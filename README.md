@@ -1,2 +1,2 @@
-bitsquare
+www.bitsquare.io
 =========
