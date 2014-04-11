@@ -24,10 +24,10 @@ The project use Java 8 and Maven.
 
 
 ### Screenshots of basic screens:
-* [Orderbook screen](https://github.com/bitsquare/bitsquare/screenshots/orderbook.png)
-* [Trade screen](https://github.com/bitsquare/bitsquare/screenshots/orderbook.png)
-* [Bank transfer screen](https://github.com/bitsquare/bitsquare/screenshots/orderbook.png)
-* [Trade completed screen](https://github.com/bitsquare/bitsquare/screenshots/orderbook.png)
+* [Orderbook screen](https://github.com/bitsquare/bitsquare/tree/master/screenshots/orderbook.png)
+* [Trade screen](https://github.com/bitsquare/bitsquare/tree/master/screenshots/orderbook.png)
+* [Bank transfer screen](https://github.com/bitsquare/bitsquare/tree/master/screenshots/orderbook.png)
+* [Trade completed screen](https://github.com/bitsquare/bitsquare/tree/master/screenshots/orderbook.png)
 
 ### Links:
 * Web: http://bitsquare.io
