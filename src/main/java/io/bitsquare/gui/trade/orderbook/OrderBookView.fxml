@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import io.bitsquare.gui.components.HSpacer?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<AnchorPane fx:id="holderPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+            AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="io.bitsquare.gui.trade.orderbook.OrderBookController">
+    <children>
+
+        <HBox fx:id="topHBox" prefHeight="22.0" AnchorPane.topAnchor="10.0" AnchorPane.leftAnchor="10.0"
+              AnchorPane.rightAnchor="10.0">
+            <children>
+                <Label text="Filter:" prefWidth="190" id="form-header-text"/>
+
+                <Button fx:id="tradeButton">
+                    <graphic>
+                        <ImageView fx:id="tradeButtonImageView"/>
+                    </graphic>
+                </Button>
+                <HSpacer prefWidth="10"/>
+                <TextField fx:id="amount" prefHeight="26.0" prefWidth="60.0" alignment="CENTER_RIGHT">
+                    <HBox.margin>
+                        <Insets left="0.0"/>
+                    </HBox.margin>
+                </TextField>
+                <Label text="BTC for">
+                    <padding>
+                        <Insets left="4.0" right="4.0" top="5.0"/>
+                    </padding>
+                </Label>
+                <TextField fx:id="price" prefHeight="26.0" prefWidth="70.0" alignment="CENTER_RIGHT"/>
+                <Label text="EUR/BTC =">
+                    <padding>
+                        <Insets left="4.0" right="4.0" top="5.0"/>
+                    </padding>
+                </Label>
+                <TextField fx:id="volume" prefHeight="26.0" prefWidth="70.0" alignment="CENTER_RIGHT" editable="false"/>
+                <Label prefHeight="21.0" prefWidth="100.0" text="EUR in total">
+                    <padding>
+                        <Insets left="4.0" right="4.0" top="5.0"/>
+                    </padding>
+                    <HBox.margin>
+                        <Insets/>
+                    </HBox.margin>
+                </Label>
+            </children>
+        </HBox>
+
+        <VBox fx:id="filterPane" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="40.0"
+              AnchorPane.bottomAnchor="10.0" prefWidth="180.0">
+            <Separator prefWidth="190"/>
+        </VBox>
+
+        <TableView fx:id="orderBookTable" id="orderbook-table" AnchorPane.leftAnchor="200.0"
+                   AnchorPane.topAnchor="40.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
+            <columns>
+                <TableColumn text="Amount (Min.)" fx:id="amountColumn" prefWidth="210">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="amount"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn text="Price" fx:id="priceColumn" prefWidth="160">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="price"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn text="Volume (Min.)" fx:id="volumeColumn" prefWidth="200">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="volume"/>
+                    </cellValueFactory>
+                </TableColumn>
+            </columns>
+        </TableView>
+
+    </children>
+</AnchorPane>

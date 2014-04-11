@@ -1,0 +1,6 @@
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.Pane?>
+<Pane fx:controller="io.bitsquare.gui.orders.OrdersController"
+      xmlns:fx="http://javafx.com/fxml">
+    <Label text="Orders"/>
+</Pane>

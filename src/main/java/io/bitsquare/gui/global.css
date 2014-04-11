@@ -1,0 +1,109 @@
+#root-pane {
+    -fx-background-color: #dddddd;
+}
+
+#content-pane {
+    -fx-background-color: #f4f4f4;
+}
+
+/* main nav */
+
+#nav-button {
+    -fx-background-color: transparent;
+}
+
+#nav-button-label {
+    -fx-font-size: 10;
+    -fx-alignment: center;
+    -fx-padding: -10;
+}
+
+#nav-buy-button {
+    -fx-background-color: transparent;
+}
+
+#nav-buy-button-label {
+    -fx-font-size: 10;
+    -fx-alignment: center;
+    -fx-padding: -10;
+}
+
+#nav-sell-button {
+    -fx-background-color: transparent;
+}
+
+#nav-sell-button-label {
+    -fx-font-size: 10;
+    -fx-alignment: center;
+    -fx-padding: -10;
+}
+
+#nav-currency-combobox {
+}
+
+/* */
+
+#orderbook-table .table-cell {
+    -fx-alignment: center;
+}
+
+#orderbook-table .column-header .label {
+    -fx-alignment: center;
+}
+
+#orderbook-table .focus {
+    -fx-alignment: center;
+}
+
+#feedback-text {
+    -fx-font-size: 10;
+}
+
+
+/* forms */
+#form-header-text {
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+}
+
+#form-title {
+    -fx-font-weight: bold;
+}
+
+
+/* tabpane */
+.tab-pane .tab-label {
+    -fx-font-size: 15;
+}
+
+.tab-pane:focused {
+    -fx-background-color: transparent;
+}
+
+.tab-header-area:focused {
+    -fx-background-color: transparent;
+}
+
+.tab:focused {
+    -fx-background-color: transparent;
+}
+
+/* tableview */
+.table-view:focused {
+    -fx-background-color: transparent;
+}
+
+/* scrollpane */
+
+.scroll-pane {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.scroll-pane:focused {
+    -fx-background-insets: 0;
+}
+
+.scroll-pane .corner {
+    -fx-background-insets: 0;
+}
