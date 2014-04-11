@@ -29,6 +29,7 @@ The project use Java 8 and Maven.
 * [Bank transfer screen](https://github.com/bitsquare/bitsquare/tree/master/screenshots/bank_transfer.png)
 * [Trade completed screen](https://github.com/bitsquare/bitsquare/tree/master/screenshots/completed.png)
 
+
 ### Links:
 * Web: http://bitsquare.io
 * Whitepaper: https://docs.google.com/document/d/1d3EiWZdaM89-P6MVhS53unXv2-pDpSFsN3W4kCGXKgY/edit?pli=1
