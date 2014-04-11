@@ -47,7 +47,7 @@ public class MockOrderBook implements IOrderBook
                 boolean directionResult = offerListVO.getOffer().getDirection() != orderBookFilter.getDirection();
                 boolean currencyResult = offerListVO.getOffer().getCurrency().equals(orderBookFilter.getCurrency());
 
-                if (offerListVO.getOffer().getDirection() == Direction.BUY && orderBookFilter.getPrice() > 0)
+                if (offerListVO.getOffer().getDirection() == Direction.SELL && orderBookFilter.getPrice() > 0)
                     priceResult = offerListVO.getOffer().getPrice() <= orderBookFilter.getPrice();
                 else
                     priceResult = offerListVO.getOffer().getPrice() >= orderBookFilter.getPrice();
