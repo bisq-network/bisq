@@ -143,7 +143,6 @@ public class TradingFacade
     }
 
     /**
-     *
      * @param trade
      */
     public void payToDepositTx(Trade trade)
@@ -160,7 +159,6 @@ public class TradingFacade
 
 
     /**
-     *
      * @param trade
      */
     public void releaseBTC(Trade trade)

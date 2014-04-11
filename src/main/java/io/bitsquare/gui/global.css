@@ -59,7 +59,6 @@
     -fx-font-size: 10;
 }
 
-
 /* forms */
 #form-header-text {
     -fx-font-weight: bold;
@@ -69,7 +68,6 @@
 #form-title {
     -fx-font-weight: bold;
 }
-
 
 /* tabpane */
 .tab-pane .tab-label {
