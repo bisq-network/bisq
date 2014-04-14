@@ -7,6 +7,8 @@ This is just a first very basic GUI prototype with mock data.
 There is only the trade process for Sell BTC and the role of the offer taker modelled yet.
 
 The project use Java 8 and Maven.
+We use bitcoinj library as a submodule.
+To get the project with the submodule included use: git clone --recursive git://github.com/bitsquare/bitsquare
 
 ### Implemented (prototype level):
 * Screen for orderbook with filtering mock offers by amount, price and order type (buy, sell), other filters not impl. yet
