@@ -1,0 +1,3 @@
+[submodule "libs/bitcoinj"]
+	path = libs/bitcoinj
+	url = git://github.com/bitcoinj/bitcoinj
