@@ -4,13 +4,20 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>bitsquare</groupId>
+    <groupId>io.bitsquare</groupId>
     <artifactId>bitsquare</artifactId>
-    <version>0.1</version>
+    <version>0.01-SNAPSHOT</version>
 
     <name>BitSquare</name>
     <description>A P2P Fiat-Bitcoin Exchange</description>
     <url>https://www.bitsquare.io</url>
+
+    <parent>
+        <groupId>com.google</groupId>
+        <artifactId>bitcoinj-parent</artifactId>
+        <version>0.12-SNAPSHOT</version>
+        <relativePath>libs/bitcoinj/pom.xml</relativePath>
+    </parent>
 
     <licenses>
         <license>
@@ -24,6 +31,31 @@
         <url>https://github.com/bitsquare/bitsquare</url>
     </scm>
 
+    <repositories>
+        <repository>
+            <id>sonatype-oss-snapshot</id>
+            <snapshots/>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+        <repository>
+            <id>sonatype-oss-snapshot2</id>
+            <snapshots/>
+            <url>https://oss.sonatype.org/content/groups/public</url>
+        </repository>
+        <!-- bitcoin-j repo -->
+        <repository>
+            <id>bitcoinj-release</id>
+            <releases />
+            <url>http://distribution.bitcoinj.googlecode.com/git/releases</url>
+        </repository>
+        <!-- zxing repo -->
+        <repository>
+            <id>mvn-adamgent</id>
+            <url>http://mvn-adamgent.googlecode.com/svn/maven/release</url>
+            <name>Adam Gent Maven Repository</name>
+        </repository>
+    </repositories>
+
     <build>
         <resources>
             <resource>
@@ -33,24 +65,27 @@
                 <directory>src/main/resources</directory>
             </resource>
         </resources>
-
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
                 <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>io.bitsquare.BitSquare</mainClass>
-                        </manifest>
-                    </archive>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
         </plugins>
     </build>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.google</groupId>
+            <artifactId>bitcoinj</artifactId>
+            <version>0.12-SNAPSHOT</version>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -60,7 +95,7 @@
 
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <artifactId>slf4j-jdk14</artifactId>
             <version>1.7.6</version>
         </dependency>
 
@@ -80,8 +115,14 @@
 
         <dependency>
             <groupId>com.google.guava</groupId>
-            <artifactId>guava-base</artifactId>
-            <version>r03</version>
+            <artifactId>guava</artifactId>
+            <version>16.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.aquafx-project</groupId>
+            <artifactId>aquafx</artifactId>
+            <version>0.1</version>
         </dependency>
 
         <dependency>
@@ -95,6 +136,17 @@
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
             <version>8.0.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>de.jensd</groupId>
+            <artifactId>fontawesomefx</artifactId>
+            <version>8.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>net.glxn</groupId>
+            <artifactId>qrgen</artifactId>
+            <version>1.3</version>
         </dependency>
 
     </dependencies>

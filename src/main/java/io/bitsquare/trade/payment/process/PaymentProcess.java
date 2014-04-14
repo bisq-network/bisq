@@ -2,7 +2,7 @@ package io.bitsquare.trade.payment.process;
 
 import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
-import io.bitsquare.btc.MockWalletFacade;
+import io.bitsquare.btc.IWalletFacade;
 import io.bitsquare.msg.IMessageFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,7 @@ public class PaymentProcess
     protected String takerOutputPayment;
 
     protected String multiSigAddress;
-    private MockWalletFacade wallet;
+    private IWalletFacade wallet;
 
     public PaymentProcess()
     {
@@ -39,7 +39,7 @@ public class PaymentProcess
     }
 
     @Inject
-    public void setWallet(MockWalletFacade wallet)
+    public void setWallet(IWalletFacade wallet)
     {
         this.wallet = wallet;
     }

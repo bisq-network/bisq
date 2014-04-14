@@ -1,6 +1,6 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.Pane?>
 <Pane fx:controller="io.bitsquare.gui.funds.FundsController"
-      xmlns:fx="http://javafx.com/fxml">
+      xmlns:fx="http://javafx.com/fxml" fx:id="rootContainer">
     <Label text="Wallet"/>
 </Pane>

@@ -199,7 +199,7 @@ public class TradeProcessController implements Initializable, IChildController
     private void onBankTransferInited()
     {
         infoLabel.setText("Bank transfer has been inited.\nCheck your bank account and continue when you have received the money.\n");
-        nextButton.setText("Money received on Bank account");
+        nextButton.setText("I have received the bank transfer");
         nextButton.setOnAction(e -> releaseBTC());
         vBox.getChildren().add(nextButton);
     }

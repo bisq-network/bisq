@@ -2,8 +2,8 @@ package io.bitsquare.trade;
 
 import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
+import io.bitsquare.btc.IWalletFacade;
 import io.bitsquare.btc.KeyPair;
-import io.bitsquare.btc.MockWalletFacade;
 import io.bitsquare.crypto.ICryptoFacade;
 import io.bitsquare.msg.IMessageFacade;
 import io.bitsquare.msg.Message;
@@ -29,7 +29,7 @@ public class TradingFacade
     private User user;
     private IMessageFacade messageFacade;
     private BlockChainFacade blockChainFacade;
-    private MockWalletFacade walletFacade;
+    private IWalletFacade walletFacade;
     private ICryptoFacade cryptoFacade;
     private Settings settings;
 
@@ -38,7 +38,7 @@ public class TradingFacade
                          Settings settings,
                          IMessageFacade messageFacade,
                          BlockChainFacade blockChainFacade,
-                         MockWalletFacade walletFacade,
+                         IWalletFacade walletFacade,
                          ICryptoFacade cryptoFacade)
     {
         this.user = user;

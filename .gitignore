@@ -4,3 +4,5 @@
 /bin
 .idea
 bitsquare.iml
+.spvchain
+.wallet
