@@ -14,9 +14,21 @@ public interface IWalletFacade
 
     void terminateWallet();
 
+    /**
+     *
+     * @return  current balance in satoshis
+     */
     BigInteger getBalance();
+
+    /**
+     *
+     * @return
+     */
+    String getAddress();
 
     boolean pay(BigInteger satoshisToPay, String destinationAddress);
 
     KeyPair createNewAddress();
+
+
 }

@@ -10,45 +10,36 @@
 
 #nav-button {
     -fx-background-color: transparent;
+    -fx-alignment: center;
 }
 
 #nav-button-label {
     -fx-font-size: 10;
+    -fx-text-alignment: center;
     -fx-alignment: center;
-    -fx-padding: -10;
 }
 
-#nav-buy-button {
-    -fx-background-color: transparent;
+#nav-balance-label {
+    -fx-font-weight: bold;
+    -fx-text-alignment: right;
 }
 
-#nav-buy-button-label {
-    -fx-font-size: 10;
-    -fx-alignment: center;
-    -fx-padding: -10;
+#nav-balance-currency-label {
+    -fx-text-alignment: left;
 }
 
-#nav-sell-button {
-    -fx-background-color: transparent;
-}
-
-#nav-sell-button-label {
-    -fx-font-size: 10;
-    -fx-alignment: center;
-    -fx-padding: -10;
-}
 
 #nav-currency-combobox {
 }
 
-/* */
+/* table */
 
 #orderbook-table .table-cell {
     -fx-alignment: center;
 }
 
 #orderbook-table .column-header .label {
-    -fx-alignment: center;
+    -fx-alignment-alignment: center;
 }
 
 #orderbook-table .focus {

@@ -6,6 +6,7 @@ import io.bitsquare.BitSquare;
 import io.bitsquare.btc.IWalletFacade;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.trade.TradeController;
+import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
@@ -19,6 +20,7 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -65,11 +67,11 @@ public class MainController implements Initializable, INavigationController
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
+        walletFacade.initWallet(new ProgressBarUpdater());
+
         buildNavigation();
 
         buildFooter();
-
-        walletFacade.initWallet(new ProgressBarUpdater());
     }
 
 
@@ -113,7 +115,9 @@ public class MainController implements Initializable, INavigationController
         addNavButton(leftNavPane, "History", Icons.HISTORY, Icons.HISTORY, INavigationController.HISTORY);
         addNavButton(leftNavPane, "Funds", Icons.FUNDS, Icons.FUNDS, INavigationController.FUNDS);
         addNavButton(leftNavPane, "Message", Icons.MSG, Icons.MSG, INavigationController.MSG);
+        addBalanceInfo(rightNavPane);
         addCurrencyComboBox();
+
         addNavButton(rightNavPane, "Settings", Icons.SETTINGS, Icons.SETTINGS, INavigationController.SETTINGS);
 
         sellButton.fire();
@@ -137,22 +141,13 @@ public class MainController implements Initializable, INavigationController
 
     private ToggleButton addNavButton(Pane parent, String title, String iconId, String iconIdActivated, String navTarget, Direction direction)
     {
-        VBox vBox = new VBox();
+        Pane pane = new Pane();
+        pane.setPrefSize(50,50);
         ToggleButton toggleButton = new ToggleButton("", Icons.getIconImageView(iconId));
-        toggleButton.setPrefWidth(50);
         toggleButton.setToggleGroup(toggleGroup);
-        Label titleLabel = new Label(title);
-        titleLabel.setPrefWidth(50);
-
         toggleButton.setId("nav-button");
-        titleLabel.setId("nav-button-label");
-
-        vBox.getChildren().setAll(toggleButton, titleLabel);
-        parent.getChildren().add(vBox);
-
+        toggleButton.setPrefSize(50,50);
         toggleButton.setOnAction(e -> {
-
-
             if (prevToggleButton != null)
             {
                 ((ImageView) (prevToggleButton.getGraphic())).setImage(prevToggleButtonIcon);
@@ -170,14 +165,57 @@ public class MainController implements Initializable, INavigationController
             prevToggleButton = toggleButton;
 
         });
+
+        Label titleLabel = new Label(title);
+        titleLabel.setPrefWidth(60);
+        titleLabel.setLayoutY(40);
+        titleLabel.setId("nav-button-label");
+        titleLabel.setMouseTransparent(true);
+
+        pane.getChildren().setAll(toggleButton, titleLabel);
+        parent.getChildren().add(pane);
+
         return toggleButton;
+    }
+
+    private TextField addBalanceInfo(Pane parent)
+    {
+        Pane holder = new Pane();
+        TextField balanceLabel = new TextField();
+        balanceLabel.setEditable(false);
+        balanceLabel.setMouseTransparent(true);
+        //balanceLabel.setPrefHeight(30);
+        balanceLabel.setPrefWidth(90);
+        balanceLabel.setId("nav-balance-label");
+        balanceLabel.setText(Formatter.formatSatoshis(walletFacade.getBalance(), false));
+        holder.getChildren().add(balanceLabel);
+        rightNavPane.getChildren().add(holder);
+
+        Label balanceCurrencyLabel = new Label("BTC");
+        balanceCurrencyLabel.setPadding(new Insets(6, 0, 0, 0));
+        HBox hBox = new HBox();
+        hBox.setSpacing(2);
+        hBox.getChildren().setAll(balanceLabel, balanceCurrencyLabel);
+
+        VBox vBox = new VBox();
+        vBox.setPadding(new Insets(12, 0, 0, 0));
+        vBox.setSpacing(2);
+        Label titleLabel = new Label("Balance");
+        titleLabel.setMouseTransparent(true);
+        titleLabel.setPrefWidth(90);
+        titleLabel.setId("nav-button-label");
+
+        vBox.getChildren().setAll(hBox, titleLabel);
+        parent.getChildren().add(vBox);
+
+        return balanceLabel;
     }
 
     private void addCurrencyComboBox()
     {
         Pane holder = new Pane();
         ComboBox currencyComboBox = new ComboBox(FXCollections.observableArrayList(settings.getAllCurrencies()));
-        currencyComboBox.setLayoutY(10);
+        currencyComboBox.setLayoutY(12);
         currencyComboBox.setId("nav-currency-combobox");
         currencyComboBox.setValue(Settings.getCurrency());
 

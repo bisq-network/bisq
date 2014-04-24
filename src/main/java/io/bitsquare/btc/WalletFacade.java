@@ -1,13 +1,16 @@
 package io.bitsquare.btc;
 
+import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.NetworkParameters;
 import com.google.bitcoin.core.PeerEventListener;
+import com.google.bitcoin.core.Wallet;
 import com.google.bitcoin.kits.WalletAppKit;
 import com.google.bitcoin.params.MainNetParams;
 import com.google.bitcoin.params.RegTestParams;
 import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import wallettemplate.Main;
 
 import java.math.BigInteger;
 import java.util.UUID;
@@ -29,6 +32,7 @@ public class WalletFacade implements IWalletFacade
         balance = new BigInteger("100000000");
     }
 
+    @Override
     public void initWallet(PeerEventListener peerEventListener)
     {
         if (networkParameters == RegTestParams.get())
@@ -58,18 +62,23 @@ public class WalletFacade implements IWalletFacade
         log.info(walletAppKit.wallet().toString());
     }
 
+    @Override
     public void terminateWallet()
     {
         walletAppKit.stopAsync();
         walletAppKit.awaitTerminated();
     }
 
-
-    //MOCK...
     @Override
     public BigInteger getBalance()
     {
-        return balance;
+        return walletAppKit.wallet().getBalance(Wallet.BalanceType.ESTIMATED);
+    }
+
+    @Override
+    public String getAddress()
+    {
+        return walletAppKit.wallet().getKeys().get(0).toAddress(networkParameters).toString();
     }
 
     @Override

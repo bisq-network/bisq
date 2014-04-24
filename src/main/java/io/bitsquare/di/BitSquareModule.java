@@ -54,7 +54,7 @@ public class BitSquareModule extends AbstractModule
 
         bind(TradingFacade.class).asEagerSingleton();
 
-        bind(String.class).annotatedWith(Names.named("networkType")).toInstance(IWalletFacade.MAIN_NET);
+        bind(String.class).annotatedWith(Names.named("networkType")).toInstance(IWalletFacade.TEST_NET);
         bind(NetworkParameters.class).toProvider(NetworkParametersProvider.class).asEagerSingleton();
         bind(WalletAppKit.class).toProvider(WalletAppKitProvider.class).asEagerSingleton();
     }
