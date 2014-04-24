@@ -16,13 +16,14 @@ git clone --recursive git://github.com/bitsquare/bitsquare
 * Screen for creating an offer (needs update)
 * Screen for offer taking and payment process
 * Simple storage for some filter attributes
+* bitcoinj/wallet integration (basic)
 
 
 ### Next steps:
+* Setup with account registration
 * Other trade variants (Buy BTC taker, Sell BTC offerer, Sell BTC offerer)
 * Arbitrator integration
-* bitcoinj integration
-* messaging system
+* Messaging system
 * ...
 
 
