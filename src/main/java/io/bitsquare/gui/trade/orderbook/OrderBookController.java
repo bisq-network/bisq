@@ -1,8 +1,8 @@
 package io.bitsquare.gui.trade.orderbook;
 
 import com.google.inject.Inject;
-import io.bitsquare.gui.IChildController;
-import io.bitsquare.gui.INavigationController;
+import io.bitsquare.gui.ChildController;
+import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.trade.offer.CreateOfferController;
 import io.bitsquare.gui.trade.tradeprocess.TradeProcessController;
 import io.bitsquare.gui.util.Converter;
@@ -10,8 +10,7 @@ import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
-import io.bitsquare.trade.orderbook.IOrderBook;
-import io.bitsquare.trade.orderbook.MockOrderBook;
+import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -34,10 +33,10 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.ResourceBundle;
 
-public class OrderBookController implements Initializable, IChildController
+public class OrderBookController implements Initializable, ChildController
 {
-    private INavigationController navigationController;
-    private IOrderBook orderBook;
+    private NavigationController navigationController;
+    private OrderBook orderBook;
     private Settings settings;
 
     private OrderBookListItem selectedOrderBookListItem;
@@ -65,7 +64,7 @@ public class OrderBookController implements Initializable, IChildController
     private ImageView tradeButtonImageView;
 
     @Inject
-    public OrderBookController(IOrderBook orderBook, OrderBookFilter orderBookFilter, Settings settings)
+    public OrderBookController(OrderBook orderBook, OrderBookFilter orderBookFilter, Settings settings)
     {
         this.orderBook = orderBook;
         this.orderBookFilter = orderBookFilter;
@@ -121,7 +120,7 @@ public class OrderBookController implements Initializable, IChildController
     }
 
     @Override
-    public void setNavigationController(INavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
         this.navigationController = navigationController;
     }
@@ -154,7 +153,7 @@ public class OrderBookController implements Initializable, IChildController
     private void openTradeTab(OrderBookListItem orderBookListItem)
     {
         String title = orderBookListItem.getOffer().getDirection() == Direction.BUY ? "Trade: Sell Bitcoin" : "Trade: Buy Bitcoin";
-        TradeProcessController tradeProcessController = (TradeProcessController) navigationController.navigateToView(INavigationController.TRADE__PROCESS, title);
+        TradeProcessController tradeProcessController = (TradeProcessController) navigationController.navigateToView(NavigationController.TRADE__PROCESS, title);
 
         double requestedAmount = orderBookListItem.getOffer().getAmount();
         if (!amount.getText().equals(""))
@@ -173,7 +172,7 @@ public class OrderBookController implements Initializable, IChildController
             holderPane.getChildren().add(createOfferButton);
 
             createOfferButton.setOnAction(e -> {
-                IChildController nextController = navigationController.navigateToView(INavigationController.TRADE__CREATE_OFFER, "Create offer");
+                ChildController nextController = navigationController.navigateToView(NavigationController.TRADE__CREATE_OFFER, "Create offer");
                 ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
             });
         }
@@ -202,15 +201,16 @@ public class OrderBookController implements Initializable, IChildController
 
     private void createFilterPane()
     {
-        MockOrderBook mockOrderBook = new MockOrderBook(settings);
+        OrderBook mockOrderBook = new OrderBook(settings);
         orderBookFilter.setOfferConstraints(mockOrderBook.getRandomOfferConstraints());
 
-        OrderBookFilterTextItemBuilder.build(filterPane, "Bank transfer types: ", orderBookFilter.getOfferConstraints().getBankTransferTypes(), settings.getAllBankTransferTypes());
+        //OrderBookFilterTextItemBuilder.build(filterPane, "Bank transfer types: ", orderBookFilter.getOfferConstraints().getBankAccountTypes(), settings.getAllBankAccountTypes());
         OrderBookFilterTextItemBuilder.build(filterPane, "Countries: ", orderBookFilter.getOfferConstraints().getCountries(), settings.getAllCountries());
         OrderBookFilterTextItemBuilder.build(filterPane, "Languages: ", orderBookFilter.getOfferConstraints().getLanguages(), settings.getAllLanguages());
         OrderBookFilterTextItemBuilder.build(filterPane, "Collateral: ", Arrays.asList(String.valueOf(orderBookFilter.getOfferConstraints().getCollateral())), settings.getAllCollaterals());
         OrderBookFilterTextItemBuilder.build(filterPane, "Arbitrator: ", Arrays.asList(orderBookFilter.getOfferConstraints().getArbitrator()), settings.getAllArbitrators());
     }
+
 
     private double textInputToNumber(String oldValue, String newValue)
     {

@@ -3,9 +3,9 @@ package io.bitsquare.gui.funds;
 import com.google.inject.Inject;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.btc.IWalletFacade;
-import io.bitsquare.gui.IChildController;
-import io.bitsquare.gui.INavigationController;
+import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.gui.ChildController;
+import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.util.Formatter;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -20,11 +20,11 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 
-public class FundsController implements Initializable, IChildController
+public class FundsController implements Initializable, ChildController
 {
 
-    private INavigationController navigationController;
-    private IWalletFacade walletFacade;
+    private NavigationController navigationController;
+    private WalletFacade walletFacade;
 
     @FXML
     public Pane rootContainer;
@@ -36,7 +36,7 @@ public class FundsController implements Initializable, IChildController
     public Label copyIcon;
 
     @Inject
-    public FundsController(IWalletFacade walletFacade)
+    public FundsController(WalletFacade walletFacade)
     {
         this.walletFacade = walletFacade;
 
@@ -58,14 +58,13 @@ public class FundsController implements Initializable, IChildController
     }
 
     @Override
-    public void setNavigationController(INavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
         this.navigationController = navigationController;
 
         addressLabel.setText(walletFacade.getAddress());
         balanceLabel.setText(Formatter.formatSatoshis(walletFacade.getBalance(), false));
     }
-
 
 
 }

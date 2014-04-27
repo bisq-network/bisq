@@ -2,15 +2,15 @@ package io.bitsquare.trade.payment.process;
 
 import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
-import io.bitsquare.btc.IWalletFacade;
-import io.bitsquare.msg.IMessageFacade;
+import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.msg.MessageFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PaymentProcess
 {
     private static final Logger log = LoggerFactory.getLogger(PaymentProcess.class);
-    private IMessageFacade messageService;
+    private MessageFacade messageService;
     private BlockChainFacade bitcoinServices;
 
     protected String offererDepositPubKey;
@@ -26,20 +26,20 @@ public class PaymentProcess
     protected String takerOutputPayment;
 
     protected String multiSigAddress;
-    private IWalletFacade wallet;
+    private WalletFacade wallet;
 
     public PaymentProcess()
     {
     }
 
     @Inject
-    public void setMessageService(IMessageFacade messageService)
+    public void setMessageService(MessageFacade messageService)
     {
         this.messageService = messageService;
     }
 
     @Inject
-    public void setWallet(IWalletFacade wallet)
+    public void setWallet(WalletFacade wallet)
     {
         this.wallet = wallet;
     }

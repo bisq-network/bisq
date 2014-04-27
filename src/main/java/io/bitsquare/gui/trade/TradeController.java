@@ -1,13 +1,12 @@
 package io.bitsquare.gui.trade;
 
-import io.bitsquare.BitSquare;
 import io.bitsquare.di.GuiceFXMLLoader;
-import io.bitsquare.gui.IChildController;
-import io.bitsquare.gui.INavigationController;
+import io.bitsquare.gui.ChildController;
+import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.trade.orderbook.OrderBookController;
+import io.bitsquare.gui.util.Localisation;
 import io.bitsquare.trade.Direction;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -17,29 +16,29 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class TradeController implements Initializable, INavigationController, IChildController
+public class TradeController implements Initializable, NavigationController, ChildController
 {
     @FXML
     private TabPane tabPane;
 
-    private IChildController childController;
+    private ChildController childController;
     private boolean orderbookCreated;
-    private INavigationController navigationController;
+    private NavigationController navigationController;
     private OrderBookController orderBookController;
 
     @Override
-    public IChildController navigateToView(String fxmlView, String title)
+    public ChildController navigateToView(String fxmlView, String title)
     {
-        if (fxmlView.equals(INavigationController.TRADE__ORDER_BOOK) && orderbookCreated)
+        if (fxmlView.equals(NavigationController.TRADE__ORDER_BOOK) && orderbookCreated)
         {
             tabPane.getSelectionModel().select(0);
             return null;
         }
 
-        FXMLLoader loader = new GuiceFXMLLoader();
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
         try
         {
-            Pane view = loader.load(BitSquare.class.getResourceAsStream(fxmlView));
+            Pane view = loader.load();
             childController = loader.getController();
             childController.setNavigationController(this);
 
@@ -50,7 +49,7 @@ public class TradeController implements Initializable, INavigationController, IC
             tab.setContent(view);
             tabPane.getTabs().add(tab);
 
-            if (fxmlView.equals(INavigationController.TRADE__ORDER_BOOK))
+            if (fxmlView.equals(NavigationController.TRADE__ORDER_BOOK))
             {
                 tab.setClosable(false);
                 orderbookCreated = true;
@@ -69,11 +68,11 @@ public class TradeController implements Initializable, INavigationController, IC
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        navigateToView(INavigationController.TRADE__ORDER_BOOK, "Orderbook");
+        navigateToView(NavigationController.TRADE__ORDER_BOOK, "Orderbook");
     }
 
     @Override
-    public void setNavigationController(INavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
 
         this.navigationController = navigationController;

@@ -7,7 +7,14 @@ import java.util.List;
 
 public class ProcessStepBar<T> extends Control
 {
-    private List<ProcessStepItem> processStepItems;
+
+
+    private List<ProcessStepItem> processStepItems = null;
+
+    public ProcessStepBar()
+    {
+    }
+
 
     public ProcessStepBar(List<ProcessStepItem> processStepItems)
     {
@@ -18,6 +25,13 @@ public class ProcessStepBar<T> extends Control
     protected Skin<?> createDefaultSkin()
     {
         return new ProcessStepBarSkin<>(this);
+    }
+
+    public void setProcessStepItems(List<ProcessStepItem> processStepItems)
+    {
+        this.processStepItems = processStepItems;
+        if (getSkin() != null)
+            ((ProcessStepBarSkin) getSkin()).dataChanged();
     }
 
     List<ProcessStepItem> getProcessStepItems()

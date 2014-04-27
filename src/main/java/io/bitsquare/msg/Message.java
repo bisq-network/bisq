@@ -41,19 +41,15 @@ public class Message
         this.payload = contract;
     }
 
-    public String toString()
-    {
-        return type + ": " + Utils.convertToJson(payload);
-    }
-
     public String getType()
     {
         return type;
     }
 
-    public void setType(String type)
+
+    public String toString()
     {
-        this.type = type;
+        return type + ": " + Utils.convertToJson(payload);
     }
 
 

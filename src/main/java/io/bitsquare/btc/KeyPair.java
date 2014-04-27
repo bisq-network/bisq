@@ -2,6 +2,7 @@ package io.bitsquare.btc;
 
 public class KeyPair
 {
+    //TODO just for mock, remove later
     private String pubKey;
     private String privKey;
 

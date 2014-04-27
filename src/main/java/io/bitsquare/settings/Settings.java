@@ -1,7 +1,8 @@
 package io.bitsquare.settings;
 
 import com.google.inject.Inject;
-import io.bitsquare.storage.IStorage;
+import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 
 import java.util.ArrayList;
@@ -10,10 +11,12 @@ import java.util.Locale;
 
 public class Settings
 {
+
     public static Locale locale = Locale.ENGLISH;
     public static Currency currency = Currency.getInstance("USD");
 
-    private IStorage storage;
+
+    private Storage storage;
     private OrderBookFilter orderBookFilter;
 
     public static Locale getLocale()
@@ -27,13 +30,14 @@ public class Settings
     }
 
     @Inject
-    public Settings(IStorage storage, OrderBookFilter orderBookFilter)
+    public Settings(Storage storage, OrderBookFilter orderBookFilter)
     {
-
+        this.storage = storage;
         this.orderBookFilter = orderBookFilter;
+
+
         locale = Locale.ENGLISH;
         currency = Currency.getInstance("USD");
-        this.storage = storage;
 
         currency = (Currency) storage.read("Settings.currency");
         if (currency == null)
@@ -66,16 +70,16 @@ public class Settings
         return currencies;
     }
 
-    public ArrayList<String> getAllBankTransferTypes()
+    public ArrayList<BankAccountType> getAllBankAccountTypes()
     {
-        ArrayList<String> bankTransferTypes = new ArrayList<>();
-        bankTransferTypes.add("SEPA");
-        bankTransferTypes.add("Wire");
-        bankTransferTypes.add("International");
-        bankTransferTypes.add("OKPay");
-        bankTransferTypes.add("Netteller");
-        bankTransferTypes.add("Perfect Money");
-        bankTransferTypes.add("Any");
+        ArrayList<BankAccountType> bankTransferTypes = new ArrayList<>();
+        bankTransferTypes.add(new BankAccountType(BankAccountType.BankAccountTypeEnum.SEPA, "IBAN", "BIC"));
+        bankTransferTypes.add(new BankAccountType(BankAccountType.BankAccountTypeEnum.WIRE, "Prim_todo", "Sec_todo"));
+        bankTransferTypes.add(new BankAccountType(BankAccountType.BankAccountTypeEnum.INTERNATIONAL, "Prim_todo", "Sec_todo"));
+        bankTransferTypes.add(new BankAccountType(BankAccountType.BankAccountTypeEnum.OK_PAY, "Prim_todo", "Sec_todo"));
+        bankTransferTypes.add(new BankAccountType(BankAccountType.BankAccountTypeEnum.NET_TELLER, "Prim_todo", "Sec_todo"));
+        bankTransferTypes.add(new BankAccountType(BankAccountType.BankAccountTypeEnum.PERFECT_MONEY, "Prim_todo", "Sec_todo"));
+        bankTransferTypes.add(new BankAccountType(BankAccountType.BankAccountTypeEnum.OTHER, "Prim_todo", "Sec_todo"));
         return bankTransferTypes;
     }
 
@@ -183,5 +187,6 @@ public class Settings
     {
         return orderBookFilter;
     }
+
 
 }

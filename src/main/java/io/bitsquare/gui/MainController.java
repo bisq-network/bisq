@@ -1,34 +1,31 @@
 package io.bitsquare.gui;
 
-import com.google.bitcoin.core.DownloadListener;
 import com.google.inject.Inject;
-import io.bitsquare.BitSquare;
-import io.bitsquare.btc.IWalletFacade;
+import io.bitsquare.btc.DownloadListener;
+import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.GuiceFXMLLoader;
+import io.bitsquare.gui.components.NetworkSyncPane;
+import io.bitsquare.gui.setup.SetupController;
 import io.bitsquare.gui.trade.TradeController;
 import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.gui.util.Icons;
+import io.bitsquare.gui.util.Localisation;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
-import javafx.animation.FadeTransition;
-import javafx.animation.Interpolator;
+import io.bitsquare.user.User;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
-import javafx.util.Duration;
+import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,28 +35,36 @@ import java.util.Currency;
 import java.util.Date;
 import java.util.ResourceBundle;
 
-public class MainController implements Initializable, INavigationController
+public class MainController implements Initializable, NavigationController, DownloadListener
 {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
 
     private Settings settings;
+    private User user;
     private OrderBookFilter orderBookFilter;
-    private IWalletFacade walletFacade;
-    private IChildController childController;
+    private WalletFacade walletFacade;
+    private ChildController childController;
     private ToggleGroup toggleGroup;
     private ToggleButton prevToggleButton;
     private Image prevToggleButtonIcon;
-    public ProgressBar networkSyncProgressBar;
-    public Label networkSyncInfoLabel;
+    // public ProgressBar networkSyncProgressBar;
+    //public Label networkSyncInfoLabel;
+    private Pane setupView;
+    private SetupController setupController;
 
     @FXML
     public Pane contentPane;
-    public HBox leftNavPane, rightNavPane, footerContainer;
+    public HBox leftNavPane, rightNavPane;
+    public StackPane rootContainer;
+    public AnchorPane anchorPane;
+    private NetworkSyncPane networkSyncPane;
+
 
     @Inject
-    public MainController(Settings settings, OrderBookFilter orderBookFilter, IWalletFacade walletFacade)
+    public MainController(Settings settings, User user, OrderBookFilter orderBookFilter, WalletFacade walletFacade)
     {
         this.settings = settings;
+        this.user = user;
         this.orderBookFilter = orderBookFilter;
         this.walletFacade = walletFacade;
     }
@@ -67,21 +72,49 @@ public class MainController implements Initializable, INavigationController
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        walletFacade.initWallet(new ProgressBarUpdater());
+        networkSyncPane = new NetworkSyncPane();
+        networkSyncPane.setSpacing(10);
+        networkSyncPane.setPrefHeight(20);
+        AnchorPane.setBottomAnchor(networkSyncPane, 0.0);
+        AnchorPane.setLeftAnchor(networkSyncPane, 0.0);
+
+        walletFacade.addDownloadListener(this);
+        walletFacade.initWallet();
 
         buildNavigation();
-
-        buildFooter();
+        if (user.getAccountID() != null)
+        {
+            anchorPane.getChildren().add(networkSyncPane);
+        }
+        else
+        {
+            buildSetupView();
+            anchorPane.setOpacity(0);
+            setupController.setNetworkSyncPane(networkSyncPane);
+            rootContainer.getChildren().add(setupView);
+        }
     }
 
 
     @Override
-    public IChildController navigateToView(String fxmlView, String title)
+    public ChildController navigateToView(String fxmlView, String title)
     {
-        FXMLLoader loader = new GuiceFXMLLoader();
+        if (setupView != null)
+        {
+            anchorPane.getChildren().add(networkSyncPane);
+
+            anchorPane.setOpacity(1);
+            rootContainer.getChildren().remove(setupView);
+            setupView = null;
+            setupController = null;
+
+            return null;
+        }
+
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
         try
         {
-            Node view = loader.load(BitSquare.class.getResourceAsStream(fxmlView));
+            final Node view = loader.load();
             contentPane.getChildren().setAll(view);
             childController = loader.getController();
             childController.setNavigationController(this);
@@ -91,10 +124,23 @@ public class MainController implements Initializable, INavigationController
             e.printStackTrace();
         }
         return null;
-
     }
 
-    public IChildController navigateToView(String fxmlView, Direction direction)
+    @Override
+    public void progress(double percent, int blocksSoFar, Date date)
+    {
+        if (networkSyncPane != null)
+            Platform.runLater(() -> networkSyncPane.setProgress(percent));
+    }
+
+    @Override
+    public void doneDownload()
+    {
+        if (networkSyncPane != null)
+            Platform.runLater(networkSyncPane::doneDownload);
+    }
+
+    public ChildController navigateToView(String fxmlView, Direction direction)
     {
         childController = navigateToView(fxmlView, direction == Direction.BUY ? "Orderbook Buy" : "Orderbook Sell");
         if (childController instanceof TradeController && direction != null)
@@ -104,34 +150,38 @@ public class MainController implements Initializable, INavigationController
         return childController;
     }
 
+    private void buildSetupView()
+    {
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationController.SETUP), Localisation.getResourceBundle());
+        try
+        {
+            setupView = loader.load();
+            setupController = loader.getController();
+            setupController.setNavigationController(this);
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
     private void buildNavigation()
     {
         toggleGroup = new ToggleGroup();
 
-        ToggleButton homeButton = addNavButton(leftNavPane, "Overview", Icons.HOME, Icons.HOME, INavigationController.HOME);
-        ToggleButton buyButton = addNavButton(leftNavPane, "Buy BTC", Icons.NAV_BUY, Icons.NAV_BUY_ACTIVE, INavigationController.TRADE, Direction.BUY);
-        ToggleButton sellButton = addNavButton(leftNavPane, "Sell BTC", Icons.NAV_SELL, Icons.NAV_SELL_ACTIVE, INavigationController.TRADE, Direction.SELL);
-        addNavButton(leftNavPane, "Orders", Icons.ORDERS, Icons.ORDERS, INavigationController.ORDERS);
-        addNavButton(leftNavPane, "History", Icons.HISTORY, Icons.HISTORY, INavigationController.HISTORY);
-        addNavButton(leftNavPane, "Funds", Icons.FUNDS, Icons.FUNDS, INavigationController.FUNDS);
-        addNavButton(leftNavPane, "Message", Icons.MSG, Icons.MSG, INavigationController.MSG);
+        ToggleButton homeButton = addNavButton(leftNavPane, "Overview", Icons.HOME, Icons.HOME, NavigationController.HOME);
+        ToggleButton buyButton = addNavButton(leftNavPane, "Buy BTC", Icons.NAV_BUY, Icons.NAV_BUY_ACTIVE, NavigationController.TRADE, Direction.BUY);
+        ToggleButton sellButton = addNavButton(leftNavPane, "Sell BTC", Icons.NAV_SELL, Icons.NAV_SELL_ACTIVE, NavigationController.TRADE, Direction.SELL);
+        addNavButton(leftNavPane, "Orders", Icons.ORDERS, Icons.ORDERS, NavigationController.ORDERS);
+        addNavButton(leftNavPane, "History", Icons.HISTORY, Icons.HISTORY, NavigationController.HISTORY);
+        addNavButton(leftNavPane, "Funds", Icons.FUNDS, Icons.FUNDS, NavigationController.FUNDS);
+        addNavButton(leftNavPane, "Message", Icons.MSG, Icons.MSG, NavigationController.MSG);
         addBalanceInfo(rightNavPane);
         addCurrencyComboBox();
 
-        addNavButton(rightNavPane, "Settings", Icons.SETTINGS, Icons.SETTINGS, INavigationController.SETTINGS);
+        addNavButton(rightNavPane, "Settings", Icons.SETTINGS, Icons.SETTINGS, NavigationController.SETTINGS);
 
         sellButton.fire();
         //homeButton.fire();
-    }
-
-    private void buildFooter()
-    {
-        networkSyncInfoLabel = new Label();
-        networkSyncInfoLabel.setText("Synchronize with network...");
-        networkSyncProgressBar = new ProgressBar();
-        networkSyncProgressBar.setPrefWidth(200);
-        networkSyncProgressBar.setProgress(-1);
-        footerContainer.getChildren().addAll(networkSyncProgressBar, networkSyncInfoLabel);
     }
 
     private ToggleButton addNavButton(Pane parent, String title, String iconId, String iconIdActivated, String navTarget)
@@ -142,11 +192,11 @@ public class MainController implements Initializable, INavigationController
     private ToggleButton addNavButton(Pane parent, String title, String iconId, String iconIdActivated, String navTarget, Direction direction)
     {
         Pane pane = new Pane();
-        pane.setPrefSize(50,50);
+        pane.setPrefSize(50, 50);
         ToggleButton toggleButton = new ToggleButton("", Icons.getIconImageView(iconId));
         toggleButton.setToggleGroup(toggleGroup);
         toggleButton.setId("nav-button");
-        toggleButton.setPrefSize(50,50);
+        toggleButton.setPrefSize(50, 50);
         toggleButton.setOnAction(e -> {
             if (prevToggleButton != null)
             {
@@ -184,7 +234,6 @@ public class MainController implements Initializable, INavigationController
         TextField balanceLabel = new TextField();
         balanceLabel.setEditable(false);
         balanceLabel.setMouseTransparent(true);
-        //balanceLabel.setPrefHeight(30);
         balanceLabel.setPrefWidth(90);
         balanceLabel.setId("nav-balance-label");
         balanceLabel.setText(Formatter.formatSatoshis(walletFacade.getBalance(), false));
@@ -216,7 +265,6 @@ public class MainController implements Initializable, INavigationController
         Pane holder = new Pane();
         ComboBox currencyComboBox = new ComboBox(FXCollections.observableArrayList(settings.getAllCurrencies()));
         currencyComboBox.setLayoutY(12);
-        currencyComboBox.setId("nav-currency-combobox");
         currencyComboBox.setValue(Settings.getCurrency());
 
         currencyComboBox.valueProperty().addListener(new ChangeListener<Currency>()
@@ -232,39 +280,5 @@ public class MainController implements Initializable, INavigationController
         rightNavPane.getChildren().add(holder);
     }
 
-    private void setProgress(double percent)
-    {
-        networkSyncProgressBar.setProgress(percent / 100.0);
-        networkSyncInfoLabel.setText("Synchronize with network: " + (int) percent + "%");
-    }
 
-    private void doneDownload()
-    {
-        networkSyncInfoLabel.setText("Sync with network: Done");
-
-        FadeTransition fade = new FadeTransition(Duration.millis(700), footerContainer);
-        fade.setToValue(0.0);
-        fade.setCycleCount(1);
-        fade.setInterpolator(Interpolator.EASE_BOTH);
-        fade.play();
-        fade.setOnFinished(e -> footerContainer.getChildren().clear());
-    }
-
-    private class ProgressBarUpdater extends DownloadListener
-    {
-        @Override
-        protected void progress(double percent, int blocksSoFar, Date date)
-        {
-            super.progress(percent, blocksSoFar, date);
-            Platform.runLater(() -> MainController.this.setProgress(percent));
-        }
-
-        @Override
-        protected void doneDownload()
-        {
-            super.doneDownload();
-            Platform.runLater(MainController.this::doneDownload);
-        }
-
-    }
 }

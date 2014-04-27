@@ -6,6 +6,15 @@
     -fx-background-color: #f4f4f4;
 }
 
+#headline-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 18;
+}
+
+#info-label {
+    -fx-font-size: 14;
+}
+
 /* main nav */
 
 #nav-button {
@@ -28,8 +37,12 @@
     -fx-text-alignment: left;
 }
 
+#copy-icon {
+    -fx-cursor: hand;
+}
 
-#nav-currency-combobox {
+#copy-icon:hover {
+    -fx-text-fill: #0096c9;
 }
 
 /* table */
@@ -58,6 +71,13 @@
 
 #form-title {
     -fx-font-weight: bold;
+}
+
+#form-title {
+    -fx-font-weight: bold;
+}
+
+#form-entry-value {
 }
 
 /* tabpane */

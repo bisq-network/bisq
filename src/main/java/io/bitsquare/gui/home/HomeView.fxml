@@ -1,5 +1,5 @@
-<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
 <VBox fx:id="rootContainer" fx:controller="io.bitsquare.gui.home.HomeController" spacing="10"
       xmlns:fx="http://javafx.com/fxml">
     <Label text="Overview"/>

@@ -1,23 +1,71 @@
 package io.bitsquare.user;
 
-public class User
+import io.bitsquare.bank.BankAccount;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+public class User implements Serializable
 {
+    private static final long serialVersionUID = 7409078808248518638L;
+
     private String accountID;
     private String messageID;
-    private boolean isOnline;
-    private BankDetails bankDetails;
-    private String country;
+    private boolean online;
+    private BankAccount currentBankAccount = null;
 
-    public User(String accountID, String messageID, String country, BankDetails bankDetails)
-    {
-        this.accountID = accountID;
-        this.messageID = messageID;
-        this.country = country;
-        this.bankDetails = bankDetails;
-    }
+    private Map<String, BankAccount> bankAccounts = new HashMap<>();
+    private String country;
 
     public User()
     {
+    }
+
+    public void updateFromStorage(User savedUser)
+    {
+        if (savedUser != null)
+        {
+            accountID = savedUser.getAccountID();
+            messageID = savedUser.getMessageID();
+            online = savedUser.isOnline();
+            currentBankAccount = savedUser.getCurrentBankAccount();
+            bankAccounts = savedUser.getBankAccounts();
+            country = savedUser.getCountry();
+        }
+    }
+
+    public String getStringifiedBankAccounts()
+    {
+        String bankAccountUIDs = "";
+        for (Iterator<Map.Entry<String, BankAccount>> iterator = getBankAccounts().entrySet().iterator(); iterator.hasNext(); )
+        {
+            Map.Entry entry = iterator.next();
+            bankAccountUIDs += entry.getValue().toString();
+
+            if (iterator.hasNext())
+                bankAccountUIDs += ", ";
+        }
+        return bankAccountUIDs;
+    }
+
+    public void addBankAccount(BankAccount bankAccount)
+    {
+        if (currentBankAccount == null)
+            currentBankAccount = bankAccount;
+
+        bankAccounts.put(bankAccount.getUid(), bankAccount);
+    }
+
+    public Map<String, BankAccount> getBankAccounts()
+    {
+        return bankAccounts;
+    }
+
+    public BankAccount getBankAccountByUID(String uid)
+    {
+        return bankAccounts.get(uid);
     }
 
     public String getMessageID()
@@ -50,25 +98,15 @@ public class User
         return country;
     }
 
-
-    public BankDetails getBankDetails()
+    public BankAccount getCurrentBankAccount()
     {
-        return bankDetails;
+        return currentBankAccount;
     }
 
-    public void setBankDetails(BankDetails bankDetails)
+    public boolean isOnline()
     {
-        this.bankDetails = bankDetails;
+        return online;
     }
 
 
-    public boolean getOnline()
-    {
-        return isOnline;
-    }
-
-    public void setOnline(boolean online)
-    {
-        this.isOnline = online;
-    }
 }

@@ -1,15 +1,14 @@
 <?import io.bitsquare.gui.components.HSpacer?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.*?>
 <AnchorPane fx:controller="io.bitsquare.gui.funds.FundsController"
             xmlns:fx="http://javafx.com/fxml" fx:id="rootContainer">
 
     <Label text="Just one generic address by now for dev...." AnchorPane.topAnchor="10" AnchorPane.leftAnchor="10"/>
 
     <HBox spacing="5" AnchorPane.topAnchor="40" AnchorPane.leftAnchor="10">
-        <Label text="Funds address:" >
+        <Label text="Funds address:">
             <padding>
                 <Insets bottom="0.0" left="0.0" right="0.0" top="5.0"/>
             </padding>

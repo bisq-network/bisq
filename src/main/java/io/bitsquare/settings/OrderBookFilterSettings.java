@@ -1,7 +1,7 @@
 package io.bitsquare.settings;
 
 import com.google.inject.Inject;
-import io.bitsquare.storage.IStorage;
+import io.bitsquare.storage.Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,12 +11,12 @@ public class OrderBookFilterSettings
 {
     private static final Logger log = LoggerFactory.getLogger(OrderBookFilterSettings.class);
 
-    private IStorage storage;
+    private Storage storage;
     private Currency currency;
     private ArrayList<Currency> currencies;
 
     @Inject
-    public OrderBookFilterSettings(IStorage storage)
+    public OrderBookFilterSettings(Storage storage)
     {
         this.storage = storage;
 

@@ -3,15 +3,12 @@ package io.bitsquare.gui.trade.tradeprocess;
 import com.google.inject.Inject;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.Fees;
-import io.bitsquare.gui.IChildController;
-import io.bitsquare.gui.INavigationController;
+import io.bitsquare.gui.ChildController;
+import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.components.VSpacer;
 import io.bitsquare.gui.components.processbar.ProcessStepBar;
 import io.bitsquare.gui.components.processbar.ProcessStepItem;
-import io.bitsquare.gui.util.Colors;
-import io.bitsquare.gui.util.Converter;
-import io.bitsquare.gui.util.Formatter;
-import io.bitsquare.gui.util.Utils;
+import io.bitsquare.gui.util.*;
 import io.bitsquare.trade.*;
 import io.bitsquare.user.User;
 import javafx.animation.AnimationTimer;
@@ -30,14 +27,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class TradeProcessController implements Initializable, IChildController
+public class TradeProcessController implements Initializable, ChildController
 {
-    private TradingFacade tradingFacade;
+    private Trading trading;
     private Offer offer;
     private Trade trade;
     private Contract contract;
 
-    private INavigationController navigationController;
+    private NavigationController navigationController;
     private List<ProcessStepItem> processStepItems = new ArrayList();
     private double requestedAmount;
 
@@ -58,13 +55,13 @@ public class TradeProcessController implements Initializable, IChildController
     public AnchorPane rootContainer;
 
     @Inject
-    public TradeProcessController(TradingFacade tradingFacade)
+    public TradeProcessController(Trading trading)
     {
-        this.tradingFacade = tradingFacade;
+        this.trading = trading;
     }
 
     @Override
-    public void setNavigationController(INavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
         this.navigationController = navigationController;
     }
@@ -79,9 +76,9 @@ public class TradeProcessController implements Initializable, IChildController
         this.offer = offer;
         this.requestedAmount = requestedAmount;
 
-        trade = tradingFacade.createNewTrade(offer);
+        trade = trading.createNewTrade(offer);
         trade.setRequestedAmount(requestedAmount);
-        contract = tradingFacade.createNewContract(trade);
+        contract = trading.createNewContract(trade);
 
         processStepItems.add(new ProcessStepItem(takerIsSelling() ? "Sell BTC" : "Buy BTC", Colors.BLUE));
         processStepItems.add(new ProcessStepItem("Bank transfer", Colors.BLUE));
@@ -138,7 +135,7 @@ public class TradeProcessController implements Initializable, IChildController
     // Payment Process
     private void sendTakeOfferRequest()
     {
-        tradingFacade.sendTakeOfferRequest(trade);
+        trading.sendTakeOfferRequest(trade);
         feedbackLabel.setText("Request take offer confirmation from peer.");
         Utils.setTimeout(500, (AnimationTimer animationTimer) -> {
             onTakeOfferRequestConfirmed();
@@ -149,7 +146,7 @@ public class TradeProcessController implements Initializable, IChildController
 
     private void onTakeOfferRequestConfirmed()
     {
-        tradingFacade.payOfferFee(trade);
+        trading.payOfferFee(trade);
 
         feedbackLabel.setText("Request offer fee payment confirmation from peer.");
         Utils.setTimeout(500, (AnimationTimer animationTimer) -> {
@@ -161,7 +158,7 @@ public class TradeProcessController implements Initializable, IChildController
 
     private void onOfferFeePaymentConfirmed()
     {
-        tradingFacade.requestOffererDetailData();
+        trading.requestOffererDetailData();
         feedbackLabel.setText("Request detail data from peer.");
         Utils.setTimeout(500, (AnimationTimer animationTimer) -> {
             onUserDetailsReceived();
@@ -172,8 +169,8 @@ public class TradeProcessController implements Initializable, IChildController
 
     private void onUserDetailsReceived()
     {
-        tradingFacade.signContract(contract);
-        tradingFacade.payToDepositTx(trade);
+        trading.signContract(contract);
+        trading.payToDepositTx(trade);
 
         buildWaitBankTransfer();
     }
@@ -207,7 +204,7 @@ public class TradeProcessController implements Initializable, IChildController
     private void releaseBTC()
     {
         processStepBar.next();
-        tradingFacade.releaseBTC(trade);
+        trading.releaseBTC(trade);
 
         vBox.getChildren().remove(infoLabel);
 
@@ -220,8 +217,8 @@ public class TradeProcessController implements Initializable, IChildController
         summaryGridPane.setHgap(5);
         summaryGridPane.setPadding(new Insets(5, 5, 5, 5));
 
-        addLabel(summaryGridPane, "You have payed:", getTotalToPay(), ++row);
-        addLabel(summaryGridPane, "You have received:\n ", getTotalToReceive(), ++row);
+        FormBuilder.addLabel(summaryGridPane, "You have payed:", getTotalToPay(), ++row);
+        FormBuilder.addLabel(summaryGridPane, "You have received:\n ", getTotalToReceive(), ++row);
 
         TitledPane summaryTitlePane = new TitledPane("Trade summary:", summaryGridPane);
         summaryTitlePane.setCollapsible(false);
@@ -233,7 +230,7 @@ public class TradeProcessController implements Initializable, IChildController
         TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
 
-        navigationController.navigateToView(INavigationController.TRADE__ORDER_BOOK, "Orderbook");
+        navigationController.navigateToView(NavigationController.TRADE__ORDER_BOOK, "Orderbook");
     }
 
     private void buildStep1()
@@ -248,7 +245,7 @@ public class TradeProcessController implements Initializable, IChildController
         offerDetailsGridPane.setHgap(5);
         offerDetailsGridPane.setPadding(new Insets(5, 5, 5, 5));
 
-        amountTextField = addInputField(offerDetailsGridPane, "Amount (BTC):", Formatter.formatAmount(getAmount()), ++row);
+        amountTextField = FormBuilder.addInputField(offerDetailsGridPane, "Amount (BTC):", Formatter.formatAmount(getAmount()), ++row);
         amountTextField.textProperty().addListener(e -> {
             setTotal();
             setVolume();
@@ -261,14 +258,14 @@ public class TradeProcessController implements Initializable, IChildController
 
         offerDetailsGridPane.add(new Label("(" + offer.getAmount() + "BTC - " + offer.getMinAmount() + "BTC)"), 2, row);
 
-        addLabel(offerDetailsGridPane, "Price:", Formatter.formatPriceWithCurrencyPair(offer.getPrice(), offer.getCurrency()), ++row);
-        totalLabel = addLabel(offerDetailsGridPane, "Total:", "", ++row);
+        FormBuilder.addLabel(offerDetailsGridPane, "Price:", Formatter.formatPriceWithCurrencyPair(offer.getPrice(), offer.getCurrency()), ++row);
+        totalLabel = FormBuilder.addLabel(offerDetailsGridPane, "Total:", "", ++row);
         setTotal();
-        collateralLabel1 = addLabel(offerDetailsGridPane, "Collateral:", Formatter.formatCollateral(offer.getOfferConstraints().getCollateral(), getAmount()), ++row);
-        addLabel(offerDetailsGridPane, "Offer fee:", Formatter.formatSatoshis(Fees.OFFER_CREATION_FEE, true), ++row);
-        addVSpacer(offerDetailsGridPane, ++row);
-        totalToPayLabel = addLabel(offerDetailsGridPane, "You pay:", getTotalToPay(), ++row);
-        totalToReceiveLabel = addLabel(offerDetailsGridPane, "You receive:\n ", getTotalToReceive(), ++row);
+        collateralLabel1 = FormBuilder.addLabel(offerDetailsGridPane, "Collateral:", Formatter.formatCollateral(offer.getOfferConstraints().getCollateral(), getAmount()), ++row);
+        FormBuilder.addLabel(offerDetailsGridPane, "Offer fee:", Formatter.formatSatoshis(Fees.OFFER_CREATION_FEE, true), ++row);
+        FormBuilder.addVSpacer(offerDetailsGridPane, ++row);
+        totalToPayLabel = FormBuilder.addLabel(offerDetailsGridPane, "You pay:", getTotalToPay(), ++row);
+        totalToReceiveLabel = FormBuilder.addLabel(offerDetailsGridPane, "You receive:\n ", getTotalToReceive(), ++row);
 
         offerDetailsTitlePane = new TitledPane(takerIsSelling() ? "Sell Bitcoin" : "Buy Bitcoin", offerDetailsGridPane);
         offerDetailsTitlePane.setCollapsible(false);
@@ -282,41 +279,41 @@ public class TradeProcessController implements Initializable, IChildController
         contractGridPane.setHgap(5);
         contractGridPane.setPadding(new Insets(5, 5, 5, 5));
         row = 0;
-        addHeaderLabel(contractGridPane, "Offer details:", row);
-        addLabel(contractGridPane, "Offer ID:", offer.getUid().toString(), ++row);
-        addLabel(contractGridPane, "Offer type:", Formatter.formatDirection((offer.getDirection() == Direction.BUY ? Direction.SELL : Direction.BUY), false), ++row);
-        amountLabel = addLabel(contractGridPane, "Amount:", Formatter.formatAmount(getAmount()), ++row);
-        volumeLabel = addLabel(contractGridPane, "Volume:", "", ++row);
+        FormBuilder.addHeaderLabel(contractGridPane, "Offer details:", row);
+        FormBuilder.addLabel(contractGridPane, "Offer ID:", offer.getUid().toString(), ++row);
+        FormBuilder.addLabel(contractGridPane, "Offer type:", Formatter.formatDirection((offer.getDirection() == Direction.BUY ? Direction.SELL : Direction.BUY), false), ++row);
+        amountLabel = FormBuilder.addLabel(contractGridPane, "Amount:", Formatter.formatAmount(getAmount()), ++row);
+        volumeLabel = FormBuilder.addLabel(contractGridPane, "Volume:", "", ++row);
         setVolume();
-        addLabel(contractGridPane, "Price:", Formatter.formatPriceWithCurrencyPair(offer.getPrice(), offer.getCurrency()), ++row);
-        collateralLabel2 = addLabel(contractGridPane, "Collateral:", "", ++row);
+        FormBuilder.addLabel(contractGridPane, "Price:", Formatter.formatPriceWithCurrencyPair(offer.getPrice(), offer.getCurrency()), ++row);
+        collateralLabel2 = FormBuilder.addLabel(contractGridPane, "Collateral:", "", ++row);
         setCollateral();
-        addLabel(contractGridPane, "Language:", Formatter.formatList(offerConstraints.getLanguages()), ++row);
-        addLabel(contractGridPane, "Arbitrator:", offerConstraints.getArbitrator(), ++row);
-        // addLabel(contractGridPane, "Identity verification:", Formatter.formatList(offerConstraints.getIdentityVerifications()), ++row);
-        addLabel(contractGridPane, "Bank transfer reference ID:", "Purchase xyz 01.04.2014", ++row);
+        FormBuilder.addLabel(contractGridPane, "Language:", Formatter.formatList(offerConstraints.getLanguages()), ++row);
+        FormBuilder.addLabel(contractGridPane, "Arbitrator:", offerConstraints.getArbitrator(), ++row);
+        // FormBuilder.addLabel(contractGridPane, "Identity verification:", Formatter.formatList(offerConstraints.getIdentityVerifications()), ++row);
+        FormBuilder.addLabel(contractGridPane, "Bank transfer reference ID:", "Purchase xyz 01.04.2014", ++row);
 
-        addVSpacer(contractGridPane, ++row);
-        addHeaderLabel(contractGridPane, "Offerer data:", ++row);
-        addLabel(contractGridPane, "Account ID:", offerer.getAccountID(), ++row);
-        addLabel(contractGridPane, "Messaging ID:", offerer.getMessageID(), ++row);
-        addLabel(contractGridPane, "Country:", offerer.getCountry(), ++row);
-        offererPubKeyLabel = addLabel(contractGridPane, "Payment public key:", contract.getOffererPubKey(), ++row);
-        addLabel(contractGridPane, "Bank transfer type:", offerer.getBankDetails().getBankTransferType(), ++row);
-        offererAccountPrimaryID = addLabel(contractGridPane, "Bank account IBAN:", offerer.getBankDetails().getAccountPrimaryID(), ++row);
-        offererAccountSecondaryIDLabel = addLabel(contractGridPane, "Bank account BIC:", offerer.getBankDetails().getAccountSecondaryID(), ++row);
-        offererAccountHolderNameLabel = addLabel(contractGridPane, "Bank account holder:", offerer.getBankDetails().getAccountHolderName(), ++row);
+        FormBuilder.addVSpacer(contractGridPane, ++row);
+        FormBuilder.addHeaderLabel(contractGridPane, "Offerer data:", ++row);
+        FormBuilder.addLabel(contractGridPane, "Account ID:", offerer.getAccountID(), ++row);
+        FormBuilder.addLabel(contractGridPane, "Messaging ID:", offerer.getMessageID(), ++row);
+        FormBuilder.addLabel(contractGridPane, "Country:", offerer.getCountry(), ++row);
+        offererPubKeyLabel = FormBuilder.addLabel(contractGridPane, "Payment public key:", contract.getOffererPubKey(), ++row);
+        FormBuilder.addLabel(contractGridPane, "Bank transfer type:", offerer.getCurrentBankAccount().getBankAccountType().toString(), ++row);
+        offererAccountPrimaryID = FormBuilder.addLabel(contractGridPane, "Bank account IBAN:", offerer.getCurrentBankAccount().getAccountPrimaryID(), ++row);
+        offererAccountSecondaryIDLabel = FormBuilder.addLabel(contractGridPane, "Bank account BIC:", offerer.getCurrentBankAccount().getAccountSecondaryID(), ++row);
+        offererAccountHolderNameLabel = FormBuilder.addLabel(contractGridPane, "Bank account holder:", offerer.getCurrentBankAccount().getAccountHolderName(), ++row);
 
-        addVSpacer(contractGridPane, ++row);
-        addHeaderLabel(contractGridPane, "Offer taker data:", ++row);
-        addLabel(contractGridPane, "Account ID:", taker.getAccountID(), ++row);
-        addLabel(contractGridPane, "Messaging ID:", taker.getMessageID(), ++row);
-        addLabel(contractGridPane, "Country:", taker.getCountry(), ++row);
-        addLabel(contractGridPane, "Payment public key:", contract.getTakerPubKey(), ++row);
-        addLabel(contractGridPane, "Bank transfer type:", taker.getBankDetails().getBankTransferType(), ++row);
-        addLabel(contractGridPane, "Bank account IBAN:", taker.getBankDetails().getAccountPrimaryID(), ++row);
-        addLabel(contractGridPane, "Bank account BIC:", taker.getBankDetails().getAccountSecondaryID(), ++row);
-        addLabel(contractGridPane, "Bank account holder:", taker.getBankDetails().getAccountHolderName(), ++row);
+        FormBuilder.addVSpacer(contractGridPane, ++row);
+        FormBuilder.addHeaderLabel(contractGridPane, "Offer taker data:", ++row);
+        FormBuilder.addLabel(contractGridPane, "Account ID:", taker.getAccountID(), ++row);
+        FormBuilder.addLabel(contractGridPane, "Messaging ID:", taker.getMessageID(), ++row);
+        FormBuilder.addLabel(contractGridPane, "Country:", taker.getCountry(), ++row);
+        FormBuilder.addLabel(contractGridPane, "Payment public key:", contract.getTakerPubKey(), ++row);
+        FormBuilder.addLabel(contractGridPane, "Bank transfer type:", taker.getCurrentBankAccount().getBankAccountType().toString(), ++row);
+        FormBuilder.addLabel(contractGridPane, "Bank account IBAN:", taker.getCurrentBankAccount().getAccountPrimaryID(), ++row);
+        FormBuilder.addLabel(contractGridPane, "Bank account BIC:", taker.getCurrentBankAccount().getAccountSecondaryID(), ++row);
+        FormBuilder.addLabel(contractGridPane, "Bank account holder:", taker.getCurrentBankAccount().getAccountHolderName(), ++row);
 
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setContent(contractGridPane);
@@ -337,35 +334,6 @@ public class TradeProcessController implements Initializable, IChildController
         vBox.getChildren().addAll(processStepBar, new VSpacer(5), offerDetailsTitlePane, nextButton);
         rootContainer.getChildren().addAll(vBox, contractTitlePane);
     }
-
-    private Label addLabel(GridPane gridPane, String title, String value, int row)
-    {
-        gridPane.add(new Label(title), 0, row);
-        Label valueLabel = new Label(value);
-        gridPane.add(valueLabel, 1, row);
-        return valueLabel;
-    }
-
-    private void addHeaderLabel(GridPane gridPane, String title, int row)
-    {
-        Label headerLabel = new Label(title);
-        headerLabel.setId("form-header-text");
-        gridPane.add(headerLabel, 0, row);
-    }
-
-    private TextField addInputField(GridPane gridPane, String title, String value, int row)
-    {
-        gridPane.add(new Label(title), 0, row);
-        TextField textField = new TextField(value);
-        gridPane.add(textField, 1, row);
-        return textField;
-    }
-
-    private void addVSpacer(GridPane gridPane, int row)
-    {
-        gridPane.add(new VSpacer(10), 0, row);
-    }
-
 
     private void setTotal()
     {

@@ -34,22 +34,35 @@ public class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, B
 
         controller = getSkinnable();
 
-        int i = 0;
-        labelWithBorders = new ArrayList<>();
-        int size = controller.getProcessStepItems().size();
-        for (Iterator<ProcessStepItem> iterator = controller.getProcessStepItems().iterator(); iterator.hasNext(); )
+        applyData();
+    }
+
+    public void dataChanged()
+    {
+        applyData();
+    }
+
+    private void applyData()
+    {
+        if (controller.getProcessStepItems() != null)
         {
-            ProcessStepItem processStepItem = iterator.next();
-            LabelWithBorder labelWithBorder = new LabelWithBorder(processStepItem, i == 0, i == size - 1);
-            getChildren().add(labelWithBorder);
-            labelWithBorders.add(labelWithBorder);
-            if (i == 0)
-                currentLabelWithBorder = prevLabelWithBorder = labelWithBorder;
+            int i = 0;
+            labelWithBorders = new ArrayList<>();
+            int size = controller.getProcessStepItems().size();
+            for (Iterator<ProcessStepItem> iterator = controller.getProcessStepItems().iterator(); iterator.hasNext(); )
+            {
+                ProcessStepItem processStepItem = iterator.next();
+                LabelWithBorder labelWithBorder = new LabelWithBorder(processStepItem, i == 0, i == size - 1);
+                getChildren().add(labelWithBorder);
+                labelWithBorders.add(labelWithBorder);
+                if (i == 0)
+                    currentLabelWithBorder = prevLabelWithBorder = labelWithBorder;
 
-            i++;
+                i++;
+            }
+
+            currentLabelWithBorder.select();
         }
-
-        currentLabelWithBorder.select();
     }
 
     public void next()
@@ -88,6 +101,7 @@ public class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, B
             x += newWidth + distance;
         }
     }
+
 
     public static class LabelWithBorder extends Label
     {

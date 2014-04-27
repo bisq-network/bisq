@@ -1,8 +1,8 @@
 package io.bitsquare.gui.trade.offer;
 
 import com.google.inject.Inject;
-import io.bitsquare.gui.IChildController;
-import io.bitsquare.gui.INavigationController;
+import io.bitsquare.gui.ChildController;
+import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.util.Converter;
 import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.settings.OrderBookFilterSettings;
@@ -10,8 +10,8 @@ import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.OfferConstraints;
-import io.bitsquare.trade.TradingFacade;
-import io.bitsquare.trade.orderbook.MockOrderBook;
+import io.bitsquare.trade.Trading;
+import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
 import javafx.beans.value.ChangeListener;
@@ -34,12 +34,12 @@ import java.util.Currency;
 import java.util.ResourceBundle;
 import java.util.UUID;
 
-public class CreateOfferController implements Initializable, IChildController
+public class CreateOfferController implements Initializable, ChildController
 {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferController.class);
 
-    private INavigationController navigationController;
-    private TradingFacade tradingFacade;
+    private NavigationController navigationController;
+    private Trading trading;
     private OrderBookFilterSettings orderBookFilterSettings;
     private Settings settings;
     private User user;
@@ -68,9 +68,9 @@ public class CreateOfferController implements Initializable, IChildController
     public Button placeOfferButton;
 
     @Inject
-    public CreateOfferController(TradingFacade tradingFacade, OrderBookFilterSettings orderBookFilterSettings, Settings settings, User user)
+    public CreateOfferController(Trading trading, OrderBookFilterSettings orderBookFilterSettings, Settings settings, User user)
     {
-        this.tradingFacade = tradingFacade;
+        this.trading = trading;
         this.orderBookFilterSettings = orderBookFilterSettings;
         this.settings = settings;
         this.user = user;
@@ -101,7 +101,7 @@ public class CreateOfferController implements Initializable, IChildController
 
         placeOfferButton.setOnAction(e -> {
             // TODO not impl yet. use mocks
-            OfferConstraints offerConstraints = new MockOrderBook(settings).getRandomOfferConstraints();
+            OfferConstraints offerConstraints = new OrderBook(settings).getRandomOfferConstraints();
             Offer offer = new Offer(UUID.randomUUID(),
                     direction,
                     Converter.convertToDouble(price.getText()),
@@ -110,17 +110,17 @@ public class CreateOfferController implements Initializable, IChildController
                     settings.getCurrency(),
                     user,
                     offerConstraints);
-            tradingFacade.placeNewOffer(offer);
+            trading.placeNewOffer(offer);
 
             TabPane tabPane = ((TabPane) (holderPane.getParent().getParent()));
             tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
 
-            navigationController.navigateToView(INavigationController.TRADE__ORDER_BOOK, "Orderbook");
+            navigationController.navigateToView(NavigationController.TRADE__ORDER_BOOK, "Orderbook");
         });
     }
 
     @Override
-    public void setNavigationController(INavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
         this.navigationController = navigationController;
     }

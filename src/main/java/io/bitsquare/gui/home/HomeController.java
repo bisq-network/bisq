@@ -1,7 +1,7 @@
 package io.bitsquare.gui.home;
 
-import io.bitsquare.gui.IChildController;
-import io.bitsquare.gui.INavigationController;
+import io.bitsquare.gui.ChildController;
+import io.bitsquare.gui.NavigationController;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.Pane;
@@ -9,9 +9,9 @@ import javafx.scene.layout.Pane;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class HomeController implements Initializable, IChildController
+public class HomeController implements Initializable, ChildController
 {
-    private INavigationController navigationController;
+    private NavigationController navigationController;
 
     @FXML
     public Pane rootContainer;
@@ -23,7 +23,7 @@ public class HomeController implements Initializable, IChildController
     }
 
     @Override
-    public void setNavigationController(INavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
         this.navigationController = navigationController;
     }
