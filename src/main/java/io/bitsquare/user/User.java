@@ -41,8 +41,8 @@ public class User implements Serializable
         String bankAccountUIDs = "";
         for (Iterator<Map.Entry<String, BankAccount>> iterator = getBankAccounts().entrySet().iterator(); iterator.hasNext(); )
         {
-            Map.Entry entry = iterator.next();
-            bankAccountUIDs += entry.getValue().toString();
+            Map.Entry<String, BankAccount> entry = iterator.next();
+            bankAccountUIDs += entry.getValue().getStringifiedBankAccount();
 
             if (iterator.hasNext())
                 bankAccountUIDs += ", ";

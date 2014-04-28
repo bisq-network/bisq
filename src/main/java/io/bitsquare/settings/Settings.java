@@ -5,9 +5,8 @@ import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 
-import java.util.ArrayList;
-import java.util.Currency;
-import java.util.Locale;
+import java.util.*;
+import java.util.function.Predicate;
 
 public class Settings
 {
@@ -98,16 +97,37 @@ public class Settings
         bankTransferTypes.add("AT");
         return bankTransferTypes;
     }
-    /*
-    public ArrayList<String> getAllCountries()
+
+    public ArrayList<Locale> getAllLocales(String sortField)
     {
-        ArrayList<String> result = new ArrayList<>();
-        for (Locale locale : Locale.getAvailableLocales())
+        ArrayList<Locale> list = new ArrayList<Locale>(Arrays.asList(Locale.getAvailableLocales()));
+
+        list.removeIf(new Predicate<Locale>()
         {
-            result.add(locale.getDisplayCountry());
-        }
-        return result;
-    }   */
+            @Override
+            public boolean test(Locale locale)
+            {
+                return locale == null || locale.getCountry().equals("") || locale.getLanguage().equals("");
+            }
+        });
+
+        list.sort(new Comparator()
+        {
+            @Override
+            public int compare(Object o1, Object o2)
+            {
+                if (sortField.equals("displayCountry"))
+                    return (((Locale) o1).getDisplayCountry()).compareTo(((Locale) o2).getDisplayCountry());
+                else
+                    return 1;
+            }
+        });
+        Locale defaultLocale = Locale.getDefault();
+        list.remove(defaultLocale);
+        list.add(0, defaultLocale);
+
+        return list;
+    }
 
     /*public ArrayList<String> getAllLanguages()
     {

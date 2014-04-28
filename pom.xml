@@ -7,7 +7,6 @@
     <groupId>io.bitsquare</groupId>
     <artifactId>bitsquare</artifactId>
     <version>0.01-SNAPSHOT</version>
-
     <name>BitSquare</name>
     <description>A P2P Fiat-Bitcoin Exchange</description>
     <url>https://www.bitsquare.io</url>
@@ -21,13 +20,19 @@
 
     <licenses>
         <license>
-            <name>Apache 2</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <name>GNU AFFERO GENERAL PUBLIC LICENSE</name>
+            <url>http://www.gnu.org/licenses/agpl-3.0.html</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
 
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/bitsquare/bitsquare/issues</url>
+    </issueManagement>
+
     <scm>
+        <!-- Public read-only source -->
         <url>https://github.com/bitsquare/bitsquare</url>
     </scm>
 
@@ -56,13 +61,21 @@
         </repository>
     </repositories>
 
+    <!-- TODO Maven build not working yet... -->
     <build>
+        <finalName>bitsquare</finalName>
         <resources>
             <resource>
                 <directory>src/main/java</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.fxml</include>
+                    <include>**/*.css</include>
+                </includes>
             </resource>
             <resource>
                 <directory>src/main/resources</directory>
+                <filtering>false</filtering>
             </resource>
         </resources>
         <plugins>
@@ -78,6 +91,7 @@
         </plugins>
     </build>
 
+
     <dependencies>
 
         <dependency>
@@ -92,17 +106,24 @@
             <version>4.11</version>
             <scope>test</scope>
         </dependency>
-
+                 <!--
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
-            <version>1.7.6</version>
+            <version>1.7.7</version>
         </dependency>
+         -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.7</version>
+        </dependency>
+
 
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.0.9</version>
+            <version>1.1.2</version>
             <scope>compile</scope>
         </dependency>
 
@@ -150,6 +171,17 @@
         </dependency>
 
     </dependencies>
+
+    <reporting>
+        <plugins>
+            <!-- Generate cross-referenced HTML source code listing -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jxr-plugin</artifactId>
+                <version>2.1</version>
+            </plugin>
+        </plugins>
+    </reporting>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

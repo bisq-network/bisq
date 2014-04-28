@@ -1,16 +1,20 @@
 package io.bitsquare.bank;
 
 import java.io.Serializable;
+import java.util.Locale;
 
 public class BankAccount implements Serializable
 {
 
     private static final long serialVersionUID = 1792577576443221268L;
+    private static final long VERSION = 1;
 
-    public BankAccountType bankAccountType;
-    public String accountPrimaryID;
-    public String accountSecondaryID;
-    public String accountHolderName;
+    private BankAccountType bankAccountType;
+    private String accountPrimaryID;
+    private String accountSecondaryID;
+    private String accountHolderName;
+    private Locale locale;
+
     private String uid;
 
     // TODO just for mock yet
@@ -19,14 +23,15 @@ public class BankAccount implements Serializable
         this.bankAccountType = bankAccountType;
     }
 
-    public BankAccount(BankAccountType bankAccountType, String accountPrimaryID, String accountSecondaryID, String accountHolderName)
+    public BankAccount(BankAccountType bankAccountType, String accountPrimaryID, String accountSecondaryID, String accountHolderName, Locale locale)
     {
         this.bankAccountType = bankAccountType;
         this.accountPrimaryID = accountPrimaryID;
         this.accountSecondaryID = accountSecondaryID;
         this.accountHolderName = accountHolderName;
+        this.locale = locale;
 
-        uid = bankAccountType + "_" + accountPrimaryID + "_" + accountSecondaryID + "_" + accountHolderName;
+        uid = bankAccountType + "_" + accountPrimaryID + "_" + accountSecondaryID + "_" + accountHolderName + "_" + locale.getISO3Country();
     }
 
     public String getAccountPrimaryID()
@@ -54,14 +59,16 @@ public class BankAccount implements Serializable
         return uid;
     }
 
-    @Override
-    public String toString()
+    // Changes of that structure must be reflected in VERSION updates
+    public String getStringifiedBankAccount()
     {
-        return "BankAccount{" +
-                "bankAccountType=" + bankAccountType +
-                ", accountPrimaryID='" + accountPrimaryID + '\'' +
-                ", accountSecondaryID='" + accountSecondaryID + '\'' +
-                ", accountHolderName='" + accountHolderName + '\'' +
+        return "{" +
+                "type=" + bankAccountType +
+                ", primaryID='" + accountPrimaryID + '\'' +
+                ", secondaryID='" + accountSecondaryID + '\'' +
+                ", holderName='" + accountHolderName + '\'' +
+                ", country='" + locale.getISO3Country() + '\'' +
+                ", v='" + VERSION + '\'' +
                 '}';
     }
 }

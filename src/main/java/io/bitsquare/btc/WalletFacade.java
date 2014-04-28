@@ -87,8 +87,10 @@ public class WalletFacade implements WalletEventListener
         log.info(walletAppKit.wallet().toString());
     }
 
-    public void terminateWallet()
+    public void shutDown()
     {
+        if (accountRegistrationWallet != null)
+            accountRegistrationWallet.shutDown();
         walletAppKit.stopAsync();
         walletAppKit.awaitTerminated();
     }
@@ -176,7 +178,7 @@ public class WalletFacade implements WalletEventListener
 
     public int getRegistrationConfirmationDepthInBlocks()
     {
-        return getAccountRegistrationWallet().getConfirmationDepthInBlocks();
+        return WalletUtil.getConfirmationDepthInBlocks(getAccountRegistrationWallet());
     }
 
     // WalletEventListener
@@ -193,7 +195,7 @@ public class WalletFacade implements WalletEventListener
     public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
     {
         for (WalletListener walletListener : walletListeners)
-            walletListener.onConfidenceChanged(tx.getConfidence().numBroadcastPeers(), tx.getConfidence().getDepthInBlocks());
+            walletListener.onConfidenceChanged(tx.getConfidence().numBroadcastPeers(), WalletUtil.getConfirmationDepthInBlocks(walletAppKit.wallet()));
 
         log.info("onTransactionConfidenceChanged " + tx.getConfidence().toString());
     }
@@ -271,4 +273,6 @@ public class WalletFacade implements WalletEventListener
 
         void onCoinsReceived(BigInteger newBalance);
     }
+
+
 }

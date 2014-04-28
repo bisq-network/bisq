@@ -18,8 +18,6 @@ import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.User;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -29,6 +27,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,11 +46,11 @@ public class SetupController implements Initializable, ChildController, WalletFa
     private Storage storage;
 
     private List<ProcessStepItem> processStepItems = new ArrayList();
-    private int depthInBlocks = 0;
 
     private NavigationController navigationController;
     private ImageView confirmIconImageView;
-    private TextField balanceLabel, confirmationsLabel;
+    private TextField balanceLabel, confirmationsLabel, accountHolderName, accountPrimaryID, accountSecondaryID;
+    private ComboBox countryComboBox, bankTransferTypeComboBox;
 
     @FXML
     private AnchorPane rootContainer;
@@ -102,8 +101,6 @@ public class SetupController implements Initializable, ChildController, WalletFa
     @Override
     public void onConfidenceChanged(int numBroadcastPeers, int depthInBlocks)
     {
-        this.depthInBlocks = depthInBlocks;
-
         updateCreateAccountButton();
         confirmIconImageView.setImage(getConfirmIconImage(numBroadcastPeers, depthInBlocks));
         confirmationsLabel.setText(getConfirmationsText(numBroadcastPeers, depthInBlocks));
@@ -143,6 +140,12 @@ public class SetupController implements Initializable, ChildController, WalletFa
             return Icons.getIconImage(Icons.getIconIDForConfirmations(depthInBlocks));
         else
             return Icons.getIconImage(Icons.getIconIDForPeersSeenTx(numBroadcastPeers));
+    }
+
+    private void updateCreateAccountButton()
+    {
+        boolean funded = walletFacade.getAccountRegistrationBalance().compareTo(BigInteger.ZERO) > 0;
+        nextButton.setDisable(!funded || walletFacade.getRegistrationConfirmationDepthInBlocks() == 0);
     }
 
 
@@ -202,9 +205,7 @@ public class SetupController implements Initializable, ChildController, WalletFa
             buildStep1();
         });
 
-        skipButton.setOnAction(e -> {
-            close();
-        });
+        skipButton.setOnAction(e -> close());
     }
 
     private void buildStep1()
@@ -215,45 +216,81 @@ public class SetupController implements Initializable, ChildController, WalletFa
 
         formGridPane.getChildren().clear();
         int gridRow = -1;
-        ComboBox bankTransferTypes = FormBuilder.addComboBox(formGridPane, "Bank account type:", settings.getAllBankAccountTypes(), ++gridRow);
-        bankTransferTypes.setPromptText("Select");
-        //TODO dev
-        bankTransferTypes.getSelectionModel().select(1);
-        TextField accountHolderName = FormBuilder.addInputField(formGridPane, "Bank account holder name:", "Bob Brown", ++gridRow);
-        TextField accountPrimaryID = FormBuilder.addInputField(formGridPane, "Bank account primary ID", "dummy IBAN", ++gridRow);
-        TextField accountSecondaryID = FormBuilder.addInputField(formGridPane, "Bank account secondary ID:", "dummy BIC", ++gridRow);
+        bankTransferTypeComboBox = FormBuilder.addComboBox(formGridPane, "Bank account type:", settings.getAllBankAccountTypes(), ++gridRow);
+        bankTransferTypeComboBox.setPromptText("Select bank account type");
+        accountHolderName = FormBuilder.addInputField(formGridPane, "Bank account holder name:", "", ++gridRow);
+        accountPrimaryID = FormBuilder.addInputField(formGridPane, "Bank account primary ID", "", ++gridRow);
+        accountSecondaryID = FormBuilder.addInputField(formGridPane, "Bank account secondary ID:", "", ++gridRow);
+
+        countryComboBox = FormBuilder.addComboBox(formGridPane, "Country:", settings.getAllLocales("displayCountry"), ++gridRow);
+        countryComboBox.setPromptText("Select country");
+        countryComboBox.setConverter(new StringConverter()
+        {
+            @Override
+            public String toString(Object o)
+            {
+                return ((Locale) o).getDisplayCountry();
+            }
+
+            @Override
+            public Object fromString(String s)
+            {
+                return s;
+            }
+        });
+
+
         Button addButton = new Button("Add other Bank account");
         formGridPane.add(addButton, 1, ++gridRow);
 
         nextButton.setText("Create account");
-        nextButton.setDisable(true);
+        checkCreateAccountButtonState();
         skipButton.setText("Register later");
 
         // handlers
-        bankTransferTypes.valueProperty().addListener(new ChangeListener<Object>()
-        {
-            @Override
-            public void changed(ObservableValue ov, Object oldValue, Object newValue)
-            {
-                if (newValue != null && newValue instanceof BankAccountType)
-                {
-                    BankAccountType bankAccountType = (BankAccountType) newValue;
-                    accountPrimaryID.setText("");
-                    accountPrimaryID.setPromptText(bankAccountType.getPrimaryIDName());
-                    accountSecondaryID.setText("");
-                    accountSecondaryID.setPromptText(bankAccountType.getSecondaryIDName());
+        accountHolderName.focusedProperty().addListener((ov, oldValue, newValue) -> checkCreateAccountButtonState());
+        accountPrimaryID.focusedProperty().addListener((ov, oldValue, newValue) -> checkCreateAccountButtonState());
+        accountSecondaryID.focusedProperty().addListener((ov, oldValue, newValue) -> checkCreateAccountButtonState());
 
-                    nextButton.setDisable(false);
+        bankTransferTypeComboBox.valueProperty().addListener((ov, oldValue, newValue) -> {
+            if (newValue != null && newValue instanceof BankAccountType)
+            {
+                BankAccountType bankAccountType = (BankAccountType) newValue;
+                accountPrimaryID.setText("");
+                accountPrimaryID.setPromptText(bankAccountType.getPrimaryIDName());
+                accountSecondaryID.setText("");
+                accountSecondaryID.setPromptText(bankAccountType.getSecondaryIDName());
+
+                checkCreateAccountButtonState();
+            }
+        });
+
+        countryComboBox.valueProperty().addListener((ov, oldValue, newValue) -> {
+            if (newValue != null && newValue instanceof BankAccountType)
+            {
+                if (newValue != null)
+                {
+                    checkCreateAccountButtonState();
                 }
             }
         });
 
         addButton.setOnAction(e -> {
-            if (bankTransferTypes.getSelectionModel() != null && verifyBankAccountData(bankTransferTypes.getSelectionModel().getSelectedItem(), accountPrimaryID.getText(), accountSecondaryID.getText(), accountHolderName.getText()))
+            if (bankTransferTypeComboBox.getSelectionModel() != null
+                    && verifyBankAccountData(bankTransferTypeComboBox.getSelectionModel().getSelectedItem(),
+                    accountPrimaryID.getText(),
+                    accountSecondaryID.getText(),
+                    accountHolderName.getText()))
             {
-                user.addBankAccount(new BankAccount((BankAccountType) bankTransferTypes.getSelectionModel().getSelectedItem(), accountPrimaryID.getText(), accountSecondaryID.getText(), accountHolderName.getText()));
+                user.addBankAccount(new BankAccount(
+                        (BankAccountType) bankTransferTypeComboBox.getSelectionModel().getSelectedItem(),
+                        accountPrimaryID.getText(),
+                        accountSecondaryID.getText(),
+                        accountHolderName.getText(),
+                        (Locale) countryComboBox.getSelectionModel().getSelectedItem())
+                );
 
-                bankTransferTypes.getSelectionModel().clearSelection();
+                bankTransferTypeComboBox.getSelectionModel().clearSelection();
                 accountPrimaryID.setText("");
                 accountPrimaryID.setPromptText("");
                 accountSecondaryID.setText("");
@@ -262,8 +299,21 @@ public class SetupController implements Initializable, ChildController, WalletFa
         });
 
         nextButton.setOnAction(e -> {
-            if (bankTransferTypes.getSelectionModel() != null && verifyBankAccountData(bankTransferTypes.getSelectionModel().getSelectedItem(), accountPrimaryID.getText(), accountSecondaryID.getText(), accountHolderName.getText()))
-                user.addBankAccount(new BankAccount((BankAccountType) bankTransferTypes.getSelectionModel().getSelectedItem(), accountPrimaryID.getText(), accountSecondaryID.getText(), accountHolderName.getText()));
+            boolean inputValid = verifyBankAccountData(bankTransferTypeComboBox.getSelectionModel().getSelectedItem(),
+                    accountPrimaryID.getText(),
+                    accountSecondaryID.getText(),
+                    accountHolderName.getText());
+
+
+            if (bankTransferTypeComboBox.getSelectionModel() != null && countryComboBox.getSelectionModel() != null && inputValid)
+            {
+                BankAccount bankAccount = new BankAccount((BankAccountType) bankTransferTypeComboBox.getSelectionModel().getSelectedItem(),
+                        accountPrimaryID.getText(),
+                        accountSecondaryID.getText(),
+                        accountHolderName.getText(),
+                        (Locale) countryComboBox.getSelectionModel().getSelectedItem());
+                user.addBankAccount(bankAccount);
+            }
 
             if (user.getBankAccounts().size() > 0)
             {
@@ -280,7 +330,6 @@ public class SetupController implements Initializable, ChildController, WalletFa
                 } catch (InsufficientMoneyException e1)
                 {
                     log.warn(e1.toString());
-                    //e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                 }
             }
             else
@@ -290,9 +339,19 @@ public class SetupController implements Initializable, ChildController, WalletFa
             }
         });
 
-        skipButton.setOnAction(e -> {
-            close();
-        });
+        skipButton.setOnAction(e -> close());
+    }
+
+    private void checkCreateAccountButtonState()
+    {
+        boolean enabled = accountHolderName.getText().length() > 0
+                && accountPrimaryID.getText().length() > 0
+                && accountSecondaryID.getText().length() > 0
+                && bankTransferTypeComboBox.getSelectionModel() != null
+                && bankTransferTypeComboBox.getSelectionModel().getSelectedItem() != null
+                && countryComboBox.getSelectionModel() != null
+                && countryComboBox.getSelectionModel().getSelectedItem() != null;
+        nextButton.setDisable(!enabled);
     }
 
     private void buildStep2()
@@ -322,9 +381,7 @@ public class SetupController implements Initializable, ChildController, WalletFa
         skipButton.setOpacity(0);
 
         // handlers
-        nextButton.setOnAction(e -> {
-            close();
-        });
+        nextButton.setOnAction(e -> close());
     }
 
     // util
@@ -335,12 +392,6 @@ public class SetupController implements Initializable, ChildController, WalletFa
         FormBuilder.addInputField(formGridPane, "Bank account primary ID", bankAccount.getAccountPrimaryID(), ++row).setMouseTransparent(true);
         FormBuilder.addInputField(formGridPane, "Bank account secondary ID:", bankAccount.getAccountSecondaryID(), ++row).setMouseTransparent(true);
         return row;
-    }
-
-    private void updateCreateAccountButton()
-    {
-        boolean funded = walletFacade.getAccountRegistrationBalance().compareTo(BigInteger.ZERO) > 0;
-        nextButton.setDisable(!funded || depthInBlocks == 0);
     }
 }
 

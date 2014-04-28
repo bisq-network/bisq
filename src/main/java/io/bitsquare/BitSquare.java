@@ -58,7 +58,7 @@ public class BitSquare extends Application
     @Override
     public void stop() throws Exception
     {
-        walletFacade.terminateWallet();
+        walletFacade.shutDown();
 
         super.stop();
     }

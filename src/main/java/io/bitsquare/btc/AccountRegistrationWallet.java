@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
@@ -25,8 +24,11 @@ import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
 public class AccountRegistrationWallet extends Wallet implements WalletEventListener
 {
     private static final Logger log = LoggerFactory.getLogger(AccountRegistrationWallet.class);
+    private final File walletFile;
 
     private NetworkParameters networkParameters;
+    private BlockChain chain;
+    private PeerGroup peerGroup;
     private List<WalletFacade.WalletListener> walletListeners = new ArrayList<>();
 
     AccountRegistrationWallet(NetworkParameters networkParameters, BlockChain chain, PeerGroup peerGroup)
@@ -34,8 +36,10 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
         super(networkParameters);
 
         this.networkParameters = networkParameters;
+        this.chain = chain;
+        this.peerGroup = peerGroup;
 
-        File walletFile = new File(".", "bitsquare_account_reg" + ".wallet");
+        walletFile = new File(".", "bitsquare_account_reg" + ".wallet");
         if (walletFile.exists())
         {
             try
@@ -60,7 +64,25 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
 
         chain.addWallet(this);
         peerGroup.addWallet(this);
+        try
+        {
+            saveToFile(walletFile);
+        } catch (IOException e)
+        {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
         autosaveToFile(walletFile, 1, TimeUnit.SECONDS, null);
+    }
+
+    void shutDown()
+    {
+        try
+        {
+            saveToFile(walletFile);
+        } catch (IOException e)
+        {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
     }
 
     Address getAddress()
@@ -148,7 +170,7 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
     public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
     {
         for (WalletFacade.WalletListener walletListener : walletListeners)
-            walletListener.onConfidenceChanged(tx.getConfidence().numBroadcastPeers(), tx.getConfidence().getDepthInBlocks());
+            walletListener.onConfidenceChanged(tx.getConfidence().numBroadcastPeers(), WalletUtil.getConfirmationDepthInBlocks(this));
 
         log.info("onTransactionConfidenceChanged " + tx.getConfidence().toString());
     }
@@ -185,24 +207,8 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
 
     int getConfirmationNumBroadcastPeers()
     {
-        Transaction transaction = getTransaction();
+        Transaction transaction = WalletUtil.getTransaction(this);
         return (transaction == null || transaction.getConfidence() == null) ? 0 : transaction.getConfidence().numBroadcastPeers();
     }
 
-    int getConfirmationDepthInBlocks()
-    {
-        Transaction transaction = getTransaction();
-        return (transaction == null || transaction.getConfidence() == null) ? 0 : transaction.getConfidence().getDepthInBlocks();
-    }
-
-    //TODO only 1 tx supported yet...
-    private Transaction getTransaction()
-    {
-        Set<Transaction> transactions = getTransactions(true);
-        if (transactions != null && transactions.size() == 1)
-        {
-            return transactions.iterator().next();
-        }
-        return null;
-    }
 }

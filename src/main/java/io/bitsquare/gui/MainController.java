@@ -46,18 +46,18 @@ public class MainController implements Initializable, NavigationController, Wall
     private ToggleGroup toggleGroup;
     private ToggleButton prevToggleButton;
     private Image prevToggleButtonIcon;
-    // public ProgressBar networkSyncProgressBar;
-    //public Label networkSyncInfoLabel;
     private Pane setupView;
     private SetupController setupController;
+    private NetworkSyncPane networkSyncPane;
 
     @FXML
     public Pane contentPane;
+    @FXML
     public HBox leftNavPane, rightNavPane;
+    @FXML
     public StackPane rootContainer;
+    @FXML
     public AnchorPane anchorPane;
-    private NetworkSyncPane networkSyncPane;
-
 
     @Inject
     public MainController(Settings settings, User user, OrderBookFilter orderBookFilter, WalletFacade walletFacade)
@@ -74,24 +74,20 @@ public class MainController implements Initializable, NavigationController, Wall
         networkSyncPane = new NetworkSyncPane();
         networkSyncPane.setSpacing(10);
         networkSyncPane.setPrefHeight(20);
-        AnchorPane.setBottomAnchor(networkSyncPane, 0.0);
-        AnchorPane.setLeftAnchor(networkSyncPane, 0.0);
 
         walletFacade.addDownloadListener(this);
         walletFacade.initWallet();
-
         buildNavigation();
-        if (user.getAccountID() != null)
-        {
-            anchorPane.getChildren().add(networkSyncPane);
-        }
-        else
+        if (user.getAccountID() == null)
         {
             buildSetupView();
             anchorPane.setOpacity(0);
             setupController.setNetworkSyncPane(networkSyncPane);
             rootContainer.getChildren().add(setupView);
         }
+
+        AnchorPane.setBottomAnchor(networkSyncPane, 0.0);
+        AnchorPane.setLeftAnchor(networkSyncPane, 0.0);
     }
 
 
