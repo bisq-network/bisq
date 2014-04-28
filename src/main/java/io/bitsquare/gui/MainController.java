@@ -1,7 +1,6 @@
 package io.bitsquare.gui;
 
 import com.google.inject.Inject;
-import io.bitsquare.btc.DownloadListener;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.components.NetworkSyncPane;
@@ -35,7 +34,7 @@ import java.util.Currency;
 import java.util.Date;
 import java.util.ResourceBundle;
 
-public class MainController implements Initializable, NavigationController, DownloadListener
+public class MainController implements Initializable, NavigationController, WalletFacade.DownloadListener
 {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
 

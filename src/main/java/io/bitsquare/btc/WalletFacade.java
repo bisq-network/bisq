@@ -4,6 +4,7 @@ import com.google.bitcoin.core.*;
 import com.google.bitcoin.kits.WalletAppKit;
 import com.google.bitcoin.params.MainNetParams;
 import com.google.bitcoin.params.RegTestParams;
+import com.google.bitcoin.script.Script;
 import com.google.bitcoin.utils.Threading;
 import com.google.inject.Inject;
 import io.bitsquare.crypto.CryptoFacade;
@@ -22,7 +23,7 @@ import java.util.UUID;
  * Code from BitcoinJ must not be used outside that facade.
  * That way a change of the library will only affect that class.
  */
-public class WalletFacade
+public class WalletFacade implements WalletEventListener
 {
     public static final String MAIN_NET = "MAIN_NET";
     public static final String TEST_NET = "TEST_NET";
@@ -38,6 +39,7 @@ public class WalletFacade
     private AccountRegistrationWallet accountRegistrationWallet = null;
 
     private List<DownloadListener> downloadListeners = new ArrayList<>();
+    private List<WalletListener> walletListeners = new ArrayList<>();
 
     @Inject
     public WalletFacade(NetworkParameters networkParameters, WalletAppKit walletAppKit, CryptoFacade cryptoFacade, BlockChainFacade blockChainFacade)
@@ -80,6 +82,8 @@ public class WalletFacade
         walletAppKit.wallet().allowSpendingUnconfirmedTransactions();
         walletAppKit.peerGroup().setMaxConnections(11);
 
+        walletAppKit.wallet().addEventListener(this);
+
         log.info(walletAppKit.wallet().toString());
     }
 
@@ -89,15 +93,36 @@ public class WalletFacade
         walletAppKit.awaitTerminated();
     }
 
-    public void addDownloadListener(DownloadListener downloadListener)
+    public void addDownloadListener(DownloadListener listener)
     {
-        downloadListeners.add(downloadListener);
+        downloadListeners.add(listener);
     }
 
-    public void removeDownloadListener(DownloadListener downloadListener)
+    public void removeDownloadListener(DownloadListener listener)
     {
-        downloadListeners.remove(downloadListener);
+        downloadListeners.remove(listener);
     }
+
+    public void addWalletListener(WalletListener listener)
+    {
+        walletListeners.add(listener);
+    }
+
+    public void removeWalletListener(WalletListener listener)
+    {
+        walletListeners.remove(listener);
+    }
+
+    public void addRegistrationWalletListener(WalletListener listener)
+    {
+        getAccountRegistrationWallet().addWalletListener(listener);
+    }
+
+    public void removeRegistrationWalletListener(WalletListener listener)
+    {
+        getAccountRegistrationWallet().removeWalletListener(listener);
+    }
+
 
     //MOCK
     public KeyPair createNewAddress()
@@ -132,16 +157,6 @@ public class WalletFacade
         return getAccountRegistrationWallet().getBalance(Wallet.BalanceType.ESTIMATED);
     }
 
-    public int getAccountRegistrationConfirmations()
-    {
-        return getAccountRegistrationWallet().getConfirmations();
-    }
-
-    public int getAccountRegistrationNumberOfPeersSeenTx()
-    {
-        return getAccountRegistrationWallet().getNumberOfPeersSeenTx();
-    }
-
     public void sendRegistrationTx(String stringifiedBankAccounts) throws InsufficientMoneyException
     {
         getAccountRegistrationWallet().saveToBlockchain(cryptoFacade.getEmbeddedAccountRegistrationData(getAccountRegistrationWallet().getKey(), stringifiedBankAccounts));
@@ -153,6 +168,66 @@ public class WalletFacade
                 && cryptoFacade.verifyHash(hashAsHexStringToVerify, bankAccountIDs, signatureBankAccountIDs)
                 && blockChainFacade.verifyAddressInBlockChain(hashAsHexStringToVerify, address);
     }
+
+    public int getRegistrationConfirmationNumBroadcastPeers()
+    {
+        return getAccountRegistrationWallet().getConfirmationNumBroadcastPeers();
+    }
+
+    public int getRegistrationConfirmationDepthInBlocks()
+    {
+        return getAccountRegistrationWallet().getConfirmationDepthInBlocks();
+    }
+
+    // WalletEventListener
+    @Override
+    public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+    {
+        for (WalletListener walletListener : walletListeners)
+            walletListener.onCoinsReceived(newBalance);
+
+        log.info("onCoinsReceived");
+    }
+
+    @Override
+    public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
+    {
+        for (WalletListener walletListener : walletListeners)
+            walletListener.onConfidenceChanged(tx.getConfidence().numBroadcastPeers(), tx.getConfidence().getDepthInBlocks());
+
+        log.info("onTransactionConfidenceChanged " + tx.getConfidence().toString());
+    }
+
+    @Override
+    public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+    {
+        log.info("onCoinsSent");
+    }
+
+    @Override
+    public void onReorganize(Wallet wallet)
+    {
+        log.info("onReorganize");
+    }
+
+    @Override
+    public void onWalletChanged(Wallet wallet)
+    {
+        log.info("onWalletChanged");
+    }
+
+    @Override
+    public void onKeysAdded(Wallet wallet, List<ECKey> keys)
+    {
+        log.info("onKeysAdded");
+    }
+
+    @Override
+    public void onScriptsAdded(Wallet wallet, List<Script> scripts)
+    {
+        log.info("onScriptsAdded");
+    }
+
 
     private AccountRegistrationWallet getAccountRegistrationWallet()
     {
@@ -181,5 +256,19 @@ public class WalletFacade
             for (DownloadListener downloadListener : downloadListeners)
                 downloadListener.doneDownload();
         }
+    }
+
+    public static interface DownloadListener
+    {
+        void progress(double percent, int blocksSoFar, Date date);
+
+        void doneDownload();
+    }
+
+    public static interface WalletListener
+    {
+        void onConfidenceChanged(int numBroadcastPeers, int depthInBlocks);
+
+        void onCoinsReceived(BigInteger newBalance);
     }
 }

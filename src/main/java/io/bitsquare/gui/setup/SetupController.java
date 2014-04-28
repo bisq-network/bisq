@@ -23,6 +23,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -31,10 +32,11 @@ import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.net.URL;
 import java.util.*;
 
-public class SetupController implements Initializable, ChildController
+public class SetupController implements Initializable, ChildController, WalletFacade.WalletListener
 {
     private static final Logger log = LoggerFactory.getLogger(SetupController.class);
 
@@ -45,8 +47,11 @@ public class SetupController implements Initializable, ChildController
     private Storage storage;
 
     private List<ProcessStepItem> processStepItems = new ArrayList();
+    private int depthInBlocks = 0;
 
     private NavigationController navigationController;
+    private ImageView confirmIconImageView;
+    private TextField balanceLabel, confirmationsLabel;
 
     @FXML
     private AnchorPane rootContainer;
@@ -58,6 +63,7 @@ public class SetupController implements Initializable, ChildController
     private GridPane formGridPane;
     @FXML
     private Button nextButton, skipButton;
+
 
     @Inject
     public SetupController(User user, WalletFacade walletFacade, CryptoFacade cryptoFacade, Settings settings, Storage storage)
@@ -76,6 +82,8 @@ public class SetupController implements Initializable, ChildController
         processStepItems.add(new ProcessStepItem("Complete", Colors.BLUE));
         processStepBar.setProcessStepItems(processStepItems);
 
+        walletFacade.addRegistrationWalletListener(this);
+
         buildStep0();
     }
 
@@ -91,8 +99,29 @@ public class SetupController implements Initializable, ChildController
         this.navigationController = navigationController;
     }
 
+    @Override
+    public void onConfidenceChanged(int numBroadcastPeers, int depthInBlocks)
+    {
+        this.depthInBlocks = depthInBlocks;
+
+        updateCreateAccountButton();
+        confirmIconImageView.setImage(getConfirmIconImage(numBroadcastPeers, depthInBlocks));
+        confirmationsLabel.setText(getConfirmationsText(numBroadcastPeers, depthInBlocks));
+        log.info("onConfidenceChanged " + numBroadcastPeers + " / " + depthInBlocks);
+    }
+
+    @Override
+    public void onCoinsReceived(BigInteger newBalance)
+    {
+        updateCreateAccountButton();
+        balanceLabel.setText(Formatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true));
+        log.info("onCoinsReceived " + newBalance);
+    }
+
+
     private void close()
     {
+        walletFacade.removeRegistrationWalletListener(this);
         navigationController.navigateToView(NavigationController.HOME, "");
     }
 
@@ -108,13 +137,12 @@ public class SetupController implements Initializable, ChildController
         return result;
     }
 
-    private ImageView getConfirmIcon()
+    private Image getConfirmIconImage(int numBroadcastPeers, int depthInBlocks)
     {
-        int confirmations = walletFacade.getAccountRegistrationConfirmations();
-        if (confirmations > 0)
-            return Icons.getIconImageView(Icons.getIconIDForConfirmations(confirmations));
+        if (depthInBlocks > 0)
+            return Icons.getIconImage(Icons.getIconIDForConfirmations(depthInBlocks));
         else
-            return Icons.getIconImageView(Icons.getIconIDForPeersSeenTx(walletFacade.getAccountRegistrationNumberOfPeersSeenTx()));
+            return Icons.getIconImage(Icons.getIconIDForPeersSeenTx(numBroadcastPeers));
     }
 
 
@@ -122,27 +150,43 @@ public class SetupController implements Initializable, ChildController
     // GUI BUILDER
     ///////////////////////////////////////////////////////////////////////////////////
 
+    private String getConfirmationsText(int registrationConfirmationNumBroadcastPeers, int registrationConfirmationDepthInBlocks)
+    {
+        return registrationConfirmationDepthInBlocks + " confirmation(s) / " + "Seen by " + registrationConfirmationNumBroadcastPeers + " peer(s)";
+    }
+
     private void buildStep0()
     {
-        infoLabel.setText("You need to pay 0.01 BTC to the registration address.\n" +
+        infoLabel.setText("You need to pay 0.01 BTC to the registration address.\n\n" +
                 "That payment will be used to create a unique account connected with your bank account number.\n" +
                 "The privacy of your bank account number will be protected and only revealed to your trading partners.\n" +
                 "The payment will be spent to miners and is needed to store data into the blockchain.\n" +
-                "Your trading account will be the source for your reputation in the trading platform.");
+                "Your trading account will be the source for your reputation in the trading platform.\n\n" +
+                "You need at least 1 confirmation for doing the registration payment.");
 
-        int row = -1;
-        TextField addressLabel = FormBuilder.addInputField(formGridPane, "Registration address:", walletFacade.getAccountRegistrationAddress().toString(), ++row);
+        int gridRow = -1;
+
+        TextField addressLabel = FormBuilder.addInputField(formGridPane, "Registration address:", walletFacade.getAccountRegistrationAddress().toString(), ++gridRow);
         addressLabel.setEditable(false);
+
         Label copyIcon = new Label("");
-        formGridPane.add(copyIcon, 2, row);
+        formGridPane.add(copyIcon, 2, gridRow);
         copyIcon.setId("copy-icon");
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
-        formGridPane.add(getConfirmIcon(), 3, row);
-        TextField balanceLabel = FormBuilder.addInputField(formGridPane, "Balance:", Formatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true), ++row);
+
+        balanceLabel = FormBuilder.addInputField(formGridPane, "Balance:", Formatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true), ++gridRow);
         balanceLabel.setEditable(false);
 
+        confirmationsLabel = FormBuilder.addInputField(formGridPane, "Confirmations:", getConfirmationsText(walletFacade.getRegistrationConfirmationNumBroadcastPeers(), walletFacade.getRegistrationConfirmationDepthInBlocks()), ++gridRow);
+        confirmationsLabel.setEditable(false);
+
+        confirmIconImageView = new ImageView(getConfirmIconImage(walletFacade.getRegistrationConfirmationNumBroadcastPeers(), walletFacade.getRegistrationConfirmationDepthInBlocks()));
+        formGridPane.add(confirmIconImageView, 2, gridRow);
+
         nextButton.setText("Payment done");
+        updateCreateAccountButton();
+
         skipButton.setText("Register later");
 
         // handlers
@@ -170,18 +214,19 @@ public class SetupController implements Initializable, ChildController
                 "Only your trading partners will be able to read those data, so your privacy will be protected.");
 
         formGridPane.getChildren().clear();
-        int row = -1;
-        ComboBox bankTransferTypes = FormBuilder.addComboBox(formGridPane, "Bank account type:", settings.getAllBankAccountTypes(), ++row);
+        int gridRow = -1;
+        ComboBox bankTransferTypes = FormBuilder.addComboBox(formGridPane, "Bank account type:", settings.getAllBankAccountTypes(), ++gridRow);
         bankTransferTypes.setPromptText("Select");
         //TODO dev
         bankTransferTypes.getSelectionModel().select(1);
-        TextField accountHolderName = FormBuilder.addInputField(formGridPane, "Bank account holder name:", "Bob Brown", ++row);
-        TextField accountPrimaryID = FormBuilder.addInputField(formGridPane, "Bank account primary ID", "dummy IBAN", ++row);
-        TextField accountSecondaryID = FormBuilder.addInputField(formGridPane, "Bank account secondary ID:", "dummy BIC", ++row);
+        TextField accountHolderName = FormBuilder.addInputField(formGridPane, "Bank account holder name:", "Bob Brown", ++gridRow);
+        TextField accountPrimaryID = FormBuilder.addInputField(formGridPane, "Bank account primary ID", "dummy IBAN", ++gridRow);
+        TextField accountSecondaryID = FormBuilder.addInputField(formGridPane, "Bank account secondary ID:", "dummy BIC", ++gridRow);
         Button addButton = new Button("Add other Bank account");
-        formGridPane.add(addButton, 1, ++row);
+        formGridPane.add(addButton, 1, ++gridRow);
 
         nextButton.setText("Create account");
+        nextButton.setDisable(true);
         skipButton.setText("Register later");
 
         // handlers
@@ -197,6 +242,8 @@ public class SetupController implements Initializable, ChildController
                     accountPrimaryID.setPromptText(bankAccountType.getPrimaryIDName());
                     accountSecondaryID.setText("");
                     accountSecondaryID.setPromptText(bankAccountType.getSecondaryIDName());
+
+                    nextButton.setDisable(false);
                 }
             }
         });
@@ -254,22 +301,22 @@ public class SetupController implements Initializable, ChildController
                 "You have saved following bank accounts with your trading account to the blockchain:");
 
         formGridPane.getChildren().clear();
-        int row = -1;
+        int gridRow = -1;
         Map<String, BankAccount> bankAccounts = user.getBankAccounts();
         Iterator iterator = bankAccounts.entrySet().iterator();
         int index = 0;
         while (iterator.hasNext())
         {
-            FormBuilder.addHeaderLabel(formGridPane, "Bank account " + (index + 1), ++row);
+            FormBuilder.addHeaderLabel(formGridPane, "Bank account " + (index + 1), ++gridRow);
             Map.Entry<String, BankAccount> entry = (Map.Entry) iterator.next();
-            // need to get updated row from subroutine
-            row = buildBankAccountDetails(entry.getValue(), ++row);
-            FormBuilder.addVSpacer(formGridPane, ++row);
+            // need to get updated gridRow from subroutine
+            gridRow = buildBankAccountDetails(entry.getValue(), ++gridRow);
+            FormBuilder.addVSpacer(formGridPane, ++gridRow);
             index++;
         }
-        FormBuilder.addVSpacer(formGridPane, ++row);
-        FormBuilder.addInputField(formGridPane, "Registration address:", walletFacade.getAccountRegistrationAddress().toString(), ++row).setMouseTransparent(true);
-        FormBuilder.addInputField(formGridPane, "Balance:", Formatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true), ++row).setMouseTransparent(true);
+        FormBuilder.addVSpacer(formGridPane, ++gridRow);
+        FormBuilder.addInputField(formGridPane, "Registration address:", walletFacade.getAccountRegistrationAddress().toString(), ++gridRow).setMouseTransparent(true);
+        FormBuilder.addInputField(formGridPane, "Balance:", Formatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true), ++gridRow).setMouseTransparent(true);
 
         nextButton.setText("Done");
         skipButton.setOpacity(0);
@@ -288,6 +335,12 @@ public class SetupController implements Initializable, ChildController
         FormBuilder.addInputField(formGridPane, "Bank account primary ID", bankAccount.getAccountPrimaryID(), ++row).setMouseTransparent(true);
         FormBuilder.addInputField(formGridPane, "Bank account secondary ID:", bankAccount.getAccountSecondaryID(), ++row).setMouseTransparent(true);
         return row;
+    }
+
+    private void updateCreateAccountButton()
+    {
+        boolean funded = walletFacade.getAccountRegistrationBalance().compareTo(BigInteger.ZERO) > 0;
+        nextButton.setDisable(!funded || depthInBlocks == 0);
     }
 }
 

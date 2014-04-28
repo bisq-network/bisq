@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -26,8 +27,9 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
     private static final Logger log = LoggerFactory.getLogger(AccountRegistrationWallet.class);
 
     private NetworkParameters networkParameters;
+    private List<WalletFacade.WalletListener> walletListeners = new ArrayList<>();
 
-    public AccountRegistrationWallet(NetworkParameters networkParameters, BlockChain chain, PeerGroup peerGroup)
+    AccountRegistrationWallet(NetworkParameters networkParameters, BlockChain chain, PeerGroup peerGroup)
     {
         super(networkParameters);
 
@@ -61,17 +63,33 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
         autosaveToFile(walletFile, 1, TimeUnit.SECONDS, null);
     }
 
-    public Address getAddress()
+    Address getAddress()
     {
         return getKey().toAddress(networkParameters);
     }
 
-    public ECKey getKey()
+    ECKey getKey()
     {
         return getKeys().get(0);
     }
 
-    public void saveToBlockchain(byte[] dataToEmbed) throws InsufficientMoneyException
+    void addWalletListener(WalletFacade.WalletListener listener)
+    {
+        if (walletListeners.size() == 0)
+            addEventListener(this);
+
+        walletListeners.add(listener);
+    }
+
+    void removeWalletListener(WalletFacade.WalletListener listener)
+    {
+        walletListeners.remove(listener);
+
+        if (walletListeners.size() == 0)
+            removeEventListener(this);
+    }
+
+    void saveToBlockchain(byte[] dataToEmbed) throws InsufficientMoneyException
     {
         Script script = new ScriptBuilder()
                 .op(OP_RETURN)
@@ -116,45 +134,23 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
         });
     }
 
-    public int getConfirmations()
-    {
-        // TODO just a quick impl. need to be checked if it works for all cases...
-        Set<Transaction> transactions = getTransactions(true);
-        if (transactions != null && transactions.size() == 1)
-        {
-            Transaction transaction = transactions.iterator().next();
-            final int lastBlockSeenHeight = getLastBlockSeenHeight();
-            int appearedAtChainHeight = 0;
-            if (transaction.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
-                appearedAtChainHeight = transaction.getConfidence().getAppearedAtChainHeight();
 
-            final int numberOfBlocksEmbedded = lastBlockSeenHeight - appearedAtChainHeight + 1;
-
-            if (numberOfBlocksEmbedded > 0)
-                return numberOfBlocksEmbedded;
-            else
-                return 0;
-        }
-        return 0;
-    }
-
-    public int getNumberOfPeersSeenTx()
-    {
-        // TODO just a quick impl. need to be checked if it works for all cases...
-        Set<Transaction> transactions = getTransactions(true);
-        if (transactions != null && transactions.size() == 1)
-        {
-            Transaction transaction = transactions.iterator().next();
-            return (transaction == null || transaction.getConfidence() == null) ? 0 : transaction.getConfidence().numBroadcastPeers();
-        }
-        return 0;
-    }
-
-    //TODO those handlers are not called yet...
     @Override
     public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
     {
+        for (WalletFacade.WalletListener walletListener : walletListeners)
+            walletListener.onCoinsReceived(newBalance);
+
         log.info("onCoinsReceived");
+    }
+
+    @Override
+    public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
+    {
+        for (WalletFacade.WalletListener walletListener : walletListeners)
+            walletListener.onConfidenceChanged(tx.getConfidence().numBroadcastPeers(), tx.getConfidence().getDepthInBlocks());
+
+        log.info("onTransactionConfidenceChanged " + tx.getConfidence().toString());
     }
 
     @Override
@@ -167,12 +163,6 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
     public void onReorganize(Wallet wallet)
     {
         log.info("onReorganize");
-    }
-
-    @Override
-    public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
-    {
-        log.info("onTransactionConfidenceChanged");
     }
 
     @Override
@@ -193,5 +183,26 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
         log.info("onScriptsAdded");
     }
 
+    int getConfirmationNumBroadcastPeers()
+    {
+        Transaction transaction = getTransaction();
+        return (transaction == null || transaction.getConfidence() == null) ? 0 : transaction.getConfidence().numBroadcastPeers();
+    }
 
+    int getConfirmationDepthInBlocks()
+    {
+        Transaction transaction = getTransaction();
+        return (transaction == null || transaction.getConfidence() == null) ? 0 : transaction.getConfidence().getDepthInBlocks();
+    }
+
+    //TODO only 1 tx supported yet...
+    private Transaction getTransaction()
+    {
+        Set<Transaction> transactions = getTransactions(true);
+        if (transactions != null && transactions.size() == 1)
+        {
+            return transactions.iterator().next();
+        }
+        return null;
+    }
 }
