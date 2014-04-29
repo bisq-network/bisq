@@ -1,6 +1,7 @@
 package io.bitsquare.bank;
 
 import java.io.Serializable;
+import java.util.Currency;
 import java.util.Locale;
 
 public class BankAccount implements Serializable
@@ -13,25 +14,27 @@ public class BankAccount implements Serializable
     private String accountPrimaryID;
     private String accountSecondaryID;
     private String accountHolderName;
-    private Locale locale;
-
+    private Locale countryLocale;
+    private Currency currency;
     private String uid;
 
     // TODO just for mock yet
     public BankAccount(BankAccountType bankAccountType)
     {
         this.bankAccountType = bankAccountType;
+
     }
 
-    public BankAccount(BankAccountType bankAccountType, String accountPrimaryID, String accountSecondaryID, String accountHolderName, Locale locale)
+    public BankAccount(BankAccountType bankAccountType, String accountPrimaryID, String accountSecondaryID, String accountHolderName, Locale countryLocale, Currency currency)
     {
         this.bankAccountType = bankAccountType;
         this.accountPrimaryID = accountPrimaryID;
         this.accountSecondaryID = accountSecondaryID;
         this.accountHolderName = accountHolderName;
-        this.locale = locale;
+        this.countryLocale = countryLocale;
+        this.currency = currency;
 
-        uid = bankAccountType + "_" + accountPrimaryID + "_" + accountSecondaryID + "_" + accountHolderName + "_" + locale.getISO3Country();
+        uid = bankAccountType + "_" + accountPrimaryID + "_" + accountSecondaryID + "_" + accountHolderName + "_" + countryLocale.getISO3Country();
     }
 
     public String getAccountPrimaryID()
@@ -54,6 +57,16 @@ public class BankAccount implements Serializable
         return bankAccountType;
     }
 
+    public Currency getCurrency()
+    {
+        return currency;
+    }
+
+    public Locale getCountryLocale()
+    {
+        return countryLocale;
+    }
+
     public String getUid()
     {
         return uid;
@@ -67,8 +80,16 @@ public class BankAccount implements Serializable
                 ", primaryID='" + accountPrimaryID + '\'' +
                 ", secondaryID='" + accountSecondaryID + '\'' +
                 ", holderName='" + accountHolderName + '\'' +
-                ", country='" + locale.getISO3Country() + '\'' +
+                ", currency='" + currency.getCurrencyCode() + '\'' +
+                ", country='" + countryLocale.getISO3Country() + '\'' +
                 ", v='" + VERSION + '\'' +
                 '}';
     }
+
+    public String getShortName()
+    {
+        return bankAccountType + " " + accountPrimaryID + " / " + accountSecondaryID + " / " + currency.getCurrencyCode();
+    }
+
+
 }

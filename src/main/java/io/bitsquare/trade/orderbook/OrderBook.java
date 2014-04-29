@@ -1,7 +1,6 @@
 package io.bitsquare.trade.orderbook;
 
 import com.google.inject.Inject;
-import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.gui.trade.orderbook.OrderBookListItem;
 import io.bitsquare.gui.util.Converter;
@@ -30,7 +29,7 @@ public class OrderBook
         orderBookListItems = FXCollections.observableArrayList();
         for (int i = 0; i < 100; i++)
         {
-            orderBookListItems.add(getOfferListVO());
+            orderBookListItems.add(getOrderBookListItem());
         }
     }
 
@@ -61,10 +60,9 @@ public class OrderBook
         return result;
     }
 
-    private OrderBookListItem getOfferListVO()
+    private OrderBookListItem getOrderBookListItem()
     {
-        Offer i = getOffer();
-        return new OrderBookListItem(i);
+        return new OrderBookListItem(getOffer());
     }
 
     public ArrayList<Currency> getCurrencies()
@@ -94,19 +92,16 @@ public class OrderBook
 
     private Offer getOffer()
     {
+        User offerer = new User();
+        offerer.setAccountID(UUID.randomUUID().toString());
+        offerer.setMessageID(UUID.randomUUID().toString());
+        offerer.setOnline(Math.random() > 0.5 ? true : false);
+        offerer.setLanguageLocales(getLanguageLocales());
+
         double amount = Math.random() * 10 + 0.1;
         amount = Converter.convertToDouble(Formatter.formatAmount(amount));
         double minAmount = Math.random() * amount;
         minAmount = Converter.convertToDouble(Formatter.formatAmount(minAmount));
-
-        String country = getCountries().get(0);
-        BankAccountType bankAccountType = getBankTransferTypes().get(0);
-        BankAccount bankAccount = new BankAccount(bankAccountType);
-        User offerer = new User();
-        offerer.setAccountID(UUID.randomUUID().toString());
-        offerer.setMessageID(UUID.randomUUID().toString());
-        offerer.setCountry(country);
-        offerer.addBankAccount(bankAccount);
 
         Direction direction = Direction.BUY;
         double price = 500 + Math.random() * 50;
@@ -129,10 +124,10 @@ public class OrderBook
 
     public OfferConstraints getRandomOfferConstraints()
     {
-        OfferConstraints offerConstraints = new OfferConstraints(getCountries(),
-                getLanguages(),
+        OfferConstraints offerConstraints = new OfferConstraints(getCountryLocales(),
+                getLanguageLocales(),
                 Double.valueOf(getCollaterals().get(0)),
-                getBankTransferTypes(),
+                getBankTransferTypeEnums(),
                 getArbitrators().get(0),
                 randomizeStrings(settings.getAllIdentityVerifications(), false).get(0));
 
@@ -140,20 +135,26 @@ public class OrderBook
     }
 
 
-    private List<String> getCountries()
+    private List<Locale> getCountryLocales()
     {
 
-        return randomizeStrings(settings.getAllCountries(), false);
+        return randomizeList(settings.getAllLocales(), false);
     }
 
-    private List<String> getLanguages()
+    private List<Locale> getLanguageLocales()
     {
-        return randomizeStrings(settings.getAllLanguages(), false);
+        return randomizeList(settings.getAllLocales(), false);
     }
+
 
     private List<BankAccountType> getBankTransferTypes()
     {
         return randomizeBankAccountTypes(settings.getAllBankAccountTypes(), false);
+    }
+
+    private List<BankAccountType.BankAccountTypeEnum> getBankTransferTypeEnums()
+    {
+        return randomizeBankAccountTypeEnums(settings.getAllBankAccountTypeEnums(), false);
     }
 
     private List<String> getArbitrators()
@@ -164,6 +165,16 @@ public class OrderBook
     private List<String> getCollaterals()
     {
         return randomizeStrings(settings.getAllCollaterals(), false);
+    }
+
+    private List<BankAccountType.BankAccountTypeEnum> randomizeBankAccountTypeEnums(List<BankAccountType.BankAccountTypeEnum> list, boolean optional)
+    {
+        int e = new Random().nextInt(list.size());
+        if (!optional && list.size() > 0)
+            e = Math.max(e, 1);
+        int s = (e == 0) ? 0 : new Random().nextInt(e);
+        list = list.subList(s, e);
+        return list;
     }
 
     private List<BankAccountType> randomizeBankAccountTypes(List<BankAccountType> list, boolean optional)
@@ -185,6 +196,17 @@ public class OrderBook
         list = list.subList(s, e);
         return list;
     }
+
+    private List randomizeList(List list, boolean optional)
+    {
+        int e = new Random().nextInt(list.size());
+        if (!optional && list.size() > 0)
+            e = Math.max(e, 1);
+        int s = (e == 0) ? 0 : new Random().nextInt(e);
+        list = list.subList(s, e);
+        return list;
+    }
+
 
     private List<Double> randomizeDouble(List<Double> list, boolean optional)
     {

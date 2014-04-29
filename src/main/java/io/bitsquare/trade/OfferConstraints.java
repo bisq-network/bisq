@@ -3,50 +3,58 @@ package io.bitsquare.trade;
 import io.bitsquare.bank.BankAccountType;
 
 import java.util.List;
+import java.util.Locale;
 
 public class OfferConstraints
 {
+    //TODO remove
     private double collateral;
-    private List<String> countries;
-    private List<String> languages;
-    private List<BankAccountType> bankAccountTypes;
     private String arbitrator;
     private String identityVerification;
 
-    public OfferConstraints(List<String> countries,
-                            List<String> languages,
+    private List<Locale> countryLocales;
+    private List<Locale> languageLocales;
+    private List<BankAccountType.BankAccountTypeEnum> bankAccountTypes;
+
+    public OfferConstraints(List<Locale> countryLocales,
+                            List<Locale> languageLocales,
                             double collateral,
-                            List<BankAccountType> bankAccountTypes,
+                            List<BankAccountType.BankAccountTypeEnum> bankAccountTypes,
                             String arbitrator,
                             String identityVerification)
     {
-        this.countries = countries;
-        this.languages = languages;
-        this.collateral = collateral;
+        this.countryLocales = countryLocales;
+        this.languageLocales = languageLocales;
         this.bankAccountTypes = bankAccountTypes;
+
+
+        this.collateral = collateral;
         this.arbitrator = arbitrator;
         this.identityVerification = identityVerification;
     }
 
-    public double getCollateral()
+
+    /**
+     * @return List of ISO3 country codes
+     */
+    public List<Locale> getCountryLocales()
     {
-        return collateral;
+        return countryLocales;
     }
 
-    public List<String> getCountries()
+    /**
+     * @return List of ISO3 language codes
+     */
+    public List<Locale> getLanguageLocales()
     {
-        return countries;
+        return languageLocales;
     }
 
-    public List<String> getLanguages()
-    {
-        return languages;
-    }
-
-    public List<BankAccountType> getBankAccountTypes()
+    public List<BankAccountType.BankAccountTypeEnum> getBankAccountTypes()
     {
         return bankAccountTypes;
     }
+
 
     public String getArbitrator()
     {
@@ -56,5 +64,10 @@ public class OfferConstraints
     public String getIdentityVerification()
     {
         return identityVerification;
+    }
+
+    public double getCollateral()
+    {
+        return collateral;
     }
 }

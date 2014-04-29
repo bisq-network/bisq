@@ -288,7 +288,7 @@ public class TradeProcessController implements Initializable, ChildController
         FormBuilder.addLabel(contractGridPane, "Price:", Formatter.formatPriceWithCurrencyPair(offer.getPrice(), offer.getCurrency()), ++row);
         collateralLabel2 = FormBuilder.addLabel(contractGridPane, "Collateral:", "", ++row);
         setCollateral();
-        FormBuilder.addLabel(contractGridPane, "Language:", Formatter.formatList(offerConstraints.getLanguages()), ++row);
+        // FormBuilder.addLabel(contractGridPane, "Language:", Formatter.formatList(offerConstraints.getLanguageLocales()), ++row);
         FormBuilder.addLabel(contractGridPane, "Arbitrator:", offerConstraints.getArbitrator(), ++row);
         // FormBuilder.addLabel(contractGridPane, "Identity verification:", Formatter.formatList(offerConstraints.getIdentityVerifications()), ++row);
         FormBuilder.addLabel(contractGridPane, "Bank transfer reference ID:", "Purchase xyz 01.04.2014", ++row);
@@ -297,7 +297,7 @@ public class TradeProcessController implements Initializable, ChildController
         FormBuilder.addHeaderLabel(contractGridPane, "Offerer data:", ++row);
         FormBuilder.addLabel(contractGridPane, "Account ID:", offerer.getAccountID(), ++row);
         FormBuilder.addLabel(contractGridPane, "Messaging ID:", offerer.getMessageID(), ++row);
-        FormBuilder.addLabel(contractGridPane, "Country:", offerer.getCountry(), ++row);
+        //FormBuilder.addLabel(contractGridPane, "Country:", offerer.getCountry(), ++row);
         offererPubKeyLabel = FormBuilder.addLabel(contractGridPane, "Payment public key:", contract.getOffererPubKey(), ++row);
         FormBuilder.addLabel(contractGridPane, "Bank transfer type:", offerer.getCurrentBankAccount().getBankAccountType().toString(), ++row);
         offererAccountPrimaryID = FormBuilder.addLabel(contractGridPane, "Bank account IBAN:", offerer.getCurrentBankAccount().getAccountPrimaryID(), ++row);
@@ -308,7 +308,7 @@ public class TradeProcessController implements Initializable, ChildController
         FormBuilder.addHeaderLabel(contractGridPane, "Offer taker data:", ++row);
         FormBuilder.addLabel(contractGridPane, "Account ID:", taker.getAccountID(), ++row);
         FormBuilder.addLabel(contractGridPane, "Messaging ID:", taker.getMessageID(), ++row);
-        FormBuilder.addLabel(contractGridPane, "Country:", taker.getCountry(), ++row);
+        // FormBuilder.addLabel(contractGridPane, "Country:", taker.getCountry(), ++row);
         FormBuilder.addLabel(contractGridPane, "Payment public key:", contract.getTakerPubKey(), ++row);
         FormBuilder.addLabel(contractGridPane, "Bank transfer type:", taker.getCurrentBankAccount().getBankAccountType().toString(), ++row);
         FormBuilder.addLabel(contractGridPane, "Bank account IBAN:", taker.getCurrentBankAccount().getAccountPrimaryID(), ++row);

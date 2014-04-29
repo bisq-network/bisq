@@ -16,8 +16,10 @@ public class WalletUtil
         Transaction transaction = WalletUtil.getTransaction(wallet);
         if (transaction != null && transaction.getConfidence() != null)
         {
-            int appearedAtChainHeight = (transaction.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) ? transaction.getConfidence().getAppearedAtChainHeight() : 0;
-            return wallet.getLastBlockSeenHeight() - appearedAtChainHeight + 1;
+            if (transaction.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
+                return wallet.getLastBlockSeenHeight() - transaction.getConfidence().getAppearedAtChainHeight() + 1;
+            else
+                return 0;
         }
         else
         {

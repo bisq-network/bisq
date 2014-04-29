@@ -1,6 +1,7 @@
 package io.bitsquare.gui;
 
 import com.google.inject.Inject;
+import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.components.NetworkSyncPane;
@@ -25,12 +26,12 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Currency;
 import java.util.Date;
 import java.util.ResourceBundle;
 
@@ -171,7 +172,7 @@ public class MainController implements Initializable, NavigationController, Wall
         addNavButton(leftNavPane, "Funds", Icons.FUNDS, Icons.FUNDS, NavigationController.FUNDS);
         addNavButton(leftNavPane, "Message", Icons.MSG, Icons.MSG, NavigationController.MSG);
         addBalanceInfo(rightNavPane);
-        addCurrencyComboBox();
+        addAccountComboBox();
 
         addNavButton(rightNavPane, "Settings", Icons.SETTINGS, Icons.SETTINGS, NavigationController.SETTINGS);
 
@@ -255,24 +256,44 @@ public class MainController implements Initializable, NavigationController, Wall
         return balanceLabel;
     }
 
-    private void addCurrencyComboBox()
+    private void addAccountComboBox()
     {
-        Pane holder = new Pane();
-        ComboBox currencyComboBox = new ComboBox(FXCollections.observableArrayList(settings.getAllCurrencies()));
-        currencyComboBox.setLayoutY(12);
-        currencyComboBox.setValue(Settings.getCurrency());
-
-        currencyComboBox.valueProperty().addListener(new ChangeListener<Currency>()
+        if (user.getBankAccounts().size() > 1)
         {
-            @Override
-            public void changed(ObservableValue ov, Currency oldValue, Currency newValue)
+            ComboBox accountComboBox = new ComboBox(FXCollections.observableArrayList(user.getBankAccounts()));
+            accountComboBox.setLayoutY(12);
+            accountComboBox.setValue(user.getCurrentBankAccount());
+            accountComboBox.setConverter(new StringConverter<BankAccount>()
             {
-                orderBookFilter.setCurrency(newValue);
-                settings.setCurrency(newValue);
-            }
-        });
-        holder.getChildren().add(currencyComboBox);
-        rightNavPane.getChildren().add(holder);
+                @Override
+                public String toString(BankAccount bankAccount)
+                {
+                    return bankAccount.getShortName();
+                }
+
+                @Override
+                public BankAccount fromString(String s)
+                {
+                    return null;
+                }
+            });
+
+
+            accountComboBox.valueProperty().addListener(new ChangeListener<BankAccount>()
+            {
+                @Override
+                public void changed(ObservableValue ov, BankAccount oldValue, BankAccount newValue)
+                {
+                    user.setCurrentBankAccount(newValue);
+                    orderBookFilter.setCurrency(newValue.getCurrency());
+                    orderBookFilter.setCountryLocale(newValue.getCountryLocale());
+                }
+            });
+
+            Pane holder = new Pane();
+            holder.getChildren().add(accountComboBox);
+            rightNavPane.getChildren().add(holder);
+        }
     }
 
 

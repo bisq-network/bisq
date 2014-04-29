@@ -3,9 +3,10 @@ package io.bitsquare.user;
 import io.bitsquare.bank.BankAccount;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
+import java.util.Locale;
 
 public class User implements Serializable
 {
@@ -14,13 +15,14 @@ public class User implements Serializable
     private String accountID;
     private String messageID;
     private boolean online;
+    private List<BankAccount> bankAccounts = new ArrayList<>();
     private BankAccount currentBankAccount = null;
-
-    private Map<String, BankAccount> bankAccounts = new HashMap<>();
-    private String country;
+    private List<Locale> languageLocales = new ArrayList<>();
+    private Locale currentLanguageLocale = null;
 
     public User()
     {
+        addLanguageLocales(Locale.getDefault());
     }
 
     public void updateFromStorage(User savedUser)
@@ -32,17 +34,18 @@ public class User implements Serializable
             online = savedUser.isOnline();
             currentBankAccount = savedUser.getCurrentBankAccount();
             bankAccounts = savedUser.getBankAccounts();
-            country = savedUser.getCountry();
+            languageLocales = savedUser.getLanguageLocales();
+            currentLanguageLocale = savedUser.getCurrentLanguageLocale();
         }
     }
 
     public String getStringifiedBankAccounts()
     {
         String bankAccountUIDs = "";
-        for (Iterator<Map.Entry<String, BankAccount>> iterator = getBankAccounts().entrySet().iterator(); iterator.hasNext(); )
+        for (Iterator<BankAccount> iterator = getBankAccounts().iterator(); iterator.hasNext(); )
         {
-            Map.Entry<String, BankAccount> entry = iterator.next();
-            bankAccountUIDs += entry.getValue().getStringifiedBankAccount();
+            BankAccount bankAccount = iterator.next();
+            bankAccountUIDs += bankAccount.getStringifiedBankAccount();
 
             if (iterator.hasNext())
                 bankAccountUIDs += ", ";
@@ -50,37 +53,23 @@ public class User implements Serializable
         return bankAccountUIDs;
     }
 
+    public void addLanguageLocales(Locale locale)
+    {
+        languageLocales.add(locale);
+        currentLanguageLocale = locale;
+    }
+
     public void addBankAccount(BankAccount bankAccount)
     {
-        if (currentBankAccount == null)
-            currentBankAccount = bankAccount;
 
-        bankAccounts.put(bankAccount.getUid(), bankAccount);
+        bankAccounts.add(bankAccount);
+        currentBankAccount = bankAccount;
     }
 
-    public Map<String, BankAccount> getBankAccounts()
-    {
-        return bankAccounts;
-    }
-
-    public BankAccount getBankAccountByUID(String uid)
-    {
-        return bankAccounts.get(uid);
-    }
-
-    public String getMessageID()
-    {
-        return messageID;
-    }
-
+    // setter
     public void setMessageID(String messageID)
     {
         this.messageID = messageID;
-    }
-
-    public String getAccountID()
-    {
-        return accountID;
     }
 
     public void setAccountID(String accountID)
@@ -88,19 +77,62 @@ public class User implements Serializable
         this.accountID = accountID;
     }
 
-    public void setCountry(String country)
+
+    public void setBankAccounts(List<BankAccount> bankAccounts)
     {
-        this.country = country;
+        this.bankAccounts = bankAccounts;
     }
 
-    public String getCountry()
+    public void setCurrentBankAccount(BankAccount currentBankAccount)
     {
-        return country;
+        this.currentBankAccount = currentBankAccount;
+    }
+
+    public void setLanguageLocales(List<Locale> languageLocales)
+    {
+        this.languageLocales = languageLocales;
+    }
+
+    public void setCurrentLanguageLocale(Locale currentLanguageLocale)
+    {
+        this.currentLanguageLocale = currentLanguageLocale;
+    }
+
+    public void setOnline(boolean online)
+    {
+        this.online = online;
+    }
+
+
+    // getter
+    public String getMessageID()
+    {
+        return messageID;
+    }
+
+    public String getAccountID()
+    {
+        return accountID;
+    }
+
+    public List<BankAccount> getBankAccounts()
+    {
+        return bankAccounts;
     }
 
     public BankAccount getCurrentBankAccount()
     {
         return currentBankAccount;
+    }
+
+    public List<Locale> getLanguageLocales()
+    {
+        return languageLocales;
+    }
+
+    public Locale getCurrentLanguageLocale()
+    {
+        return currentLanguageLocale;
     }
 
     public boolean isOnline()

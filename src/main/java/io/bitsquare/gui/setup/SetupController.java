@@ -50,7 +50,8 @@ public class SetupController implements Initializable, ChildController, WalletFa
     private NavigationController navigationController;
     private ImageView confirmIconImageView;
     private TextField balanceLabel, confirmationsLabel, accountHolderName, accountPrimaryID, accountSecondaryID;
-    private ComboBox countryComboBox, bankTransferTypeComboBox;
+    private ComboBox countryComboBox, bankTransferTypeComboBox, currencyComboBox;
+    private Button addBankAccountButton;
 
     @FXML
     private AnchorPane rootContainer;
@@ -123,15 +124,19 @@ public class SetupController implements Initializable, ChildController, WalletFa
     }
 
     // TODO need checks per bankTransferType
-    private boolean verifyBankAccountData(Object bankTransferTypeSelectedItem, String accountPrimaryID, String accountSecondaryID, String accountHolderName)
+    private boolean verifyBankAccountData()
     {
-        boolean result = bankTransferTypeSelectedItem != null;
-        result &= bankTransferTypeSelectedItem.toString().length() > 0;
-        result &= accountPrimaryID.length() > 0;
-        result &= accountSecondaryID.length() > 0;
-        result &= accountHolderName.length() > 0;
-        result &= Verification.verifyAccountIDsByBankTransferType(bankTransferTypeSelectedItem, accountPrimaryID, accountSecondaryID);
-        return result;
+        boolean accountIDsByBankTransferTypeValid = Verification.verifyAccountIDsByBankTransferType(bankTransferTypeComboBox.getSelectionModel().getSelectedItem(),
+                accountPrimaryID.getText(),
+                accountSecondaryID.getText());
+
+        return bankTransferTypeComboBox.getSelectionModel().getSelectedItem() != null
+                && countryComboBox.getSelectionModel().getSelectedItem() != null
+                && currencyComboBox.getSelectionModel().getSelectedItem() != null
+                && accountPrimaryID.getText().length() > 0
+                && accountSecondaryID.getText().length() > 0
+                && accountHolderName.getText().length() > 0
+                && accountIDsByBankTransferTypeValid;
     }
 
     private Image getConfirmIconImage(int numBroadcastPeers, int depthInBlocks)
@@ -222,35 +227,52 @@ public class SetupController implements Initializable, ChildController, WalletFa
         accountPrimaryID = FormBuilder.addInputField(formGridPane, "Bank account primary ID", "", ++gridRow);
         accountSecondaryID = FormBuilder.addInputField(formGridPane, "Bank account secondary ID:", "", ++gridRow);
 
-        countryComboBox = FormBuilder.addComboBox(formGridPane, "Country:", settings.getAllLocales("displayCountry"), ++gridRow);
-        countryComboBox.setPromptText("Select country");
-        countryComboBox.setConverter(new StringConverter()
+        currencyComboBox = FormBuilder.addComboBox(formGridPane, "Currency used for bank account:", settings.getAllCurrencies(), ++gridRow);
+        currencyComboBox.setPromptText("Select currency");
+        currencyComboBox.setConverter(new StringConverter<Currency>()
         {
             @Override
-            public String toString(Object o)
+            public String toString(Currency currency)
             {
-                return ((Locale) o).getDisplayCountry();
+                return currency.getCurrencyCode() + " (" + currency.getDisplayName() + ")";
             }
 
             @Override
-            public Object fromString(String s)
+            public Currency fromString(String s)
             {
-                return s;
+                return null;
+            }
+        });
+
+        countryComboBox = FormBuilder.addComboBox(formGridPane, "Country of bank account:", settings.getAllLocales(), ++gridRow);
+        countryComboBox.setPromptText("Select country");
+        countryComboBox.setConverter(new StringConverter<Locale>()
+        {
+            @Override
+            public String toString(Locale locale)
+            {
+                return locale.getDisplayCountry();
+            }
+
+            @Override
+            public Locale fromString(String s)
+            {
+                return null;
             }
         });
 
 
-        Button addButton = new Button("Add other Bank account");
-        formGridPane.add(addButton, 1, ++gridRow);
+        addBankAccountButton = new Button("Add other Bank account");
+        formGridPane.add(addBankAccountButton, 1, ++gridRow);
 
         nextButton.setText("Create account");
         checkCreateAccountButtonState();
         skipButton.setText("Register later");
 
         // handlers
-        accountHolderName.focusedProperty().addListener((ov, oldValue, newValue) -> checkCreateAccountButtonState());
-        accountPrimaryID.focusedProperty().addListener((ov, oldValue, newValue) -> checkCreateAccountButtonState());
-        accountSecondaryID.focusedProperty().addListener((ov, oldValue, newValue) -> checkCreateAccountButtonState());
+        accountHolderName.textProperty().addListener((ov, oldValue, newValue) -> checkCreateAccountButtonState());
+        accountPrimaryID.textProperty().addListener((ov, oldValue, newValue) -> checkCreateAccountButtonState());
+        accountSecondaryID.textProperty().addListener((ov, oldValue, newValue) -> checkCreateAccountButtonState());
 
         bankTransferTypeComboBox.valueProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue != null && newValue instanceof BankAccountType)
@@ -265,31 +287,13 @@ public class SetupController implements Initializable, ChildController, WalletFa
             }
         });
 
-        countryComboBox.valueProperty().addListener((ov, oldValue, newValue) -> {
-            if (newValue != null && newValue instanceof BankAccountType)
-            {
-                if (newValue != null)
-                {
-                    checkCreateAccountButtonState();
-                }
-            }
-        });
+        currencyComboBox.valueProperty().addListener((ov, oldValue, newValue) -> checkCreateAccountButtonState());
+        countryComboBox.valueProperty().addListener((ov, oldValue, newValue) -> checkCreateAccountButtonState());
 
-        addButton.setOnAction(e -> {
-            if (bankTransferTypeComboBox.getSelectionModel() != null
-                    && verifyBankAccountData(bankTransferTypeComboBox.getSelectionModel().getSelectedItem(),
-                    accountPrimaryID.getText(),
-                    accountSecondaryID.getText(),
-                    accountHolderName.getText()))
+        addBankAccountButton.setOnAction(e -> {
+            addBankAccount();
+            if (verifyBankAccountData())
             {
-                user.addBankAccount(new BankAccount(
-                        (BankAccountType) bankTransferTypeComboBox.getSelectionModel().getSelectedItem(),
-                        accountPrimaryID.getText(),
-                        accountSecondaryID.getText(),
-                        accountHolderName.getText(),
-                        (Locale) countryComboBox.getSelectionModel().getSelectedItem())
-                );
-
                 bankTransferTypeComboBox.getSelectionModel().clearSelection();
                 accountPrimaryID.setText("");
                 accountPrimaryID.setPromptText("");
@@ -299,21 +303,7 @@ public class SetupController implements Initializable, ChildController, WalletFa
         });
 
         nextButton.setOnAction(e -> {
-            boolean inputValid = verifyBankAccountData(bankTransferTypeComboBox.getSelectionModel().getSelectedItem(),
-                    accountPrimaryID.getText(),
-                    accountSecondaryID.getText(),
-                    accountHolderName.getText());
-
-
-            if (bankTransferTypeComboBox.getSelectionModel() != null && countryComboBox.getSelectionModel() != null && inputValid)
-            {
-                BankAccount bankAccount = new BankAccount((BankAccountType) bankTransferTypeComboBox.getSelectionModel().getSelectedItem(),
-                        accountPrimaryID.getText(),
-                        accountSecondaryID.getText(),
-                        accountHolderName.getText(),
-                        (Locale) countryComboBox.getSelectionModel().getSelectedItem());
-                user.addBankAccount(bankAccount);
-            }
+            addBankAccount();
 
             if (user.getBankAccounts().size() > 0)
             {
@@ -342,16 +332,24 @@ public class SetupController implements Initializable, ChildController, WalletFa
         skipButton.setOnAction(e -> close());
     }
 
+    private void addBankAccount()
+    {
+        if (verifyBankAccountData())
+        {
+            BankAccount bankAccount = new BankAccount((BankAccountType) bankTransferTypeComboBox.getSelectionModel().getSelectedItem(),
+                    accountPrimaryID.getText(),
+                    accountSecondaryID.getText(),
+                    accountHolderName.getText(),
+                    (Locale) countryComboBox.getSelectionModel().getSelectedItem(),
+                    (Currency) currencyComboBox.getSelectionModel().getSelectedItem());
+            user.addBankAccount(bankAccount);
+        }
+    }
+
     private void checkCreateAccountButtonState()
     {
-        boolean enabled = accountHolderName.getText().length() > 0
-                && accountPrimaryID.getText().length() > 0
-                && accountSecondaryID.getText().length() > 0
-                && bankTransferTypeComboBox.getSelectionModel() != null
-                && bankTransferTypeComboBox.getSelectionModel().getSelectedItem() != null
-                && countryComboBox.getSelectionModel() != null
-                && countryComboBox.getSelectionModel().getSelectedItem() != null;
-        nextButton.setDisable(!enabled);
+        nextButton.setDisable(!verifyBankAccountData());
+        addBankAccountButton.setDisable(!verifyBankAccountData());
     }
 
     private void buildStep2()
@@ -361,8 +359,8 @@ public class SetupController implements Initializable, ChildController, WalletFa
 
         formGridPane.getChildren().clear();
         int gridRow = -1;
-        Map<String, BankAccount> bankAccounts = user.getBankAccounts();
-        Iterator iterator = bankAccounts.entrySet().iterator();
+        List<BankAccount> bankAccounts = user.getBankAccounts();
+        Iterator iterator = bankAccounts.iterator();
         int index = 0;
         while (iterator.hasNext())
         {

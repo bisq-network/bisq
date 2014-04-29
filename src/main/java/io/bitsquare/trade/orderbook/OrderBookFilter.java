@@ -2,10 +2,10 @@ package io.bitsquare.trade.orderbook;
 
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.OfferConstraints;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 
 import java.util.Currency;
+import java.util.Locale;
 
 public class OrderBookFilter
 {
@@ -13,22 +13,65 @@ public class OrderBookFilter
     private double amount;
     private Direction direction;
     private Currency currency;
-    private final StringProperty currencyProperty = new SimpleStringProperty();
+    private Locale countryLocale;
+    private Locale languageLocale;
     private OfferConstraints offerConstraints;
+
+
+    public SimpleBooleanProperty changedPropertyProperty()
+    {
+        return changedProperty;
+    }
+
+    private final SimpleBooleanProperty changedProperty = new SimpleBooleanProperty();
+
+    // setters
+    public void setCurrency(Currency currency)
+    {
+        this.currency = currency;
+        triggerChange();
+    }
 
     public void setAmount(double amount)
     {
         this.amount = amount;
+        triggerChange();
     }
 
-    public double getAmount()
+    public void setPrice(double price)
     {
-        return amount;
+        this.price = price;
+        triggerChange();
     }
 
     public void setDirection(Direction direction)
     {
         this.direction = direction;
+        triggerChange();
+    }
+
+    public void setOfferConstraints(OfferConstraints offerConstraints)
+    {
+        this.offerConstraints = offerConstraints;
+        triggerChange();
+    }
+
+    public void setCountryLocale(Locale countryLocale)
+    {
+        this.countryLocale = countryLocale;
+        triggerChange();
+    }
+
+    public void setLanguageLocale(Locale languageLocale)
+    {
+        this.languageLocale = languageLocale;
+        triggerChange();
+    }
+
+    // getters
+    public double getAmount()
+    {
+        return amount;
     }
 
     public Direction getDirection()
@@ -41,25 +84,9 @@ public class OrderBookFilter
         return price;
     }
 
-    public void setPrice(double price)
-    {
-        this.price = price;
-    }
-
     public Currency getCurrency()
     {
         return currency;
-    }
-
-    public StringProperty getCurrencyProperty()
-    {
-        return currencyProperty;
-    }
-
-    public void setCurrency(Currency currency)
-    {
-        this.currency = currency;
-        currencyProperty.set(currency.getCurrencyCode());
     }
 
     public OfferConstraints getOfferConstraints()
@@ -67,8 +94,23 @@ public class OrderBookFilter
         return offerConstraints;
     }
 
-    public void setOfferConstraints(OfferConstraints offerConstraints)
+    public Locale getCountryLocale()
     {
-        this.offerConstraints = offerConstraints;
+        return countryLocale;
+    }
+
+    public Locale getLanguageLocale()
+    {
+        return languageLocale;
+    }
+
+    public SimpleBooleanProperty getChangedProperty()
+    {
+        return changedProperty;
+    }
+
+    private void triggerChange()
+    {
+        changedProperty.set(!changedProperty.get());
     }
 }

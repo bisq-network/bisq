@@ -43,30 +43,81 @@ public class Settings
             currency = Currency.getInstance("USD");
     }
 
-
-    //TODO remove duplicated entries, insert separators
-    public ArrayList<Currency> getAllCurrencies()
+    public ArrayList<Locale> getAllLocales()
     {
-        ArrayList<Currency> currencies = new ArrayList<>();
-        currencies.add(Currency.getInstance("USD"));
-        currencies.add(Currency.getInstance("EUR"));
-        currencies.add(Currency.getInstance("CNY"));
-        currencies.add(Currency.getInstance("RUB"));
+        ArrayList<Locale> list = new ArrayList<Locale>(Arrays.asList(Locale.getAvailableLocales()));
+        list.removeIf(new Predicate<Locale>()
+        {
+            @Override
+            public boolean test(Locale locale)
+            {
+                return locale == null || locale.getCountry().equals("") || locale.getLanguage().equals("");
+            }
+        });
 
-        currencies.add(Currency.getInstance("JPY"));
-        currencies.add(Currency.getInstance("GBP"));
-        currencies.add(Currency.getInstance("CAD"));
-        currencies.add(Currency.getInstance("AUD"));
-        currencies.add(Currency.getInstance("CHF"));
-        currencies.add(Currency.getInstance("CNY"));
+        list.sort(new Comparator<Locale>()
+        {
+            @Override
+            public int compare(Locale locale1, Locale locale2)
+            {
+                return locale1.getDisplayCountry().compareTo(locale2.getDisplayCountry());
+            }
+        });
 
-      /*  Set<Currency> otherCurrenciesSet = Currency.getAvailableCurrencies();
-        ArrayList<Currency> otherCurrenciesList = new ArrayList<>();
-        otherCurrenciesList.addAll(otherCurrenciesSet);
-        Collections.sort(otherCurrenciesList, new CurrencyComparator());
+        Locale defaultLocale = Locale.getDefault();
+        list.remove(defaultLocale);
+        list.add(0, defaultLocale);
 
-        currencies.addAll(otherCurrenciesList); */
-        return currencies;
+        return list;
+    }
+
+    public List<Currency> getAllCurrencies()
+    {
+        ArrayList<Currency> mainCurrencies = new ArrayList<>();
+        mainCurrencies.add(Currency.getInstance("USD"));
+        mainCurrencies.add(Currency.getInstance("EUR"));
+        mainCurrencies.add(Currency.getInstance("CNY"));
+        mainCurrencies.add(Currency.getInstance("RUB"));
+        mainCurrencies.add(Currency.getInstance("JPY"));
+        mainCurrencies.add(Currency.getInstance("GBP"));
+        mainCurrencies.add(Currency.getInstance("CAD"));
+        mainCurrencies.add(Currency.getInstance("AUD"));
+        mainCurrencies.add(Currency.getInstance("CHF"));
+        mainCurrencies.add(Currency.getInstance("CNY"));
+
+        Set<Currency> allCurrenciesSet = Currency.getAvailableCurrencies();
+
+        allCurrenciesSet.removeAll(mainCurrencies);
+        List<Currency> allCurrenciesList = new ArrayList<>(allCurrenciesSet);
+        allCurrenciesList.sort(new Comparator<Currency>()
+        {
+            @Override
+            public int compare(Currency a, Currency b)
+            {
+                return a.getCurrencyCode().compareTo(b.getCurrencyCode());
+            }
+        });
+
+        List<Currency> resultList = new ArrayList<>(mainCurrencies);
+        resultList.addAll(allCurrenciesList);
+        Currency defaultCurrency = Currency.getInstance(Locale.getDefault());
+        resultList.remove(defaultCurrency);
+        resultList.add(0, defaultCurrency);
+
+        return resultList;
+    }
+
+    public ArrayList<BankAccountType.BankAccountTypeEnum> getAllBankAccountTypeEnums()
+    {
+        ArrayList<BankAccountType.BankAccountTypeEnum> bankAccountTypeEnums = new ArrayList<>();
+        bankAccountTypeEnums.add(BankAccountType.BankAccountTypeEnum.SEPA);
+        bankAccountTypeEnums.add(BankAccountType.BankAccountTypeEnum.WIRE);
+        bankAccountTypeEnums.add(BankAccountType.BankAccountTypeEnum.INTERNATIONAL);
+        bankAccountTypeEnums.add(BankAccountType.BankAccountTypeEnum.OK_PAY);
+        bankAccountTypeEnums.add(BankAccountType.BankAccountTypeEnum.NET_TELLER);
+        bankAccountTypeEnums.add(BankAccountType.BankAccountTypeEnum.PERFECT_MONEY);
+        bankAccountTypeEnums.add(BankAccountType.BankAccountTypeEnum.OTHER);
+        return bankAccountTypeEnums;
     }
 
     public ArrayList<BankAccountType> getAllBankAccountTypes()
@@ -82,74 +133,6 @@ public class Settings
         return bankTransferTypes;
     }
 
-    public ArrayList<String> getAllCountries()
-    {
-        ArrayList<String> bankTransferTypes = new ArrayList<>();
-        bankTransferTypes.add("USA");
-        bankTransferTypes.add("GB");
-        bankTransferTypes.add("DE");
-        bankTransferTypes.add("FR");
-        bankTransferTypes.add("ES");
-        bankTransferTypes.add("CH");
-        bankTransferTypes.add("RUS");
-        bankTransferTypes.add("AUS");
-        bankTransferTypes.add("CAN");
-        bankTransferTypes.add("AT");
-        return bankTransferTypes;
-    }
-
-    public ArrayList<Locale> getAllLocales(String sortField)
-    {
-        ArrayList<Locale> list = new ArrayList<Locale>(Arrays.asList(Locale.getAvailableLocales()));
-
-        list.removeIf(new Predicate<Locale>()
-        {
-            @Override
-            public boolean test(Locale locale)
-            {
-                return locale == null || locale.getCountry().equals("") || locale.getLanguage().equals("");
-            }
-        });
-
-        list.sort(new Comparator()
-        {
-            @Override
-            public int compare(Object o1, Object o2)
-            {
-                if (sortField.equals("displayCountry"))
-                    return (((Locale) o1).getDisplayCountry()).compareTo(((Locale) o2).getDisplayCountry());
-                else
-                    return 1;
-            }
-        });
-        Locale defaultLocale = Locale.getDefault();
-        list.remove(defaultLocale);
-        list.add(0, defaultLocale);
-
-        return list;
-    }
-
-    /*public ArrayList<String> getAllLanguages()
-    {
-        ArrayList<String> result = new ArrayList<>();
-        for (Locale locale : Locale.getAvailableLocales())
-        {
-            result.add(locale.getDisplayLanguage());
-        }
-
-        return result;
-    }  */
-    public ArrayList<String> getAllLanguages()
-    {
-        ArrayList<String> bankTransferTypes = new ArrayList<>();
-        bankTransferTypes.add("English");
-        bankTransferTypes.add("Chinese");
-        bankTransferTypes.add("Spanish");
-        bankTransferTypes.add("Russian");
-        bankTransferTypes.add("French");
-        bankTransferTypes.add("Italian");
-        return bankTransferTypes;
-    }
 
     public ArrayList<String> getAllArbitrators()
     {
