@@ -64,7 +64,7 @@ public class Trade
         return requestedAmount;
     }
 
-    public void setRequestedAmount(double requestedAmount)
+    public void setTradeAmount(double requestedAmount)
     {
         this.requestedAmount = requestedAmount;
     }

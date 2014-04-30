@@ -33,7 +33,7 @@ public class ConfirmationComponent implements WalletFacade.WalletListener
     {
         confirmIconImageView.setImage(getConfirmIconImage(numBroadcastPeers, depthInBlocks));
         confirmationsLabel.setText(getConfirmationsText(numBroadcastPeers, depthInBlocks));
-        if (depthInBlocks == 0)
+        if (depthInBlocks == 0 && numBroadcastPeers > 0)
             confirmSpinner.setProgress(-1);
         else
             confirmSpinner.setOpacity(0);

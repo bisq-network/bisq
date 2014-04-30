@@ -1,7 +1,6 @@
 package io.bitsquare.user;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.trade.OfferConstraint;
 import javafx.beans.property.SimpleBooleanProperty;
 
 import java.io.Serializable;
@@ -21,8 +20,6 @@ public class User implements Serializable
     private List<BankAccount> bankAccounts = new ArrayList<>();
     private BankAccount currentBankAccount = null;
 
-    private OfferConstraint offerConstraint;
-
     public User()
     {
     }
@@ -34,8 +31,8 @@ public class User implements Serializable
             accountID = savedUser.getAccountID();
             messageID = savedUser.getMessageID();
             online = savedUser.isOnline();
-            currentBankAccount = savedUser.getCurrentBankAccount();
             bankAccounts = savedUser.getBankAccounts();
+            currentBankAccount = savedUser.getCurrentBankAccount();
         }
     }
 
@@ -87,10 +84,6 @@ public class User implements Serializable
         this.online = online;
     }
 
-    public void setOfferConstraint(OfferConstraint offerConstraint)
-    {
-        this.offerConstraint = offerConstraint;
-    }
 
     // getter
     public String getMessageID()
@@ -119,10 +112,6 @@ public class User implements Serializable
         return online;
     }
 
-    public OfferConstraint getOfferConstraint()
-    {
-        return offerConstraint;
-    }
 
     public SimpleBooleanProperty getChangedProperty()
     {

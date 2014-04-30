@@ -1,5 +1,6 @@
 package io.bitsquare.gui.components.processbar;
 
+import io.bitsquare.gui.util.Colors;
 import javafx.scene.paint.Paint;
 
 public class ProcessStepItem
@@ -10,7 +11,7 @@ public class ProcessStepItem
 
     public ProcessStepItem(String label)
     {
-        this(label, Paint.valueOf("#000000"), false);
+        this(label, Colors.BLUE, false);
     }
 
     public ProcessStepItem(String label, Paint color)

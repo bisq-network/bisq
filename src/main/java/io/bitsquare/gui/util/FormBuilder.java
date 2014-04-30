@@ -20,12 +20,17 @@ public class FormBuilder
         return valueLabel;
     }
 
-    public static Label addHeaderLabel(GridPane gridPane, String title, int row)
+    public static Label addHeaderLabel(GridPane gridPane, String title, int row, int column)
     {
         Label headerLabel = new Label(title);
         headerLabel.setId("form-header-text");
-        gridPane.add(headerLabel, 0, row);
+        gridPane.add(headerLabel, column, row);
         return headerLabel;
+    }
+
+    public static Label addHeaderLabel(GridPane gridPane, String title, int row)
+    {
+        return addHeaderLabel(gridPane, title, row, 0);
     }
 
     public static TextField addInputField(GridPane gridPane, String title, String value, int row)
@@ -46,6 +51,7 @@ public class FormBuilder
         gridPane.add(textField, 1, row);
         textField.setMouseTransparent(!selectable && !editable);
         textField.setEditable(editable);
+
         return textField;
     }
 
@@ -57,7 +63,7 @@ public class FormBuilder
     public static Button addButton(GridPane gridPane, String title, int row)
     {
         Button button = new Button(title);
-        gridPane.add(button, 0, row);
+        gridPane.add(button, 1, row);
         return button;
     }
 
@@ -80,7 +86,7 @@ public class FormBuilder
         ProgressIndicator progressIndicator = new ProgressIndicator();
         gridPane.add(progressIndicator, 3, row);
         progressIndicator.setPrefSize(18, 18);
-        if (walletFacade.getRegConfDepthInBlocks() == 0)
+        if (walletFacade.getRegConfDepthInBlocks() == 0 && walletFacade.getRegConfNumBroadcastPeers() > 0)
             progressIndicator.setProgress(-1);
         else
             progressIndicator.setOpacity(0);

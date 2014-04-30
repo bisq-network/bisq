@@ -7,16 +7,16 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.components.ConfirmationComponent;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.components.processbar.ProcessStepBar;
 import io.bitsquare.gui.components.processbar.ProcessStepItem;
-import io.bitsquare.gui.util.*;
+import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.Formatter;
-import io.bitsquare.settings.Settings;
+import io.bitsquare.gui.util.Localisation;
+import io.bitsquare.gui.util.Verification;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utils;
@@ -27,7 +27,9 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
+import org.controlsfx.dialog.Dialogs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,12 +43,8 @@ public class SetupController implements Initializable, ChildController, WalletFa
 
     private User user;
     private final WalletFacade walletFacade;
-    private CryptoFacade cryptoFacade;
-    private Settings settings;
     private Storage storage;
-
     private List<ProcessStepItem> processStepItems = new ArrayList();
-
     private NavigationController navigationController;
     private TextField balanceLabel, accountTitle, accountHolderName, accountPrimaryID, accountSecondaryID;
     private ComboBox countryComboBox, bankTransferTypeComboBox, currencyComboBox;
@@ -59,32 +57,29 @@ public class SetupController implements Initializable, ChildController, WalletFa
     @FXML
     private ProcessStepBar<String> processStepBar;
     @FXML
-    private GridPane formGridPane;
+    private GridPane gridPane;
     @FXML
     private Button nextButton, skipButton;
+    @FXML
+    private VBox vBox;
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor(s)
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SetupController(User user, WalletFacade walletFacade, CryptoFacade cryptoFacade, Settings settings, Storage storage)
+    public SetupController(User user, WalletFacade walletFacade, Storage storage)
     {
         this.user = user;
         this.walletFacade = walletFacade;
-        this.cryptoFacade = cryptoFacade;
-        this.settings = settings;
         this.storage = storage;
     }
 
-    public void initialize(URL url, ResourceBundle rb)
-    {
-        processStepItems.add(new ProcessStepItem("Fund registration fee", Colors.BLUE));
-        processStepItems.add(new ProcessStepItem("Add Bank account", Colors.BLUE));
-        processStepItems.add(new ProcessStepItem("Complete", Colors.BLUE));
-        processStepBar.setProcessStepItems(processStepItems);
 
-        walletFacade.addRegistrationWalletListener(this);
-
-        buildStep0();
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     // pass in NetworkSyncPane from parent view
     public void setNetworkSyncPane(NetworkSyncPane networkSyncPane)
@@ -92,11 +87,39 @@ public class SetupController implements Initializable, ChildController, WalletFa
         rootContainer.getChildren().add(networkSyncPane);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface implementation: Initializable
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb)
+    {
+        processStepItems.add(new ProcessStepItem("Fund registration fee"));
+        processStepItems.add(new ProcessStepItem("Add Bank account"));
+        processStepItems.add(new ProcessStepItem("Complete"));
+        processStepBar.setProcessStepItems(processStepItems);
+
+        walletFacade.addRegistrationWalletListener(this);
+
+        buildStep0();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface implementation: ChildController
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void setNavigationController(NavigationController navigationController)
     {
         this.navigationController = navigationController;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface implementation: WalletFacade.WalletListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onConfidenceChanged(int numBroadcastPeers, int depthInBlocks)
@@ -115,40 +138,9 @@ public class SetupController implements Initializable, ChildController, WalletFa
     }
 
 
-    private void close()
-    {
-        walletFacade.removeRegistrationWalletListener(this);
-        navigationController.navigateToView(NavigationController.HOME, "");
-    }
-
-    // TODO need checks per bankTransferType
-    private boolean verifyBankAccountData()
-    {
-        boolean accountIDsByBankTransferTypeValid = Verification.verifyAccountIDsByBankTransferType(bankTransferTypeComboBox.getSelectionModel().getSelectedItem(),
-                accountPrimaryID.getText(),
-                accountSecondaryID.getText());
-
-        return bankTransferTypeComboBox.getSelectionModel().getSelectedItem() != null
-                && countryComboBox.getSelectionModel().getSelectedItem() != null
-                && currencyComboBox.getSelectionModel().getSelectedItem() != null
-                && accountTitle.getText().length() > 0
-                && accountHolderName.getText().length() > 0
-                && accountPrimaryID.getText().length() > 0
-                && accountSecondaryID.getText().length() > 0
-                && accountIDsByBankTransferTypeValid;
-    }
-
-
-    private void updateCreateAccountButton()
-    {
-        boolean funded = walletFacade.getAccountRegistrationBalance().compareTo(BigInteger.ZERO) > 0;
-        nextButton.setDisable(!funded || walletFacade.getRegConfDepthInBlocks() == 0);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////
-    // GUI BUILDER
-    ///////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void buildStep0()
     {
@@ -159,19 +151,19 @@ public class SetupController implements Initializable, ChildController, WalletFa
                 "Your trading account will be the source for your reputation in the trading platform.\n\n" +
                 "You need at least 1 confirmation for doing the registration payment.");
 
-        int gridRow = -1;
+        int row = -1;
 
-        TextField addressLabel = FormBuilder.addTextField(formGridPane, "Registration address:", walletFacade.getAccountRegistrationAddress().toString(), ++gridRow, false, true);
+        TextField addressLabel = FormBuilder.addTextField(gridPane, "Registration address:", walletFacade.getAccountRegistrationAddress().toString(), ++row, false, true);
 
         Label copyIcon = new Label("");
-        formGridPane.add(copyIcon, 2, gridRow);
+        gridPane.add(copyIcon, 2, row);
         copyIcon.setId("copy-icon");
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
 
-        balanceLabel = FormBuilder.addTextField(formGridPane, "Balance:", Formatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true), ++gridRow);
+        balanceLabel = FormBuilder.addTextField(gridPane, "Balance:", Formatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true), ++row);
 
-        ConfirmationComponent confirmationComponent = new ConfirmationComponent(walletFacade, formGridPane, ++gridRow);
+        new ConfirmationComponent(walletFacade, gridPane, ++row);
 
         nextButton.setText("Payment done");
         updateCreateAccountButton();
@@ -200,9 +192,9 @@ public class SetupController implements Initializable, ChildController, WalletFa
                 "That data will be stored in the blockchain in a way that your privacy is protected.\n" +
                 "Only your trading partners will be able to read those data, so your privacy will be protected.");
 
-        formGridPane.getChildren().clear();
-        int gridRow = -1;
-        bankTransferTypeComboBox = FormBuilder.addComboBox(formGridPane, "Bank account type:", Utils.getAllBankAccountTypes(), ++gridRow);
+        gridPane.getChildren().clear();
+        int row = -1;
+        bankTransferTypeComboBox = FormBuilder.addComboBox(gridPane, "Bank account type:", Utils.getAllBankAccountTypes(), ++row);
         bankTransferTypeComboBox.setConverter(new StringConverter<BankAccountType>()
         {
             @Override
@@ -219,12 +211,12 @@ public class SetupController implements Initializable, ChildController, WalletFa
         });
 
         bankTransferTypeComboBox.setPromptText("Select bank account type");
-        accountTitle = FormBuilder.addInputField(formGridPane, "Bank account title:", "", ++gridRow);
-        accountHolderName = FormBuilder.addInputField(formGridPane, "Bank account holder name:", "", ++gridRow);
-        accountPrimaryID = FormBuilder.addInputField(formGridPane, "Bank account primary ID", "", ++gridRow);
-        accountSecondaryID = FormBuilder.addInputField(formGridPane, "Bank account secondary ID:", "", ++gridRow);
+        accountTitle = FormBuilder.addInputField(gridPane, "Bank account title:", "", ++row);
+        accountHolderName = FormBuilder.addInputField(gridPane, "Bank account holder name:", "", ++row);
+        accountPrimaryID = FormBuilder.addInputField(gridPane, "Bank account primary ID", "", ++row);
+        accountSecondaryID = FormBuilder.addInputField(gridPane, "Bank account secondary ID:", "", ++row);
 
-        currencyComboBox = FormBuilder.addComboBox(formGridPane, "Currency used for bank account:", Utils.getAllCurrencies(), ++gridRow);
+        currencyComboBox = FormBuilder.addComboBox(gridPane, "Currency used for bank account:", Utils.getAllCurrencies(), ++row);
         currencyComboBox.setPromptText("Select currency");
         currencyComboBox.setConverter(new StringConverter<Currency>()
         {
@@ -241,7 +233,7 @@ public class SetupController implements Initializable, ChildController, WalletFa
             }
         });
 
-        countryComboBox = FormBuilder.addComboBox(formGridPane, "Country of bank account:", Utils.getAllLocales(), ++gridRow);
+        countryComboBox = FormBuilder.addComboBox(gridPane, "Country of bank account:", Utils.getAllLocales(), ++row);
         countryComboBox.setPromptText("Select country");
         countryComboBox.setConverter(new StringConverter<Locale>()
         {
@@ -260,7 +252,7 @@ public class SetupController implements Initializable, ChildController, WalletFa
 
 
         addBankAccountButton = new Button("Add other Bank account");
-        formGridPane.add(addBankAccountButton, 1, ++gridRow);
+        gridPane.add(addBankAccountButton, 1, ++row);
 
         nextButton.setText("Create account");
         checkCreateAccountButtonState();
@@ -318,21 +310,99 @@ public class SetupController implements Initializable, ChildController, WalletFa
                     buildStep2();
                 } catch (InsufficientMoneyException e1)
                 {
-                    log.warn(e1.toString());
-                    // TODO
-                    processStepBar.next();
-                    buildStep2();
+                    Dialogs.create()
+                            .title("Not enough money available")
+                            .message("There is not enough money available. Please pay in first to your wallet.")
+                            .nativeTitleBar()
+                            .lightweight()
+                            .showError();
                 }
-            }
-            else
-            {
-                log.warn("You need to add a bank account first!");
-                //TODO warning popup
             }
         });
 
         skipButton.setOnAction(e -> close());
     }
+
+    private void buildStep2()
+    {
+        vBox.getChildren().remove(infoLabel);
+        vBox.getChildren().remove(nextButton);
+        vBox.getChildren().remove(skipButton);
+
+        gridPane.getChildren().clear();
+        int row = -1;
+
+        FormBuilder.addHeaderLabel(gridPane, "Registration complete", ++row);
+        FormBuilder.addTextField(gridPane, "Registration address:", walletFacade.getAccountRegistrationAddress().toString(), ++row);
+        FormBuilder.addTextField(gridPane, "Balance:", Formatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true), ++row);
+
+        Button closeButton = FormBuilder.addButton(gridPane, "Close", ++row);
+        closeButton.setDefaultButton(true);
+        closeButton.setOnAction(e -> close());
+
+        FormBuilder.addVSpacer(gridPane, ++row);
+
+        FormBuilder.addHeaderLabel(gridPane, "Summary", ++row);
+        Label info = new Label("You have saved following bank accounts with your trading account to the blockchain:");
+        gridPane.add(info, 0, ++row);
+        GridPane.setColumnSpan(info, 3);
+
+        FormBuilder.addVSpacer(gridPane, ++row);
+
+        List<BankAccount> bankAccounts = user.getBankAccounts();
+        Iterator<BankAccount> iterator = bankAccounts.iterator();
+        int index = 0;
+        while (iterator.hasNext())
+        {
+            FormBuilder.addHeaderLabel(gridPane, "Bank account " + (index + 1), ++row);
+            BankAccount bankAccount = iterator.next();
+            // need to get updated row from subroutine
+            row = buildBankAccountDetails(bankAccount, ++row);
+            FormBuilder.addVSpacer(gridPane, ++row);
+            index++;
+        }
+    }
+
+    private void close()
+    {
+        walletFacade.removeRegistrationWalletListener(this);
+        navigationController.navigateToView(NavigationController.HOME, "");
+    }
+
+
+    // util
+    private int buildBankAccountDetails(BankAccount bankAccount, int row)
+    {
+        FormBuilder.addTextField(gridPane, "Bank account holder name:", bankAccount.getAccountHolderName(), ++row);
+        FormBuilder.addTextField(gridPane, "Bank account type", bankAccount.getBankAccountType().toString(), ++row);
+        FormBuilder.addTextField(gridPane, "Bank account primary ID", bankAccount.getAccountPrimaryID(), ++row);
+        FormBuilder.addTextField(gridPane, "Bank account secondary ID:", bankAccount.getAccountSecondaryID(), ++row);
+        return row;
+    }
+
+    // TODO need checks per bankTransferType
+    private boolean verifyBankAccountData()
+    {
+        boolean accountIDsByBankTransferTypeValid = Verification.verifyAccountIDsByBankTransferType(bankTransferTypeComboBox.getSelectionModel().getSelectedItem(),
+                accountPrimaryID.getText(),
+                accountSecondaryID.getText());
+
+        return bankTransferTypeComboBox.getSelectionModel().getSelectedItem() != null
+                && countryComboBox.getSelectionModel().getSelectedItem() != null
+                && currencyComboBox.getSelectionModel().getSelectedItem() != null
+                && accountTitle.getText().length() > 0
+                && accountHolderName.getText().length() > 0
+                && accountPrimaryID.getText().length() > 0
+                && accountSecondaryID.getText().length() > 0
+                && accountIDsByBankTransferTypeValid;
+    }
+
+    private void updateCreateAccountButton()
+    {
+        boolean funded = walletFacade.getAccountRegistrationBalance().compareTo(BigInteger.ZERO) > 0;
+        nextButton.setDisable(!funded || walletFacade.getRegConfDepthInBlocks() == 0);
+    }
+
 
     private void addBankAccount()
     {
@@ -355,47 +425,5 @@ public class SetupController implements Initializable, ChildController, WalletFa
         nextButton.setDisable(!verifyBankAccountData());
         addBankAccountButton.setDisable(!verifyBankAccountData());
     }
-
-    private void buildStep2()
-    {
-        infoLabel.setText("Summary:\n" +
-                "You have saved following bank accounts with your trading account to the blockchain:");
-
-        formGridPane.getChildren().clear();
-        int gridRow = -1;
-        List<BankAccount> bankAccounts = user.getBankAccounts();
-        Iterator<BankAccount> iterator = bankAccounts.iterator();
-        int index = 0;
-        while (iterator.hasNext())
-        {
-            FormBuilder.addHeaderLabel(formGridPane, "Bank account " + (index + 1), ++gridRow);
-            BankAccount bankAccount = iterator.next();
-            // need to get updated gridRow from subroutine
-            gridRow = buildBankAccountDetails(bankAccount, ++gridRow);
-            FormBuilder.addVSpacer(formGridPane, ++gridRow);
-            index++;
-        }
-        FormBuilder.addVSpacer(formGridPane, ++gridRow);
-        FormBuilder.addTextField(formGridPane, "Registration address:", walletFacade.getAccountRegistrationAddress().toString(), ++gridRow);
-        FormBuilder.addTextField(formGridPane, "Balance:", Formatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true), ++gridRow);
-
-        nextButton.setText("Done");
-        skipButton.setOpacity(0);
-
-        // handlers
-        nextButton.setOnAction(e -> close());
-    }
-
-    // util
-    private int buildBankAccountDetails(BankAccount bankAccount, int row)
-    {
-        FormBuilder.addTextField(formGridPane, "Bank account holder name:", bankAccount.getAccountHolderName(), ++row);
-        FormBuilder.addTextField(formGridPane, "Bank account type", bankAccount.getBankAccountType().toString(), ++row);
-        FormBuilder.addTextField(formGridPane, "Bank account primary ID", bankAccount.getAccountPrimaryID(), ++row);
-        FormBuilder.addTextField(formGridPane, "Bank account secondary ID:", bankAccount.getAccountSecondaryID(), ++row);
-        return row;
-    }
-
-
 }
 

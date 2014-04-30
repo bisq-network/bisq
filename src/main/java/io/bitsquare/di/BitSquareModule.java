@@ -14,7 +14,6 @@ import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.settings.OrderBookFilterSettings;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Trading;
@@ -36,7 +35,6 @@ public class BitSquareModule extends AbstractModule
         bind(Storage.class).asEagerSingleton();
         bind(Settings.class).asEagerSingleton();
         bind(OrderBookFilter.class).asEagerSingleton();
-        bind(OrderBookFilterSettings.class).asEagerSingleton();
 
         bind(CryptoFacade.class).asEagerSingleton();
         bind(WalletFacade.class).asEagerSingleton();

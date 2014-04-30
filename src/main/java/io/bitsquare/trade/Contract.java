@@ -7,7 +7,6 @@ import java.util.UUID;
 public class Contract
 {
     private User taker;
-    private User offerer;
     private String offererPubKey;
     private Trade trade;
     private String takerPubKey;
@@ -33,17 +32,6 @@ public class Contract
     {
         return taker;
     }
-
-    public User getOfferer()
-    {
-        return offerer;
-    }
-
-    public void setOfferer(User offerer)
-    {
-        this.offerer = offerer;
-    }
-
 
     public String getTakerPubKey()
     {

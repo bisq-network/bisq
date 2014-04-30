@@ -5,9 +5,12 @@
 Messaging!
 
 low prio:
+- tx confirm. not working correct and reliable
 - add settings after setup
 - settings screen
 - return to setup when unregistered, change/add bank accounts from settings
+- warning popups
+-
 
 
 

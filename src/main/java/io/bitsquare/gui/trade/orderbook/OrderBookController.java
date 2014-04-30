@@ -159,7 +159,7 @@ public class OrderBookController implements Initializable, ChildController
         if (!amount.getText().equals(""))
             requestedAmount = Converter.stringToDouble(amount.getText());
 
-        tradeProcessController.initView(orderBookListItem.getOffer(), requestedAmount);
+        tradeProcessController.initWithData(orderBookListItem.getOffer(), requestedAmount);
     }
 
     private void updateOfferList()

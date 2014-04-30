@@ -45,6 +45,21 @@
     -fx-text-fill: #0096c9;
 }
 
+.text-field:readonly {
+    -fx-text-fill: #000000;
+    -fx-background-color: #ffffff;
+}
+
+#feedback-text {
+    -fx-font-size: 10;
+}
+
+#label-url {
+    -fx-cursor: hand;
+    -fx-text-fill: blue;
+    -fx-underline: true;
+}
+
 /* table */
 
 #orderbook-table .table-cell {
@@ -57,10 +72,6 @@
 
 #orderbook-table .focus {
     -fx-alignment: center;
-}
-
-#feedback-text {
-    -fx-font-size: 10;
 }
 
 /* forms */

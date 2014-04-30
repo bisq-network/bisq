@@ -171,9 +171,11 @@ public class WalletFacade implements WalletEventListener
 
     public boolean verifyAccountRegistration(String address, String hashAsHexStringToVerify, byte[] pubKey, String bankAccountIDs, String signatureBankAccountIDs)
     {
+        return true;
+        /*
         return cryptoFacade.verifySignature(pubKey, bankAccountIDs, signatureBankAccountIDs)
                 && cryptoFacade.verifyHash(hashAsHexStringToVerify, bankAccountIDs, signatureBankAccountIDs)
-                && blockChainFacade.verifyAddressInBlockChain(hashAsHexStringToVerify, address);
+                && blockChainFacade.verifyEmbeddedData(address);  */
     }
 
     public int getRegConfNumBroadcastPeers()

@@ -1,6 +1,7 @@
 package io.bitsquare.settings;
 
 import com.google.inject.Inject;
+import io.bitsquare.user.Arbitrator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ public class Settings implements Serializable
 
     private List<Locale> acceptedLanguageLocales = new ArrayList<>();
     private List<Locale> acceptedCountryLocales = new ArrayList<>();
+    private List<Arbitrator> arbitrators = new ArrayList<>();
 
     @Inject
     public Settings()
@@ -24,33 +26,35 @@ public class Settings implements Serializable
         if (savedSettings != null)
         {
             acceptedLanguageLocales = savedSettings.getAcceptedLanguageLocales();
-
             acceptedCountryLocales = savedSettings.getAcceptedCountryLocales();
+            arbitrators = savedSettings.getArbitrators();
         }
     }
 
     public void addAcceptedLanguageLocale(Locale locale)
     {
-        acceptedLanguageLocales.add(locale);
+        if (!acceptedLanguageLocales.contains(locale))
+            acceptedLanguageLocales.add(locale);
     }
 
     public void addAcceptedCountryLocale(Locale locale)
     {
-        acceptedCountryLocales.add(locale);
+        if (!acceptedCountryLocales.contains(locale))
+            acceptedCountryLocales.add(locale);
     }
 
-    //setters
-    public void setAcceptedLanguageLocales(List<Locale> acceptedLanguageLocales)
+    public void addArbitrator(Arbitrator arbitrator)
     {
-        this.acceptedLanguageLocales = acceptedLanguageLocales;
-    }
-
-    public void setAcceptedCountryLocales(List<Locale> acceptedCountryLocales)
-    {
-        this.acceptedCountryLocales = acceptedCountryLocales;
+        if (!arbitrators.contains(arbitrator))
+            arbitrators.add(arbitrator);
     }
 
     //getters
+    public List<Arbitrator> getArbitrators()
+    {
+        return arbitrators;
+    }
+
     public List<Locale> getAcceptedLanguageLocales()
     {
         return acceptedLanguageLocales;
@@ -62,5 +66,8 @@ public class Settings implements Serializable
         return acceptedCountryLocales;
     }
 
-
+    public Arbitrator getRandomArbitrator()
+    {
+        return arbitrators.size() > 0 ? arbitrators.get((int) (Math.random() * arbitrators.size())) : null;
+    }
 }

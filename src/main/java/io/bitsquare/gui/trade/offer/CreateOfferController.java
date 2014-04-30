@@ -25,6 +25,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import org.controlsfx.dialog.Dialogs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,6 +121,7 @@ public class CreateOfferController implements Initializable, ChildController, Wa
                         user.getCurrentBankAccount().getBankAccountType().getType(),
                         user.getCurrentBankAccount().getCurrency(),
                         user.getCurrentBankAccount().getCountryLocale(),
+                        settings.getRandomArbitrator(),
                         settings.getAcceptedCountryLocales(),
                         settings.getAcceptedLanguageLocales());
 
@@ -131,8 +133,12 @@ public class CreateOfferController implements Initializable, ChildController, Wa
                     buildConfirmationView(txID);
                 } catch (InsufficientMoneyException e1)
                 {
-                    //TODO popup
-                    log.error(e.toString());
+                    Dialogs.create()
+                            .title("Not enough money available")
+                            .message("There is not enough money available. Please pay in first to your wallet.")
+                            .nativeTitleBar()
+                            .lightweight()
+                            .showError();
                 }
             }
         });

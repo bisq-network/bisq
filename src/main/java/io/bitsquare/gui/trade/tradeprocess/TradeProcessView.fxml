@@ -1,10 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import io.bitsquare.gui.components.processbar.ProcessStepBar?>
+<?import io.bitsquare.gui.components.VSpacer?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="rootContainer"
-            AnchorPane.leftAnchor="0.0"
-            AnchorPane.rightAnchor="0.0"
-            AnchorPane.topAnchor="0.0"
-            AnchorPane.bottomAnchor="0.0"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="io.bitsquare.gui.trade.tradeprocess.TradeProcessController"/>
+<AnchorPane fx:id="rootContainer" fx:controller="io.bitsquare.gui.trade.tradeprocess.TradeProcessController"
+            xmlns:fx="http://javafx.com/fxml">
+    <ScrollPane fitToWidth="true" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
+                AnchorPane.bottomAnchor="0">
+
+        <content>
+            <VBox fx:id="vBox" spacing="10">
+                <padding>
+                    <Insets left="10" right="10" top="10" bottom="10"/>
+                </padding>
+                <ProcessStepBar fx:id="processStepBar"/>
+                <VSpacer prefHeight="5"/>
+                <GridPane fx:id="formGridPane" vgap="5" hgap="5">
+                    <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                    </padding>
+                    <columnConstraints>
+                        <ColumnConstraints halignment="RIGHT"/>
+                        <ColumnConstraints halignment="LEFT" prefWidth="400"/>
+                        <ColumnConstraints halignment="LEFT"/>
+                    </columnConstraints>
+                </GridPane>
+            </VBox>
+        </content>
+    </ScrollPane>
+</AnchorPane>

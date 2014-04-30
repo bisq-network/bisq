@@ -4,11 +4,16 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.bitsquare.bank.BankAccountType;
+import javafx.animation.AnimationTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.*;
+import java.net.URI;
 import java.util.*;
+import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class Utils
@@ -36,6 +41,13 @@ public class Utils
     {
         printElapsedTime("");
     }
+
+
+    public static void openURL(String url) throws Exception
+    {
+        Desktop.getDesktop().browse(new URI(url));
+    }
+
 
     public static Object copy(Object orig)
     {
@@ -155,5 +167,29 @@ public class Utils
         return bankTransferTypes;
     }
 
-
+    /**
+     * @param delay    in milliseconds
+     * @param callback
+     * @usage Utils.setTimeout(1000, (AnimationTimer animationTimer) -> {
+     * doSomething();
+     * return null;
+     * });
+     */
+    public static void setTimeout(int delay, Function<AnimationTimer, Void> callback)
+    {
+        long startTime = System.currentTimeMillis();
+        AnimationTimer animationTimer = new AnimationTimer()
+        {
+            @Override
+            public void handle(long arg0)
+            {
+                if (System.currentTimeMillis() > delay + startTime)
+                {
+                    callback.apply(this);
+                    this.stop();
+                }
+            }
+        };
+        animationTimer.start();
+    }
 }

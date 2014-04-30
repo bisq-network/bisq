@@ -1,6 +1,7 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.user.Arbitrator;
 
 import java.util.Currency;
 import java.util.List;
@@ -13,8 +14,6 @@ public class Offer
     private double price;
     private double amount;
     private double minAmount;
-
-
     private String accountID;
     private String messageID;
     private Direction direction;
@@ -24,6 +23,7 @@ public class Offer
     private List<Locale> acceptedCountryLocales;
     private List<Locale> acceptedLanguageLocales;
     private String offerPaymentTxID;
+    private Arbitrator arbitrator;
 
     public Offer(String accountID,
                  String messageID,
@@ -34,6 +34,7 @@ public class Offer
                  BankAccountType.BankAccountTypeEnum bankAccountTypeEnum,
                  Currency currency,
                  Locale bankAccountCountryLocale,
+                 Arbitrator arbitrator,
                  List<Locale> acceptedCountryLocales,
                  List<Locale> acceptedLanguageLocales)
     {
@@ -46,19 +47,28 @@ public class Offer
         this.bankAccountTypeEnum = bankAccountTypeEnum;
         this.currency = currency;
         this.bankAccountCountryLocale = bankAccountCountryLocale;
+        this.arbitrator = arbitrator;
         this.acceptedCountryLocales = acceptedCountryLocales;
         this.acceptedLanguageLocales = acceptedLanguageLocales;
 
         uid = UUID.randomUUID();
     }
 
-    // setter
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void setOfferPaymentTxID(String offerPaymentTxID)
     {
         this.offerPaymentTxID = offerPaymentTxID;
     }
 
-    // getters
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public String getAccountID()
     {
         return accountID;
@@ -134,4 +144,8 @@ public class Offer
         return offerPaymentTxID;
     }
 
+    public Arbitrator getArbitrator()
+    {
+        return arbitrator;
+    }
 }

@@ -86,7 +86,6 @@ public class Trading
         KeyPair address = walletFacade.createNewAddress();
 
         Contract contract = new Contract(trade, address.getPubKey());
-        //contract.setOfferer(trade.getOffer().getOfferer());
         contract.setTaker(user);
         contracts.put(trade.getUid().toString(), contract);
         return contract;

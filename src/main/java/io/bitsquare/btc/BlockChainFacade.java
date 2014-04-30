@@ -1,6 +1,7 @@
 package io.bitsquare.btc;
 
 import com.google.inject.Inject;
+import io.bitsquare.bank.BankAccount;
 
 /**
  * That facade delivers blockchain functionality from the bitcoinJ library
@@ -15,11 +16,14 @@ public class BlockChainFacade
 
     }
 
-    public boolean verifyAddressInBlockChain(String hashAsHexStringToVerify, String address)
+    public boolean verifyEmbeddedData(String address)
     {
-        return findAddressInBlockChain(address)
-                && getDataForTxWithAddress(hashAsHexStringToVerify, address)
-                && isFeePayed(address);
+        return true;
+        /*
+        if (findAddressInBlockChain(address) && isFeePayed(address))
+            return getDataForTxWithAddress(address) != null;
+        else
+            return true;   */
     }
 
     private boolean findAddressInBlockChain(String address)
@@ -29,11 +33,11 @@ public class BlockChainFacade
         return true;
     }
 
-    private boolean getDataForTxWithAddress(String hashToVerify, String address)
+    private byte[] getDataForTxWithAddress(String address)
     {
         // TODO
-        // check if data after OP_RETURN match hashToVerify
-        return true;
+        // return data after OP_RETURN
+        return null;
     }
 
     private boolean isFeePayed(String address)
@@ -43,4 +47,17 @@ public class BlockChainFacade
         return true;
     }
 
+    public boolean isAccountIDBlacklisted(String accountID)
+    {
+        // TODO
+        // check if accountID is on blacklist
+        return false;
+    }
+
+    public boolean isBankAccountBlacklisted(BankAccount bankAccount)
+    {
+        // TODO
+        // check if accountID is on blacklist
+        return false;
+    }
 }
