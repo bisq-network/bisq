@@ -2,6 +2,8 @@ package io.bitsquare;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import io.bitsquare.bank.BankAccount;
+import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.di.GuiceFXMLLoader;
@@ -10,6 +12,7 @@ import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.User;
+import io.bitsquare.util.MockData;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -100,32 +103,35 @@ public class BitSquare extends Application
 
             storage.write(settings.getClass().getName(), settings);
 
-            /*
-            BankAccount bankAccount1 = new BankAccount(new BankAccountType(BankAccountType.BankAccountTypeEnum.SEPA,"Iban", "Bic"),
-                    MockData.getCurrencies().get(0),
-                    MockData.getLocales().get(0),
-                    "Main account",
-                    "Manfred Karrer",
-                    "564613242346",
-                    "23432432434"
-                    );
-            BankAccount bankAccount2 = new BankAccount(new BankAccountType(BankAccountType.BankAccountTypeEnum.OK_PAY,"Number", "ID"),
-                    MockData.getCurrencies().get(0),
-                    MockData.getLocales().get(0),
-                    "OK account",
-                    "Manfred Karrer",
-                    "22312123123123123",
-                    "asdasdasdas"
-            );
-            user.addBankAccount(bankAccount2);
-            user.addBankAccount(bankAccount1);
-            user.setAccountID(UUID.randomUUID().toString());
-            storage.write(user.getClass().getName(), user);
-            */
+            initMockUser(storage, user);
         }
         else
         {
             settings.updateFromStorage(savedSettings);
         }
+    }
+
+    private void initMockUser(Storage storage, User user)
+    {
+        BankAccount bankAccount1 = new BankAccount(new BankAccountType(BankAccountType.BankAccountTypeEnum.SEPA, "Iban", "Bic"),
+                MockData.getCurrencies().get(0),
+                MockData.getLocales().get(0),
+                "Main account",
+                "Manfred Karrer",
+                "564613242346",
+                "23432432434"
+        );
+        BankAccount bankAccount2 = new BankAccount(new BankAccountType(BankAccountType.BankAccountTypeEnum.OK_PAY, "Number", "ID"),
+                MockData.getCurrencies().get(0),
+                MockData.getLocales().get(0),
+                "OK account",
+                "Manfred Karrer",
+                "22312123123123123",
+                "asdasdasdas"
+        );
+        user.addBankAccount(bankAccount2);
+        user.addBankAccount(bankAccount1);
+        user.setAccountID(UUID.randomUUID().toString());
+        storage.write(user.getClass().getName(), user);
     }
 }

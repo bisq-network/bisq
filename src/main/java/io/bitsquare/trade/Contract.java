@@ -7,25 +7,35 @@ import java.util.UUID;
 public class Contract
 {
     private User taker;
-    private String offererPubKey;
     private Trade trade;
     private String takerPubKey;
+    private String offererPubKey;
 
-
-    public Contract(Trade trade, String takerPubKey)
+    public Contract(User taker, Trade trade, String takerPubKey)
     {
+        this.taker = taker;
         this.trade = trade;
         this.takerPubKey = takerPubKey;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setOffererPubKey(String offererPubKey)
+    {
+        this.offererPubKey = offererPubKey;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public UUID getUid()
     {
         return trade.getUid();
-    }
-
-    public void setTaker(User taker)
-    {
-        this.taker = taker;
     }
 
     public User getTaker()
@@ -38,9 +48,9 @@ public class Contract
         return takerPubKey;
     }
 
-    public void setTakerPubKey(String takerPubKey)
+    public Trade getTrade()
     {
-        this.takerPubKey = takerPubKey;
+        return trade;
     }
 
     public String getOffererPubKey()
@@ -48,19 +58,4 @@ public class Contract
         return offererPubKey;
     }
 
-    public void setOffererPubKey(String offererPubKey)
-    {
-        this.offererPubKey = offererPubKey;
-    }
-
-
-    public Trade getTrade()
-    {
-        return trade;
-    }
-
-    public void setTrade(Trade trade)
-    {
-        this.trade = trade;
-    }
 }

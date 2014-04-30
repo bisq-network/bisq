@@ -16,7 +16,7 @@ public class User implements Serializable
 
     private String accountID;
     private String messageID;
-    private boolean online;
+    private boolean isOnline;
     private List<BankAccount> bankAccounts = new ArrayList<>();
     private BankAccount currentBankAccount = null;
 
@@ -24,30 +24,21 @@ public class User implements Serializable
     {
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void updateFromStorage(User savedUser)
     {
         if (savedUser != null)
         {
             accountID = savedUser.getAccountID();
             messageID = savedUser.getMessageID();
-            online = savedUser.isOnline();
+            isOnline = savedUser.getIsOnline();
             bankAccounts = savedUser.getBankAccounts();
             currentBankAccount = savedUser.getCurrentBankAccount();
         }
-    }
-
-    public String getStringifiedBankAccounts()
-    {
-        String bankAccountUIDs = "";
-        for (Iterator<BankAccount> iterator = getBankAccounts().iterator(); iterator.hasNext(); )
-        {
-            BankAccount bankAccount = iterator.next();
-            bankAccountUIDs += bankAccount.getStringifiedBankAccount();
-
-            if (iterator.hasNext())
-                bankAccountUIDs += ", ";
-        }
-        return bankAccountUIDs;
     }
 
     public void addBankAccount(BankAccount bankAccount)
@@ -56,7 +47,11 @@ public class User implements Serializable
         currentBankAccount = bankAccount;
     }
 
-    // setter
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void setMessageID(String messageID)
     {
         this.messageID = messageID;
@@ -78,14 +73,30 @@ public class User implements Serializable
         triggerChange();
     }
 
-
-    public void setOnline(boolean online)
+    public void setIsOnline(boolean isOnline)
     {
-        this.online = online;
+        this.isOnline = isOnline;
     }
 
 
-    // getter
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String getStringifiedBankAccounts()
+    {
+        String bankAccountUIDs = "";
+        for (Iterator<BankAccount> iterator = getBankAccounts().iterator(); iterator.hasNext(); )
+        {
+            BankAccount bankAccount = iterator.next();
+            bankAccountUIDs += bankAccount.getStringifiedBankAccount();
+
+            if (iterator.hasNext())
+                bankAccountUIDs += ", ";
+        }
+        return bankAccountUIDs;
+    }
+
     public String getMessageID()
     {
         return messageID;
@@ -106,17 +117,20 @@ public class User implements Serializable
         return currentBankAccount;
     }
 
-
-    public boolean isOnline()
+    public boolean getIsOnline()
     {
-        return online;
+        return isOnline;
     }
-
 
     public SimpleBooleanProperty getChangedProperty()
     {
         return changedProperty;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void triggerChange()
     {

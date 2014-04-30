@@ -11,8 +11,6 @@ import java.util.Locale;
 
 public class Formatter
 {
-
-
     public static String formatPrice(double price)
     {
         return formatDouble(price);

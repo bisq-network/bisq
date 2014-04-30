@@ -1,7 +1,7 @@
 package io.bitsquare.trade.orderbook;
 
 import com.google.inject.Inject;
-import io.bitsquare.gui.trade.orderbook.OrderBookListItem;
+import io.bitsquare.gui.market.orderbook.OrderBookListItem;
 import io.bitsquare.gui.util.Converter;
 import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.settings.Settings;
@@ -43,7 +43,7 @@ public class MockOrderBook extends OrderBook
             price = 500 - Math.random() * 50;
         }
 
-        Offer offer = new Offer(UUID.randomUUID().toString(),
+        Offer offer = new Offer("mjbxLbuVpU1cNXLJbrJZyirYwweoRPVVTj",
                 UUID.randomUUID().toString(),
                 direction,
                 price,

@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 <AnchorPane fx:id="holderPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
             AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="io.bitsquare.gui.trade.orderbook.OrderBookController">
+            fx:controller="io.bitsquare.gui.market.orderbook.OrderBookController">
     <children>
 
         <HBox fx:id="topHBox" prefHeight="22.0" AnchorPane.topAnchor="10.0" AnchorPane.leftAnchor="10.0"

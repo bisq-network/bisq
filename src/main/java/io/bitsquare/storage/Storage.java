@@ -1,6 +1,5 @@
 package io.bitsquare.storage;
 
-import io.bitsquare.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,56 +12,62 @@ import java.util.Map;
  */
 public class Storage
 {
-
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
 
+    //TODO save in users preferences location
     private final String preferencesFileName = "preferences.ser";
     private final String storageFile;
-    private DataVO dataVO;
+    private Map<String, Object> dict;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Storage()
     {
         storageFile = Storage.class.getProtectionDomain().getCodeSource().getLocation().getFile() + "/" + preferencesFileName;
 
-        dataVO = readDataVO();
-        if (dataVO == null)
+        dict = readDataVO();
+        if (dict == null)
         {
-            dataVO = new DataVO();
-            dataVO.dict = new HashMap<String, Object>();
-            writeDataVO(dataVO);
+            dict = new HashMap<>();
+            writeDataVO(dict);
         }
     }
 
 
-    public void updateUserFromStorage(User user)
-    {
-        User savedUser = (User) read(user.getClass().getName());
-        if (savedUser != null)
-            user.updateFromStorage(savedUser);
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void write(String key, Object value)
     {
         //log.info("Write object with key = " + key + " / value = " + value);
-        dataVO.dict.put(key, value);
-        writeDataVO(dataVO);
+        dict.put(key, value);
+        writeDataVO(dict);
     }
 
     public Object read(String key)
     {
-        dataVO = readDataVO();
-        Object result = dataVO.dict.get(key);
+        dict = readDataVO();
+        Object result = dict.get(key);
         //log.info("Read object with key = " + key + " result = " + result);
         return result;
     }
 
-    private void writeDataVO(DataVO dataVO)
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void writeDataVO(Map<String, Object> dict)
     {
         try
         {
             FileOutputStream fileOut = new FileOutputStream(storageFile);
             ObjectOutputStream out = new ObjectOutputStream(fileOut);
-            out.writeObject(dataVO);
+            out.writeObject(dict);
             out.close();
             fileOut.close();
         } catch (IOException i)
@@ -71,9 +76,9 @@ public class Storage
         }
     }
 
-    private DataVO readDataVO()
+    private Map<String, Object> readDataVO()
     {
-        DataVO dataVO = null;
+        Map<String, Object> dict = null;
         File file = new File(storageFile);
         if (file.exists())
         {
@@ -81,7 +86,7 @@ public class Storage
             {
                 FileInputStream fileIn = new FileInputStream(file);
                 ObjectInputStream in = new ObjectInputStream(fileIn);
-                dataVO = (DataVO) in.readObject();
+                dict = (Map<String, Object>) in.readObject();
                 in.close();
                 fileIn.close();
             } catch (IOException i)
@@ -92,16 +97,6 @@ public class Storage
                 c.printStackTrace();
             }
         }
-        return dataVO;
+        return dict;
     }
-
-
-}
-
-class DataVO implements Serializable
-{
-
-    private static final long serialVersionUID = -1127046445783201376L;
-
-    public Map<String, Object> dict;
 }

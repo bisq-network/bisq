@@ -5,8 +5,8 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.components.NetworkSyncPane;
+import io.bitsquare.gui.market.MarketController;
 import io.bitsquare.gui.setup.SetupController;
-import io.bitsquare.gui.trade.TradeController;
 import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.gui.util.Localisation;
@@ -56,12 +56,22 @@ public class MainController implements Initializable, NavigationController, Wall
     @FXML
     public AnchorPane anchorPane;
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Inject
     public MainController(User user, WalletFacade walletFacade)
     {
         this.user = user;
         this.walletFacade = walletFacade;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface implementation: Initializable
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
@@ -87,6 +97,10 @@ public class MainController implements Initializable, NavigationController, Wall
     }
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface implementation: NavigationController
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public ChildController navigateToView(String fxmlView, String title)
     {
@@ -102,9 +116,9 @@ public class MainController implements Initializable, NavigationController, Wall
             return null;
         }
 
-        if (childController instanceof TradeController)
+        if (childController instanceof MarketController)
         {
-            ((TradeController) childController).cleanup();
+            ((MarketController) childController).cleanup();
         }
 
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
@@ -122,6 +136,11 @@ public class MainController implements Initializable, NavigationController, Wall
         return null;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface implementation: WalletFacade.DownloadListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void progress(double percent, int blocksSoFar, Date date)
     {
@@ -136,15 +155,10 @@ public class MainController implements Initializable, NavigationController, Wall
             Platform.runLater(networkSyncPane::doneDownload);
     }
 
-    public ChildController navigateToView(String fxmlView, Direction direction)
-    {
-        childController = navigateToView(fxmlView, direction == Direction.BUY ? "Orderbook Buy" : "Orderbook Sell");
-        if (childController instanceof TradeController && direction != null)
-        {
-            ((TradeController) childController).setDirection(direction);
-        }
-        return childController;
-    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void buildSetupView()
     {
@@ -165,8 +179,8 @@ public class MainController implements Initializable, NavigationController, Wall
         toggleGroup = new ToggleGroup();
 
         ToggleButton homeButton = addNavButton(leftNavPane, "Overview", Icons.HOME, Icons.HOME, NavigationController.HOME);
-        ToggleButton buyButton = addNavButton(leftNavPane, "Buy BTC", Icons.NAV_BUY, Icons.NAV_BUY_ACTIVE, NavigationController.TRADE, Direction.BUY);
-        ToggleButton sellButton = addNavButton(leftNavPane, "Sell BTC", Icons.NAV_SELL, Icons.NAV_SELL_ACTIVE, NavigationController.TRADE, Direction.SELL);
+        ToggleButton buyButton = addNavButton(leftNavPane, "Buy BTC", Icons.NAV_BUY, Icons.NAV_BUY_ACTIVE, NavigationController.MARKET, Direction.BUY);
+        ToggleButton sellButton = addNavButton(leftNavPane, "Sell BTC", Icons.NAV_SELL, Icons.NAV_SELL_ACTIVE, NavigationController.MARKET, Direction.SELL);
         addNavButton(leftNavPane, "Orders", Icons.ORDERS, Icons.ORDERS, NavigationController.ORDERS);
         addNavButton(leftNavPane, "History", Icons.HISTORY, Icons.HISTORY, NavigationController.HISTORY);
         addNavButton(leftNavPane, "Funds", Icons.FUNDS, Icons.FUNDS, NavigationController.FUNDS);
@@ -201,12 +215,18 @@ public class MainController implements Initializable, NavigationController, Wall
             prevToggleButtonIcon = ((ImageView) (toggleButton.getGraphic())).getImage();
             ((ImageView) (toggleButton.getGraphic())).setImage(Icons.getIconImage(iconIdActivated));
 
-            if (childController instanceof TradeController && direction != null)
+            if (childController instanceof MarketController && direction != null)
             {
-                ((TradeController) childController).setDirection(direction);
+                ((MarketController) childController).setDirection(direction);
             }
             else
-                navigateToView(navTarget, direction);
+            {
+                childController = navigateToView(navTarget, direction == Direction.BUY ? "Orderbook Buy" : "Orderbook Sell");
+                if (childController instanceof MarketController && direction != null)
+                {
+                    ((MarketController) childController).setDirection(direction);
+                }
+            }
 
             prevToggleButton = toggleButton;
 

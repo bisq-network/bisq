@@ -5,7 +5,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="rootContainer" fx:controller="io.bitsquare.gui.trade.tradeprocess.TradeProcessController"
+<AnchorPane fx:id="rootContainer" fx:controller="io.bitsquare.gui.market.trade.TradeController"
             xmlns:fx="http://javafx.com/fxml">
     <ScrollPane fitToWidth="true" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
                 AnchorPane.bottomAnchor="0">
@@ -17,7 +17,7 @@
                 </padding>
                 <ProcessStepBar fx:id="processStepBar"/>
                 <VSpacer prefHeight="5"/>
-                <GridPane fx:id="formGridPane" vgap="5" hgap="5">
+                <GridPane fx:id="gridPane" vgap="5" hgap="5">
                     <padding>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
                     </padding>

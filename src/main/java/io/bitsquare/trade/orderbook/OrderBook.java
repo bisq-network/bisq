@@ -2,8 +2,7 @@ package io.bitsquare.trade.orderbook;
 
 import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.trade.orderbook.OrderBookListItem;
+import io.bitsquare.gui.market.orderbook.OrderBookListItem;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
@@ -23,29 +22,30 @@ public class OrderBook
 {
     private static final Logger log = LoggerFactory.getLogger(OrderBook.class);
 
-    private FilteredList<OrderBookListItem> filteredList;
-    private SortedList<OrderBookListItem> offerList;
-
-
-    protected ObservableList<OrderBookListItem> allOffers = FXCollections.observableArrayList();
     private Settings settings;
     private User user;
+
+    protected ObservableList<OrderBookListItem> allOffers = FXCollections.observableArrayList();
+    private FilteredList<OrderBookListItem> filteredList = new FilteredList<>(allOffers);
+    // FilteredList does not support sorting, so we need to wrap it to a SortedList
+    private SortedList<OrderBookListItem> offerList = new SortedList<>(filteredList);
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     public OrderBook(Settings settings, User user)
     {
         this.settings = settings;
         this.user = user;
-
-        filteredList = new FilteredList<>(allOffers);
-        // FilteredList does not support sorting, so we need to wrap it to a SortedList
-        offerList = new SortedList<>(filteredList);
     }
 
-    public SortedList<OrderBookListItem> getOfferList()
-    {
-        return offerList;
-    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void updateFilter(OrderBookFilter orderBookFilter)
     {
@@ -130,6 +130,20 @@ public class OrderBook
         });
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getter
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public SortedList<OrderBookListItem> getOfferList()
+    {
+        return offerList;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private boolean countryInList(Locale orderBookFilterLocale, List<Locale> offerConstraintsLocales)
     {
         for (Locale locale : offerConstraintsLocales)
@@ -152,16 +166,4 @@ public class OrderBook
         }
         return false;
     }
-
-    private boolean matchBankAccountTypeEnum(BankAccountType.BankAccountTypeEnum orderBookFilterBankAccountType, List<BankAccountType.BankAccountTypeEnum> offerConstraintsBankAccountTypes)
-    {
-        for (BankAccountType.BankAccountTypeEnum bankAccountType : offerConstraintsBankAccountTypes)
-        {
-            if (bankAccountType.equals(orderBookFilterBankAccountType))
-                return true;
-        }
-        return false;
-    }
-
-
 }
