@@ -1,23 +1,27 @@
 package io.bitsquare.gui.util;
 
-import io.bitsquare.settings.Settings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.DecimalFormat;
 import java.text.ParseException;
+import java.util.Locale;
 
 public class Converter
 {
-    public static double convertToDouble(String input)
+    private static final Logger log = LoggerFactory.getLogger(Converter.class);
+
+    public static double stringToDouble(String input)
     {
         try
         {
-            DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Settings.getLocale());
+            DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.getDefault());
             return decimalFormat.parse(input).doubleValue();
         } catch (ParseException e)
         {
-            //e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            log.warn(e.toString());
         }
-        return 0.0;
+        return 0;
     }
 
 

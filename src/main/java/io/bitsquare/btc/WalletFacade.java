@@ -5,7 +5,10 @@ import com.google.bitcoin.kits.WalletAppKit;
 import com.google.bitcoin.params.MainNetParams;
 import com.google.bitcoin.params.RegTestParams;
 import com.google.bitcoin.script.Script;
+import com.google.bitcoin.script.ScriptBuilder;
 import com.google.bitcoin.utils.Threading;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.inject.Inject;
 import io.bitsquare.crypto.CryptoFacade;
 import javafx.application.Platform;
@@ -17,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
+import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
 
 /**
  * That facade delivers wallet functionality from the bitcoinJ library
@@ -79,12 +84,12 @@ public class WalletFacade implements WalletEventListener
         walletAppKit.startAsync();
         walletAppKit.awaitRunning();
         // Don't make the user wait for confirmations for now, as the intention is they're sending it their own money!
-        walletAppKit.wallet().allowSpendingUnconfirmedTransactions();
+        getWallet().allowSpendingUnconfirmedTransactions();
         walletAppKit.peerGroup().setMaxConnections(11);
 
-        walletAppKit.wallet().addEventListener(this);
+        getWallet().addEventListener(this);
 
-        log.info(walletAppKit.wallet().toString());
+        log.info(getWallet().toString());
     }
 
     public void shutDown()
@@ -134,12 +139,12 @@ public class WalletFacade implements WalletEventListener
 
     public BigInteger getBalance()
     {
-        return walletAppKit.wallet().getBalance(Wallet.BalanceType.ESTIMATED);
+        return getWallet().getBalance(Wallet.BalanceType.ESTIMATED);
     }
 
     public String getAddress()
     {
-        return walletAppKit.wallet().getKeys().get(0).toAddress(networkParameters).toString();
+        return getWallet().getKeys().get(0).toAddress(networkParameters).toString();
     }
 
     // account registration
@@ -171,14 +176,14 @@ public class WalletFacade implements WalletEventListener
                 && blockChainFacade.verifyAddressInBlockChain(hashAsHexStringToVerify, address);
     }
 
-    public int getRegistrationConfirmationNumBroadcastPeers()
+    public int getRegConfNumBroadcastPeers()
     {
-        return getAccountRegistrationWallet().getConfirmationNumBroadcastPeers();
+        return getAccountRegistrationWallet().getConfNumBroadcastPeers();
     }
 
-    public int getRegistrationConfirmationDepthInBlocks()
+    public int getRegConfDepthInBlocks()
     {
-        return WalletUtil.getConfirmationDepthInBlocks(getAccountRegistrationWallet());
+        return WalletUtil.getConfDepthInBlocks(getAccountRegistrationWallet());
     }
 
     // WalletEventListener
@@ -195,7 +200,7 @@ public class WalletFacade implements WalletEventListener
     public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
     {
         for (WalletListener walletListener : walletListeners)
-            walletListener.onConfidenceChanged(tx.getConfidence().numBroadcastPeers(), WalletUtil.getConfirmationDepthInBlocks(walletAppKit.wallet()));
+            walletListener.onConfidenceChanged(tx.getConfidence().numBroadcastPeers(), WalletUtil.getConfDepthInBlocks(getWallet()));
 
         log.info("onTransactionConfidenceChanged " + tx.getConfidence().toString());
     }
@@ -239,6 +244,51 @@ public class WalletFacade implements WalletEventListener
         return accountRegistrationWallet;
     }
 
+    public String payOfferFee() throws InsufficientMoneyException
+    {
+        getWallet();
+
+        Script script = new ScriptBuilder()
+                .op(OP_RETURN)
+                .build();
+        Transaction transaction = new Transaction(networkParameters);
+        TransactionOutput dataOutput = new TransactionOutput(networkParameters,
+                transaction,
+                Transaction.MIN_NONDUST_OUTPUT,
+                script.getProgram());
+        transaction.addOutput(dataOutput);
+        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
+
+        // give fee to miners yet. Later it could be spent to other traders via lottery...
+        sendRequest.fee = Fees.OFFER_CREATION_FEE;
+
+        Wallet.SendResult sendResult = getWallet().sendCoins(sendRequest);
+
+        Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>()
+        {
+            @Override
+            public void onSuccess(Transaction result)
+            {
+                log.info("sendResult onSuccess:" + result.toString());
+                // Platform.runLater(overlayUi::done);
+            }
+
+            @Override
+            public void onFailure(Throwable t)
+            {
+                log.warn("sendResult onFailure:" + t.toString());
+                // We died trying to empty the wallet.
+                // crashAlert(t);
+            }
+        });
+
+        return transaction.getHashAsString();
+    }
+
+    private Wallet getWallet()
+    {
+        return walletAppKit.wallet();
+    }
 
     // inner classes
     private class BlockChainDownloadListener extends com.google.bitcoin.core.DownloadListener

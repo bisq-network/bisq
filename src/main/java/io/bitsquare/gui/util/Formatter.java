@@ -1,13 +1,13 @@
 package io.bitsquare.gui.util;
 
 import io.bitsquare.btc.BtcFormatter;
-import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
 
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.Currency;
 import java.util.List;
+import java.util.Locale;
 
 public class Formatter
 {
@@ -111,7 +111,7 @@ public class Formatter
 
     public static DecimalFormat getDecimalFormat(int fractionDigits)
     {
-        DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Settings.getLocale());
+        DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.getDefault());
         decimalFormat.setMinimumFractionDigits(fractionDigits);
         decimalFormat.setMaximumFractionDigits(fractionDigits);
         decimalFormat.setGroupingUsed(false);
@@ -121,6 +121,34 @@ public class Formatter
     private static String formatPercent(double value)
     {
         return value * 100 + "%";
+    }
+
+    public static String countryLocalesToString(List<Locale> countryLocales)
+    {
+        String result = "";
+        int i = 0;
+        for (Locale locale : countryLocales)
+        {
+            result += locale.getCountry();
+            i++;
+            if (i < countryLocales.size())
+                result += ", ";
+        }
+        return result;
+    }
+
+    public static String languageLocalesToString(List<Locale> languageLocales)
+    {
+        String result = "";
+        int i = 0;
+        for (Locale locale : languageLocales)
+        {
+            result += locale.getDisplayLanguage();
+            i++;
+            if (i < languageLocales.size())
+                result += ", ";
+        }
+        return result;
     }
 
 }

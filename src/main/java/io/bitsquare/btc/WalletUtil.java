@@ -11,7 +11,7 @@ public class WalletUtil
 {
 
     // TODO check if that is correct and safe
-    public static int getConfirmationDepthInBlocks(Wallet wallet)
+    public static int getConfDepthInBlocks(Wallet wallet)
     {
         Transaction transaction = WalletUtil.getTransaction(wallet);
         if (transaction != null && transaction.getConfidence() != null)

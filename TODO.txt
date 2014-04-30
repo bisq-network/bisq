@@ -1,0 +1,13 @@
+- payment process update with new models
+- btc payments in payment process
+- arbitration integration
+
+Messaging!
+
+low prio:
+- add settings after setup
+- settings screen
+- return to setup when unregistered, change/add bank accounts from settings
+
+
+

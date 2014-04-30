@@ -4,7 +4,7 @@ import javafx.animation.AnimationTimer;
 
 import java.util.function.Function;
 
-public class Utils
+public class GUIUtils
 {
     /**
      * @param delay    in milliseconds

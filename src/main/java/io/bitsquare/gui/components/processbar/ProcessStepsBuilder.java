@@ -1,6 +1,6 @@
 package io.bitsquare.gui.components.processbar;
 
-import io.bitsquare.gui.util.Utils;
+import io.bitsquare.gui.util.GUIUtils;
 import javafx.animation.AnimationTimer;
 import javafx.scene.control.Button;
 import javafx.scene.control.Control;
@@ -65,7 +65,7 @@ public class ProcessStepsBuilder
 
                 // TODO
                 // mock simulate network delay
-                Utils.setTimeout(100, (AnimationTimer animationTimer) -> {
+                GUIUtils.setTimeout(100, (AnimationTimer animationTimer) -> {
                     next();
                     return null;
                 });

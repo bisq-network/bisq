@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <AnchorPane fx:id="rootContainer" fx:controller="io.bitsquare.gui.setup.SetupController"
-            xmlns:fx="http://javafx.com/fxml" minHeight="300" minWidth="400" prefHeight="600" prefWidth="800">
+            xmlns:fx="http://javafx.com/fxml">
     <ScrollPane fitToWidth="true" AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10" AnchorPane.topAnchor="10"
                 AnchorPane.bottomAnchor="30">
         <content>

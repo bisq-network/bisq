@@ -1,5 +1,6 @@
 package io.bitsquare.trade;
 
+import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.KeyPair;
@@ -52,11 +53,15 @@ public class Trading
     /**
      * @param offer
      */
-    public void placeNewOffer(Offer offer)
+    public String placeNewOffer(Offer offer) throws InsufficientMoneyException
     {
         log.info("place New Offer");
         offers.put(offer.getUid().toString(), offer);
+        String txID = walletFacade.payOfferFee();
+        offer.setOfferPaymentTxID(txID);
+
         messageFacade.broadcast(new Message(Message.BROADCAST_NEW_OFFER, offer));
+        return txID;
     }
 
     /**
@@ -67,7 +72,7 @@ public class Trading
     public void sendTakeOfferRequest(Trade trade)
     {
         log.info("Taker asks offerer to take his offer");
-        messageFacade.send(new Message(Message.REQUEST_TAKE_OFFER, trade), trade.getOffer().getOfferer().getMessageID());
+        //messageFacade.send(new Message(Message.REQUEST_TAKE_OFFER, trade), trade.getOffer().getOfferer().getMessageID());
     }
 
 
@@ -81,7 +86,7 @@ public class Trading
         KeyPair address = walletFacade.createNewAddress();
 
         Contract contract = new Contract(trade, address.getPubKey());
-        contract.setOfferer(trade.getOffer().getOfferer());
+        //contract.setOfferer(trade.getOffer().getOfferer());
         contract.setTaker(user);
         contracts.put(trade.getUid().toString(), contract);
         return contract;
@@ -132,7 +137,7 @@ public class Trading
         trade.setTakeOfferFeeTxID(txID);
 
         log.info("Taker asks offerer for confirmation for his fee payment. txID=" + txID);
-        messageFacade.send(new Message(Message.REQUEST_OFFER_FEE_PAYMENT_CONFIRM, trade), trade.getOffer().getOfferer().getMessageID());
+        // messageFacade.send(new Message(Message.REQUEST_OFFER_FEE_PAYMENT_CONFIRM, trade), trade.getOffer().getOfferer().getMessageID());
     }
 
 
@@ -154,7 +159,7 @@ public class Trading
         log.info("Sign deposit tx");
 
         log.info("Send deposit Tx");
-        messageFacade.send(new Message(Message.REQUEST_OFFER_FEE_PAYMENT_CONFIRM, trade), trade.getOffer().getOfferer().getMessageID());
+        // messageFacade.send(new Message(Message.REQUEST_OFFER_FEE_PAYMENT_CONFIRM, trade), trade.getOffer().getOfferer().getMessageID());
     }
 
 
@@ -168,7 +173,7 @@ public class Trading
         log.info("Broadcast payment tx");
 
         log.info("Send message to peer that payment Tx has been broadcasted.");
-        messageFacade.send(new Message(Message.REQUEST_OFFER_FEE_PAYMENT_CONFIRM, trade), trade.getOffer().getOfferer().getMessageID());
+        // messageFacade.send(new Message(Message.REQUEST_OFFER_FEE_PAYMENT_CONFIRM, trade), trade.getOffer().getOfferer().getMessageID());
     }
 
 

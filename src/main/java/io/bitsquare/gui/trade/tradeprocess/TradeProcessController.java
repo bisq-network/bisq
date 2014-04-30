@@ -45,7 +45,7 @@ public class TradeProcessController implements Initializable, ChildController
     private TextField amountTextField;
     private Label offererPubKeyLabel, offererAccountPrimaryID, offererAccountSecondaryIDLabel,
             offererAccountHolderNameLabel, feedbackLabel, infoLabel, totalLabel, volumeLabel, totalToPayLabel,
-            totalToReceiveLabel, collateralLabel1, collateralLabel2, amountLabel;
+    /*totalToReceiveLabel,*/ amountLabel;
     private Pane progressPane;
     private ProgressBar progressBar;
     private ProgressIndicator progressIndicator;
@@ -90,7 +90,7 @@ public class TradeProcessController implements Initializable, ChildController
 
     private void trade()
     {
-        double requestedAmount = Converter.convertToDouble(amountTextField.getText());
+        double requestedAmount = Converter.stringToDouble(amountTextField.getText());
         if (requestedAmount <= offer.getAmount() && requestedAmount >= offer.getMinAmount())
         {
             amountTextField.setEditable(false);
@@ -137,7 +137,7 @@ public class TradeProcessController implements Initializable, ChildController
     {
         trading.sendTakeOfferRequest(trade);
         feedbackLabel.setText("Request take offer confirmation from peer.");
-        Utils.setTimeout(500, (AnimationTimer animationTimer) -> {
+        GUIUtils.setTimeout(500, (AnimationTimer animationTimer) -> {
             onTakeOfferRequestConfirmed();
             progressBar.setProgress(1.0 / 3.0);
             return null;
@@ -149,7 +149,7 @@ public class TradeProcessController implements Initializable, ChildController
         trading.payOfferFee(trade);
 
         feedbackLabel.setText("Request offer fee payment confirmation from peer.");
-        Utils.setTimeout(500, (AnimationTimer animationTimer) -> {
+        GUIUtils.setTimeout(500, (AnimationTimer animationTimer) -> {
             onOfferFeePaymentConfirmed();
             progressBar.setProgress(2.0 / 3.0);
             return null;
@@ -160,7 +160,7 @@ public class TradeProcessController implements Initializable, ChildController
     {
         trading.requestOffererDetailData();
         feedbackLabel.setText("Request detail data from peer.");
-        Utils.setTimeout(500, (AnimationTimer animationTimer) -> {
+        GUIUtils.setTimeout(500, (AnimationTimer animationTimer) -> {
             onUserDetailsReceived();
             progressBar.setProgress(1.0);
             return null;
@@ -187,7 +187,7 @@ public class TradeProcessController implements Initializable, ChildController
         infoLabel = new Label("Wait for Bank transfer.");
         vBox.getChildren().addAll(infoLabel);
 
-        Utils.setTimeout(2000, (AnimationTimer animationTimer) -> {
+        GUIUtils.setTimeout(2000, (AnimationTimer animationTimer) -> {
             onBankTransferInited();
             return null;
         });
@@ -218,7 +218,7 @@ public class TradeProcessController implements Initializable, ChildController
         summaryGridPane.setPadding(new Insets(5, 5, 5, 5));
 
         FormBuilder.addLabel(summaryGridPane, "You have payed:", getTotalToPay(), ++row);
-        FormBuilder.addLabel(summaryGridPane, "You have received:\n ", getTotalToReceive(), ++row);
+        // FormBuilder.addLabel(summaryGridPane, "You have received:\n ", getTotalToReceive(), ++row);
 
         TitledPane summaryTitlePane = new TitledPane("Trade summary:", summaryGridPane);
         summaryTitlePane.setCollapsible(false);
@@ -235,7 +235,6 @@ public class TradeProcessController implements Initializable, ChildController
 
     private void buildStep1()
     {
-        OfferConstraints offerConstraints = offer.getOfferConstraints();
         User taker = contract.getTaker();
         User offerer = contract.getOfferer();
 
@@ -245,13 +244,13 @@ public class TradeProcessController implements Initializable, ChildController
         offerDetailsGridPane.setHgap(5);
         offerDetailsGridPane.setPadding(new Insets(5, 5, 5, 5));
 
-        amountTextField = FormBuilder.addInputField(offerDetailsGridPane, "Amount (BTC):", Formatter.formatAmount(getAmount()), ++row);
+        amountTextField = FormBuilder.addTextField(offerDetailsGridPane, "Amount (BTC):", Formatter.formatAmount(getAmount()), ++row);
         amountTextField.textProperty().addListener(e -> {
             setTotal();
             setVolume();
-            setCollateral();
+            //setCollateral();
             totalToPayLabel.setText(getTotalToPay());
-            totalToReceiveLabel.setText(getTotalToReceive());
+            // totalToReceiveLabel.setText(getTotalToReceive());
             amountLabel.setText(amountTextField.getText());
 
         });
@@ -261,11 +260,10 @@ public class TradeProcessController implements Initializable, ChildController
         FormBuilder.addLabel(offerDetailsGridPane, "Price:", Formatter.formatPriceWithCurrencyPair(offer.getPrice(), offer.getCurrency()), ++row);
         totalLabel = FormBuilder.addLabel(offerDetailsGridPane, "Total:", "", ++row);
         setTotal();
-        collateralLabel1 = FormBuilder.addLabel(offerDetailsGridPane, "Collateral:", Formatter.formatCollateral(offer.getOfferConstraints().getCollateral(), getAmount()), ++row);
         FormBuilder.addLabel(offerDetailsGridPane, "Offer fee:", Formatter.formatSatoshis(Fees.OFFER_CREATION_FEE, true), ++row);
         FormBuilder.addVSpacer(offerDetailsGridPane, ++row);
         totalToPayLabel = FormBuilder.addLabel(offerDetailsGridPane, "You pay:", getTotalToPay(), ++row);
-        totalToReceiveLabel = FormBuilder.addLabel(offerDetailsGridPane, "You receive:\n ", getTotalToReceive(), ++row);
+        // totalToReceiveLabel = FormBuilder.addLabel(offerDetailsGridPane, "You receive:\n ", getTotalToReceive(), ++row);
 
         offerDetailsTitlePane = new TitledPane(takerIsSelling() ? "Sell Bitcoin" : "Buy Bitcoin", offerDetailsGridPane);
         offerDetailsTitlePane.setCollapsible(false);
@@ -286,10 +284,9 @@ public class TradeProcessController implements Initializable, ChildController
         volumeLabel = FormBuilder.addLabel(contractGridPane, "Volume:", "", ++row);
         setVolume();
         FormBuilder.addLabel(contractGridPane, "Price:", Formatter.formatPriceWithCurrencyPair(offer.getPrice(), offer.getCurrency()), ++row);
-        collateralLabel2 = FormBuilder.addLabel(contractGridPane, "Collateral:", "", ++row);
-        setCollateral();
-        // FormBuilder.addLabel(contractGridPane, "Language:", Formatter.formatList(offerConstraints.getLanguageLocales()), ++row);
-        FormBuilder.addLabel(contractGridPane, "Arbitrator:", offerConstraints.getArbitrator(), ++row);
+        //setCollateral();
+        // FormBuilder.addLabel(contractGridPane, "Language:", Formatter.formatList(offerConstraints.getAcceptedLanguageLocales()), ++row);
+        // FormBuilder.addLabel(contractGridPane, "Arbitrator:", offerConstraints.getArbitrator(), ++row);
         // FormBuilder.addLabel(contractGridPane, "Identity verification:", Formatter.formatList(offerConstraints.getIdentityVerifications()), ++row);
         FormBuilder.addLabel(contractGridPane, "Bank transfer reference ID:", "Purchase xyz 01.04.2014", ++row);
 
@@ -299,8 +296,8 @@ public class TradeProcessController implements Initializable, ChildController
         FormBuilder.addLabel(contractGridPane, "Messaging ID:", offerer.getMessageID(), ++row);
         //FormBuilder.addLabel(contractGridPane, "Country:", offerer.getCountry(), ++row);
         offererPubKeyLabel = FormBuilder.addLabel(contractGridPane, "Payment public key:", contract.getOffererPubKey(), ++row);
-        FormBuilder.addLabel(contractGridPane, "Bank transfer type:", offerer.getCurrentBankAccount().getBankAccountType().toString(), ++row);
-        offererAccountPrimaryID = FormBuilder.addLabel(contractGridPane, "Bank account IBAN:", offerer.getCurrentBankAccount().getAccountPrimaryID(), ++row);
+        // FormBuilder.addLabel(contractGridPane, "Bank transfer type:", offerer.getCurrentBankAccount().getBankAccountType().toString(), ++row);
+//        offererAccountPrimaryID = FormBuilder.addLabel(contractGridPane, "Bank account IBAN:", offerer.getCurrentBankAccount().getAccountPrimaryID(), ++row);
         offererAccountSecondaryIDLabel = FormBuilder.addLabel(contractGridPane, "Bank account BIC:", offerer.getCurrentBankAccount().getAccountSecondaryID(), ++row);
         offererAccountHolderNameLabel = FormBuilder.addLabel(contractGridPane, "Bank account holder:", offerer.getCurrentBankAccount().getAccountHolderName(), ++row);
 
@@ -352,7 +349,7 @@ public class TradeProcessController implements Initializable, ChildController
 
     private double getVolume()
     {
-        return offer.getPrice() * Converter.convertToDouble(amountTextField.getText());
+        return offer.getPrice() * Converter.stringToDouble(amountTextField.getText());
     }
 
     private double getAmount()
@@ -365,40 +362,40 @@ public class TradeProcessController implements Initializable, ChildController
         String result = "";
         if (takerIsSelling())
         {
-            double btcValue = Converter.convertToDouble(amountTextField.getText()) + BtcFormatter.satoshiToBTC(Fees.OFFER_CREATION_FEE) +
-                    offer.getOfferConstraints().getCollateral() * Converter.convertToDouble(amountTextField.getText());
+            double btcValue = Converter.stringToDouble(amountTextField.getText()) + BtcFormatter.satoshiToBTC(Fees.OFFER_CREATION_FEE)/* +
+                    offer.getConstraints().getCollateral() * Converter.stringToDouble(amountTextField.getText())*/;
             result = Formatter.formatAmount(btcValue, true, true);
         }
         else
         {
-            double btcValue = BtcFormatter.satoshiToBTC(Fees.OFFER_CREATION_FEE) + offer.getOfferConstraints().getCollateral() * Converter.convertToDouble(amountTextField.getText());
+            double btcValue = BtcFormatter.satoshiToBTC(Fees.OFFER_CREATION_FEE) /*+ offer.getConstraints().getCollateral() * Converter.stringToDouble(amountTextField.getText())*/;
             result = Formatter.formatAmount(btcValue, true, true) + "\n" + Formatter.formatVolume(getVolume(), offer.getCurrency());
         }
         return result;
     }
 
-    private String getTotalToReceive()
+    /*private String getTotalToReceive()
     {
         String result = "";
         if (takerIsSelling())
         {
-            double btcValue = offer.getOfferConstraints().getCollateral() * Converter.convertToDouble(amountTextField.getText());
+            double btcValue = offer.getConstraints().getCollateral() * Converter.stringToDouble(amountTextField.getText());
             result = Formatter.formatAmount(btcValue, true, true) + "\n" + Formatter.formatVolume(getVolume(), offer.getCurrency());
         }
         else
         {
-            double btcValue = Converter.convertToDouble(amountTextField.getText()) +
-                    offer.getOfferConstraints().getCollateral() * Converter.convertToDouble(amountTextField.getText());
+            double btcValue = Converter.stringToDouble(amountTextField.getText()) +
+                    offer.getConstraints().getCollateral() * Converter.stringToDouble(amountTextField.getText());
             result = Formatter.formatAmount(btcValue, true, true);
         }
         return result;
-    }
+    }  */
 
-    public void setCollateral()
+    /*public void setCollateral()
     {
-        String value = Formatter.formatCollateral(offer.getOfferConstraints().getCollateral(), Converter.convertToDouble(amountTextField.getText()));
+        String value = Formatter.formatCollateral(offer.getConstraints().getCollateral(), Converter.stringToDouble(amountTextField.getText()));
         collateralLabel1.setText(value);
         collateralLabel2.setText(value);
-    }
+    }*/
 }
 

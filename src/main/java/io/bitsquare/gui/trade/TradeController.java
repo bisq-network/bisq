@@ -84,5 +84,14 @@ public class TradeController implements Initializable, NavigationController, Chi
         orderBookController.setDirection(direction);
     }
 
+    public void cleanup()
+    {
+        if (orderBookController != null)
+        {
+            orderBookController.cleanup();
+            orderBookController = null;
+        }
+    }
+
 }
 

@@ -1,78 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
 <AnchorPane fx:id="holderPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
             AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="io.bitsquare.gui.trade.offer.CreateOfferController">
     <children>
-        <HBox prefHeight="22.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
-            <children>
-                <ImageView fx:id="directionImageView"/>
+        <VBox spacing="10" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0"
+              AnchorPane.bottomAnchor="10.0">
+            <GridPane fx:id="formGridPane" vgap="5" hgap="5">
+                <children>
+                    <Label id="form-header-text" text="Create new offer:" GridPane.rowIndex="0"
+                           GridPane.columnIndex="0"/>
 
-                <Label fx:id="buyLabel" text="Buy">
-                    <padding>
-                        <Insets left="4.0" right="4.0" top="5.0"/>
-                    </padding>
-                </Label>
+                    <Label fx:id="buyLabel" text="Buy" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
 
-                <TextField fx:id="amount" prefHeight="26.0" prefWidth="70.0" alignment="CENTER_RIGHT">
-                    <HBox.margin>
-                        <Insets left="0.0"/>
-                    </HBox.margin>
-                </TextField>
-                <Label text="BTC for">
-                    <padding>
-                        <Insets left="4.0" right="4.0" top="5.0"/>
-                    </padding>
-                </Label>
-                <TextField fx:id="price" prefHeight="26.0" prefWidth="70.0" alignment="CENTER_RIGHT"/>
-                <Label text="EUR =">
-                    <padding>
-                        <Insets left="4.0" right="4.0" top="5.0"/>
-                    </padding>
-                </Label>
-                <TextField fx:id="volume" prefHeight="26.0" prefWidth="70.0" alignment="CENTER_RIGHT" editable="false"/>
-                <Label prefHeight="21.0" text="EUR in total   (Min. Amount:">
-                    <padding>
-                        <Insets left="4.0" right="4.0" top="5.0"/>
-                    </padding>
-                    <HBox.margin>
-                        <Insets/>
-                    </HBox.margin>
-                </Label>
-                <TextField fx:id="minAmount" prefHeight="26.0" prefWidth="70.0" alignment="CENTER_RIGHT"/>
-                <Label text="BTC)">
-                    <padding>
-                        <Insets left="4.0" right="4.0" top="5.0"/>
-                    </padding>
-                </Label>
+                    <HBox GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="NEVER" spacing="5"
+                          alignment="CENTER_RIGHT">
+                        <children>
+                            <TextField fx:id="amount" prefWidth="70.0" alignment="CENTER_RIGHT"/>
+                            <Label text="BTC for:"/>
+                            <TextField fx:id="price" prefWidth="70.0" alignment="CENTER_RIGHT"/>
+                            <Label text="EUR ="/>
+                            <TextField fx:id="volume" prefWidth="70.0" alignment="CENTER_RIGHT"
+                                       mouseTransparent="true"/>
+                            <Label text="EUR in total"/>
+                        </children>
+                    </HBox>
 
-            </children>
-        </HBox>
+                    <Label text="Min. Amount:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
 
-        <Pane fx:id="detailsPane" AnchorPane.topAnchor="50.0"
-              AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0">
+                    <TextField fx:id="minAmount" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-            <Label text="Offer details:">
-                <font>
-                    <Font size="18.0"/>
-                </font>
-            </Label>
-        </Pane>
+                </children>
 
-        <Label text="Place offer" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="380.0">
-            <font>
-                <Font size="18.0"/>
-            </font>
-        </Label>
-        <Separator AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="405.0"/>
+                <padding>
+                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                </padding>
 
-        <Label text="Offer fee: 0.01 BTC" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="415.0"/>
-        <Button fx:id="placeOfferButton" text="Place offer" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="440.0"/>
-
+                <columnConstraints>
+                    <ColumnConstraints halignment="RIGHT"/>
+                    <ColumnConstraints halignment="LEFT"/>
+                    <ColumnConstraints halignment="LEFT"/>
+                </columnConstraints>
+            </GridPane>
+        </VBox>
     </children>
 </AnchorPane>

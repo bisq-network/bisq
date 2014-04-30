@@ -10,9 +10,7 @@ import io.bitsquare.gui.trade.TradeController;
 import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.gui.util.Localisation;
-import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
-import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -39,9 +37,7 @@ public class MainController implements Initializable, NavigationController, Wall
 {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
 
-    private Settings settings;
     private User user;
-    private OrderBookFilter orderBookFilter;
     private WalletFacade walletFacade;
     private ChildController childController;
     private ToggleGroup toggleGroup;
@@ -61,11 +57,9 @@ public class MainController implements Initializable, NavigationController, Wall
     public AnchorPane anchorPane;
 
     @Inject
-    public MainController(Settings settings, User user, OrderBookFilter orderBookFilter, WalletFacade walletFacade)
+    public MainController(User user, WalletFacade walletFacade)
     {
-        this.settings = settings;
         this.user = user;
-        this.orderBookFilter = orderBookFilter;
         this.walletFacade = walletFacade;
     }
 
@@ -78,6 +72,7 @@ public class MainController implements Initializable, NavigationController, Wall
 
         walletFacade.addDownloadListener(this);
         walletFacade.initWallet();
+
         buildNavigation();
         if (user.getAccountID() == null)
         {
@@ -105,6 +100,11 @@ public class MainController implements Initializable, NavigationController, Wall
             setupController = null;
 
             return null;
+        }
+
+        if (childController instanceof TradeController)
+        {
+            ((TradeController) childController).cleanup();
         }
 
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
@@ -172,7 +172,7 @@ public class MainController implements Initializable, NavigationController, Wall
         addNavButton(leftNavPane, "Funds", Icons.FUNDS, Icons.FUNDS, NavigationController.FUNDS);
         addNavButton(leftNavPane, "Message", Icons.MSG, Icons.MSG, NavigationController.MSG);
         addBalanceInfo(rightNavPane);
-        addAccountComboBox();
+        addAccountComboBox(rightNavPane);
 
         addNavButton(rightNavPane, "Settings", Icons.SETTINGS, Icons.SETTINGS, NavigationController.SETTINGS);
 
@@ -226,15 +226,12 @@ public class MainController implements Initializable, NavigationController, Wall
 
     private TextField addBalanceInfo(Pane parent)
     {
-        Pane holder = new Pane();
         TextField balanceLabel = new TextField();
         balanceLabel.setEditable(false);
         balanceLabel.setMouseTransparent(true);
         balanceLabel.setPrefWidth(90);
         balanceLabel.setId("nav-balance-label");
         balanceLabel.setText(Formatter.formatSatoshis(walletFacade.getBalance(), false));
-        holder.getChildren().add(balanceLabel);
-        rightNavPane.getChildren().add(holder);
 
         Label balanceCurrencyLabel = new Label("BTC");
         balanceCurrencyLabel.setPadding(new Insets(6, 0, 0, 0));
@@ -256,7 +253,7 @@ public class MainController implements Initializable, NavigationController, Wall
         return balanceLabel;
     }
 
-    private void addAccountComboBox()
+    private void addAccountComboBox(Pane parent)
     {
         if (user.getBankAccounts().size() > 1)
         {
@@ -268,7 +265,7 @@ public class MainController implements Initializable, NavigationController, Wall
                 @Override
                 public String toString(BankAccount bankAccount)
                 {
-                    return bankAccount.getShortName();
+                    return bankAccount.getAccountTitle();
                 }
 
                 @Override
@@ -278,6 +275,16 @@ public class MainController implements Initializable, NavigationController, Wall
                 }
             });
 
+            VBox vBox = new VBox();
+            vBox.setPadding(new Insets(12, 0, 0, 0));
+            vBox.setSpacing(2);
+            Label titleLabel = new Label("Bank account");
+            titleLabel.setMouseTransparent(true);
+            titleLabel.setPrefWidth(90);
+            titleLabel.setId("nav-button-label");
+
+            vBox.getChildren().setAll(accountComboBox, titleLabel);
+            parent.getChildren().add(vBox);
 
             accountComboBox.valueProperty().addListener(new ChangeListener<BankAccount>()
             {
@@ -285,16 +292,10 @@ public class MainController implements Initializable, NavigationController, Wall
                 public void changed(ObservableValue ov, BankAccount oldValue, BankAccount newValue)
                 {
                     user.setCurrentBankAccount(newValue);
-                    orderBookFilter.setCurrency(newValue.getCurrency());
-                    orderBookFilter.setCountryLocale(newValue.getCountryLocale());
                 }
             });
 
-            Pane holder = new Pane();
-            holder.getChildren().add(accountComboBox);
-            rightNavPane.getChildren().add(holder);
         }
     }
-
 
 }

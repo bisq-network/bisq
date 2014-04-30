@@ -1,239 +1,167 @@
 package io.bitsquare.trade.orderbook;
 
 import com.google.inject.Inject;
+import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.gui.trade.orderbook.OrderBookListItem;
-import io.bitsquare.gui.util.Converter;
-import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
-import io.bitsquare.trade.OfferConstraints;
 import io.bitsquare.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.List;
+import java.util.Locale;
 import java.util.function.Predicate;
 
 public class OrderBook
 {
-    private ObservableList<OrderBookListItem> orderBookListItems;
+    private static final Logger log = LoggerFactory.getLogger(OrderBook.class);
+
+    private FilteredList<OrderBookListItem> filteredList;
+    private SortedList<OrderBookListItem> offerList;
+
+
+    protected ObservableList<OrderBookListItem> allOffers = FXCollections.observableArrayList();
     private Settings settings;
+    private User user;
 
     @Inject
-    public OrderBook(Settings settings)
+    public OrderBook(Settings settings, User user)
     {
         this.settings = settings;
-        orderBookListItems = FXCollections.observableArrayList();
-        for (int i = 0; i < 100; i++)
-        {
-            orderBookListItems.add(getOrderBookListItem());
-        }
+        this.user = user;
+
+        filteredList = new FilteredList<>(allOffers);
+        // FilteredList does not support sorting, so we need to wrap it to a SortedList
+        offerList = new SortedList<>(filteredList);
     }
 
-    public ObservableList<OrderBookListItem> getFilteredList(OrderBookFilter orderBookFilter)
+    public SortedList<OrderBookListItem> getOfferList()
     {
-        FilteredList filtered = orderBookListItems.filtered(new Predicate<OrderBookListItem>()
+        return offerList;
+    }
+
+    public void updateFilter(OrderBookFilter orderBookFilter)
+    {
+        filteredList.setPredicate(new Predicate<OrderBookListItem>()
         {
             @Override
-            public boolean test(OrderBookListItem offerListVO)
+            public boolean test(OrderBookListItem orderBookListItem)
             {
-                boolean priceResult;
-                boolean amountResult = offerListVO.getOffer().getAmount() >= orderBookFilter.getAmount();
-                // swap direction. use who want to buy btc want to see sell offers...
-                boolean directionResult = offerListVO.getOffer().getDirection() != orderBookFilter.getDirection();
-                boolean currencyResult = offerListVO.getOffer().getCurrency().equals(orderBookFilter.getCurrency());
+                Offer offer = orderBookListItem.getOffer();
+                BankAccount currentBankAccount = user.getCurrentBankAccount();
 
-                if (offerListVO.getOffer().getDirection() == Direction.SELL && orderBookFilter.getPrice() > 0)
-                    priceResult = offerListVO.getOffer().getPrice() <= orderBookFilter.getPrice();
-                else
-                    priceResult = offerListVO.getOffer().getPrice() >= orderBookFilter.getPrice();
-                return priceResult && amountResult && directionResult && currencyResult;
+                if (orderBookFilter == null
+                        || offer == null
+                        || currentBankAccount == null
+                        || orderBookFilter.getDirection() == null)
+                    return false;
+
+                // The users current bank account currency must match the offer currency (1 to 1)
+                boolean currencyResult = currentBankAccount.getCurrency().equals(offer.getCurrency());
+
+                // The offer bank account country must match one of the accepted countries defined in the settings (1 to n)
+                boolean countryResult = countryInList(offer.getBankAccountCountryLocale(), settings.getAcceptedCountryLocales());
+
+                // One of the supported languages from the settings must match one of the offer languages (n to n)
+                boolean languageResult = languagesInList(settings.getAcceptedLanguageLocales(), offer.getAcceptedLanguageLocales());
+
+                // Apply updateFilter only if there is a valid value set
+                // The requested amount must be lower or equal then the offer amount
+                boolean amountResult = true;
+                if (orderBookFilter.getAmount() > 0)
+                    amountResult = orderBookFilter.getAmount() <= offer.getAmount();
+
+                // The requested trade direction must be opposite of the offerList trade direction
+                boolean directionResult = !orderBookFilter.getDirection().equals(offer.getDirection());
+
+                // Apply updateFilter only if there is a valid value set
+                boolean priceResult = true;
+                if (orderBookFilter.getPrice() > 0)
+                {
+                    if (offer.getDirection() == Direction.SELL)
+                        priceResult = orderBookFilter.getPrice() >= offer.getPrice();
+                    else
+                        priceResult = orderBookFilter.getPrice() <= offer.getPrice();
+                }
+
+                boolean result = currencyResult
+                        && countryResult
+                        && languageResult
+                        && amountResult
+                        && directionResult
+                        && priceResult;
+
+                /*
+                log.debug("result = " + result +
+                        ", currencyResult = " + currencyResult +
+                        ", countryResult = " + countryResult +
+                        ", languageResult = " + languageResult +
+                        ", bankAccountTypeEnumResult = " + bankAccountTypeEnumResult +
+                        ", amountResult = " + amountResult +
+                        ", directionResult = " + directionResult +
+                        ", priceResult = " + priceResult
+                );
+
+                log.debug("currentBankAccount.getCurrency() = " + currentBankAccount.getCurrency() +
+                        ", offer.getCurrency() = " + offer.getCurrency());
+                log.debug("offer.getCountryLocale() = " + offer.getCountryLocale() +
+                        ", settings.getAcceptedCountryLocales() = " + settings.getAcceptedCountryLocales().toString());
+                log.debug("settings.getAcceptedLanguageLocales() = " + settings.getAcceptedLanguageLocales() +
+                        ", constraints.getAcceptedLanguageLocales() = " + constraints.getLanguageLocales());
+                log.debug("currentBankAccount.getBankAccountType().getType() = " + currentBankAccount.getBankAccountType().getType() +
+                        ", constraints.getBankAccountTypes() = " + constraints.getBankAccountTypes());
+                log.debug("orderBookFilter.getAmount() = " + orderBookFilter.getAmount() +
+                        ", offer.getAmount() = " + offer.getAmount());
+                log.debug("orderBookFilter.getDirection() = " + orderBookFilter.getDirection() +
+                        ", offer.getDirection() = " + offer.getDirection());
+                log.debug("orderBookFilter.getPrice() = " + orderBookFilter.getPrice() +
+                        ", offer.getPrice() = " + offer.getPrice());
+                    */
+
+                return result;
             }
         });
-
-        //TODO use FilteredList
-        ObservableList<OrderBookListItem> result = FXCollections.observableArrayList();
-        result.addAll(filtered);
-        return result;
     }
 
-    private OrderBookListItem getOrderBookListItem()
+    private boolean countryInList(Locale orderBookFilterLocale, List<Locale> offerConstraintsLocales)
     {
-        return new OrderBookListItem(getOffer());
-    }
-
-    public ArrayList<Currency> getCurrencies()
-    {
-        ArrayList<Currency> currencies = new ArrayList<>();
-        currencies.add(Currency.getInstance("USD"));
-        currencies.add(Currency.getInstance("EUR"));
-        currencies.add(Currency.getInstance("CNY"));
-        currencies.add(Currency.getInstance("RUB"));
-
-        currencies.add(Currency.getInstance("JPY"));
-        currencies.add(Currency.getInstance("GBP"));
-        currencies.add(Currency.getInstance("CAD"));
-        currencies.add(Currency.getInstance("AUD"));
-        currencies.add(Currency.getInstance("CHF"));
-        currencies.add(Currency.getInstance("CNY"));
-
-       /* Set<Currency> otherCurrenciesSet = Currency.getAvailableCurrencies();
-        ArrayList<Currency> otherCurrenciesList = new ArrayList<>();
-        otherCurrenciesList.addAll(otherCurrenciesSet);
-        Collections.sort(otherCurrenciesList, new CurrencyComparator());
-
-        currencies.addAll(otherCurrenciesList); */
-
-        return currencies;
-    }
-
-    private Offer getOffer()
-    {
-        User offerer = new User();
-        offerer.setAccountID(UUID.randomUUID().toString());
-        offerer.setMessageID(UUID.randomUUID().toString());
-        offerer.setOnline(Math.random() > 0.5 ? true : false);
-        offerer.setLanguageLocales(getLanguageLocales());
-
-        double amount = Math.random() * 10 + 0.1;
-        amount = Converter.convertToDouble(Formatter.formatAmount(amount));
-        double minAmount = Math.random() * amount;
-        minAmount = Converter.convertToDouble(Formatter.formatAmount(minAmount));
-
-        Direction direction = Direction.BUY;
-        double price = 500 + Math.random() * 50;
-        if (Math.random() > 0.5)
+        for (Locale locale : offerConstraintsLocales)
         {
-            direction = Direction.SELL;
-            price = 500 - Math.random() * 50;
+            if (locale.getCountry().equals(orderBookFilterLocale.getCountry()))
+                return true;
         }
-        Currency currency = (randomizeCurrencies(getCurrencies(), false)).get(0);
-        return new Offer(UUID.randomUUID(),
-                direction,
-                price,
-                amount,
-                minAmount,
-                currency,
-                offerer,
-                getRandomOfferConstraints()
-        );
+        return false;
     }
 
-    public OfferConstraints getRandomOfferConstraints()
+    private boolean languagesInList(List<Locale> orderBookFilterLocales, List<Locale> offerConstraintsLocales)
     {
-        OfferConstraints offerConstraints = new OfferConstraints(getCountryLocales(),
-                getLanguageLocales(),
-                Double.valueOf(getCollaterals().get(0)),
-                getBankTransferTypeEnums(),
-                getArbitrators().get(0),
-                randomizeStrings(settings.getAllIdentityVerifications(), false).get(0));
-
-        return offerConstraints;
+        for (Locale offerConstraintsLocale : offerConstraintsLocales)
+        {
+            for (Locale orderBookFilterLocale : orderBookFilterLocales)
+            {
+                if (offerConstraintsLocale.getLanguage().equals(orderBookFilterLocale.getLanguage()))
+                    return true;
+            }
+        }
+        return false;
     }
 
-
-    private List<Locale> getCountryLocales()
+    private boolean matchBankAccountTypeEnum(BankAccountType.BankAccountTypeEnum orderBookFilterBankAccountType, List<BankAccountType.BankAccountTypeEnum> offerConstraintsBankAccountTypes)
     {
-
-        return randomizeList(settings.getAllLocales(), false);
-    }
-
-    private List<Locale> getLanguageLocales()
-    {
-        return randomizeList(settings.getAllLocales(), false);
-    }
-
-
-    private List<BankAccountType> getBankTransferTypes()
-    {
-        return randomizeBankAccountTypes(settings.getAllBankAccountTypes(), false);
-    }
-
-    private List<BankAccountType.BankAccountTypeEnum> getBankTransferTypeEnums()
-    {
-        return randomizeBankAccountTypeEnums(settings.getAllBankAccountTypeEnums(), false);
-    }
-
-    private List<String> getArbitrators()
-    {
-        return randomizeStrings(settings.getAllArbitrators(), false);
-    }
-
-    private List<String> getCollaterals()
-    {
-        return randomizeStrings(settings.getAllCollaterals(), false);
-    }
-
-    private List<BankAccountType.BankAccountTypeEnum> randomizeBankAccountTypeEnums(List<BankAccountType.BankAccountTypeEnum> list, boolean optional)
-    {
-        int e = new Random().nextInt(list.size());
-        if (!optional && list.size() > 0)
-            e = Math.max(e, 1);
-        int s = (e == 0) ? 0 : new Random().nextInt(e);
-        list = list.subList(s, e);
-        return list;
-    }
-
-    private List<BankAccountType> randomizeBankAccountTypes(List<BankAccountType> list, boolean optional)
-    {
-        int e = new Random().nextInt(list.size());
-        if (!optional && list.size() > 0)
-            e = Math.max(e, 1);
-        int s = (e == 0) ? 0 : new Random().nextInt(e);
-        list = list.subList(s, e);
-        return list;
-    }
-
-    private List<String> randomizeStrings(List<String> list, boolean optional)
-    {
-        int e = new Random().nextInt(list.size());
-        if (!optional && list.size() > 0)
-            e = Math.max(e, 1);
-        int s = (e == 0) ? 0 : new Random().nextInt(e);
-        list = list.subList(s, e);
-        return list;
-    }
-
-    private List randomizeList(List list, boolean optional)
-    {
-        int e = new Random().nextInt(list.size());
-        if (!optional && list.size() > 0)
-            e = Math.max(e, 1);
-        int s = (e == 0) ? 0 : new Random().nextInt(e);
-        list = list.subList(s, e);
-        return list;
+        for (BankAccountType.BankAccountTypeEnum bankAccountType : offerConstraintsBankAccountTypes)
+        {
+            if (bankAccountType.equals(orderBookFilterBankAccountType))
+                return true;
+        }
+        return false;
     }
 
 
-    private List<Double> randomizeDouble(List<Double> list, boolean optional)
-    {
-        int e = new Random().nextInt(list.size());
-        if (!optional && list.size() > 0)
-            e = Math.max(e, 1);
-        int s = (e == 0) ? 0 : new Random().nextInt(e);
-        list = list.subList(s, e);
-        return list;
-    }
-
-    private List<Currency> randomizeCurrencies(List<Currency> list, boolean optional)
-    {
-        int e = new Random().nextInt(list.size());
-        if (!optional && list.size() > 0)
-            e = Math.max(e, 1);
-        int s = (e == 0) ? 0 : new Random().nextInt(e);
-        list = list.subList(s, e);
-        return list;
-    }
-}
-
-class CurrencyComparator implements Comparator<Currency>
-{
-    @Override
-    public int compare(Currency a, Currency b)
-    {
-        return a.getCurrencyCode().compareTo(b.getCurrencyCode());
-    }
 }

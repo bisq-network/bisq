@@ -1,11 +1,11 @@
 package io.bitsquare.gui.util;
 
+import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.components.VSpacer;
 import javafx.collections.FXCollections;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 
 import java.util.List;
@@ -20,18 +20,32 @@ public class FormBuilder
         return valueLabel;
     }
 
-    public static void addHeaderLabel(GridPane gridPane, String title, int row)
+    public static Label addHeaderLabel(GridPane gridPane, String title, int row)
     {
         Label headerLabel = new Label(title);
         headerLabel.setId("form-header-text");
         gridPane.add(headerLabel, 0, row);
+        return headerLabel;
     }
 
     public static TextField addInputField(GridPane gridPane, String title, String value, int row)
     {
+        return addTextField(gridPane, title, value, row, true, true);
+    }
+
+    public static TextField addTextField(GridPane gridPane, String title, String value, int row)
+    {
+        return addTextField(gridPane, title, value, row, false, false);
+    }
+
+
+    public static TextField addTextField(GridPane gridPane, String title, String value, int row, boolean editable, boolean selectable)
+    {
         gridPane.add(new Label(title), 0, row);
         TextField textField = new TextField(value);
         gridPane.add(textField, 1, row);
+        textField.setMouseTransparent(!selectable && !editable);
+        textField.setEditable(editable);
         return textField;
     }
 
@@ -54,4 +68,49 @@ public class FormBuilder
         gridPane.add(comboBox, 1, row);
         return comboBox;
     }
+
+
+    public static TextField addConfirmationsLabel(GridPane gridPane, WalletFacade walletFacade, int row)
+    {
+        return FormBuilder.addTextField(gridPane, "Confirmations:", getConfirmationText(walletFacade), row);
+    }
+
+    public static ProgressIndicator addConfirmationsSpinner(GridPane gridPane, WalletFacade walletFacade, int row)
+    {
+        ProgressIndicator progressIndicator = new ProgressIndicator();
+        gridPane.add(progressIndicator, 3, row);
+        progressIndicator.setPrefSize(18, 18);
+        if (walletFacade.getRegConfDepthInBlocks() == 0)
+            progressIndicator.setProgress(-1);
+        else
+            progressIndicator.setOpacity(0);
+
+        return progressIndicator;
+    }
+
+    public static ImageView addConfirmationsIcon(GridPane gridPane, WalletFacade walletFacade, int row)
+    {
+        int depthInBlocks = walletFacade.getRegConfNumBroadcastPeers();
+        int numBroadcastPeers = walletFacade.getRegConfDepthInBlocks();
+
+        Image confirmIconImage;
+        if (depthInBlocks > 0)
+            confirmIconImage = Icons.getIconImage(Icons.getIconIDForConfirmations(depthInBlocks));
+        else
+            confirmIconImage = Icons.getIconImage(Icons.getIconIDForPeersSeenTx(numBroadcastPeers));
+
+        ImageView confirmIconImageView = new ImageView(confirmIconImage);
+        gridPane.add(confirmIconImageView, 2, row);
+
+        return confirmIconImageView;
+    }
+
+    public static String getConfirmationText(WalletFacade walletFacade)
+    {
+        int numBroadcastPeers = walletFacade.getRegConfNumBroadcastPeers();
+        int depthInBlocks = walletFacade.getRegConfDepthInBlocks();
+        return depthInBlocks + " confirmation(s) / " + "Seen by " + numBroadcastPeers + " peer(s)";
+    }
+
+
 }

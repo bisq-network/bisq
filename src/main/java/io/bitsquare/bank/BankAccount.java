@@ -18,23 +18,26 @@ public class BankAccount implements Serializable
     private Currency currency;
     private String uid;
 
-    // TODO just for mock yet
-    public BankAccount(BankAccountType bankAccountType)
+
+    private String accountTitle;
+
+    public BankAccount(BankAccountType bankAccountType,
+                       Currency currency,
+                       Locale countryLocale,
+                       String accountTitle,
+                       String accountHolderName,
+                       String accountPrimaryID,
+                       String accountSecondaryID)
     {
         this.bankAccountType = bankAccountType;
-
-    }
-
-    public BankAccount(BankAccountType bankAccountType, String accountPrimaryID, String accountSecondaryID, String accountHolderName, Locale countryLocale, Currency currency)
-    {
-        this.bankAccountType = bankAccountType;
+        this.currency = currency;
+        this.countryLocale = countryLocale;
+        this.accountTitle = accountTitle;
+        this.accountHolderName = accountHolderName;
         this.accountPrimaryID = accountPrimaryID;
         this.accountSecondaryID = accountSecondaryID;
-        this.accountHolderName = accountHolderName;
-        this.countryLocale = countryLocale;
-        this.currency = currency;
 
-        uid = bankAccountType + "_" + accountPrimaryID + "_" + accountSecondaryID + "_" + accountHolderName + "_" + countryLocale.getISO3Country();
+        uid = bankAccountType + "_" + accountPrimaryID + "_" + accountSecondaryID + "_" + accountHolderName + "_" + countryLocale.getCountry();
     }
 
     public String getAccountPrimaryID()
@@ -72,6 +75,11 @@ public class BankAccount implements Serializable
         return uid;
     }
 
+    public String getAccountTitle()
+    {
+        return accountTitle;
+    }
+
     // Changes of that structure must be reflected in VERSION updates
     public String getStringifiedBankAccount()
     {
@@ -81,15 +89,9 @@ public class BankAccount implements Serializable
                 ", secondaryID='" + accountSecondaryID + '\'' +
                 ", holderName='" + accountHolderName + '\'' +
                 ", currency='" + currency.getCurrencyCode() + '\'' +
-                ", country='" + countryLocale.getISO3Country() + '\'' +
+                ", country='" + countryLocale.getCountry() + '\'' +
                 ", v='" + VERSION + '\'' +
                 '}';
     }
-
-    public String getShortName()
-    {
-        return bankAccountType + " " + accountPrimaryID + " / " + accountSecondaryID + " / " + currency.getCurrencyCode();
-    }
-
 
 }

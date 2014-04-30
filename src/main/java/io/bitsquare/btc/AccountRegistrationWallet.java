@@ -170,7 +170,7 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
     public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
     {
         for (WalletFacade.WalletListener walletListener : walletListeners)
-            walletListener.onConfidenceChanged(tx.getConfidence().numBroadcastPeers(), WalletUtil.getConfirmationDepthInBlocks(this));
+            walletListener.onConfidenceChanged(tx.getConfidence().numBroadcastPeers(), WalletUtil.getConfDepthInBlocks(this));
 
         log.info("onTransactionConfidenceChanged " + tx.getConfidence().toString());
     }
@@ -205,7 +205,7 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
         log.info("onScriptsAdded");
     }
 
-    int getConfirmationNumBroadcastPeers()
+    int getConfNumBroadcastPeers()
     {
         Transaction transaction = WalletUtil.getTransaction(this);
         return (transaction == null || transaction.getConfidence() == null) ? 0 : transaction.getConfidence().numBroadcastPeers();

@@ -33,10 +33,6 @@ public class Storage
         }
     }
 
-    public void saveUser(User user)
-    {
-        write(user.getClass().getName(), user);
-    }
 
     public void updateUserFromStorage(User user)
     {
@@ -47,7 +43,7 @@ public class Storage
 
     public void write(String key, Object value)
     {
-        log.info("Write object with key = " + key + " / value = " + value);
+        //log.info("Write object with key = " + key + " / value = " + value);
         dataVO.dict.put(key, value);
         writeDataVO(dataVO);
     }
@@ -56,7 +52,7 @@ public class Storage
     {
         dataVO = readDataVO();
         Object result = dataVO.dict.get(key);
-        log.info("Read object with key = " + key + " result = " + result);
+        //log.info("Read object with key = " + key + " result = " + result);
         return result;
     }
 

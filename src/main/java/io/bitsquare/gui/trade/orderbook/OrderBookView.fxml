@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.*?>
-<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.layout.*?>
 <AnchorPane fx:id="holderPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
             AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns:fx="http://javafx.com/fxml/1"
@@ -40,27 +40,31 @@
             </children>
         </HBox>
 
+        <Button fx:id="createOfferButton" text="Create new offer" AnchorPane.topAnchor="10.0"
+                AnchorPane.rightAnchor="10.0"/>
+
         <TableView fx:id="orderBookTable" id="orderbook-table" AnchorPane.leftAnchor="10.0"
-                   AnchorPane.topAnchor="40.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
+                   AnchorPane.topAnchor="45.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
             <columns>
-                <TableColumn text="Amount (Min.)" fx:id="amountColumn" prefWidth="120">
+                <TableColumn text="Amount (Min.)" fx:id="amountColumn" minWidth="120">
                     <cellValueFactory>
                         <PropertyValueFactory property="amount"/>
                     </cellValueFactory>
                 </TableColumn>
-                <TableColumn text="Price" fx:id="priceColumn" prefWidth="100">
+                <TableColumn text="Price" fx:id="priceColumn" minWidth="70">
                     <cellValueFactory>
                         <PropertyValueFactory property="price"/>
                     </cellValueFactory>
                 </TableColumn>
-                <TableColumn text="Volume (Min.)" fx:id="volumeColumn" prefWidth="160">
+                <TableColumn text="Volume (Min.)" fx:id="volumeColumn" minWidth="130">
                     <cellValueFactory>
                         <PropertyValueFactory property="volume"/>
                     </cellValueFactory>
                 </TableColumn>
-                <TableColumn text="Country" fx:id="countryColumn" prefWidth="100" sortable="false"/>
-                <TableColumn text="Bank transfer type" fx:id="bankAccountTypeColumn" prefWidth="180"/>
-                <TableColumn text="" fx:id="directionColumn" prefWidth="100" sortable="false"/>
+                <TableColumn text="Country" fx:id="countryColumn" minWidth="60"/>
+                <TableColumn text="Bank transfer type" fx:id="bankAccountTypeColumn" minWidth="140"/>
+                <TableColumn text="" fx:id="directionColumn" minWidth="80" sortable="false"/>
+
             </columns>
         </TableView>
 

@@ -10,14 +10,14 @@ import io.bitsquare.gui.util.Converter;
 import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.gui.util.Localisation;
-import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
+import io.bitsquare.user.User;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.ParseException;
-import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -43,10 +42,11 @@ public class OrderBookController implements Initializable, ChildController
     private NavigationController navigationController;
     private OrderBook orderBook;
 
-    private OrderBookListItem selectedOrderBookListItem;
+    private SortedList<OrderBookListItem> offerList;
     private final OrderBookFilter orderBookFilter;
+    private User user;
 
-    private Button createOfferButton;
+
     private Image buyIcon = Icons.getIconImage(Icons.BUY);
     private Image sellIcon = Icons.getIconImage(Icons.SELL);
 
@@ -61,22 +61,32 @@ public class OrderBookController implements Initializable, ChildController
     @FXML
     public TableColumn priceColumn, amountColumn, volumeColumn;
     @FXML
-    private TableColumn<OrderBookListItem, OrderBookListItem> directionColumn, countryColumn, bankAccountTypeColumn;
+    private TableColumn<String, OrderBookListItem> directionColumn, countryColumn, bankAccountTypeColumn;
+    @FXML
+    public Button createOfferButton;
 
     @Inject
-    public OrderBookController(OrderBook orderBook, OrderBookFilter orderBookFilter)
+    public OrderBookController(OrderBook orderBook, OrderBookFilter orderBookFilter, User user)
     {
         this.orderBook = orderBook;
         this.orderBookFilter = orderBookFilter;
+        this.user = user;
     }
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
+        // setup table
         setCountryColumnCellFactory();
         setBankAccountTypeColumnCellFactory();
         setDirectionColumnCellFactory();
+        offerList = orderBook.getOfferList();
+        offerList.comparatorProperty().bind(orderBookTable.comparatorProperty());
+        orderBookTable.setItems(offerList);
+        orderBookTable.getSortOrder().add(priceColumn);
+        orderBookTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
+        // handlers
         amount.textProperty().addListener(new ChangeListener<String>()
         {
             @Override
@@ -97,10 +107,6 @@ public class OrderBookController implements Initializable, ChildController
             }
         });
 
-        orderBookTable.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
-            selectedOrderBookListItem = orderBookTable.getSelectionModel().getSelectedItem();
-        });
-
         orderBookFilter.getChangedProperty().addListener(new ChangeListener<Boolean>()
         {
             @Override
@@ -109,8 +115,19 @@ public class OrderBookController implements Initializable, ChildController
                 updateOfferList();
             }
         });
+        user.getChangedProperty().addListener(new ChangeListener<Boolean>()
+        {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
+            {
+                updateOfferList();
+            }
+        });
 
-        updateOfferList();
+        createOfferButton.setOnAction(e -> {
+            ChildController nextController = navigationController.navigateToView(NavigationController.TRADE__CREATE_OFFER, "Create offer");
+            ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
+        });
     }
 
     @Override
@@ -126,6 +143,13 @@ public class OrderBookController implements Initializable, ChildController
         orderBookFilter.setDirection(direction);
     }
 
+    public void cleanup()
+    {
+        orderBookTable.setItems(null);
+        orderBookTable.getSortOrder().clear();
+        offerList.comparatorProperty().unbind();
+    }
+
     private void openTradeTab(OrderBookListItem orderBookListItem)
     {
         String title = orderBookListItem.getOffer().getDirection() == Direction.BUY ? "Trade: Sell Bitcoin" : "Trade: Buy Bitcoin";
@@ -133,57 +157,31 @@ public class OrderBookController implements Initializable, ChildController
 
         double requestedAmount = orderBookListItem.getOffer().getAmount();
         if (!amount.getText().equals(""))
-            requestedAmount = Converter.convertToDouble(amount.getText());
+            requestedAmount = Converter.stringToDouble(amount.getText());
 
         tradeProcessController.initView(orderBookListItem.getOffer(), requestedAmount);
     }
 
-    private void displayCreateOfferButton()
-    {
-        if (createOfferButton == null)
-        {
-            createOfferButton = new Button("Create new offer");
-            holderPane.setBottomAnchor(createOfferButton, 360.0);
-            holderPane.setLeftAnchor(createOfferButton, 10.0);
-            holderPane.getChildren().add(createOfferButton);
-
-            createOfferButton.setOnAction(e -> {
-                ChildController nextController = navigationController.navigateToView(NavigationController.TRADE__CREATE_OFFER, "Create offer");
-                ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
-            });
-        }
-        createOfferButton.setVisible(true);
-
-        holderPane.setBottomAnchor(orderBookTable, 390.0);
-    }
-
     private void updateOfferList()
     {
-        ObservableList offers = orderBook.getFilteredList(orderBookFilter);
-        orderBookTable.setItems(offers);
-        orderBookTable.getSortOrder().add(priceColumn);
-        priceColumn.setSortType((orderBookFilter.getDirection() == Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
+        orderBook.updateFilter(orderBookFilter);
 
-        if (offers.size() == 0)
-        {
-            displayCreateOfferButton();
-        }
-        else if (createOfferButton != null)
-        {
-            createOfferButton.setVisible(false);
-            holderPane.setBottomAnchor(orderBookTable, 10.0);
-        }
+        priceColumn.setSortType((orderBookFilter.getDirection() == Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
+        orderBookTable.sort();
+
+        if (orderBookTable.getItems() != null)
+            createOfferButton.setDefaultButton(orderBookTable.getItems().size() == 0);
     }
 
     private void setDirectionColumnCellFactory()
     {
         directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
-        directionColumn.setCellFactory(new Callback<TableColumn<OrderBookListItem, OrderBookListItem>, TableCell<OrderBookListItem, OrderBookListItem>>()
+        directionColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>()
         {
             @Override
-            public TableCell<OrderBookListItem, OrderBookListItem> call(TableColumn<OrderBookListItem, OrderBookListItem> directionColumn)
+            public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn)
             {
-                return new TableCell<OrderBookListItem, OrderBookListItem>()
+                return new TableCell<String, OrderBookListItem>()
                 {
                     final ImageView iconView = new ImageView();
                     final Button button = new Button();
@@ -216,6 +214,7 @@ public class OrderBookController implements Initializable, ChildController
                             button.setText(title);
                             setGraphic(button);
 
+                            button.setDefaultButton(getIndex() == 0);
                             button.setOnAction(event -> openTradeTab(orderBookListItem));
                         }
                         else
@@ -231,12 +230,12 @@ public class OrderBookController implements Initializable, ChildController
     private void setCountryColumnCellFactory()
     {
         countryColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
-        countryColumn.setCellFactory(new Callback<TableColumn<OrderBookListItem, OrderBookListItem>, TableCell<OrderBookListItem, OrderBookListItem>>()
+        countryColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>()
         {
             @Override
-            public TableCell<OrderBookListItem, OrderBookListItem> call(TableColumn<OrderBookListItem, OrderBookListItem> directionColumn)
+            public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn)
             {
-                return new TableCell<OrderBookListItem, OrderBookListItem>()
+                return new TableCell<String, OrderBookListItem>()
                 {
                     final HBox hBox = new HBox();
 
@@ -251,44 +250,19 @@ public class OrderBookController implements Initializable, ChildController
                     {
                         super.updateItem(orderBookListItem, empty);
 
+                        hBox.getChildren().clear();
                         if (orderBookListItem != null)
                         {
-                            hBox.getChildren().clear();
-                            setText("");
-
-                            List<Locale> countryLocales = orderBookListItem.getOffer().getOfferConstraints().getCountryLocales();
-                            int i = 0;
-                            String countries = "";
-                            for (Locale countryLocale : countryLocales)
+                            Locale countryLocale = orderBookListItem.getOffer().getBankAccountCountryLocale();
+                            try
                             {
-                                countries += countryLocale.getDisplayCountry();
-                                if (i < countryLocales.size() - 1)
-                                    countries += ", ";
+                                hBox.getChildren().add(Icons.getIconImageView("/images/countries/" + countryLocale.getCountry().toLowerCase() + ".png"));
 
-                                if (i < 4)
-                                {
-                                    try
-                                    {
-                                        ImageView imageView = Icons.getIconImageView("/images/countries/" + countryLocale.getCountry().toLowerCase() + ".png");
-                                        hBox.getChildren().add(imageView);
-
-                                    } catch (Exception e)
-                                    {
-                                        log.warn("Country icon not found: " + "/images/countries/" + countryLocale.getCountry().toLowerCase() + ".png country name: " + countryLocale.getDisplayCountry());
-                                    }
-                                }
-                                else
-                                {
-                                    setText("...");
-                                }
-                                i++;
+                            } catch (Exception e)
+                            {
+                                log.warn("Country icon not found: " + "/images/countries/" + countryLocale.getCountry().toLowerCase() + ".png country name: " + countryLocale.getDisplayCountry());
                             }
-                            Tooltip.install(this, new Tooltip(countries));
-                        }
-                        else
-                        {
-                            setText("");
-                            hBox.getChildren().clear();
+                            Tooltip.install(this, new Tooltip(countryLocale.getDisplayCountry()));
                         }
                     }
                 };
@@ -299,12 +273,12 @@ public class OrderBookController implements Initializable, ChildController
     private void setBankAccountTypeColumnCellFactory()
     {
         bankAccountTypeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
-        bankAccountTypeColumn.setCellFactory(new Callback<TableColumn<OrderBookListItem, OrderBookListItem>, TableCell<OrderBookListItem, OrderBookListItem>>()
+        bankAccountTypeColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>()
         {
             @Override
-            public TableCell<OrderBookListItem, OrderBookListItem> call(TableColumn<OrderBookListItem, OrderBookListItem> directionColumn)
+            public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn)
             {
-                return new TableCell<OrderBookListItem, OrderBookListItem>()
+                return new TableCell<String, OrderBookListItem>()
                 {
                     @Override
                     public void updateItem(final OrderBookListItem orderBookListItem, boolean empty)
@@ -313,19 +287,8 @@ public class OrderBookController implements Initializable, ChildController
 
                         if (orderBookListItem != null)
                         {
-                            List<BankAccountType.BankAccountTypeEnum> bankAccountTypeEnums = orderBookListItem.getOffer().getOfferConstraints().getBankAccountTypes();
-                            String text = "";
-                            int i = 0;
-                            for (BankAccountType.BankAccountTypeEnum bankAccountTypeEnum : bankAccountTypeEnums)
-                            {
-                                text += Localisation.get(bankAccountTypeEnum.toString());
-                                i++;
-                                if (i < bankAccountTypeEnums.size())
-                                    text += ", ";
-                            }
-                            setText(text);
-                            if (text.length() > 20)
-                                Tooltip.install(this, new Tooltip(text));
+                            BankAccountType.BankAccountTypeEnum bankAccountTypeEnum = orderBookListItem.getOffer().getBankAccountTypeEnum();
+                            setText(Localisation.get(bankAccountTypeEnum.toString()));
                         }
                         else
                         {
@@ -345,12 +308,12 @@ public class OrderBookController implements Initializable, ChildController
         {
             try
             {
-                DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Settings.getLocale());
+                DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.getDefault());
                 d = decimalFormat.parse(newValue).doubleValue();
             } catch (ParseException e)
             {
                 amount.setText(oldValue);
-                d = Converter.convertToDouble(oldValue);
+                d = Converter.stringToDouble(oldValue);
             }
         }
         return d;
@@ -363,5 +326,23 @@ public class OrderBookController implements Initializable, ChildController
         volume.setText(Formatter.formatPrice(a * p));
     }
 
+
+    // the scrollbar width is not handled correctly from the layout initially
+  /*  private void forceTableLayoutUpdate()
+    {
+        final List<OrderBookListItem> items = orderBookTable.getItems();
+        if (items == null || items.size() == 0) return;
+
+        final OrderBookListItem item = orderBookTable.getItems().get(0);
+        items.remove(0);
+        Platform.runLater(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                items.add(0, item);
+            }
+        });
+    }   */
 }
 

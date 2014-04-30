@@ -1,28 +1,30 @@
 package io.bitsquare.user;
 
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.trade.OfferConstraint;
+import javafx.beans.property.SimpleBooleanProperty;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 
 public class User implements Serializable
 {
     private static final long serialVersionUID = 7409078808248518638L;
+
+    transient private final SimpleBooleanProperty changedProperty = new SimpleBooleanProperty();
 
     private String accountID;
     private String messageID;
     private boolean online;
     private List<BankAccount> bankAccounts = new ArrayList<>();
     private BankAccount currentBankAccount = null;
-    private List<Locale> languageLocales = new ArrayList<>();
-    private Locale currentLanguageLocale = null;
+
+    private OfferConstraint offerConstraint;
 
     public User()
     {
-        addLanguageLocales(Locale.getDefault());
     }
 
     public void updateFromStorage(User savedUser)
@@ -34,8 +36,6 @@ public class User implements Serializable
             online = savedUser.isOnline();
             currentBankAccount = savedUser.getCurrentBankAccount();
             bankAccounts = savedUser.getBankAccounts();
-            languageLocales = savedUser.getLanguageLocales();
-            currentLanguageLocale = savedUser.getCurrentLanguageLocale();
         }
     }
 
@@ -53,15 +53,8 @@ public class User implements Serializable
         return bankAccountUIDs;
     }
 
-    public void addLanguageLocales(Locale locale)
-    {
-        languageLocales.add(locale);
-        currentLanguageLocale = locale;
-    }
-
     public void addBankAccount(BankAccount bankAccount)
     {
-
         bankAccounts.add(bankAccount);
         currentBankAccount = bankAccount;
     }
@@ -77,7 +70,6 @@ public class User implements Serializable
         this.accountID = accountID;
     }
 
-
     public void setBankAccounts(List<BankAccount> bankAccounts)
     {
         this.bankAccounts = bankAccounts;
@@ -86,23 +78,19 @@ public class User implements Serializable
     public void setCurrentBankAccount(BankAccount currentBankAccount)
     {
         this.currentBankAccount = currentBankAccount;
+        triggerChange();
     }
 
-    public void setLanguageLocales(List<Locale> languageLocales)
-    {
-        this.languageLocales = languageLocales;
-    }
-
-    public void setCurrentLanguageLocale(Locale currentLanguageLocale)
-    {
-        this.currentLanguageLocale = currentLanguageLocale;
-    }
 
     public void setOnline(boolean online)
     {
         this.online = online;
     }
 
+    public void setOfferConstraint(OfferConstraint offerConstraint)
+    {
+        this.offerConstraint = offerConstraint;
+    }
 
     // getter
     public String getMessageID()
@@ -125,20 +113,24 @@ public class User implements Serializable
         return currentBankAccount;
     }
 
-    public List<Locale> getLanguageLocales()
-    {
-        return languageLocales;
-    }
-
-    public Locale getCurrentLanguageLocale()
-    {
-        return currentLanguageLocale;
-    }
 
     public boolean isOnline()
     {
         return online;
     }
 
+    public OfferConstraint getOfferConstraint()
+    {
+        return offerConstraint;
+    }
 
+    public SimpleBooleanProperty getChangedProperty()
+    {
+        return changedProperty;
+    }
+
+    private void triggerChange()
+    {
+        changedProperty.set(!changedProperty.get());
+    }
 }
