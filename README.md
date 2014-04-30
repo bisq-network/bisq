@@ -33,7 +33,6 @@ git clone --recursive git://github.com/bitsquare/bitsquare
 * [Registration screen 3](https://github.com/bitsquare/bitsquare/tree/master/screenshots/reg3.png)
 * [Orderbook screen 1](https://github.com/bitsquare/bitsquare/tree/master/screenshots/orderbook1.png)
 * [Orderbook screen 2](https://github.com/bitsquare/bitsquare/tree/master/screenshots/orderbook2.png)
-* [Orderbook screen](https://github.com/bitsquare/bitsquare/tree/master/screenshots/orderbook.png)
 * [Create Offer screen 1](https://github.com/bitsquare/bitsquare/tree/master/screenshots/newOffer1.png)
 * [Create Offer screen 2](https://github.com/bitsquare/bitsquare/tree/master/screenshots/newOffer2.png)
 * [Trade screen](https://github.com/bitsquare/bitsquare/tree/master/screenshots/trade.png)
