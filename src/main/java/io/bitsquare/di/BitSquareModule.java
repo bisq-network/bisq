@@ -62,7 +62,7 @@ class WalletAppKitProvider implements Provider<WalletAppKit>
 
     public WalletAppKit get()
     {
-        return new WalletAppKit(networkParameters, new File("."), "bitsquare");
+        return new WalletAppKit(networkParameters, new File("."), WalletFacade.WALLET_PREFIX);
     }
 }
 

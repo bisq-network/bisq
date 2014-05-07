@@ -3,10 +3,10 @@ package io.bitsquare.gui.funds;
 import com.google.inject.Inject;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
-import io.bitsquare.gui.util.Formatter;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
@@ -63,7 +63,7 @@ public class FundsController implements Initializable, ChildController
         this.navigationController = navigationController;
 
         addressLabel.setText(walletFacade.getAddress());
-        balanceLabel.setText(Formatter.formatSatoshis(walletFacade.getBalance(), false));
+        balanceLabel.setText(BtcFormatter.formatSatoshis(walletFacade.getBalance(), false));
     }
 
 

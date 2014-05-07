@@ -1,5 +1,6 @@
 package io.bitsquare.trade;
 
+import java.math.BigInteger;
 import java.util.UUID;
 
 public class Trade
@@ -7,8 +8,7 @@ public class Trade
     private Offer offer;
     private boolean takeOfferRequested;
     private boolean takeOfferAccepted;
-    private double requestedAmount;
-    private boolean takeOfferFeePayed;
+    private BigInteger requestedAmount;
     private boolean takeOfferFeePaymentConfirmed;
     private String jsonRepresentation;
     private String signature;
@@ -59,19 +59,14 @@ public class Trade
         this.takeOfferAccepted = takeOfferAccepted;
     }
 
-    public double getRequestedAmount()
+    public BigInteger getRequestedAmount()
     {
         return requestedAmount;
     }
 
-    public void setTradeAmount(double requestedAmount)
+    public void setTradeAmount(BigInteger requestedAmount)
     {
         this.requestedAmount = requestedAmount;
-    }
-
-    public void setTakeOfferFeePayed(boolean takeOfferFeePayed)
-    {
-        this.takeOfferFeePayed = takeOfferFeePayed;
     }
 
     public void setTakeOfferFeePaymentConfirmed(boolean takeOfferFeePaymentConfirmed)

@@ -3,6 +3,7 @@ package io.bitsquare.trade;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.user.Arbitrator;
 
+import java.math.BigInteger;
 import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
@@ -12,29 +13,37 @@ public class Offer
 {
     private UUID uid;
     private double price;
-    private double amount;
-    private double minAmount;
+    private BigInteger amount;
+    private BigInteger minAmount;
     private String accountID;
     private String messageID;
     private Direction direction;
     private BankAccountType.BankAccountTypeEnum bankAccountTypeEnum;
     private Currency currency;
     private Locale bankAccountCountryLocale;
+
+    private double collateral;
     private List<Locale> acceptedCountryLocales;
     private List<Locale> acceptedLanguageLocales;
     private String offerPaymentTxID;
     private Arbitrator arbitrator;
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public Offer(String accountID,
                  String messageID,
                  Direction direction,
                  double price,
-                 double amount,
-                 double minAmount,
+                 BigInteger amount,
+                 BigInteger minAmount,
                  BankAccountType.BankAccountTypeEnum bankAccountTypeEnum,
                  Currency currency,
                  Locale bankAccountCountryLocale,
                  Arbitrator arbitrator,
+                 double collateral,
                  List<Locale> acceptedCountryLocales,
                  List<Locale> acceptedLanguageLocales)
     {
@@ -48,6 +57,7 @@ public class Offer
         this.currency = currency;
         this.bankAccountCountryLocale = bankAccountCountryLocale;
         this.arbitrator = arbitrator;
+        this.collateral = collateral;
         this.acceptedCountryLocales = acceptedCountryLocales;
         this.acceptedLanguageLocales = acceptedLanguageLocales;
 
@@ -89,12 +99,12 @@ public class Offer
         return price;
     }
 
-    public double getAmount()
+    public BigInteger getAmount()
     {
         return amount;
     }
 
-    public double getMinAmount()
+    public BigInteger getMinAmount()
     {
         return minAmount;
     }
@@ -131,12 +141,12 @@ public class Offer
 
     public double getVolume()
     {
-        return price * amount;
+        return price * amount.doubleValue();
     }
 
     public double getMinVolume()
     {
-        return price * minAmount;
+        return price * minAmount.doubleValue();
     }
 
     public String getOfferPaymentTxID()
@@ -147,5 +157,10 @@ public class Offer
     public Arbitrator getArbitrator()
     {
         return arbitrator;
+    }
+
+    public double getCollateral()
+    {
+        return collateral;
     }
 }

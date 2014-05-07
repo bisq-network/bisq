@@ -1,6 +1,7 @@
 package io.bitsquare.trade.orderbook;
 
 import com.google.inject.Inject;
+import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.gui.market.orderbook.OrderBookListItem;
 import io.bitsquare.gui.util.Converter;
 import io.bitsquare.gui.util.Formatter;
@@ -42,19 +43,20 @@ public class MockOrderBook extends OrderBook
             direction = Direction.SELL;
             price = 500 - Math.random() * 50;
         }
-
+        double collateral = 0.1;// Math.random() * 20 + 0.1;
         Offer offer = new Offer("mjbxLbuVpU1cNXLJbrJZyirYwweoRPVVTj",
                 UUID.randomUUID().toString(),
                 direction,
                 price,
-                amount,
-                minAmount,
-                MockData.getBankTransferTypeEnums().get(0),
-                MockData.getCurrencies().get(0),
-                MockData.getLocales().get(0),
-                MockData.getArbitrators().get(0),
-                MockData.getLocales(),
-                MockData.getLocales());
+                BtcFormatter.doubleValueToSatoshis(amount),
+                BtcFormatter.doubleValueToSatoshis(minAmount),
+                MockData.getRandomBankTransferTypeEnums().get(0),
+                MockData.getRandomCurrencies().get(0),
+                MockData.getRandomLocales().get(0),
+                MockData.getRandomArbitrators().get(0),
+                collateral,
+                MockData.getRandomLocales(),
+                MockData.getRandomLocales());
 
         return offer;
     }

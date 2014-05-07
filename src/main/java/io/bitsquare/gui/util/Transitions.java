@@ -12,16 +12,16 @@ import static com.google.common.base.Preconditions.checkState;
 public class Transitions
 {
 
-    public static final int UI_ANIMATION_TIME_MSEC = 350;
+    public static final int UI_ANIMATION_TIME = 350;
 
     public static void fadeIn(Node ui)
     {
-        fadeIn(ui, UI_ANIMATION_TIME_MSEC);
+        fadeIn(ui, UI_ANIMATION_TIME);
     }
 
     public static void fadeIn(Node ui, int time)
     {
-        FadeTransition ft = new FadeTransition(Duration.millis(UI_ANIMATION_TIME_MSEC), ui);
+        FadeTransition ft = new FadeTransition(Duration.millis(UI_ANIMATION_TIME), ui);
         ft.setFromValue(0.0);
         ft.setToValue(1.0);
         ft.play();
@@ -29,7 +29,7 @@ public class Transitions
 
     public static Animation fadeOut(Node ui)
     {
-        FadeTransition ft = new FadeTransition(Duration.millis(UI_ANIMATION_TIME_MSEC), ui);
+        FadeTransition ft = new FadeTransition(Duration.millis(UI_ANIMATION_TIME), ui);
         ft.setFromValue(ui.getOpacity());
         ft.setToValue(0.0);
         ft.play();
@@ -45,7 +45,7 @@ public class Transitions
 
     public static void blurOut(Node node)
     {
-        blurOut(node, UI_ANIMATION_TIME_MSEC);
+        blurOut(node, UI_ANIMATION_TIME);
     }
 
     public static void blurOut(Node node, int time)
@@ -64,7 +64,7 @@ public class Transitions
         GaussianBlur blur = (GaussianBlur) node.getEffect();
         Timeline timeline = new Timeline();
         KeyValue kv = new KeyValue(blur.radiusProperty(), 0.0);
-        KeyFrame kf = new KeyFrame(Duration.millis(UI_ANIMATION_TIME_MSEC), kv);
+        KeyFrame kf = new KeyFrame(Duration.millis(UI_ANIMATION_TIME), kv);
         timeline.getKeyFrames().add(kf);
         timeline.setOnFinished(actionEvent -> node.setEffect(null));
         timeline.play();

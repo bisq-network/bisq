@@ -9,24 +9,14 @@ public class MockDelay
     {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<String> future = executor.submit(new Task(expectedMsg));
+        // max timeout  5 sec
         try
         {
-            try
-            {
-                // max timeout  5 sec
-                return future.get(5, TimeUnit.SECONDS);
-            } catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            } catch (ExecutionException e)
-            {
-                e.printStackTrace();
-            }
-        } catch (TimeoutException e)
+            return future.get(5, TimeUnit.SECONDS);
+        } catch (InterruptedException | TimeoutException | ExecutionException e)
         {
-            System.out.println("Terminated!");
+            e.printStackTrace();
         }
-
         executor.shutdownNow();
         return null;
     }

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import io.bitsquare.user.Arbitrator;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -14,8 +15,9 @@ public class Settings implements Serializable
 
     private List<Locale> acceptedLanguageLocales = new ArrayList<>();
     private List<Locale> acceptedCountryLocales = new ArrayList<>();
-    private List<Arbitrator> arbitrators = new ArrayList<>();
-
+    private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
+    private double maxCollateral;
+    private double minCollateral;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -37,7 +39,9 @@ public class Settings implements Serializable
         {
             acceptedLanguageLocales = savedSettings.getAcceptedLanguageLocales();
             acceptedCountryLocales = savedSettings.getAcceptedCountryLocales();
-            arbitrators = savedSettings.getArbitrators();
+            acceptedArbitrators = savedSettings.getAcceptedArbitrators();
+            maxCollateral = savedSettings.getMaxCollateral();
+            minCollateral = savedSettings.getMinCollateral();
         }
     }
 
@@ -53,20 +57,29 @@ public class Settings implements Serializable
             acceptedCountryLocales.add(locale);
     }
 
-    public void addArbitrator(Arbitrator arbitrator)
+    public void addAcceptedArbitrator(Arbitrator arbitrator)
     {
-        if (!arbitrators.contains(arbitrator))
-            arbitrators.add(arbitrator);
+        if (!acceptedArbitrators.contains(arbitrator))
+            acceptedArbitrators.add(arbitrator);
     }
 
+    public void setMaxCollateral(double maxCollateral)
+    {
+        this.maxCollateral = maxCollateral;
+    }
+
+    public void setMinCollateral(double minCollateral)
+    {
+        this.minCollateral = minCollateral;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<Arbitrator> getArbitrators()
+    public List<Arbitrator> getAcceptedArbitrators()
     {
-        return arbitrators;
+        return acceptedArbitrators;
     }
 
     public List<Locale> getAcceptedLanguageLocales()
@@ -79,8 +92,28 @@ public class Settings implements Serializable
         return acceptedCountryLocales;
     }
 
-    public Arbitrator getRandomArbitrator()
+    public Arbitrator getRandomArbitrator(double collateral, BigInteger amount)
     {
-        return arbitrators.size() > 0 ? arbitrators.get((int) (Math.random() * arbitrators.size())) : null;
+        List<Arbitrator> candidates = new ArrayList<>();
+        for (Arbitrator arbitrator : acceptedArbitrators)
+        {
+            if (arbitrator.getArbitrationFeePercent() >= collateral &&
+                    arbitrator.getMinArbitrationFee().compareTo(amount) < 0)
+            {
+                candidates.add(arbitrator);
+            }
+        }
+        return candidates.size() > 0 ? candidates.get((int) (Math.random() * candidates.size())) : null;
     }
+
+    public double getMaxCollateral()
+    {
+        return maxCollateral;
+    }
+
+    public double getMinCollateral()
+    {
+        return minCollateral;
+    }
+
 }

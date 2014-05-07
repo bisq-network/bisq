@@ -2,6 +2,7 @@ package io.bitsquare.gui.market.orderbook;
 
 import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.market.offer.CreateOfferController;
@@ -30,6 +31,7 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -155,9 +157,9 @@ public class OrderBookController implements Initializable, ChildController
         String title = orderBookListItem.getOffer().getDirection() == Direction.BUY ? "Trade: Sell Bitcoin" : "Trade: Buy Bitcoin";
         TradeController tradeController = (TradeController) navigationController.navigateToView(NavigationController.TRADE, title);
 
-        double requestedAmount = orderBookListItem.getOffer().getAmount();
+        BigInteger requestedAmount = orderBookListItem.getOffer().getAmount();
         if (!amount.getText().equals(""))
-            requestedAmount = Converter.stringToDouble(amount.getText());
+            requestedAmount = BtcFormatter.stringValueToSatoshis(amount.getText());
 
         tradeController.initWithData(orderBookListItem.getOffer(), requestedAmount);
     }

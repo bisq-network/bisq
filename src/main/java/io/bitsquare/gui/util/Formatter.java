@@ -1,9 +1,7 @@
 package io.bitsquare.gui.util;
 
-import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.trade.Direction;
 
-import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.Currency;
 import java.util.List;
@@ -86,14 +84,6 @@ public class Formatter
     {
         String s = list.toString();
         return s.substring(1, s.length() - 1);
-    }
-
-    public static String formatSatoshis(BigInteger satoshis, boolean useBTC)
-    {
-        if (useBTC)
-            return formatDouble(BtcFormatter.satoshiToBTC(satoshis), 4) + " BTC";
-        else
-            return formatDouble(BtcFormatter.satoshiToBTC(satoshis), 4);
     }
 
     public static String formatDouble(double value)

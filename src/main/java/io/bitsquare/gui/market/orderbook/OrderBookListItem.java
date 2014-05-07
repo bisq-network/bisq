@@ -22,7 +22,7 @@ public class OrderBookListItem
         this.offer = offer;
 
         this.price.set(Formatter.formatPrice(offer.getPrice()));
-        this.amount.set(Formatter.formatAmountWithMinAmount(offer.getAmount(), offer.getMinAmount()));
+        this.amount.set(Formatter.formatAmountWithMinAmount(offer.getAmount().doubleValue(), offer.getMinAmount().doubleValue()));
         this.volume.set(Formatter.formatVolumeWithMinVolume(offer.getVolume(), offer.getMinVolume()));
     }
 

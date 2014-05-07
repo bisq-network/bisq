@@ -42,20 +42,23 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
         walletFile = new File(".", "bitsquare_account_reg" + ".wallet");
         if (walletFile.exists())
         {
+            FileInputStream walletStream = null;
             try
             {
-                FileInputStream walletStream = new FileInputStream(walletFile);
-                new WalletProtobufSerializer().readWallet(WalletProtobufSerializer.parseToProto(walletStream), this);
+                walletStream = new FileInputStream(walletFile);
             } catch (FileNotFoundException e)
             {
                 e.printStackTrace();
-            } catch (UnreadableWalletException e)
+            }
+
+            try
             {
-                e.printStackTrace();
-            } catch (IOException e)
+                new WalletProtobufSerializer().readWallet(WalletProtobufSerializer.parseToProto(walletStream), this);
+            } catch (UnreadableWalletException | IOException e)
             {
                 e.printStackTrace();
             }
+
         }
         else
         {
@@ -69,7 +72,7 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
             saveToFile(walletFile);
         } catch (IOException e)
         {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
         autosaveToFile(walletFile, 1, TimeUnit.SECONDS, null);
     }
@@ -81,7 +84,7 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
             saveToFile(walletFile);
         } catch (IOException e)
         {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
     }
 

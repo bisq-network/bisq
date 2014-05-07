@@ -3,9 +3,13 @@ package io.bitsquare.btc;
 import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.TransactionConfidence;
 import com.google.bitcoin.core.Wallet;
+import com.google.bitcoin.script.Script;
+import com.google.bitcoin.script.ScriptBuilder;
 
 import java.math.BigInteger;
 import java.util.Set;
+
+import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
 
 public class WalletUtil
 {
@@ -40,5 +44,12 @@ public class WalletUtil
             }
         }
         return null;
+    }
+
+    public static Script getEmptyOP_RETURNScript()
+    {
+        return new ScriptBuilder()
+                .op(OP_RETURN)
+                .build();
     }
 }

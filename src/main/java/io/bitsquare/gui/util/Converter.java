@@ -20,9 +20,8 @@ public class Converter
         } catch (ParseException e)
         {
             log.warn(e.toString());
+            return 0;
         }
-        return 0;
     }
-
 
 }

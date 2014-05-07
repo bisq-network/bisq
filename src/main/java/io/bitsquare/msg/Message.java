@@ -49,7 +49,7 @@ public class Message
 
     public String toString()
     {
-        return type + ": " + Utils.convertToJson(payload);
+        return type + ": " + Utils.objectToJson(payload);
     }
 
 

@@ -3,6 +3,7 @@ package io.bitsquare.util;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import io.bitsquare.bank.BankAccountType;
 import javafx.animation.AnimationTimer;
 import org.slf4j.Logger;
@@ -20,10 +21,64 @@ public class Utils
 {
     private static final Logger log = LoggerFactory.getLogger(Utils.class);
 
-    public static String convertToJson(Object object)
+    public static String objectToJson(Object object)
     {
         Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).create();
         return gson.toJson(object);
+    }
+
+    public static <T> T jsonToObject(String jsonString, Class<T> classOfT)
+    {
+        Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).create();
+        return gson.fromJson(jsonString, classOfT);
+    }
+
+    public static Object deserializeHexStringToObject(String serializedHexString)
+    {
+        Object result = null;
+        try
+        {
+            ByteInputStream byteInputStream = new ByteInputStream();
+            byteInputStream.setBuf(com.google.bitcoin.core.Utils.parseAsHexOrBase58(serializedHexString));
+            ObjectInputStream objectInputStream = new ObjectInputStream(byteInputStream);
+
+            try
+            {
+                result = objectInputStream.readObject();
+            } catch (ClassNotFoundException e)
+            {
+                e.printStackTrace();
+            } finally
+            {
+                byteInputStream.close();
+                objectInputStream.close();
+            }
+
+        } catch (IOException i)
+        {
+            i.printStackTrace();
+        }
+        return result;
+    }
+
+    public static String serializeObjectToHexString(Object serializable)
+    {
+        String result = null;
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        try
+        {
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            objectOutputStream.writeObject(serializable);
+
+            result = com.google.bitcoin.core.Utils.bytesToHexString(byteArrayOutputStream.toByteArray());
+            byteArrayOutputStream.close();
+            objectOutputStream.close();
+
+        } catch (IOException e)
+        {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        return result;
     }
 
     private static long lastTimeStamp = System.currentTimeMillis();

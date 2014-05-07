@@ -1,5 +1,8 @@
 package io.bitsquare.gui.market.trade;
 
+import com.google.bitcoin.core.InsufficientMoneyException;
+import com.google.bitcoin.core.Transaction;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.BtcFormatter;
@@ -23,7 +26,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import org.controlsfx.dialog.Dialogs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +38,7 @@ import java.util.ResourceBundle;
 public class TradeController implements Initializable, ChildController, WalletFacade.WalletListener
 {
     private static final Logger log = LoggerFactory.getLogger(TradeController.class);
-    private static final int SIM_DELAY = 1000;
+    private static final int SIM_DELAY = 2000;
 
     private Trading trading;
     private WalletFacade walletFacade;
@@ -44,14 +46,14 @@ public class TradeController implements Initializable, ChildController, WalletFa
     private Offer offer;
     private Trade trade;
     private Contract contract;
-    private double requestedAmount;
+    private BigInteger requestedAmount;
     private boolean offererIsOnline;
     private int row;
 
     private List<ProcessStepItem> processStepItems = new ArrayList();
 
     private NavigationController navigationController;
-    private TextField amountTextField, totalToPayLabel, totalLabel;
+    private TextField amountTextField, totalToPayLabel, totalLabel, collateralTextField;
     private Label statusTextField, infoLabel;
     private Button nextButton;
     private ProgressBar progressBar;
@@ -81,14 +83,14 @@ public class TradeController implements Initializable, ChildController, WalletFa
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initWithData(Offer offer, double requestedAmount)
+    public void initWithData(Offer offer, BigInteger requestedAmount)
     {
         this.offer = offer;
-        this.requestedAmount = requestedAmount > 0 ? requestedAmount : offer.getAmount();
+        this.requestedAmount = requestedAmount.compareTo(BigInteger.ZERO) > 0 ? requestedAmount : offer.getAmount();
 
-        trade = trading.createNewTrade(offer);
+        trade = trading.createTrade(offer);
         trade.setTradeAmount(requestedAmount);
-        contract = trading.createNewContract(trade);
+        contract = trading.createContract(trade);
 
         processStepItems.add(new ProcessStepItem(takerIsSelling() ? "Sell BTC" : "Buy BTC"));
         processStepItems.add(new ProcessStepItem("Bank transfer"));
@@ -148,19 +150,22 @@ public class TradeController implements Initializable, ChildController, WalletFa
         row = -1;
 
         FormBuilder.addHeaderLabel(gridPane, "Take offer:", ++row);
-        amountTextField = FormBuilder.addTextField(gridPane, "Amount BTC:", Formatter.formatAmount(requestedAmount), ++row, true, true);
+        amountTextField = FormBuilder.addTextField(gridPane, "Amount (BTC):", BtcFormatter.formatSatoshis(requestedAmount, false), ++row, true, true);
         amountTextField.textProperty().addListener(e -> {
             applyVolume();
+            applyCollateral();
             totalToPayLabel.setText(getTotalToPay());
 
         });
-        Label amountRangeLabel = new Label("(" + Formatter.formatAmount(offer.getMinAmount()) + " - " + Formatter.formatAmount(offer.getAmount()) + ")");
+        Label amountRangeLabel = new Label("(" + BtcFormatter.formatSatoshis(offer.getMinAmount(), false) + " - " + BtcFormatter.formatSatoshis(offer.getAmount(), false) + ")");
         gridPane.add(amountRangeLabel, 2, row);
 
-        FormBuilder.addTextField(gridPane, "Price:", Formatter.formatPriceWithCurrencyPair(offer.getPrice(), offer.getCurrency()), ++row);
-        totalLabel = FormBuilder.addTextField(gridPane, "Total:", Formatter.formatVolume(getVolume(), offer.getCurrency()), ++row);
-        FormBuilder.addTextField(gridPane, "Offer fee:", Formatter.formatSatoshis(Fees.OFFER_TAKER_FEE, true), ++row);
-        totalToPayLabel = FormBuilder.addTextField(gridPane, "Total to pay:", getTotalToPay(), ++row);
+        FormBuilder.addTextField(gridPane, "Price (" + offer.getCurrency() + "/BTC):", Formatter.formatPrice(offer.getPrice()), ++row);
+        totalLabel = FormBuilder.addTextField(gridPane, "Total (" + offer.getCurrency() + "):", Formatter.formatVolume(getVolume()), ++row);
+        collateralTextField = FormBuilder.addTextField(gridPane, "Collateral (BTC):", "", ++row);
+        applyCollateral();
+        FormBuilder.addTextField(gridPane, "Offer fee (BTC):", BtcFormatter.formatSatoshis(Fees.OFFER_TAKER_FEE, false), ++row);
+        totalToPayLabel = FormBuilder.addTextField(gridPane, "Total to pay (BTC):", getTotalToPay(), ++row);
 
         nextButton = FormBuilder.addButton(gridPane, "Take offer and pay", ++row);
         nextButton.setDefaultButton(true);
@@ -247,9 +252,9 @@ public class TradeController implements Initializable, ChildController, WalletFa
         progressIndicatorHolder.getChildren().addAll(progressIndicator);
         gridPane.add(progressIndicatorHolder, 1, row);
 
-        trade.setTradeAmount(Converter.stringToDouble(amountTextField.getText()));
-        trading.sendTakeOfferRequest(trade);
+        trade.setTradeAmount(BtcFormatter.stringValueToSatoshis(amountTextField.getText()));
 
+        trading.sendTakeOfferRequest(trade);
         Utils.setTimeout(SIM_DELAY, (AnimationTimer animationTimer) -> {
             onTakeOfferRequestConfirmed();
             progressBar.setProgress(1.0 / 3.0);
@@ -259,14 +264,37 @@ public class TradeController implements Initializable, ChildController, WalletFa
 
     private void onTakeOfferRequestConfirmed()
     {
-        trading.payOfferFee(trade);
+        FutureCallback callback = new FutureCallback<Transaction>()
+        {
+            @Override
+            public void onSuccess(Transaction transaction)
+            {
+                log.info("sendResult onSuccess:" + transaction.toString());
+                trade.setTakeOfferFeeTxID(transaction.getHashAsString());
 
-        statusTextField.setText("Offer fee payed. Send offerer payment transaction ID for confirmation.");
-        Utils.setTimeout(SIM_DELAY, (AnimationTimer animationTimer) -> {
-            onOfferFeePaymentConfirmed();
-            progressBar.setProgress(2.0 / 3.0);
-            return null;
-        });
+                statusTextField.setText("Offer fee payed. Send offerer payment transaction ID for confirmation.");
+                Utils.setTimeout(SIM_DELAY, (AnimationTimer animationTimer) -> {
+                    onOfferFeePaymentConfirmed();
+                    progressBar.setProgress(2.0 / 3.0);
+                    return null;
+                });
+            }
+
+            @Override
+            public void onFailure(Throwable t)
+            {
+                log.warn("sendResult onFailure:" + t.toString());
+                Popups.openErrorPopup("Fee payment failed", "Fee payment failed. " + t.toString());
+            }
+        };
+
+        try
+        {
+            trading.payOfferFee(trade, callback);
+        } catch (InsufficientMoneyException e)
+        {
+            Popups.openErrorPopup("Not enough money available", "There is not enough money available. Please pay in first to your wallet.");
+        }
     }
 
     private void onOfferFeePaymentConfirmed()
@@ -282,14 +310,10 @@ public class TradeController implements Initializable, ChildController, WalletFa
 
     private void onUserDetailsReceived()
     {
-        if (!walletFacade.verifyAccountRegistration(offer.getAccountID(), null, null, null, null))
+        if (!blockChainFacade.verifyEmbeddedData(offer.getAccountID()))
         {
-            Dialogs.create()
-                    .title("Offerers bank account is blacklisted")
-                    .message("Offerers bank account is blacklisted.")
-                    .nativeTitleBar()
-                    .lightweight()
-                    .showError();
+            Popups.openErrorPopup("Offerers bank account is blacklisted", "Offerers bank account is blacklisted.");
+            return;
         }
 
         trading.signContract(contract);
@@ -337,8 +361,19 @@ public class TradeController implements Initializable, ChildController, WalletFa
         gridPane.getChildren().clear();
         row = -1;
         FormBuilder.addHeaderLabel(gridPane, "Trade successfully completed", ++row);
-        FormBuilder.addTextField(gridPane, "You have payed:", getTotalToPay(), ++row);
-        FormBuilder.addTextField(gridPane, "You have received:", getTotalToReceive(), ++row);
+        FormBuilder.addTextField(gridPane, "You have payed in total (BTC):", getTotalToPay(), ++row);
+        if (takerIsSelling())
+        {
+            FormBuilder.addTextField(gridPane, "You got returned collateral (BTC):", BtcFormatter.formatSatoshis(getCollateralInSatoshis(), false), ++row);
+            FormBuilder.addTextField(gridPane, "You have received (" + offer.getCurrency() + "):", Formatter.formatVolume(getVolume()), ++row);
+        }
+        else
+        {
+            FormBuilder.addTextField(gridPane, "You got returned collateral (BTC):", BtcFormatter.formatSatoshis(getCollateralInSatoshis(), false), ++row);
+            FormBuilder.addTextField(gridPane, "You have received (" + offer.getCurrency() + "):", Formatter.formatVolume(getVolume()), ++row);
+            FormBuilder.addTextField(gridPane, "You have received (BTC):", BtcFormatter.formatSatoshis(offer.getAmount(), false), ++row);
+        }
+
         gridPane.add(nextButton, 1, ++row);
     }
 
@@ -355,8 +390,8 @@ public class TradeController implements Initializable, ChildController, WalletFa
     // Other Private methods
     private boolean tradeAmountValid()
     {
-        double tradeAmount = Converter.stringToDouble(amountTextField.getText());
-        return tradeAmount <= offer.getAmount() && tradeAmount >= offer.getMinAmount();
+        BigInteger tradeAmount = BtcFormatter.stringValueToSatoshis(amountTextField.getText());
+        return tradeAmount.compareTo(offer.getAmount()) <= 0 && tradeAmount.compareTo(offer.getMinAmount()) >= 0;
     }
 
     private boolean takerIsSelling()
@@ -388,28 +423,31 @@ public class TradeController implements Initializable, ChildController, WalletFa
 
     private String getTotalToPay()
     {
-        String result = "";
         if (takerIsSelling())
         {
-            double btcValue = Converter.stringToDouble(amountTextField.getText()) + BtcFormatter.satoshiToBTC(Fees.OFFER_CREATION_FEE)/* +
-                    offer.getConstraints().getCollateral() * Converter.stringToDouble(amountTextField.getText())*/;
-            result = Formatter.formatAmount(btcValue, true, true);
+            return BtcFormatter.formatSatoshis(getAmountInSatoshis().add(Fees.OFFER_TAKER_FEE).add(getCollateralInSatoshis()), false);
         }
         else
         {
-            double btcValue = BtcFormatter.satoshiToBTC(Fees.OFFER_CREATION_FEE) /*+ offer.getConstraints().getCollateral() * Converter.stringToDouble(amountTextField.getText())*/;
-            result = Formatter.formatAmount(btcValue, true, true) + "\n" + Formatter.formatVolume(getVolume(), offer.getCurrency());
+            return BtcFormatter.formatSatoshis(Fees.OFFER_TAKER_FEE.add(getCollateralInSatoshis()), false) + "\n" +
+                    Formatter.formatVolume(getVolume(), offer.getCurrency());
         }
-        return result;
     }
 
-    private String getTotalToReceive()
+
+    private void applyCollateral()
     {
-        if (takerIsSelling())
-            return Formatter.formatVolume(getVolume(), offer.getCurrency());
-        else
-            return Formatter.formatAmount(offer.getAmount(), true, true);
+        collateralTextField.setText(BtcFormatter.formatSatoshis(getCollateralInSatoshis(), false));
     }
 
+    private BigInteger getCollateralInSatoshis()
+    {
+        return BtcFormatter.doubleValueToSatoshis(Converter.stringToDouble(amountTextField.getText()) * offer.getCollateral());
+    }
+
+    private BigInteger getAmountInSatoshis()
+    {
+        return BtcFormatter.stringValueToSatoshis(amountTextField.getText());
+    }
 }
 

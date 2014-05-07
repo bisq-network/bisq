@@ -15,8 +15,9 @@
 
     <logger name="io.bitsquare" level="DEBUG"/>
 
-    <logger name="com.google.bitcoin" level="WARN"/>
+    <logger name="com.google.bitcoin" level="INFO"/>
 
+    <logger name="com.google.bitcoin.core.Peer" level="ERROR" additivity="false"/>
     <logger name="com.google.bitcoin.core.PeerGroup" level="ERROR" additivity="false"/>
     <logger name="com.google.bitcoin.net.NioClientManager" level="ERROR" additivity="false"/>
     <logger name="com.google.bitcoin.net.ConnectionHandler" level="ERROR" additivity="false"/>

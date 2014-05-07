@@ -20,7 +20,12 @@ public class MockData
         list.add(Currency.getInstance("JPY"));
         list.add(Currency.getInstance("CNY"));
         list.add(Currency.getInstance("CHF"));
-        return randomizeList(list);
+        return list;
+    }
+
+    public static List<Currency> getRandomCurrencies()
+    {
+        return randomizeList(getCurrencies());
     }
 
     public static List<Locale> getLocales()
@@ -36,20 +41,40 @@ public class MockData
         list.add(new Locale("en", "AU"));
         list.add(new Locale("it", "IT"));
         list.add(new Locale("en", "CA"));
-        return randomizeList(list);
+        return list;
+    }
+
+    public static List<Locale> getRandomLocales()
+    {
+        return randomizeList(getLocales());
     }
 
     public static List<Arbitrator> getArbitrators()
     {
         List<Arbitrator> list = new ArrayList<>();
-        list.add(new Arbitrator("Charly Shen", UUID.randomUUID().toString(), UUID.randomUUID().toString(), "http://www.arbit.io/Charly_Shen"));
-        list.add(new Arbitrator("Tom Shang", UUID.randomUUID().toString(), UUID.randomUUID().toString(), "http://www.arbit.io/Tom_Shang"));
-        list.add(new Arbitrator("Edward Swow", UUID.randomUUID().toString(), UUID.randomUUID().toString(), "http://www.arbit.io/Edward_Swow"));
-        list.add(new Arbitrator("Julian Sangre", UUID.randomUUID().toString(), UUID.randomUUID().toString(), "http://www.arbit.io/Julian_Sangre"));
-        return randomizeList(list);
+        list.add(new Arbitrator("uid_1", "Charlie Boom", UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(), "http://www.arbit.io/Charly_Boom", 0.1, 10, com.google.bitcoin.core.Utils.toNanoCoins("0.01")));
+        list.add(new Arbitrator("uid_2", "Tom Shang", UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(), "http://www.arbit.io/Tom_Shang", 0, 1, com.google.bitcoin.core.Utils.toNanoCoins("0.001")));
+        list.add(new Arbitrator("uid_3", "Edward Snow", UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(), "http://www.arbit.io/Edward_Swow", 0.2, 5, com.google.bitcoin.core.Utils.toNanoCoins("0.05")));
+        list.add(new Arbitrator("uid_4", "Julian Sander", UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(), "http://www.arbit.io/Julian_Sander", 0, 20, com.google.bitcoin.core.Utils.toNanoCoins("0.1")));
+        return list;
     }
 
+    public static List<Arbitrator> getRandomArbitrators()
+    {
+        return randomizeList(getArbitrators());
+    }
+
+
     public static List<BankAccountType.BankAccountTypeEnum> getBankTransferTypeEnums()
+    {
+        return Utils.getAllBankAccountTypeEnums();
+    }
+
+    public static List<BankAccountType.BankAccountTypeEnum> getRandomBankTransferTypeEnums()
     {
         return randomizeList(Utils.getAllBankAccountTypeEnums());
     }

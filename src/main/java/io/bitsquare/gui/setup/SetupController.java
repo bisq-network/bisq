@@ -6,6 +6,7 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
@@ -14,8 +15,8 @@ import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.components.processbar.ProcessStepBar;
 import io.bitsquare.gui.components.processbar.ProcessStepItem;
 import io.bitsquare.gui.util.FormBuilder;
-import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.gui.util.Localisation;
+import io.bitsquare.gui.util.Popups;
 import io.bitsquare.gui.util.Verification;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.User;
@@ -29,7 +30,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
-import org.controlsfx.dialog.Dialogs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,13 +41,15 @@ public class SetupController implements Initializable, ChildController, WalletFa
 {
     private static final Logger log = LoggerFactory.getLogger(SetupController.class);
 
-    private User user;
+    private final User user;
     private final WalletFacade walletFacade;
-    private Storage storage;
-    private List<ProcessStepItem> processStepItems = new ArrayList();
+    private final Storage storage;
+    private final List<ProcessStepItem> processStepItems = new ArrayList<>();
     private NavigationController navigationController;
     private TextField balanceLabel, accountTitle, accountHolderName, accountPrimaryID, accountSecondaryID;
-    private ComboBox countryComboBox, bankTransferTypeComboBox, currencyComboBox;
+    private ComboBox<Locale> countryComboBox;
+    private ComboBox<BankAccountType> bankTransferTypeComboBox;
+    private ComboBox<Currency> currencyComboBox;
     private Button addBankAccountButton;
 
     @FXML
@@ -133,7 +135,7 @@ public class SetupController implements Initializable, ChildController, WalletFa
     public void onCoinsReceived(BigInteger newBalance)
     {
         updateCreateAccountButton();
-        balanceLabel.setText(Formatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true));
+        balanceLabel.setText(BtcFormatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true));
         log.info("onCoinsReceived " + newBalance);
     }
 
@@ -161,7 +163,7 @@ public class SetupController implements Initializable, ChildController, WalletFa
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
 
-        balanceLabel = FormBuilder.addTextField(gridPane, "Balance:", Formatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true), ++row);
+        balanceLabel = FormBuilder.addTextField(gridPane, "Balance:", BtcFormatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true), ++row);
 
         new ConfirmationComponent(walletFacade, gridPane, ++row);
 
@@ -194,7 +196,7 @@ public class SetupController implements Initializable, ChildController, WalletFa
 
         gridPane.getChildren().clear();
         int row = -1;
-        bankTransferTypeComboBox = FormBuilder.addComboBox(gridPane, "Bank account type:", Utils.getAllBankAccountTypes(), ++row);
+        bankTransferTypeComboBox = FormBuilder.addBankAccountComboBox(gridPane, "Bank account type:", Utils.getAllBankAccountTypes(), ++row);
         bankTransferTypeComboBox.setConverter(new StringConverter<BankAccountType>()
         {
             @Override
@@ -216,7 +218,7 @@ public class SetupController implements Initializable, ChildController, WalletFa
         accountPrimaryID = FormBuilder.addInputField(gridPane, "Bank account primary ID", "", ++row);
         accountSecondaryID = FormBuilder.addInputField(gridPane, "Bank account secondary ID:", "", ++row);
 
-        currencyComboBox = FormBuilder.addComboBox(gridPane, "Currency used for bank account:", Utils.getAllCurrencies(), ++row);
+        currencyComboBox = FormBuilder.addCurrencyComboBox(gridPane, "Currency used for bank account:", Utils.getAllCurrencies(), ++row);
         currencyComboBox.setPromptText("Select currency");
         currencyComboBox.setConverter(new StringConverter<Currency>()
         {
@@ -233,7 +235,7 @@ public class SetupController implements Initializable, ChildController, WalletFa
             }
         });
 
-        countryComboBox = FormBuilder.addComboBox(gridPane, "Country of bank account:", Utils.getAllLocales(), ++row);
+        countryComboBox = FormBuilder.addLocalesComboBox(gridPane, "Country of bank account:", Utils.getAllLocales(), ++row);
         countryComboBox.setPromptText("Select country");
         countryComboBox.setConverter(new StringConverter<Locale>()
         {
@@ -267,11 +269,10 @@ public class SetupController implements Initializable, ChildController, WalletFa
         bankTransferTypeComboBox.valueProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue != null && newValue instanceof BankAccountType)
             {
-                BankAccountType bankAccountType = (BankAccountType) newValue;
                 accountPrimaryID.setText("");
-                accountPrimaryID.setPromptText(bankAccountType.getPrimaryIDName());
+                accountPrimaryID.setPromptText(newValue.getPrimaryIDName());
                 accountSecondaryID.setText("");
-                accountSecondaryID.setPromptText(bankAccountType.getSecondaryIDName());
+                accountSecondaryID.setPromptText(newValue.getSecondaryIDName());
 
                 checkCreateAccountButtonState();
             }
@@ -303,19 +304,14 @@ public class SetupController implements Initializable, ChildController, WalletFa
                 {
                     walletFacade.sendRegistrationTx(user.getStringifiedBankAccounts());
                     user.setAccountID(walletFacade.getAccountRegistrationAddress().toString());
-                    user.setMessageID(walletFacade.getAccountRegistrationPubKey().toString());
+                    user.setMessageID(walletFacade.getAccountRegistrationPubKey());
 
                     storage.write(user.getClass().getName(), user);
                     processStepBar.next();
                     buildStep2();
                 } catch (InsufficientMoneyException e1)
                 {
-                    Dialogs.create()
-                            .title("Not enough money available")
-                            .message("There is not enough money available. Please pay in first to your wallet.")
-                            .nativeTitleBar()
-                            .lightweight()
-                            .showError();
+                    Popups.openErrorPopup("Not enough money available", "There is not enough money available. Please pay in first to your wallet.");
                 }
             }
         });
@@ -334,7 +330,7 @@ public class SetupController implements Initializable, ChildController, WalletFa
 
         FormBuilder.addHeaderLabel(gridPane, "Registration complete", ++row);
         FormBuilder.addTextField(gridPane, "Registration address:", walletFacade.getAccountRegistrationAddress().toString(), ++row);
-        FormBuilder.addTextField(gridPane, "Balance:", Formatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true), ++row);
+        FormBuilder.addTextField(gridPane, "Balance:", BtcFormatter.formatSatoshis(walletFacade.getAccountRegistrationBalance(), true), ++row);
 
         Button closeButton = FormBuilder.addButton(gridPane, "Close", ++row);
         closeButton.setDefaultButton(true);
@@ -409,9 +405,9 @@ public class SetupController implements Initializable, ChildController, WalletFa
         if (verifyBankAccountData())
         {
             BankAccount bankAccount = new BankAccount(
-                    (BankAccountType) bankTransferTypeComboBox.getSelectionModel().getSelectedItem(),
-                    (Currency) currencyComboBox.getSelectionModel().getSelectedItem(),
-                    (Locale) countryComboBox.getSelectionModel().getSelectedItem(),
+                    bankTransferTypeComboBox.getSelectionModel().getSelectedItem(),
+                    currencyComboBox.getSelectionModel().getSelectedItem(),
+                    countryComboBox.getSelectionModel().getSelectedItem(),
                     accountTitle.getText(),
                     accountHolderName.getText(),
                     accountPrimaryID.getText(),

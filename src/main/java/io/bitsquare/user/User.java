@@ -20,6 +20,7 @@ public class User implements Serializable
     private List<BankAccount> bankAccounts = new ArrayList<>();
     private BankAccount currentBankAccount = null;
 
+
     public User()
     {
     }

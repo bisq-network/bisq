@@ -2,12 +2,12 @@ package io.bitsquare.gui;
 
 import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.market.MarketController;
 import io.bitsquare.gui.setup.SetupController;
-import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.gui.util.Localisation;
 import io.bitsquare.trade.Direction;
@@ -251,7 +251,7 @@ public class MainController implements Initializable, NavigationController, Wall
         balanceLabel.setMouseTransparent(true);
         balanceLabel.setPrefWidth(90);
         balanceLabel.setId("nav-balance-label");
-        balanceLabel.setText(Formatter.formatSatoshis(walletFacade.getBalance(), false));
+        balanceLabel.setText(BtcFormatter.formatSatoshis(walletFacade.getBalance(), false));
 
         Label balanceCurrencyLabel = new Label("BTC");
         balanceCurrencyLabel.setPadding(new Insets(6, 0, 0, 0));

@@ -13,4 +13,14 @@ public class Popups
                 .lightweight()
                 .showError();
     }
+
+    public static void openWarningPopup(String title, String message)
+    {
+        Dialogs.create()
+                .title(title)
+                .message(message)
+                .nativeTitleBar()
+                .lightweight()
+                .showWarning();
+    }
 }

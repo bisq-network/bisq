@@ -37,11 +37,9 @@ public class CryptoFacade
         return Utils.sha256hash160(concatenateChunks(stringifiedBankAccounts, signedBankAccountIDs).getBytes(Charsets.UTF_8));
     }
 
-
-    // TODO MOCK
-    public String signContract(String contractAsJson)
+    public String signContract(ECKey key, String contractAsJson)
     {
-        return contractAsJson;
+        return key.signMessage(contractAsJson);
     }
 
     //   registration

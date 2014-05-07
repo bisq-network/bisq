@@ -6,6 +6,7 @@ import io.bitsquare.gui.market.orderbook.OrderBookListItem;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
+import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -76,7 +77,7 @@ public class OrderBook
                 // The requested amount must be lower or equal then the offer amount
                 boolean amountResult = true;
                 if (orderBookFilter.getAmount() > 0)
-                    amountResult = orderBookFilter.getAmount() <= offer.getAmount();
+                    amountResult = orderBookFilter.getAmount() <= offer.getAmount().doubleValue();
 
                 // The requested trade direction must be opposite of the offerList trade direction
                 boolean directionResult = !orderBookFilter.getDirection().equals(offer.getDirection());
@@ -91,40 +92,46 @@ public class OrderBook
                         priceResult = orderBookFilter.getPrice() <= offer.getPrice();
                 }
 
+                // The arbitrator defined in the offer must match one of the accepted arbitrators defined in the settings (1 to n)
+                boolean arbitratorResult = arbitratorInList(offer.getArbitrator(), settings.getAcceptedArbitrators());
+
+
                 boolean result = currencyResult
                         && countryResult
                         && languageResult
                         && amountResult
                         && directionResult
-                        && priceResult;
+                        && priceResult
+                        && arbitratorResult;
 
-                /*
+                       /*
                 log.debug("result = " + result +
                         ", currencyResult = " + currencyResult +
                         ", countryResult = " + countryResult +
                         ", languageResult = " + languageResult +
-                        ", bankAccountTypeEnumResult = " + bankAccountTypeEnumResult +
                         ", amountResult = " + amountResult +
                         ", directionResult = " + directionResult +
-                        ", priceResult = " + priceResult
+                        ", priceResult = " + priceResult +
+                        ", arbitratorResult = " + arbitratorResult
                 );
 
                 log.debug("currentBankAccount.getCurrency() = " + currentBankAccount.getCurrency() +
                         ", offer.getCurrency() = " + offer.getCurrency());
-                log.debug("offer.getCountryLocale() = " + offer.getCountryLocale() +
+                log.debug("offer.getCountryLocale() = " + offer.getBankAccountCountryLocale() +
                         ", settings.getAcceptedCountryLocales() = " + settings.getAcceptedCountryLocales().toString());
                 log.debug("settings.getAcceptedLanguageLocales() = " + settings.getAcceptedLanguageLocales() +
-                        ", constraints.getAcceptedLanguageLocales() = " + constraints.getLanguageLocales());
+                        ", offer.getAcceptedLanguageLocales() = " + offer.getAcceptedLanguageLocales());
                 log.debug("currentBankAccount.getBankAccountType().getType() = " + currentBankAccount.getBankAccountType().getType() +
-                        ", constraints.getBankAccountTypes() = " + constraints.getBankAccountTypes());
+                        ", offer.getBankAccountTypeEnum() = " + offer.getBankAccountTypeEnum());
                 log.debug("orderBookFilter.getAmount() = " + orderBookFilter.getAmount() +
                         ", offer.getAmount() = " + offer.getAmount());
                 log.debug("orderBookFilter.getDirection() = " + orderBookFilter.getDirection() +
                         ", offer.getDirection() = " + offer.getDirection());
                 log.debug("orderBookFilter.getPrice() = " + orderBookFilter.getPrice() +
                         ", offer.getPrice() = " + offer.getPrice());
-                    */
-
+                log.debug("offer.getArbitrator() = " + offer.getArbitrator() +
+                        ", settings.getAcceptedArbitrators() = " + settings.getAcceptedArbitrators());
+                             */
                 return result;
             }
         });
@@ -144,24 +151,43 @@ public class OrderBook
     // Private Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean countryInList(Locale orderBookFilterLocale, List<Locale> offerConstraintsLocales)
+    private boolean countryInList(Locale localeToMatch, List<Locale> list)
     {
-        for (Locale locale : offerConstraintsLocales)
+        for (Locale locale : list)
         {
-            if (locale.getCountry().equals(orderBookFilterLocale.getCountry()))
+            if (locale.getCountry().equals(localeToMatch.getCountry()))
                 return true;
         }
         return false;
     }
 
-    private boolean languagesInList(List<Locale> orderBookFilterLocales, List<Locale> offerConstraintsLocales)
+    private boolean languagesInList(List<Locale> list1, List<Locale> list2)
     {
-        for (Locale offerConstraintsLocale : offerConstraintsLocales)
+        for (Locale locale1 : list2)
         {
-            for (Locale orderBookFilterLocale : orderBookFilterLocales)
+            for (Locale locale2 : list1)
             {
-                if (offerConstraintsLocale.getLanguage().equals(orderBookFilterLocale.getLanguage()))
+                if (locale1.getLanguage().equals(locale2.getLanguage()))
                     return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean arbitratorInList(Arbitrator arbitratorToMatch, List<Arbitrator> list)
+    {
+        if (arbitratorToMatch != null)
+        {
+            for (Arbitrator arbitrator : list)
+            {
+                try
+                {
+                    if (arbitrator.getUID().equals(arbitratorToMatch.getUID()))
+                        return true;
+                } catch (Exception e)
+                {
+                    log.error(e.toString());
+                }
             }
         }
         return false;

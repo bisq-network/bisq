@@ -7,25 +7,23 @@
             xmlns:fx="http://javafx.com/fxml">
     <ScrollPane fitToWidth="true" AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10" AnchorPane.topAnchor="10"
                 AnchorPane.bottomAnchor="30">
-        <content>
-            <VBox fx:id="vBox" spacing="10">
-                <Label text="Setup trading account" id="headline-label"/>
-                <ProcessStepBar fx:id="processStepBar"/>
-                <VSpacer prefHeight="10"/>
-                <Label fx:id="infoLabel"/>
-                <GridPane fx:id="gridPane" vgap="5" hgap="5">
-                    <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
-                    </padding>
-                    <columnConstraints>
-                        <ColumnConstraints halignment="RIGHT"/>
-                        <ColumnConstraints halignment="LEFT" prefWidth="320"/>
-                        <ColumnConstraints halignment="LEFT"/>
-                    </columnConstraints>
-                </GridPane>
-                <Button fx:id="nextButton" defaultButton="true"/>
-                <Button fx:id="skipButton"/>
-            </VBox>
-        </content>
+        <VBox fx:id="vBox" spacing="10">
+            <Label text="Setup trading account" id="headline-label"/>
+            <ProcessStepBar fx:id="processStepBar"/>
+            <VSpacer prefHeight="10"/>
+            <Label fx:id="infoLabel"/>
+            <GridPane fx:id="gridPane" vgap="5" hgap="5">
+                <padding>
+                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                </padding>
+                <columnConstraints>
+                    <ColumnConstraints halignment="RIGHT"/>
+                    <ColumnConstraints halignment="LEFT" prefWidth="320"/>
+                    <ColumnConstraints halignment="LEFT"/>
+                </columnConstraints>
+            </GridPane>
+            <Button fx:id="nextButton" defaultButton="true"/>
+            <Button fx:id="skipButton"/>
+        </VBox>
     </ScrollPane>
 </AnchorPane>

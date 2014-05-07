@@ -1,5 +1,6 @@
 package io.bitsquare;
 
+import com.google.bitcoin.core.Utils;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bitsquare.bank.BankAccount;
@@ -45,8 +46,10 @@ public class BitSquare extends Application
         final Storage storage = injector.getInstance(Storage.class);
         user.updateFromStorage((User) storage.read(user.getClass().getName()));
 
-        settings.updateFromStorage((Settings) storage.read(settings.getClass().getName()));
+        // mock
         initSettings(settings, storage, user);
+
+        settings.updateFromStorage((Settings) storage.read(settings.getClass().getName()));
 
         stage.setTitle("BitSquare");
 
@@ -83,55 +86,62 @@ public class BitSquare extends Application
         {
             // write default settings
             settings.getAcceptedCountryLocales().clear();
-            settings.getAcceptedLanguageLocales().clear();
-
-            settings.addAcceptedLanguageLocale(Locale.getDefault());
-            settings.addAcceptedCountryLocale(Locale.getDefault());
-
-            //TODO mock
+            // settings.addAcceptedLanguageLocale(Locale.getDefault());
+            settings.addAcceptedLanguageLocale(MockData.getLocales().get(0));
             settings.addAcceptedLanguageLocale(new Locale("en", "US"));
             settings.addAcceptedLanguageLocale(new Locale("es", "ES"));
 
-            settings.addAcceptedCountryLocale(new Locale("de", "AT"));
+            settings.getAcceptedCountryLocales().clear();
+            //settings.addAcceptedCountryLocale(Locale.getDefault());
+            settings.addAcceptedCountryLocale(MockData.getLocales().get(0));
             settings.addAcceptedCountryLocale(new Locale("en", "US"));
             settings.addAcceptedCountryLocale(new Locale("es", "ES"));
 
-            settings.addArbitrator(new Arbitrator("Charly Boom", UUID.randomUUID().toString(), UUID.randomUUID().toString(), "http://www.arbit.io/Charly_Boom"));
-            settings.addArbitrator(new Arbitrator("Tom Shang", UUID.randomUUID().toString(), UUID.randomUUID().toString(), "http://www.arbit.io/Tom_Shang"));
-            settings.addArbitrator(new Arbitrator("Edward Snow", UUID.randomUUID().toString(), UUID.randomUUID().toString(), "http://www.arbit.io/Edward_Swow"));
-            settings.addArbitrator(new Arbitrator("Julian Sander", UUID.randomUUID().toString(), UUID.randomUUID().toString(), "http://www.arbit.io/Julian_Sander"));
+            settings.getAcceptedArbitrators().clear();
+            settings.addAcceptedArbitrator(new Arbitrator("uid_1", "Charlie Boom", UUID.randomUUID().toString(),
+                    UUID.randomUUID().toString(), "http://www.arbit.io/Charly_Boom", 0.1, 10, Utils.toNanoCoins("0.01")));
+            settings.addAcceptedArbitrator(new Arbitrator("uid_2", "Tom Shang", UUID.randomUUID().toString(),
+                    UUID.randomUUID().toString(), "http://www.arbit.io/Tom_Shang", 0, 1, Utils.toNanoCoins("0.001")));
+            settings.addAcceptedArbitrator(new Arbitrator("uid_3", "Edward Snow", UUID.randomUUID().toString(),
+                    UUID.randomUUID().toString(), "http://www.arbit.io/Edward_Swow", 0.2, 5, Utils.toNanoCoins("0.05")));
+            settings.addAcceptedArbitrator(new Arbitrator("uid_4", "Julian Sander", UUID.randomUUID().toString(),
+                    UUID.randomUUID().toString(), "http://www.arbit.io/Julian_Sander", 0, 20, Utils.toNanoCoins("0.1")));
+
+            settings.setMinCollateral(0.01);
+            settings.setMaxCollateral(0.1);
 
             storage.write(settings.getClass().getName(), settings);
 
-            initMockUser(storage, user);
-        }
-        else
-        {
-            settings.updateFromStorage(savedSettings);
+            //initMockUser(storage, user);
         }
     }
 
     private void initMockUser(Storage storage, User user)
     {
+        user.getBankAccounts().clear();
+
         BankAccount bankAccount1 = new BankAccount(new BankAccountType(BankAccountType.BankAccountTypeEnum.SEPA, "Iban", "Bic"),
                 MockData.getCurrencies().get(0),
                 MockData.getLocales().get(0),
-                "Main account",
+                "Main EUR account",
                 "Manfred Karrer",
                 "564613242346",
                 "23432432434"
         );
-        BankAccount bankAccount2 = new BankAccount(new BankAccountType(BankAccountType.BankAccountTypeEnum.OK_PAY, "Number", "ID"),
-                MockData.getCurrencies().get(0),
-                MockData.getLocales().get(0),
-                "OK account",
+        user.addBankAccount(bankAccount1);
+
+        BankAccount bankAccount2 = new BankAccount(new BankAccountType(BankAccountType.BankAccountTypeEnum.INTERNATIONAL, "Number", "ID"),
+                MockData.getCurrencies().get(1),
+                MockData.getLocales().get(2),
+                "US account",
                 "Manfred Karrer",
                 "22312123123123123",
                 "asdasdasdas"
         );
         user.addBankAccount(bankAccount2);
-        user.addBankAccount(bankAccount1);
+
         user.setAccountID(UUID.randomUUID().toString());
+
         storage.write(user.getClass().getName(), user);
     }
 }

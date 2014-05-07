@@ -6,45 +6,34 @@
 <AnchorPane fx:id="holderPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
             AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="io.bitsquare.gui.market.offer.CreateOfferController">
-    <children>
-        <VBox spacing="10" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0"
-              AnchorPane.bottomAnchor="10.0">
-            <GridPane fx:id="formGridPane" vgap="5" hgap="5">
-                <children>
-                    <Label id="form-header-text" text="Create new offer:" GridPane.rowIndex="0"
-                           GridPane.columnIndex="0"/>
+    <VBox spacing="10" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0"
+          AnchorPane.bottomAnchor="10.0">
+        <GridPane fx:id="formGridPane" vgap="5" hgap="5">
+            <Label id="form-header-text" text="Create new offer:" GridPane.rowIndex="0"
+                   GridPane.columnIndex="0"/>
 
-                    <Label fx:id="buyLabel" text="Buy" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <Label fx:id="buyLabel" text="Buy" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
 
-                    <HBox GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="NEVER" spacing="5"
-                          alignment="CENTER_RIGHT">
-                        <children>
-                            <TextField fx:id="amount" prefWidth="70.0" alignment="CENTER_RIGHT"/>
-                            <Label text="BTC for:"/>
-                            <TextField fx:id="price" prefWidth="70.0" alignment="CENTER_RIGHT"/>
-                            <Label text="EUR ="/>
-                            <TextField fx:id="volume" prefWidth="70.0" alignment="CENTER_RIGHT"
-                                       mouseTransparent="true"/>
-                            <Label text="EUR in total"/>
-                        </children>
-                    </HBox>
+            <HBox GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="NEVER" spacing="5"
+                  alignment="CENTER_RIGHT">
+                <TextField fx:id="amountTextField" prefWidth="70.0" alignment="CENTER_RIGHT"/>
+                <Label text="BTC for:"/>
+                <TextField fx:id="priceTextField" prefWidth="70.0" alignment="CENTER_RIGHT"/>
+                <Label text="EUR ="/>
+                <TextField fx:id="volumeTextField" prefWidth="70.0" alignment="CENTER_RIGHT" editable="false"
+                           mouseTransparent="true"/>
+                <Label text="EUR in total"/>
+            </HBox>
 
-                    <Label text="Min. Amount:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <padding>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+            </padding>
 
-                    <TextField fx:id="minAmount" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-
-                </children>
-
-                <padding>
-                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
-                </padding>
-
-                <columnConstraints>
-                    <ColumnConstraints halignment="RIGHT"/>
-                    <ColumnConstraints halignment="LEFT"/>
-                    <ColumnConstraints halignment="LEFT"/>
-                </columnConstraints>
-            </GridPane>
-        </VBox>
-    </children>
+            <columnConstraints>
+                <ColumnConstraints halignment="RIGHT"/>
+                <ColumnConstraints halignment="LEFT"/>
+                <ColumnConstraints halignment="LEFT"/>
+            </columnConstraints>
+        </GridPane>
+    </VBox>
 </AnchorPane>

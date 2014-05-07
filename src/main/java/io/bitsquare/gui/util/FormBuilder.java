@@ -1,5 +1,6 @@
 package io.bitsquare.gui.util;
 
+import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.components.VSpacer;
 import javafx.collections.FXCollections;
@@ -8,7 +9,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 
+import java.util.Currency;
 import java.util.List;
+import java.util.Locale;
 
 public class FormBuilder
 {
@@ -67,13 +70,37 @@ public class FormBuilder
         return button;
     }
 
-    public static ComboBox addComboBox(GridPane gridPane, String title, List<?> list, int row)
+    public static ComboBox<Locale> addLocalesComboBox(GridPane gridPane, String title, List<Locale> list, int row)
     {
         gridPane.add(new Label(title), 0, row);
-        ComboBox comboBox = new ComboBox(FXCollections.observableArrayList(list));
+        ComboBox<Locale> comboBox = new ComboBox<>(FXCollections.observableArrayList(list));
         gridPane.add(comboBox, 1, row);
         return comboBox;
     }
+
+    public static ComboBox<Currency> addCurrencyComboBox(GridPane gridPane, String title, List<Currency> list, int row)
+    {
+        gridPane.add(new Label(title), 0, row);
+        ComboBox<Currency> comboBox = new ComboBox<>(FXCollections.observableArrayList(list));
+        gridPane.add(comboBox, 1, row);
+        return comboBox;
+    }
+
+    public static ComboBox<BankAccountType> addBankAccountComboBox(GridPane gridPane, String title, List<BankAccountType> list, int row)
+    {
+        gridPane.add(new Label(title), 0, row);
+        ComboBox<BankAccountType> comboBox = new ComboBox<>(FXCollections.observableArrayList(list));
+        gridPane.add(comboBox, 1, row);
+        return comboBox;
+    }
+
+   /* public static ComboBox addLocalesComboBox(GridPane gridPane, String title, List<?> list, int row)
+    {
+        gridPane.add(new Label(title), 0, row);
+        ComboBox<?> comboBox = new ComboBox<>(FXCollections.observableArrayList(list));
+        gridPane.add(comboBox, 1, row);
+        return comboBox;
+    }   */
 
 
     public static TextField addConfirmationsLabel(GridPane gridPane, WalletFacade walletFacade, int row)
