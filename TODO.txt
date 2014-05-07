@@ -1,7 +1,6 @@
-- pay out from MS in payment process
 - arbitration integration
-
-Messaging!
+- Messaging!
+- settings
 
 low prio:
 - tx confirm. not working correct and reliable

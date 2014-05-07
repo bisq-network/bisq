@@ -20,9 +20,9 @@ git clone --recursive git://github.com/bitsquare/bitsquare
 * Setup with account registration and tx with OP_RETURN + embedded and blinded bank account data
 * Offer fee payment with a OP_RETURN tx and fees to miners
 * Pay in to MS fund
+* Payout from MS fund
 
 ### Next steps:
-* Payout from MS fund
 * Arbitrator integration
 * Messaging system
 * Other trade variants (Buy BTC taker, Sell BTC offerer, Sell BTC offerer)
