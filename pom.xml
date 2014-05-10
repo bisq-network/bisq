@@ -50,7 +50,7 @@
         <!-- bitcoin-j repo -->
         <repository>
             <id>bitcoinj-release</id>
-            <releases />
+            <releases/>
             <url>http://distribution.bitcoinj.googlecode.com/git/releases</url>
         </repository>
         <!-- zxing repo -->
@@ -59,6 +59,12 @@
             <url>http://mvn-adamgent.googlecode.com/svn/maven/release</url>
             <name>Adam Gent Maven Repository</name>
         </repository>
+
+        <repository>
+            <id>tomp2p.net</id>
+            <url>http://tomp2p.net/dev/mvn/</url>
+        </repository>
+
     </repositories>
 
     <!-- TODO Maven build not working yet... -->
@@ -106,13 +112,13 @@
             <version>4.11</version>
             <scope>test</scope>
         </dependency>
-                 <!--
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-jdk14</artifactId>
-            <version>1.7.7</version>
-        </dependency>
-         -->
+        <!--
+<dependency>
+   <groupId>org.slf4j</groupId>
+   <artifactId>slf4j-jdk14</artifactId>
+   <version>1.7.7</version>
+</dependency>
+-->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -168,6 +174,12 @@
             <groupId>net.glxn</groupId>
             <artifactId>qrgen</artifactId>
             <version>1.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.tomp2p</groupId>
+            <artifactId>TomP2P</artifactId>
+            <version>4.4</version>
         </dependency>
 
     </dependencies>

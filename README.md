@@ -21,11 +21,13 @@ git clone --recursive git://github.com/bitsquare/bitsquare
 * Offer fee payment with a OP_RETURN tx and fees to miners
 * Pay in to MS fund
 * Payout from MS fund
+* TomP2P as messaging lib integrated and basic use cases in msg screen implemented: orderbook, add order, remove order, find peer, chat with peer
 
 ### Next steps:
+* Implement messaging with TomP2P for registration, orderbook and payment process
 * Arbitrator integration
-* Messaging system
 * Other trade variants (Buy BTC taker, Sell BTC offerer, Sell BTC offerer)
+* Verify registration and fee payments tx and get them from the blockchain
 * ...
 
 

@@ -36,11 +36,13 @@ public class WalletFacade implements WalletEventListener
     public static final String MAIN_NET = "MAIN_NET";
     public static final String TEST_NET = "TEST_NET";
 
-    // for testing trade process between offerer and taker
-    //public static final String WALLET_PREFIX = "offerer"; // offerer
-    public static final String WALLET_PREFIX = "taker"; // offerer
+    public static String WALLET_PREFIX;
 
-    //public static final String WALLET_PREFIX = "bitsquare";
+    // for testing trade process between offerer and taker
+    //public static String WALLET_PREFIX = "offerer"; // offerer
+    //public static String WALLET_PREFIX = "taker"; // offerer
+
+    //public static  String WALLET_PREFIX = "bitsquare";
 
 
     private static final Logger log = LoggerFactory.getLogger(WalletFacade.class);
@@ -105,13 +107,10 @@ public class WalletFacade implements WalletEventListener
 
         wallet = walletAppKit.wallet();
 
-        // Don't make the user wait for confirmations for now, as the intention is they're sending it their own money!
-        wallet.allowSpendingUnconfirmedTransactions();
+        //wallet.allowSpendingUnconfirmedTransactions();
         walletAppKit.peerGroup().setMaxConnections(20);
 
         wallet.addEventListener(this);
-
-        log.info(wallet.toString());
 
         // testTradeProcessDepositTx();
         // testTradeProcessPayOutTx();

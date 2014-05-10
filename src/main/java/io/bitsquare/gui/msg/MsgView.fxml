@@ -1,6 +1,80 @@
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.Pane?>
-<Pane fx:controller="io.bitsquare.gui.msg.MsgController"
-      xmlns:fx="http://javafx.com/fxml">
-    <Label text="Msg"/>
-</Pane>
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<AnchorPane fx:controller="io.bitsquare.gui.msg.MsgController" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
+            AnchorPane.topAnchor="0" xmlns="http://javafx.com/javafx/8"
+            xmlns:fx="http://javafx.com/fxml/1">
+    <children>
+
+        <Label text="Offer list" AnchorPane.leftAnchor="10" AnchorPane.topAnchor="15.0">
+            <font>
+                <Font name="System Bold" size="18.0"/>
+            </font>
+        </Label>
+        <ComboBox fx:id="currencyComboBox" onAction="#selectCurrency" prefWidth="100" AnchorPane.rightAnchor="405" AnchorPane.topAnchor="10.0"/>
+        <TableView fx:id="offerTable" prefHeight="200.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="405"
+                   AnchorPane.topAnchor="40.0">
+            <columns>
+                <TableColumn text="Offer" fx:id="offerColumn" minWidth="120">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="offer"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn text="Peer PubKey" fx:id="pubKeyColumn" minWidth="80" prefWidth="80">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="pubKey"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn text="" fx:id="removeOfferColumn" minWidth="80" sortable="false"/>
+                <TableColumn text="" fx:id="connectToPeerColumn" minWidth="80" sortable="false"/>
+            </columns>
+        </TableView>
+
+
+        <Label text="Chat with peer" AnchorPane.bottomAnchor="210.0" AnchorPane.leftAnchor="10.0">
+            <font>
+                <Font name="System Bold" size="18.0"/>
+            </font>
+        </Label>
+        <TextArea fx:id="chatTextArea" editable="false" prefHeight="160.0" AnchorPane.bottomAnchor="45.0" AnchorPane.leftAnchor="10.0"
+                  AnchorPane.rightAnchor="10.0"/>
+        <TextField fx:id="chatInputField" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="120.0"/>
+        <Button fx:id="sendButton" onAction="#sendChatMsg" disable="true" defaultButton="true" prefWidth="100.0" text="Send" AnchorPane.bottomAnchor="10.0"
+                AnchorPane.rightAnchor="10"/>
+
+
+        <GridPane hgap="5.0" prefWidth="385.0" vgap="5.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="40.0">
+            <children>
+                <Label layoutX="418.0" text="Add new Offer" AnchorPane.topAnchor="10.0" GridPane.columnSpan="2" GridPane.halignment="LEFT"
+                       GridPane.rowIndex="0">
+                    <font>
+                        <Font name="System Bold" size="18.0"/>
+                    </font>
+                </Label>
+                <Label text="Peer ID:" GridPane.rowIndex="1"/>
+                <Label text="Currency:" GridPane.rowIndex="2"/>
+                <Label text="Offer data:" GridPane.rowIndex="3"/>
+                <TextField fx:id="peerIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                <TextField fx:id="currencyTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                <TextField fx:id="offerDataTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                <Button onAction="#publishOffer" text="Add Offer" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+            </children>
+
+            <columnConstraints>
+                <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="10.0"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="10.0"/>
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="10.0" vgrow="ALWAYS"/>
+            </rowConstraints>
+        </GridPane>
+
+    </children>
+</AnchorPane>

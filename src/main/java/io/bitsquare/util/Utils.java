@@ -21,6 +21,12 @@ public class Utils
 {
     private static final Logger log = LoggerFactory.getLogger(Utils.class);
 
+    public static String getRootDir()
+    {
+        return Utils.class.getProtectionDomain().getCodeSource().getLocation().getFile() + "/";
+    }
+
+
     public static String objectToJson(Object object)
     {
         Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).create();

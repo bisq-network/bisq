@@ -18,6 +18,7 @@ import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.Localisation;
 import io.bitsquare.gui.util.Popups;
 import io.bitsquare.gui.util.Verification;
+import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utils;
@@ -43,6 +44,7 @@ public class SetupController implements Initializable, ChildController, WalletFa
 
     private final User user;
     private final WalletFacade walletFacade;
+    private MessageFacade messageFacade;
     private final Storage storage;
     private final List<ProcessStepItem> processStepItems = new ArrayList<>();
     private NavigationController navigationController;
@@ -71,10 +73,11 @@ public class SetupController implements Initializable, ChildController, WalletFa
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SetupController(User user, WalletFacade walletFacade, Storage storage)
+    public SetupController(User user, WalletFacade walletFacade, MessageFacade messageFacade, Storage storage)
     {
         this.user = user;
         this.walletFacade = walletFacade;
+        this.messageFacade = messageFacade;
         this.storage = storage;
     }
 
@@ -118,6 +121,11 @@ public class SetupController implements Initializable, ChildController, WalletFa
         this.navigationController = navigationController;
     }
 
+    @Override
+    public void cleanup()
+    {
+
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: WalletFacade.WalletListener
@@ -305,6 +313,7 @@ public class SetupController implements Initializable, ChildController, WalletFa
                     walletFacade.sendRegistrationTx(user.getStringifiedBankAccounts());
                     user.setAccountID(walletFacade.getAccountRegistrationAddress().toString());
                     user.setMessageID(walletFacade.getAccountRegistrationPubKey());
+                    //user.setMessageID(messageFacade.getPubKey());
 
                     storage.write(user.getClass().getName(), user);
                     processStepBar.next();

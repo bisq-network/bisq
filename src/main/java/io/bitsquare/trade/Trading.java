@@ -9,7 +9,6 @@ import io.bitsquare.btc.Fees;
 import io.bitsquare.btc.KeyPair;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
-import io.bitsquare.msg.Message;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
@@ -70,7 +69,7 @@ public class Trading
         offers.put(offer.getUid().toString(), offer);
         walletFacade.payFee(Fees.OFFER_CREATION_FEE, callback);
 
-        messageFacade.broadcast(new Message(Message.BROADCAST_NEW_OFFER, offer));
+        // messageFacade.broadcast(new Message(Message.BROADCAST_NEW_OFFER, offer));
     }
 
     public Trade createTrade(Offer offer)

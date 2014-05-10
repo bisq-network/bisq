@@ -39,5 +39,11 @@ public class SettingsController implements Initializable, ChildController
         this.navigationController = navigationController;
     }
 
+    @Override
+    public void cleanup()
+    {
+
+    }
+
 }
 

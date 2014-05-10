@@ -28,5 +28,11 @@ public class HomeController implements Initializable, ChildController
         this.navigationController = navigationController;
     }
 
+    @Override
+    public void cleanup()
+    {
+
+    }
+
 }
 

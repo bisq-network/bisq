@@ -122,6 +122,12 @@ public class TradeController implements Initializable, ChildController, WalletFa
         this.navigationController = navigationController;
     }
 
+    @Override
+    public void cleanup()
+    {
+
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: WalletFacade.WalletListener

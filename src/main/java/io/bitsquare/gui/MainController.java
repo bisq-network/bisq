@@ -10,6 +10,7 @@ import io.bitsquare.gui.market.MarketController;
 import io.bitsquare.gui.setup.SetupController;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.gui.util.Localisation;
+import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.user.User;
 import javafx.application.Platform;
@@ -39,6 +40,7 @@ public class MainController implements Initializable, NavigationController, Wall
 
     private User user;
     private WalletFacade walletFacade;
+    private MessageFacade messageFacade;
     private ChildController childController;
     private ToggleGroup toggleGroup;
     private ToggleButton prevToggleButton;
@@ -62,10 +64,11 @@ public class MainController implements Initializable, NavigationController, Wall
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MainController(User user, WalletFacade walletFacade)
+    public MainController(User user, WalletFacade walletFacade, MessageFacade messageFacade)
     {
         this.user = user;
         this.walletFacade = walletFacade;
+        this.messageFacade = messageFacade;
     }
 
 
@@ -79,6 +82,8 @@ public class MainController implements Initializable, NavigationController, Wall
         networkSyncPane = new NetworkSyncPane();
         networkSyncPane.setSpacing(10);
         networkSyncPane.setPrefHeight(20);
+
+        messageFacade.init();
 
         walletFacade.addDownloadListener(this);
         walletFacade.initWallet();
@@ -116,10 +121,8 @@ public class MainController implements Initializable, NavigationController, Wall
             return null;
         }
 
-        if (childController instanceof MarketController)
-        {
-            ((MarketController) childController).cleanup();
-        }
+        if (childController != null)
+            childController.cleanup();
 
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
         try
@@ -184,14 +187,15 @@ public class MainController implements Initializable, NavigationController, Wall
         addNavButton(leftNavPane, "Orders", Icons.ORDERS, Icons.ORDERS, NavigationController.ORDERS);
         addNavButton(leftNavPane, "History", Icons.HISTORY, Icons.HISTORY, NavigationController.HISTORY);
         addNavButton(leftNavPane, "Funds", Icons.FUNDS, Icons.FUNDS, NavigationController.FUNDS);
-        addNavButton(leftNavPane, "Message", Icons.MSG, Icons.MSG, NavigationController.MSG);
+        ToggleButton msgButton = addNavButton(leftNavPane, "Message", Icons.MSG, Icons.MSG, NavigationController.MSG);
         addBalanceInfo(rightNavPane);
         addAccountComboBox(rightNavPane);
 
         addNavButton(rightNavPane, "Settings", Icons.SETTINGS, Icons.SETTINGS, NavigationController.SETTINGS);
 
-        sellButton.fire();
+        //sellButton.fire();
         //homeButton.fire();
+        msgButton.fire();
     }
 
     private ToggleButton addNavButton(Pane parent, String title, String iconId, String iconIdActivated, String navTarget)

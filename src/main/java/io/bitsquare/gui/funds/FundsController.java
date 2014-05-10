@@ -66,6 +66,12 @@ public class FundsController implements Initializable, ChildController
         balanceLabel.setText(BtcFormatter.formatSatoshis(walletFacade.getBalance(), false));
     }
 
+    @Override
+    public void cleanup()
+    {
+
+    }
+
 
 }
 

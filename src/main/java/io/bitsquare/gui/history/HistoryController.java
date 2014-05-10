@@ -24,5 +24,11 @@ public class HistoryController implements Initializable, ChildController
     {
         this.navigationController = navigationController;
     }
+
+    @Override
+    public void cleanup()
+    {
+
+    }
 }
 

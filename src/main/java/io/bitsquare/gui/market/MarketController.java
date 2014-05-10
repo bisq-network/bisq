@@ -93,11 +93,7 @@ public class MarketController implements Initializable, NavigationController, Ch
         this.navigationController = navigationController;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
+    @Override
     public void cleanup()
     {
         if (orderBookController != null)

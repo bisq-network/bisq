@@ -9,6 +9,7 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.util.Localisation;
+import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Arbitrator;
@@ -28,9 +29,15 @@ public class BitSquare extends Application
 {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
     private WalletFacade walletFacade;
+    private MessageFacade messageFacade;
 
     public static void main(String[] args)
     {
+        if (args.length > 0)
+            WalletFacade.WALLET_PREFIX = args[0];
+        else
+            WalletFacade.WALLET_PREFIX = "bitsquare";
+
         launch(args);
     }
 
@@ -39,6 +46,7 @@ public class BitSquare extends Application
     {
         final Injector injector = Guice.createInjector(new BitSquareModule());
         walletFacade = injector.getInstance(WalletFacade.class);
+        messageFacade = injector.getInstance(MessageFacade.class);
 
         // apply stored data
         final User user = injector.getInstance(User.class);
@@ -51,7 +59,7 @@ public class BitSquare extends Application
 
         settings.updateFromStorage((Settings) storage.read(settings.getClass().getName()));
 
-        stage.setTitle("BitSquare");
+        stage.setTitle("BitSquare (" + WalletFacade.WALLET_PREFIX + ")");
 
         GuiceFXMLLoader.setInjector(injector);
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource("/io/bitsquare/gui/MainView.fxml"), Localisation.getResourceBundle());
@@ -75,6 +83,7 @@ public class BitSquare extends Application
     public void stop() throws Exception
     {
         walletFacade.shutDown();
+        messageFacade.shutDown();
 
         super.stop();
     }

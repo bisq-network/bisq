@@ -11,15 +11,18 @@ import java.util.UUID;
 
 public class Offer
 {
+    // key attributes for lookup
+    private Direction direction;
+    private Currency currency;
+
     private UUID uid;
+
     private double price;
     private BigInteger amount;
     private BigInteger minAmount;
     private String accountID;
     private String messageID;
-    private Direction direction;
     private BankAccountType.BankAccountTypeEnum bankAccountTypeEnum;
-    private Currency currency;
     private Locale bankAccountCountryLocale;
 
     private double collateral;

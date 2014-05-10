@@ -138,6 +138,15 @@ public class OrderBookController implements Initializable, ChildController
         this.navigationController = navigationController;
     }
 
+    @Override
+    public void cleanup()
+    {
+        orderBookTable.setItems(null);
+        orderBookTable.getSortOrder().clear();
+        offerList.comparatorProperty().unbind();
+    }
+
+
     public void setDirection(Direction direction)
     {
         orderBookTable.getSelectionModel().clearSelection();
@@ -145,12 +154,6 @@ public class OrderBookController implements Initializable, ChildController
         orderBookFilter.setDirection(direction);
     }
 
-    public void cleanup()
-    {
-        orderBookTable.setItems(null);
-        orderBookTable.getSortOrder().clear();
-        offerList.comparatorProperty().unbind();
-    }
 
     private void openTradeTab(OrderBookListItem orderBookListItem)
     {

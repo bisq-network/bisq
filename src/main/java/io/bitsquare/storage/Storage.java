@@ -1,5 +1,6 @@
 package io.bitsquare.storage;
 
+import io.bitsquare.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +27,7 @@ public class Storage
 
     public Storage()
     {
-        storageFile = Storage.class.getProtectionDomain().getCodeSource().getLocation().getFile() + "/" + preferencesFileName;
+        storageFile = Utils.getRootDir() + preferencesFileName;
 
         dict = readDataVO();
         if (dict == null)

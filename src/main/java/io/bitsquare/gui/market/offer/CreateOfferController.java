@@ -114,6 +114,12 @@ public class CreateOfferController implements Initializable, ChildController, Wa
         this.navigationController = navigationController;
     }
 
+    @Override
+    public void cleanup()
+    {
+
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: WalletFacade.WalletListener
