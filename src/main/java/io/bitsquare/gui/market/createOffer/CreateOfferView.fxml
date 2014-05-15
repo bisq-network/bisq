@@ -65,13 +65,13 @@
                 <Label fx:id="txTitleLabel" text="Transaction ID:" visible="false" GridPane.rowIndex="12"/>
                 <TextField fx:id="txTextField" visible="false" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="12"/>
                 <ProgressIndicator fx:id="progressIndicator" id="confidence-progress-indicator" visible="false" progress="0" GridPane.columnIndex="2" GridPane.halignment="LEFT"
-                                   GridPane.rowIndex="12"
-                                   GridPane.rowSpan="2" GridPane.valignment="TOP">
+                                   GridPane.rowIndex="12" GridPane.rowSpan="2" GridPane.valignment="TOP">
                     <GridPane.margin>
                         <Insets top="2.0"/>
                     </GridPane.margin>
                 </ProgressIndicator>
-                <Label fx:id="confirmationLabel" visible="false" text="Checking confirmations..." GridPane.columnIndex="3" GridPane.rowIndex="12"/>
+                <Label fx:id="confirmationLabel" text="Checking confirmations..." visible="false" GridPane.columnIndex="3" GridPane.rowIndex="12"/>
+
 
                 <Button fx:id="closeButton" visible="false" defaultButton="true" onAction="#onClose" text="Close" GridPane.columnIndex="1" GridPane.rowIndex="13"/>
 

@@ -25,7 +25,7 @@
                                             <children>
                                                 <Label text="Registration address:"/>
                                                 <TextField fx:id="registrationAddressTextField" editable="false" GridPane.columnIndex="1"/>
-                                                <Label fx:id="copyIcon" minWidth="10" GridPane.columnIndex="2">
+                                                <Label fx:id="copyIcon" GridPane.columnIndex="2">
                                                     <padding>
                                                         <Insets bottom="0.0" left="0.0" right="0.0" top="-1.0"/>
                                                     </padding>
@@ -44,7 +44,8 @@
                                                 </ProgressIndicator>
                                                 <Label fx:id="confirmationLabel" text="Checking confirmations..." GridPane.columnIndex="3" GridPane.rowIndex="1"/>
 
-                                                <Button defaultButton="true" onAction="#onPaymentDone" text="Payment done" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                                                <Button fx:id="paymentDoneButton" defaultButton="true" onAction="#onPaymentDone" text="Payment done" disable="true" GridPane.columnIndex="1"
+                                                        GridPane.rowIndex="2"/>
                                                 <Button onAction="#onSkipPayment" text="Skip and pay later" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
                                             </children>
@@ -52,7 +53,7 @@
                                             <columnConstraints>
                                                 <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>
                                                 <ColumnConstraints hgrow="ALWAYS"/>
-                                                <ColumnConstraints hgrow="SOMETIMES" prefWidth="20.0"/>
+                                                <ColumnConstraints hgrow="SOMETIMES" prefWidth="20.0" minWidth="20"/>
                                                 <ColumnConstraints hgrow="SOMETIMES"/>
                                                 <ColumnConstraints hgrow="SOMETIMES"/>
                                             </columnConstraints>

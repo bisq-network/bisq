@@ -11,6 +11,7 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.components.NetworkSyncPane;
+import io.bitsquare.gui.util.ConfidenceDisplay;
 import io.bitsquare.gui.util.Localisation;
 import io.bitsquare.gui.util.Popups;
 import io.bitsquare.gui.util.Verification;
@@ -33,7 +34,10 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.net.URL;
-import java.util.*;
+import java.util.Currency;
+import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 public class SetupController implements Initializable, ChildController
 {
@@ -44,6 +48,7 @@ public class SetupController implements Initializable, ChildController
     private NavigationController navigationController;
     private MessageFacade messageFacade;
     private final Storage storage;
+    private ConfidenceDisplay confidenceDisplay;
 
     @FXML
     private AnchorPane rootContainer;
@@ -54,7 +59,7 @@ public class SetupController implements Initializable, ChildController
     @FXML
     private TextField registrationAddressTextField, balanceTextField, accountTitle, accountHolderName, accountPrimaryID, accountSecondaryID;
     @FXML
-    private Button createAccountButton, addBankAccountButton;
+    private Button createAccountButton, addBankAccountButton, paymentDoneButton;
     @FXML
     private Accordion accordion;
     @FXML
@@ -209,20 +214,20 @@ public class SetupController implements Initializable, ChildController
             clipboard.setContent(content);
         });
 
-        updateBalance(walletFacade.getAccountRegistrationBalance());
+        confidenceDisplay = new ConfidenceDisplay(walletFacade.getAccountRegistrationWallet(), confirmationLabel, balanceTextField, progressIndicator);
+        paymentDoneButton.setDisable(walletFacade.getAccountRegistrationBalance().compareTo(BigInteger.ZERO) == 0);
 
         walletFacade.getAccountRegistrationWallet().addEventListener(new WalletEventListener()
         {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
             {
-                updateBalance(newBalance);
+                paymentDoneButton.setDisable(newBalance.compareTo(BigInteger.ZERO) == 0);
             }
 
             @Override
             public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
             {
-                updateConfidence(tx);
             }
 
             @Override
@@ -349,60 +354,6 @@ public class SetupController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    private void updateBalance(BigInteger balance)
-    {
-        if (balance.compareTo(BigInteger.ZERO) == 0)
-        {
-            confirmationLabel.setText("");
-            progressIndicator.setOpacity(0);
-            progressIndicator.setProgress(0);
-        }
-        else
-        {
-            progressIndicator.setOpacity(1);
-            progressIndicator.setProgress(-1);
-            Set<Transaction> transactions = walletFacade.getAccountRegistrationWallet().getTransactions(false);
-            for (Iterator<Transaction> iterator = transactions.iterator(); iterator.hasNext(); )
-            {
-                Transaction transaction = iterator.next();
-                updateConfidence(transaction);
-                break;
-            }
-        }
-        balanceTextField.setText(Utils.bitcoinValueToFriendlyString(balance));
-    }
-
-    private void updateConfidence(Transaction tx)
-    {
-        TransactionConfidence confidence = tx.getConfidence();
-        double progressIndicatorSize = 50;
-        switch (confidence.getConfidenceType())
-        {
-            case UNKNOWN:
-                confirmationLabel.setText("");
-                progressIndicator.setProgress(0);
-                break;
-            case PENDING:
-                confirmationLabel.setText("Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 confirmations");
-                progressIndicator.setProgress(-1.0);
-                progressIndicatorSize = 20;
-                break;
-            case BUILDING:
-                confirmationLabel.setText("Confirmed in " + confidence.getDepthInBlocks() + " block(s)");
-                progressIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
-                break;
-            case DEAD:
-                confirmationLabel.setText("Transaction is invalid.");
-                break;
-        }
-
-        progressIndicator.setMaxHeight(progressIndicatorSize);
-        progressIndicator.setPrefHeight(progressIndicatorSize);
-        progressIndicator.setMaxWidth(progressIndicatorSize);
-        progressIndicator.setPrefWidth(progressIndicatorSize);
-    }
 
     private void addBankAccount()
     {

@@ -1,7 +1,8 @@
 package io.bitsquare.gui.market.createOffer;
 
-import com.google.bitcoin.core.*;
-import com.google.bitcoin.script.Script;
+import com.google.bitcoin.core.InsufficientMoneyException;
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.Utils;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bitsquare.btc.BtcFormatter;
@@ -9,10 +10,7 @@ import io.bitsquare.btc.Fees;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
-import io.bitsquare.gui.util.Converter;
-import io.bitsquare.gui.util.Formatter;
-import io.bitsquare.gui.util.Localisation;
-import io.bitsquare.gui.util.Popups;
+import io.bitsquare.gui.util.*;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
@@ -34,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
-import java.util.List;
 import java.util.ResourceBundle;
 
 public class CreateOfferController implements Initializable, ChildController
@@ -49,6 +46,7 @@ public class CreateOfferController implements Initializable, ChildController
     private User user;
     private Direction direction;
     private Offer offer;
+    private ConfidenceDisplay confidenceDisplay;
 
     @FXML
     private AnchorPane rootContainer;
@@ -198,6 +196,15 @@ public class CreateOfferController implements Initializable, ChildController
                 offer.setOfferFeePaymentTxID(transaction.getHashAsString());
                 setupSuccessScreen(transaction);
                 placeOfferTitle.setText("Transaction sent:");
+
+                try
+                {
+                    log.info("send offer to P2P orderbook");
+                    messageFacade.addOffer(offer);
+                } catch (IOException e)
+                {
+                    Popups.openErrorPopup("Could not publish offer", "Could not publish offer. " + e.getMessage());
+                }
             }
 
             @Override
@@ -211,14 +218,10 @@ public class CreateOfferController implements Initializable, ChildController
         try
         {
             trading.placeNewOffer(offer, callback);
-            messageFacade.addOffer(offer);
             placeOfferButton.setDisable(true);
         } catch (InsufficientMoneyException e1)
         {
             Popups.openErrorPopup("Not enough money available", "There is not enough money available. Please pay in first to your wallet. " + e1.getMessage());
-        } catch (IOException e1)
-        {
-            Popups.openErrorPopup("Could not publish offer", "Could not publish offer. " + e1.getMessage());
         }
     }
 
@@ -246,77 +249,7 @@ public class CreateOfferController implements Initializable, ChildController
 
         txTextField.setText(newTransaction.getHashAsString());
 
-        updateConfidence(newTransaction);
-
-        walletFacade.getWallet().addEventListener(new WalletEventListener()
-        {
-            @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
-            {
-            }
-
-            @Override
-            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
-            {
-                updateConfidence(newTransaction);
-            }
-
-            @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
-            {
-            }
-
-            @Override
-            public void onReorganize(Wallet wallet)
-            {
-            }
-
-            @Override
-            public void onWalletChanged(Wallet wallet)
-            {
-            }
-
-            @Override
-            public void onKeysAdded(Wallet wallet, List<ECKey> keys)
-            {
-            }
-
-            @Override
-            public void onScriptsAdded(Wallet wallet, List<Script> scripts)
-            {
-            }
-        });
-    }
-
-    private void updateConfidence(Transaction tx)
-    {
-        TransactionConfidence confidence = tx.getConfidence();
-        double progressIndicatorSize = 20;
-        switch (confidence.getConfidenceType())
-        {
-            case UNKNOWN:
-                confirmationLabel.setText("");
-                progressIndicator.setProgress(0);
-                progressIndicatorSize = 50;
-                break;
-            case PENDING:
-                confirmationLabel.setText("Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 confirmations");
-                progressIndicator.setProgress(-1.0);
-                break;
-            case BUILDING:
-                confirmationLabel.setText("Confirmed in " + confidence.getDepthInBlocks() + " block(s)");
-                progressIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
-                progressIndicatorSize = 50;
-                break;
-            case DEAD:
-                confirmationLabel.setText("Transaction is invalid.");
-                break;
-        }
-
-        progressIndicator.setMaxHeight(progressIndicatorSize);
-        progressIndicator.setPrefHeight(progressIndicatorSize);
-        progressIndicator.setMaxWidth(progressIndicatorSize);
-        progressIndicator.setPrefWidth(progressIndicatorSize);
+        confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, newTransaction, progressIndicator);
     }
 
     private void updateVolume()
