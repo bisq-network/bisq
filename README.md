@@ -7,9 +7,7 @@ This is just a first very basic GUI prototype with mock data.
 There is only the trade process for Sell BTC and the role of the offer taker modelled yet.
 
 The project use Java 8 and Maven.
-
-We use bitcoinj library as a submodule. To get the project with the submodule included use:
-git clone --recursive git://github.com/bitsquare/bitsquare
+We use the bitcoinj library and TomP2P for DHT and messaging.
 
 ### Implemented (prototype level):
 * Screen for orderbook with filtering mock offers by amount, price and order type (buy, sell)
@@ -22,12 +20,12 @@ git clone --recursive git://github.com/bitsquare/bitsquare
 * Pay in to MS fund
 * Payout from MS fund
 * TomP2P as messaging lib integrated and basic use cases in msg screen implemented: orderbook, add order, remove order, find peer, chat with peer
+* Payment process until wait for bank transfer implemented with messaging
 
 ### Next steps:
-* Implement messaging with TomP2P for registration, orderbook and payment process
+* Payment process after wait for bank transfer implemented with messaging
 * Arbitrator integration
 * Other trade variants (Buy BTC taker, Sell BTC offerer, Sell BTC offerer)
-* Verify registration and fee payments tx and get them from the blockchain
 * ...
 
 

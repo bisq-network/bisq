@@ -13,6 +13,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
+import io.bitsquare.BitSquare;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.gui.util.Popups;
 import javafx.application.Platform;
@@ -35,15 +36,13 @@ public class WalletFacade implements WalletEventListener
 {
     public static final String MAIN_NET = "MAIN_NET";
     public static final String TEST_NET = "TEST_NET";
+    public static final String REG_TEST_NET = "REG_TEST_NET";
 
-    public static String WALLET_PREFIX;
+    public static String WALLET_PREFIX = BitSquare.ID;
 
     // for testing trade process between offerer and taker
     //public static String WALLET_PREFIX = "offerer"; // offerer
     //public static String WALLET_PREFIX = "taker"; // offerer
-
-    //public static  String WALLET_PREFIX = "bitsquare";
-
 
     private static final Logger log = LoggerFactory.getLogger(WalletFacade.class);
 
@@ -56,6 +55,8 @@ public class WalletFacade implements WalletEventListener
 
     private List<DownloadListener> downloadListeners = new ArrayList<>();
     private List<WalletListener> walletListeners = new ArrayList<>();
+
+
     private Wallet wallet;
 
 
@@ -107,7 +108,7 @@ public class WalletFacade implements WalletEventListener
 
         wallet = walletAppKit.wallet();
 
-        //wallet.allowSpendingUnconfirmedTransactions();
+        wallet.allowSpendingUnconfirmedTransactions();
         walletAppKit.peerGroup().setMaxConnections(20);
 
         wallet.addEventListener(this);
@@ -168,7 +169,7 @@ public class WalletFacade implements WalletEventListener
         return wallet.getBalance(Wallet.BalanceType.ESTIMATED);
     }
 
-    public String getAddress()
+    public String getAddressAsString()
     {
         return wallet.getKeys().get(0).toAddress(params).toString();
     }
@@ -189,6 +190,18 @@ public class WalletFacade implements WalletEventListener
         return tx.getHashAsString();
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Trade process
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public int getNumOfPeersSeenTx(String txID)
+    {
+        // TODO check from blockchain
+        // will be async
+        return 3;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Account registration
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -200,7 +213,7 @@ public class WalletFacade implements WalletEventListener
 
     public String getAccountRegistrationPubKey()
     {
-        return Utils.bytesToHexString(getAccountRegistrationWallet().getKey().getPubKey());
+        return Utils.bytesToHexString(getAccountRegistrationKey().getPubKey());
     }
 
     public BigInteger getAccountRegistrationBalance()
@@ -211,6 +224,11 @@ public class WalletFacade implements WalletEventListener
     public void sendRegistrationTx(String stringifiedBankAccounts) throws InsufficientMoneyException
     {
         getAccountRegistrationWallet().saveToBlockchain(cryptoFacade.getEmbeddedAccountRegistrationData(getAccountRegistrationWallet().getKey(), stringifiedBankAccounts));
+    }
+
+    public ECKey getAccountRegistrationKey()
+    {
+        return getAccountRegistrationWallet().getKey();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -227,11 +245,10 @@ public class WalletFacade implements WalletEventListener
         return WalletUtil.getConfDepthInBlocks(getAccountRegistrationWallet());
     }
 
-    public ECKey getAccountKey()
+    public Wallet getWallet()
     {
-        return getAccountRegistrationWallet().getKey();
+        return wallet;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: WalletEventListener
@@ -243,7 +260,7 @@ public class WalletFacade implements WalletEventListener
         for (WalletListener walletListener : walletListeners)
             walletListener.onCoinsReceived(newBalance);
 
-        log.info("onCoinsReceived");
+        // log.info("onCoinsReceived");
     }
 
     @Override
@@ -252,13 +269,13 @@ public class WalletFacade implements WalletEventListener
         for (WalletListener walletListener : walletListeners)
             walletListener.onConfidenceChanged(tx.getConfidence().numBroadcastPeers(), WalletUtil.getConfDepthInBlocks(wallet));
 
-        log.info("onTransactionConfidenceChanged " + tx.getConfidence().toString());
+        // log.info("onTransactionConfidenceChanged " + tx.getConfidence().toString());
     }
 
     @Override
     public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
     {
-        log.info("onCoinsSent");
+        // log.info("onCoinsSent");
     }
 
     @Override
@@ -270,7 +287,7 @@ public class WalletFacade implements WalletEventListener
     @Override
     public void onWalletChanged(Wallet wallet)
     {
-        log.info("onWalletChanged");
+        // log.info("onWalletChanged");
     }
 
     @Override
@@ -285,12 +302,11 @@ public class WalletFacade implements WalletEventListener
         log.info("onScriptsAdded");
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private AccountRegistrationWallet getAccountRegistrationWallet()
+    public AccountRegistrationWallet getAccountRegistrationWallet()
     {
         if (accountRegistrationWallet == null)
             accountRegistrationWallet = new AccountRegistrationWallet(params, walletAppKit.chain(), walletAppKit.peerGroup());
@@ -329,25 +345,25 @@ public class WalletFacade implements WalletEventListener
             String arbitratorPubKey = "";
 
             // 1 offerer creates MS TX and pay in
-          /* Transaction tx1 = offererCreatesMSTxAndAddPayment(offererAmount, offererPubKey, takerPubKey, arbitratorPubKey);
+            Transaction tx1 = offererCreatesMSTxAndAddPayment(offererAmount, offererPubKey, takerPubKey, arbitratorPubKey);
             tx1AsHex = Utils.bytesToHexString(tx1.bitcoinSerialize());
-              */
+
 
             tx1AsHex = "01000000014378dfcd19add18eb6f118a1e35ced127ff23c9dc5034eee1cda5b9caeb814f0000000006b4830450221008e599dd7bb7223c7b036869198b14f08009f9bc117709d23c249d0bdd6b483be022047be181f467782ea277b36890feb2f6de3ceddcedf8730a9f505bac36b3b015b01210352f2e34760514099f90b03aab91239466924c3b06047d3cf0e011f26ef96ceb7ffffffff0240420f00000000004852210352f2e34760514099f90b03aab91239466924c3b06047d3cf0e011f26ef96ceb7210207cf5fb65d6923d5d41db21ceac9567a0fc3eb92c6137f274018381ced7b65680053aeb077e605000000001976a9149fc3d8e0371b6eab89a8c3c015839f9e493ccf6588ac00000000";
 
             // 2. taker pay in and sign
-           /* Transaction tx2 = takerAddPaymentAndSign(takerAmount, msOutputAmount, offererPubKey, takerPubKey, arbitratorPubKey, tx1AsHex);
+          /* Transaction tx2 = takerAddPaymentAndSign(takerAmount, msOutputAmount, offererPubKey, takerPubKey, arbitratorPubKey, tx1AsHex);
             tx2AsHex = Utils.bytesToHexString(tx2.bitcoinSerialize());
             tx2ScriptSigAsHex = Utils.bytesToHexString(tx2.getInput(1).getScriptBytes());
             tx2ConnOutAsHex =  Utils.bytesToHexString(tx2.getInput(1).getConnectedOutput().getParentTransaction().bitcoinSerialize());
-                    */
+                                  */
 
             tx2AsHex = "01000000024378dfcd19add18eb6f118a1e35ced127ff23c9dc5034eee1cda5b9caeb814f0000000006b4830450221008e599dd7bb7223c7b036869198b14f08009f9bc117709d23c249d0bdd6b483be022047be181f467782ea277b36890feb2f6de3ceddcedf8730a9f505bac36b3b015b01210352f2e34760514099f90b03aab91239466924c3b06047d3cf0e011f26ef96ceb7ffffffffa58b22a93a0fcf99ba48aa3b96d842284b2b3d24f72d045cc192ea8a6b89435c010000006a47304402207f4beeb1a86432be0b4c3d4f4db7416b52b66c84383d1980d39e21d547a1762f02200405d0d4b80d1094e3a08cb39ef6f1161be163026d417af08d54c5a1cfdbbbeb01210207cf5fb65d6923d5d41db21ceac9567a0fc3eb92c6137f274018381ced7b6568ffffffff03c0c62d00000000004852210352f2e34760514099f90b03aab91239466924c3b06047d3cf0e011f26ef96ceb7210207cf5fb65d6923d5d41db21ceac9567a0fc3eb92c6137f274018381ced7b65680053aeb077e605000000001976a9149fc3d8e0371b6eab89a8c3c015839f9e493ccf6588ac7035d705000000001976a914e5175c1f71c28218306d4a27c8cec0269dddbbde88ac00000000";
             tx2ScriptSigAsHex = "47304402207f4beeb1a86432be0b4c3d4f4db7416b52b66c84383d1980d39e21d547a1762f02200405d0d4b80d1094e3a08cb39ef6f1161be163026d417af08d54c5a1cfdbbbeb01210207cf5fb65d6923d5d41db21ceac9567a0fc3eb92c6137f274018381ced7b6568";
             tx2ConnOutAsHex = "01000000014378dfcd19add18eb6f118a1e35ced127ff23c9dc5034eee1cda5b9caeb814f0010000006a473044022011431387fc19b093b26a6d2371995c828179aae68e94ad5804e5d0986a6b471302206abc2b698375620e65fc9970b7781da0af2179d1bdc4ebc82a13e285359a3ce7012103c7b9e9ef657705522c85b8429bb2b42c04f0fd4a09e0605cd7dd62ffecb57944ffffffff02c0ce823e000000001976a9142d1b4347ae850805f3badbb4b2949674f46c4ccd88ac00e1f505000000001976a914e5175c1f71c28218306d4a27c8cec0269dddbbde88ac00000000";
 
             // 3. offerer sign and send
-            Transaction tx3 = offererSignAndSendTx(tx1AsHex, tx2AsHex, tx2ConnOutAsHex, tx2ScriptSigAsHex);
+            Transaction tx3 = offererSignAndSendTx(tx1AsHex, tx2AsHex, tx2ConnOutAsHex, tx2ScriptSigAsHex, null);
 
             log.info(tx3.toString());  // tx has 453 Bytes
 
@@ -421,8 +437,13 @@ public class WalletFacade implements WalletEventListener
 
     }
 
+    public String getMultiSigPubKeyAsHex()
+    {
+        return Utils.bytesToHexString(wallet.getKeys().get(0).getPubKey());
+    }
+
     // deposit 1. offerer
-    private Transaction offererCreatesMSTxAndAddPayment(BigInteger offererAmount, String offererPubKey, String takerPubKey, String arbitratorPubKey) throws InsufficientMoneyException
+    public Transaction offererCreatesMSTxAndAddPayment(BigInteger offererAmount, String offererPubKey, String takerPubKey, String arbitratorPubKey) throws InsufficientMoneyException
     {
         // use that to use the convenient api for getting the best coin selection and fee calculation
         // TODO should be constructed manually
@@ -494,13 +515,15 @@ public class WalletFacade implements WalletEventListener
     public Transaction offererSignAndSendTx(String tx1AsHex,
                                             String tx2AsHex,
                                             String tx2ConnOutAsHex,
-                                            String tx2ScriptSigAsHex) throws Exception
+                                            String tx2ScriptSigAsHex,
+                                            FutureCallback<Transaction> callback) throws Exception
     {
+        log.info("offererSignAndSendTx start");
         Transaction tx = new Transaction(params);
 
         Transaction tx1 = new Transaction(params, Utils.parseAsHexOrBase58(tx1AsHex));
         Transaction tx1ConnOut = wallet.getTransaction(tx1.getInput(0).getOutpoint().getHash());
-        TransactionOutPoint tx1OutPoint = new TransactionOutPoint(params, 0, tx1ConnOut);
+        TransactionOutPoint tx1OutPoint = new TransactionOutPoint(params, 1, tx1ConnOut);
         TransactionInput tx1Input = new TransactionInput(params, tx, tx1.getInput(0).getScriptBytes(), tx1OutPoint);
         tx1Input.setParent(tx);
         tx.addInput(tx1Input);
@@ -529,10 +552,13 @@ public class WalletFacade implements WalletEventListener
         else
             throw new ScriptException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
 
+        log.info("offererSignAndSendTx check correctlySpends input 0");
         input.getScriptSig().correctlySpends(tx, 0, scriptPubKey, false);
 
         input = tx.getInput(1);
         scriptPubKey = input.getConnectedOutput().getScriptPubKey();
+
+        log.info("offererSignAndSendTx check correctlySpends input 1");
         input.getScriptSig().correctlySpends(tx, 1, scriptPubKey, false);
 
          /*
@@ -542,26 +568,28 @@ public class WalletFacade implements WalletEventListener
         OUT[1] offerer change
         OUT[2] taker change
          */
-
+        log.info("offererSignAndSendTx broadcastTransaction verify ");
         tx.verify();
 
+        log.info("offererSignAndSendTx broadcastTransaction pre ");
         ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(tx);
-
-        FutureCallback callback = new FutureCallback<Transaction>()
+        log.info("offererSignAndSendTx broadcastTransaction post");
+        FutureCallback<Transaction> localCallback = new FutureCallback<Transaction>()
         {
             @Override
             public void onSuccess(Transaction transaction)
             {
-                log.info("sendResult onSuccess:" + transaction.toString());
+                log.info("offererSignAndSendTx onSuccess" + transaction.toString());
             }
 
             @Override
             public void onFailure(Throwable t)
             {
-                log.warn("sendResult onFailure:" + t.toString());
+                log.info("offererSignAndSendTx onFailure" + t.toString());
                 Popups.openErrorPopup("Fee payment failed", "Fee payment failed. " + t.toString());
             }
         };
+        Futures.addCallback(broadcastComplete, localCallback);
         Futures.addCallback(broadcastComplete, callback);
 
         return tx;
@@ -628,7 +656,7 @@ public class WalletFacade implements WalletEventListener
 
         ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(tx);
 
-        FutureCallback callback = new FutureCallback<Transaction>()
+        FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
         {
             @Override
             public void onSuccess(Transaction transaction)
@@ -647,7 +675,6 @@ public class WalletFacade implements WalletEventListener
 
         return tx;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Inner classes

@@ -1,8 +1,5 @@
 package io.bitsquare.gui.market.trade;
 
-import com.google.bitcoin.core.InsufficientMoneyException;
-import com.google.bitcoin.core.Transaction;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.BtcFormatter;
@@ -16,12 +13,17 @@ import io.bitsquare.gui.util.Converter;
 import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.gui.util.Popups;
-import io.bitsquare.trade.*;
-import io.bitsquare.util.Utils;
+import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.trade.Direction;
+import io.bitsquare.trade.Offer;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.Trading;
+import io.bitsquare.trade.taker.TakerPaymentProtocol;
+import io.bitsquare.trade.taker.TakerPaymentProtocolListener;
+import io.bitsquare.util.Utilities;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
@@ -35,17 +37,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class TradeController implements Initializable, ChildController, WalletFacade.WalletListener
+public class TakerTradeController implements Initializable, ChildController, WalletFacade.WalletListener
 {
-    private static final Logger log = LoggerFactory.getLogger(TradeController.class);
-    private static final int SIM_DELAY = 2000;
+    private static final Logger log = LoggerFactory.getLogger(TakerTradeController.class);
 
     private Trading trading;
     private WalletFacade walletFacade;
     private BlockChainFacade blockChainFacade;
+    private MessageFacade messageFacade;
     private Offer offer;
     private Trade trade;
-    private Contract contract;
     private BigInteger requestedAmount;
     private boolean offererIsOnline;
     private int row;
@@ -53,10 +54,14 @@ public class TradeController implements Initializable, ChildController, WalletFa
     private List<ProcessStepItem> processStepItems = new ArrayList();
 
     private NavigationController navigationController;
-    private TextField amountTextField, totalToPayLabel, totalLabel, collateralTextField;
+    private TextField amountTextField, totalToPayLabel, totalLabel, collateralTextField, isOnlineTextField;
     private Label statusTextField, infoLabel;
     private Button nextButton;
     private ProgressBar progressBar;
+    private AnimationTimer checkOnlineStatusTimer;
+    private Pane isOnlineCheckerHolder;
+    TakerPaymentProtocol takerPaymentProtocol;
+    private Label headerLabel;
 
     @FXML
     private AnchorPane rootContainer;
@@ -71,11 +76,12 @@ public class TradeController implements Initializable, ChildController, WalletFa
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeController(Trading trading, WalletFacade walletFacade, BlockChainFacade blockChainFacade)
+    public TakerTradeController(Trading trading, WalletFacade walletFacade, BlockChainFacade blockChainFacade, MessageFacade messageFacade)
     {
         this.trading = trading;
         this.walletFacade = walletFacade;
         this.blockChainFacade = blockChainFacade;
+        this.messageFacade = messageFacade;
     }
 
 
@@ -88,9 +94,9 @@ public class TradeController implements Initializable, ChildController, WalletFa
         this.offer = offer;
         this.requestedAmount = requestedAmount.compareTo(BigInteger.ZERO) > 0 ? requestedAmount : offer.getAmount();
 
-        trade = trading.createTrade(offer);
-        trade.setTradeAmount(requestedAmount);
-        contract = trading.createContract(trade);
+        // trade = trading.createTrade(offer);
+        //trade.setTradeAmount(requestedAmount);
+        //contract = trading.createContract(trade);
 
         processStepItems.add(new ProcessStepItem(takerIsSelling() ? "Sell BTC" : "Buy BTC"));
         processStepItems.add(new ProcessStepItem("Bank transfer"));
@@ -125,7 +131,13 @@ public class TradeController implements Initializable, ChildController, WalletFa
     @Override
     public void cleanup()
     {
+        if (checkOnlineStatusTimer != null)
+        {
+            checkOnlineStatusTimer.stop();
+            checkOnlineStatusTimer = null;
+        }
 
+        walletFacade.removeRegistrationWalletListener(this);
     }
 
 
@@ -136,15 +148,20 @@ public class TradeController implements Initializable, ChildController, WalletFa
     @Override
     public void onConfidenceChanged(int numBroadcastPeers, int depthInBlocks)
     {
-        log.info("onConfidenceChanged " + numBroadcastPeers + " / " + depthInBlocks);
+        //log.info("onConfidenceChanged " + numBroadcastPeers + " / " + depthInBlocks);
     }
 
     @Override
     public void onCoinsReceived(BigInteger newBalance)
     {
-        log.info("onCoinsReceived " + newBalance);
+        //log.info("onCoinsReceived " + newBalance);
     }
 
+    //TODO
+    public void onPingPeerResult(boolean success)
+    {
+        setIsOnlineStatus(success);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
@@ -173,24 +190,29 @@ public class TradeController implements Initializable, ChildController, WalletFa
         FormBuilder.addTextField(gridPane, "Offer fee (BTC):", BtcFormatter.formatSatoshis(Fees.OFFER_TAKER_FEE, false), ++row);
         totalToPayLabel = FormBuilder.addTextField(gridPane, "Total to pay (BTC):", getTotalToPay(), ++row);
 
+        isOnlineTextField = FormBuilder.addTextField(gridPane, "Online status:", "Checking offerers online status...", ++row);
+        ProgressIndicator isOnlineChecker = new ProgressIndicator();
+        isOnlineChecker.setPrefSize(20, 20);
+        isOnlineChecker.setLayoutY(3);
+        isOnlineCheckerHolder = new Pane();
+        isOnlineCheckerHolder.getChildren().addAll(isOnlineChecker);
+        gridPane.add(isOnlineCheckerHolder, 2, row);
+
+        messageFacade.pingPeer(offer.getMessagePubKeyAsHex());
+        checkOnlineStatusTimer = Utilities.setTimeout(5000, (AnimationTimer animationTimer) -> {
+            setIsOnlineStatus(false);
+            return null;
+        });
+
         nextButton = FormBuilder.addButton(gridPane, "Take offer and pay", ++row);
         nextButton.setDefaultButton(true);
-        nextButton.setOnAction(e -> initTrade());
+        nextButton.setOnAction(e -> takeOffer());
 
         // details
         FormBuilder.addVSpacer(gridPane, ++row);
         FormBuilder.addHeaderLabel(gridPane, "Offerer details:", ++row);
-        TextField isOnlineTextField = FormBuilder.addTextField(gridPane, "Online status:", "Checking offerers online status...", ++row);
-        ProgressIndicator isOnlineChecker = new ProgressIndicator();
-        isOnlineChecker.setPrefSize(20, 20);
-        isOnlineChecker.setLayoutY(3);
-        Pane isOnlineCheckerHolder = new Pane();
-        isOnlineCheckerHolder.getChildren().addAll(isOnlineChecker);
-        gridPane.add(isOnlineCheckerHolder, 2, row);
-        checkIfOffererIsOnline(isOnlineCheckerHolder, isOnlineTextField);
-
         FormBuilder.addTextField(gridPane, "Bank account type:", offer.getBankAccountTypeEnum().toString(), ++row);
-        FormBuilder.addTextField(gridPane, "Bank account country:", offer.getBankAccountCountryLocale().getDisplayCountry(), ++row);
+        FormBuilder.addTextField(gridPane, "Country:", offer.getBankAccountCountryLocale().getDisplayCountry(), ++row);
         FormBuilder.addTextField(gridPane, "Arbitrator:", offer.getArbitrator().getName(), ++row);
         Label arbitratorLink = new Label(offer.getArbitrator().getUrl());
         arbitratorLink.setId("label-url");
@@ -198,23 +220,18 @@ public class TradeController implements Initializable, ChildController, WalletFa
         arbitratorLink.setOnMouseClicked(e -> {
             try
             {
-                Utils.openURL(offer.getArbitrator().getUrl());
+                Utilities.openURL(offer.getArbitrator().getUrl());
             } catch (Exception e1)
             {
                 log.warn(e1.toString());
             }
         });
 
-        FormBuilder.addVSpacer(gridPane, ++row);
-        FormBuilder.addHeaderLabel(gridPane, "More details:", ++row);
-        FormBuilder.addTextField(gridPane, "Offer ID:", offer.getUid().toString(), ++row);
-        FormBuilder.addTextField(gridPane, "Account ID:", offer.getAccountID(), ++row);
-        FormBuilder.addTextField(gridPane, "Messaging ID:", offer.getMessageID(), ++row);
         FormBuilder.addTextField(gridPane, "Supported languages:", Formatter.languageLocalesToString(offer.getAcceptedLanguageLocales()), ++row);
         FormBuilder.addTextField(gridPane, "Supported countries:", Formatter.countryLocalesToString(offer.getAcceptedCountryLocales()), ++row);
     }
 
-    private void initTrade()
+    private void takeOffer()
     {
         if (!tradeAmountValid())
         {
@@ -222,7 +239,7 @@ public class TradeController implements Initializable, ChildController, WalletFa
             return;
         }
 
-        if (!blockChainFacade.verifyEmbeddedData(offer.getAccountID()))
+       /* if (!blockChainFacade.verifyAccountRegistration(offer.getAccountID()))
         {
             Popups.openErrorPopup("Offerers account ID not valid", "Offerers registration tx is not found in blockchain or does not match the requirements.");
             return;
@@ -232,7 +249,7 @@ public class TradeController implements Initializable, ChildController, WalletFa
         {
             Popups.openErrorPopup("Offerers account ID is blacklisted", "Offerers account ID is blacklisted.");
             return;
-        }
+        }  */
 
         amountTextField.setEditable(false);
 
@@ -258,101 +275,80 @@ public class TradeController implements Initializable, ChildController, WalletFa
         progressIndicatorHolder.getChildren().addAll(progressIndicator);
         gridPane.add(progressIndicatorHolder, 1, row);
 
+        trade = trading.createTrade(offer);
         trade.setTradeAmount(BtcFormatter.stringValueToSatoshis(amountTextField.getText()));
 
-        trading.sendTakeOfferRequest(trade);
-        Utils.setTimeout(SIM_DELAY, (AnimationTimer animationTimer) -> {
-            onTakeOfferRequestConfirmed();
-            progressBar.setProgress(1.0 / 3.0);
-            return null;
-        });
-    }
-
-    private void onTakeOfferRequestConfirmed()
-    {
-        FutureCallback callback = new FutureCallback<Transaction>()
+        takerPaymentProtocol = trading.addTakerPaymentProtocol(trade, new TakerPaymentProtocolListener()
         {
             @Override
-            public void onSuccess(Transaction transaction)
+            public void onProgress(double progress)
             {
-                log.info("sendResult onSuccess:" + transaction.toString());
-                trade.setTakeOfferFeeTxID(transaction.getHashAsString());
+                progressBar.setProgress(progress);
 
-                statusTextField.setText("Offer fee payed. Send offerer payment transaction ID for confirmation.");
-                Utils.setTimeout(SIM_DELAY, (AnimationTimer animationTimer) -> {
-                    onOfferFeePaymentConfirmed();
-                    progressBar.setProgress(2.0 / 3.0);
-                    return null;
-                });
+                /*switch (state)
+                {
+                    case FOUND_PEER_ADDRESS:
+                        statusTextField.setText("Peer found.");
+                        break;
+                    case SEND_TAKE_OFFER_REQUEST_ARRIVED:
+                        statusTextField.setText("Take offer request successfully sent to peer.");
+                        break;
+                    case SEND_TAKE_OFFER_REQUEST_ACCEPTED:
+                        statusTextField.setText("Take offer request accepted by peer.");
+                        break;
+                    case SEND_TAKE_OFFER_REQUEST_REJECTED:
+                        statusTextField.setText("Take offer request rejected by peer.");
+                        break;
+                    case INSUFFICIENT_MONEY_FOR_OFFER_FEE:
+                        Popups.openErrorPopup("Not enough money available", "There is not enough money available. Please pay in first to your wallet.");
+                        break;
+                    case OFFER_FEE_PAYED:
+                        statusTextField.setText("Offer fee payed. Send offerer payment transaction ID for confirmation.");
+                        break;
+                }  */
             }
 
             @Override
-            public void onFailure(Throwable t)
+            public void onFailure(String failureMessage)
             {
-                log.warn("sendResult onFailure:" + t.toString());
-                Popups.openErrorPopup("Fee payment failed", "Fee payment failed. " + t.toString());
+                log.warn(failureMessage);
             }
-        };
 
-        try
-        {
-            trading.payOfferFee(trade, callback);
-        } catch (InsufficientMoneyException e)
-        {
-            Popups.openErrorPopup("Not enough money available", "There is not enough money available. Please pay in first to your wallet.");
-        }
-    }
+            @Override
+            public void onDepositTxPublished(String depositTxID)
+            {
+                buildDepositPublishedScreen(depositTxID);
+            }
 
-    private void onOfferFeePaymentConfirmed()
-    {
-        trading.requestOffererDetailData();
-        statusTextField.setText("Request bank account details from offerer.");
-        Utils.setTimeout(SIM_DELAY, (AnimationTimer animationTimer) -> {
-            onUserDetailsReceived();
-            progressBar.setProgress(1.0);
-            return null;
+            @Override
+            public void onBankTransferInited()
+            {
+                buildBankTransferInitedScreen();
+            }
         });
+
+        takerPaymentProtocol.takeOffer();
     }
 
-    private void onUserDetailsReceived()
+    private void buildDepositPublishedScreen(String depositTxID)
     {
-        if (!blockChainFacade.verifyEmbeddedData(offer.getAccountID()))
-        {
-            Popups.openErrorPopup("Offerers bank account is blacklisted", "Offerers bank account is blacklisted.");
-            return;
-        }
-
-        trading.signContract(contract);
-        trading.payToDepositTx(trade);
-
-        buildWaitBankTransfer();
-    }
-
-    private void buildWaitBankTransfer()
-    {
-        processStepBar.next();
-
         gridPane.getChildren().clear();
 
         row = -1;
-        FormBuilder.addHeaderLabel(gridPane, "Bank transfer", ++row, 0);
-        infoLabel = FormBuilder.addLabel(gridPane, "Status:", "Wait for Bank transfer.", ++row);
-
-        Utils.setTimeout(SIM_DELAY, (AnimationTimer animationTimer) -> {
-            onBankTransferInited();
-            return null;
-        });
+        headerLabel = FormBuilder.addHeaderLabel(gridPane, "Deposit transaction published", ++row, 0);
+        infoLabel = FormBuilder.addLabel(gridPane, "Status:", "Deposit transaction published by offerer.\nAs soon as the offerer starts the \nBank transfer, you will get informed.", ++row);
+        FormBuilder.addTextField(gridPane, "Transaction ID:", depositTxID, ++row, false, true);
     }
 
-    private void onBankTransferInited()
+    private void buildBankTransferInitedScreen()
     {
-        row = 1;
-        infoLabel.setText("Bank transfer has been inited.");
-        Label label = FormBuilder.addLabel(gridPane, "", "Check your bank account and continue when you have received the money.", ++row);
-        GridPane.setColumnSpan(label, 2);
+        processStepBar.next();
 
+        headerLabel.setText("Bank transfer inited");
+        infoLabel.setText("Check your bank account and continue \nwhen you have received the money.");
+        log.info("#### grid " + gridPane.getChildren().size());
         gridPane.add(nextButton, 1, ++row);
-        nextButton.setText("I have received the bank transfer");
+        nextButton.setText("I have received the money at my bank");
         nextButton.setOnAction(e -> releaseBTC());
     }
 
@@ -405,16 +401,20 @@ public class TradeController implements Initializable, ChildController, WalletFa
         return offer.getDirection() == Direction.BUY;
     }
 
-
-    private void checkIfOffererIsOnline(Node isOnlineChecker, TextField isOnlineTextField)
+    private void setIsOnlineStatus(boolean isOnline)
     {
-        // mock
-        Utils.setTimeout(3000, (AnimationTimer animationTimer) -> {
-            offererIsOnline = Math.random() > 0.3 ? true : false;
-            isOnlineTextField.setText(offererIsOnline ? "Online" : "Offline");
-            gridPane.getChildren().remove(isOnlineChecker);
-            return null;
-        });
+        if (checkOnlineStatusTimer != null)
+        {
+            checkOnlineStatusTimer.stop();
+            checkOnlineStatusTimer = null;
+        }
+
+        offererIsOnline = isOnline;
+        isOnlineTextField.setText(offererIsOnline ? "Online" : "Offline");
+        gridPane.getChildren().remove(isOnlineCheckerHolder);
+
+        isOnlineTextField.setId(isOnline ? "online-label" : "offline-label");
+        isOnlineTextField.layout();
     }
 
     private void applyVolume()
@@ -448,7 +448,10 @@ public class TradeController implements Initializable, ChildController, WalletFa
 
     private BigInteger getCollateralInSatoshis()
     {
-        return BtcFormatter.doubleValueToSatoshis(Converter.stringToDouble(amountTextField.getText()) * offer.getCollateral());
+        double amount = Converter.stringToDouble(amountTextField.getText());
+        double resultDouble = amount * (double) offer.getCollateral() / 100.0;
+        BigInteger result = BtcFormatter.doubleValueToSatoshis(resultDouble);
+        return result;
     }
 
     private BigInteger getAmountInSatoshis()

@@ -1,61 +1,107 @@
 package io.bitsquare.trade;
 
-import io.bitsquare.user.User;
+import io.bitsquare.bank.BankAccount;
 
-import java.util.UUID;
+import java.io.Serializable;
+import java.math.BigInteger;
 
-public class Contract
+public class Contract implements Serializable
 {
-    private User taker;
-    private Trade trade;
-    private String takerPubKey;
-    private String offererPubKey;
+    private static final long serialVersionUID = 71472356206100158L;
 
-    public Contract(User taker, Trade trade, String takerPubKey)
+    private Offer offer;
+    private String takeOfferFeeTxID;
+    private BigInteger tradeAmount;
+    private String offererAccountID;
+    private String takerAccountID;
+    private BankAccount offererBankAccount;
+    private BankAccount takerBankAccount;
+    private String offererMessagePubKeyAsHex;
+    private String takerMessagePubKeyAsHex;
+
+    public Contract(Offer offer,
+                    BigInteger tradeAmount,
+                    String takeOfferFeeTxID,
+                    String offererAccountID,
+                    String takerAccountID,
+                    BankAccount offererBankAccount,
+                    BankAccount takerBankAccount,
+                    String offererMessagePubKeyAsHex,
+                    String takerMessagePubKeyAsHex)
     {
-        this.taker = taker;
-        this.trade = trade;
-        this.takerPubKey = takerPubKey;
+        this.offer = offer;
+        this.tradeAmount = tradeAmount;
+        this.takeOfferFeeTxID = takeOfferFeeTxID;
+        this.offererAccountID = offererAccountID;
+        this.takerAccountID = takerAccountID;
+        this.offererBankAccount = offererBankAccount;
+        this.takerBankAccount = takerBankAccount;
+        this.offererMessagePubKeyAsHex = offererMessagePubKeyAsHex;
+        this.takerMessagePubKeyAsHex = takerMessagePubKeyAsHex;
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setOffererPubKey(String offererPubKey)
-    {
-        this.offererPubKey = offererPubKey;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public UUID getUid()
+    public Offer getOffer()
     {
-        return trade.getUid();
+        return offer;
     }
 
-    public User getTaker()
+    public String getTakeOfferFeeTxID()
     {
-        return taker;
+        return takeOfferFeeTxID;
     }
 
-    public String getTakerPubKey()
+    public BigInteger getTradeAmount()
     {
-        return takerPubKey;
+        return tradeAmount;
     }
 
-    public Trade getTrade()
+    public String getOffererAccountID()
     {
-        return trade;
+        return offererAccountID;
     }
 
-    public String getOffererPubKey()
+    public String getTakerAccountID()
     {
-        return offererPubKey;
+        return takerAccountID;
     }
 
+    public BankAccount getOffererBankAccount()
+    {
+        return offererBankAccount;
+    }
+
+    public BankAccount getTakerBankAccount()
+    {
+        return takerBankAccount;
+    }
+
+    public String getTakerMessagePubKeyAsHex()
+    {
+        return takerMessagePubKeyAsHex;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "Contract{" +
+                "offer=" + offer +
+                ", takeOfferFeeTxID='" + takeOfferFeeTxID + '\'' +
+                ", tradeAmount=" + tradeAmount +
+                ", offererAccountID='" + offererAccountID + '\'' +
+                ", takerAccountID='" + takerAccountID + '\'' +
+                ", offererBankAccount=" + offererBankAccount +
+                ", takerBankAccount=" + takerBankAccount +
+                ", offererMessagePubKeyAsHex='" + offererMessagePubKeyAsHex + '\'' +
+                ", takerMessagePubKeyAsHex='" + takerMessagePubKeyAsHex + '\'' +
+                '}';
+    }
+
+    public String getOffererMessagePubKeyAsHex()
+    {
+        return offererMessagePubKeyAsHex;
+    }
 }

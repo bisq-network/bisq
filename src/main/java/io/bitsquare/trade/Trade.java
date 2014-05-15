@@ -1,22 +1,74 @@
 package io.bitsquare.trade;
 
-import java.math.BigInteger;
-import java.util.UUID;
+import com.google.bitcoin.core.Transaction;
+import javafx.beans.property.SimpleBooleanProperty;
 
-public class Trade
+import java.io.Serializable;
+import java.math.BigInteger;
+
+public class Trade implements Serializable
 {
+    private static final long serialVersionUID = -8275323072940974077L;
+
+    transient private final SimpleBooleanProperty depositTxChangedProperty = new SimpleBooleanProperty();
+
     private Offer offer;
-    private boolean takeOfferRequested;
-    private boolean takeOfferAccepted;
-    private BigInteger requestedAmount;
-    private boolean takeOfferFeePaymentConfirmed;
-    private String jsonRepresentation;
-    private String signature;
     private String takeOfferFeeTxID;
+    private BigInteger tradeAmount;
+    private Contract contract;
+    private String contractAsJson;
+    private String takerSignature;
+    private Transaction depositTransaction;
 
     public Trade(Offer offer)
     {
         this.offer = offer;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public void setTakeOfferFeeTxID(String takeOfferFeeTxID)
+    {
+        this.takeOfferFeeTxID = takeOfferFeeTxID;
+    }
+
+    public void setTradeAmount(BigInteger tradeAmount)
+    {
+        this.tradeAmount = tradeAmount;
+    }
+
+    public void setContract(Contract contract)
+    {
+        this.contract = contract;
+    }
+
+    public void setContractAsJson(String contractAsJson)
+    {
+        this.contractAsJson = contractAsJson;
+    }
+
+    public void setContractTakerSignature(String takerSignature)
+    {
+        this.takerSignature = takerSignature;
+    }
+
+    public void setDepositTransaction(Transaction depositTransaction)
+    {
+        this.depositTransaction = depositTransaction;
+        depositTxChangedProperty.set(!depositTxChangedProperty.get());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String getUid()
+    {
+        return offer.getUid();
     }
 
     public Offer getOffer()
@@ -24,58 +76,56 @@ public class Trade
         return offer;
     }
 
-    public UUID getUid()
+    public String getTakeOfferFeeTxID()
     {
-        return offer.getUid();
+        return takeOfferFeeTxID;
     }
 
-    public void setJsonRepresentation(String jsonRepresentation)
+    public BigInteger getTradeAmount()
     {
-        this.jsonRepresentation = jsonRepresentation;
+        return tradeAmount;
     }
 
-    public void setSignature(String signature)
+    public Contract getContract()
     {
-        this.signature = signature;
+        return contract;
     }
 
-    public boolean isTakeOfferRequested()
+    public String getContractAsJson()
     {
-        return takeOfferRequested;
+        return contractAsJson;
     }
 
-    public void setTakeOfferRequested(boolean takeOfferRequested)
+    public String getTakerSignature()
     {
-        this.takeOfferRequested = takeOfferRequested;
+        return takerSignature;
     }
 
-    public boolean isTakeOfferAccepted()
+    public Transaction getDepositTransaction()
     {
-        return takeOfferAccepted;
+        return depositTransaction;
     }
 
-    public void setTakeOfferAccepted(boolean takeOfferAccepted)
+    public SimpleBooleanProperty getDepositTxChangedProperty()
     {
-        this.takeOfferAccepted = takeOfferAccepted;
+        return depositTxChangedProperty;
+    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // toString
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public String toString()
+    {
+        return "Trade{" +
+                "offer=" + offer +
+                ", takeOfferFeeTxID='" + takeOfferFeeTxID + '\'' +
+                ", tradeAmount=" + tradeAmount +
+                ", contract=" + contract +
+                ", contractAsJson='" + contractAsJson + '\'' +
+                ", takerSignature='" + takerSignature + '\'' +
+                '}';
     }
 
-    public BigInteger getRequestedAmount()
-    {
-        return requestedAmount;
-    }
 
-    public void setTradeAmount(BigInteger requestedAmount)
-    {
-        this.requestedAmount = requestedAmount;
-    }
-
-    public void setTakeOfferFeePaymentConfirmed(boolean takeOfferFeePaymentConfirmed)
-    {
-        this.takeOfferFeePaymentConfirmed = takeOfferFeePaymentConfirmed;
-    }
-
-    public void setTakeOfferFeeTxID(String takeOfferFeeTxID)
-    {
-        this.takeOfferFeeTxID = takeOfferFeeTxID;
-    }
 }

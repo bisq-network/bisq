@@ -16,8 +16,8 @@ public class Settings implements Serializable
     private List<Locale> acceptedLanguageLocales = new ArrayList<>();
     private List<Locale> acceptedCountryLocales = new ArrayList<>();
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
-    private double maxCollateral;
-    private double minCollateral;
+    private int maxCollateral;
+    private int minCollateral;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -63,12 +63,12 @@ public class Settings implements Serializable
             acceptedArbitrators.add(arbitrator);
     }
 
-    public void setMaxCollateral(double maxCollateral)
+    public void setMaxCollateral(int maxCollateral)
     {
         this.maxCollateral = maxCollateral;
     }
 
-    public void setMinCollateral(double minCollateral)
+    public void setMinCollateral(int minCollateral)
     {
         this.minCollateral = minCollateral;
     }
@@ -92,26 +92,27 @@ public class Settings implements Serializable
         return acceptedCountryLocales;
     }
 
-    public Arbitrator getRandomArbitrator(double collateral, BigInteger amount)
+    //TODO
+    public Arbitrator getRandomArbitrator(int collateral, BigInteger amount)
     {
         List<Arbitrator> candidates = new ArrayList<>();
         for (Arbitrator arbitrator : acceptedArbitrators)
         {
-            if (arbitrator.getArbitrationFeePercent() >= collateral &&
-                    arbitrator.getMinArbitrationFee().compareTo(amount) < 0)
-            {
-                candidates.add(arbitrator);
-            }
+            /*if (arbitrator.getArbitrationFeePercent() >= collateral &&
+                    arbitrator.getMinArbitrationAmount().compareTo(amount) < 0)
+            {   */
+            candidates.add(arbitrator);
+            // }
         }
         return candidates.size() > 0 ? candidates.get((int) (Math.random() * candidates.size())) : null;
     }
 
-    public double getMaxCollateral()
+    public int getMaxCollateral()
     {
         return maxCollateral;
     }
 
-    public double getMinCollateral()
+    public int getMinCollateral()
     {
         return minCollateral;
     }

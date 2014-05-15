@@ -1,29 +1,160 @@
-<?import io.bitsquare.gui.components.processbar.ProcessStepBar?>
-<?import io.bitsquare.gui.components.VSpacer?>
+<?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="rootContainer" fx:controller="io.bitsquare.gui.setup.SetupController"
-            xmlns:fx="http://javafx.com/fxml">
-    <ScrollPane fitToWidth="true" AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10" AnchorPane.topAnchor="10"
-                AnchorPane.bottomAnchor="30">
-        <VBox fx:id="vBox" spacing="10">
-            <Label text="Setup trading account" id="headline-label"/>
-            <ProcessStepBar fx:id="processStepBar"/>
-            <VSpacer prefHeight="10"/>
-            <Label fx:id="infoLabel"/>
-            <GridPane fx:id="gridPane" vgap="5" hgap="5">
-                <padding>
-                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
-                </padding>
-                <columnConstraints>
-                    <ColumnConstraints halignment="RIGHT"/>
-                    <ColumnConstraints halignment="LEFT" prefWidth="320"/>
-                    <ColumnConstraints halignment="LEFT"/>
-                </columnConstraints>
-            </GridPane>
-            <Button fx:id="nextButton" defaultButton="true"/>
-            <Button fx:id="skipButton"/>
-        </VBox>
-    </ScrollPane>
+<AnchorPane fx:id="rootContainer" fx:controller="io.bitsquare.gui.setup.SetupController" prefWidth="800" prefHeight="600" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+    <children>
+
+        <Label id="headline-label" text="Setup trading account" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0"/>
+
+        <Accordion fx:id="accordion" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+            <panes>
+
+                <TitledPane fx:id="payRegistrationFeePane" text="Pay registration fee">
+                    <content>
+                        <AnchorPane>
+                            <children>
+                                <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                    <children>
+
+                                        <Label fx:id="payRegFeeInfoLabel"/>
+
+                                        <GridPane hgap="5.0" vgap="5.0">
+
+                                            <children>
+                                                <Label text="Registration address:"/>
+                                                <TextField fx:id="registrationAddressTextField" editable="false" GridPane.columnIndex="1"/>
+                                                <Label fx:id="copyIcon" minWidth="10" GridPane.columnIndex="2">
+                                                    <padding>
+                                                        <Insets bottom="0.0" left="0.0" right="0.0" top="-1.0"/>
+                                                    </padding>
+                                                    <tooltip>
+                                                        <Tooltip text="Copy address to clipboard"/>
+                                                    </tooltip>
+                                                </Label>
+
+                                                <Label text="Balance:" GridPane.rowIndex="1"/>
+                                                <TextField fx:id="balanceTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                                                <ProgressIndicator fx:id="progressIndicator" id="confidence-progress-indicator" GridPane.columnIndex="2" GridPane.halignment="LEFT"
+                                                                   GridPane.rowIndex="1" GridPane.rowSpan="2" GridPane.valignment="TOP">
+                                                    <GridPane.margin>
+                                                        <Insets top="2.0"/>
+                                                    </GridPane.margin>
+                                                </ProgressIndicator>
+                                                <Label fx:id="confirmationLabel" text="Checking confirmations..." GridPane.columnIndex="3" GridPane.rowIndex="1"/>
+
+                                                <Button defaultButton="true" onAction="#onPaymentDone" text="Payment done" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                                                <Button onAction="#onSkipPayment" text="Skip and pay later" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+                                            </children>
+
+                                            <columnConstraints>
+                                                <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>
+                                                <ColumnConstraints hgrow="ALWAYS"/>
+                                                <ColumnConstraints hgrow="SOMETIMES" prefWidth="20.0"/>
+                                                <ColumnConstraints hgrow="SOMETIMES"/>
+                                                <ColumnConstraints hgrow="SOMETIMES"/>
+                                            </columnConstraints>
+                                            <rowConstraints>
+                                                <RowConstraints vgrow="SOMETIMES"/>
+                                                <RowConstraints vgrow="SOMETIMES"/>
+                                                <RowConstraints vgrow="SOMETIMES"/>
+                                                <RowConstraints vgrow="SOMETIMES"/>
+                                            </rowConstraints>
+
+                                        </GridPane>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </AnchorPane>
+                    </content>
+                </TitledPane>
+
+
+                <TitledPane fx:id="addBankAccountPane" animated="true" text="Add Bank account">
+                    <content>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                            <children>
+                                <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                      AnchorPane.topAnchor="0.0">
+                                    <children>
+
+                                        <Label fx:id="addBankAccountInfoLabel"/>
+
+                                        <GridPane hgap="5.0" vgap="5.0">
+
+                                            <children>
+                                                <Label text="Bank account type:"/>
+                                                <ComboBox fx:id="bankAccountTypesComboBox" promptText="Select bank account type" GridPane.columnIndex="1"/>
+
+                                                <Label text="Bank account title:" GridPane.rowIndex="1"/>
+                                                <TextField fx:id="accountTitle" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                                                <Label text="Bank account holder name" GridPane.rowIndex="2"/>
+                                                <TextField fx:id="accountHolderName" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                                                <Label text="Bank account primary ID" GridPane.rowIndex="3"/>
+                                                <TextField fx:id="accountPrimaryID" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+                                                <Label text="Bank account secondary ID" GridPane.rowIndex="4"/>
+                                                <TextField fx:id="accountSecondaryID" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+
+                                                <Label text="Currency used for bank account:" GridPane.rowIndex="5"/>
+                                                <ComboBox fx:id="currencyComboBox" promptText="Select currency" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+
+                                                <Label text="Country of bank account" GridPane.rowIndex="6"/>
+                                                <ComboBox fx:id="countryComboBox" promptText="Select country" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+
+                                                <Button fx:id="addBankAccountButton" onAction="#onAddBankAccount" text="Add another bank account" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+
+                                                <Button fx:id="createAccountButton" defaultButton="true" onAction="#onCreateAccount" text="Create account" GridPane.columnIndex="1"
+                                                        GridPane.rowIndex="8"/>
+
+                                                <Button onAction="#onSkipBankAccountSetup" text="Skip and register later" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
+                                            </children>
+
+                                            <columnConstraints>
+                                                <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>
+                                                <ColumnConstraints hgrow="ALWAYS"/>
+                                            </columnConstraints>
+                                            <rowConstraints>
+                                                <RowConstraints vgrow="SOMETIMES"/>
+                                                <RowConstraints vgrow="SOMETIMES"/>
+                                                <RowConstraints vgrow="SOMETIMES"/>
+                                                <RowConstraints vgrow="SOMETIMES"/>
+                                                <RowConstraints vgrow="SOMETIMES"/>
+                                                <RowConstraints vgrow="SOMETIMES"/>
+                                                <RowConstraints vgrow="SOMETIMES"/>
+                                                <RowConstraints vgrow="SOMETIMES"/>
+                                                <RowConstraints vgrow="SOMETIMES"/>
+                                                <RowConstraints vgrow="SOMETIMES"/>
+                                            </rowConstraints>
+                                        </GridPane>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </AnchorPane>
+                    </content>
+                </TitledPane>
+
+                <TitledPane fx:id="settingsPane" animated="true" text="Set up preferences">
+                    <content>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                            <children>
+                                <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                    <children>
+                                        <Label text="Set up preferences... TODO "/>
+                                        <Button defaultButton="true" onAction="#onClose" text="Done" GridPane.columnIndex="1" GridPane.rowIndex="8"/>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </AnchorPane>
+                    </content>
+                </TitledPane>
+
+            </panes>
+        </Accordion>
+
+    </children>
 </AnchorPane>

@@ -7,6 +7,11 @@ public class BankAccountType implements Serializable
 
     private static final long serialVersionUID = -8772708150197835288L;
 
+    public static enum BankAccountTypeEnum
+    {
+        SEPA, WIRE, INTERNATIONAL, OK_PAY, NET_TELLER, PERFECT_MONEY, OTHER
+    }
+
     private BankAccountTypeEnum type;
     private String primaryIDName;
     private String secondaryIDName;
@@ -40,8 +45,4 @@ public class BankAccountType implements Serializable
         return type.toString();
     }
 
-    public static enum BankAccountTypeEnum
-    {
-        SEPA, WIRE, INTERNATIONAL, OK_PAY, NET_TELLER, PERFECT_MONEY, OTHER
-    }
 }

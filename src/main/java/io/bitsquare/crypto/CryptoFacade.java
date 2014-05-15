@@ -6,7 +6,6 @@ import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.security.SignatureException;
 import java.util.UUID;
@@ -58,7 +57,7 @@ public class CryptoFacade
 
     public boolean verifyHash(String hashAsHexStringToVerify, String msg, String sig)
     {
-        String hashAsHexString = Hex.toHexString(createHash(msg, sig));
+        String hashAsHexString = Utils.bytesToHexString(createHash(msg, sig));
         return hashAsHexString.equals(hashAsHexStringToVerify);
     }
 

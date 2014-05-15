@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<AnchorPane fx:id="rootContainer" prefHeight="500" prefWidth="800" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
+            xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8" fx:controller="io.bitsquare.gui.market.createOffer.CreateOfferController">
+    <children>
+
+        <GridPane hgap="5.0" vgap="5.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+            <children>
+                <Label id="form-header-text" text="Create new offer" GridPane.rowIndex="0"/>
+
+                <Label fx:id="buyLabel" GridPane.rowIndex="1"/>
+
+                <HBox spacing="5" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="NEVER" alignment="CENTER_LEFT">
+                    <TextField fx:id="amountTextField" prefWidth="70.0" alignment="CENTER_RIGHT"/>
+                    <Label text="BTC for:"/>
+                    <TextField fx:id="priceTextField" prefWidth="70.0" alignment="CENTER_RIGHT"/>
+                    <Label text="EUR ="/>
+                    <TextField fx:id="volumeTextField" prefWidth="70.0" alignment="CENTER_RIGHT" editable="false"/>
+                    <Label text="EUR in total"/>
+                </HBox>
+
+                <Label text="Min. Amount:" GridPane.rowIndex="2"/>
+                <TextField fx:id="minAmountTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                <Label text="Collateral (%):" GridPane.rowIndex="3"/>
+                <TextField fx:id="collateralTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+
+                <Label id="form-header-text" text="Offer details" GridPane.rowIndex="4">
+                    <GridPane.margin>
+                        <Insets top="10.0"/>
+                    </GridPane.margin>
+                </Label>
+
+                <Label text="Bank account type:" GridPane.rowIndex="5"/>
+                <TextField fx:id="bankAccountTypeTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+
+                <Label text="Bank account currency:" GridPane.rowIndex="6"/>
+                <TextField fx:id="bankAccountCurrencyTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+
+                <Label text="Bank account county:" GridPane.rowIndex="7"/>
+                <TextField fx:id="bankAccountCountyTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+
+                <Label text="Accepted countries:" GridPane.rowIndex="8"/>
+                <TextField fx:id="acceptedCountriesTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="8"/>
+
+                <Label text="Accepted languages:" GridPane.rowIndex="9"/>
+                <TextField fx:id="acceptedLanguagesTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
+
+
+                <Label id="form-header-text" fx:id="placeOfferTitle" text="Place offer:" GridPane.rowIndex="10">
+                    <GridPane.margin>
+                        <Insets top="10.0"/>
+                    </GridPane.margin>
+                </Label>
+
+                <Label text="Offer fee:" GridPane.rowIndex="11"/>
+                <TextField fx:id="feeLabel" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="11"/>
+
+                <Button fx:id="placeOfferButton" defaultButton="true" onAction="#onPlaceOffer" text="Place offer" GridPane.columnIndex="1" GridPane.rowIndex="12"/>
+
+                <Label fx:id="txTitleLabel" text="Transaction ID:" visible="false" GridPane.rowIndex="12"/>
+                <TextField fx:id="txTextField" visible="false" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="12"/>
+                <ProgressIndicator fx:id="progressIndicator" id="confidence-progress-indicator" visible="false" progress="0" GridPane.columnIndex="2" GridPane.halignment="LEFT"
+                                   GridPane.rowIndex="12"
+                                   GridPane.rowSpan="2" GridPane.valignment="TOP">
+                    <GridPane.margin>
+                        <Insets top="2.0"/>
+                    </GridPane.margin>
+                </ProgressIndicator>
+                <Label fx:id="confirmationLabel" visible="false" text="Checking confirmations..." GridPane.columnIndex="3" GridPane.rowIndex="12"/>
+
+                <Button fx:id="closeButton" visible="false" defaultButton="true" onAction="#onClose" text="Close" GridPane.columnIndex="1" GridPane.rowIndex="13"/>
+
+            </children>
+
+            <columnConstraints>
+                <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="400"/>
+                <ColumnConstraints hgrow="SOMETIMES" prefWidth="20.0" minWidth="20"/>
+                <ColumnConstraints hgrow="SOMETIMES"/>
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+            </rowConstraints>
+            <opaqueInsets>
+                <Insets/>
+            </opaqueInsets>
+
+        </GridPane>
+    </children>
+</AnchorPane>

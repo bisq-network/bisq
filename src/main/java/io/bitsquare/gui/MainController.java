@@ -1,5 +1,7 @@
 package io.bitsquare.gui;
 
+import com.google.bitcoin.core.*;
+import com.google.bitcoin.script.Script;
 import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BtcFormatter;
@@ -11,7 +13,9 @@ import io.bitsquare.gui.setup.SetupController;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.gui.util.Localisation;
 import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.TradeMessage;
 import io.bitsquare.trade.Direction;
+import io.bitsquare.trade.Trading;
 import io.bitsquare.user.User;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -26,12 +30,15 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.util.StringConverter;
+import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URL;
 import java.util.Date;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class MainController implements Initializable, NavigationController, WalletFacade.DownloadListener
@@ -41,6 +48,7 @@ public class MainController implements Initializable, NavigationController, Wall
     private User user;
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
+    private Trading trading;
     private ChildController childController;
     private ToggleGroup toggleGroup;
     private ToggleButton prevToggleButton;
@@ -48,6 +56,9 @@ public class MainController implements Initializable, NavigationController, Wall
     private Pane setupView;
     private SetupController setupController;
     private NetworkSyncPane networkSyncPane;
+    private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, historyButton, fundsButton, settingsButton;
+    private Pane msgButtonHolder, buyButtonHolder, sellButtonHolder, ordersButtonButtonHolder;
+    private TextField balanceTextField;
 
     @FXML
     public Pane contentPane;
@@ -64,11 +75,12 @@ public class MainController implements Initializable, NavigationController, Wall
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MainController(User user, WalletFacade walletFacade, MessageFacade messageFacade)
+    public MainController(User user, WalletFacade walletFacade, MessageFacade messageFacade, Trading trading)
     {
         this.user = user;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
+        this.trading = trading;
     }
 
 
@@ -88,19 +100,50 @@ public class MainController implements Initializable, NavigationController, Wall
         walletFacade.addDownloadListener(this);
         walletFacade.initWallet();
 
-        buildNavigation();
         if (user.getAccountID() == null)
         {
             buildSetupView();
-            anchorPane.setOpacity(0);
+            anchorPane.setVisible(false);
             setupController.setNetworkSyncPane(networkSyncPane);
             rootContainer.getChildren().add(setupView);
+        }
+        else
+        {
+            buildNavigation();
+
+            sellButton.fire();
+            // ordersButton.fire();
+            // homeButton.fire();
+            // msgButton.fire();
         }
 
         AnchorPane.setBottomAnchor(networkSyncPane, 0.0);
         AnchorPane.setLeftAnchor(networkSyncPane, 0.0);
+
+        messageFacade.addTakeOfferRequestListener((tradingMessage, sender) -> showTakeOfferRequest(tradingMessage, sender));
     }
 
+    private void showTakeOfferRequest(final TradeMessage tradeMessage, PeerAddress sender)
+    {
+        trading.createOffererPaymentProtocol(tradeMessage, sender);
+        try
+        {
+            ImageView newTradeRequestIcon = Icons.getIconImageView(Icons.MSG_ALERT);
+            Button alertButton = new Button("", newTradeRequestIcon);
+            alertButton.setId("nav-alert-button");
+            alertButton.relocate(36, 19);
+            Tooltip.install(alertButton, new Tooltip("Someone accepted your offer"));
+
+            alertButton.setOnAction((e) -> {
+                ordersButton.fire();
+            });
+            ordersButtonButtonHolder.getChildren().add(alertButton);
+
+        } catch (NullPointerException e)
+        {
+            log.warn("showTakeOfferRequest failed because of a NullPointerException");
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: NavigationController
@@ -113,12 +156,12 @@ public class MainController implements Initializable, NavigationController, Wall
         {
             anchorPane.getChildren().add(networkSyncPane);
 
-            anchorPane.setOpacity(1);
+            anchorPane.setVisible(true);
             rootContainer.getChildren().remove(setupView);
             setupView = null;
             setupController = null;
 
-            return null;
+            buildNavigation();
         }
 
         if (childController != null)
@@ -181,21 +224,31 @@ public class MainController implements Initializable, NavigationController, Wall
     {
         toggleGroup = new ToggleGroup();
 
-        ToggleButton homeButton = addNavButton(leftNavPane, "Overview", Icons.HOME, Icons.HOME, NavigationController.HOME);
-        ToggleButton buyButton = addNavButton(leftNavPane, "Buy BTC", Icons.NAV_BUY, Icons.NAV_BUY_ACTIVE, NavigationController.MARKET, Direction.BUY);
-        ToggleButton sellButton = addNavButton(leftNavPane, "Sell BTC", Icons.NAV_SELL, Icons.NAV_SELL_ACTIVE, NavigationController.MARKET, Direction.SELL);
-        addNavButton(leftNavPane, "Orders", Icons.ORDERS, Icons.ORDERS, NavigationController.ORDERS);
-        addNavButton(leftNavPane, "History", Icons.HISTORY, Icons.HISTORY, NavigationController.HISTORY);
-        addNavButton(leftNavPane, "Funds", Icons.FUNDS, Icons.FUNDS, NavigationController.FUNDS);
-        ToggleButton msgButton = addNavButton(leftNavPane, "Message", Icons.MSG, Icons.MSG, NavigationController.MSG);
+        homeButton = addNavButton(leftNavPane, "Overview", Icons.HOME, Icons.HOME, NavigationController.HOME);
+
+        buyButtonHolder = new Pane();
+        buyButton = addNavButton(buyButtonHolder, "Buy BTC", Icons.NAV_BUY, Icons.NAV_BUY_ACTIVE, NavigationController.MARKET, Direction.BUY);
+        leftNavPane.getChildren().add(buyButtonHolder);
+
+        sellButtonHolder = new Pane();
+        sellButton = addNavButton(sellButtonHolder, "Sell BTC", Icons.NAV_SELL, Icons.NAV_SELL_ACTIVE, NavigationController.MARKET, Direction.SELL);
+        leftNavPane.getChildren().add(sellButtonHolder);
+
+        ordersButtonButtonHolder = new Pane();
+        ordersButton = addNavButton(ordersButtonButtonHolder, "Orders", Icons.ORDERS, Icons.ORDERS, NavigationController.ORDERS);
+        leftNavPane.getChildren().add(ordersButtonButtonHolder);
+
+        historyButton = addNavButton(leftNavPane, "History", Icons.HISTORY, Icons.HISTORY, NavigationController.HISTORY);
+        fundsButton = addNavButton(leftNavPane, "Funds", Icons.FUNDS, Icons.FUNDS, NavigationController.FUNDS);
+
+        msgButtonHolder = new Pane();
+        msgButton = addNavButton(msgButtonHolder, "Message", Icons.MSG, Icons.MSG, NavigationController.MSG);
+        leftNavPane.getChildren().add(msgButtonHolder);
+
         addBalanceInfo(rightNavPane);
         addAccountComboBox(rightNavPane);
 
-        addNavButton(rightNavPane, "Settings", Icons.SETTINGS, Icons.SETTINGS, NavigationController.SETTINGS);
-
-        //sellButton.fire();
-        //homeButton.fire();
-        msgButton.fire();
+        settingsButton = addNavButton(rightNavPane, "Settings", Icons.SETTINGS, Icons.SETTINGS, NavigationController.SETTINGS);
     }
 
     private ToggleButton addNavButton(Pane parent, String title, String iconId, String iconIdActivated, String navTarget)
@@ -250,18 +303,19 @@ public class MainController implements Initializable, NavigationController, Wall
 
     private TextField addBalanceInfo(Pane parent)
     {
-        TextField balanceLabel = new TextField();
-        balanceLabel.setEditable(false);
-        balanceLabel.setMouseTransparent(true);
-        balanceLabel.setPrefWidth(90);
-        balanceLabel.setId("nav-balance-label");
-        balanceLabel.setText(BtcFormatter.formatSatoshis(walletFacade.getBalance(), false));
+        balanceTextField = new TextField();
+        balanceTextField.setEditable(false);
+        balanceTextField.setMouseTransparent(true);
+        balanceTextField.setPrefWidth(90);
+        balanceTextField.setId("nav-balance-label");
+
+        balanceTextField.setText(BtcFormatter.formatSatoshis(walletFacade.getBalance(), false));
 
         Label balanceCurrencyLabel = new Label("BTC");
         balanceCurrencyLabel.setPadding(new Insets(6, 0, 0, 0));
         HBox hBox = new HBox();
         hBox.setSpacing(2);
-        hBox.getChildren().setAll(balanceLabel, balanceCurrencyLabel);
+        hBox.getChildren().setAll(balanceTextField, balanceCurrencyLabel);
 
         VBox vBox = new VBox();
         vBox.setPadding(new Insets(12, 0, 0, 0));
@@ -274,7 +328,47 @@ public class MainController implements Initializable, NavigationController, Wall
         vBox.getChildren().setAll(hBox, titleLabel);
         parent.getChildren().add(vBox);
 
-        return balanceLabel;
+        balanceTextField.setText(Utils.bitcoinValueToFriendlyString(walletFacade.getBalance()));
+        walletFacade.getWallet().addEventListener(new WalletEventListener()
+        {
+            @Override
+            public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            {
+                balanceTextField.setText(Utils.bitcoinValueToFriendlyString(newBalance));
+            }
+
+            @Override
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
+            {
+            }
+
+            @Override
+            public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            {
+            }
+
+            @Override
+            public void onReorganize(Wallet wallet)
+            {
+            }
+
+            @Override
+            public void onWalletChanged(Wallet wallet)
+            {
+            }
+
+            @Override
+            public void onKeysAdded(Wallet wallet, List<ECKey> keys)
+            {
+            }
+
+            @Override
+            public void onScriptsAdded(Wallet wallet, List<Script> scripts)
+            {
+            }
+        });
+
+        return balanceTextField;
     }
 
     private void addAccountComboBox(Pane parent)
@@ -321,5 +415,6 @@ public class MainController implements Initializable, NavigationController, Wall
 
         }
     }
+
 
 }

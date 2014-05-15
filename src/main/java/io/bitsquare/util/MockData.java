@@ -1,8 +1,12 @@
 package io.bitsquare.util;
 
+import com.google.bitcoin.core.ECKey;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.user.Arbitrator;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PublicKey;
 import java.util.*;
 
 public class MockData
@@ -52,15 +56,30 @@ public class MockData
     public static List<Arbitrator> getArbitrators()
     {
         List<Arbitrator> list = new ArrayList<>();
-        list.add(new Arbitrator("uid_1", "Charlie Boom", UUID.randomUUID().toString(),
-                UUID.randomUUID().toString(), "http://www.arbit.io/Charly_Boom", 0.1, 10, com.google.bitcoin.core.Utils.toNanoCoins("0.01")));
-        list.add(new Arbitrator("uid_2", "Tom Shang", UUID.randomUUID().toString(),
-                UUID.randomUUID().toString(), "http://www.arbit.io/Tom_Shang", 0, 1, com.google.bitcoin.core.Utils.toNanoCoins("0.001")));
-        list.add(new Arbitrator("uid_3", "Edward Snow", UUID.randomUUID().toString(),
-                UUID.randomUUID().toString(), "http://www.arbit.io/Edward_Swow", 0.2, 5, com.google.bitcoin.core.Utils.toNanoCoins("0.05")));
-        list.add(new Arbitrator("uid_4", "Julian Sander", UUID.randomUUID().toString(),
-                UUID.randomUUID().toString(), "http://www.arbit.io/Julian_Sander", 0, 20, com.google.bitcoin.core.Utils.toNanoCoins("0.1")));
+        list.add(new Arbitrator("uid_1", "Charlie Boom", com.google.bitcoin.core.Utils.bytesToHexString(new ECKey().getPubKey()),
+                getMessagePubKey(), "http://www.arbit.io/Charly_Boom", 1, 10, com.google.bitcoin.core.Utils.toNanoCoins("0.01")));
+        list.add(new Arbitrator("uid_2", "Tom Shang", com.google.bitcoin.core.Utils.bytesToHexString(new ECKey().getPubKey()),
+                getMessagePubKey(), "http://www.arbit.io/Tom_Shang", 0, 1, com.google.bitcoin.core.Utils.toNanoCoins("0.001")));
+        list.add(new Arbitrator("uid_3", "Edward Snow", com.google.bitcoin.core.Utils.bytesToHexString(new ECKey().getPubKey()),
+                getMessagePubKey(), "http://www.arbit.io/Edward_Swow", 2, 5, com.google.bitcoin.core.Utils.toNanoCoins("0.05")));
+        list.add(new Arbitrator("uid_4", "Julian Sander", com.google.bitcoin.core.Utils.bytesToHexString(new ECKey().getPubKey()),
+                getMessagePubKey(), "http://www.arbit.io/Julian_Sander", 0, 20, com.google.bitcoin.core.Utils.toNanoCoins("0.1")));
         return list;
+    }
+
+    private static String getMessagePubKey()
+    {
+        try
+        {
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA");
+            keyGen.initialize(1024);
+            KeyPair generatedKeyPair = keyGen.genKeyPair();
+            PublicKey pubKey = generatedKeyPair.getPublic();
+            return DSAKeyUtil.getHexStringFromPublicKey(pubKey);
+        } catch (Exception e2)
+        {
+            return null;
+        }
     }
 
     public static List<Arbitrator> getRandomArbitrators()
@@ -71,12 +90,12 @@ public class MockData
 
     public static List<BankAccountType.BankAccountTypeEnum> getBankTransferTypeEnums()
     {
-        return Utils.getAllBankAccountTypeEnums();
+        return Utilities.getAllBankAccountTypeEnums();
     }
 
     public static List<BankAccountType.BankAccountTypeEnum> getRandomBankTransferTypeEnums()
     {
-        return randomizeList(Utils.getAllBankAccountTypeEnums());
+        return randomizeList(Utilities.getAllBankAccountTypeEnums());
     }
 
     public static List randomizeList(List list)

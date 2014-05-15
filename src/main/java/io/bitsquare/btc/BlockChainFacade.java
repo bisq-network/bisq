@@ -16,11 +16,19 @@ public class BlockChainFacade
 
     }
 
-    public boolean verifyEmbeddedData(String address)
+    //TODO
+    public boolean isAccountBlackListed(String accountID, BankAccount bankAccount)
     {
+        return false;
+    }
+
+    //TODO
+    public boolean verifyAccountRegistration()
+    {
+        return true;
+
         // tx id 76982adc582657b2eb68f3e43341596a68aadc4ef6b9590e88e93387d4d5d1f9
         // address: mjbxLbuVpU1cNXLJbrJZyirYwweoRPVVTj
-        return true;
             /*
         if (findAddressInBlockChain(address) && isFeePayed(address))
             return getDataForTxWithAddress(address) != null;
@@ -49,14 +57,14 @@ public class BlockChainFacade
         return true;
     }
 
-    public boolean isAccountIDBlacklisted(String accountID)
+    private boolean isAccountIDBlacklisted(String accountID)
     {
         // TODO
         // check if accountID is on blacklist
         return false;
     }
 
-    public boolean isBankAccountBlacklisted(BankAccount bankAccount)
+    private boolean isBankAccountBlacklisted(BankAccount bankAccount)
     {
         // TODO
         // check if accountID is on blacklist

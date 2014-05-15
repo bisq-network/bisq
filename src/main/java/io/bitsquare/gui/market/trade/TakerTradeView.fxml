@@ -5,13 +5,13 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="rootContainer" fx:controller="io.bitsquare.gui.market.trade.TradeController"
+<AnchorPane fx:id="rootContainer" fx:controller="io.bitsquare.gui.market.trade.TakerTradeController"
             xmlns:fx="http://javafx.com/fxml">
     <ScrollPane fitToWidth="true" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
                 AnchorPane.bottomAnchor="0">
 
         <content>
-            <VBox fx:id="vBox" spacing="10">
+            <VBox spacing="10">
                 <padding>
                     <Insets left="10" right="10" top="10" bottom="10"/>
                 </padding>

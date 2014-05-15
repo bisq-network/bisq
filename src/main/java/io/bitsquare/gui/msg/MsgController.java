@@ -1,11 +1,12 @@
 package io.bitsquare.gui.msg;
 
 import com.google.inject.Inject;
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.BitSquare;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.msg.MessageListener;
+import io.bitsquare.msg.listeners.OrderBookListener;
+import io.bitsquare.msg.listeners.PingPeerListener;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -26,7 +27,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-public class MsgController implements Initializable, ChildController, MessageListener
+public class MsgController implements Initializable, ChildController, OrderBookListener, PingPeerListener
 {
     private static final Logger log = LoggerFactory.getLogger(MsgController.class);
 
@@ -69,8 +70,8 @@ public class MsgController implements Initializable, ChildController, MessageLis
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        myID = WalletFacade.WALLET_PREFIX;
-        otherID = WalletFacade.WALLET_PREFIX.equals("taker") ? "offerer" : "taker";
+        myID = BitSquare.ID;
+        otherID = BitSquare.ID.equals("taker") ? "offerer" : "taker";
 
         messageFacade.addMessageListener(this);
 
@@ -94,14 +95,14 @@ public class MsgController implements Initializable, ChildController, MessageLis
     // Interface implementation: MessageListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
+   /* @Override
     public void onMessage(Object message)
     {
         sendButton.setDisable(!messageFacade.isOtherPeerDefined());
 
         if (message instanceof String)
             chatTextArea.appendText("\n" + otherID + ": " + message);
-    }
+    }  */
 
     @Override
     public void onPing()
@@ -110,12 +111,12 @@ public class MsgController implements Initializable, ChildController, MessageLis
     }
 
     @Override
-    public void onOfferPublished(boolean success)
+    public void onOfferAdded(Data offerData, boolean success)
     {
         if (success)
             getOffers();
         else
-            log.warn("onOfferPublished returned false");
+            log.warn("onOfferAdded returned false");
     }
 
     @Override
@@ -145,7 +146,7 @@ public class MsgController implements Initializable, ChildController, MessageLis
 
 
     @Override
-    public void onOfferRemoved(boolean success)
+    public void onOfferRemoved(Data offerData, boolean success)
     {
         if (success)
             getOffers();
@@ -153,7 +154,7 @@ public class MsgController implements Initializable, ChildController, MessageLis
             log.warn("onOfferRemoved failed");
     }
 
-    @Override
+   /* @Override
     public void onResponseFromSend(Object response)
     {
         String msg = (response instanceof String) ? (String) response : null;
@@ -168,14 +169,14 @@ public class MsgController implements Initializable, ChildController, MessageLis
     public void onSendFailed()
     {
         offerTable.getSelectionModel().clearSelection();
-    }
+    }  */
 
     @Override
-    public void onPeerFound()
+    public void onPingPeerResult(boolean success)
     {
-        sendButton.setDisable(!messageFacade.isOtherPeerDefined());
+       /* sendButton.setDisable(!messageFacade.isOtherPeerDefined());
         if (pingPending)
-            sendChatMsg(MessageFacade.PING);
+            sendChatMsg(MessageFacade.PING);        */
     }
 
 
@@ -201,14 +202,14 @@ public class MsgController implements Initializable, ChildController, MessageLis
     @FXML
     public void publishOffer(ActionEvent actionEvent)
     {
-        OfferListItem offerListItem = new OfferListItem(offerDataTextField.getText(), messageFacade.getPubKeyAsHex(), currencyTextField.getText());
+       /* OfferListItem offerListItem = new OfferListItem(offerDataTextField.getText(), messageFacade.getPubKeyAsHex(), currencyTextField.getText());
         try
         {
-            messageFacade.publishOffer(currencyTextField.getText(), offerListItem);
+            messageFacade.addOffer(currencyTextField.getText(), offerListItem);
         } catch (IOException e)
         {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
+        }  */
     }
 
     @FXML
@@ -232,14 +233,14 @@ public class MsgController implements Initializable, ChildController, MessageLis
     private void inviteForChat(OfferListItem item, int index)
     {
         selectedIndex = index;
-        messageFacade.findPeer(item.getPubKey());
+        // messageFacade.pingPeer(item.getPubKey());
         pingPending = true;
 
     }
 
     private void sendChatMsg(String msg)
     {
-        messageFacade.sendMessage(msg);
+        // messageFacade.sendMessage(msg);
 
         chatTextArea.appendText("\n" + myID + ": " + msg);
         chatInputField.setText("");
@@ -252,13 +253,13 @@ public class MsgController implements Initializable, ChildController, MessageLis
 
     private void removeOffer(OfferListItem offer)
     {
-        try
+       /* try
         {
-            messageFacade.removeOffer(currencyTextField.getText(), offer);
+            messageFacade.removeOffer(offer);
         } catch (IOException e)
         {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
+        } */
     }
 
 

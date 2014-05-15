@@ -4,6 +4,7 @@ package io.bitsquare.di;
 import com.google.bitcoin.core.NetworkParameters;
 import com.google.bitcoin.kits.WalletAppKit;
 import com.google.bitcoin.params.MainNetParams;
+import com.google.bitcoin.params.RegTestParams;
 import com.google.bitcoin.params.TestNet3Params;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -17,10 +18,10 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Trading;
-import io.bitsquare.trade.orderbook.MockOrderBook;
 import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
+import io.bitsquare.util.Utilities;
 
 import java.io.File;
 
@@ -31,7 +32,7 @@ public class BitSquareModule extends AbstractModule
     protected void configure()
     {
         bind(User.class).asEagerSingleton();
-        bind(OrderBook.class).to(MockOrderBook.class).asEagerSingleton();
+        bind(OrderBook.class).asEagerSingleton();
         bind(Storage.class).asEagerSingleton();
         bind(Settings.class).asEagerSingleton();
         bind(OrderBookFilter.class).asEagerSingleton();
@@ -44,6 +45,7 @@ public class BitSquareModule extends AbstractModule
         bind(Trading.class).asEagerSingleton();
 
         //bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.MAIN_NET);
+        // bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.REG_TEST_NET);
         bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.TEST_NET);
         bind(NetworkParameters.class).toProvider(NetworkParametersProvider.class).asEagerSingleton();
         bind(WalletAppKit.class).toProvider(WalletAppKitProvider.class).asEagerSingleton();
@@ -62,7 +64,7 @@ class WalletAppKitProvider implements Provider<WalletAppKit>
 
     public WalletAppKit get()
     {
-        return new WalletAppKit(networkParameters, new File("."), WalletFacade.WALLET_PREFIX);
+        return new WalletAppKit(networkParameters, new File(Utilities.getRootDir()), WalletFacade.WALLET_PREFIX);
     }
 }
 
@@ -87,6 +89,9 @@ class NetworkParametersProvider implements Provider<NetworkParameters>
                 break;
             case WalletFacade.TEST_NET:
                 result = TestNet3Params.get();
+                break;
+            case WalletFacade.REG_TEST_NET:
+                result = RegTestParams.get();
                 break;
         }
         return result;

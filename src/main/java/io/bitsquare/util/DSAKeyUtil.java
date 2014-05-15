@@ -1,6 +1,6 @@
-package io.bitsquare.msg;
+package io.bitsquare.util;
 
-import io.bitsquare.util.Utils;
+import com.google.bitcoin.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,10 +13,10 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
-public class MsgKeyUtil
+public class DSAKeyUtil
 {
-    private static final Logger log = LoggerFactory.getLogger(MsgKeyUtil.class);
-    private static final String baseDir = Utils.getRootDir();
+    private static final Logger log = LoggerFactory.getLogger(DSAKeyUtil.class);
+    private static final String baseDir = Utilities.getRootDir();
 
     public static KeyPair getKeyPair()
     {
@@ -26,6 +26,27 @@ public class MsgKeyUtil
     public static KeyPair getKeyPair(String keyName)
     {
         return getKeyPair("public_" + keyName + ".key", "private_" + keyName + ".key");
+    }
+
+
+    public static String getHexStringFromPublicKey(PublicKey publicKey)
+    {
+        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
+        return Utils.bytesToHexString(x509EncodedKeySpec.getEncoded());
+    }
+
+    public static PublicKey getPublicKeyFromHexString(String publicKeyAsHex)
+    {
+        byte[] bytes = Utils.parseAsHexOrBase58(publicKeyAsHex);
+        try
+        {
+            KeyFactory keyFactory = KeyFactory.getInstance("DSA");
+            return keyFactory.generatePublic(new X509EncodedKeySpec(bytes));
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e)
+        {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        return null;
     }
 
     public static KeyPair getKeyPair(String pubKeyPath, String privKeyPath)
@@ -40,7 +61,6 @@ public class MsgKeyUtil
             try
             {
                 KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA");
-
                 keyGen.initialize(1024);
                 KeyPair generatedKeyPair = keyGen.genKeyPair();
 
@@ -55,7 +75,6 @@ public class MsgKeyUtil
             }
         }
     }
-
 
     private static void dumpKeyPair(KeyPair keyPair)
     {
@@ -76,21 +95,20 @@ public class MsgKeyUtil
         return result;
     }
 
+
     public static void saveKeyPair(String pubKeyPath, String privKeyPath, KeyPair keyPair) throws IOException
     {
         PrivateKey privateKey = keyPair.getPrivate();
         PublicKey publicKey = keyPair.getPublic();
 
         // Store Public Key.
-        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(
-                publicKey.getEncoded());
+        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
         FileOutputStream fos = new FileOutputStream(baseDir + pubKeyPath);
         fos.write(x509EncodedKeySpec.getEncoded());
         fos.close();
 
         // Store Private Key.
-        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(
-                privateKey.getEncoded());
+        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
         fos = new FileOutputStream(baseDir + privKeyPath);
         fos.write(pkcs8EncodedKeySpec.getEncoded());
         fos.close();

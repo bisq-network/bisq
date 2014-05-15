@@ -1,34 +1,38 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.user.Arbitrator;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-public class Offer
+public class Offer implements Serializable
 {
+    private static final long serialVersionUID = -971164804305475826L;
+
     // key attributes for lookup
     private Direction direction;
     private Currency currency;
 
-    private UUID uid;
+    private String uid;
 
     private double price;
     private BigInteger amount;
     private BigInteger minAmount;
-    private String accountID;
-    private String messageID;
+    private String messagePubKeyAsHex;
     private BankAccountType.BankAccountTypeEnum bankAccountTypeEnum;
     private Locale bankAccountCountryLocale;
 
-    private double collateral;
+    private int collateral;
     private List<Locale> acceptedCountryLocales;
     private List<Locale> acceptedLanguageLocales;
-    private String offerPaymentTxID;
+    private String offerFeePaymentTxID;
+    private String bankAccountUID;
     private Arbitrator arbitrator;
 
 
@@ -36,8 +40,7 @@ public class Offer
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Offer(String accountID,
-                 String messageID,
+    public Offer(String messagePubKeyAsHex,
                  Direction direction,
                  double price,
                  BigInteger amount,
@@ -45,13 +48,13 @@ public class Offer
                  BankAccountType.BankAccountTypeEnum bankAccountTypeEnum,
                  Currency currency,
                  Locale bankAccountCountryLocale,
+                 String bankAccountUID,
                  Arbitrator arbitrator,
-                 double collateral,
+                 int collateral,
                  List<Locale> acceptedCountryLocales,
                  List<Locale> acceptedLanguageLocales)
     {
-        this.accountID = accountID;
-        this.messageID = messageID;
+        this.messagePubKeyAsHex = messagePubKeyAsHex;
         this.direction = direction;
         this.price = price;
         this.amount = amount;
@@ -59,12 +62,13 @@ public class Offer
         this.bankAccountTypeEnum = bankAccountTypeEnum;
         this.currency = currency;
         this.bankAccountCountryLocale = bankAccountCountryLocale;
+        this.bankAccountUID = bankAccountUID;
         this.arbitrator = arbitrator;
         this.collateral = collateral;
         this.acceptedCountryLocales = acceptedCountryLocales;
         this.acceptedLanguageLocales = acceptedLanguageLocales;
 
-        uid = UUID.randomUUID();
+        this.uid = UUID.randomUUID().toString();
     }
 
 
@@ -72,9 +76,9 @@ public class Offer
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setOfferPaymentTxID(String offerPaymentTxID)
+    public void setOfferFeePaymentTxID(String offerFeePaymentTxID)
     {
-        this.offerPaymentTxID = offerPaymentTxID;
+        this.offerFeePaymentTxID = offerFeePaymentTxID;
     }
 
 
@@ -82,17 +86,12 @@ public class Offer
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getAccountID()
+    public String getMessagePubKeyAsHex()
     {
-        return accountID;
+        return messagePubKeyAsHex;
     }
 
-    public String getMessageID()
-    {
-        return messageID;
-    }
-
-    public UUID getUid()
+    public String getUid()
     {
         return uid;
     }
@@ -144,17 +143,17 @@ public class Offer
 
     public double getVolume()
     {
-        return price * amount.doubleValue();
+        return price * BtcFormatter.satoshiToBTC(amount);
     }
 
     public double getMinVolume()
     {
-        return price * minAmount.doubleValue();
+        return price * BtcFormatter.satoshiToBTC(minAmount);
     }
 
-    public String getOfferPaymentTxID()
+    public String getOfferFeePaymentTxID()
     {
-        return offerPaymentTxID;
+        return offerFeePaymentTxID;
     }
 
     public Arbitrator getArbitrator()
@@ -162,8 +161,35 @@ public class Offer
         return arbitrator;
     }
 
-    public double getCollateral()
+    public int getCollateral()
     {
         return collateral;
+    }
+
+    public String getBankAccountUID()
+    {
+        return bankAccountUID;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "Offer{" +
+                "direction=" + direction +
+                ", currency=" + currency +
+                ", uid='" + uid + '\'' +
+                ", price=" + price +
+                ", amount=" + amount +
+                ", minAmount=" + minAmount +
+                ", messagePubKey=" + messagePubKeyAsHex.hashCode() +
+                ", bankAccountTypeEnum=" + bankAccountTypeEnum +
+                ", bankAccountCountryLocale=" + bankAccountCountryLocale +
+                ", collateral=" + collateral +
+                ", acceptedCountryLocales=" + acceptedCountryLocales +
+                ", acceptedLanguageLocales=" + acceptedLanguageLocales +
+                ", offerFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
+                ", bankAccountUID='" + bankAccountUID + '\'' +
+                ", arbitrator=" + arbitrator +
+                '}';
     }
 }

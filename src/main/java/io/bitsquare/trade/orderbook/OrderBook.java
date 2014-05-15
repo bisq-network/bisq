@@ -3,28 +3,37 @@ package io.bitsquare.trade.orderbook;
 import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.market.orderbook.OrderBookListItem;
+import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.listeners.OrderBookListener;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
+import io.bitsquare.trade.Trading;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import net.tomp2p.peers.Number160;
+import net.tomp2p.storage.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Predicate;
 
-public class OrderBook
+public class OrderBook implements OrderBookListener
 {
     private static final Logger log = LoggerFactory.getLogger(OrderBook.class);
 
     private Settings settings;
     private User user;
+    private MessageFacade messageFacade;
+    private Trading trading;
 
     protected ObservableList<OrderBookListItem> allOffers = FXCollections.observableArrayList();
     private FilteredList<OrderBookListItem> filteredList = new FilteredList<>(allOffers);
@@ -37,10 +46,12 @@ public class OrderBook
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OrderBook(Settings settings, User user)
+    public OrderBook(Settings settings, User user, MessageFacade messageFacade, Trading trading)
     {
         this.settings = settings;
         this.user = user;
+        this.messageFacade = messageFacade;
+        this.trading = trading;
     }
 
 
@@ -48,7 +59,29 @@ public class OrderBook
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void updateFilter(OrderBookFilter orderBookFilter)
+
+    public void init()
+    {
+        messageFacade.addMessageListener(this);
+    }
+
+    public void cleanup()
+    {
+        messageFacade.removeMessageListener(this);
+    }
+
+    public void loadOffers()
+    {
+        messageFacade.getOffers(user.getCurrentBankAccount().getCurrency().getCurrencyCode());
+    }
+
+    public void removeOffer(Offer offer) throws IOException
+    {
+        trading.removeOffer(offer);
+        messageFacade.removeOffer(offer);
+    }
+
+    public void applyFilter(OrderBookFilter orderBookFilter)
     {
         filteredList.setPredicate(new Predicate<OrderBookListItem>()
         {
@@ -73,7 +106,7 @@ public class OrderBook
                 // One of the supported languages from the settings must match one of the offer languages (n to n)
                 boolean languageResult = languagesInList(settings.getAcceptedLanguageLocales(), offer.getAcceptedLanguageLocales());
 
-                // Apply updateFilter only if there is a valid value set
+                // Apply applyFilter only if there is a valid value set
                 // The requested amount must be lower or equal then the offer amount
                 boolean amountResult = true;
                 if (orderBookFilter.getAmount() > 0)
@@ -82,7 +115,7 @@ public class OrderBook
                 // The requested trade direction must be opposite of the offerList trade direction
                 boolean directionResult = !orderBookFilter.getDirection().equals(offer.getDirection());
 
-                // Apply updateFilter only if there is a valid value set
+                // Apply applyFilter only if there is a valid value set
                 boolean priceResult = true;
                 if (orderBookFilter.getPrice() > 0)
                 {
@@ -104,7 +137,7 @@ public class OrderBook
                         && priceResult
                         && arbitratorResult;
 
-                       /*
+                           /*
                 log.debug("result = " + result +
                         ", currencyResult = " + currencyResult +
                         ", countryResult = " + countryResult +
@@ -131,10 +164,91 @@ public class OrderBook
                         ", offer.getPrice() = " + offer.getPrice());
                 log.debug("offer.getArbitrator() = " + offer.getArbitrator() +
                         ", settings.getAcceptedArbitrators() = " + settings.getAcceptedArbitrators());
-                             */
+                         */
                 return result;
             }
         });
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface implementation: MessageListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onOfferAdded(Data offerData, boolean success)
+    {
+        try
+        {
+            Object offerDataObject = offerData.getObject();
+            if (offerDataObject instanceof Offer && offerDataObject != null)
+            {
+                Offer offer = (Offer) offerDataObject;
+                allOffers.add(new OrderBookListItem(offer));
+            }
+        } catch (ClassNotFoundException | IOException e)
+        {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+    }
+
+    @Override
+    public void onOffersReceived(Map<Number160, Data> dataMap, boolean success)
+    {
+        if (success && dataMap != null)
+        {
+            allOffers.clear();
+            for (Data offerData : dataMap.values())
+            {
+                try
+                {
+                    Object offerDataObject = offerData.getObject();
+                    if (offerDataObject instanceof Offer && offerDataObject != null)
+                    {
+                        Offer offer = (Offer) offerDataObject;
+                        OrderBookListItem orderBookListItem = new OrderBookListItem(offer);
+                        allOffers.add(orderBookListItem);
+                    }
+                } catch (ClassNotFoundException | IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+        else
+        {
+            allOffers.clear();
+        }
+    }
+
+    @Override
+    public void onOfferRemoved(Data offerData, boolean success)
+    {
+        if (success)
+        {
+            try
+            {
+                Object offerDataObject = offerData.getObject();
+                if (offerDataObject instanceof Offer && offerDataObject != null)
+                {
+                    Offer offer = (Offer) offerDataObject;
+                    allOffers.removeIf(new Predicate<OrderBookListItem>()
+                    {
+                        @Override
+                        public boolean test(OrderBookListItem orderBookListItem)
+                        {
+                            return orderBookListItem.getOffer().getUid().equals(offer.getUid());
+                        }
+                    });
+                }
+            } catch (ClassNotFoundException | IOException e)
+            {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+        }
+        else
+        {
+            log.warn("onOfferRemoved failed");
+        }
     }
 
 
@@ -146,6 +260,7 @@ public class OrderBook
     {
         return offerList;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private Methods
@@ -182,7 +297,7 @@ public class OrderBook
             {
                 try
                 {
-                    if (arbitrator.getUID().equals(arbitratorToMatch.getUID()))
+                    if (arbitrator.getUid().equals(arbitratorToMatch.getUid()))
                         return true;
                 } catch (Exception e)
                 {
@@ -192,4 +307,6 @@ public class OrderBook
         }
         return false;
     }
+
+
 }

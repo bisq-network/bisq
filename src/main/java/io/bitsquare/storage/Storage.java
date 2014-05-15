@@ -1,6 +1,7 @@
 package io.bitsquare.storage;
 
-import io.bitsquare.util.Utils;
+import io.bitsquare.BitSquare;
+import io.bitsquare.util.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,7 @@ public class Storage
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
 
     //TODO save in users preferences location
-    private final String preferencesFileName = "preferences.ser";
+    private final String preferencesFileName = "pref_" + BitSquare.ID + ".ser";
     private final String storageFile;
     private Map<String, Object> dict;
 
@@ -27,7 +28,7 @@ public class Storage
 
     public Storage()
     {
-        storageFile = Utils.getRootDir() + preferencesFileName;
+        storageFile = Utilities.getRootDir() + preferencesFileName;
 
         dict = readDataVO();
         if (dict == null)

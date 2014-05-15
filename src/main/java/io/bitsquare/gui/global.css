@@ -15,11 +15,29 @@
     -fx-font-size: 14;
 }
 
+#online-label {
+    -fx-fill: green;
+}
+
+#offline-label {
+    -fx-fill: red;
+}
+
+#confidence-progress-indicator {
+    -fx-fill: null;
+}
+
 /* main nav */
 
 #nav-button {
     -fx-background-color: transparent;
     -fx-alignment: center;
+}
+
+#nav-alert-button {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-border-style: none;
 }
 
 #nav-button-label {

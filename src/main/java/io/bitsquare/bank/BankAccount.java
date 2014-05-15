@@ -8,7 +8,6 @@ public class BankAccount implements Serializable
 {
 
     private static final long serialVersionUID = 1792577576443221268L;
-    private static final long VERSION = 1;
 
     private BankAccountType bankAccountType;
     private String accountPrimaryID;
@@ -80,17 +79,18 @@ public class BankAccount implements Serializable
         return accountTitle;
     }
 
-    // Changes of that structure must be reflected in VERSION updates
-    public String getStringifiedBankAccount()
+    @Override
+    public String toString()
     {
-        return "{" +
-                "type=" + bankAccountType +
-                ", primaryID='" + accountPrimaryID + '\'' +
-                ", secondaryID='" + accountSecondaryID + '\'' +
-                ", holderName='" + accountHolderName + '\'' +
-                ", currency='" + currency.getCurrencyCode() + '\'' +
-                ", country='" + countryLocale.getCountry() + '\'' +
-                ", v='" + VERSION + '\'' +
+        return "BankAccount{" +
+                "bankAccountType=" + bankAccountType +
+                ", accountPrimaryID='" + accountPrimaryID + '\'' +
+                ", accountSecondaryID='" + accountSecondaryID + '\'' +
+                ", accountHolderName='" + accountHolderName + '\'' +
+                ", countryLocale=" + countryLocale +
+                ", currency=" + currency +
+                ", uid='" + uid + '\'' +
+                ", accountTitle='" + accountTitle + '\'' +
                 '}';
     }
 

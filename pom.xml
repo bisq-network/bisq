@@ -11,12 +11,15 @@
     <description>A P2P Fiat-Bitcoin Exchange</description>
     <url>https://www.bitsquare.io</url>
 
+    <!--
     <parent>
         <groupId>com.google</groupId>
         <artifactId>bitcoinj-parent</artifactId>
         <version>0.12-SNAPSHOT</version>
         <relativePath>libs/bitcoinj/pom.xml</relativePath>
     </parent>
+
+    -->
 
     <licenses>
         <license>
@@ -97,13 +100,18 @@
         </plugins>
     </build>
 
-
     <dependencies>
 
         <dependency>
             <groupId>com.google</groupId>
             <artifactId>bitcoinj</artifactId>
-            <version>0.12-SNAPSHOT</version>
+            <version>0.11.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.tomp2p</groupId>
+            <artifactId>TomP2P</artifactId>
+            <version>4.4</version>
         </dependency>
 
         <dependency>
@@ -112,19 +120,12 @@
             <version>4.11</version>
             <scope>test</scope>
         </dependency>
-        <!--
-<dependency>
-   <groupId>org.slf4j</groupId>
-   <artifactId>slf4j-jdk14</artifactId>
-   <version>1.7.7</version>
-</dependency>
--->
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.7</version>
         </dependency>
-
 
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -144,12 +145,6 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>16.0.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.aquafx-project</groupId>
-            <artifactId>aquafx</artifactId>
-            <version>0.1</version>
         </dependency>
 
         <dependency>
@@ -177,9 +172,9 @@
         </dependency>
 
         <dependency>
-            <groupId>net.tomp2p</groupId>
-            <artifactId>TomP2P</artifactId>
-            <version>4.4</version>
+            <groupId>com.madgag.spongycastle</groupId>
+            <artifactId>core</artifactId>
+            <version>1.50.0.0</version>
         </dependency>
 
     </dependencies>
@@ -187,11 +182,11 @@
     <reporting>
         <plugins>
             <!-- Generate cross-referenced HTML source code listing -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jxr-plugin</artifactId>
-                <version>2.1</version>
-            </plugin>
+            <!-- <plugin>
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-jxr-plugin</artifactId>
+                 <version>2.1</version>
+             </plugin>  -->
         </plugins>
     </reporting>
 

@@ -13,9 +13,12 @@ public class Converter
 
     public static double stringToDouble(String input)
     {
+        if (input == null || input.equals(""))
+            return 0;
         try
         {
             DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.getDefault());
+            Object d = decimalFormat.getDecimalFormatSymbols();
             return decimalFormat.parse(input).doubleValue();
         } catch (ParseException e)
         {

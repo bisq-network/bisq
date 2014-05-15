@@ -5,7 +5,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 
 public class OrderBookFilter
 {
-    transient private final SimpleBooleanProperty changedProperty = new SimpleBooleanProperty();
+    transient private final SimpleBooleanProperty directionChangedProperty = new SimpleBooleanProperty();
 
     private double price;
     private double amount;
@@ -19,19 +19,17 @@ public class OrderBookFilter
     public void setAmount(double amount)
     {
         this.amount = amount;
-        triggerChange();
     }
 
     public void setPrice(double price)
     {
         this.price = price;
-        triggerChange();
     }
 
     public void setDirection(Direction direction)
     {
         this.direction = direction;
-        triggerChange();
+        directionChangedProperty.set(!directionChangedProperty.get());
     }
 
 
@@ -54,19 +52,10 @@ public class OrderBookFilter
         return price;
     }
 
-    public SimpleBooleanProperty getChangedProperty()
+    public SimpleBooleanProperty getDirectionChangedProperty()
     {
-        return changedProperty;
+        return directionChangedProperty;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void triggerChange()
-    {
-        changedProperty.set(!changedProperty.get());
-    }
 
 }

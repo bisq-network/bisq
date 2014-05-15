@@ -13,10 +13,10 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="io.bitsquare" level="INFO"/>
+    <logger name="io.bitsquare" level="DEBUG"/>
 
     <logger name="com.google.bitcoin" level="ERROR"/>
-    <logger name="net.tomp2p" level="INFO"/>
+    <logger name="net.tomp2p" level="ERROR"/>
 
 
     <logger name="com.google.bitcoin.core.Peer" level="ERROR" additivity="false"/>

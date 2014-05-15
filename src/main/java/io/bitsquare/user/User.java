@@ -12,14 +12,13 @@ public class User implements Serializable
 {
     private static final long serialVersionUID = 7409078808248518638L;
 
-    transient private final SimpleBooleanProperty changedProperty = new SimpleBooleanProperty();
+    transient private final SimpleBooleanProperty bankAccountChangedProperty = new SimpleBooleanProperty();
 
     private String accountID;
-    private String messageID;
+    private String messagePubKeyAsHex;
     private boolean isOnline;
     private List<BankAccount> bankAccounts = new ArrayList<>();
     private BankAccount currentBankAccount = null;
-
 
     public User()
     {
@@ -35,7 +34,7 @@ public class User implements Serializable
         if (savedUser != null)
         {
             accountID = savedUser.getAccountID();
-            messageID = savedUser.getMessageID();
+            messagePubKeyAsHex = savedUser.getMessagePubKeyAsHex();
             isOnline = savedUser.getIsOnline();
             bankAccounts = savedUser.getBankAccounts();
             currentBankAccount = savedUser.getCurrentBankAccount();
@@ -53,9 +52,9 @@ public class User implements Serializable
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setMessageID(String messageID)
+    public void setMessagePubKeyAsHex(String messageID)
     {
-        this.messageID = messageID;
+        this.messagePubKeyAsHex = messageID;
     }
 
     public void setAccountID(String accountID)
@@ -71,7 +70,7 @@ public class User implements Serializable
     public void setCurrentBankAccount(BankAccount currentBankAccount)
     {
         this.currentBankAccount = currentBankAccount;
-        triggerChange();
+        bankAccountChangedProperty.set(!bankAccountChangedProperty.get());
     }
 
     public void setIsOnline(boolean isOnline)
@@ -90,7 +89,7 @@ public class User implements Serializable
         for (Iterator<BankAccount> iterator = getBankAccounts().iterator(); iterator.hasNext(); )
         {
             BankAccount bankAccount = iterator.next();
-            bankAccountUIDs += bankAccount.getStringifiedBankAccount();
+            bankAccountUIDs += bankAccount.toString();
 
             if (iterator.hasNext())
                 bankAccountUIDs += ", ";
@@ -98,9 +97,9 @@ public class User implements Serializable
         return bankAccountUIDs;
     }
 
-    public String getMessageID()
+    public String getMessagePubKeyAsHex()
     {
-        return messageID;
+        return messagePubKeyAsHex;
     }
 
     public String getAccountID()
@@ -118,23 +117,37 @@ public class User implements Serializable
         return currentBankAccount;
     }
 
+    public BankAccount getBankAccount(String bankAccountUID)
+    {
+        for (Iterator<BankAccount> iterator = bankAccounts.iterator(); iterator.hasNext(); )
+        {
+            BankAccount bankAccount = iterator.next();
+            if (bankAccount.getUid().equals(bankAccountUID))
+                return bankAccount;
+        }
+        return null;
+    }
+
     public boolean getIsOnline()
     {
         return isOnline;
     }
 
-    public SimpleBooleanProperty getChangedProperty()
+    public SimpleBooleanProperty getBankAccountChangedProperty()
     {
-        return changedProperty;
+        return bankAccountChangedProperty;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void triggerChange()
+    @Override
+    public String toString()
     {
-        changedProperty.set(!changedProperty.get());
+        return "User{" +
+                "bankAccountChangedProperty=" + bankAccountChangedProperty +
+                ", accountID='" + accountID + '\'' +
+                ", messagePubKeyAsHex='" + messagePubKeyAsHex + '\'' +
+                ", isOnline=" + isOnline +
+                ", bankAccounts=" + bankAccounts +
+                ", currentBankAccount=" + currentBankAccount +
+                '}';
     }
 }

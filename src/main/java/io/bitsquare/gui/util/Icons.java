@@ -16,11 +16,11 @@ public class Icons
     public static final String MSG = "/images/nav/msg.png";
     public static final String SETTINGS = "/images/nav/settings.png";
 
+    public static final String MSG_ALERT = "/images/nav/alertRound.png";
+
     public static final String BUY = "/images/buy.png";
     public static final String SELL = "/images/sell.png";
-    public static final String REMOVE = "/images/remove_minus_9.png";
-    public static final String ADD = "/images/list.png";
-    public static final String REFRESH = "/images/refresh.png";
+    public static final String REMOVE = "/images/removeOffer.png";
 
     public static final String PROGRESS_0_ICON_FILE = "/images/tx/circleProgress0.png";
     public static final String PROGRESS_1_ICON_FILE = "/images/tx/circleProgress1.png";

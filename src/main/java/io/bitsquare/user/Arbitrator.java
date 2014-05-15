@@ -9,25 +9,23 @@ public class Arbitrator implements Serializable
 
     private String name;
     private String pubKey;
-    private String messageID;
+    private String messagePubKeyAsHex;
     private String url;
-
-
-    private double baseFeePercent;
-    private double arbitrationFeePercent;
-    private BigInteger minArbitrationFee;
+    private int baseFeePercent;      // in percent int 1 for 1%
+    private int arbitrationFeePercent;
+    private BigInteger minArbitrationAmount; // in Satoshis
     private String uid;
 
-    public Arbitrator(String uid, String name, String pubKey, String messageID, String url, double baseFeePercent, double arbitrationFeePercent, BigInteger minArbitrationFee)
+    public Arbitrator(String uid, String name, String pubKey, String messagePubKeyAsHex, String url, int baseFeePercent, int arbitrationFeePercent, BigInteger minArbitrationAmount)
     {
         this.uid = uid;
         this.name = name;
         this.pubKey = pubKey;
-        this.messageID = messageID;
+        this.messagePubKeyAsHex = messagePubKeyAsHex;
         this.url = url;
         this.baseFeePercent = baseFeePercent;
         this.arbitrationFeePercent = arbitrationFeePercent;
-        this.minArbitrationFee = minArbitrationFee;
+        this.minArbitrationAmount = minArbitrationAmount;
     }
 
 
@@ -45,9 +43,9 @@ public class Arbitrator implements Serializable
         return pubKey;
     }
 
-    public String getMessageID()
+    public String getMessagePubKeyAsHex()
     {
-        return messageID;
+        return messagePubKeyAsHex;
     }
 
     public String getUrl()
@@ -55,23 +53,38 @@ public class Arbitrator implements Serializable
         return url;
     }
 
-    public BigInteger getMinArbitrationFee()
+    public BigInteger getMinArbitrationAmount()
     {
-        return minArbitrationFee;
+        return minArbitrationAmount;
     }
 
-    public double getBaseFeePercent()
+    public int getBaseFeePercent()
     {
         return baseFeePercent;
     }
 
-    public double getArbitrationFeePercent()
+    public int getArbitrationFeePercent()
     {
         return arbitrationFeePercent;
     }
 
-    public Object getUID()
+    public Object getUid()
     {
         return uid;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "Arbitrator{" +
+                "name='" + name + '\'' +
+                ", pubKey='" + pubKey + '\'' +
+                ", messagePubKeyAsHex='" + messagePubKeyAsHex + '\'' +
+                ", url='" + url + '\'' +
+                ", baseFeePercent=" + baseFeePercent +
+                ", arbitrationFeePercent=" + arbitrationFeePercent +
+                ", minArbitrationAmount=" + minArbitrationAmount +
+                ", uid='" + uid + '\'' +
+                '}';
     }
 }

@@ -1,6 +1,14 @@
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.VBox?>
-<VBox fx:id="rootContainer" fx:controller="io.bitsquare.gui.home.HomeController" spacing="10"
-      xmlns:fx="http://javafx.com/fxml">
-    <Label text="Overview"/>
-</VBox>
+<?import javafx.scene.layout.*?>
+<AnchorPane fx:controller="io.bitsquare.gui.home.HomeController" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
+            xmlns:fx="http://javafx.com/fxml">
+    <children>
+        <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <children>
+
+                <Label id="headline-label" text="Overview"/>
+
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>

@@ -17,25 +17,25 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class Utils
+public class Utilities
 {
-    private static final Logger log = LoggerFactory.getLogger(Utils.class);
+    private static final Logger log = LoggerFactory.getLogger(Utilities.class);
 
     public static String getRootDir()
     {
-        return Utils.class.getProtectionDomain().getCodeSource().getLocation().getFile() + "/";
+        return Utilities.class.getProtectionDomain().getCodeSource().getLocation().getFile() + "/../";
     }
 
 
     public static String objectToJson(Object object)
     {
-        Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).create();
+        Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).setPrettyPrinting().create();
         return gson.toJson(object);
     }
 
     public static <T> T jsonToObject(String jsonString, Class<T> classOfT)
     {
-        Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).create();
+        Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).setPrettyPrinting().create();
         return gson.fromJson(jsonString, classOfT);
     }
 
@@ -228,23 +228,16 @@ public class Utils
         return bankTransferTypes;
     }
 
-    /**
-     * @param delay    in milliseconds
-     * @param callback
-     * @usage Utils.setTimeout(1000, (AnimationTimer animationTimer) -> {
-     * doSomething();
-     * return null;
-     * });
-     */
-    public static void setTimeout(int delay, Function<AnimationTimer, Void> callback)
+    public static AnimationTimer setTimeout(int delay, Function<AnimationTimer, Void> callback)
     {
-        long startTime = System.currentTimeMillis();
         AnimationTimer animationTimer = new AnimationTimer()
         {
+            long lastTimeStamp = System.currentTimeMillis();
+
             @Override
             public void handle(long arg0)
             {
-                if (System.currentTimeMillis() > delay + startTime)
+                if (System.currentTimeMillis() > delay + lastTimeStamp)
                 {
                     callback.apply(this);
                     this.stop();
@@ -252,5 +245,26 @@ public class Utils
             }
         };
         animationTimer.start();
+        return animationTimer;
+    }
+
+    public static AnimationTimer setInterval(int delay, Function<AnimationTimer, Void> callback)
+    {
+        AnimationTimer animationTimer = new AnimationTimer()
+        {
+            long lastTimeStamp = System.currentTimeMillis();
+
+            @Override
+            public void handle(long arg0)
+            {
+                if (System.currentTimeMillis() > delay + lastTimeStamp)
+                {
+                    lastTimeStamp = System.currentTimeMillis();
+                    callback.apply(this);
+                }
+            }
+        };
+        animationTimer.start();
+        return animationTimer;
     }
 }

@@ -13,8 +13,9 @@ public interface NavigationController
     public static final String SETTINGS = "/io/bitsquare/gui/settings/SettingsView.fxml";
 
     public static final String ORDER_BOOK = "/io/bitsquare/gui/market/orderbook/OrderBookView.fxml";
-    public static final String TRADE = "/io/bitsquare/gui/market/trade/TradeView.fxml";
-    public static final String CREATE_OFFER = "/io/bitsquare/gui/market/offer/CreateOfferView.fxml";
+    public static final String TAKER_TRADE = "/io/bitsquare/gui/market/trade/TakerTradeView.fxml";
+    public static final String OFFERER_TRADE = "/io/bitsquare/gui/orders/OffererTradeView.fxml";
+    public static final String CREATE_OFFER = "/io/bitsquare/gui/market/createOffer/CreateOfferView.fxml";
 
     ChildController navigateToView(String fxmlView, String title);
 }

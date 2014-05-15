@@ -2,35 +2,46 @@ package io.bitsquare.trade;
 
 import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.TransactionConfidence;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.Fees;
-import io.bitsquare.btc.KeyPair;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.TradeMessage;
 import io.bitsquare.settings.Settings;
+import io.bitsquare.storage.Storage;
+import io.bitsquare.trade.offerer.OffererPaymentProtocol;
+import io.bitsquare.trade.offerer.OffererPaymentProtocolListener;
+import io.bitsquare.trade.taker.TakerPaymentProtocol;
+import io.bitsquare.trade.taker.TakerPaymentProtocolListener;
 import io.bitsquare.user.User;
-import io.bitsquare.util.Utils;
+import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.HashMap;
-import java.util.UUID;
+import java.util.Map;
 
 /**
  * Represents trade domain. Keeps complexity of process apart from view controller
  */
-//TODO use scheduler/process pattern with tasks for every async job
 public class Trading
 {
     private static final Logger log = LoggerFactory.getLogger(Trading.class);
 
-    private final HashMap<String, Offer> offers = new HashMap<>();
-    private final HashMap<String, Trade> trades = new HashMap<>();
-    private final HashMap<String, Contract> contracts = new HashMap<>();
+    private Map<String, Offer> myOffers = new HashMap<>();
+    private Map<String, Trade> trades = new HashMap<>();
+    private final Map<String, TakerPaymentProtocol> takerPaymentProtocols = new HashMap<>();
+
+
+    private final Map<String, OffererPaymentProtocol> offererPaymentProtocols = new HashMap<>();
+    private final String storageKey;
     private User user;
+    private Storage storage;
     private MessageFacade messageFacade;
     private BlockChainFacade blockChainFacade;
     private WalletFacade walletFacade;
@@ -45,6 +56,7 @@ public class Trading
     @Inject
     public Trading(User user,
                    Settings settings,
+                   Storage storage,
                    MessageFacade messageFacade,
                    BlockChainFacade blockChainFacade,
                    WalletFacade walletFacade,
@@ -52,10 +64,21 @@ public class Trading
     {
         this.user = user;
         this.settings = settings;
+        this.storage = storage;
         this.messageFacade = messageFacade;
         this.blockChainFacade = blockChainFacade;
         this.walletFacade = walletFacade;
         this.cryptoFacade = cryptoFacade;
+
+        storageKey = this.getClass().getName();
+
+        Object offersObject = storage.read(storageKey + ".offers");
+        if (offersObject != null && offersObject instanceof HashMap)
+            myOffers = (Map) offersObject;
+
+        Object tradesObject = storage.read(storageKey + ".trades");
+        if (tradesObject != null && tradesObject instanceof HashMap)
+            trades = (Map) tradesObject;
     }
 
 
@@ -63,78 +86,116 @@ public class Trading
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void cleanup()
+    {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Offer, trade, contract
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void placeNewOffer(Offer offer, FutureCallback<Transaction> callback) throws InsufficientMoneyException
     {
-        log.info("place New Offer");
-        offers.put(offer.getUid().toString(), offer);
-        walletFacade.payFee(Fees.OFFER_CREATION_FEE, callback);
+        if (myOffers.containsKey(offer.getUid()))
+            throw new IllegalStateException("offers contains already a offer with the ID " + offer.getUid());
 
-        // messageFacade.broadcast(new Message(Message.BROADCAST_NEW_OFFER, offer));
+        myOffers.put(offer.getUid(), offer);
+        storage.write(storageKey + ".offers", myOffers);
+        walletFacade.payFee(Fees.OFFER_CREATION_FEE, callback);
+    }
+
+    public void removeOffer(Offer offer) throws IOException
+    {
+        myOffers.remove(offer.getUid());
+        storage.write(storageKey + ".offers", myOffers);
     }
 
     public Trade createTrade(Offer offer)
     {
-        log.info("create New Trade");
+       /* if (trades.containsKey(offer.getUid()))
+            throw new IllegalStateException("trades contains already a trade with the ID " + offer.getUid());  */
+
         Trade trade = new Trade(offer);
-        trades.put(trade.getUid().toString(), trade);
+        trades.put(offer.getUid(), trade);
+        storage.write(storageKey + ".trades", trades);
         return trade;
     }
 
-    public Contract createContract(Trade trade)
+    public void removeTrade(Trade trade) throws IOException
     {
-        log.info("create new contract");
-        KeyPair address = new KeyPair(UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        //TODO
-        Contract contract = new Contract(user, trade, address.getPubKey());
-        contracts.put(trade.getUid().toString(), contract);
-        return contract;
+        trades.remove(trade.getUid());
+        storage.write(storageKey + ".trades", trades);
+    }
+
+    public TakerPaymentProtocol addTakerPaymentProtocol(Trade trade, TakerPaymentProtocolListener listener)
+    {
+        TakerPaymentProtocol takerPaymentProtocol = new TakerPaymentProtocol(trade, listener, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
+        takerPaymentProtocols.put(trade.getUid(), takerPaymentProtocol);
+        return takerPaymentProtocol;
+    }
+
+    public OffererPaymentProtocol addOffererPaymentProtocol(Trade trade, OffererPaymentProtocolListener listener)
+    {
+        OffererPaymentProtocol offererPaymentProtocol = new OffererPaymentProtocol(trade, listener, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
+        offererPaymentProtocols.put(trade.getUid(), offererPaymentProtocol);
+        return offererPaymentProtocol;
+    }
+
+    public void createOffererPaymentProtocol(TradeMessage tradeMessage, PeerAddress sender)
+    {
+        Offer offer = myOffers.get(tradeMessage.getOfferUID());
+        Trade trade = createTrade(offer);
+        OffererPaymentProtocol offererPaymentProtocol = addOffererPaymentProtocol(trade, new OffererPaymentProtocolListener()
+        {
+            @Override
+            public void onProgress(double progress)
+            {
+                //log.debug("onProgress " + progress);
+            }
+
+            @Override
+            public void onFailure(String failureMessage)
+            {
+                log.warn(failureMessage);
+            }
+
+            @Override
+            public void onDepositTxPublished(String depositTxID)
+            {
+                log.debug("trading onDepositTxPublished " + depositTxID);
+            }
+
+            @Override
+            public void onDepositTxConfirmedUpdate(TransactionConfidence confidence)
+            {
+                log.debug("trading onDepositTxConfirmedUpdate");
+            }
+
+            @Override
+            public void onDepositTxConfirmedInBlockchain()
+            {
+                log.debug("trading onDepositTxConfirmedInBlockchain");
+            }
+
+        });
+
+        // the handler was not called there because the obejct was not created when the event occurred (and therefor no listener)
+        // will probably created earlier, so let it for the moment like that....
+        offererPaymentProtocol.onTakeOfferRequested(sender);
     }
 
 
-    // trade process
-    // 1
-    public void sendTakeOfferRequest(Trade trade)
+    public void onBankTransferInited(String tradeUID)
     {
-        log.info("Taker asks offerer to take his offer");
-        //messageFacade.send(new Message(Message.REQUEST_TAKE_OFFER, trade), trade.getOffer().getOfferer().getMessageID());
+        offererPaymentProtocols.get(tradeUID).bankTransferInited();
     }
 
-    // 2
-    public void payOfferFee(Trade trade, FutureCallback<Transaction> callback) throws InsufficientMoneyException
-    {
-        log.info("Pay offer fee");
 
-        walletFacade.payFee(Fees.OFFER_TAKER_FEE, callback);
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Trade process
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-        log.info("Taker asks offerer for confirmation for his fee payment.");
-        // messageFacade.send(new Message(Message.REQUEST_OFFER_FEE_PAYMENT_CONFIRM, trade), trade.getOffer().getOfferer().getMessageID());
-    }
-
-    // 3
-    public void requestOffererDetailData()
-    {
-        log.info("Request offerer detail data");
-
-    }
-
-    // 4
-    public void signContract(Contract contract)
-    {
-        log.info("sign Contract");
-
-        String contractAsJson = Utils.objectToJson(contract);
-
-        contract.getTrade().setJsonRepresentation(contractAsJson);
-        contract.getTrade().setSignature(cryptoFacade.signContract(walletFacade.getAccountKey(), contractAsJson));
-    }
-
-    // 5
-    public void payToDepositTx(Trade trade)
-    {
-        //walletFacade.takerAddPaymentAndSign();
-        // messageFacade.send(new Message(Message.REQUEST_OFFER_FEE_PAYMENT_CONFIRM, trade), trade.getOffer().getOfferer().getMessageID());
-    }
 
     // 6
     public void releaseBTC(Trade trade)
@@ -151,9 +212,13 @@ public class Trading
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Trade> getTrades()
+    public Map<String, Trade> getTrades()
     {
         return trades;
     }
 
+    public Offer getOffer(String offerUID)
+    {
+        return myOffers.get(offerUID.toString());
+    }
 }

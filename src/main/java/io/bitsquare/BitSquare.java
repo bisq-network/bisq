@@ -1,5 +1,6 @@
 package io.bitsquare;
 
+import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Utils;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -14,6 +15,7 @@ import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.User;
+import io.bitsquare.util.DSAKeyUtil;
 import io.bitsquare.util.MockData;
 import javafx.application.Application;
 import javafx.scene.Parent;
@@ -22,21 +24,23 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PublicKey;
 import java.util.Locale;
-import java.util.UUID;
 
 public class BitSquare extends Application
 {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
+    public static String ID = "";
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
 
     public static void main(String[] args)
     {
+        log.debug("Startup: main");
         if (args.length > 0)
-            WalletFacade.WALLET_PREFIX = args[0];
-        else
-            WalletFacade.WALLET_PREFIX = "bitsquare";
+            ID = args[0];
 
         launch(args);
     }
@@ -44,9 +48,12 @@ public class BitSquare extends Application
     @Override
     public void start(Stage stage) throws Exception
     {
+        log.debug("Startup: start");
         final Injector injector = Guice.createInjector(new BitSquareModule());
         walletFacade = injector.getInstance(WalletFacade.class);
+
         messageFacade = injector.getInstance(MessageFacade.class);
+        log.debug("Startup: messageFacade, walletFacade inited");
 
         // apply stored data
         final User user = injector.getInstance(User.class);
@@ -59,7 +66,11 @@ public class BitSquare extends Application
 
         settings.updateFromStorage((Settings) storage.read(settings.getClass().getName()));
 
-        stage.setTitle("BitSquare (" + WalletFacade.WALLET_PREFIX + ")");
+        if (ID.length() > 0)
+            stage.setTitle("BitSquare (" + ID + ")");
+        else
+            stage.setTitle("BitSquare");
+
 
         GuiceFXMLLoader.setInjector(injector);
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource("/io/bitsquare/gui/MainView.fxml"), Localisation.getResourceBundle());
@@ -71,12 +82,13 @@ public class BitSquare extends Application
         final String global = getClass().getResource("/io/bitsquare/gui/global.css").toExternalForm();
         scene.getStylesheets().setAll(global);
 
-        stage.setMinWidth(740);
+        stage.setMinWidth(800);
         stage.setMinHeight(400);
         stage.setWidth(800);
         stage.setHeight(600);
 
         stage.show();
+        log.debug("Startup: stage displayed");
     }
 
     @Override
@@ -104,26 +116,44 @@ public class BitSquare extends Application
             //settings.addAcceptedCountryLocale(Locale.getDefault());
             settings.addAcceptedCountryLocale(MockData.getLocales().get(0));
             settings.addAcceptedCountryLocale(new Locale("en", "US"));
+            settings.addAcceptedCountryLocale(new Locale("de", "DE"));
             settings.addAcceptedCountryLocale(new Locale("es", "ES"));
 
-            settings.getAcceptedArbitrators().clear();
-            settings.addAcceptedArbitrator(new Arbitrator("uid_1", "Charlie Boom", UUID.randomUUID().toString(),
-                    UUID.randomUUID().toString(), "http://www.arbit.io/Charly_Boom", 0.1, 10, Utils.toNanoCoins("0.01")));
-            settings.addAcceptedArbitrator(new Arbitrator("uid_2", "Tom Shang", UUID.randomUUID().toString(),
-                    UUID.randomUUID().toString(), "http://www.arbit.io/Tom_Shang", 0, 1, Utils.toNanoCoins("0.001")));
-            settings.addAcceptedArbitrator(new Arbitrator("uid_3", "Edward Snow", UUID.randomUUID().toString(),
-                    UUID.randomUUID().toString(), "http://www.arbit.io/Edward_Swow", 0.2, 5, Utils.toNanoCoins("0.05")));
-            settings.addAcceptedArbitrator(new Arbitrator("uid_4", "Julian Sander", UUID.randomUUID().toString(),
-                    UUID.randomUUID().toString(), "http://www.arbit.io/Julian_Sander", 0, 20, Utils.toNanoCoins("0.1")));
 
-            settings.setMinCollateral(0.01);
-            settings.setMaxCollateral(0.1);
+            settings.getAcceptedArbitrators().clear();
+            settings.addAcceptedArbitrator(new Arbitrator("uid_1", "Charlie Boom", Utils.bytesToHexString(new ECKey().getPubKey()),
+                    getMessagePubKey(), "http://www.arbit.io/Charly_Boom", 1, 10, Utils.toNanoCoins("0.01")));
+            settings.addAcceptedArbitrator(new Arbitrator("uid_2", "Tom Shang", Utils.bytesToHexString(new ECKey().getPubKey()),
+                    getMessagePubKey(), "http://www.arbit.io/Tom_Shang", 0, 1, Utils.toNanoCoins("0.001")));
+            settings.addAcceptedArbitrator(new Arbitrator("uid_3", "Edward Snow", Utils.bytesToHexString(new ECKey().getPubKey()),
+                    getMessagePubKey(), "http://www.arbit.io/Edward_Swow", 2, 5, Utils.toNanoCoins("0.05")));
+            settings.addAcceptedArbitrator(new Arbitrator("uid_4", "Julian Sander", Utils.bytesToHexString(new ECKey().getPubKey()),
+                    getMessagePubKey(), "http://www.arbit.io/Julian_Sander", 0, 20, Utils.toNanoCoins("0.1")));
+
+            settings.setMinCollateral(1);
+            settings.setMaxCollateral(10);
 
             storage.write(settings.getClass().getName(), settings);
 
             //initMockUser(storage, user);
         }
     }
+
+    private String getMessagePubKey()
+    {
+        try
+        {
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA");
+            keyGen.initialize(1024);
+            KeyPair generatedKeyPair = keyGen.genKeyPair();
+            PublicKey pubKey = generatedKeyPair.getPublic();
+            return DSAKeyUtil.getHexStringFromPublicKey(pubKey);
+        } catch (Exception e2)
+        {
+            return null;
+        }
+    }
+
 
     private void initMockUser(Storage storage, User user)
     {
@@ -149,7 +179,7 @@ public class BitSquare extends Application
         );
         user.addBankAccount(bankAccount2);
 
-        user.setAccountID(UUID.randomUUID().toString());
+        user.setAccountID(Utils.bytesToHexString(new ECKey().getPubKey()));
 
         storage.write(user.getClass().getName(), user);
     }

@@ -7,6 +7,8 @@ import com.google.bitcoin.store.UnreadableWalletException;
 import com.google.bitcoin.store.WalletProtobufSerializer;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import io.bitsquare.BitSquare;
+import io.bitsquare.util.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +41,7 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
         this.chain = chain;
         this.peerGroup = peerGroup;
 
-        walletFile = new File(".", "bitsquare_account_reg" + ".wallet");
+        walletFile = new File(Utilities.getRootDir() + "account_reg_" + BitSquare.ID + ".wallet");
         if (walletFile.exists())
         {
             FileInputStream walletStream = null;
@@ -74,7 +76,10 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
         {
             e.printStackTrace();
         }
+
         autosaveToFile(walletFile, 1, TimeUnit.SECONDS, null);
+
+        allowSpendingUnconfirmedTransactions();
     }
 
     void shutDown()
@@ -166,7 +171,7 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
         for (WalletFacade.WalletListener walletListener : walletListeners)
             walletListener.onCoinsReceived(newBalance);
 
-        log.info("onCoinsReceived");
+        // log.info("onCoinsReceived");
     }
 
     @Override
@@ -175,7 +180,7 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
         for (WalletFacade.WalletListener walletListener : walletListeners)
             walletListener.onConfidenceChanged(tx.getConfidence().numBroadcastPeers(), WalletUtil.getConfDepthInBlocks(this));
 
-        log.info("onTransactionConfidenceChanged " + tx.getConfidence().toString());
+        // log.info("onTransactionConfidenceChanged " + tx.getConfidence().toString());
     }
 
     @Override
@@ -193,7 +198,7 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
     @Override
     public void onWalletChanged(Wallet wallet)
     {
-        log.info("onWalletChanged");
+        // log.info("onWalletChanged");
     }
 
     @Override

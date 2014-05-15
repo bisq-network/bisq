@@ -1,38 +1,57 @@
-<?import io.bitsquare.gui.components.HSpacer?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:controller="io.bitsquare.gui.funds.FundsController"
-            xmlns:fx="http://javafx.com/fxml" fx:id="rootContainer">
+<AnchorPane fx:controller="io.bitsquare.gui.funds.FundsController" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
+            xmlns:fx="http://javafx.com/fxml">
+    <children>
+        <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <children>
 
-    <Label text="Just one generic address by now for dev...." AnchorPane.topAnchor="10" AnchorPane.leftAnchor="10"/>
+                <Label id="headline-label" text="Trading account wallet"/>
 
-    <HBox spacing="5" AnchorPane.topAnchor="40" AnchorPane.leftAnchor="10">
-        <Label text="Funds address:">
-            <padding>
-                <Insets bottom="0.0" left="0.0" right="0.0" top="5.0"/>
-            </padding>
-        </Label>
-        <TextField fx:id="addressLabel" prefWidth="300" editable="false"/>
+                <GridPane hgap="5.0" vgap="5.0">
 
-        <Label fx:id="copyIcon">
-            <padding>
-                <Insets bottom="0.0" left="0.0" right="0.0" top="4.0"/>
-            </padding>
-        </Label>
-        <HSpacer prefWidth="10"/>
+                    <children>
+                        <Label text="Trading account address:"/>
+                        <TextField fx:id="tradingAccountTextField" editable="false" GridPane.columnIndex="1"/>
+                        <Label fx:id="copyIcon" minWidth="10" GridPane.columnIndex="2">
+                            <padding>
+                                <Insets bottom="0.0" left="0.0" right="0.0" top="-1.0"/>
+                            </padding>
+                            <tooltip>
+                                <Tooltip text="Copy address to clipboard"/>
+                            </tooltip>
+                        </Label>
 
-        <Label text="Balance:">
-            <padding>
-                <Insets bottom="0.0" left="0.0" right="0.0" top="5.0"/>
-            </padding>
-        </Label>
-        <TextField fx:id="balanceLabel" prefWidth="100" editable="false"/>
-        <Label text="BTC">
-            <padding>
-                <Insets bottom="0.0" left="0.0" right="0.0" top="5.0"/>
-            </padding>
-        </Label>
-    </HBox>
+                        <Label text="Balance:" GridPane.rowIndex="1"/>
+                        <TextField fx:id="balanceTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                        <ProgressIndicator fx:id="progressIndicator" id="confidence-progress-indicator" GridPane.columnIndex="2" GridPane.halignment="LEFT"
+                                           GridPane.rowIndex="1" GridPane.rowSpan="2" GridPane.valignment="TOP">
+                            <GridPane.margin>
+                                <Insets top="2.0"/>
+                            </GridPane.margin>
+                        </ProgressIndicator>
+                        <Label fx:id="confirmationLabel" text="Checking confirmations..." GridPane.columnIndex="3" GridPane.rowIndex="1"/>
 
+                        <Label text="dummy for layout progressIndicator" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                    </children>
+
+                    <columnConstraints>
+                        <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>
+                        <ColumnConstraints hgrow="ALWAYS"/>
+                        <ColumnConstraints hgrow="SOMETIMES" prefWidth="20.0"/>
+                        <ColumnConstraints hgrow="SOMETIMES"/>
+                        <ColumnConstraints hgrow="SOMETIMES"/>
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints vgrow="SOMETIMES"/>
+                        <RowConstraints vgrow="SOMETIMES"/>
+                        <RowConstraints vgrow="SOMETIMES"/>
+                    </rowConstraints>
+
+                </GridPane>
+            </children>
+        </VBox>
+    </children>
 </AnchorPane>
