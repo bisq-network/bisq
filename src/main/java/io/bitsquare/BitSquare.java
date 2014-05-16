@@ -122,13 +122,13 @@ public class BitSquare extends Application
 
             settings.getAcceptedArbitrators().clear();
             settings.addAcceptedArbitrator(new Arbitrator("uid_1", "Charlie Boom", Utils.bytesToHexString(new ECKey().getPubKey()),
-                    getMessagePubKey(), "http://www.arbit.io/Charly_Boom", 1, 10, Utils.toNanoCoins("0.01")));
+                    getMessagePubKey(), "http://www.arbit.io/Charly_Boom", 10, 50, Utils.toNanoCoins("0.01")));
             settings.addAcceptedArbitrator(new Arbitrator("uid_2", "Tom Shang", Utils.bytesToHexString(new ECKey().getPubKey()),
-                    getMessagePubKey(), "http://www.arbit.io/Tom_Shang", 0, 1, Utils.toNanoCoins("0.001")));
+                    getMessagePubKey(), "http://www.arbit.io/Tom_Shang", 10, 100, Utils.toNanoCoins("0.001")));
             settings.addAcceptedArbitrator(new Arbitrator("uid_3", "Edward Snow", Utils.bytesToHexString(new ECKey().getPubKey()),
-                    getMessagePubKey(), "http://www.arbit.io/Edward_Swow", 2, 5, Utils.toNanoCoins("0.05")));
+                    getMessagePubKey(), "http://www.arbit.io/Edward_Swow", 20, 50, Utils.toNanoCoins("0.05")));
             settings.addAcceptedArbitrator(new Arbitrator("uid_4", "Julian Sander", Utils.bytesToHexString(new ECKey().getPubKey()),
-                    getMessagePubKey(), "http://www.arbit.io/Julian_Sander", 0, 20, Utils.toNanoCoins("0.1")));
+                    getMessagePubKey(), "http://www.arbit.io/Julian_Sander", 10, 20, Utils.toNanoCoins("0.1")));
 
             settings.setMinCollateral(1);
             settings.setMaxCollateral(10);

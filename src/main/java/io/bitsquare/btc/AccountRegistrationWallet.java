@@ -9,8 +9,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.bitsquare.BitSquare;
 import io.bitsquare.util.Utilities;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,23 +23,33 @@ import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
 
 public class AccountRegistrationWallet extends Wallet implements WalletEventListener
 {
-    private static final Logger log = LoggerFactory.getLogger(AccountRegistrationWallet.class);
+    // private static final Logger log = LoggerFactory.getLogger(AccountRegistrationWallet.class);
     private final File walletFile;
 
-    private NetworkParameters networkParameters;
+    private NetworkParameters params;
     private BlockChain chain;
     private PeerGroup peerGroup;
     private List<WalletFacade.WalletListener> walletListeners = new ArrayList<>();
 
-    AccountRegistrationWallet(NetworkParameters networkParameters, BlockChain chain, PeerGroup peerGroup)
+    AccountRegistrationWallet(NetworkParameters params, BlockChain chain, PeerGroup peerGroup)
     {
-        super(networkParameters);
+        super(params);
 
-        this.networkParameters = networkParameters;
+        this.params = params;
         this.chain = chain;
         this.peerGroup = peerGroup;
 
-        walletFile = new File(Utilities.getRootDir() + "account_reg_" + BitSquare.ID + ".wallet");
+     /*   try
+        {
+            final InetAddress localHost = InetAddress.getLocalHost();
+            PeerAddress peerAddress = new PeerAddress(localHost, params.getPort());
+            peerGroup.addAddress(peerAddress);
+        } catch (UnknownHostException e)
+        {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } */
+
+        walletFile = new File(Utilities.getRootDir() + BitSquare.ID + "_account_reg" + ".wallet");
         if (walletFile.exists())
         {
             FileInputStream walletStream = null;
@@ -78,6 +86,7 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
         }
 
         autosaveToFile(walletFile, 1, TimeUnit.SECONDS, null);
+        peerGroup.setMinBroadcastConnections(1);
 
         allowSpendingUnconfirmedTransactions();
     }
@@ -95,7 +104,7 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
 
     Address getAddress()
     {
-        return getKey().toAddress(networkParameters);
+        return getKey().toAddress(params);
     }
 
     ECKey getKey()
@@ -125,8 +134,8 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
                 .op(OP_RETURN)
                 .data(dataToEmbed)
                 .build();
-        Transaction transaction = new Transaction(networkParameters);
-        TransactionOutput dataOutput = new TransactionOutput(networkParameters,
+        Transaction transaction = new Transaction(params);
+        TransactionOutput dataOutput = new TransactionOutput(params,
                 transaction,
                 Transaction.MIN_NONDUST_OUTPUT,
                 script.getProgram());
@@ -144,14 +153,14 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
             @Override
             public void onSuccess(Transaction result)
             {
-                log.info("sendResult onSuccess:" + result.toString());
+                //log.info("sendResult onSuccess:" + result.toString());
                 // Platform.runLater(overlayUi::done);
             }
 
             @Override
             public void onFailure(Throwable t)
             {
-                log.warn("sendResult onFailure:" + t.toString());
+                //log.warn("sendResult onFailure:" + t.toString());
                 // We died trying to empty the wallet.
                 // crashAlert(t);
             }
@@ -171,7 +180,7 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
         for (WalletFacade.WalletListener walletListener : walletListeners)
             walletListener.onCoinsReceived(newBalance);
 
-        // log.info("onCoinsReceived");
+        // //log.info("onCoinsReceived");
     }
 
     @Override
@@ -180,37 +189,37 @@ public class AccountRegistrationWallet extends Wallet implements WalletEventList
         for (WalletFacade.WalletListener walletListener : walletListeners)
             walletListener.onConfidenceChanged(tx.getConfidence().numBroadcastPeers(), WalletUtil.getConfDepthInBlocks(this));
 
-        // log.info("onTransactionConfidenceChanged " + tx.getConfidence().toString());
+        // //log.info("onTransactionConfidenceChanged " + tx.getConfidence().toString());
     }
 
     @Override
     public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
     {
-        log.info("onCoinsSent");
+        //log.info("onCoinsSent");
     }
 
     @Override
     public void onReorganize(Wallet wallet)
     {
-        log.info("onReorganize");
+        //log.info("onReorganize");
     }
 
     @Override
     public void onWalletChanged(Wallet wallet)
     {
-        // log.info("onWalletChanged");
+        // //log.info("onWalletChanged");
     }
 
     @Override
     public void onKeysAdded(Wallet wallet, List<ECKey> keys)
     {
-        log.info("onKeysAdded");
+        //log.info("onKeysAdded");
     }
 
     @Override
     public void onScriptsAdded(Wallet wallet, List<Script> scripts)
     {
-        log.info("onScriptsAdded");
+        //log.info("onScriptsAdded");
     }
 
     int getConfNumBroadcastPeers()

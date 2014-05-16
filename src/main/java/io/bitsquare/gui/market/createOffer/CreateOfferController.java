@@ -94,9 +94,10 @@ public class CreateOfferController implements Initializable, ChildController
 
 
         //TODO
-        amountTextField.setText("0,01");
-        minAmountTextField.setText("0,001");
+        amountTextField.setText("1");
+        minAmountTextField.setText("0,1");
         priceTextField.setText("500");
+        collateralTextField.setText("10");
         updateVolume();
 
         amountTextField.textProperty().addListener(new ChangeListener<String>()
@@ -131,7 +132,7 @@ public class CreateOfferController implements Initializable, ChildController
         bankAccountCountyTextField.setText(user.getCurrentBankAccount().getCountryLocale().getDisplayCountry());
         acceptedCountriesTextField.setText(Formatter.countryLocalesToString(settings.getAcceptedCountryLocales()));
         acceptedLanguagesTextField.setText(Formatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
-        feeLabel.setText(Utils.bitcoinValueToFriendlyString(Fees.OFFER_CREATION_FEE));
+        feeLabel.setText(Utils.bitcoinValueToFriendlyString(Fees.OFFER_CREATION_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE)));
     }
 
 
@@ -279,9 +280,9 @@ public class CreateOfferController implements Initializable, ChildController
         return priceAsDouble > 0 &&
                 amountAsDouble > 0 &&
                 minAmountAsDouble > 0 &&
-                minAmountAsDouble <= amountAsDouble &&
+                minAmountAsDouble <= amountAsDouble/* &&
                 collateralAsDouble >= settings.getMinCollateral() &&
-                collateralAsDouble <= settings.getMaxCollateral();
+                collateralAsDouble <= settings.getMaxCollateral()*/;
     }
 
 }

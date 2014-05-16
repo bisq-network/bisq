@@ -4,8 +4,9 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.layout.*?>
-<VBox prefHeight="540" prefWidth="800" spacing="10" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
-      xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.bitsquare.gui.orders.OrdersController">
+<VBox fx:controller="io.bitsquare.gui.orders.OrdersController" spacing="10" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
+      AnchorPane.topAnchor="0" xmlns="http://javafx.com/javafx/8"
+      xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <Label id="headline-label" text="Open trades">
             <VBox.margin>
@@ -13,7 +14,7 @@
             </VBox.margin>
         </Label>
 
-        <TableView fx:id="openTradesTable" id="orderbook-table" prefHeight="150.0">
+        <TableView id="orderbook-table" fx:id="openTradesTable" prefHeight="150.0">
             <columns>
                 <TableColumn fx:id="amountColumn" minWidth="120" text="Amount (Min.)">
                     <cellValueFactory>
@@ -56,12 +57,11 @@
         <GridPane hgap="5.0" vgap="5.0">
             <children>
                 <!-- row 0 -->
-                <Label id="headline-label" text="Deposit transaction" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.halignment="LEFT"
-                       GridPane.rowIndex="0"/>
+                <Label id="headline-label" text="Deposit transaction" GridPane.columnSpan="2" GridPane.halignment="LEFT"/>
 
                 <!-- row 1 -->
-                <Label text="Transaction ID:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                <TextField fx:id="txIDTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                <Label text="Transaction ID:" GridPane.rowIndex="1"/>
+                <TextField fx:id="txTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
                 <Label id="copy-icon" fx:id="txIDCopyIcon" minWidth="10" GridPane.columnIndex="2" GridPane.rowIndex="1">
                     <padding>
                         <Insets bottom="0.0" left="0.0" right="0.0" top="-1.0"/>
@@ -70,12 +70,17 @@
                         <Tooltip text="Copy address to clipboard"/>
                     </tooltip>
                 </Label>
-                <ProgressIndicator fx:id="progressIndicator" prefHeight="20" prefWidth="20" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
-                <Label fx:id="confidenceLabel" text="Checking confirmations..." GridPane.columnIndex="4" GridPane.rowIndex="1"/>
+                <ProgressIndicator id="confidence-progress-indicator" fx:id="progressIndicator" visible="false" GridPane.columnIndex="3" GridPane.halignment="LEFT" GridPane.rowIndex="1"
+                                   GridPane.rowSpan="2" GridPane.valignment="TOP">
+                    <GridPane.margin>
+                        <Insets top="2.0"/>
+                    </GridPane.margin>
+                </ProgressIndicator>
+                <Label fx:id="confirmationLabel" visible="false" GridPane.columnIndex="4" GridPane.rowIndex="1"/>
+
 
                 <!-- row 2 -->
-                <Label id="headline-label" text="Bank details" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.halignment="LEFT"
-                       GridPane.rowIndex="2"/>
+                <Label id="headline-label" text="Bank details" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.halignment="LEFT" GridPane.rowIndex="2"/>
 
                 <!-- row 3 -->
                 <Label text="Bank account type:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
@@ -118,16 +123,15 @@
                 </Label>
 
                 <!-- row 7 -->
-                <Button fx:id="bankTransferInitedButton" defaultButton="true" opacity="0.5" onAction="#bankTransferInited" text="Bank transfer inited"
-                        GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+                <Button fx:id="bankTransferInitedButton" defaultButton="true" onAction="#bankTransferInited" disable="true" text="Bank transfer inited" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
 
             </children>
             <columnConstraints>
                 <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>
-                <ColumnConstraints hgrow="ALWAYS" minWidth="400"/>
-                <ColumnConstraints fillWidth="false" halignment="LEFT" hgrow="NEVER"/>
-                <ColumnConstraints fillWidth="false" halignment="LEFT" hgrow="SOMETIMES"/>
-                <ColumnConstraints fillWidth="false" halignment="LEFT" hgrow="SOMETIMES"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+                <ColumnConstraints fillWidth="false" hgrow="SOMETIMES" minWidth="20"/>
+                <ColumnConstraints fillWidth="false" hgrow="SOMETIMES" minWidth="20" prefWidth="20"/>
+                <ColumnConstraints fillWidth="false" hgrow="SOMETIMES"/>
             </columnConstraints>
             <rowConstraints>
                 <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>

@@ -17,7 +17,7 @@ public class Storage
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
 
     //TODO save in users preferences location
-    private final String preferencesFileName = "pref_" + BitSquare.ID + ".ser";
+    private final String preferencesFileName = BitSquare.ID + "_pref" + ".ser";
     private final String storageFile;
     private Map<String, Object> dict;
 

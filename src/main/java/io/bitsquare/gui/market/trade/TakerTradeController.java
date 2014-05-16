@@ -1,5 +1,7 @@
 package io.bitsquare.gui.market.trade;
 
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.Utils;
 import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.BtcFormatter;
@@ -14,6 +16,7 @@ import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.gui.util.Popups;
 import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.TradeMessage;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
@@ -37,7 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class TakerTradeController implements Initializable, ChildController, WalletFacade.WalletListener
+public class TakerTradeController implements Initializable, ChildController
 {
     private static final Logger log = LoggerFactory.getLogger(TakerTradeController.class);
 
@@ -114,7 +117,6 @@ public class TakerTradeController implements Initializable, ChildController, Wal
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        walletFacade.addRegistrationWalletListener(this);
     }
 
 
@@ -136,26 +138,8 @@ public class TakerTradeController implements Initializable, ChildController, Wal
             checkOnlineStatusTimer.stop();
             checkOnlineStatusTimer = null;
         }
-
-        walletFacade.removeRegistrationWalletListener(this);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: WalletFacade.WalletListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onConfidenceChanged(int numBroadcastPeers, int depthInBlocks)
-    {
-        //log.info("onConfidenceChanged " + numBroadcastPeers + " / " + depthInBlocks);
-    }
-
-    @Override
-    public void onCoinsReceived(BigInteger newBalance)
-    {
-        //log.info("onCoinsReceived " + newBalance);
-    }
 
     //TODO
     public void onPingPeerResult(boolean success)
@@ -187,7 +171,7 @@ public class TakerTradeController implements Initializable, ChildController, Wal
         totalLabel = FormBuilder.addTextField(gridPane, "Total (" + offer.getCurrency() + "):", Formatter.formatVolume(getVolume()), ++row);
         collateralTextField = FormBuilder.addTextField(gridPane, "Collateral (BTC):", "", ++row);
         applyCollateral();
-        FormBuilder.addTextField(gridPane, "Offer fee (BTC):", BtcFormatter.formatSatoshis(Fees.OFFER_TAKER_FEE, false), ++row);
+        FormBuilder.addTextField(gridPane, "Offer fee (BTC):", Utils.bitcoinValueToFriendlyString(Fees.OFFER_TAKER_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE)), ++row);
         totalToPayLabel = FormBuilder.addTextField(gridPane, "Total to pay (BTC):", getTotalToPay(), ++row);
 
         isOnlineTextField = FormBuilder.addTextField(gridPane, "Online status:", "Checking offerers online status...", ++row);
@@ -198,9 +182,10 @@ public class TakerTradeController implements Initializable, ChildController, Wal
         isOnlineCheckerHolder.getChildren().addAll(isOnlineChecker);
         gridPane.add(isOnlineCheckerHolder, 2, row);
 
+        //TODO
         messageFacade.pingPeer(offer.getMessagePubKeyAsHex());
-        checkOnlineStatusTimer = Utilities.setTimeout(5000, (AnimationTimer animationTimer) -> {
-            setIsOnlineStatus(false);
+        checkOnlineStatusTimer = Utilities.setTimeout(1000, (AnimationTimer animationTimer) -> {
+            setIsOnlineStatus(true);
             return null;
         });
 
@@ -321,13 +306,24 @@ public class TakerTradeController implements Initializable, ChildController, Wal
             }
 
             @Override
-            public void onBankTransferInited()
+            public void onBankTransferInited(TradeMessage tradeMessage)
             {
-                buildBankTransferInitedScreen();
+                buildBankTransferInitedScreen(tradeMessage);
+            }
+
+            @Override
+            public void onTradeCompleted(String hashAsString)
+            {
+                showSummary(hashAsString);
             }
         });
 
         takerPaymentProtocol.takeOffer();
+    }
+
+    private void updateTx(Trade trade)
+    {
+
     }
 
     private void buildDepositPublishedScreen(String depositTxID)
@@ -338,24 +334,26 @@ public class TakerTradeController implements Initializable, ChildController, Wal
         headerLabel = FormBuilder.addHeaderLabel(gridPane, "Deposit transaction published", ++row, 0);
         infoLabel = FormBuilder.addLabel(gridPane, "Status:", "Deposit transaction published by offerer.\nAs soon as the offerer starts the \nBank transfer, you will get informed.", ++row);
         FormBuilder.addTextField(gridPane, "Transaction ID:", depositTxID, ++row, false, true);
+
+        // todo need to load that tx from blockchain, or listen to blockchain
+        //   confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, transaction, progressIndicator);
     }
 
-    private void buildBankTransferInitedScreen()
+    private void buildBankTransferInitedScreen(TradeMessage tradeMessage)
     {
         processStepBar.next();
 
         headerLabel.setText("Bank transfer inited");
         infoLabel.setText("Check your bank account and continue \nwhen you have received the money.");
-        log.info("#### grid " + gridPane.getChildren().size());
         gridPane.add(nextButton, 1, ++row);
         nextButton.setText("I have received the money at my bank");
-        nextButton.setOnAction(e -> releaseBTC());
+        nextButton.setOnAction(e -> releaseBTC(tradeMessage));
     }
 
-    private void releaseBTC()
+    private void releaseBTC(TradeMessage tradeMessage)
     {
         processStepBar.next();
-        trading.releaseBTC(trade);
+        trading.releaseBTC(trade.getUid(), tradeMessage);
 
         nextButton.setText("Close");
         nextButton.setOnAction(e -> close());
@@ -379,10 +377,14 @@ public class TakerTradeController implements Initializable, ChildController, Wal
         gridPane.add(nextButton, 1, ++row);
     }
 
+    private void showSummary(String hashAsString)
+    {
+        gridPane.getChildren().clear();
+
+    }
+
     private void close()
     {
-        walletFacade.removeRegistrationWalletListener(this);
-
         TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
 
@@ -431,11 +433,11 @@ public class TakerTradeController implements Initializable, ChildController, Wal
     {
         if (takerIsSelling())
         {
-            return BtcFormatter.formatSatoshis(getAmountInSatoshis().add(Fees.OFFER_TAKER_FEE).add(getCollateralInSatoshis()), false);
+            return BtcFormatter.formatSatoshis(getAmountInSatoshis().add(Fees.OFFER_TAKER_FEE).add(Transaction.MIN_NONDUST_OUTPUT).add(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE).add(getCollateralInSatoshis()), false);
         }
         else
         {
-            return BtcFormatter.formatSatoshis(Fees.OFFER_TAKER_FEE.add(getCollateralInSatoshis()), false) + "\n" +
+            return BtcFormatter.formatSatoshis(Fees.OFFER_TAKER_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE).add(getCollateralInSatoshis()), false) + "\n" +
                     Formatter.formatVolume(getVolume(), offer.getCurrency());
         }
     }

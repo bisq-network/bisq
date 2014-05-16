@@ -25,7 +25,7 @@ public class DSAKeyUtil
 
     public static KeyPair getKeyPair(String keyName)
     {
-        return getKeyPair("public_" + keyName + ".key", "private_" + keyName + ".key");
+        return getKeyPair(keyName + "_public" + ".key", keyName + "_private" + ".key");
     }
 
 

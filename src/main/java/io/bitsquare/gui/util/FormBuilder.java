@@ -1,12 +1,12 @@
 package io.bitsquare.gui.util;
 
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.components.VSpacer;
 import javafx.collections.FXCollections;
-import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
 import java.util.Currency;
@@ -103,12 +103,12 @@ public class FormBuilder
     }   */
 
 
-    public static TextField addConfirmationsLabel(GridPane gridPane, WalletFacade walletFacade, int row)
+   /* public static TextField addConfirmationsLabel(GridPane gridPane, WalletFacade walletFacade, int row)
     {
         return FormBuilder.addTextField(gridPane, "Confirmations:", getConfirmationText(walletFacade), row);
-    }
+    } */
 
-    public static ProgressIndicator addConfirmationsSpinner(GridPane gridPane, WalletFacade walletFacade, int row)
+   /* public static ProgressIndicator addConfirmationsSpinner(GridPane gridPane, WalletFacade walletFacade, int row)
     {
         ProgressIndicator progressIndicator = new ProgressIndicator();
         gridPane.add(progressIndicator, 3, row);
@@ -143,7 +143,7 @@ public class FormBuilder
         int numBroadcastPeers = walletFacade.getRegConfNumBroadcastPeers();
         int depthInBlocks = walletFacade.getRegConfDepthInBlocks();
         return depthInBlocks + " confirmation(s) / " + "Seen by " + numBroadcastPeers + " peer(s)";
-    }
+    }  */
 
 
 }

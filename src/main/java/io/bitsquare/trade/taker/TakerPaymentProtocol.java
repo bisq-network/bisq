@@ -3,6 +3,7 @@ package io.bitsquare.trade.taker;
 import com.google.bitcoin.core.AddressFormatException;
 import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.Utils;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BlockChainFacade;
@@ -43,8 +44,7 @@ public class TakerPaymentProtocol
     private CryptoFacade cryptoFacade;
     private User user;
     private PeerAddress peerAddress;
-    private boolean isTakeOfferRequested;
-    private int numberOfSteps = 6;//TODO
+    private int numberOfSteps = 15;//TODO
     private int currentStep = 0;
 
 
@@ -217,7 +217,7 @@ public class TakerPaymentProtocol
         {
             // Pay the offer fee
             takerPaymentProtocolListener.onProgress(getProgress());
-            walletFacade.payFee(Fees.OFFER_TAKER_FEE, callback);
+            walletFacade.payOfferFee(Fees.OFFER_TAKER_FEE, callback);
         } catch (InsufficientMoneyException e)
         {
             takerPaymentProtocolListener.onProgress(getProgress());
@@ -341,7 +341,7 @@ public class TakerPaymentProtocol
 
         log.debug("2.9 contract created: " + contract.toString());
         String contractAsJson = Utilities.objectToJson(contract);
-        String signature = cryptoFacade.signContract(walletFacade.getAccountRegistrationKey(), contractAsJson);
+        String signature = cryptoFacade.signContract(walletFacade.getRegistrationKey(), contractAsJson);
 
         //log.debug("2.9 contractAsJson: " + contractAsJson);
         log.debug("2.9 contract signature: " + signature);
@@ -363,14 +363,17 @@ public class TakerPaymentProtocol
         log.debug("2.10 payDeposit");
 
         BigInteger collateralAmount = trade.getTradeAmount().multiply(BigInteger.valueOf(offer.getCollateral())).divide(BigInteger.valueOf(100));
-        BigInteger takerAmount = trade.getTradeAmount().add(collateralAmount);
-        BigInteger msOutputAmount = trade.getTradeAmount().add(collateralAmount).add(collateralAmount);
+        BigInteger takerInputAmount = trade.getTradeAmount().add(collateralAmount);
+
+        // trade + 2 x coll + 1 x btc network fee
+        BigInteger msOutputAmount = trade.getTradeAmount().add(collateralAmount).add(collateralAmount).add(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
+
         String offererPubKey = requestTradeMessage.getOffererPubKey();
         String takerPubKey = walletFacade.getMultiSigPubKeyAsHex();
         String arbitratorPubKey = offer.getArbitrator().getPubKey();
         String preparedOffererDepositTxAsHex = requestTradeMessage.getPreparedOffererDepositTxAsHex();
 
-        checkNotNull(takerAmount);
+        checkNotNull(takerInputAmount);
         checkNotNull(msOutputAmount);
         checkNotNull(offererPubKey);
         checkNotNull(takerPubKey);
@@ -378,15 +381,15 @@ public class TakerPaymentProtocol
         checkNotNull(preparedOffererDepositTxAsHex);
 
         log.debug("2.10 offererCreatesMSTxAndAddPayment");
-        log.debug("takerAmount     " + takerAmount);
-        log.debug("msOutputAmount     " + msOutputAmount);
+        log.debug("takerAmount     " + Utils.bitcoinValueToFriendlyString(takerInputAmount));
+        log.debug("msOutputAmount     " + Utils.bitcoinValueToFriendlyString(msOutputAmount));
         log.debug("offerer pubkey    " + offererPubKey);
         log.debug("taker pubkey      " + takerPubKey);
         log.debug("arbitrator pubkey " + arbitratorPubKey);
         log.debug("preparedOffererDepositTxAsHex " + preparedOffererDepositTxAsHex);
         try
         {
-            Transaction signedTakerDepositTx = walletFacade.takerAddPaymentAndSign(takerAmount, msOutputAmount, offererPubKey, takerPubKey, arbitratorPubKey, preparedOffererDepositTxAsHex);
+            Transaction signedTakerDepositTx = walletFacade.takerAddPaymentAndSign(takerInputAmount, msOutputAmount, offererPubKey, takerPubKey, arbitratorPubKey, preparedOffererDepositTxAsHex);
             log.debug("2.10 deposit tx created: " + signedTakerDepositTx);
             sendSignedTakerDepositTxAsHex(signedTakerDepositTx);
         } catch (InterruptedException | AddressFormatException | ExecutionException | InsufficientMoneyException e)
@@ -433,9 +436,12 @@ public class TakerPaymentProtocol
         String signedTakerDepositTxAsHex = com.google.bitcoin.core.Utils.bytesToHexString(signedTakerDepositTx.bitcoinSerialize());
         String txScriptSigAsHex = com.google.bitcoin.core.Utils.bytesToHexString(signedTakerDepositTx.getInput(1).getScriptBytes());
         String txConnOutAsHex = com.google.bitcoin.core.Utils.bytesToHexString(signedTakerDepositTx.getInput(1).getConnectedOutput().getParentTransaction().bitcoinSerialize());
+        //TODO just 1 address supported yet
+        String payoutAddress = walletFacade.getAddressAsString();
         log.debug("2.10 deposit txAsHex: " + signedTakerDepositTxAsHex);
         log.debug("2.10 txScriptSigAsHex: " + txScriptSigAsHex);
         log.debug("2.10 txConnOutAsHex: " + txConnOutAsHex);
+        log.debug("2.10 payoutAddress: " + payoutAddress);
 
         TradeMessage tradeMessage = new TradeMessage(TradeMessageType.REQUEST_OFFERER_DEPOSIT_PUBLICATION,
                 trade.getUid(),
@@ -446,7 +452,8 @@ public class TakerPaymentProtocol
                 txScriptSigAsHex,
                 txConnOutAsHex,
                 contractAsJson,
-                signature);
+                signature,
+                payoutAddress);
 
         log.debug("2.11 sendTradingMessage");
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
@@ -466,6 +473,9 @@ public class TakerPaymentProtocol
     {
         log.debug("3.6 DepositTxID received: " + tradeMessage.getDepositTxID());
 
+        //Transaction tx =  walletFacade.getWallet().getTransaction(new Sha256Hash(tradeMessage.getDepositTxID()));
+        //walletFacade.getWallet().commitTx(tx);
+
         takerPaymentProtocolListener.onProgress(getProgress());
         takerPaymentProtocolListener.onDepositTxPublished(tradeMessage.getDepositTxID());
     }
@@ -480,18 +490,101 @@ public class TakerPaymentProtocol
     // Step 3.11  Incoming msg from offerer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onBankTransferInited()
+    public void onBankTransferInited(TradeMessage tradeMessage)
     {
         log.debug("3.11 Bank transfer inited msg received");
-        log.debug("########## LAST STEP TAKER FOR FIRST PART");
-
-        takerPaymentProtocolListener.onBankTransferInited();
+        takerPaymentProtocolListener.onBankTransferInited(tradeMessage);
     }
 
     //************************************************************************************************
     // Taker will check periodically his bank account until he received the money. That might take a while...
     //************************************************************************************************
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Step 3.12  User clicked the "bank transfer received" button, so we release the funds for pay out
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void releaseBTC(TradeMessage tradeMessage)
+    {
+        log.debug("3.12 releaseBTC");
+        FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
+        {
+            @Override
+            public void onSuccess(Transaction transaction)
+            {
+                System.out.println("######### 3.12 onSuccess walletFacade.takerSignAndSendTx " + transaction.toString());
+                log.error("3.12 onSuccess walletFacade.takerSignAndSendTx " + transaction.toString());
+                takerPaymentProtocolListener.onTradeCompleted(transaction.getHashAsString());
+
+                sendPayoutTxToOfferer(transaction.getHashAsString());
+            }
+
+            @Override
+            public void onFailure(Throwable t)
+            {
+                log.error("######### 3.12 onFailure walletFacade.takerSignAndSendTx");
+                System.err.println("3.12 onFailure walletFacade.takerSignAndSendTx");
+                takerPaymentProtocolListener.onFailure("takerSignAndSendTx failed " + t.getMessage());
+            }
+        };
+        try
+        {
+            String depositTxID = tradeMessage.getDepositTxID();
+            String offererSignatureR = tradeMessage.getOffererSignatureR();
+            String offererSignatureS = tradeMessage.getOffererSignatureS();
+            BigInteger offererPaybackAmount = tradeMessage.getOffererPaybackAmount();
+            BigInteger takerPaybackAmount = tradeMessage.getTakerPaybackAmount();
+            String offererPayoutAddress = tradeMessage.getOffererPayoutAddress();
+
+            log.debug("3.12  walletFacade.takerSignAndSendTx");
+            walletFacade.takerSignAndSendTx(depositTxID,
+                    offererSignatureR,
+                    offererSignatureS,
+                    offererPaybackAmount,
+                    takerPaybackAmount,
+                    offererPayoutAddress,
+                    callback);
+        } catch (InsufficientMoneyException e)
+        {
+            log.error("3.12 offererCreateAndSignPayoutTx  onFailed InsufficientMoneyException " + e.getMessage());
+        } catch (AddressFormatException e)
+        {
+            log.error("3.12 offererCreateAndSignPayoutTx  onFailed AddressFormatException " + e.getMessage());
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Step 3.13  Send payout txID to offerer
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void sendPayoutTxToOfferer(String txId)
+    {
+        log.debug("3.13 sendPayoutTxToOfferer ");
+        TradeMessageListener listener = new TradeMessageListener()
+        {
+            @Override
+            public void onResult()
+            {
+                log.debug("3.13 sendPayoutTxToOfferer PAYOUT_TX_PUBLISHED onResult");
+                log.debug("3.13  TRADE COMPLETE!!!!!!!!!!!");
+                takerPaymentProtocolListener.onProgress(getProgress());
+            }
+
+            @Override
+            public void onFailed()
+            {
+                log.debug("3.13 sendPayoutTxToOfferer PAYOUT_TX_PUBLISHED onFailed");
+                takerPaymentProtocolListener.onFailure("sendPayoutTxToOfferer PAYOUT_TX_PUBLISHED onFailed");
+            }
+        };
+
+        TradeMessage tradeMessage = new TradeMessage(TradeMessageType.PAYOUT_TX_PUBLISHED, trade.getUid());
+        tradeMessage.setPayoutTxID(txId);
+
+        log.debug("3.13 sendTradeMessage PAYOUT_TX_PUBLISHED");
+        messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
+    }
 
     private double getProgress()
     {

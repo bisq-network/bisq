@@ -18,6 +18,8 @@ import io.bitsquare.trade.offerer.OffererPaymentProtocolListener;
 import io.bitsquare.trade.taker.TakerPaymentProtocol;
 import io.bitsquare.trade.taker.TakerPaymentProtocolListener;
 import io.bitsquare.user.User;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +38,6 @@ public class Trading
     private Map<String, Offer> myOffers = new HashMap<>();
     private Map<String, Trade> trades = new HashMap<>();
     private final Map<String, TakerPaymentProtocol> takerPaymentProtocols = new HashMap<>();
-
-
     private final Map<String, OffererPaymentProtocol> offererPaymentProtocols = new HashMap<>();
     private final String storageKey;
     private User user;
@@ -47,6 +47,7 @@ public class Trading
     private WalletFacade walletFacade;
     private CryptoFacade cryptoFacade;
     private Settings settings;
+    private final StringProperty newTradeProperty = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -101,8 +102,9 @@ public class Trading
             throw new IllegalStateException("offers contains already a offer with the ID " + offer.getUid());
 
         myOffers.put(offer.getUid(), offer);
-        storage.write(storageKey + ".offers", myOffers);
-        walletFacade.payFee(Fees.OFFER_CREATION_FEE, callback);
+        //TODO for testing
+        //storage.write(storageKey + ".offers", myOffers);
+        walletFacade.payOfferFee(Fees.OFFER_CREATION_FEE, callback);
     }
 
     public void removeOffer(Offer offer) throws IOException
@@ -113,12 +115,16 @@ public class Trading
 
     public Trade createTrade(Offer offer)
     {
-       /* if (trades.containsKey(offer.getUid()))
-            throw new IllegalStateException("trades contains already a trade with the ID " + offer.getUid());  */
+        if (trades.containsKey(offer.getUid()))
+            throw new IllegalStateException("trades contains already a trade with the ID " + offer.getUid());
 
         Trade trade = new Trade(offer);
         trades.put(offer.getUid(), trade);
-        storage.write(storageKey + ".trades", trades);
+        //TODO for testing
+        //storage.write(storageKey + ".trades", trades);
+
+        this.newTradeProperty.set(trade.getUid());
+
         return trade;
     }
 
@@ -126,6 +132,11 @@ public class Trading
     {
         trades.remove(trade.getUid());
         storage.write(storageKey + ".trades", trades);
+    }
+
+    public final StringProperty getNewTradeProperty()
+    {
+        return this.newTradeProperty;
     }
 
     public TakerPaymentProtocol addTakerPaymentProtocol(Trade trade, TakerPaymentProtocolListener listener)
@@ -173,6 +184,12 @@ public class Trading
             }
 
             @Override
+            public void onPayoutTxPublished(String payoutTxID)
+            {
+                log.debug("trading onPayoutTxPublished");
+            }
+
+            @Override
             public void onDepositTxConfirmedInBlockchain()
             {
                 log.debug("trading onDepositTxConfirmedInBlockchain");
@@ -198,14 +215,9 @@ public class Trading
 
 
     // 6
-    public void releaseBTC(Trade trade)
+    public void releaseBTC(String tradeUID, TradeMessage tradeMessage)
     {
-        log.info("Sign payment tx");
-
-        log.info("Broadcast payment tx");
-
-        log.info("Send message to peer that payment Tx has been broadcasted.");
-        // messageFacade.send(new Message(Message.REQUEST_OFFER_FEE_PAYMENT_CONFIRM, trade), trade.getOffer().getOfferer().getMessageID());
+        takerPaymentProtocols.get(tradeUID).releaseBTC(tradeMessage);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

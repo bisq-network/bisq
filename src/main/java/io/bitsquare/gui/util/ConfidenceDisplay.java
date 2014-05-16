@@ -50,12 +50,14 @@ public class ConfidenceDisplay
             public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
             {
                 updateBalance(newBalance);
+                // log.debug("onCoinsReceived  " + newBalance);
             }
 
             @Override
             public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
             {
                 updateConfidence(tx);
+                // log.debug("onTransactionConfidenceChanged tx " + tx.getHashAsString());
             }
 
             @Override
@@ -111,12 +113,14 @@ public class ConfidenceDisplay
             public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
             {
                 updateBalance(newBalance);
+                // log.debug("onCoinsReceived " + newBalance);
             }
 
             @Override
             public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
             {
                 updateConfidence(newTransaction);
+                // log.debug("onTransactionConfidenceChanged newTransaction " + newTransaction.getHashAsString());
             }
 
             @Override

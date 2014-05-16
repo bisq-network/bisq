@@ -182,6 +182,7 @@ public class MessageFacade
     {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         Number160 contentKey = Number160.createHash(offer.getUid());
+        log.debug("removeOffer");
         FutureDHT removeFuture = myPeer.remove(locationKey).setReturnResults().setContentKey(contentKey).start();
         removeFuture.addListener(new BaseFutureAdapter<BaseFuture>()
         {
@@ -196,6 +197,7 @@ public class MessageFacade
 
     private void onOfferRemoved(Data data, boolean success, Number160 locationKey)
     {
+        log.debug("onOfferRemoved");
         setDirty(locationKey);
 
         for (OrderBookListener orderBookListener : orderBookListeners)
@@ -456,7 +458,11 @@ public class MessageFacade
                 break;
             case BANK_TX_INITED:
                 for (TakerPaymentProtocol takeOfferTradeListener : takerPaymentProtocols)
-                    takeOfferTradeListener.onBankTransferInited();
+                    takeOfferTradeListener.onBankTransferInited(tradeMessage);
+                break;
+            case PAYOUT_TX_PUBLISHED:
+                for (OffererPaymentProtocol offererPaymentProtocol : offererPaymentProtocols)
+                    offererPaymentProtocol.onPayoutTxPublished(tradeMessage);
                 break;
 
             default:
@@ -638,7 +644,7 @@ public class MessageFacade
     private void setupStorage() throws IOException
     {
         //TODO BitSquare.ID just temp...
-        String dirPath = Utilities.getRootDir() + "tomP2P_" + BitSquare.ID;
+        String dirPath = Utilities.getRootDir() + BitSquare.ID + "_tomP2P";
         File dirFile = new File(dirPath);
         boolean success = true;
         if (!dirFile.exists())

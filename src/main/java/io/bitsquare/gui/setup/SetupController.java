@@ -214,10 +214,10 @@ public class SetupController implements Initializable, ChildController
             clipboard.setContent(content);
         });
 
-        confidenceDisplay = new ConfidenceDisplay(walletFacade.getAccountRegistrationWallet(), confirmationLabel, balanceTextField, progressIndicator);
+        confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, balanceTextField, progressIndicator);
         paymentDoneButton.setDisable(walletFacade.getAccountRegistrationBalance().compareTo(BigInteger.ZERO) == 0);
-
-        walletFacade.getAccountRegistrationWallet().addEventListener(new WalletEventListener()
+        log.debug("getAccountRegistrationBalance " + walletFacade.getAccountRegistrationBalance().toString());
+        walletFacade.getWallet().addEventListener(new WalletEventListener()
         {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
@@ -336,13 +336,13 @@ public class SetupController implements Initializable, ChildController
         accountSecondaryID.textProperty().addListener((ov, oldValue, newValue) -> checkCreateAccountButtonState());
 
         //todo
-        bankAccountTypesComboBox.getSelectionModel().select(0);
+      /*  bankAccountTypesComboBox.getSelectionModel().select(0);
         currencyComboBox.getSelectionModel().select(0);
         countryComboBox.getSelectionModel().select(0);
-        accountHolderName.setText("dummy accountHolderName");
-        accountTitle.setText("dummy accountTitle");
-        accountPrimaryID.setText("dummy accountPrimaryID");
-        accountSecondaryID.setText("dummy accountSecondaryID");
+        accountTitle.setText("Sepa EUR Account");
+        accountHolderName.setText("Alice");
+        accountPrimaryID.setText("123456");
+        accountSecondaryID.setText("7896541");   */
     }
 
     private void setupSettingsScreen()

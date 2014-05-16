@@ -305,7 +305,6 @@ public class MainController implements Initializable, NavigationController, Wall
     {
         balanceTextField = new TextField();
         balanceTextField.setEditable(false);
-        balanceTextField.setMouseTransparent(true);
         balanceTextField.setPrefWidth(90);
         balanceTextField.setId("nav-balance-label");
 

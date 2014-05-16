@@ -13,4 +13,6 @@ public interface OffererPaymentProtocolListener
     void onDepositTxConfirmedInBlockchain();
 
     void onDepositTxConfirmedUpdate(TransactionConfidence confidence);
+
+    void onPayoutTxPublished(String payoutTxID);
 }

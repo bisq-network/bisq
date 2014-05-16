@@ -15,7 +15,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import io.bitsquare.BitSquare;
 import io.bitsquare.crypto.CryptoFacade;
-import io.bitsquare.gui.util.Popups;
 import javafx.application.Platform;
 import javafx.util.Pair;
 import org.slf4j.Logger;
@@ -26,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
 
 /**
  * That facade delivers wallet functionality from the bitcoinJ library
@@ -51,13 +52,15 @@ public class WalletFacade implements WalletEventListener
     private CryptoFacade cryptoFacade;
 
     // that wallet is used only for the registration process
-    private AccountRegistrationWallet accountRegistrationWallet = null;
+    //private AccountRegistrationWallet accountRegistrationWallet = null;
 
     private List<DownloadListener> downloadListeners = new ArrayList<>();
     private List<WalletListener> walletListeners = new ArrayList<>();
 
 
     private Wallet wallet;
+    private ECKey registrationKey;
+    private ECKey tradingKey;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -98,20 +101,27 @@ public class WalletFacade implements WalletEventListener
             walletAppKit.setCheckpoints(getClass().getResourceAsStream("/wallet/checkpoints"));
         }
 
+        walletAppKit.setAutoSave(true);
+
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
-        walletAppKit.setDownloadListener(new BlockChainDownloadListener())
-                .setBlockingStartup(false)
-                .setUserAgent("BitSquare", "0.1");
+        walletAppKit.setDownloadListener(new BlockChainDownloadListener()).setBlockingStartup(false).setUserAgent("BitSquare", "0.1");
         walletAppKit.startAsync();
         walletAppKit.awaitRunning();
 
         wallet = walletAppKit.wallet();
 
+        registrationKey = wallet.getKeys().get(0);
+        tradingKey = new ECKey();
+        wallet.addKey(tradingKey);
+
+        log.info("getConnectedPeers " + walletAppKit.peerGroup().getConnectedPeers().size());
         wallet.allowSpendingUnconfirmedTransactions();
-        walletAppKit.peerGroup().setMaxConnections(20);
+        // walletAppKit.peerGroup().setMaxConnections(10);
+        walletAppKit.peerGroup().setMinBroadcastConnections(1);
 
         wallet.addEventListener(this);
+        wallet.addWatchedAddress(tradingKey.toAddress(params));
 
         // testTradeProcessDepositTx();
         // testTradeProcessPayOutTx();
@@ -119,10 +129,15 @@ public class WalletFacade implements WalletEventListener
 
     public void shutDown()
     {
-        if (accountRegistrationWallet != null)
-            accountRegistrationWallet.shutDown();
+        /*if (accountRegistrationWallet != null)
+            accountRegistrationWallet.shutDown();     */
         walletAppKit.stopAsync();
         walletAppKit.awaitTerminated();
+    }
+
+    public void updateWallet()
+    {
+
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +154,7 @@ public class WalletFacade implements WalletEventListener
         downloadListeners.remove(listener);
     }
 
-    public void addWalletListener(WalletListener listener)
+   /* public void addWalletListener(WalletListener listener)
     {
         walletListeners.add(listener);
     }
@@ -157,7 +172,7 @@ public class WalletFacade implements WalletEventListener
     public void removeRegistrationWalletListener(WalletListener listener)
     {
         getAccountRegistrationWallet().removeWalletListener(listener);
-    }
+    } */
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -171,10 +186,10 @@ public class WalletFacade implements WalletEventListener
 
     public String getAddressAsString()
     {
-        return wallet.getKeys().get(0).toAddress(params).toString();
+        return tradingKey.toAddress(params).toString();
     }
 
-    public String payFee(BigInteger fee, FutureCallback<Transaction> callback) throws InsufficientMoneyException
+    public String payOfferFee(BigInteger fee, FutureCallback<Transaction> callback) throws InsufficientMoneyException
     {
         Transaction tx = new Transaction(params);
         //TransactionOutput output = new TransactionOutput(params, tx, Transaction.MIN_NONDUST_OUTPUT, WalletUtil.getEmptyOP_RETURNScript());
@@ -206,36 +221,84 @@ public class WalletFacade implements WalletEventListener
     // Account registration
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+
     public Address getAccountRegistrationAddress()
     {
-        return getAccountRegistrationWallet().getAddress();
+        return registrationKey.toAddress(params);
     }
 
-    public String getAccountRegistrationPubKey()
+   /* public String getAccountRegistrationPubKey()
     {
         return Utils.bytesToHexString(getAccountRegistrationKey().getPubKey());
-    }
+    } */
 
     public BigInteger getAccountRegistrationBalance()
     {
-        return getAccountRegistrationWallet().getBalance(Wallet.BalanceType.ESTIMATED);
+        return wallet.getBalance(Wallet.BalanceType.ESTIMATED);
+        // return getAccountRegistrationWallet().getBalance(Wallet.BalanceType.ESTIMATED);
     }
 
     public void sendRegistrationTx(String stringifiedBankAccounts) throws InsufficientMoneyException
     {
-        getAccountRegistrationWallet().saveToBlockchain(cryptoFacade.getEmbeddedAccountRegistrationData(getAccountRegistrationWallet().getKey(), stringifiedBankAccounts));
+        saveToBlockchain(cryptoFacade.getEmbeddedAccountRegistrationData(registrationKey, stringifiedBankAccounts));
     }
 
-    public ECKey getAccountRegistrationKey()
+    public ECKey getRegistrationKey()
     {
-        return getAccountRegistrationWallet().getKey();
+        return registrationKey;
     }
+
+    void saveToBlockchain(byte[] dataToEmbed) throws InsufficientMoneyException
+    {
+        Script script = new ScriptBuilder()
+                .op(OP_RETURN)
+                .data(dataToEmbed)
+                .build();
+        Transaction transaction = new Transaction(params);
+        TransactionOutput dataOutput = new TransactionOutput(params,
+                transaction,
+                Transaction.MIN_NONDUST_OUTPUT,
+                script.getProgram());
+        transaction.addOutput(dataOutput);
+        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
+
+        // give fee to miners yet. Later it could be spent to other traders via lottery...
+        sendRequest.fee = Fees.ACCOUNT_REGISTRATION_FEE;
+        Wallet.SendResult sendResult = null;
+        sendResult = wallet.sendCoins(sendRequest);
+        log.info("Registration transaction: " + transaction.toString());
+        //TODO
+        Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>()
+        {
+            @Override
+            public void onSuccess(Transaction result)
+            {
+                log.info("sendResult onSuccess:" + result.toString());
+                // Platform.runLater(overlayUi::done);
+            }
+
+            @Override
+            public void onFailure(Throwable t)
+            {
+                log.warn("sendResult onFailure:" + t.toString());
+                // We died trying to empty the wallet.
+                // crashAlert(t);
+            }
+        });
+
+        //TODO
+        sendResult.tx.getConfidence().addEventListener((tx, reason) -> {
+            //if (reason == TransactionConfidence.Listener.ChangeReason.SEEN_PEERS)
+            //updateTitleForBroadcast();
+        });
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public int getRegConfNumBroadcastPeers()
+    /*public int getRegConfNumBroadcastPeers()
     {
         return getAccountRegistrationWallet().getConfNumBroadcastPeers();
     }
@@ -243,7 +306,7 @@ public class WalletFacade implements WalletEventListener
     public int getRegConfDepthInBlocks()
     {
         return WalletUtil.getConfDepthInBlocks(getAccountRegistrationWallet());
-    }
+    }   */
 
     public Wallet getWallet()
     {
@@ -306,13 +369,13 @@ public class WalletFacade implements WalletEventListener
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AccountRegistrationWallet getAccountRegistrationWallet()
+  /*  public AccountRegistrationWallet getAccountRegistrationWallet()
     {
         if (accountRegistrationWallet == null)
             accountRegistrationWallet = new AccountRegistrationWallet(params, walletAppKit.chain(), walletAppKit.peerGroup());
 
         return accountRegistrationWallet;
-    }
+    }*/
 
     private Script getMultiSigScript(String offererPubKey, String takerPubKey, String arbitratorPubKey)
     {
@@ -416,13 +479,14 @@ public class WalletFacade implements WalletEventListener
                     offererSignatureS,
                     offererPaybackAmount,
                     takerPaybackAmount,
-                    offererAddress);
+                    offererAddress, null);
 
             log.info(takerTx.toString());    // tx has 265 Bytes
 
             /*
         6606c366a487bff9e412d0b6c09c14916319932db5954bf5d8719f43f828a3ba: Unknown confidence level.
-     in   [] [30450221008ebd06e53ce1ab7b599098b3117f2073b1d224baae21190ef7839b70a638207602201485ae19965f2d954398f691aa40fecb4d08d625ae96037a4fc5eecb7a4803c301] [30440220521c485045a46fbb61c634ebf456c470f9c2f7307a743e3fce10b50f7a69115d0220249ff5f9796a9fcd12984afcfd3f7d16d2f8c49ddcef245db7c7b02b909af9a601]
+     in   [] [30450221008ebd06e53ce1ab7b599098b3117f2073b1d224baae21190ef7839b70a638207602201485ae19965f2d954398f691aa40fecb4d08d625ae96037a4fc5eecb7a4803c301]
+             [30440220521c485045a46fbb61c634ebf456c470f9c2f7307a743e3fce10b50f7a69115d0220249ff5f9796a9fcd12984afcfd3f7d16d2f8c49ddcef245db7c7b02b909af9a601]
           outpoint:4142ee4877eb116abf955a7ec6ef2dc38133b793df762b76d75e3d7d4d8badc9:0 hash160:[exception: Script not in the standard scriptPubKey form]
      out  DUP HASH160 [9fc3d8e0371b6eab89a8c3c015839f9e493ccf65] EQUALVERIFY CHECKSIG 0.0289 BTC
      out  DUP HASH160 [e5175c1f71c28218306d4a27c8cec0269dddbbde] EQUALVERIFY CHECKSIG 0.0009 BTC
@@ -439,19 +503,21 @@ public class WalletFacade implements WalletEventListener
 
     public String getMultiSigPubKeyAsHex()
     {
-        return Utils.bytesToHexString(wallet.getKeys().get(0).getPubKey());
+        return Utils.bytesToHexString(tradingKey.getPubKey());
     }
 
     // deposit 1. offerer
-    public Transaction offererCreatesMSTxAndAddPayment(BigInteger offererAmount, String offererPubKey, String takerPubKey, String arbitratorPubKey) throws InsufficientMoneyException
+    public Transaction offererCreatesMSTxAndAddPayment(BigInteger offererInputAmount, String offererPubKey, String takerPubKey, String arbitratorPubKey) throws InsufficientMoneyException
     {
+        log.debug("offererCreatesMSTxAndAddPayment");
         // use that to use the convenient api for getting the best coin selection and fee calculation
         // TODO should be constructed manually
         Transaction tx = new Transaction(params);
         Script multiSigOutputScript = getMultiSigScript(offererPubKey, takerPubKey, arbitratorPubKey);
-        tx.addOutput(offererAmount, multiSigOutputScript);
+        tx.addOutput(offererInputAmount, multiSigOutputScript);
         Wallet.SendRequest request = Wallet.SendRequest.forTx(tx);
         wallet.completeTx(request);
+
         // TODO remove sig or use SigHash.NONE
         //tx.getInput(0).setScriptSig(null);
 
@@ -460,6 +526,8 @@ public class WalletFacade implements WalletEventListener
         OUT[0] MS
         OUT[1] offerer change
          */
+
+        log.debug("offererCreatesMSTxAndAddPayment tx = " + tx.toString());
         return tx;
     }
 
@@ -472,6 +540,7 @@ public class WalletFacade implements WalletEventListener
                                               String tx1AsHex
     ) throws InsufficientMoneyException, ExecutionException, InterruptedException, AddressFormatException
     {
+        log.debug("takerAddPaymentAndSign");
         Script multiSigOutputScript = getMultiSigScript(offererPubKey, takerPubKey, arbitratorPubKey);
 
         // use that to use the convenient api for getting the best coin selection and fee calculation
@@ -484,6 +553,8 @@ public class WalletFacade implements WalletEventListener
         tx.addInput(dummyTx.getInput(0));
         tx.addOutput(dummyTx.getOutput(1));
         tx.getOutput(0).setValue(msOutputAmount);
+
+        log.debug("tx" + tx.toString());
 
         TransactionInput input = tx.getInput(1);
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
@@ -498,6 +569,7 @@ public class WalletFacade implements WalletEventListener
         else
             throw new ScriptException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
 
+        log.debug("correctlySpends?");
         input.getScriptSig().correctlySpends(tx, 1, scriptPubKey, false);
 
         /*
@@ -508,6 +580,7 @@ public class WalletFacade implements WalletEventListener
         OUT[2] taker change
          */
 
+        // wallet.commitTx(tx);
         return tx;
     }
 
@@ -555,10 +628,9 @@ public class WalletFacade implements WalletEventListener
         log.info("offererSignAndSendTx check correctlySpends input 0");
         input.getScriptSig().correctlySpends(tx, 0, scriptPubKey, false);
 
+        log.info("offererSignAndSendTx check correctlySpends input 1");
         input = tx.getInput(1);
         scriptPubKey = input.getConnectedOutput().getScriptPubKey();
-
-        log.info("offererSignAndSendTx check correctlySpends input 1");
         input.getScriptSig().correctlySpends(tx, 1, scriptPubKey, false);
 
          /*
@@ -571,15 +643,14 @@ public class WalletFacade implements WalletEventListener
         log.info("offererSignAndSendTx broadcastTransaction verify ");
         tx.verify();
 
-        log.info("offererSignAndSendTx broadcastTransaction pre ");
+        log.info("offererSignAndSendTx broadcastTransaction");
         ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(tx);
-        log.info("offererSignAndSendTx broadcastTransaction post");
-        FutureCallback<Transaction> localCallback = new FutureCallback<Transaction>()
+        /*FutureCallback<Transaction> localCallback = new FutureCallback<Transaction>()
         {
             @Override
             public void onSuccess(Transaction transaction)
             {
-                log.info("offererSignAndSendTx onSuccess" + transaction.toString());
+                log.info("offererSignAndSendTx onSuccess" + transaction.getHashAsString());
             }
 
             @Override
@@ -589,19 +660,18 @@ public class WalletFacade implements WalletEventListener
                 Popups.openErrorPopup("Fee payment failed", "Fee payment failed. " + t.toString());
             }
         };
-        Futures.addCallback(broadcastComplete, localCallback);
+        Futures.addCallback(broadcastComplete, localCallback);  */
         Futures.addCallback(broadcastComplete, callback);
 
         return tx;
     }
 
     // payout 1. offerer
-    private Pair<ECKey.ECDSASignature, Transaction> offererCreateAndSignPayoutTx(String depositTxID,
-                                                                                 BigInteger offererPaybackAmount,
-                                                                                 BigInteger takerPaybackAmount,
-                                                                                 String takerAddress) throws InsufficientMoneyException, AddressFormatException
+    public Pair<ECKey.ECDSASignature, Transaction> offererCreateAndSignPayoutTx(String depositTxID,
+                                                                                BigInteger offererPaybackAmount,
+                                                                                BigInteger takerPaybackAmount,
+                                                                                String takerAddress) throws InsufficientMoneyException, AddressFormatException
     {
-        ECKey key = wallet.getKeys().get(0);
         // offerer has published depositTx so he has it in wallet
         Transaction depositTx = wallet.getTransaction(new Sha256Hash(depositTxID));
         TransactionOutput multiSigOutput = depositTx.getOutput(0);
@@ -610,24 +680,24 @@ public class WalletFacade implements WalletEventListener
         Transaction tx = new Transaction(params);
         tx.addInput(multiSigOutput);
         //TODO fee calculation
-        tx.addOutput(offererPaybackAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE), key.toAddress(params));
+        tx.addOutput(offererPaybackAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE), tradingKey.toAddress(params));
         tx.addOutput(takerPaybackAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE), new Address(params, takerAddress));
 
         Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature signature = key.sign(sigHash);
+        ECKey.ECDSASignature signature = tradingKey.sign(sigHash);
 
         return new Pair<>(signature, depositTx);
     }
 
     // payout 2. taker
-    private Transaction takerSignAndSendTx(String depositTxAsHex,
-                                           String offererSignatureR,
-                                           String offererSignatureS,
-                                           BigInteger offererPaybackAmount,
-                                           BigInteger takerPaybackAmount,
-                                           String offererAddress) throws InsufficientMoneyException, AddressFormatException
+    public Transaction takerSignAndSendTx(String depositTxAsHex,
+                                          String offererSignatureR,
+                                          String offererSignatureS,
+                                          BigInteger offererPaybackAmount,
+                                          BigInteger takerPaybackAmount,
+                                          String offererAddress,
+                                          FutureCallback<Transaction> callback) throws InsufficientMoneyException, AddressFormatException
     {
-        ECKey key = wallet.getKeys().get(0);
 
         Transaction depositTx = new Transaction(params, Utils.parseAsHexOrBase58(depositTxAsHex));
         TransactionOutput multiSigOutput = depositTx.getOutput(0);
@@ -636,12 +706,17 @@ public class WalletFacade implements WalletEventListener
         Transaction tx = new Transaction(params);
         tx.addInput(multiSigOutput);
         //TODO fee calculation
+        if (offererPaybackAmount.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) <= 0)
+            log.error("Cannot use such low value");
+        if (takerPaybackAmount.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) <= 0)
+            log.error("Cannot use such low value");
+
         tx.addOutput(offererPaybackAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE), new Address(params, offererAddress));
-        tx.addOutput(takerPaybackAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE), key.toAddress(params));
+        tx.addOutput(takerPaybackAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE), tradingKey.toAddress(params));
 
         Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
 
-        ECKey.ECDSASignature takerSignature = key.sign(sigHash);
+        ECKey.ECDSASignature takerSignature = tradingKey.sign(sigHash);
         TransactionSignature takerTxSig = new TransactionSignature(takerSignature, Transaction.SigHash.ALL, false);
 
         ECKey.ECDSASignature offererSignature = new ECKey.ECDSASignature(new BigInteger(offererSignatureR), new BigInteger(offererSignatureS));
@@ -650,31 +725,142 @@ public class WalletFacade implements WalletEventListener
         Script inputScript = ScriptBuilder.createMultiSigInputScript(ImmutableList.of(offererTxSig, takerTxSig));
         tx.getInput(0).setScriptSig(inputScript);
 
+        log.info("verify tx");
         tx.verify();
-        tx.getInput(0).getScriptSig().correctlySpends(tx, 0, multiSigScript, false);
-        tx.getInput(0).verify(multiSigOutput);
 
+        try
+        {
+            log.info("verify correctlySpends");
+            tx.getInput(0).getScriptSig().correctlySpends(tx, 0, multiSigScript, false);
+        } catch (Exception e)
+        {
+            log.error("verify correctlySpends 0:" + e.getMessage());
+        }
+
+        try
+        {
+            log.info("verify multiSigOutput");
+            tx.getInput(0).verify(multiSigOutput);
+        } catch (Exception e)
+        {
+            log.error("verify multiSigOutput 1:" + e.getMessage());
+        }
+
+        log.info("broadcastTransaction:" + tx.toString());
+        Object t = wallet.getTransactions(true);
+        log.info("pre broadcastTransaction broadcastTransaction:" + wallet.getTransactions(true).size());
         ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(tx);
 
-        FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
+       /* final TransactionBroadcast broadcast = new TransactionBroadcast(walletAppKit.peerGroup(), tx);
+        broadcast.setMinConnections(1);
+        Futures.addCallback(broadcast.future(), new FutureCallback<Transaction>() {
+            @Override
+            public void onSuccess(Transaction transaction) {
+                // OK, now tell the wallet about the transaction. If the wallet created the transaction then
+                // it already knows and will ignore this. If it's a transaction we received from
+                // somebody else via a side channel and are now broadcasting, this will put it into the
+                // wallet now we know it's valid.
+                for (Wallet wallet : wallets) {
+                    // Assumption here is there are no dependencies of the created transaction.
+                    //
+                    // We may end up with two threads trying to do this in parallel - the wallet will
+                    // ignore whichever one loses the race.
+                    try {
+                        wallet.receivePending(transaction, null);
+                    } catch (VerificationException e) {
+                        throw new RuntimeException(e);   // Cannot fail to verify a tx we created ourselves.
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                // This can't happen with the current code, but just in case one day that changes ...
+               // runningBroadcasts.remove(broadcast);
+                throw new RuntimeException(throwable);
+            }
+        }); */
+        // Keep a reference to the TransactionBroadcast object. This is important because otherwise, the entire tree
+        // of objects we just created would become garbage if the user doens't hold on to the returned future, and
+        // eventually be collected. This in turn could result in the transaction not being committed to the wallet
+        // at all.
+        // runningBroadcasts.add(broadcast);
+        // broadcast.broadcast();
+
+
+        FutureCallback<Transaction> localCallback = new FutureCallback<Transaction>()
         {
             @Override
             public void onSuccess(Transaction transaction)
             {
+                Object t = wallet.getTransactions(true);
+                log.info("onSuccess broadcastTransaction:" + wallet.getTransactions(true).size());
+
                 log.info("sendResult onSuccess:" + transaction.toString());
+                log.info("is in wallet?" + wallet.getTransaction(transaction.getHash()).getHashAsString());
+                /*if (wallet.getTransaction(transaction.getHash()) == null)
+                    wallet.commitTx(transaction); */
+                log.info("now must be in wallet?" + wallet.getTransaction(transaction.getHash()).getHashAsString());
+                log.info("#####################  now must be in wallet?" + wallet.getTransaction(transaction.getHash()).getHashAsString());
+
             }
 
             @Override
             public void onFailure(Throwable t)
             {
                 log.warn("sendResult onFailure:" + t.toString());
-                Popups.openErrorPopup("Fee payment failed", "Fee payment failed. " + t.toString());
             }
         };
+
+        Futures.addCallback(broadcastComplete, localCallback);
         Futures.addCallback(broadcastComplete, callback);
 
         return tx;
     }
+
+
+
+
+       /*
+    public ListenableFuture<Transaction> broadcastTransaction(final Transaction tx, final int minConnections) {
+        final TransactionBroadcast broadcast = new TransactionBroadcast(walletAppKit.peerGroup(), tx);
+        broadcast.setMinConnections(1);
+        // Send the TX to the wallet once we have a successful broadcast.
+        Futures.addCallback(broadcast.future(), new FutureCallback<Transaction>() {
+            @Override
+            public void onSuccess(Transaction transaction) {
+                // OK, now tell the wallet about the transaction. If the wallet created the transaction then
+                // it already knows and will ignore this. If it's a transaction we received from
+                // somebody else via a side channel and are now broadcasting, this will put it into the
+                // wallet now we know it's valid.
+                for (Wallet wallet : wallets) {
+                    // Assumption here is there are no dependencies of the created transaction.
+                    //
+                    // We may end up with two threads trying to do this in parallel - the wallet will
+                    // ignore whichever one loses the race.
+                    try {
+                        wallet.receivePending(transaction, null);
+                    } catch (VerificationException e) {
+                        throw new RuntimeException(e);   // Cannot fail to verify a tx we created ourselves.
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                // This can't happen with the current code, but just in case one day that changes ...
+                runningBroadcasts.remove(broadcast);
+                throw new RuntimeException(throwable);
+            }
+        });
+        // Keep a reference to the TransactionBroadcast object. This is important because otherwise, the entire tree
+        // of objects we just created would become garbage if the user doens't hold on to the returned future, and
+        // eventually be collected. This in turn could result in the transaction not being committed to the wallet
+        // at all.
+        runningBroadcasts.add(broadcast);
+        broadcast.broadcast();
+        return broadcast.future();
+    }     */
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Inner classes

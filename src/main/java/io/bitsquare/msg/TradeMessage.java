@@ -18,8 +18,14 @@ public class TradeMessage implements Serializable
     private String txConnOutAsHex;
     private String contractAsJson;
     private String takerContractSignature;
+    private String takerPayoutAddress;
     private TradeMessageType type;
     private String depositTxID;
+    private String offererSignatureR;
+    private String offererSignatureS;
+    private BigInteger offererPaybackAmount;
+    private BigInteger takerPaybackAmount;
+    private String offererPayoutAddress;
     private BigInteger tradeAmount;
     private String takeOfferFeeTxID;
     private String takerMultiSigPubKey;
@@ -28,6 +34,7 @@ public class TradeMessage implements Serializable
     private String accountID;
     private String offererPubKey;
     private String preparedOffererDepositTxAsHex;
+    private String payoutTxID;
 
     public TradeMessage(TradeMessageType type, String offerUID)
     {
@@ -36,6 +43,7 @@ public class TradeMessage implements Serializable
 
         uid = UUID.randomUUID().toString();
     }
+
 
     public TradeMessage(TradeMessageType type, String offerUID, BigInteger tradeAmount, String takeOfferFeeTxID, String takerMultiSigPubKey)
     {
@@ -68,7 +76,8 @@ public class TradeMessage implements Serializable
                         String txScriptSigAsHex,
                         String txConnOutAsHex,
                         String contractAsJson,
-                        String takerContractSignature)
+                        String takerContractSignature,
+                        String takerPayoutAddress)
     {
         this.offerUID = offerUID;
         this.type = type;
@@ -80,6 +89,7 @@ public class TradeMessage implements Serializable
         this.txConnOutAsHex = txConnOutAsHex;
         this.contractAsJson = contractAsJson;
         this.takerContractSignature = takerContractSignature;
+        this.takerPayoutAddress = takerPayoutAddress;
 
         uid = UUID.randomUUID().toString();
     }
@@ -89,6 +99,28 @@ public class TradeMessage implements Serializable
         this.offerUID = offerUID;
         this.type = type;
         this.depositTxID = depositTxID;
+
+        uid = UUID.randomUUID().toString();
+    }
+
+    // 3.10
+
+    public TradeMessage(TradeMessageType type, String offerUID,
+                        String depositTxID,
+                        String offererSignatureR,
+                        String offererSignatureS,
+                        BigInteger offererPaybackAmount,
+                        BigInteger takerPaybackAmount,
+                        String offererPayoutAddress)
+    {
+        this.offerUID = offerUID;
+        this.type = type;
+        this.depositTxID = depositTxID;
+        this.offererSignatureR = offererSignatureR;
+        this.offererSignatureS = offererSignatureS;
+        this.offererPaybackAmount = offererPaybackAmount;
+        this.takerPaybackAmount = takerPaybackAmount;
+        this.offererPayoutAddress = offererPayoutAddress;
 
         uid = UUID.randomUUID().toString();
     }
@@ -178,4 +210,46 @@ public class TradeMessage implements Serializable
     {
         return offererPubKey;
     }
+
+    public String getTakerPayoutAddress()
+    {
+        return takerPayoutAddress;
+    }
+
+    public String getOffererPayoutAddress()
+    {
+        return offererPayoutAddress;
+    }
+
+    public String getOffererSignatureR()
+    {
+        return offererSignatureR;
+    }
+
+    public String getOffererSignatureS()
+    {
+        return offererSignatureS;
+    }
+
+    public BigInteger getOffererPaybackAmount()
+    {
+        return offererPaybackAmount;
+    }
+
+    public BigInteger getTakerPaybackAmount()
+    {
+        return takerPaybackAmount;
+    }
+
+    public String getPayoutTxID()
+    {
+        return payoutTxID;
+    }
+
+    public void setPayoutTxID(String payoutTxID)
+    {
+        this.payoutTxID = payoutTxID;
+    }
+
+
 }

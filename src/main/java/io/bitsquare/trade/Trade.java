@@ -11,6 +11,7 @@ public class Trade implements Serializable
     private static final long serialVersionUID = -8275323072940974077L;
 
     transient private final SimpleBooleanProperty depositTxChangedProperty = new SimpleBooleanProperty();
+    transient private final SimpleBooleanProperty contractChangedProperty = new SimpleBooleanProperty();
 
     private Offer offer;
     private String takeOfferFeeTxID;
@@ -43,6 +44,7 @@ public class Trade implements Serializable
     public void setContract(Contract contract)
     {
         this.contract = contract;
+        contractChangedProperty.set(!contractChangedProperty.get());
     }
 
     public void setContractAsJson(String contractAsJson)
@@ -110,6 +112,12 @@ public class Trade implements Serializable
     {
         return depositTxChangedProperty;
     }
+
+    public SimpleBooleanProperty getContractChangedProperty()
+    {
+        return contractChangedProperty;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // toString
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -32,6 +32,7 @@ public class NetworkSyncPane extends HBox
     public void doneDownload()
     {
         networkSyncInfoLabel.setText("Sync with network: Done");
+        networkSyncProgressBar.setProgress(1);
 
         FadeTransition fade = new FadeTransition(Duration.millis(700), this);
         fade.setToValue(0.0);

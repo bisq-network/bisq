@@ -1,9 +1,6 @@
 package io.bitsquare.trade.offerer;
 
-import com.google.bitcoin.core.InsufficientMoneyException;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.TransactionConfidence;
-import com.google.bitcoin.core.Utils;
+import com.google.bitcoin.core.*;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BlockChainFacade;
@@ -18,6 +15,7 @@ import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
+import javafx.util.Pair;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +42,11 @@ public class OffererPaymentProtocol
     private User user;
     private PeerAddress peerAddress;
     private boolean isTakeOfferRequested;
-    private int numberOfSteps = 20;//TODO
+    private int numberOfSteps = 15;//TODO
     private int currentStep = 0;
     private String preparedOffererDepositTxAsHex;
+    private Transaction depositTransaction;
+    private String takerPayoutAddress;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -118,9 +118,11 @@ public class OffererPaymentProtocol
                     isTakeOfferRequested = true;
                     try
                     {
+                        log.debug("1.3 messageFacade.removeOffer");
                         messageFacade.removeOffer(offer);
                     } catch (IOException e)
                     {
+                        log.error("1.3 messageFacade.removeOffer failed " + e.getMessage());
                         offererPaymentProtocolListener.onFailure("removeOffer failed " + e.getMessage());
                     }
 
@@ -212,7 +214,7 @@ public class OffererPaymentProtocol
 
         log.debug("2.5 createDepositTx");
 
-        BigInteger collateralAmount = trade.getTradeAmount().multiply(BigInteger.valueOf(offer.getCollateral())).divide(BigInteger.valueOf(100));
+        BigInteger offererInputAmount = trade.getTradeAmount().multiply(BigInteger.valueOf(offer.getCollateral())).divide(BigInteger.valueOf(100));
         String offererPubKey = walletFacade.getMultiSigPubKeyAsHex();
         String takerPubKey = requestTradeMessage.getTakerMultiSigPubKey();
         String arbitratorPubKey = offer.getArbitrator().getPubKey();
@@ -223,13 +225,13 @@ public class OffererPaymentProtocol
         checkNotNull(arbitratorPubKey);
 
         log.debug("2.5 offererCreatesMSTxAndAddPayment");
-        log.debug("collateralAmount     " + collateralAmount);
+        log.debug("offererInputAmount     " + Utils.bitcoinValueToFriendlyString(offererInputAmount));
         log.debug("offerer pubkey    " + offererPubKey);
         log.debug("taker pubkey      " + takerPubKey);
         log.debug("arbitrator pubkey " + arbitratorPubKey);
         try
         {
-            Transaction tx = walletFacade.offererCreatesMSTxAndAddPayment(collateralAmount, offererPubKey, takerPubKey, arbitratorPubKey);
+            Transaction tx = walletFacade.offererCreatesMSTxAndAddPayment(offererInputAmount, offererPubKey, takerPubKey, arbitratorPubKey);
             preparedOffererDepositTxAsHex = Utils.bytesToHexString(tx.bitcoinSerialize());
             log.debug("2.5 deposit tx created: " + tx);
             log.debug("2.5 deposit txAsHex: " + preparedOffererDepositTxAsHex);
@@ -237,6 +239,8 @@ public class OffererPaymentProtocol
         } catch (InsufficientMoneyException e)
         {
             log.warn("2.5 InsufficientMoneyException " + e.getMessage());
+            //110010000
+            // 20240000
         }
 
     }
@@ -298,6 +302,7 @@ public class OffererPaymentProtocol
     public void onDepositTxReadyForPublication(TradeMessage requestTradeMessage)
     {
         log.debug("3.1 onDepositTxReadyForPublication");
+        takerPayoutAddress = requestTradeMessage.getTakerPayoutAddress();
         verifyTaker(requestTradeMessage);
     }
 
@@ -350,24 +355,29 @@ public class OffererPaymentProtocol
         log.debug("3.3 contractAsJson: " + contractAsJson);
         log.debug("3.3 requestTradingMessage.getContractAsJson(): " + requestTradeMessage.getContractAsJson());
 
-        // TODO generic json creates too complex object, at least the PublicKeys need to be removed
-        boolean isEqual = contractAsJson.equals(requestTradeMessage.getContractAsJson());
-        log.debug("3.3 does json match?: " + isEqual);
+        if (contractAsJson.equals(requestTradeMessage.getContractAsJson()))
+        {
+            log.debug("3.3 The 2 contracts as json does  match");
+            String signature = cryptoFacade.signContract(walletFacade.getRegistrationKey(), contractAsJson);
+            trade.setContract(contract);
+            trade.setContractAsJson(contractAsJson);
+            trade.setContractTakerSignature(signature);
+            log.debug("3.3 signature: " + signature);
 
-       /* if (contractAsJson.equals(requestTradingMessage.getContractAsJson()))
-        { */
-        String signature = cryptoFacade.signContract(walletFacade.getAccountRegistrationKey(), contractAsJson);
-        trade.setContract(contract);
-        trade.setContractAsJson(contractAsJson);
-        trade.setContractTakerSignature(signature);
-        log.debug("3.3 signature: " + signature);
-
-        signAndPublishDepositTx(requestTradeMessage);
-       /* }
+            signAndPublishDepositTx(requestTradeMessage);
+        }
         else
         {
             log.error("3.3 verifyContract failed");
-        }  */
+            //TODO ignore that for now... fee inconsistency...
+            String signature = cryptoFacade.signContract(walletFacade.getRegistrationKey(), contractAsJson);
+            trade.setContract(contract);
+            trade.setContractAsJson(contractAsJson);
+            trade.setContractTakerSignature(signature);
+            log.debug("3.3 signature: " + signature);
+
+            signAndPublishDepositTx(requestTradeMessage);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -388,6 +398,12 @@ public class OffererPaymentProtocol
             public void onSuccess(Transaction transaction)
             {
                 log.info("3.4 signAndPublishDepositTx offererSignAndSendTx onSuccess:" + transaction.toString());
+
+                String txID = transaction.getHashAsString();
+                trade.setDepositTransaction(transaction);
+                log.debug("3.4 deposit tx published: " + transaction);
+                log.debug("3.4 deposit txID: " + txID);
+                sendDepositTxIdToTaker(transaction);
             }
 
             @Override
@@ -399,13 +415,7 @@ public class OffererPaymentProtocol
         try
         {
             log.debug("3.4 offererSignAndSendTx");
-            Transaction transaction = walletFacade.offererSignAndSendTx(preparedOffererDepositTxAsHex, signedTakerDepositTxAsHex, txConnOutAsHex, txScriptSigAsHex, callback);
-            String txID = transaction.getHashAsString();
-            trade.setDepositTransaction(transaction);
-            log.debug("3.4 deposit tx published: " + transaction);
-            log.debug("3.4 deposit txID: " + txID);
-
-            sendDepositTxIdToTaker(transaction);
+            depositTransaction = walletFacade.offererSignAndSendTx(preparedOffererDepositTxAsHex, signedTakerDepositTxAsHex, txConnOutAsHex, txScriptSigAsHex, callback);
         } catch (Exception e)
         {
             log.error("3.4 error at walletFacade.offererSignAndSendTx: " + e.getMessage());
@@ -469,20 +479,16 @@ public class OffererPaymentProtocol
             @Override
             public void onConfidenceChanged(Transaction tx, ChangeReason reason)
             {
-                log.info("onConfidenceChanged reason = " + reason);
-                log.info("onConfidenceChanged confidence = " + tx.getConfidence().toString());
                 if (reason == ChangeReason.SEEN_PEERS)
                 {
                     updateConfirmation(tx.getConfidence());
 
-                    log.debug("### confidence.numBroadcastPeers() " + tx.getConfidence().numBroadcastPeers());
-
                     //todo just for testing now, dont like to wait so long...
-                    if (tx.getConfidence().numBroadcastPeers() > 3)
+                   /* if (tx.getConfidence().numBroadcastPeers() > 3)
                     {
                         onDepositTxConfirmedInBlockchain();
                         transaction.getConfidence().removeEventListener(this);
-                    }
+                    }  */
 
                 }
                 if (reason == ChangeReason.TYPE && tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
@@ -534,8 +540,6 @@ public class OffererPaymentProtocol
             public void onResult()
             {
                 log.debug("3.10 bankTransferInited BANK_TX_INITED onResult");
-                log.debug("########## LAST STEP OFFERER FOR FIRST PART");
-
                 offererPaymentProtocolListener.onProgress(getProgress());
             }
 
@@ -546,9 +550,52 @@ public class OffererPaymentProtocol
                 offererPaymentProtocolListener.onFailure("bankTransferInited BANK_TX_INITED");
             }
         };
-        TradeMessage tradeMessage = new TradeMessage(TradeMessageType.BANK_TX_INITED, trade.getUid());
-        log.debug("3.10  sendTradingMessage BANK_TX_INITED");
-        messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
+
+
+        try
+        {
+            BigInteger collateral = trade.getTradeAmount().multiply(BigInteger.valueOf(offer.getCollateral())).divide(BigInteger.valueOf(100));
+            BigInteger offererPaybackAmount = trade.getTradeAmount().add(collateral);
+            BigInteger takerPaybackAmount = collateral;
+
+            log.debug("offererPaybackAmount " + offererPaybackAmount.toString());
+            log.debug("takerPaybackAmount " + takerPaybackAmount.toString());
+            log.debug("depositTransaction.getHashAsString() " + depositTransaction.getHashAsString());
+            log.debug("takerPayoutAddress " + takerPayoutAddress);
+            log.debug("walletFacade.offererCreateAndSignPayoutTx");
+            Pair<ECKey.ECDSASignature, Transaction> result = walletFacade.offererCreateAndSignPayoutTx(depositTransaction.getHashAsString(), offererPaybackAmount, takerPaybackAmount, takerPayoutAddress);
+
+            ECKey.ECDSASignature offererSignature = result.getKey();
+            String offererSignatureR = offererSignature.r.toString();
+            String offererSignatureS = offererSignature.s.toString();
+            Transaction depositTx = result.getValue();
+            String depositTxID = Utils.bytesToHexString(depositTx.bitcoinSerialize());
+            String offererPayoutAddress = walletFacade.getAddressAsString();
+            TradeMessage tradeMessage = new TradeMessage(TradeMessageType.BANK_TX_INITED, trade.getUid(),
+                    depositTxID,
+                    offererSignatureR,
+                    offererSignatureS,
+                    offererPaybackAmount,
+                    takerPaybackAmount,
+                    offererPayoutAddress);
+
+            log.debug("depositTxID " + depositTxID);
+            log.debug("offererSignatureR " + offererSignatureR);
+            log.debug("offererSignatureS " + offererSignatureS);
+            log.debug("offererPaybackAmount " + offererPaybackAmount.toString());
+            log.debug("takerPaybackAmount " + takerPaybackAmount.toString());
+            log.debug("offererPayoutAddress " + offererPayoutAddress);
+
+            log.debug("3.10  sendTradingMessage BANK_TX_INITED");
+            messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
+
+        } catch (InsufficientMoneyException e)
+        {
+            log.error("3.10 offererCreateAndSignPayoutTx  onFailed InsufficientMoneyException " + e.getMessage());
+        } catch (AddressFormatException e)
+        {
+            log.error("3.10 offererCreateAndSignPayoutTx  onFailed AddressFormatException " + e.getMessage());
+        }
     }
 
 
@@ -557,9 +604,29 @@ public class OffererPaymentProtocol
     //************************************************************************************************
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Step 3.14  We received the payout tx. Trade is completed
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onPayoutTxPublished(TradeMessage tradeMessage)
+    {
+        log.debug("3.14  onPayoutTxPublished");
+        log.debug("3.14  TRADE COMPLETE!!!!!!!!!!!");
+
+        walletFacade.updateWallet();
+        offererPaymentProtocolListener.onPayoutTxPublished(tradeMessage.getPayoutTxID());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Util
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private double getProgress()
     {
         currentStep++;
         return (double) currentStep / (double) numberOfSteps;
     }
+
+
 }

@@ -23,7 +23,7 @@ public class RelayNode
         {
             masterPeer = new PeerMaker(ID).setPorts(port).makeAndListen();
             // masterPeer = new PeerMaker(ID).setPorts(port).setBagSize(100).makeAndListen();     // setBagSize cause sync problems...
-            masterPeer.getBroadcastRPC().getConnectionBean().getConnectionReservation().reserve(10).awaitUninterruptibly();
+            masterPeer.getBroadcastRPC().getConnectionBean().getConnectionReservation().reserve(3).awaitUninterruptibly();
         }
         return masterPeer;
     }
