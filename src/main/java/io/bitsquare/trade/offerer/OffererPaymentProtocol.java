@@ -215,7 +215,7 @@ public class OffererPaymentProtocol
         log.debug("2.5 createDepositTx");
 
         BigInteger offererInputAmount = trade.getTradeAmount().multiply(BigInteger.valueOf(offer.getCollateral())).divide(BigInteger.valueOf(100));
-        String offererPubKey = walletFacade.getMultiSigPubKeyAsHex();
+        String offererPubKey = walletFacade.getPubKeyAsHex();
         String takerPubKey = requestTradeMessage.getTakerMultiSigPubKey();
         String arbitratorPubKey = offer.getArbitrator().getPubKey();
 
@@ -369,14 +369,6 @@ public class OffererPaymentProtocol
         else
         {
             log.error("3.3 verifyContract failed");
-            //TODO ignore that for now... fee inconsistency...
-            String signature = cryptoFacade.signContract(walletFacade.getRegistrationKey(), contractAsJson);
-            trade.setContract(contract);
-            trade.setContractAsJson(contractAsJson);
-            trade.setContractTakerSignature(signature);
-            log.debug("3.3 signature: " + signature);
-
-            signAndPublishDepositTx(requestTradeMessage);
         }
     }
 
@@ -570,7 +562,7 @@ public class OffererPaymentProtocol
             String offererSignatureS = offererSignature.s.toString();
             Transaction depositTx = result.getValue();
             String depositTxID = Utils.bytesToHexString(depositTx.bitcoinSerialize());
-            String offererPayoutAddress = walletFacade.getAddressAsString();
+            String offererPayoutAddress = walletFacade.getTradingAddress();
             TradeMessage tradeMessage = new TradeMessage(TradeMessageType.BANK_TX_INITED, trade.getUid(),
                     depositTxID,
                     offererSignatureR,
@@ -613,7 +605,6 @@ public class OffererPaymentProtocol
         log.debug("3.14  onPayoutTxPublished");
         log.debug("3.14  TRADE COMPLETE!!!!!!!!!!!");
 
-        walletFacade.updateWallet();
         offererPaymentProtocolListener.onPayoutTxPublished(tradeMessage.getPayoutTxID());
     }
 

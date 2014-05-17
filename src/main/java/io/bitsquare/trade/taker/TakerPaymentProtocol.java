@@ -264,7 +264,7 @@ public class TakerPaymentProtocol
                 trade.getUid(),
                 trade.getTradeAmount(),
                 takeOfferFeeTxID,
-                walletFacade.getMultiSigPubKeyAsHex());
+                walletFacade.getPubKeyAsHex());
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
     }
 
@@ -364,12 +364,10 @@ public class TakerPaymentProtocol
 
         BigInteger collateralAmount = trade.getTradeAmount().multiply(BigInteger.valueOf(offer.getCollateral())).divide(BigInteger.valueOf(100));
         BigInteger takerInputAmount = trade.getTradeAmount().add(collateralAmount);
-
-        // trade + 2 x coll + 1 x btc network fee
-        BigInteger msOutputAmount = trade.getTradeAmount().add(collateralAmount).add(collateralAmount).add(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
+        BigInteger msOutputAmount = trade.getTradeAmount().add(collateralAmount).add(collateralAmount);
 
         String offererPubKey = requestTradeMessage.getOffererPubKey();
-        String takerPubKey = walletFacade.getMultiSigPubKeyAsHex();
+        String takerPubKey = walletFacade.getPubKeyAsHex();
         String arbitratorPubKey = offer.getArbitrator().getPubKey();
         String preparedOffererDepositTxAsHex = requestTradeMessage.getPreparedOffererDepositTxAsHex();
 
@@ -427,7 +425,7 @@ public class TakerPaymentProtocol
 
         takerPaymentProtocolListener.onProgress(getProgress());
 
-        BankAccount bankAccount = user.getBankAccount(offer.getBankAccountUID());
+        BankAccount bankAccount = user.getCurrentBankAccount();
         String accountID = user.getAccountID();
         String messagePubKey = user.getMessagePubKeyAsHex();
         String contractAsJson = trade.getContractAsJson();
@@ -437,7 +435,7 @@ public class TakerPaymentProtocol
         String txScriptSigAsHex = com.google.bitcoin.core.Utils.bytesToHexString(signedTakerDepositTx.getInput(1).getScriptBytes());
         String txConnOutAsHex = com.google.bitcoin.core.Utils.bytesToHexString(signedTakerDepositTx.getInput(1).getConnectedOutput().getParentTransaction().bitcoinSerialize());
         //TODO just 1 address supported yet
-        String payoutAddress = walletFacade.getAddressAsString();
+        String payoutAddress = walletFacade.getTradingAddress();
         log.debug("2.10 deposit txAsHex: " + signedTakerDepositTxAsHex);
         log.debug("2.10 txScriptSigAsHex: " + txScriptSigAsHex);
         log.debug("2.10 txConnOutAsHex: " + txConnOutAsHex);

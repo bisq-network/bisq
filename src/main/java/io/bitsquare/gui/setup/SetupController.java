@@ -163,8 +163,8 @@ public class SetupController implements Initializable, ChildController
         {
             try
             {
-                walletFacade.sendRegistrationTx(user.getStringifiedBankAccounts());
-                user.setAccountID(walletFacade.getAccountRegistrationAddress().toString());
+                walletFacade.publishRegistrationTxWithExtraData(user.getStringifiedBankAccounts());
+                user.setAccountID(walletFacade.getRegistrationAddress().toString());
                 user.setMessagePubKeyAsHex(DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey()));
 
                 storage.write(user.getClass().getName(), user);
@@ -201,7 +201,7 @@ public class SetupController implements Initializable, ChildController
                 "Your trading account will be the source for your reputation in the trading platform.\n\n" +
                 "You need at least 1 confirmation for doing the registration payment.");
 
-        String registrationAddress = walletFacade.getAccountRegistrationAddress().toString();
+        String registrationAddress = walletFacade.getRegistrationAddress().toString();
         registrationAddressTextField.setText(registrationAddress);
 
         copyIcon.setId("copy-icon");
@@ -215,8 +215,8 @@ public class SetupController implements Initializable, ChildController
         });
 
         confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, balanceTextField, progressIndicator);
-        paymentDoneButton.setDisable(walletFacade.getAccountRegistrationBalance().compareTo(BigInteger.ZERO) == 0);
-        log.debug("getAccountRegistrationBalance " + walletFacade.getAccountRegistrationBalance().toString());
+        paymentDoneButton.setDisable(walletFacade.getRegistrationBalance().compareTo(BigInteger.ZERO) == 0);
+        log.debug("getAccountRegistrationBalance " + walletFacade.getRegistrationBalance().toString());
         walletFacade.getWallet().addEventListener(new WalletEventListener()
         {
             @Override
@@ -336,13 +336,13 @@ public class SetupController implements Initializable, ChildController
         accountSecondaryID.textProperty().addListener((ov, oldValue, newValue) -> checkCreateAccountButtonState());
 
         //todo
-      /*  bankAccountTypesComboBox.getSelectionModel().select(0);
+        bankAccountTypesComboBox.getSelectionModel().select(0);
         currencyComboBox.getSelectionModel().select(0);
         countryComboBox.getSelectionModel().select(0);
         accountTitle.setText("Sepa EUR Account");
         accountHolderName.setText("Alice");
         accountPrimaryID.setText("123456");
-        accountSecondaryID.setText("7896541");   */
+        accountSecondaryID.setText("7896541");
     }
 
     private void setupSettingsScreen()

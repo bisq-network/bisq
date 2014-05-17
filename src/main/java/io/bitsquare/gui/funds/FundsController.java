@@ -44,7 +44,7 @@ public class FundsController implements Initializable, ChildController
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        String tradingAccountAddress = walletFacade.getAddressAsString();
+        String tradingAccountAddress = walletFacade.getTradingAddress();
         tradingAccountTextField.setText(tradingAccountAddress);
 
         copyIcon.setId("copy-icon");
