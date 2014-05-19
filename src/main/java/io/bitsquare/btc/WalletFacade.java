@@ -91,7 +91,7 @@ public class WalletFacade
 
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
-        walletAppKit.setDownloadListener(new BlockChainDownloadListener()).setBlockingStartup(false).setUserAgent("BitSquare", "0.1");
+        walletAppKit.setDownloadListener(new BlockChainDownloadListener()).setBlockingStartup(false).setUserAgent(BitSquare.ID, "0.1");
         walletAppKit.startAsync();
         walletAppKit.awaitRunning();
 
@@ -102,11 +102,12 @@ public class WalletFacade
         wallet.addKey(tradingKey);
 
         wallet.allowSpendingUnconfirmedTransactions();
-        // walletAppKit.peerGroup().setMaxConnections(10);
-        //TODO for regtest set 1
-        walletAppKit.peerGroup().setMinBroadcastConnections(1);
+        //walletAppKit.peerGroup().setMaxConnections(11);
 
-        //wallet.addWatchedAddress(tradingKey.toAddress(params));
+        if (params == RegTestParams.get())
+            walletAppKit.peerGroup().setMinBroadcastConnections(1);
+       /* else
+            walletAppKit.peerGroup().setMinBroadcastConnections(2);  */
     }
 
     public void shutDown()
@@ -178,24 +179,27 @@ public class WalletFacade
 
     public void publishRegistrationTxWithExtraData(String stringifiedBankAccounts) throws InsufficientMoneyException
     {
+        log.debug("publishRegistrationTxWithExtraData");
+        log.trace("inputs: ");
+        log.trace("stringifiedBankAccounts " + stringifiedBankAccounts);
         byte[] dataToEmbed = cryptoFacade.getEmbeddedAccountRegistrationData(registrationKey, stringifiedBankAccounts);
         Script script = new ScriptBuilder().op(OP_RETURN).data(dataToEmbed).build();
-        Transaction transaction = new Transaction(params);
-        TransactionOutput dataOutput = new TransactionOutput(params, transaction, Transaction.MIN_NONDUST_OUTPUT, script.getProgram());
-        transaction.addOutput(dataOutput);
-        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
+        Transaction tx = new Transaction(params);
+        TransactionOutput dataOutput = new TransactionOutput(params, tx, Transaction.MIN_NONDUST_OUTPUT, script.getProgram());
+        tx.addOutput(dataOutput);
+        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
 
         // give fee to miners yet. Later it could be spent to other traders via lottery...
-        sendRequest.fee = Fees.ACCOUNT_REGISTRATION_FEE;
+        sendRequest.fee = Fees.ACCOUNT_REGISTRATION_FEE.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        log.debug("Registration transaction: " + transaction.toString());
-        //TODO
+        log.debug("Registration transaction: " + tx.toString());
+        printInputs("publishRegistrationTxWithExtraData", tx);
         Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>()
         {
             @Override
             public void onSuccess(Transaction result)
             {
-                log.debug("sendResult onSuccess:" + result.toString());
+                log.debug("sendResult onSuccess");
             }
 
             @Override
@@ -223,6 +227,8 @@ public class WalletFacade
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
+        log.debug("Check if wallet is consistent: result=" + wallet.isConsistent());
+        printInputs("payOfferFee", tx);
         log.debug("tx=" + tx.toString());
         return tx.getHashAsString();
     }
@@ -235,78 +241,113 @@ public class WalletFacade
     }
 
 
-    // Offerer creates deposit tx with his input and change output, the MS has just a dummy value at the moment
+    // 1. step: deposit tx
+    // Offerer creates the 2of3 multiSig deposit tx with his unsigned input and change output
     public Transaction offererCreatesMSTxAndAddPayment(BigInteger offererInputAmount, String offererPubKey, String takerPubKey, String arbitratorPubKey) throws InsufficientMoneyException
     {
         log.debug("offererCreatesMSTxAndAddPayment");
+        log.trace("inputs: ");
+        log.trace("offererInputAmount=" + Utils.bitcoinValueToFriendlyString(offererInputAmount));
+        log.trace("offererPubKey=" + offererPubKey);
+        log.trace("takerPubKey=" + takerPubKey);
+        log.trace("arbitratorPubKey=" + arbitratorPubKey);
 
-        // we pay the offererInputAmount to a dummy MS output, that way we get the best coin selection and fee calculation form the wallet and the correct change amount
-        // we don't commit that tx to the wallet as it will be changed later and it's not signed yet
-        // btc ntx fee will be included by the completeTx call, so we don't add it manually
+        // We pay the offererInputAmount to a temporary MS output which will be changed later to the correct value.
+        // With the usage of completeTx() we get all the work done with fee calculation, validation and coin selection.
+        // Later with more customized coin selection we can use a custom CoinSelector implementation.
+        // We don't commit that tx to the wallet as it will be changed later and it's not signed yet.
+        // So it will not change the wallet balance.
+        // The btc tx fee will be included by the completeTx() call, so we don't need to add it manually.
         Transaction tx = new Transaction(params);
         Script multiSigOutputScript = getMultiSigScript(offererPubKey, takerPubKey, arbitratorPubKey);
         tx.addOutput(offererInputAmount, multiSigOutputScript);
-        Wallet.SendRequest request = Wallet.SendRequest.forTx(tx);
-        wallet.completeTx(request);
+        wallet.completeTx(Wallet.SendRequest.forTx(tx));
 
-        // we remove the signature to make sure the tx is invalid to publish
+        // The completeTx() call signs the input, but we don't want to pass over a signed tx so we remove the
+        // signature to make sure the tx is invalid for publishing
         tx.getInput(0).setScriptSig(new Script(new byte[]{}));
 
-        // tx looks like:
+        log.trace("verify tx");
+        tx.verify();
+
+        // The created tx looks like:
          /*
-        IN[0]
+        IN[0]  any input > offererInputAmount + fee (unsigned)
         OUT[0] MS offererInputAmount
-        OUT[1] offerer change amount
+        OUT[1] Change = input - offererInputAmount - fee
                btc tx fee
          */
 
+        log.trace("Check if wallet is consistent: result=" + wallet.isConsistent());
+        printInputs("offererCreatesMSTxAndAddPayment", tx);
         log.debug("tx = " + tx.toString());
         return tx;
     }
 
-    // Taker put his input in, change the MS amount to the correct value and sign his input
-    public Transaction takerAddPaymentAndSign(BigInteger takerAmount,
-                                              BigInteger msOutputAmount,
-                                              String offererPubKey,
-                                              String takerPubKey,
-                                              String arbitratorPubKey,
-                                              String offerersPartialDepositTxAsHex
+    // 2. step: deposit tx
+    // Taker adds his input and change output, changes the multiSig amount to the correct value and sign his input
+    public Transaction takerAddPaymentAndSignTx(BigInteger takerInputAmount,
+                                                BigInteger msOutputAmount,
+                                                String offererPubKey,
+                                                String takerPubKey,
+                                                String arbitratorPubKey,
+                                                String offerersPartialDepositTxAsHex
     ) throws InsufficientMoneyException, ExecutionException, InterruptedException, AddressFormatException
     {
-        log.debug("takerAddPaymentAndSign");
+        log.debug("takerAddPaymentAndSignTx");
+        log.trace("inputs: ");
+        log.trace("takerInputAmount=" + Utils.bitcoinValueToFriendlyString(takerInputAmount));
+        log.trace("msOutputAmount=" + Utils.bitcoinValueToFriendlyString(msOutputAmount));
+        log.trace("offererPubKey=" + offererPubKey);
+        log.trace("takerPubKey=" + takerPubKey);
+        log.trace("arbitratorPubKey=" + arbitratorPubKey);
+        log.trace("offerersPartialDepositTxAsHex=" + offerersPartialDepositTxAsHex);
+
+        // We pay the btc tx fee 2 times to the deposit tx:
+        // 1. will be spent to miners when publishing the deposit tx
+        // 2. will be as added to the MS amount, so when spending the payout tx the fee is already there and the outputs are not changed by fee reduction
+        // Both traders pay 1 times a fee, so it is equally split between them
+
+        // We do exactly the same as in the 1. step but with the takers input.
+        Transaction tempTx = new Transaction(params);
         Script multiSigOutputScript = getMultiSigScript(offererPubKey, takerPubKey, arbitratorPubKey);
+        tempTx.addOutput(takerInputAmount, multiSigOutputScript);
+        wallet.completeTx(Wallet.SendRequest.forTx(tempTx));
+        printInputs("tempTx", tempTx);
+        log.trace("tempTx=" + tempTx);
+        // That tx has signed input, but we don't need to remove it as we don't send that tx out, it is just used temporary.
 
-        // we pay the btc tx fee 2 times directly in the deposit tx:
-        // 1. will be spent to miners when publishing the deposit tx (sum inputs - sum outputs = fee)
-        // 2. will be as added to the MS amount, so when spending the payout tx the fee is already there
-        // both traders pay 1 times a fee, so its equally split
+        // The created tempTx looks like:
+         /*
+        IN[0]  any input taker > takerInputAmount + fee (signed)
+        OUT[0] MS takerInputAmount
+        OUT[1] Change = input taker - takerInputAmount - fee
+               btc tx fee
+         */
 
-        // we construct a dummy tx to get the best coin selection and fee calculation form the wallet and the correct change amount
-        // btc ntx fee will be included by the completeTx call, so we don't add it manually
-        Transaction dummyTx = new Transaction(params);
-        dummyTx.addOutput(takerAmount, multiSigOutputScript);
-        wallet.completeTx(Wallet.SendRequest.forTx(dummyTx));  // it is signed but we don't care as it will not be used further
 
-        // Now we construct the real MS tx from the passed tx from the offerer
+        // Now we construct the real 2of3 multiSig tx from the serialized offerers tx
         Transaction tx = new Transaction(params, Utils.parseAsHexOrBase58(offerersPartialDepositTxAsHex));
+        log.trace("offerersPartialDepositTx=" + tx);
 
-        // it looks like that
+        // The serialized offerers tx looks like:
         /*
-        IN[0]  offerer input
+        IN[0]  any input offerer > offererInputAmount + fee (unsigned)
         OUT[0] MS offererInputAmount
-        OUT[1] offerer change
-        btc tx fee
+        OUT[1] Change = input offerer - offererInputAmount - fee
+               btc tx fee
         */
 
-        // we add our inputs and outputs and change the MS amount to the correct one
-        tx.addInput(dummyTx.getInput(0));
-        tx.addOutput(dummyTx.getOutput(1));
+        // Now we add the inputs and outputs from our temp tx and change the multiSig amount to the correct value
+        tx.addInput(tempTx.getInput(0));
+        if (tempTx.getOutputs().size() == 2)
+            tx.addOutput(tempTx.getOutput(1));
 
-        // we add the btc tx fee
+        // We add the btc tx fee to the msOutputAmount and apply the change to the multiSig output
         msOutputAmount = msOutputAmount.add(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
-        // and change the value of the MS output
         tx.getOutput(0).setValue(msOutputAmount);
 
+        // Now we sign our input
         TransactionInput input = tx.getInput(1);
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
@@ -320,54 +361,92 @@ public class WalletFacade
         else
             throw new ScriptException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
 
-        log.debug("check if correctly spends");
+        log.trace("check if it can be correctly spent for input 1");
         input.getScriptSig().correctlySpends(tx, 1, scriptPubKey, false);
 
-        log.debug("verify tx");
+        log.trace("verify tx");
         tx.verify();
 
+        // The resulting tx looks like:
         /*
-        IN[0] offerer 0.1001
-        IN[1] taker signed  1.1001
-        OUT[0] MS (include btc tx fee for payout tx) 1.2001
-        OUT[1] offerer change
-        OUT[2] taker change
-               btc tx fee   0.0001
-         */
+        IN[0]  any input offerer > offererInputAmount + fee (unsigned)  e.g.: 0.1001
+        IN[1]  any input taker > takerInputAmount + fee (signed)  e.g.: 1.1001
+        OUT[0] MS offererInputAmount  e.g.: 1.2001
+        OUT[1] Change = input offerer - offererInputAmount - fee   e.g.: 0 if input is matching correct value
+        OUT[2] Change = input taker - takerInputAmount - fee   e.g.: 0 if input is matching correct value
+               btc tx fee   e.g.: 0.1001
+        */
 
-        wallet.commitTx(tx);
-        log.debug("tx" + tx.toString());
+        // We must not commit that tx to the wallet as we will get it over the network when the offerer
+        // publishes it and it will have a different tx hash, so it would invalidate our wallet.
+
+        log.trace("Check if wallet is consistent before commit: result=" + wallet.isConsistent());
+        printInputs("takerAddPaymentAndSignTx", tx);
+        log.debug("tx = " + tx.toString());
         return tx;
     }
 
-    // deposit 3. offerer
-    public Transaction offererSignAndSendTx(String tx1AsHex,
-                                            String tx2AsHex,
-                                            String tx2ConnOutAsHex,
-                                            String tx2ScriptSigAsHex,
-                                            FutureCallback<Transaction> callback) throws Exception
+
+    // 3. step: deposit tx
+    // Offerer signs tx and publishes it
+    public Transaction offererSignAndPublishTx(String offerersFirstTxAsHex,
+                                               String takersSignedTxAsHex,
+                                               String takersSignedConnOutAsHex,
+                                               String takersSignedScriptSigAsHex,
+                                               FutureCallback<Transaction> callback) throws Exception
     {
-        log.info("offererSignAndSendTx start");
+        log.debug("offererSignAndPublishTx");
+        log.trace("inputs: ");
+        log.trace("offerersFirstTxAsHex=" + offerersFirstTxAsHex);
+        log.trace("takersSignedTxAsHex=" + takersSignedTxAsHex);
+        log.trace("takersSignedConnOutAsHex=" + takersSignedConnOutAsHex);
+        log.trace("takersSignedScriptSigAsHex=" + takersSignedScriptSigAsHex);
+        log.trace("callback=" + callback.toString());
+        log.trace("Wallet balance initial: " + wallet.getBalance());
+
+        // We create an empty tx (did not find a way to manipulate a tx input, otherwise the takers tx could be used directly and add the offerers input and output)
         Transaction tx = new Transaction(params);
 
-        Transaction tx1 = new Transaction(params, Utils.parseAsHexOrBase58(tx1AsHex));
-        Transaction tx1ConnOut = wallet.getTransaction(tx1.getInput(0).getOutpoint().getHash());
-        TransactionOutPoint tx1OutPoint = new TransactionOutPoint(params, 1, tx1ConnOut);
-        TransactionInput tx1Input = new TransactionInput(params, tx, tx1.getInput(0).getScriptBytes(), tx1OutPoint);
-        tx1Input.setParent(tx);
-        tx.addInput(tx1Input);
+        // offerers first tx
+        Transaction offerersFirstTx = new Transaction(params, Utils.parseAsHexOrBase58(offerersFirstTxAsHex));
 
-        Transaction tx2 = new Transaction(params, Utils.parseAsHexOrBase58(tx2AsHex));
-        Transaction tx2ConnOut = new Transaction(params, Utils.parseAsHexOrBase58(tx2ConnOutAsHex));
-        TransactionOutPoint tx2OutPoint = new TransactionOutPoint(params, 1, tx2ConnOut);
-        TransactionInput tx2Input = new TransactionInput(params, tx, Utils.parseAsHexOrBase58(tx2ScriptSigAsHex), tx2OutPoint);
-        tx2Input.setParent(tx);
-        tx.addInput(tx2Input);
+        printInputs("offerersFirstTx", offerersFirstTx);
+        log.trace("offerersFirstTx = " + offerersFirstTx.toString());
 
-        tx.addOutput(tx2.getOutput(0));
-        tx.addOutput(tx2.getOutput(1));
-        tx.addOutput(tx2.getOutput(2));
+        // add input
+        Transaction offerersFirstTxConnOut = wallet.getTransaction(offerersFirstTx.getInput(0).getOutpoint().getHash());    // pass that around!
+        TransactionOutPoint offerersFirstTxOutPoint = new TransactionOutPoint(params, 1, offerersFirstTxConnOut);
+        //TransactionInput offerersFirstTxInput = new TransactionInput(params, tx, offerersFirstTx.getInput(0).getScriptBytes(), offerersFirstTxOutPoint);   // pass that around!  getScriptBytes = empty bytes aray
+        TransactionInput offerersFirstTxInput = new TransactionInput(params, tx, new byte[]{}, offerersFirstTxOutPoint);   // pass that around!  getScriptBytes = empty bytes aray
+        offerersFirstTxInput.setParent(tx);
+        tx.addInput(offerersFirstTxInput);
 
+        // takers signed tx
+        Transaction takersSignedTx = new Transaction(params, Utils.parseAsHexOrBase58(takersSignedTxAsHex));
+
+        printInputs("takersSignedTxInput", takersSignedTx);
+        log.trace("takersSignedTx = " + takersSignedTx.toString());
+
+        // add input
+        Transaction takersSignedTxConnOut = new Transaction(params, Utils.parseAsHexOrBase58(takersSignedConnOutAsHex));
+        TransactionOutPoint takersSignedTxOutPoint = new TransactionOutPoint(params, 1, takersSignedTxConnOut);
+        TransactionInput takersSignedTxInput = new TransactionInput(params, tx, Utils.parseAsHexOrBase58(takersSignedScriptSigAsHex), takersSignedTxOutPoint);
+        takersSignedTxInput.setParent(tx);
+        tx.addInput(takersSignedTxInput);
+
+        //TODO handle non change output cases
+        // add outputs from takers tx, they are already correct
+
+        for (int i = 0; i < takersSignedTx.getOutputs().size(); i++)
+        {
+            tx.addOutput(takersSignedTx.getOutput(i));
+        }
+
+        printInputs("tx", tx);
+        log.trace("tx = " + tx.toString());
+        log.trace("Wallet balance before signing: " + wallet.getBalance());
+
+        // sign the input
         TransactionInput input = tx.getInput(0);
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
@@ -381,96 +460,113 @@ public class WalletFacade
         else
             throw new ScriptException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
 
-        log.info("offererSignAndSendTx check correctlySpends input 0");
+        log.trace("check if it can be correctly spent for input 0");
         input.getScriptSig().correctlySpends(tx, 0, scriptPubKey, false);
 
-        log.info("offererSignAndSendTx check correctlySpends input 1");
-        input = tx.getInput(1);
-        scriptPubKey = input.getConnectedOutput().getScriptPubKey();
-        input.getScriptSig().correctlySpends(tx, 1, scriptPubKey, false);
+        log.trace("check if it can be correctly spent for input 1");
+        TransactionInput input1 = tx.getInput(1);
+        scriptPubKey = input1.getConnectedOutput().getScriptPubKey();
+        input1.getScriptSig().correctlySpends(tx, 1, scriptPubKey, false);
 
          /*
-        IN[0] offerer signed
-        IN[1] taker signed
-        OUT[0] MS
+        IN[0] offerer signed 0.1001
+        IN[1] taker signed  1.1001
+        OUT[0] MS (include btc tx fee for payout tx) 1.2001
         OUT[1] offerer change
         OUT[2] taker change
+               btc tx fee   0.0001
          */
-        log.info("offererSignAndSendTx broadcastTransaction verify ");
+
+        log.trace("verify ");
         tx.verify();
 
-        log.info("offererSignAndSendTx broadcastTransaction");
+        printInputs("tx", tx);
+        log.debug("tx = " + tx.toString());
+
+        log.trace("Wallet balance before broadcastTransaction: " + wallet.getBalance());
+        log.trace("Check if wallet is consistent before broadcastTransaction: result=" + wallet.isConsistent());
         ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(tx);
-        /*FutureCallback<Transaction> localCallback = new FutureCallback<Transaction>()
-        {
-            @Override
-            public void onSuccess(Transaction transaction)
-            {
-                log.info("offererSignAndSendTx onSuccess" + transaction.getHashAsString());
-            }
+        log.trace("Wallet balance after broadcastTransaction: " + wallet.getBalance());
+        log.trace("Check if wallet is consistent: result=" + wallet.isConsistent());
 
-            @Override
-            public void onFailure(Throwable t)
-            {
-                log.info("offererSignAndSendTx onFailure" + t.toString());
-                Popups.openErrorPopup("Fee payment failed", "Fee payment failed. " + t.toString());
-            }
-        };
-        Futures.addCallback(broadcastComplete, localCallback);  */
         Futures.addCallback(broadcastComplete, callback);
-
+        printInputs("tx", tx);
+        log.debug("tx = " + tx.toString());
         return tx;
     }
 
-    // payout 1. offerer
-    public Pair<ECKey.ECDSASignature, Transaction> offererCreateAndSignPayoutTx(String depositTxID,
-                                                                                BigInteger offererPaybackAmount,
-                                                                                BigInteger takerPaybackAmount,
-                                                                                String takerAddress) throws InsufficientMoneyException, AddressFormatException
+    // 4 step deposit tx: Offerer send deposit tx to taker
+    public void takerCommitDepositTx(String depositTxAsHex)
     {
-        // offerer has published depositTx so he has it in wallet
-        Transaction depositTx = wallet.getTransaction(new Sha256Hash(depositTxID));
-        TransactionOutput multiSigOutput = depositTx.getOutput(0);
-        Script multiSigScript = multiSigOutput.getScriptPubKey();
-
-        Transaction tx = new Transaction(params);
-        tx.addInput(multiSigOutput);
-        //TODO fee calculation
-        tx.addOutput(offererPaybackAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE), tradingKey.toAddress(params));
-        tx.addOutput(takerPaybackAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE), new Address(params, takerAddress));
-
-        Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature signature = tradingKey.sign(sigHash);
-
-        return new Pair<>(signature, depositTx);
+        log.trace("takerCommitDepositTx");
+        log.trace("inputs: ");
+        log.trace("depositTxID=" + depositTxAsHex);
+        Transaction depositTx = new Transaction(params, Utils.parseAsHexOrBase58(depositTxAsHex));
+        log.trace("depositTx=" + depositTx);
+        wallet.commitTx(depositTx);
     }
 
-    // payout 2. taker
-    public Transaction takerSignAndSendTx(String depositTxAsHex,
-                                          String offererSignatureR,
-                                          String offererSignatureS,
-                                          BigInteger offererPaybackAmount,
-                                          BigInteger takerPaybackAmount,
-                                          String offererAddress,
-                                          FutureCallback<Transaction> callback) throws InsufficientMoneyException, AddressFormatException
+    // 5. step payout tx: Offerer creates payout tx and signs it
+    public Pair<ECKey.ECDSASignature, String> offererCreatesAndSignsPayoutTx(String depositTxID,
+                                                                             BigInteger offererPaybackAmount,
+                                                                             BigInteger takerPaybackAmount,
+                                                                             String takerAddress) throws InsufficientMoneyException, AddressFormatException
     {
+        log.debug("offererCreatesAndSignsPayoutTx");
+        log.trace("inputs: ");
+        log.trace("depositTxID=" + depositTxID);
+        log.trace("offererPaybackAmount=" + Utils.bitcoinValueToFriendlyString(offererPaybackAmount));
+        log.trace("takerPaybackAmount=" + Utils.bitcoinValueToFriendlyString(takerPaybackAmount));
+        log.trace("takerAddress=" + takerAddress);
 
-        Transaction depositTx = new Transaction(params, Utils.parseAsHexOrBase58(depositTxAsHex));
-        TransactionOutput multiSigOutput = depositTx.getOutput(0);
+        // Offerer has published depositTx earlier, so he has it in his wallet
+        Transaction depositTx = wallet.getTransaction(new Sha256Hash(depositTxID));
+        String depositTxAsHex = Utils.bytesToHexString(depositTx.bitcoinSerialize());
+
+        // We create the payout tx
+        Transaction tx = createPayoutTx(depositTxAsHex, offererPaybackAmount, takerPaybackAmount, getTradingAddress(), takerAddress);
+
+        // We create the signature for that tx
+        TransactionOutput multiSigOutput = tx.getInput(0).getConnectedOutput();
         Script multiSigScript = multiSigOutput.getScriptPubKey();
-
-        Transaction tx = new Transaction(params);
-        tx.addInput(multiSigOutput);
-        //TODO fee calculation
-        if (offererPaybackAmount.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) <= 0)
-            log.error("Cannot use such low value");
-        if (takerPaybackAmount.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) <= 0)
-            log.error("Cannot use such low value");
-
-        tx.addOutput(offererPaybackAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE), new Address(params, offererAddress));
-        tx.addOutput(takerPaybackAmount.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE), tradingKey.toAddress(params));
-
         Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
+        ECKey.ECDSASignature offererSignature = tradingKey.sign(sigHash);
+
+        TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
+        Script inputScript = ScriptBuilder.createMultiSigInputScript(ImmutableList.of(offererTxSig));
+        tx.getInput(0).setScriptSig(inputScript);
+
+        log.trace("sigHash=" + sigHash.toString());
+        return new Pair<>(offererSignature, depositTxAsHex);
+    }
+
+    // 6. step payout tx: Taker signs and publish tx
+    public Transaction takerSignsAndSendsTx(String depositTxAsHex,
+                                            String offererSignatureR,
+                                            String offererSignatureS,
+                                            BigInteger offererPaybackAmount,
+                                            BigInteger takerPaybackAmount,
+                                            String offererAddress,
+                                            FutureCallback<Transaction> callback) throws InsufficientMoneyException, AddressFormatException
+    {
+        log.debug("takerSignsAndSendsTx");
+        log.trace("inputs: ");
+        log.trace("depositTxAsHex=" + depositTxAsHex);
+        log.trace("offererSignatureR=" + offererSignatureR);
+        log.trace("offererSignatureS=" + offererSignatureS);
+        log.trace("offererPaybackAmount=" + Utils.bitcoinValueToFriendlyString(offererPaybackAmount));
+        log.trace("takerPaybackAmount=" + Utils.bitcoinValueToFriendlyString(takerPaybackAmount));
+        log.trace("offererAddress=" + offererAddress);
+        log.trace("callback=" + callback.toString());
+
+        // We create the payout tx
+        Transaction tx = createPayoutTx(depositTxAsHex, offererPaybackAmount, takerPaybackAmount, offererAddress, getTradingAddress());
+
+        // We sign that tx with our key and apply the signature form the offerer
+        TransactionOutput multiSigOutput = tx.getInput(0).getConnectedOutput();
+        Script multiSigScript = multiSigOutput.getScriptPubKey();
+        Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
+        log.trace("sigHash=" + sigHash.toString());
 
         ECKey.ECDSASignature takerSignature = tradingKey.sign(sigHash);
         TransactionSignature takerTxSig = new TransactionSignature(takerSignature, Transaction.SigHash.ALL, false);
@@ -481,59 +577,22 @@ public class WalletFacade
         Script inputScript = ScriptBuilder.createMultiSigInputScript(ImmutableList.of(offererTxSig, takerTxSig));
         tx.getInput(0).setScriptSig(inputScript);
 
-        log.info("verify tx");
+        log.trace("verify tx");
         tx.verify();
 
-        try
-        {
-            log.info("verify correctlySpends");
-            tx.getInput(0).getScriptSig().correctlySpends(tx, 0, multiSigScript, false);
-        } catch (Exception e)
-        {
-            log.error("verify correctlySpends 0:" + e.getMessage());
-        }
+        log.trace("check if it can be correctly spent for ms input");
+        tx.getInput(0).getScriptSig().correctlySpends(tx, 0, multiSigScript, false);
 
-        try
-        {
-            log.info("verify multiSigOutput");
-            tx.getInput(0).verify(multiSigOutput);
-        } catch (Exception e)
-        {
-            log.error("verify multiSigOutput 1:" + e.getMessage());
-        }
+        log.trace("verify multiSigOutput");
+        tx.getInput(0).verify(multiSigOutput);
 
-        log.info("broadcastTransaction:" + tx.toString());
-        Object t = wallet.getTransactions(true);
-        log.info("pre broadcastTransaction broadcastTransaction:" + wallet.getTransactions(true).size());
         ListenableFuture<Transaction> broadcastComplete = walletAppKit.peerGroup().broadcastTransaction(tx);
-
-        FutureCallback<Transaction> localCallback = new FutureCallback<Transaction>()
-        {
-            @Override
-            public void onSuccess(Transaction transaction)
-            {
-                Object t = wallet.getTransactions(true);
-                log.info("onSuccess broadcastTransaction:" + wallet.getTransactions(true).size());
-
-                log.info("sendResult onSuccess:" + transaction.toString());
-                log.info("is in wallet?" + wallet.getTransaction(transaction.getHash()).getHashAsString());
-                /*if (wallet.getTransaction(transaction.getHash()) == null)
-                    wallet.commitTx(transaction); */
-                log.info("now must be in wallet?" + wallet.getTransaction(transaction.getHash()).getHashAsString());
-                log.info("#####################  now must be in wallet?" + wallet.getTransaction(transaction.getHash()).getHashAsString());
-
-            }
-
-            @Override
-            public void onFailure(Throwable t)
-            {
-                log.warn("sendResult onFailure:" + t.toString());
-            }
-        };
-
-        Futures.addCallback(broadcastComplete, localCallback);
         Futures.addCallback(broadcastComplete, callback);
 
+        log.trace("getTransactions.size=" + wallet.getTransactions(true).size());
+        log.trace("Check if wallet is consistent: result=" + wallet.isConsistent());
+        printInputs("takerSignsAndSendsTx", tx);
+        log.debug("tx = " + tx.toString());
         return tx;
     }
 
@@ -552,114 +611,37 @@ public class WalletFacade
         return ScriptBuilder.createMultiSigOutputScript(2, keys);
     }
 
-
-    // TODO only temp. for testing trade process between offerer and taker
-    // deposit
-    private void testTradeProcessDepositTx()
+    public Transaction createPayoutTx(String depositTxAsHex,
+                                      BigInteger offererPaybackAmount,
+                                      BigInteger takerPaybackAmount,
+                                      String offererAddress,
+                                      String takerAddress) throws AddressFormatException
     {
-        try
-        {
-            String tx1AsHex, tx2AsHex, tx2ScriptSigAsHex, tx2ConnOutAsHex;
+        log.trace("createPayoutTx");
+        log.trace("inputs: ");
+        log.trace("depositTxAsHex=" + depositTxAsHex);
+        log.trace("offererPaybackAmount=" + Utils.bitcoinValueToFriendlyString(offererPaybackAmount));
+        log.trace("takerPaybackAmount=" + Utils.bitcoinValueToFriendlyString(takerPaybackAmount));
+        log.trace("offererAddress=" + offererAddress);
+        log.trace("takerAddress=" + takerAddress);
 
-            BigInteger offererAmount = Utils.toNanoCoins("0.01");
-            BigInteger takerAmount = Utils.toNanoCoins("0.02");
-
-            String takerPubKey = "0207cf5fb65d6923d5d41db21ceac9567a0fc3eb92c6137f274018381ced7b6568";
-            String offererPubKey = "0352f2e34760514099f90b03aab91239466924c3b06047d3cf0e011f26ef96ceb7";
-            String arbitratorPubKey = "";
-
-            // 1 offerer creates MS TX and pay in
-            Transaction tx1 = offererCreatesMSTxAndAddPayment(offererAmount, offererPubKey, takerPubKey, arbitratorPubKey);
-            tx1AsHex = Utils.bytesToHexString(tx1.bitcoinSerialize());
-
-
-            tx1AsHex = "01000000014378dfcd19add18eb6f118a1e35ced127ff23c9dc5034eee1cda5b9caeb814f0000000006b4830450221008e599dd7bb7223c7b036869198b14f08009f9bc117709d23c249d0bdd6b483be022047be181f467782ea277b36890feb2f6de3ceddcedf8730a9f505bac36b3b015b01210352f2e34760514099f90b03aab91239466924c3b06047d3cf0e011f26ef96ceb7ffffffff0240420f00000000004852210352f2e34760514099f90b03aab91239466924c3b06047d3cf0e011f26ef96ceb7210207cf5fb65d6923d5d41db21ceac9567a0fc3eb92c6137f274018381ced7b65680053aeb077e605000000001976a9149fc3d8e0371b6eab89a8c3c015839f9e493ccf6588ac00000000";
-
-            // 2. taker pay in and sign
-          /* Transaction tx2 = takerAddPaymentAndSign(takerAmount, msOutputAmount, offererPubKey, takerPubKey, arbitratorPubKey, tx1AsHex);
-            tx2AsHex = Utils.bytesToHexString(tx2.bitcoinSerialize());
-            tx2ScriptSigAsHex = Utils.bytesToHexString(tx2.getInput(1).getScriptBytes());
-            tx2ConnOutAsHex =  Utils.bytesToHexString(tx2.getInput(1).getConnectedOutput().getParentTransaction().bitcoinSerialize());
-                                  */
-
-            tx2AsHex = "01000000024378dfcd19add18eb6f118a1e35ced127ff23c9dc5034eee1cda5b9caeb814f0000000006b4830450221008e599dd7bb7223c7b036869198b14f08009f9bc117709d23c249d0bdd6b483be022047be181f467782ea277b36890feb2f6de3ceddcedf8730a9f505bac36b3b015b01210352f2e34760514099f90b03aab91239466924c3b06047d3cf0e011f26ef96ceb7ffffffffa58b22a93a0fcf99ba48aa3b96d842284b2b3d24f72d045cc192ea8a6b89435c010000006a47304402207f4beeb1a86432be0b4c3d4f4db7416b52b66c84383d1980d39e21d547a1762f02200405d0d4b80d1094e3a08cb39ef6f1161be163026d417af08d54c5a1cfdbbbeb01210207cf5fb65d6923d5d41db21ceac9567a0fc3eb92c6137f274018381ced7b6568ffffffff03c0c62d00000000004852210352f2e34760514099f90b03aab91239466924c3b06047d3cf0e011f26ef96ceb7210207cf5fb65d6923d5d41db21ceac9567a0fc3eb92c6137f274018381ced7b65680053aeb077e605000000001976a9149fc3d8e0371b6eab89a8c3c015839f9e493ccf6588ac7035d705000000001976a914e5175c1f71c28218306d4a27c8cec0269dddbbde88ac00000000";
-            tx2ScriptSigAsHex = "47304402207f4beeb1a86432be0b4c3d4f4db7416b52b66c84383d1980d39e21d547a1762f02200405d0d4b80d1094e3a08cb39ef6f1161be163026d417af08d54c5a1cfdbbbeb01210207cf5fb65d6923d5d41db21ceac9567a0fc3eb92c6137f274018381ced7b6568";
-            tx2ConnOutAsHex = "01000000014378dfcd19add18eb6f118a1e35ced127ff23c9dc5034eee1cda5b9caeb814f0010000006a473044022011431387fc19b093b26a6d2371995c828179aae68e94ad5804e5d0986a6b471302206abc2b698375620e65fc9970b7781da0af2179d1bdc4ebc82a13e285359a3ce7012103c7b9e9ef657705522c85b8429bb2b42c04f0fd4a09e0605cd7dd62ffecb57944ffffffff02c0ce823e000000001976a9142d1b4347ae850805f3badbb4b2949674f46c4ccd88ac00e1f505000000001976a914e5175c1f71c28218306d4a27c8cec0269dddbbde88ac00000000";
-
-            // 3. offerer sign and send
-            Transaction tx3 = offererSignAndSendTx(tx1AsHex, tx2AsHex, tx2ConnOutAsHex, tx2ScriptSigAsHex, null);
-
-            log.info(tx3.toString());  // tx has 453 Bytes
-
-        } catch (AddressFormatException | InsufficientMoneyException | InterruptedException | ExecutionException e)
-        {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (Exception e)
-        {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
+        Transaction depositTx = new Transaction(params, Utils.parseAsHexOrBase58(depositTxAsHex));
+        TransactionOutput multiSigOutput = depositTx.getOutput(0);
+        Transaction tx = new Transaction(params);
+        tx.addInput(multiSigOutput);
+        tx.addOutput(offererPaybackAmount, new Address(params, offererAddress));
+        tx.addOutput(takerPaybackAmount, new Address(params, takerAddress));
+        log.trace("tx=" + tx);
+        return tx;
     }
 
-    // payout
-    private void testTradeProcessPayOutTx()
+    private void printInputs(String tracePrefix, Transaction tx)
     {
-        String depositTxAsHex, offererSignatureR, offererSignatureS;
-        BigInteger offererPaybackAmount = Utils.toNanoCoins("0.029");
-        BigInteger takerPaybackAmount = Utils.toNanoCoins("0.001");
-
-        ECKey takerKey = new ECKey(null, Utils.parseAsHexOrBase58("0207cf5fb65d6923d5d41db21ceac9567a0fc3eb92c6137f274018381ced7b6568"));
-        String takerAddress = takerKey.toAddress(params).toString();
-
-        ECKey offererKey = new ECKey(null, Utils.parseAsHexOrBase58("0352f2e34760514099f90b03aab91239466924c3b06047d3cf0e011f26ef96ceb7"));
-        String offererAddress = offererKey.toAddress(params).toString();
-
-        String depositTxID = "4142ee4877eb116abf955a7ec6ef2dc38133b793df762b76d75e3d7d4d8badc9";
-
-        try
-        {
-            // 1. offerer create and sign payout tx
-           /* Pair<ECKey.ECDSASignature, Transaction> result = offererCreateAndSignPayoutTx(depositTxID,
-                    offererPaybackAmount,
-                    takerPaybackAmount,
-                    takerAddress);
-
-            ECKey.ECDSASignature offererSignature = result.getKey();
-            Transaction depositTx = result.getValue();
-            offererSignatureR = offererSignature.r.toString();
-            offererSignatureS = offererSignature.s.toString();
-            depositTxAsHex = Utils.bytesToHexString(depositTx.bitcoinSerialize()); */
-
-
-            depositTxAsHex = "01000000024378dfcd19add18eb6f118a1e35ced127ff23c9dc5034eee1cda5b9caeb814f0000000006a473044022008addf33a37f8f058e629020d73c3873953e1eca559fcb59d9db651f2c9b524f02203cbfd319b2675974adfbff2cb605fc9b89a92f2f3197ee634b39c892fb57d1be01210352f2e34760514099f90b03aab91239466924c3b06047d3cf0e011f26ef96ceb7ffffffffa58b22a93a0fcf99ba48aa3b96d842284b2b3d24f72d045cc192ea8a6b89435c010000006a47304402207f4beeb1a86432be0b4c3d4f4db7416b52b66c84383d1980d39e21d547a1762f02200405d0d4b80d1094e3a08cb39ef6f1161be163026d417af08d54c5a1cfdbbbeb01210207cf5fb65d6923d5d41db21ceac9567a0fc3eb92c6137f274018381ced7b6568ffffffff03c0c62d00000000004852210352f2e34760514099f90b03aab91239466924c3b06047d3cf0e011f26ef96ceb7210207cf5fb65d6923d5d41db21ceac9567a0fc3eb92c6137f274018381ced7b65680053aeb077e605000000001976a9149fc3d8e0371b6eab89a8c3c015839f9e493ccf6588ac7035d705000000001976a914e5175c1f71c28218306d4a27c8cec0269dddbbde88ac00000000";
-            offererSignatureR = "64562406184784382000330465585294975882418886289667123258365244289311131050102";
-            offererSignatureS = "9282449224979858852843663340827968850695102089943078462704407873774672151491";
-
-            // 2. taker sign and publish tx
-            Transaction takerTx = takerSignAndSendTx(depositTxAsHex,
-                    offererSignatureR,
-                    offererSignatureS,
-                    offererPaybackAmount,
-                    takerPaybackAmount,
-                    offererAddress, null);
-
-            log.info(takerTx.toString());    // tx has 265 Bytes
-
-            /*
-        6606c366a487bff9e412d0b6c09c14916319932db5954bf5d8719f43f828a3ba: Unknown confidence level.
-     in   [] [30450221008ebd06e53ce1ab7b599098b3117f2073b1d224baae21190ef7839b70a638207602201485ae19965f2d954398f691aa40fecb4d08d625ae96037a4fc5eecb7a4803c301]
-             [30440220521c485045a46fbb61c634ebf456c470f9c2f7307a743e3fce10b50f7a69115d0220249ff5f9796a9fcd12984afcfd3f7d16d2f8c49ddcef245db7c7b02b909af9a601]
-          outpoint:4142ee4877eb116abf955a7ec6ef2dc38133b793df762b76d75e3d7d4d8badc9:0 hash160:[exception: Script not in the standard scriptPubKey form]
-     out  DUP HASH160 [9fc3d8e0371b6eab89a8c3c015839f9e493ccf65] EQUALVERIFY CHECKSIG 0.0289 BTC
-     out  DUP HASH160 [e5175c1f71c28218306d4a27c8cec0269dddbbde] EQUALVERIFY CHECKSIG 0.0009 BTC
-
-           2 [0352f2e34760514099f90b03aab91239466924c3b06047d3cf0e011f26ef96ceb7] [0207cf5fb65d6923d5d41db21ceac9567a0fc3eb92c6137f274018381ced7b6568] [] 3 CHECKMULTISIG
-         */
-
-        } catch (InsufficientMoneyException | AddressFormatException e)
-        {
-            e.printStackTrace();
-        }
-
+        for (TransactionInput input : tx.getInputs())
+            if (input.getConnectedOutput() != null)
+                log.trace(tracePrefix + ": " + Utils.bitcoinValueToFriendlyString(input.getConnectedOutput().getValue()));
+            else
+                log.trace(tracePrefix + ": " + "Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
     }
 
 
@@ -673,14 +655,24 @@ public class WalletFacade
         protected void progress(double percent, int blocksSoFar, Date date)
         {
             super.progress(percent, blocksSoFar, date);
-            for (DownloadListener downloadListener : downloadListeners)
-                downloadListener.progress(percent, blocksSoFar, date);
+            Platform.runLater(() -> onProgressInUserThread(percent, blocksSoFar, date));
         }
 
         @Override
         protected void doneDownload()
         {
             super.doneDownload();
+            Platform.runLater(() -> onDoneDownloadInUserThread());
+        }
+
+        private void onProgressInUserThread(double percent, int blocksSoFar, final Date date)
+        {
+            for (DownloadListener downloadListener : downloadListeners)
+                downloadListener.progress(percent, blocksSoFar, date);
+        }
+
+        private void onDoneDownloadInUserThread()
+        {
             for (DownloadListener downloadListener : downloadListeners)
                 downloadListener.doneDownload();
         }
@@ -691,13 +683,6 @@ public class WalletFacade
         void progress(double percent, int blocksSoFar, Date date);
 
         void doneDownload();
-    }
-
-    public static interface WalletListener
-    {
-        void onConfidenceChanged(int numBroadcastPeers, int depthInBlocks);
-
-        void onCoinsReceived(BigInteger newBalance);
     }
 
 }

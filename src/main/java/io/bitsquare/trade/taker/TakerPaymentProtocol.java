@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-
+//TODO refactor to process based pattern
 public class TakerPaymentProtocol
 {
     private static final Logger log = LoggerFactory.getLogger(TakerPaymentProtocol.class);
@@ -387,7 +387,7 @@ public class TakerPaymentProtocol
         log.debug("preparedOffererDepositTxAsHex " + preparedOffererDepositTxAsHex);
         try
         {
-            Transaction signedTakerDepositTx = walletFacade.takerAddPaymentAndSign(takerInputAmount, msOutputAmount, offererPubKey, takerPubKey, arbitratorPubKey, preparedOffererDepositTxAsHex);
+            Transaction signedTakerDepositTx = walletFacade.takerAddPaymentAndSignTx(takerInputAmount, msOutputAmount, offererPubKey, takerPubKey, arbitratorPubKey, preparedOffererDepositTxAsHex);
             log.debug("2.10 deposit tx created: " + signedTakerDepositTx);
             sendSignedTakerDepositTxAsHex(signedTakerDepositTx);
         } catch (InterruptedException | AddressFormatException | ExecutionException | InsufficientMoneyException e)
@@ -469,13 +469,11 @@ public class TakerPaymentProtocol
 
     public void onDepositTxPublished(TradeMessage tradeMessage)
     {
-        log.debug("3.6 DepositTxID received: " + tradeMessage.getDepositTxID());
+        log.debug("3.6 DepositTxID received: " + tradeMessage.getDepositTxAsHex());
 
-        //Transaction tx =  walletFacade.getWallet().getTransaction(new Sha256Hash(tradeMessage.getDepositTxID()));
-        //walletFacade.getWallet().commitTx(tx);
-
+        walletFacade.takerCommitDepositTx(tradeMessage.getDepositTxAsHex());
         takerPaymentProtocolListener.onProgress(getProgress());
-        takerPaymentProtocolListener.onDepositTxPublished(tradeMessage.getDepositTxID());
+        takerPaymentProtocolListener.onDepositTxPublished(tradeMessage.getDepositTxAsHex());
     }
 
 
@@ -511,8 +509,8 @@ public class TakerPaymentProtocol
             @Override
             public void onSuccess(Transaction transaction)
             {
-                System.out.println("######### 3.12 onSuccess walletFacade.takerSignAndSendTx " + transaction.toString());
-                log.error("3.12 onSuccess walletFacade.takerSignAndSendTx " + transaction.toString());
+                System.out.println("######### 3.12 onSuccess walletFacade.takerSignsAndSendsTx " + transaction.toString());
+                log.debug("3.12 onSuccess walletFacade.takerSignsAndSendsTx " + transaction.toString());
                 takerPaymentProtocolListener.onTradeCompleted(transaction.getHashAsString());
 
                 sendPayoutTxToOfferer(transaction.getHashAsString());
@@ -521,22 +519,22 @@ public class TakerPaymentProtocol
             @Override
             public void onFailure(Throwable t)
             {
-                log.error("######### 3.12 onFailure walletFacade.takerSignAndSendTx");
-                System.err.println("3.12 onFailure walletFacade.takerSignAndSendTx");
-                takerPaymentProtocolListener.onFailure("takerSignAndSendTx failed " + t.getMessage());
+                log.error("######### 3.12 onFailure walletFacade.takerSignsAndSendsTx");
+                System.err.println("3.12 onFailure walletFacade.takerSignsAndSendsTx");
+                takerPaymentProtocolListener.onFailure("takerSignsAndSendsTx failed " + t.getMessage());
             }
         };
         try
         {
-            String depositTxID = tradeMessage.getDepositTxID();
+            String depositTxAsHex = tradeMessage.getDepositTxAsHex();
             String offererSignatureR = tradeMessage.getOffererSignatureR();
             String offererSignatureS = tradeMessage.getOffererSignatureS();
             BigInteger offererPaybackAmount = tradeMessage.getOffererPaybackAmount();
             BigInteger takerPaybackAmount = tradeMessage.getTakerPaybackAmount();
             String offererPayoutAddress = tradeMessage.getOffererPayoutAddress();
 
-            log.debug("3.12  walletFacade.takerSignAndSendTx");
-            walletFacade.takerSignAndSendTx(depositTxID,
+            log.debug("3.12  walletFacade.takerSignsAndSendsTx");
+            walletFacade.takerSignsAndSendsTx(depositTxAsHex,
                     offererSignatureR,
                     offererSignatureS,
                     offererPaybackAmount,
@@ -545,10 +543,10 @@ public class TakerPaymentProtocol
                     callback);
         } catch (InsufficientMoneyException e)
         {
-            log.error("3.12 offererCreateAndSignPayoutTx  onFailed InsufficientMoneyException " + e.getMessage());
+            log.error("3.12 offererCreatesAndSignsPayoutTx  onFailed InsufficientMoneyException " + e.getMessage());
         } catch (AddressFormatException e)
         {
-            log.error("3.12 offererCreateAndSignPayoutTx  onFailed AddressFormatException " + e.getMessage());
+            log.error("3.12 offererCreatesAndSignsPayoutTx  onFailed AddressFormatException " + e.getMessage());
         }
     }
 

@@ -25,7 +25,7 @@ import java.math.BigInteger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-
+//TODO refactor to process based pattern
 public class OffererPaymentProtocol
 {
 
@@ -407,7 +407,7 @@ public class OffererPaymentProtocol
         try
         {
             log.debug("3.4 offererSignAndSendTx");
-            depositTransaction = walletFacade.offererSignAndSendTx(preparedOffererDepositTxAsHex, signedTakerDepositTxAsHex, txConnOutAsHex, txScriptSigAsHex, callback);
+            depositTransaction = walletFacade.offererSignAndPublishTx(preparedOffererDepositTxAsHex, signedTakerDepositTxAsHex, txConnOutAsHex, txScriptSigAsHex, callback);
         } catch (Exception e)
         {
             log.error("3.4 error at walletFacade.offererSignAndSendTx: " + e.getMessage());
@@ -440,7 +440,7 @@ public class OffererPaymentProtocol
                 offererPaymentProtocolListener.onFailure("sendDepositTxAndDataForContract onSendTradingMessageFailed");
             }
         };
-        TradeMessage tradeMessage = new TradeMessage(TradeMessageType.DEPOSIT_TX_PUBLISHED, trade.getUid(), transaction.getHashAsString());
+        TradeMessage tradeMessage = new TradeMessage(TradeMessageType.DEPOSIT_TX_PUBLISHED, trade.getUid(), Utils.bytesToHexString(transaction.bitcoinSerialize()));
         log.debug("3.5  sendTradingMessage");
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
 
@@ -554,24 +554,23 @@ public class OffererPaymentProtocol
             log.debug("takerPaybackAmount " + takerPaybackAmount.toString());
             log.debug("depositTransaction.getHashAsString() " + depositTransaction.getHashAsString());
             log.debug("takerPayoutAddress " + takerPayoutAddress);
-            log.debug("walletFacade.offererCreateAndSignPayoutTx");
-            Pair<ECKey.ECDSASignature, Transaction> result = walletFacade.offererCreateAndSignPayoutTx(depositTransaction.getHashAsString(), offererPaybackAmount, takerPaybackAmount, takerPayoutAddress);
+            log.debug("walletFacade.offererCreatesAndSignsPayoutTx");
+            Pair<ECKey.ECDSASignature, String> result = walletFacade.offererCreatesAndSignsPayoutTx(depositTransaction.getHashAsString(), offererPaybackAmount, takerPaybackAmount, takerPayoutAddress);
 
             ECKey.ECDSASignature offererSignature = result.getKey();
             String offererSignatureR = offererSignature.r.toString();
             String offererSignatureS = offererSignature.s.toString();
-            Transaction depositTx = result.getValue();
-            String depositTxID = Utils.bytesToHexString(depositTx.bitcoinSerialize());
+            String depositTxAsHex = result.getValue();
             String offererPayoutAddress = walletFacade.getTradingAddress();
             TradeMessage tradeMessage = new TradeMessage(TradeMessageType.BANK_TX_INITED, trade.getUid(),
-                    depositTxID,
+                    depositTxAsHex,
                     offererSignatureR,
                     offererSignatureS,
                     offererPaybackAmount,
                     takerPaybackAmount,
                     offererPayoutAddress);
 
-            log.debug("depositTxID " + depositTxID);
+            log.debug("depositTxAsHex " + depositTxAsHex);
             log.debug("offererSignatureR " + offererSignatureR);
             log.debug("offererSignatureS " + offererSignatureS);
             log.debug("offererPaybackAmount " + offererPaybackAmount.toString());
@@ -583,10 +582,10 @@ public class OffererPaymentProtocol
 
         } catch (InsufficientMoneyException e)
         {
-            log.error("3.10 offererCreateAndSignPayoutTx  onFailed InsufficientMoneyException " + e.getMessage());
+            log.error("3.10 offererCreatesAndSignsPayoutTx  onFailed InsufficientMoneyException " + e.getMessage());
         } catch (AddressFormatException e)
         {
-            log.error("3.10 offererCreateAndSignPayoutTx  onFailed AddressFormatException " + e.getMessage());
+            log.error("3.10 offererCreatesAndSignsPayoutTx  onFailed AddressFormatException " + e.getMessage());
         }
     }
 

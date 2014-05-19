@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.UUID;
 
+//TODO refactor
 public class TradeMessage implements Serializable
 {
     private static final long serialVersionUID = 7916445031849763995L;
@@ -21,6 +22,8 @@ public class TradeMessage implements Serializable
     private String takerPayoutAddress;
     private TradeMessageType type;
     private String depositTxID;
+    private String depositTxAsHex;
+
     private String offererSignatureR;
     private String offererSignatureS;
     private BigInteger offererPaybackAmount;
@@ -94,11 +97,11 @@ public class TradeMessage implements Serializable
         uid = UUID.randomUUID().toString();
     }
 
-    public TradeMessage(TradeMessageType type, String offerUID, String depositTxID)
+    public TradeMessage(TradeMessageType type, String offerUID, String depositTxAsHex)
     {
         this.offerUID = offerUID;
         this.type = type;
-        this.depositTxID = depositTxID;
+        this.depositTxAsHex = depositTxAsHex;
 
         uid = UUID.randomUUID().toString();
     }
@@ -106,7 +109,7 @@ public class TradeMessage implements Serializable
     // 3.10
 
     public TradeMessage(TradeMessageType type, String offerUID,
-                        String depositTxID,
+                        String depositTxAsHex,
                         String offererSignatureR,
                         String offererSignatureS,
                         BigInteger offererPaybackAmount,
@@ -115,7 +118,7 @@ public class TradeMessage implements Serializable
     {
         this.offerUID = offerUID;
         this.type = type;
-        this.depositTxID = depositTxID;
+        this.depositTxAsHex = depositTxAsHex;
         this.offererSignatureR = offererSignatureR;
         this.offererSignatureS = offererSignatureS;
         this.offererPaybackAmount = offererPaybackAmount;
@@ -252,4 +255,8 @@ public class TradeMessage implements Serializable
     }
 
 
+    public String getDepositTxAsHex()
+    {
+        return depositTxAsHex;
+    }
 }

@@ -13,13 +13,17 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="io.bitsquare" level="DEBUG"/>
+    <logger name="io.bitsquare" level="TRACE"/>
 
-    <logger name="com.google.bitcoin" level="INFO"/>
+    <logger name="com.google.bitcoin" level="TRACE"/>
     <logger name="net.tomp2p" level="WARN"/>
 
     <!--
-    -->
+         -->
+
+    <logger name="com.google.bitcoin.core.DownloadListener" level="WARN" additivity="false"/>
+    <logger name="com.google.bitcoin.core.TransactionOutput" level="INFO" additivity="false"/>
+    <logger name="com.google.bitcoin.core.BitcoinSerializer" level="WARN" additivity="false"/>
     <logger name="com.google.bitcoin.core.Peer" level="ERROR" additivity="false"/>
     <logger name="com.google.bitcoin.core.PeerGroup" level="ERROR" additivity="false"/>
     <logger name="com.google.bitcoin.core.PeerSocketHandler" level="OFF" additivity="false"/>

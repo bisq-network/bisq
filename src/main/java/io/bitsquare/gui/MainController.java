@@ -17,7 +17,6 @@ import io.bitsquare.msg.TradeMessage;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Trading;
 import io.bitsquare.user.User;
-import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -41,7 +40,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class MainController implements Initializable, NavigationController, WalletFacade.DownloadListener
+public class MainController implements Initializable, NavigationController
 {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
 
@@ -97,7 +96,21 @@ public class MainController implements Initializable, NavigationController, Wall
 
         messageFacade.init();
 
-        walletFacade.addDownloadListener(this);
+        walletFacade.addDownloadListener(new WalletFacade.DownloadListener()
+        {
+            @Override
+            public void progress(double percent, int blocksSoFar, Date date)
+            {
+                networkSyncPane.setProgress(percent);
+            }
+
+            @Override
+            public void doneDownload()
+            {
+                networkSyncPane.doneDownload();
+            }
+        });
+
         walletFacade.initWallet();
 
         if (user.getAccountID() == null)
@@ -180,25 +193,6 @@ public class MainController implements Initializable, NavigationController, Wall
             e.printStackTrace();
         }
         return null;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: WalletFacade.DownloadListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void progress(double percent, int blocksSoFar, Date date)
-    {
-        if (networkSyncPane != null)
-            Platform.runLater(() -> networkSyncPane.setProgress(percent));
-    }
-
-    @Override
-    public void doneDownload()
-    {
-        if (networkSyncPane != null)
-            Platform.runLater(networkSyncPane::doneDownload);
     }
 
 
@@ -339,16 +333,19 @@ public class MainController implements Initializable, NavigationController, Wall
             @Override
             public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
             {
+                balanceTextField.setText(Utils.bitcoinValueToFriendlyString(walletFacade.getWallet().getBalance()));
             }
 
             @Override
             public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
             {
+                balanceTextField.setText(Utils.bitcoinValueToFriendlyString(newBalance));
             }
 
             @Override
             public void onReorganize(Wallet wallet)
             {
+                balanceTextField.setText(Utils.bitcoinValueToFriendlyString(walletFacade.getWallet().getBalance()));
             }
 
             @Override

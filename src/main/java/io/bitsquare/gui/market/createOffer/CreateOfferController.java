@@ -94,10 +94,10 @@ public class CreateOfferController implements Initializable, ChildController
 
 
         //TODO
-        amountTextField.setText("1");
-        minAmountTextField.setText("0,1");
-        priceTextField.setText("500");
-        collateralTextField.setText("10");
+        amountTextField.setText("0,1");
+        minAmountTextField.setText("0,001");
+        priceTextField.setText("300");
+        collateralTextField.setText("50");
         updateVolume();
 
         amountTextField.textProperty().addListener(new ChangeListener<String>()
@@ -132,7 +132,7 @@ public class CreateOfferController implements Initializable, ChildController
         bankAccountCountyTextField.setText(user.getCurrentBankAccount().getCountryLocale().getDisplayCountry());
         acceptedCountriesTextField.setText(Formatter.countryLocalesToString(settings.getAcceptedCountryLocales()));
         acceptedLanguagesTextField.setText(Formatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
-        feeLabel.setText(Utils.bitcoinValueToFriendlyString(Fees.OFFER_CREATION_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE)));
+        feeLabel.setText(Utils.bitcoinValueToFriendlyString(Fees.OFFER_CREATION_FEE));
     }
 
 
