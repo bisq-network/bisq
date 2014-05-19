@@ -7,6 +7,7 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.Fees;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
@@ -308,7 +309,7 @@ public class OrdersController implements Initializable, ChildController
             primaryBankAccountIDTitleLabel.setText("Total fees (offer fee + tx fee):");
             secondaryBankAccountIDTitleLabel.setText("Refunded collateral:");
 
-            String fiatPayed = Formatter.formatVolume(trade.getOffer().getPrice() * trade.getTradeAmount().doubleValue());
+            String fiatPayed = Formatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount()));
 
             bankAccountTypeTextField.setText(Utils.bitcoinValueToFriendlyString(trade.getTradeAmount()));
             holderNameTextField.setText(fiatPayed);

@@ -362,7 +362,7 @@ public class TakerTradeController implements Initializable, ChildController
         row = -1;
         FormBuilder.addHeaderLabel(gridPane, "Trade successfully completed", ++row);
 
-        String fiatReceived = Formatter.formatVolume(trade.getOffer().getPrice() * trade.getTradeAmount().doubleValue());
+        String fiatReceived = Formatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount()));
 
         FormBuilder.addTextField(gridPane, "You have sold (BTC):", Utils.bitcoinValueToFriendlyString(trade.getTradeAmount()), ++row);
         if (takerIsSelling())
