@@ -2,16 +2,26 @@ package io.bitsquare.trade;
 
 import com.google.bitcoin.core.Transaction;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
 
 import java.io.Serializable;
 import java.math.BigInteger;
 
 public class Trade implements Serializable
 {
+    public static enum State
+    {
+        NONE,
+        ACCEPTED,
+        COMPLETED
+    }
+
     private static final long serialVersionUID = -8275323072940974077L;
 
     transient private final SimpleBooleanProperty depositTxChangedProperty = new SimpleBooleanProperty();
+    transient private final SimpleBooleanProperty payoutTxChangedProperty = new SimpleBooleanProperty();
     transient private final SimpleBooleanProperty contractChangedProperty = new SimpleBooleanProperty();
+    transient private final SimpleStringProperty stateChangedProperty = new SimpleStringProperty();
 
     private Offer offer;
     private String takeOfferFeeTxID;
@@ -20,6 +30,8 @@ public class Trade implements Serializable
     private String contractAsJson;
     private String takerSignature;
     private Transaction depositTransaction;
+    private Transaction payoutTransaction;
+    private State state = State.NONE;
 
     public Trade(Offer offer)
     {
@@ -61,6 +73,19 @@ public class Trade implements Serializable
     {
         this.depositTransaction = depositTransaction;
         depositTxChangedProperty.set(!depositTxChangedProperty.get());
+    }
+
+    public void setState(State state)
+    {
+        this.state = state;
+        stateChangedProperty.set(state.toString());
+    }
+
+
+    public void setPayoutTransaction(Transaction payoutTransaction)
+    {
+        this.payoutTransaction = payoutTransaction;
+        payoutTxChangedProperty.set(!payoutTxChangedProperty.get());
     }
 
 
@@ -108,6 +133,17 @@ public class Trade implements Serializable
         return depositTransaction;
     }
 
+    public Transaction getPayoutTransaction()
+    {
+        return payoutTransaction;
+    }
+
+    public State getState()
+    {
+        return state;
+    }
+
+
     public SimpleBooleanProperty getDepositTxChangedProperty()
     {
         return depositTxChangedProperty;
@@ -118,9 +154,25 @@ public class Trade implements Serializable
         return contractChangedProperty;
     }
 
+    public SimpleBooleanProperty getPayoutTxChangedProperty()
+    {
+        return payoutTxChangedProperty;
+    }
+
+    public SimpleStringProperty getStateChangedProperty()
+    {
+        return stateChangedProperty;
+    }
+
+    public BigInteger getCollateralAmount()
+    {
+        return getTradeAmount().multiply(BigInteger.valueOf(getOffer().getCollateral())).divide(BigInteger.valueOf(100));
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // toString
     ///////////////////////////////////////////////////////////////////////////////////////////
+
 
     @Override
     public String toString()
@@ -132,8 +184,8 @@ public class Trade implements Serializable
                 ", contract=" + contract +
                 ", contractAsJson='" + contractAsJson + '\'' +
                 ", takerSignature='" + takerSignature + '\'' +
+                ", depositTransaction=" + depositTransaction +
+                ", state=" + state +
                 '}';
     }
-
-
 }

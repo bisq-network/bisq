@@ -42,7 +42,7 @@ public class OffererPaymentProtocol
     private User user;
     private PeerAddress peerAddress;
     private boolean isTakeOfferRequested;
-    private int numberOfSteps = 15;//TODO
+    private int numberOfSteps = 10;//TODO
     private int currentStep = 0;
     private String preparedOffererDepositTxAsHex;
     private Transaction depositTransaction;
@@ -214,7 +214,7 @@ public class OffererPaymentProtocol
 
         log.debug("2.5 createDepositTx");
 
-        BigInteger offererInputAmount = trade.getTradeAmount().multiply(BigInteger.valueOf(offer.getCollateral())).divide(BigInteger.valueOf(100));
+        BigInteger offererInputAmount = trade.getCollateralAmount();
         String offererPubKey = walletFacade.getPubKeyAsHex();
         String takerPubKey = requestTradeMessage.getTakerMultiSigPubKey();
         String arbitratorPubKey = offer.getArbitrator().getPubKey();
@@ -546,7 +546,7 @@ public class OffererPaymentProtocol
 
         try
         {
-            BigInteger collateral = trade.getTradeAmount().multiply(BigInteger.valueOf(offer.getCollateral())).divide(BigInteger.valueOf(100));
+            BigInteger collateral = trade.getCollateralAmount();
             BigInteger offererPaybackAmount = trade.getTradeAmount().add(collateral);
             BigInteger takerPaybackAmount = collateral;
 
@@ -604,7 +604,7 @@ public class OffererPaymentProtocol
         log.debug("3.14  onPayoutTxPublished");
         log.debug("3.14  TRADE COMPLETE!!!!!!!!!!!");
 
-        offererPaymentProtocolListener.onPayoutTxPublished(tradeMessage.getPayoutTxID());
+        offererPaymentProtocolListener.onPayoutTxPublished(tradeMessage.getPayoutTxAsHex());
     }
 
 

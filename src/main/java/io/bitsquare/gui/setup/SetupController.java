@@ -184,7 +184,7 @@ public class SetupController implements Initializable, ChildController
 
     public void onClose(ActionEvent actionEvent)
     {
-        navigationController.navigateToView(NavigationController.MARKET, "");
+        navigationController.navigateToView(NavigationController.FUNDS, "");
     }
 
 

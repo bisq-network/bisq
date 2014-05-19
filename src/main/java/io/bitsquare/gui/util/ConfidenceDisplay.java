@@ -16,10 +16,12 @@ import java.util.Set;
 public class ConfidenceDisplay
 {
     private static final Logger log = LoggerFactory.getLogger(ConfidenceDisplay.class);
+    private WalletEventListener walletEventListener;
 
     private Wallet wallet;
     private Label confirmationLabel;
     private TextField balanceTextField;
+    private Transaction transaction;
     private ProgressIndicator progressIndicator;
 
     /**
@@ -43,8 +45,7 @@ public class ConfidenceDisplay
         progressIndicator.setProgress(0);
 
         updateBalance(wallet.getBalance());
-
-        wallet.addEventListener(new WalletEventListener()
+        walletEventListener = new WalletEventListener()
         {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
@@ -63,6 +64,7 @@ public class ConfidenceDisplay
             @Override
             public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
             {
+                updateBalance(newBalance);
             }
 
             @Override
@@ -84,19 +86,21 @@ public class ConfidenceDisplay
             public void onScriptsAdded(Wallet wallet, List<Script> scripts)
             {
             }
-        });
+        };
+        wallet.addEventListener(walletEventListener);
     }
 
     /**
      * @param wallet
      * @param confirmationLabel
-     * @param newTransaction    We want the confidence for only that tx, not the lasted changed in the wallet
+     * @param transaction       We want the confidence for only that tx, not the lasted changed in the wallet
      * @param progressIndicator
      */
-    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, final Transaction newTransaction, ProgressIndicator progressIndicator)
+    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, final Transaction transaction, ProgressIndicator progressIndicator)
     {
         this.wallet = wallet;
         this.confirmationLabel = confirmationLabel;
+        this.transaction = transaction;
         this.progressIndicator = progressIndicator;
 
         if (balanceTextField != null)
@@ -106,26 +110,31 @@ public class ConfidenceDisplay
         progressIndicator.setProgress(0);
 
         updateBalance(wallet.getBalance());
+        updateConfidence(transaction);
 
-        wallet.addEventListener(new WalletEventListener()
+        walletEventListener = new WalletEventListener()
         {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
             {
-                updateBalance(newBalance);
+                if (tx.getHashAsString().equals(transaction.getHashAsString()))
+                    updateBalance(newBalance);
                 // log.debug("onCoinsReceived " + newBalance);
             }
 
             @Override
             public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
             {
-                updateConfidence(newTransaction);
+                if (tx.getHashAsString().equals(transaction.getHashAsString()))
+                    updateConfidence(transaction);
                 // log.debug("onTransactionConfidenceChanged newTransaction " + newTransaction.getHashAsString());
             }
 
             @Override
             public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
             {
+                if (tx.getHashAsString().equals(transaction.getHashAsString()))
+                    updateBalance(newBalance);
             }
 
             @Override
@@ -147,7 +156,24 @@ public class ConfidenceDisplay
             public void onScriptsAdded(Wallet wallet, List<Script> scripts)
             {
             }
-        });
+        };
+        wallet.addEventListener(walletEventListener);
+    }
+
+    public void destroy()
+    {
+        boolean wasInList = wallet.removeEventListener(walletEventListener);
+        log.trace("ConfidenceDisplay.destroy wasInList = " + wasInList);
+        progressIndicator.setProgress(0);
+        confirmationLabel.setText("");
+        if (balanceTextField != null)
+            balanceTextField.setText("");
+
+        walletEventListener = null;
+        wallet = null;
+        confirmationLabel = null;
+        progressIndicator = null;
+        balanceTextField = null;
     }
 
     private void updateBalance(BigInteger balance)
@@ -175,18 +201,22 @@ public class ConfidenceDisplay
                     latestTransaction = transaction;
                 }
             }
-            if (latestTransaction != null)
-            {
+            if (latestTransaction != null && (transaction == null || latestTransaction.getHashAsString().equals(transaction.getHashAsString())))
                 updateConfidence(latestTransaction);
-            }
         }
+
         if (balanceTextField != null)
             balanceTextField.setText(Utils.bitcoinValueToFriendlyString(balance));
     }
 
     private void updateConfidence(Transaction tx)
     {
+        log.debug("updateConfidence: " + this.toString());
+        log.debug("tx: " + tx.getHashAsString());
         TransactionConfidence confidence = tx.getConfidence();
+        log.debug("ConfidenceType: " + confidence.getConfidenceType().toString());
+        log.debug("numBroadcastPeers: " + confidence.numBroadcastPeers());
+        log.debug("getDepthInBlocks: " + confidence.getDepthInBlocks());
         double progressIndicatorSize = 50;
         switch (confidence.getConfidenceType())
         {

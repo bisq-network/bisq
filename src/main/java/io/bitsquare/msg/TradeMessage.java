@@ -37,7 +37,9 @@ public class TradeMessage implements Serializable
     private String accountID;
     private String offererPubKey;
     private String preparedOffererDepositTxAsHex;
-    private String payoutTxID;
+
+
+    private String payoutTxAsHex;
 
     public TradeMessage(TradeMessageType type, String offerUID)
     {
@@ -244,19 +246,19 @@ public class TradeMessage implements Serializable
         return takerPaybackAmount;
     }
 
-    public String getPayoutTxID()
-    {
-        return payoutTxID;
-    }
-
-    public void setPayoutTxID(String payoutTxID)
-    {
-        this.payoutTxID = payoutTxID;
-    }
-
-
     public String getDepositTxAsHex()
     {
         return depositTxAsHex;
     }
+
+    public void setPayoutTxAsHex(String payoutTxAsHex)
+    {
+        this.payoutTxAsHex = payoutTxAsHex;
+    }
+
+    public String getPayoutTxAsHex()
+    {
+        return payoutTxAsHex;
+    }
+
 }

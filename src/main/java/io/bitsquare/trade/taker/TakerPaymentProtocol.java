@@ -44,7 +44,7 @@ public class TakerPaymentProtocol
     private CryptoFacade cryptoFacade;
     private User user;
     private PeerAddress peerAddress;
-    private int numberOfSteps = 15;//TODO
+    private int numberOfSteps = 10;//TODO
     private int currentStep = 0;
 
 
@@ -362,7 +362,7 @@ public class TakerPaymentProtocol
     {
         log.debug("2.10 payDeposit");
 
-        BigInteger collateralAmount = trade.getTradeAmount().multiply(BigInteger.valueOf(offer.getCollateral())).divide(BigInteger.valueOf(100));
+        BigInteger collateralAmount = trade.getCollateralAmount();
         BigInteger takerInputAmount = trade.getTradeAmount().add(collateralAmount);
         BigInteger msOutputAmount = trade.getTradeAmount().add(collateralAmount).add(collateralAmount);
 
@@ -513,7 +513,7 @@ public class TakerPaymentProtocol
                 log.debug("3.12 onSuccess walletFacade.takerSignsAndSendsTx " + transaction.toString());
                 takerPaymentProtocolListener.onTradeCompleted(transaction.getHashAsString());
 
-                sendPayoutTxToOfferer(transaction.getHashAsString());
+                sendPayoutTxToOfferer(Utils.bytesToHexString(transaction.bitcoinSerialize()));
             }
 
             @Override
@@ -554,7 +554,7 @@ public class TakerPaymentProtocol
     // Step 3.13  Send payout txID to offerer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void sendPayoutTxToOfferer(String txId)
+    public void sendPayoutTxToOfferer(String payoutTxAsHex)
     {
         log.debug("3.13 sendPayoutTxToOfferer ");
         TradeMessageListener listener = new TradeMessageListener()
@@ -576,8 +576,7 @@ public class TakerPaymentProtocol
         };
 
         TradeMessage tradeMessage = new TradeMessage(TradeMessageType.PAYOUT_TX_PUBLISHED, trade.getUid());
-        tradeMessage.setPayoutTxID(txId);
-
+        tradeMessage.setPayoutTxAsHex(payoutTxAsHex);
         log.debug("3.13 sendTradeMessage PAYOUT_TX_PUBLISHED");
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
     }

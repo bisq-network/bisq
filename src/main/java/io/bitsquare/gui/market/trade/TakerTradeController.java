@@ -171,7 +171,7 @@ public class TakerTradeController implements Initializable, ChildController
         totalLabel = FormBuilder.addTextField(gridPane, "Total (" + offer.getCurrency() + "):", Formatter.formatVolume(getVolume()), ++row);
         collateralTextField = FormBuilder.addTextField(gridPane, "Collateral (BTC):", "", ++row);
         applyCollateral();
-        FormBuilder.addTextField(gridPane, "Offer fee (BTC):", Utils.bitcoinValueToFriendlyString(Fees.OFFER_TAKER_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE)), ++row);
+        FormBuilder.addTextField(gridPane, "Offer fee (BTC):", Utils.bitcoinValueToFriendlyString(Fees.OFFER_TAKER_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(Fees.TX_FEE)), ++row);
         totalToPayLabel = FormBuilder.addTextField(gridPane, "Total to pay (BTC):", getTotalToPay(), ++row);
 
         isOnlineTextField = FormBuilder.addTextField(gridPane, "Online status:", "Checking offerers online status...", ++row);
@@ -361,14 +361,19 @@ public class TakerTradeController implements Initializable, ChildController
         gridPane.getChildren().clear();
         row = -1;
         FormBuilder.addHeaderLabel(gridPane, "Trade successfully completed", ++row);
-        FormBuilder.addTextField(gridPane, "You have payed in total (BTC):", getTotalToPay(), ++row);
+
+        String fiatReceived = Formatter.formatVolume(trade.getOffer().getPrice() * trade.getTradeAmount().doubleValue());
+
+        FormBuilder.addTextField(gridPane, "You have sold (BTC):", Utils.bitcoinValueToFriendlyString(trade.getTradeAmount()), ++row);
         if (takerIsSelling())
         {
-            FormBuilder.addTextField(gridPane, "You got returned collateral (BTC):", BtcFormatter.formatSatoshis(getCollateralInSatoshis(), false), ++row);
-            FormBuilder.addTextField(gridPane, "You have received (" + offer.getCurrency() + "):", Formatter.formatVolume(getVolume()), ++row);
+            FormBuilder.addTextField(gridPane, "You have received (" + offer.getCurrency() + "):\"", fiatReceived, ++row);
+            FormBuilder.addTextField(gridPane, "Total fees (take offer fee + tx fee):", Utils.bitcoinValueToFriendlyString(Fees.OFFER_TAKER_FEE.add(Fees.TX_FEE)), ++row);
+            FormBuilder.addTextField(gridPane, "Refunded collateral:", Utils.bitcoinValueToFriendlyString(trade.getCollateralAmount()), ++row);
         }
         else
         {
+            //TODO
             FormBuilder.addTextField(gridPane, "You got returned collateral (BTC):", BtcFormatter.formatSatoshis(getCollateralInSatoshis(), false), ++row);
             FormBuilder.addTextField(gridPane, "You have received (" + offer.getCurrency() + "):", Formatter.formatVolume(getVolume()), ++row);
             FormBuilder.addTextField(gridPane, "You have received (BTC):", BtcFormatter.formatSatoshis(offer.getAmount(), false), ++row);
@@ -433,11 +438,11 @@ public class TakerTradeController implements Initializable, ChildController
     {
         if (takerIsSelling())
         {
-            return BtcFormatter.formatSatoshis(getAmountInSatoshis().add(Fees.OFFER_TAKER_FEE).add(Transaction.MIN_NONDUST_OUTPUT).add(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE).add(getCollateralInSatoshis()), false);
+            return BtcFormatter.formatSatoshis(getAmountInSatoshis().add(Fees.OFFER_TAKER_FEE).add(Transaction.MIN_NONDUST_OUTPUT).add(Fees.TX_FEE).add(getCollateralInSatoshis()), false);
         }
         else
         {
-            return BtcFormatter.formatSatoshis(Fees.OFFER_TAKER_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE).add(getCollateralInSatoshis()), false) + "\n" +
+            return BtcFormatter.formatSatoshis(Fees.OFFER_TAKER_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(Fees.TX_FEE).add(getCollateralInSatoshis()), false) + "\n" +
                     Formatter.formatVolume(getVolume(), offer.getCurrency());
         }
     }

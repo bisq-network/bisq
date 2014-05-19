@@ -15,22 +15,23 @@
 
     <logger name="io.bitsquare" level="TRACE"/>
 
-    <logger name="com.google.bitcoin" level="TRACE"/>
+    <logger name="com.google.bitcoin" level="INFO"/>
     <logger name="net.tomp2p" level="WARN"/>
 
     <!--
-         -->
+       -->
+    <logger name="com.google.bitcoin.core.Wallet" level="DEBUG"/>
+    <logger name="com.google.bitcoin.core.MemoryPool" level="INFO" additivity="false"/>
+    <logger name="com.google.bitcoin.net.discovery.DnsDiscovery" level="INFO" additivity="false"/>
 
     <logger name="com.google.bitcoin.core.DownloadListener" level="WARN" additivity="false"/>
-    <logger name="com.google.bitcoin.core.TransactionOutput" level="INFO" additivity="false"/>
+    <logger name="com.google.bitcoin.core.TransactionOutput" level="WARN" additivity="false"/>
     <logger name="com.google.bitcoin.core.BitcoinSerializer" level="WARN" additivity="false"/>
-    <logger name="com.google.bitcoin.core.Peer" level="ERROR" additivity="false"/>
-    <logger name="com.google.bitcoin.core.PeerGroup" level="ERROR" additivity="false"/>
-    <logger name="com.google.bitcoin.core.PeerSocketHandler" level="OFF" additivity="false"/>
-    <logger name="com.google.bitcoin.net.NioClientManager" level="ERROR" additivity="false"/>
-    <logger name="com.google.bitcoin.net.ConnectionHandler" level="ERROR" additivity="false"/>
-    <logger name="com.google.bitcoin.net.discovery.DnsDiscovery" level="OFF" additivity="false"/>
-    <logger name="com.google.bitcoin.core.MemoryPool" level="OFF" additivity="false"/>
+    <logger name="com.google.bitcoin.core.Peer" level="WARN" additivity="false"/>
+    <logger name="com.google.bitcoin.core.PeerGroup" level="WARN" additivity="false"/>
+    <logger name="com.google.bitcoin.core.PeerSocketHandler" level="WARN" additivity="false"/>
+    <logger name="com.google.bitcoin.net.NioClientManager" level="WARN" additivity="false"/>
+    <logger name="com.google.bitcoin.net.ConnectionHandler" level="WARN" additivity="false"/>
 
 
 </configuration>

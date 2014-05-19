@@ -3,6 +3,7 @@ package io.bitsquare.trade;
 import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.TransactionConfidence;
+import com.google.bitcoin.core.Utils;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
@@ -184,8 +185,11 @@ public class Trading
             }
 
             @Override
-            public void onPayoutTxPublished(String payoutTxID)
+            public void onPayoutTxPublished(String payoutTxAsHex)
             {
+                Transaction payoutTx = new Transaction(walletFacade.getWallet().getParams(), Utils.parseAsHexOrBase58(payoutTxAsHex));
+                trade.setPayoutTransaction(payoutTx);
+                trade.setState(Trade.State.COMPLETED);
                 log.debug("trading onPayoutTxPublished");
             }
 

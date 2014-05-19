@@ -1,19 +1,18 @@
 package io.bitsquare.gui.orders;
 
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.Wallet;
-import com.google.bitcoin.core.WalletEventListener;
+import com.google.bitcoin.core.*;
 import com.google.bitcoin.script.Script;
 import com.google.inject.Inject;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.btc.Fees;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.util.ConfidenceDisplay;
+import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.gui.util.Localisation;
 import io.bitsquare.trade.Direction;
@@ -36,6 +35,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,11 +51,14 @@ public class OrdersController implements Initializable, ChildController
     private Trading trading;
     private WalletFacade walletFacade;
     private Trade currentTrade;
-
+    private NavigationController navigationController;
     private Image buyIcon = Icons.getIconImage(Icons.BUY);
     private Image sellIcon = Icons.getIconImage(Icons.SELL);
     private ConfidenceDisplay confidenceDisplay;
 
+
+    @FXML
+    private VBox rootContainer;
     @FXML
     private TableView openTradesTable;
     @FXML
@@ -63,7 +66,8 @@ public class OrdersController implements Initializable, ChildController
     @FXML
     private ProgressIndicator progressIndicator;
     @FXML
-    private Label confirmationLabel, txIDCopyIcon, holderNameCopyIcon, primaryBankAccountIDCopyIcon, secondaryBankAccountIDCopyIcon;
+    private Label txTitleLabel, txHeaderLabel, confirmationLabel, txIDCopyIcon, holderNameCopyIcon, primaryBankAccountIDCopyIcon, secondaryBankAccountIDCopyIcon, bankAccountDetailsHeaderLabel,
+            bankAccountTypeTitleLabel, holderNameTitleLabel, primaryBankAccountIDTitleLabel, secondaryBankAccountIDTitleLabel;
     @FXML
     private TextField txTextField, bankAccountTypeTextField, holderNameTextField, primaryBankAccountIDTextField, secondaryBankAccountIDTextField;
     @FXML
@@ -81,6 +85,10 @@ public class OrdersController implements Initializable, ChildController
         this.walletFacade = walletFacade;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface implementation: Initializable
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
@@ -135,19 +143,19 @@ public class OrdersController implements Initializable, ChildController
                 {
                     openTradesTable.getSelectionModel().select(0);
                 }
-
             }
         });
     }
 
-    private void showTradeDetails(TradesTableItem tradesTableItem)
-    {
-        fillData(tradesTableItem.getTrade());
-    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface implementation: ChildController
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void setNavigationController(NavigationController navigationController)
     {
+        this.navigationController = navigationController;
     }
 
     @Override
@@ -155,73 +163,82 @@ public class OrdersController implements Initializable, ChildController
     {
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // GUI handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void bankTransferInited(ActionEvent actionEvent)
     {
         trading.onBankTransferInited(currentTrade.getUid());
         bankTransferInitedButton.setDisable(true);
     }
 
-    private void updateTx(Trade trade)
+    public void close(ActionEvent actionEvent)
     {
-        Transaction transaction = trade.getDepositTransaction();
 
-        if (transaction != null)
-        {
-            confirmationLabel.setVisible(true);
-            progressIndicator.setVisible(true);
-            progressIndicator.setProgress(-1);
-
-            txTextField.setText(transaction.getHashAsString());
-
-            confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, transaction, progressIndicator);
-
-            int depthInBlocks = transaction.getConfidence().getDepthInBlocks();
-            bankTransferInitedButton.setDisable(depthInBlocks == 0);
-
-            walletFacade.getWallet().addEventListener(new WalletEventListener()
-            {
-                @Override
-                public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
-                {
-                    int depthInBlocks = tx.getConfidence().getDepthInBlocks();
-                    bankTransferInitedButton.setDisable(depthInBlocks == 0);
-                }
-
-                @Override
-                public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
-                {
-                }
-
-                @Override
-                public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
-                {
-                }
-
-                @Override
-                public void onReorganize(Wallet wallet)
-                {
-                }
-
-
-                @Override
-                public void onWalletChanged(Wallet wallet)
-                {
-                }
-
-                @Override
-                public void onKeysAdded(Wallet wallet, List<ECKey> keys)
-                {
-                }
-
-                @Override
-                public void onScriptsAdded(Wallet wallet, List<Script> scripts)
-                {
-                }
-            });
-
-        }
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void showTradeDetails(TradesTableItem tradesTableItem)
+    {
+        fillData(tradesTableItem.getTrade());
+    }
+
+    private void updateTx(Transaction transaction)
+    {
+        txTextField.setText(transaction.getHashAsString());
+
+        confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, transaction, progressIndicator);
+
+        int depthInBlocks = transaction.getConfidence().getDepthInBlocks();
+        bankTransferInitedButton.setDisable(depthInBlocks == 0);
+
+        walletFacade.getWallet().addEventListener(new WalletEventListener()
+        {
+            @Override
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
+            {
+                int depthInBlocks = tx.getConfidence().getDepthInBlocks();
+                bankTransferInitedButton.setDisable(depthInBlocks == 0);
+            }
+
+            @Override
+            public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            {
+            }
+
+            @Override
+            public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            {
+            }
+
+            @Override
+            public void onReorganize(Wallet wallet)
+            {
+            }
+
+
+            @Override
+            public void onWalletChanged(Wallet wallet)
+            {
+            }
+
+            @Override
+            public void onKeysAdded(Wallet wallet, List<ECKey> keys)
+            {
+            }
+
+            @Override
+            public void onScriptsAdded(Wallet wallet, List<Script> scripts)
+            {
+            }
+        });
+    }
 
     private void fillData(Trade trade)
     {
@@ -234,13 +251,13 @@ public class OrdersController implements Initializable, ChildController
                 @Override
                 public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean aBoolean2)
                 {
-                    updateTx(trade);
+                    updateTx(trade.getDepositTransaction());
                 }
             });
         }
         else
         {
-            updateTx(trade);
+            updateTx(trade.getDepositTransaction());
         }
 
         // back details
@@ -259,19 +276,95 @@ public class OrdersController implements Initializable, ChildController
                 }
             });
         }
+
+        // state
+        trade.getStateChangedProperty().addListener(new ChangeListener<String>()
+        {
+            @Override
+            public void changed(ObservableValue<? extends String> observableValue, String aString, String aString2)
+            {
+                setState(trade);
+            }
+        });
+    }
+
+    private void setState(Trade trade)
+    {
+        if (trade.getState() == Trade.State.COMPLETED)
+        {
+            Transaction transaction = trade.getPayoutTransaction();
+
+            confidenceDisplay.destroy();
+            confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, transaction, progressIndicator);
+
+            txTextField.setText(transaction.getHashAsString());
+
+            txHeaderLabel.setText("Payout transaction");
+            txTitleLabel.setText("Payout transaction ID:");
+
+            bankAccountDetailsHeaderLabel.setText("Summary");
+            bankAccountTypeTitleLabel.setText("You have bought (BTC):");
+            holderNameTitleLabel.setText("You have payed (" + trade.getOffer().getCurrency() + "):");
+            primaryBankAccountIDTitleLabel.setText("Total fees (offer fee + tx fee):");
+            secondaryBankAccountIDTitleLabel.setText("Refunded collateral:");
+
+            String fiatPayed = Formatter.formatVolume(trade.getOffer().getPrice() * trade.getTradeAmount().doubleValue());
+
+            bankAccountTypeTextField.setText(Utils.bitcoinValueToFriendlyString(trade.getTradeAmount()));
+            holderNameTextField.setText(fiatPayed);
+            primaryBankAccountIDTextField.setText(Utils.bitcoinValueToFriendlyString(Fees.OFFER_CREATION_FEE.add(Fees.TX_FEE)));
+            secondaryBankAccountIDTextField.setText(Utils.bitcoinValueToFriendlyString(trade.getCollateralAmount()));
+
+            holderNameCopyIcon.setVisible(false);
+            primaryBankAccountIDCopyIcon.setVisible(false);
+            secondaryBankAccountIDCopyIcon.setVisible(false);
+
+            bankTransferInitedButton.setVisible(false);
+        }
     }
 
     private void setBankData(Trade trade)
     {
         BankAccount bankAccount = trade.getContract().getTakerBankAccount();
-        //TODO why null?
-        if (bankAccount != null)
-        {
-            bankAccountTypeTextField.setText(bankAccount.getBankAccountType().getType().toString());
-            holderNameTextField.setText(bankAccount.getAccountHolderName());
-            primaryBankAccountIDTextField.setText(bankAccount.getAccountPrimaryID());
-            secondaryBankAccountIDTextField.setText(bankAccount.getAccountSecondaryID());
-        }
+        bankAccountTypeTextField.setText(bankAccount.getBankAccountType().getType().toString());
+        holderNameTextField.setText(bankAccount.getAccountHolderName());
+        primaryBankAccountIDTextField.setText(bankAccount.getAccountPrimaryID());
+        secondaryBankAccountIDTextField.setText(bankAccount.getAccountSecondaryID());
+    }
+
+    private void initCopyIcons()
+    {
+        AwesomeDude.setIcon(txIDCopyIcon, AwesomeIcon.COPY);
+        txIDCopyIcon.setOnMouseClicked(e -> {
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+            content.putString(txTextField.getText());
+            clipboard.setContent(content);
+        });
+
+        AwesomeDude.setIcon(holderNameCopyIcon, AwesomeIcon.COPY);
+        holderNameCopyIcon.setOnMouseClicked(e -> {
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+            content.putString(holderNameTextField.getText());
+            clipboard.setContent(content);
+        });
+
+        AwesomeDude.setIcon(primaryBankAccountIDCopyIcon, AwesomeIcon.COPY);
+        primaryBankAccountIDCopyIcon.setOnMouseClicked(e -> {
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+            content.putString(primaryBankAccountIDTextField.getText());
+            clipboard.setContent(content);
+        });
+
+        AwesomeDude.setIcon(secondaryBankAccountIDCopyIcon, AwesomeIcon.COPY);
+        secondaryBankAccountIDCopyIcon.setOnMouseClicked(e -> {
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+            content.putString(secondaryBankAccountIDTextField.getText());
+            clipboard.setContent(content);
+        });
     }
 
 
@@ -435,42 +528,6 @@ public class OrdersController implements Initializable, ChildController
                     }
                 };
             }
-        });
-    }
-
-
-    private void initCopyIcons()
-    {
-        AwesomeDude.setIcon(txIDCopyIcon, AwesomeIcon.COPY);
-        txIDCopyIcon.setOnMouseClicked(e -> {
-            Clipboard clipboard = Clipboard.getSystemClipboard();
-            ClipboardContent content = new ClipboardContent();
-            content.putString(txTextField.getText());
-            clipboard.setContent(content);
-        });
-
-        AwesomeDude.setIcon(holderNameCopyIcon, AwesomeIcon.COPY);
-        holderNameCopyIcon.setOnMouseClicked(e -> {
-            Clipboard clipboard = Clipboard.getSystemClipboard();
-            ClipboardContent content = new ClipboardContent();
-            content.putString(holderNameTextField.getText());
-            clipboard.setContent(content);
-        });
-
-        AwesomeDude.setIcon(primaryBankAccountIDCopyIcon, AwesomeIcon.COPY);
-        primaryBankAccountIDCopyIcon.setOnMouseClicked(e -> {
-            Clipboard clipboard = Clipboard.getSystemClipboard();
-            ClipboardContent content = new ClipboardContent();
-            content.putString(primaryBankAccountIDTextField.getText());
-            clipboard.setContent(content);
-        });
-
-        AwesomeDude.setIcon(secondaryBankAccountIDCopyIcon, AwesomeIcon.COPY);
-        secondaryBankAccountIDCopyIcon.setOnMouseClicked(e -> {
-            Clipboard clipboard = Clipboard.getSystemClipboard();
-            ClipboardContent content = new ClipboardContent();
-            content.putString(secondaryBankAccountIDTextField.getText());
-            clipboard.setContent(content);
         });
     }
 

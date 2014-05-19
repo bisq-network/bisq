@@ -91,7 +91,7 @@ public class WalletFacade
 
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
-        walletAppKit.setDownloadListener(new BlockChainDownloadListener()).setBlockingStartup(false).setUserAgent(BitSquare.ID, "0.1");
+        walletAppKit.setDownloadListener(new BlockChainDownloadListener()).setBlockingStartup(false).setUserAgent("BitSquare", "0.1");
         walletAppKit.startAsync();
         walletAppKit.awaitRunning();
 
@@ -190,7 +190,8 @@ public class WalletFacade
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
 
         // give fee to miners yet. Later it could be spent to other traders via lottery...
-        sendRequest.fee = Fees.ACCOUNT_REGISTRATION_FEE.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
+        sendRequest.fee = Fees.ACCOUNT_REGISTRATION_FEE.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(Fees.TX_FEE);
+        log.trace("sendRequest.fee: " + Utils.bitcoinValueToFriendlyString(sendRequest.fee));
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         log.debug("Registration transaction: " + tx.toString());
         printInputs("publishRegistrationTxWithExtraData", tx);
@@ -215,6 +216,8 @@ public class WalletFacade
     // Trade process
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    //TODO refactor to similar solution like in PaymentChannelServerState
+
     public String payOfferFee(BigInteger fee, FutureCallback<Transaction> callback) throws InsufficientMoneyException
     {
         log.debug("payOfferFee fee=" + Utils.bitcoinValueToFriendlyString(fee));
@@ -222,7 +225,7 @@ public class WalletFacade
         tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, WalletUtil.getEmptyOP_RETURNScript());
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
 
-        sendRequest.fee = fee.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
+        sendRequest.fee = fee.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(Fees.TX_FEE);
 
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);
@@ -344,11 +347,14 @@ public class WalletFacade
             tx.addOutput(tempTx.getOutput(1));
 
         // We add the btc tx fee to the msOutputAmount and apply the change to the multiSig output
-        msOutputAmount = msOutputAmount.add(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
+        msOutputAmount = msOutputAmount.add(Fees.TX_FEE);
         tx.getOutput(0).setValue(msOutputAmount);
 
         // Now we sign our input
         TransactionInput input = tx.getInput(1);
+        if (input == null || input.getConnectedOutput() == null)
+            log.error("input or input.getConnectedOutput() is null: " + input);
+
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
         Sha256Hash hash = tx.hashForSignature(1, scriptPubKey, Transaction.SigHash.ALL, false);
@@ -436,11 +442,11 @@ public class WalletFacade
 
         //TODO handle non change output cases
         // add outputs from takers tx, they are already correct
-
-        for (int i = 0; i < takersSignedTx.getOutputs().size(); i++)
-        {
-            tx.addOutput(takersSignedTx.getOutput(i));
-        }
+        tx.addOutput(takersSignedTx.getOutput(0));
+        if (takersSignedTx.getOutputs().size() > 1)
+            tx.addOutput(takersSignedTx.getOutput(1));
+        if (takersSignedTx.getOutputs().size() == 3)
+            tx.addOutput(takersSignedTx.getOutput(2));
 
         printInputs("tx", tx);
         log.trace("tx = " + tx.toString());
@@ -448,6 +454,9 @@ public class WalletFacade
 
         // sign the input
         TransactionInput input = tx.getInput(0);
+        if (input == null || input.getConnectedOutput() == null)
+            log.error("input or input.getConnectedOutput() is null: " + input);
+
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
         Sha256Hash hash = tx.hashForSignature(0, scriptPubKey, Transaction.SigHash.ALL, false);
@@ -503,7 +512,19 @@ public class WalletFacade
         log.trace("depositTxID=" + depositTxAsHex);
         Transaction depositTx = new Transaction(params, Utils.parseAsHexOrBase58(depositTxAsHex));
         log.trace("depositTx=" + depositTx);
-        wallet.commitTx(depositTx);
+        // boolean isAlreadyInWallet = wallet.maybeCommitTx(depositTx);
+        //log.trace("isAlreadyInWallet=" + isAlreadyInWallet);
+
+        try
+        {
+            // Manually add the multisigContract to the wallet, overriding the isRelevant checks so we can track
+            // it and check for double-spends later
+            wallet.receivePending(depositTx, null, true);
+        } catch (VerificationException e)
+        {
+            throw new RuntimeException(e); // Cannot happen, we already called multisigContract.verify()
+        }
+
     }
 
     // 5. step payout tx: Offerer creates payout tx and signs it
