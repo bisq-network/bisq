@@ -162,8 +162,7 @@ public class ConfidenceDisplay
 
     public void destroy()
     {
-        boolean wasInList = wallet.removeEventListener(walletEventListener);
-        log.trace("ConfidenceDisplay.destroy wasInList = " + wasInList);
+        wallet.removeEventListener(walletEventListener);
         progressIndicator.setProgress(0);
         confirmationLabel.setText("");
         if (balanceTextField != null)
@@ -211,12 +210,7 @@ public class ConfidenceDisplay
 
     private void updateConfidence(Transaction tx)
     {
-        log.debug("updateConfidence: " + this.toString());
-        log.debug("tx: " + tx.getHashAsString());
         TransactionConfidence confidence = tx.getConfidence();
-        log.debug("ConfidenceType: " + confidence.getConfidenceType().toString());
-        log.debug("numBroadcastPeers: " + confidence.numBroadcastPeers());
-        log.debug("getDepthInBlocks: " + confidence.getDepthInBlocks());
         double progressIndicatorSize = 50;
         switch (confidence.getConfidenceType())
         {
