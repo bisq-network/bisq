@@ -89,6 +89,9 @@ public class WalletFacade
 
         walletAppKit.setAutoSave(true);
 
+        // add well known stable nodes
+        //walletAppKit.peerGroup().addAddress();
+
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
         walletAppKit.setDownloadListener(new BlockChainDownloadListener()).setBlockingStartup(false).setUserAgent("BitSquare", "0.1");

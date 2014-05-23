@@ -21,6 +21,7 @@ import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.rpc.ObjectDataReply;
 import net.tomp2p.storage.Data;
 import net.tomp2p.storage.StorageDisk;
+import net.tomp2p.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,6 +118,39 @@ public class MessageFacade
             masterPeer.shutdown();
     }
 
+
+    public void setupReputationRoot() throws IOException
+    {
+        String pubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(getPubKey());  // out message ID
+        final Number160 locationKey = Number160.createHash("REPUTATION_" + pubKeyAsHex); // out reputation root storage location
+        final Number160 contentKey = Utils.makeSHAHash(getPubKey().getEncoded());  // my pubKey -> i may only put in 1 reputation
+        final Data reputationData = new Data(Number160.ZERO).setProtectedEntry().setPublicKey(getPubKey()); // at registration time we add a null value as data
+        // we use a pubkey where we provable cannot own the private key.
+        // the domain key must be verifiable by peers to be sure the reputation root was net deleted by the owner.
+        // so we use the locationKey as it already meets our requirements (verifiable and impossible to create a private key out of it)
+        myPeer.put(locationKey).setData(contentKey, reputationData).setDomainKey(locationKey).setProtectDomain().start();
+    }
+
+    public void addReputation(String pubKeyAsHex) throws IOException
+    {
+        final Number160 locationKey = Number160.createHash("REPUTATION_" + pubKeyAsHex);  // reputation root storage location ot the peer
+        final Number160 contentKey = Utils.makeSHAHash(getPubKey().getEncoded());  // my pubKey -> i may only put in 1 reputation, I may update it later. eg. counter for 5 trades...
+        final Data reputationData = new Data("TODO: some reputation data..., content signed and sig attached").setProtectedEntry().setPublicKey(getPubKey());
+        myPeer.put(locationKey).setData(contentKey, reputationData).start();
+    }
+
+    // At any offer or take offer fee payment the trader add the tx id and the pubKey and the signature of that tx to that entry.
+    // That way he can prove with the signature that he is the payer of the offer fee.
+    // It does not assure that the trade was really executed, but we can protect the traders privacy that way.
+    // If we use the trade, we would link all trades together and would reveal the whole trading history.
+    public void addOfferFeePaymentToReputation(String txId, String pubKeyOfFeePayment) throws IOException
+    {
+        String pubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(getPubKey());  // out message ID
+        final Number160 locationKey = Number160.createHash("REPUTATION_" + pubKeyAsHex);  // reputation root storage location ot the peer
+        final Number160 contentKey = Utils.makeSHAHash(getPubKey().getEncoded());  // my pubKey -> i may only put in 1 reputation, I may update it later. eg. counter for 5 trades...
+        final Data reputationData = new Data("TODO: tx, btc_pubKey, sig(tx), content signed and sig attached").setProtectedEntry().setPublicKey(getPubKey());
+        myPeer.put(locationKey).setData(contentKey, reputationData).start();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Publish offer
