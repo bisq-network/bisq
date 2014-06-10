@@ -94,10 +94,10 @@ public class CreateOfferController implements Initializable, ChildController
 
 
         //TODO
-        amountTextField.setText("0,001");
-        minAmountTextField.setText("0,001");
-        priceTextField.setText("300");
-        collateralTextField.setText("50");
+       /* amountTextField.setText(""+(int)(new Random().nextDouble()*100/10+1));
+        priceTextField.setText(""+ (int)(499 - new Random().nextDouble()*1000/100)); */
+        minAmountTextField.setText("0,1");
+        collateralTextField.setText("10");
         updateVolume();
 
         amountTextField.textProperty().addListener(new ChangeListener<String>()

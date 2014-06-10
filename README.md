@@ -29,13 +29,13 @@ You can change the network mode in the guice module: BitSquareModule.java
 * TomP2P as messaging lib integrated and basic use cases in msg screen implemented: orderbook, add order, remove order, peer interaction
 * Payment process implemented with messaging for Offerer buy BTC case
 * Hash of contract data embedded into tx (OP_RETURN)
+* Arbitrator integration concept
+* Conceptual refinements
+* Develop funding model
 
 ### Next steps:
-* Conceptual refinements
-* Arbitrator integration concept
-* Other trade variants (Buy BTC taker, Sell BTC offerer, Sell BTC offerer)
-* Develop funding model
 * Start development of production version
+* Other trade variants (Buy BTC taker, Sell BTC offerer, Sell BTC offerer)
 
 
 ### Screenshots of basic the use cases:
@@ -60,8 +60,9 @@ Deposit tx: https://blockchain.info/de/tx/98c6ae55963022871216a6a124c1e1ed7f6308
 Payout tx: https://blockchain.info/tx/498e2c299ca991b27f61b63fb6ee457819ee9e33ee5a1d250fde47eb15199adc
 
 
-### Links:
+### Resources:
 * Web: http://bitsquare.io
 * Whitepaper: https://docs.google.com/document/d/1d3EiWZdaM89-P6MVhS53unXv2-pDpSFsN3W4kCGXKgY/edit?pli=1
 * Overview: http://bitsquare.io/images/overview.png
-* Discussion: https://bitcointalk.org/index.php?topic=462236
+* Discussion: https://bitcointalk.org/index.php?topic=647457
+* Video of POC prototype: https://www.youtube.com/watch?v=ByfnzJzi0bo

@@ -508,7 +508,7 @@ public class WalletFacade
     }
 
     // 4 step deposit tx: Offerer send deposit tx to taker
-    public void takerCommitDepositTx(String depositTxAsHex)
+    public String takerCommitDepositTx(String depositTxAsHex)
     {
         log.trace("takerCommitDepositTx");
         log.trace("inputs: ");
@@ -527,6 +527,8 @@ public class WalletFacade
         {
             throw new RuntimeException(e); // Cannot happen, we already called multisigContract.verify()
         }
+
+        return depositTx.getHashAsString();
 
     }
 

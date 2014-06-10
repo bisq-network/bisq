@@ -171,7 +171,7 @@ public class TakerTradeController implements Initializable, ChildController
         totalLabel = FormBuilder.addTextField(gridPane, "Total (" + offer.getCurrency() + "):", Formatter.formatVolume(getVolume()), ++row);
         collateralTextField = FormBuilder.addTextField(gridPane, "Collateral (BTC):", "", ++row);
         applyCollateral();
-        FormBuilder.addTextField(gridPane, "Offer fee (BTC):", Utils.bitcoinValueToFriendlyString(Fees.OFFER_TAKER_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(Fees.TX_FEE)), ++row);
+        FormBuilder.addTextField(gridPane, "Offer fee (BTC):", Utils.bitcoinValueToFriendlyString(Fees.OFFER_TAKER_FEE.add(Fees.TX_FEE)), ++row);
         totalToPayLabel = FormBuilder.addTextField(gridPane, "Total to pay (BTC):", getTotalToPay(), ++row);
 
         isOnlineTextField = FormBuilder.addTextField(gridPane, "Online status:", "Checking offerers online status...", ++row);

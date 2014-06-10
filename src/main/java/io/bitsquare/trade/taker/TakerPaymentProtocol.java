@@ -471,9 +471,9 @@ public class TakerPaymentProtocol
     {
         log.debug("3.6 DepositTxID received: " + tradeMessage.getDepositTxAsHex());
 
-        walletFacade.takerCommitDepositTx(tradeMessage.getDepositTxAsHex());
+        String txID = walletFacade.takerCommitDepositTx(tradeMessage.getDepositTxAsHex());
         takerPaymentProtocolListener.onProgress(getProgress());
-        takerPaymentProtocolListener.onDepositTxPublished(tradeMessage.getDepositTxAsHex());
+        takerPaymentProtocolListener.onDepositTxPublished(txID);
     }
 
 

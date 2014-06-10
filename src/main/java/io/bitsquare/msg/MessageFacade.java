@@ -98,7 +98,7 @@ public class MessageFacade
         try
         {
             createMyPeerInstance(keyName, port);
-            //setupStorage();
+            setupStorage();
             //TODO save periodically or get informed if network address changes
             saveMyAddressToDHT();
             setupReplyHandler();
@@ -160,10 +160,11 @@ public class MessageFacade
     public void addOffer(Offer offer) throws IOException
     {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
-        Number160 contentKey = Number160.createHash(offer.getUid());
+        final Number160 contentKey = Number160.createHash(offer.getUid());
         final Data offerData = new Data(offer);
         //offerData.setTTLSeconds(5);
         final FutureDHT addFuture = myPeer.put(locationKey).setData(contentKey, offerData).start();
+        //final FutureDHT addFuture = myPeer.add(locationKey).setData(offerData).start();
         addFuture.addListener(new BaseFutureAdapter<BaseFuture>()
         {
             @Override

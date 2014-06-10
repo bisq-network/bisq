@@ -197,6 +197,7 @@ public class OrderBook implements OrderBookListener
         if (success && dataMap != null)
         {
             allOffers.clear();
+
             for (Data offerData : dataMap.values())
             {
                 try
