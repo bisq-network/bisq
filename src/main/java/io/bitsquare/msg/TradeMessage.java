@@ -38,7 +38,6 @@ public class TradeMessage implements Serializable
     private String offererPubKey;
     private String preparedOffererDepositTxAsHex;
 
-
     private String payoutTxAsHex;
 
     public TradeMessage(TradeMessageType type, String offerUID)

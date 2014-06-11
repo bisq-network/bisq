@@ -12,8 +12,6 @@ import java.util.UUID;
 
 /**
  * That facade delivers crypto functionality from the bitcoinJ library
- * Code from BitcoinJ must not be used outside that facade.
- * That way a change of the library will only affect that class.
  */
 public class CryptoFacade
 {

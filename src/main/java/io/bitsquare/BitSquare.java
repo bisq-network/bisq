@@ -32,7 +32,7 @@ import java.util.Locale;
 public class BitSquare extends Application
 {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
-    public static String ID = "";
+    public static String ID = "bitsquare";
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
 

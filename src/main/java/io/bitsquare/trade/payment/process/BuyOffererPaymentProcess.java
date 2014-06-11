@@ -1,5 +1,6 @@
 package io.bitsquare.trade.payment.process;
 
+//TODO not used but let it for reference until all use cases are impl.
 public class BuyOffererPaymentProcess extends PaymentProcess
 {
     public BuyOffererPaymentProcess()
