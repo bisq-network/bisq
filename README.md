@@ -16,6 +16,14 @@ See: https://bitcoinj.github.io/testing
 You can change the network mode in the guice module: BitSquareModule.java
 
 
+### Resources:
+* Web: http://bitsquare.io
+* Whitepaper: https://docs.google.com/document/d/1d3EiWZdaM89-P6MVhS53unXv2-pDpSFsN3W4kCGXKgY/edit?pli=1
+* Overview: http://bitsquare.io/images/overview.png
+* Discussion: https://bitcointalk.org/index.php?topic=647457
+* Video of POC prototype: https://www.youtube.com/watch?v=ByfnzJzi0bo
+
+
 ### Screenshots of basic the use cases:
 * [Registration screen 1](https://github.com/bitsquare/bitsquare/tree/master/screenshots/registration_3.png)
 * [Registration screen 2](https://github.com/bitsquare/bitsquare/tree/master/screenshots/registration_bank_account.png)
@@ -36,11 +44,3 @@ Create offer fee tx: https://blockchain.info/tx/24f4d229edace44d9123628363a16cd7
 Take offer fee tx: https://blockchain.info/tx/06ea3c2a5fb79f622d3e3def7c6a20274274fcbf9ec69b95bdfe9b347bbbdf76
 Deposit tx: https://blockchain.info/de/tx/98c6ae55963022871216a6a124c1e1ed7f6308560e76b72617b6b54cf50ef412
 Payout tx: https://blockchain.info/tx/498e2c299ca991b27f61b63fb6ee457819ee9e33ee5a1d250fde47eb15199adc
-
-
-### Resources:
-* Web: http://bitsquare.io
-* Whitepaper: https://docs.google.com/document/d/1d3EiWZdaM89-P6MVhS53unXv2-pDpSFsN3W4kCGXKgY/edit?pli=1
-* Overview: http://bitsquare.io/images/overview.png
-* Discussion: https://bitcointalk.org/index.php?topic=647457
-* Video of POC prototype: https://www.youtube.com/watch?v=ByfnzJzi0bo
