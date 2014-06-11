@@ -16,28 +16,6 @@ See: https://bitcoinj.github.io/testing
 You can change the network mode in the guice module: BitSquareModule.java
 
 
-### Implemented (prototype level):
-* Orderbook with filtering offers by amount, price, order type, trading account(buy, sell)
-* Create offer
-* Take offer
-* Simple persistence
-* bitcoinj integration
-* Setup with account registration and tx with OP_RETURN + embedded and blinded bank account data
-* Offer fee payment with a OP_RETURN tx and fees to miners
-* Pay in to MS fund
-* Payout from MS fund
-* TomP2P as messaging lib integrated and basic use cases in msg screen implemented: orderbook, add order, remove order, peer interaction
-* Payment process implemented with messaging for Offerer buy BTC case
-* Hash of contract data embedded into tx (OP_RETURN)
-* Arbitrator integration concept
-* Conceptual refinements
-* Develop funding model
-
-### Next steps:
-* Start development of production version
-* Other trade variants (Buy BTC taker, Sell BTC offerer, Sell BTC offerer)
-
-
 ### Screenshots of basic the use cases:
 * [Registration screen 1](https://github.com/bitsquare/bitsquare/tree/master/screenshots/registration_3.png)
 * [Registration screen 2](https://github.com/bitsquare/bitsquare/tree/master/screenshots/registration_bank_account.png)
