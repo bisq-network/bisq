@@ -14,6 +14,7 @@ public class BitSquareValidatorTest
         assertTrue(BitSquareValidator.validateStringAsDouble("1"));
         assertTrue(BitSquareValidator.validateStringAsDouble("0,1"));
         assertTrue(BitSquareValidator.validateStringAsDouble("0.01"));
+
         assertFalse(BitSquareValidator.validateStringAsDouble(""));
         assertFalse(BitSquareValidator.validateStringAsDouble("a"));
         assertFalse(BitSquareValidator.validateStringAsDouble("0.0.1"));
@@ -27,6 +28,7 @@ public class BitSquareValidatorTest
     {
         assertTrue(BitSquareValidator.validateStringNotEmpty("a"));
         assertTrue(BitSquareValidator.validateStringNotEmpty("123"));
+
         assertFalse(BitSquareValidator.validateStringNotEmpty(""));
         assertFalse(BitSquareValidator.validateStringNotEmpty(" "));
         assertFalse(BitSquareValidator.validateStringNotEmpty(null));

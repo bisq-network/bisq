@@ -10,6 +10,7 @@ import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.Locale;
 
+// TODO
 public class BtcFormatter
 {
     private static final Logger log = LoggerFactory.getLogger(BtcFormatter.class);

@@ -18,10 +18,8 @@ import java.util.ResourceBundle;
 
 public class ArbitratorProfileController implements Initializable, ChildController
 {
-
     private Settings settings;
     private Storage storage;
-
     private Arbitrator arbitrator;
     private NavigationController navigationController;
 
@@ -32,6 +30,7 @@ public class ArbitratorProfileController implements Initializable, ChildControll
             arbitrationFeeTextField, methodsTextField, idVerificationsTextField, webPageTextField;
     @FXML
     private TextArea descriptionTextArea;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -46,12 +45,7 @@ public class ArbitratorProfileController implements Initializable, ChildControll
 
         Settings savedSettings = (Settings) storage.read(settings.getClass().getName());
         if (savedSettings != null)
-        {
             settings.updateFromStorage(savedSettings);
-        }
-        else
-        {
-        }
     }
 
 
@@ -99,6 +93,7 @@ public class ArbitratorProfileController implements Initializable, ChildControll
     public void initialize(URL url, ResourceBundle rb)
     {
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: ChildController

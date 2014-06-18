@@ -64,6 +64,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
         messageFacade.getArbitrators(LanguageUtil.getDefaultLanguageLocale());
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: Initializable
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -221,6 +222,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
         stage.close();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -230,6 +232,5 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
         prevButton.setDisable(index < 1);
         nextButton.setDisable(index == allArbitrators.size() - 1 || index == -1);
     }
-
 }
 

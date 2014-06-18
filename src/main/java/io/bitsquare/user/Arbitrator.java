@@ -7,8 +7,6 @@ import java.util.Objects;
 
 public class Arbitrator implements Serializable
 {
-
-
     public enum ID_TYPE
     {
         REAL_LIFE_ID,
@@ -95,8 +93,7 @@ public class Arbitrator implements Serializable
         this.webUrl = webUrl;
         this.description = description;
 
-        //TODO use pubKeyAsHex
-        UID = name;
+        UID = pubKeyAsHex;
     }
 
 

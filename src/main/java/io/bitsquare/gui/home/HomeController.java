@@ -96,7 +96,6 @@ public class HomeController implements Initializable, ChildController, Navigatio
     public void onArbitratorRegistration(ActionEvent actionEvent)
     {
         navigateToView(NavigationController.ARBITRATOR_REGISTRATION, "Registration as Arbitrator");
-
     }
 
     @FXML

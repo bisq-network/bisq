@@ -22,7 +22,6 @@ public class AddressListItem
         this.isUsed.set(isUsed);
     }
 
-
     // called form table columns
     public final StringProperty labelProperty()
     {
@@ -38,7 +37,6 @@ public class AddressListItem
     {
         return this.isUsed;
     }
-
 
     public Address getAddress()
     {

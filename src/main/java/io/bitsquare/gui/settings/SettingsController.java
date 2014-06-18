@@ -1,19 +1,25 @@
 package io.bitsquare.gui.settings;
 
+import com.google.bitcoin.core.ECKey;
+import com.google.bitcoin.core.Utils;
 import com.google.inject.Inject;
 import io.bitsquare.BitSquare;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountTypeInfo;
+import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.locale.*;
+import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Arbitrator;
+import io.bitsquare.user.Reputation;
 import io.bitsquare.user.User;
+import io.bitsquare.util.DSAKeyUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -37,14 +43,16 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
+// TODO separate in 2 view/controllers
 public class SettingsController implements Initializable, ChildController, NavigationController
 {
     private User user;
     private Settings settings;
     private Storage storage;
+    private WalletFacade walletFacade;
+    private MessageFacade messageFacade;
     private NavigationController navigationController;
     private ChildController childController;
-
     private ObservableList<Locale> languageList;
     private ObservableList<Country> countryList;
     private List<String> regionList;
@@ -80,11 +88,13 @@ public class SettingsController implements Initializable, ChildController, Navig
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SettingsController(User user, Settings settings, Storage storage)
+    public SettingsController(User user, Settings settings, Storage storage, WalletFacade walletFacade, MessageFacade messageFacade)
     {
         this.user = user;
         this.settings = settings;
         this.storage = storage;
+        this.walletFacade = walletFacade;
+        this.messageFacade = messageFacade;
 
         Settings savedSettings = (Settings) storage.read(settings.getClass().getName());
         if (savedSettings != null)
@@ -127,6 +137,46 @@ public class SettingsController implements Initializable, ChildController, Navig
         setupGeneralSettingsScreen();
 
         initBankAccountScreen();
+
+        addMockArbitrator();
+    }
+
+    private void addMockArbitrator()
+    {
+        String pubKeyAsHex = Utils.bytesToHexString(new ECKey().getPubKey());
+        String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey());
+        List<Locale> languages = new ArrayList<>();
+        languages.add(LanguageUtil.getDefaultLanguageLocale());
+        List<Arbitrator.METHODS> arbitrationMethods = new ArrayList<>();
+        arbitrationMethods.add(Arbitrator.METHODS.TLS_NOTARY);
+        List<Arbitrator.ID_VERIFICATIONS> idVerifications = new ArrayList<>();
+        idVerifications.add(Arbitrator.ID_VERIFICATIONS.PASSPORT);
+        idVerifications.add(Arbitrator.ID_VERIFICATIONS.GOV_ID);
+
+        Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
+                messagePubKeyAsHex,
+                "Manfred Karrer",
+                Arbitrator.ID_TYPE.REAL_LIFE_ID,
+                languages,
+                new Reputation(),
+                1,
+                0.01,
+                0.001,
+                10,
+                0.1,
+                arbitrationMethods,
+                idVerifications,
+                "http://bitsquare.io/",
+                "Bla bla..."
+        );
+
+        try
+        {
+            messageFacade.addArbitrator(arbitrator);
+        } catch (IOException e)
+        {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
     }
 
 

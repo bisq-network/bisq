@@ -4,6 +4,9 @@ import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerMaker;
 import net.tomp2p.peers.Number160;
 
+/**
+ * Network node for relaying p2p msg
+ */
 public class RelayNode
 {
     private static Peer masterPeer = null;

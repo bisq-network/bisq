@@ -132,20 +132,6 @@ public class Utilities
         return obj;
     }
 
-
-   /* public static ArrayList<BankAccountTypeInfo.BankAccountType> getAllBankAccountTypeEnums()
-    {
-        ArrayList<BankAccountTypeInfo.BankAccountType> bankAccountTypes = new ArrayList<>();
-        bankAccountTypes.add(BankAccountTypeInfo.BankAccountType.SEPA);
-        bankAccountTypes.add(BankAccountTypeInfo.BankAccountType.WIRE);
-        bankAccountTypes.add(BankAccountTypeInfo.BankAccountType.INTERNATIONAL);
-        bankAccountTypes.add(BankAccountTypeInfo.BankAccountType.OK_PAY);
-        bankAccountTypes.add(BankAccountTypeInfo.BankAccountType.NET_TELLER);
-        bankAccountTypes.add(BankAccountTypeInfo.BankAccountType.PERFECT_MONEY);
-        bankAccountTypes.add(BankAccountTypeInfo.BankAccountType.OTHER);
-        return bankAccountTypes;
-    }  */
-
     public static AnimationTimer setTimeout(int delay, Function<AnimationTimer, Void> callback)
     {
         AnimationTimer animationTimer = new AnimationTimer()

@@ -76,6 +76,7 @@ public class BitSquareValidator
         }
     }
 
+    //TODO
     public static void textFieldBankAccountSecondaryIDIsValid(TextField textField, BankAccountTypeInfo bankAccountTypeInfo) throws ValidationException
     {
         if (!validateStringNotEmpty(textField.getText()))
@@ -85,7 +86,6 @@ public class BitSquareValidator
             throw new ValidationException();
         }
     }
-
 
     public static boolean validateStringsAsDouble(String[] inputs)
     {

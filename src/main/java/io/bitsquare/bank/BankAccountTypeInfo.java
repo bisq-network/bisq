@@ -6,7 +6,6 @@ import java.util.Objects;
 
 public class BankAccountTypeInfo implements Serializable
 {
-
     private static final long serialVersionUID = -8772708150197835288L;
 
     public static enum BankAccountType

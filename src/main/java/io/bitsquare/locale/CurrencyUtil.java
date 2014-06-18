@@ -5,7 +5,6 @@ import java.util.*;
 
 public class CurrencyUtil
 {
-
     public static List<Currency> getAllCurrencies()
     {
         ArrayList<Currency> mainCurrencies = new ArrayList<>();

@@ -2,7 +2,6 @@ package io.bitsquare.di;
 
 
 import com.google.bitcoin.core.NetworkParameters;
-import com.google.bitcoin.kits.WalletAppKit;
 import com.google.bitcoin.params.MainNetParams;
 import com.google.bitcoin.params.RegTestParams;
 import com.google.bitcoin.params.TestNet3Params;
@@ -11,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import io.bitsquare.btc.BitSquareWalletAppKit;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
@@ -50,23 +50,23 @@ public class BitSquareModule extends AbstractModule
         //test net not working yet: http://sourceforge.net/p/bitcoin/mailman/message/32349208/
         //bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.TEST_NET);
         bind(NetworkParameters.class).toProvider(NetworkParametersProvider.class).asEagerSingleton();
-        bind(WalletAppKit.class).toProvider(WalletAppKitProvider.class).asEagerSingleton();
+        bind(BitSquareWalletAppKit.class).toProvider(BitSquareWalletAppKitProvider.class).asEagerSingleton();
     }
 }
 
-class WalletAppKitProvider implements Provider<WalletAppKit>
+class BitSquareWalletAppKitProvider implements Provider<BitSquareWalletAppKit>
 {
     private NetworkParameters networkParameters;
 
     @Inject
-    public WalletAppKitProvider(NetworkParameters networkParameters)
+    public BitSquareWalletAppKitProvider(NetworkParameters networkParameters)
     {
         this.networkParameters = networkParameters;
     }
 
-    public WalletAppKit get()
+    public BitSquareWalletAppKit get()
     {
-        return new WalletAppKit(networkParameters, new File(Utilities.getRootDir()), WalletFacade.WALLET_PREFIX);
+        return new BitSquareWalletAppKit(networkParameters, new File(Utilities.getRootDir()), WalletFacade.WALLET_PREFIX);
     }
 }
 

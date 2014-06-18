@@ -59,7 +59,6 @@ public class OrdersController implements Initializable, ChildController
     private Image sellIcon = Icons.getIconImage(Icons.SELL);
     private ConfidenceDisplay confidenceDisplay;
 
-
     @FXML
     private VBox rootContainer;
     @FXML
@@ -179,7 +178,6 @@ public class OrdersController implements Initializable, ChildController
 
     public void close(ActionEvent actionEvent)
     {
-
     }
 
 

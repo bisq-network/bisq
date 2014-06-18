@@ -16,7 +16,6 @@ public class HistoryController implements Initializable, ChildController
     public void initialize(URL url, ResourceBundle rb)
     {
 
-
     }
 
     @Override

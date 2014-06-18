@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.SignatureException;
-import java.util.UUID;
 
 /**
  * That facade delivers crypto functionality from the bitcoinJ library
@@ -23,10 +22,6 @@ public class CryptoFacade
     {
     }
 
-    public String getRandomID()
-    {
-        return UUID.randomUUID().toString();
-    }
 
     public byte[] getEmbeddedAccountRegistrationData(ECKey registrationKey, String stringifiedBankAccounts)
     {

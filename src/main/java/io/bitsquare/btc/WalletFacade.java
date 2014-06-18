@@ -2,12 +2,10 @@ package io.bitsquare.btc;
 
 import com.google.bitcoin.core.*;
 import com.google.bitcoin.crypto.TransactionSignature;
-import com.google.bitcoin.kits.WalletAppKit;
 import com.google.bitcoin.params.MainNetParams;
 import com.google.bitcoin.params.RegTestParams;
 import com.google.bitcoin.script.Script;
 import com.google.bitcoin.script.ScriptBuilder;
-import com.google.bitcoin.script.ScriptOpCodes;
 import com.google.bitcoin.utils.Threading;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
@@ -15,7 +13,10 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import io.bitsquare.BitSquare;
+import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.crypto.CryptoFacade;
+import io.bitsquare.storage.Storage;
 import javafx.application.Platform;
 import javafx.util.Pair;
 import org.slf4j.Logger;
@@ -38,16 +39,15 @@ public class WalletFacade
     private static final Logger log = LoggerFactory.getLogger(WalletFacade.class);
 
     private NetworkParameters params;
-    private WalletAppKit walletAppKit;
+    private BitSquareWalletAppKit walletAppKit;
     private CryptoFacade cryptoFacade;
-
-    private List<DownloadListener> downloadListeners = new ArrayList<>();
-
-    private Wallet wallet;
-    private ECKey arbitratorKey;
+    private Storage storage;
+    private BitSquareWallet wallet;
     private WalletEventListener walletEventListener;
+    private List<DownloadListener> downloadListeners = new ArrayList<>();
     private List<ConfidenceListener> confidenceListeners = new ArrayList<>();
     private List<BalanceListener> balanceListeners = new ArrayList<>();
+    private List<AddressInfo> addressInfoList = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -55,11 +55,12 @@ public class WalletFacade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletFacade(NetworkParameters params, WalletAppKit walletAppKit, CryptoFacade cryptoFacade)
+    public WalletFacade(NetworkParameters params, BitSquareWalletAppKit walletAppKit, CryptoFacade cryptoFacade, Storage storage)
     {
         this.params = params;
         this.walletAppKit = walletAppKit;
         this.cryptoFacade = cryptoFacade;
+        this.storage = storage;
     }
 
 
@@ -99,7 +100,7 @@ public class WalletFacade
         walletAppKit.startAsync();
         walletAppKit.awaitRunning();
 
-        wallet = walletAppKit.wallet();
+        wallet = (BitSquareWallet) walletAppKit.wallet();
 
 
         wallet.allowSpendingUnconfirmedTransactions();
@@ -152,12 +153,31 @@ public class WalletFacade
             }
         };
         wallet.addEventListener(walletEventListener);
+
+
+        List<AddressInfo> savedAddressInfoList = (List<AddressInfo>) storage.read("addressInfoList");
+        if (savedAddressInfoList != null)
+        {
+            addressInfoList = savedAddressInfoList;
+        }
+        else
+        {
+            addressInfoList.add(getRegistrationAddressInfo());
+            storage.write("addressInfoList", addressInfoList);
+        }
     }
 
     public void shutDown()
     {
+        wallet.removeEventListener(walletEventListener);
+
         walletAppKit.stopAsync();
         walletAppKit.awaitTerminated();
+    }
+
+    public Wallet getWallet()
+    {
+        return wallet;
     }
 
 
@@ -204,7 +224,7 @@ public class WalletFacade
             for (int n = 0; n < transactionOutputs.size(); n++)
             {
                 TransactionOutput transactionOutput = transactionOutputs.get(n);
-                if (!isOpReturnScript(transactionOutput))
+                if (!ScriptUtil.isOpReturnScript(transactionOutput))
                 {
                     Address address = transactionOutput.getScriptPubKey().getToAddress(params);
                     if (address.equals(confidenceListener.getAddress()))
@@ -216,11 +236,6 @@ public class WalletFacade
         }
     }
 
-    private boolean isOpReturnScript(TransactionOutput transactionOutput)
-    {
-        return transactionOutput.getScriptPubKey().getChunks().get(0).equalsOpCode(ScriptOpCodes.OP_RETURN);
-    }
-
     private void notifyBalanceListeners(Transaction tx)
     {
         for (int i = 0; i < balanceListeners.size(); i++)
@@ -230,7 +245,7 @@ public class WalletFacade
             for (int n = 0; n < transactionOutputs.size(); n++)
             {
                 TransactionOutput transactionOutput = transactionOutputs.get(n);
-                if (!isOpReturnScript(transactionOutput))
+                if (!ScriptUtil.isOpReturnScript(transactionOutput))
                 {
                     Address address = transactionOutput.getScriptPubKey().getToAddress(params);
                     if (address.equals(balanceListener.getAddress()))
@@ -244,45 +259,34 @@ public class WalletFacade
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Key management
+    // Address management
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean isNewWallet()
+    public List<AddressInfo> getAddressInfoList()
     {
-        // walletAppKit creates first key
-        return wallet.getKeys().size() == 1;
+        return addressInfoList;
     }
 
-    public Address getRegistrationAddress()
+    public AddressInfo getRegistrationAddressInfo()
     {
-        ECKey key = wallet.getKeys().get(0);
-        return key.toAddress(params);
+        ECKey registrationKey = wallet.getKeys().get(0);
+        return new AddressInfo(registrationKey, params, "Registration");
     }
 
-    public List<Address> getTradingAddresses()
-    {
-        List<Address> addresses = new ArrayList<>();
-
-        List<ECKey> keys = wallet.getKeys();
-        for (int i = 0; i < keys.size(); i++)
-        {
-            ECKey key = keys.get(i);
-            addresses.add(key.toAddress(params));
-        }
-        return addresses;
-    }
-
-    public Address createNewAddress()
+    public AddressInfo getNewAddressInfo(String label)
     {
         ECKey key = new ECKey();
         wallet.addKey(key);
-        return key.toAddress(params);
+        AddressInfo addressInfo = new AddressInfo(key, params, label);
+        addressInfoList.add(addressInfo);
+        storage.write("addressInfoList", addressInfoList);
+        return addressInfo;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Address management
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public AddressInfo getNewArbitratorAddressInfo()
+    {
+        return getNewAddressInfo("Arbitrator deposit");
+    }
 
     public TransactionConfidence getConfidence(Address address)
     {
@@ -295,7 +299,7 @@ public class WalletFacade
                 for (int n = 0; n < transactionOutputs.size(); n++)
                 {
                     TransactionOutput transactionOutput = transactionOutputs.get(n);
-                    if (!isOpReturnScript(transactionOutput))
+                    if (!ScriptUtil.isOpReturnScript(transactionOutput))
                     {
                         Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
                         if (addressOutput.equals(address))
@@ -319,7 +323,7 @@ public class WalletFacade
         BigInteger value = BigInteger.ZERO;
         for (TransactionOutput transactionOutput : all)
         {
-            if (!isOpReturnScript(transactionOutput))
+            if (!ScriptUtil.isOpReturnScript(transactionOutput))
             {
                 Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
                 if (addressOutput.equals(address))
@@ -329,55 +333,31 @@ public class WalletFacade
             }
         }
         return value;
-
-       /* Set<Transaction> transactions = wallet.getTransactions(true);
-        if (transactions != null)
-        {
-            for (Transaction tx : transactions)
-            {
-                List<TransactionOutput> transactionOutputs = tx.getOutputs();
-                for (int n = 0; n < transactionOutputs.size(); n++)
-                {
-                    TransactionOutput transactionOutput = transactionOutputs.get(n);
-                    if (!isOpReturnScript(transactionOutput))
-                    {
-
-                        Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-                        if (addressOutput.equals(address))
-                        {
-                            return tx.getValueSentToMe(wallet);
-                        }
-                    }
-                    else
-                    {
-                        return BigInteger.ZERO;
-                    }
-                }
-            }
-        }
-        return BigInteger.ZERO;  */
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Trading wallet
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public BigInteger getBalance()
+    public BigInteger getWalletBalance()
     {
         return wallet.getBalance(Wallet.BalanceType.ESTIMATED);
     }
 
+    public BigInteger getRegistrationBalance()
+    {
+        return getBalance(getRegistrationAddressInfo().getAddress());
+    }
+
+    public ECKey getRegistrationKey()
+    {
+        return getRegistrationAddressInfo().getKey();
+    }
+
+
+    //TODO
     public String getTradingAddress()
     {
         return getTradingKey().toAddress(params).toString();
     }
 
-    public Wallet getWallet()
-    {
-        return wallet;
-    }
-
+    //TODO
     public String getPubKeyAsHex()
     {
         return Utils.bytesToHexString(getTradingKey().getPubKey());
@@ -390,21 +370,6 @@ public class WalletFacade
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Arbitration key
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getArbitratorPubKeyAsHex()
-    {
-        if (arbitratorKey == null)
-        {
-            arbitratorKey = new ECKey();
-            wallet.addKey(arbitratorKey);
-        }
-
-        return Utils.bytesToHexString(arbitratorKey.getPubKey());
-    }
-
     //TODO separate wallets
     public BigInteger getCollateralBalance()
     {
@@ -414,17 +379,6 @@ public class WalletFacade
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Account registration
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public BigInteger getRegistrationBalance()
-    {
-        return getBalance(getRegistrationAddress());
-    }
-
-    public ECKey getRegistrationKey()
-    {
-        return wallet.getKeys().get(0);
-    }
-
 
     public void publishRegistrationTxWithExtraData(String stringifiedBankAccounts) throws InsufficientMoneyException
     {
@@ -471,7 +425,7 @@ public class WalletFacade
     {
         log.debug("payOfferFee fee=" + Utils.bitcoinValueToFriendlyString(fee));
         Transaction tx = new Transaction(params);
-        tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, WalletUtil.getEmptyOP_RETURNScript());
+        tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, ScriptUtil.getEmptyOP_RETURNScript());
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
 
         sendRequest.fee = fee.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(Fees.TX_FEE);

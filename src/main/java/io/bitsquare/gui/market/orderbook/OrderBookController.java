@@ -61,7 +61,6 @@ public class OrderBookController implements Initializable, ChildController
     private static final Logger log = LoggerFactory.getLogger(OrderBookController.class);
     private NavigationController navigationController;
     private OrderBook orderBook;
-
     private SortedList<OrderBookListItem> offerList;
     private final OrderBookFilter orderBookFilter;
     private User user;
@@ -70,7 +69,6 @@ public class OrderBookController implements Initializable, ChildController
     private Settings settings;
     private Storage storage;
     private AnimationTimer pollingTimer;
-
     private Image buyIcon = Icons.getIconImage(Icons.BUY);
     private Image sellIcon = Icons.getIconImage(Icons.SELL);
 
@@ -197,7 +195,7 @@ public class OrderBookController implements Initializable, ChildController
                     try
                     {
                         walletFacade.publishRegistrationTxWithExtraData(user.getStringifiedBankAccounts());
-                        user.setAccountID(walletFacade.getRegistrationAddress().toString());
+                        user.setAccountID(walletFacade.getRegistrationAddressInfo().toString());
                         user.setMessagePubKeyAsHex(DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey()));
 
                         storage.write(user.getClass().getName(), user);

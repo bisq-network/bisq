@@ -1,14 +1,14 @@
 package io.bitsquare.gui.funds;
 
-import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.TransactionConfidence;
 import com.google.bitcoin.core.Utils;
 import com.google.inject.Inject;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.btc.BalanceListener;
-import io.bitsquare.btc.ConfidenceListener;
+import io.bitsquare.btc.AddressInfo;
 import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
@@ -72,23 +72,16 @@ public class FundsController implements Initializable, ChildController
         setCopyColumnCellFactory();
         setConfidenceColumnCellFactory();
 
-        List<Address> addresses = walletFacade.getTradingAddresses();
+        List<AddressInfo> addressInfoList = walletFacade.getAddressInfoList();
 
-        for (int i = 0; i < addresses.size(); i++)
+        for (int i = 0; i < addressInfoList.size(); i++)
         {
-            Address address = addresses.get(i);
-            String label;
-            if (i == 0)
-                label = "Registration";
-            else
-                label = "Trade " + i;
-            addressList.add(new AddressListItem(label, address, false));
+            AddressInfo addressInfo = addressInfoList.get(i);
+            addressList.add(new AddressListItem(addressInfo.getLabel(), addressInfo.getAddress(), false));
         }
 
         addressesTable.setItems(addressList);
         addressesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        //Platform.runLater(() -> walletFacade.triggerConfidenceNotificationForAllTransactions());
     }
 
 
@@ -104,7 +97,6 @@ public class FundsController implements Initializable, ChildController
     @Override
     public void cleanup()
     {
-
     }
 
 
@@ -115,9 +107,8 @@ public class FundsController implements Initializable, ChildController
     @FXML
     public void onAddNewAddress(ActionEvent actionEvent)
     {
-        Address address = walletFacade.createNewAddress();
-        addressList.add(new AddressListItem("Trade " + (walletFacade.getTradingAddresses().size() - 1), address, false));
-        // walletFacade.triggerConfidenceNotificationForAllTransactions();
+        AddressInfo addressInfo = walletFacade.getNewAddressInfo("New address");
+        addressList.add(new AddressListItem(addressInfo.getLabel(), addressInfo.getAddress(), false));
     }
 
 
@@ -298,6 +289,5 @@ public class FundsController implements Initializable, ChildController
             }
         }
     }
-
 }
 

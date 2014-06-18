@@ -54,9 +54,7 @@ public class TakerTradeController implements Initializable, ChildController
     private BigInteger requestedAmount;
     private boolean offererIsOnline;
     private int row;
-
     private List<ProcessStepItem> processStepItems = new ArrayList();
-
     private NavigationController navigationController;
     private TextField amountTextField, totalToPayLabel, totalLabel, collateralTextField, isOnlineTextField;
     private Label statusTextField, infoLabel;
@@ -64,7 +62,7 @@ public class TakerTradeController implements Initializable, ChildController
     private ProgressBar progressBar;
     private AnimationTimer checkOnlineStatusTimer;
     private Pane isOnlineCheckerHolder;
-    TakerPaymentProtocol takerPaymentProtocol;
+    private TakerPaymentProtocol takerPaymentProtocol;
     private Label headerLabel;
 
     @FXML
@@ -447,7 +445,6 @@ public class TakerTradeController implements Initializable, ChildController
                     BitSquareFormatter.formatVolume(getVolume(), offer.getCurrency());
         }
     }
-
 
     private void applyCollateral()
     {

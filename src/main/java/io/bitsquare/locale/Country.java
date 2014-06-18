@@ -9,8 +9,6 @@ public class Country implements Serializable
 
     private String code;
     private String name;
-
-
     private Region region;
 
     public Country(String code, String name, Region region)
@@ -35,7 +33,6 @@ public class Country implements Serializable
         Country other = (Country) obj;
         return other.getCode().equals(code);
     }
-
 
     public String getCode()
     {

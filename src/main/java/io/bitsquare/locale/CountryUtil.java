@@ -55,7 +55,6 @@ public class CountryUtil
             }
         }));
 
-
         return filteredList;
     }
 
@@ -81,6 +80,18 @@ public class CountryUtil
         String regionCode = getRegionCode(locale.getCountry());
         Region region = new Region(regionCode, getRegionName(regionCode));
         return new Country(locale.getCountry(), locale.getDisplayCountry(), region);
+    }
+
+    public static String getRegionName(String regionCode)
+    {
+        for (String[] regionName : regionCodeToName)
+        {
+            if (regionName[0].equals(regionCode))
+            {
+                return regionName[1];
+            }
+        }
+        return regionCode;
     }
 
     private static List<Locale> getAllCountryLocales()
@@ -109,7 +120,6 @@ public class CountryUtil
         return allLocales;
     }
 
-
     private static String getRegionCode(String countryCode)
     {
         if (countryCode.length() > 0 && countryCodeList.contains(countryCode))
@@ -121,18 +131,6 @@ public class CountryUtil
         {
             return "Undefined";
         }
-    }
-
-    public static String getRegionName(String regionCode)
-    {
-        for (String[] regionName : regionCodeToName)
-        {
-            if (regionName[0].equals(regionCode))
-            {
-                return regionName[1];
-            }
-        }
-        return regionCode;
     }
 
     private static String[] countryCodes = new String[]{"AE",

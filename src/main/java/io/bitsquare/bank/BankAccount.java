@@ -8,7 +8,6 @@ import java.util.Objects;
 
 public class BankAccount implements Serializable
 {
-
     private static final long serialVersionUID = 1792577576443221268L;
 
     private BankAccountTypeInfo bankAccountTypeInfo;
@@ -18,8 +17,6 @@ public class BankAccount implements Serializable
     private Country country;
     private Currency currency;
     private String uid;
-
-
     private String accountTitle;
 
     public BankAccount(BankAccountTypeInfo bankAccountTypeInfo,

@@ -9,7 +9,6 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.market.MarketController;
-import io.bitsquare.gui.setup.SetupController;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
@@ -54,7 +53,6 @@ public class MainController implements Initializable, NavigationController
     private ToggleButton prevToggleButton;
     private Image prevToggleButtonIcon;
     private Pane setupView;
-    private SetupController setupController;
     private NetworkSyncPane networkSyncPane;
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, historyButton, fundsButton, settingsButton;
     private Pane msgButtonHolder, buyButtonHolder, sellButtonHolder, ordersButtonButtonHolder;
@@ -121,15 +119,6 @@ public class MainController implements Initializable, NavigationController
 
         walletFacade.initWallet();
 
-        /*if (user.getAccountID() == null)
-        {
-            buildSetupView();
-            anchorPane.setVisible(false);
-            setupController.setNetworkSyncPane(networkSyncPane);
-            rootContainer.getChildren().add(setupView);
-        }
-        else
-        {  */
         buildNavigation();
 
         //homeButton.fire();
@@ -139,7 +128,6 @@ public class MainController implements Initializable, NavigationController
         // ordersButton.fire();
         // homeButton.fire();
         // msgButton.fire();
-        //   }
 
         AnchorPane.setBottomAnchor(networkSyncPane, 0.0);
         AnchorPane.setLeftAnchor(networkSyncPane, 0.0);
@@ -212,7 +200,6 @@ public class MainController implements Initializable, NavigationController
             anchorPane.setVisible(true);
             rootContainer.getChildren().remove(setupView);
             setupView = null;
-            setupController = null;
 
             buildNavigation();
         }
@@ -239,20 +226,6 @@ public class MainController implements Initializable, NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void buildSetupView()
-    {
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationController.SETUP), Localisation.getResourceBundle());
-        try
-        {
-            setupView = loader.load();
-            setupController = loader.getController();
-            setupController.setNavigationController(this);
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
 
     private void buildNavigation()
     {
@@ -342,7 +315,7 @@ public class MainController implements Initializable, NavigationController
         balanceTextField.setPrefWidth(90);
         balanceTextField.setId("nav-balance-label");
 
-        balanceTextField.setText(BtcFormatter.formatSatoshis(walletFacade.getBalance(), false));
+        balanceTextField.setText(BtcFormatter.formatSatoshis(walletFacade.getWalletBalance(), false));
 
         Label balanceCurrencyLabel = new Label("BTC");
         balanceCurrencyLabel.setPadding(new Insets(6, 0, 0, 0));
@@ -361,7 +334,7 @@ public class MainController implements Initializable, NavigationController
         vBox.getChildren().setAll(hBox, titleLabel);
         parent.getChildren().add(vBox);
 
-        balanceTextField.setText(Utils.bitcoinValueToFriendlyString(walletFacade.getBalance()));
+        balanceTextField.setText(Utils.bitcoinValueToFriendlyString(walletFacade.getWalletBalance()));
         walletFacade.getWallet().addEventListener(new WalletEventListener()
         {
             @Override

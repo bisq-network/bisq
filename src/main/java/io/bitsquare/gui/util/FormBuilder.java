@@ -13,6 +13,7 @@ import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 
+//TODO to be removed
 public class FormBuilder
 {
     public static Label addLabel(GridPane gridPane, String title, String value, int row)

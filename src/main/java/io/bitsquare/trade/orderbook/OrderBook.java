@@ -61,7 +61,6 @@ public class OrderBook implements OrderBookListener
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     public void init()
     {
         messageFacade.addMessageListener(this);

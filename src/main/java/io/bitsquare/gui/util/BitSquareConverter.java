@@ -7,7 +7,6 @@ public class BitSquareConverter
 {
     private static final Logger log = LoggerFactory.getLogger(BitSquareConverter.class);
 
-
     /**
      * @param input String to be converted to a double. Both decimal points "." and "," are supported. Thousands separator is not supported.
      * @return Returns a double value. Any invalid value returns Double.NEGATIVE_INFINITY.
@@ -22,7 +21,6 @@ public class BitSquareConverter
             return Double.NEGATIVE_INFINITY;
         }
     }
-
 
     /**
      * @param input String to be converted to a double. Both decimal points "." and "," are supported. Thousands separator is not supported.

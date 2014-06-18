@@ -40,6 +40,7 @@ public class Contract implements Serializable
         this.takerMessagePubKeyAsHex = takerMessagePubKeyAsHex;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -84,6 +85,11 @@ public class Contract implements Serializable
         return takerMessagePubKeyAsHex;
     }
 
+    public String getOffererMessagePubKeyAsHex()
+    {
+        return offererMessagePubKeyAsHex;
+    }
+
     @Override
     public String toString()
     {
@@ -100,8 +106,5 @@ public class Contract implements Serializable
                 '}';
     }
 
-    public String getOffererMessagePubKeyAsHex()
-    {
-        return offererMessagePubKeyAsHex;
-    }
+
 }

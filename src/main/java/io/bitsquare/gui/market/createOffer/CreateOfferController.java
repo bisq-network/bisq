@@ -243,6 +243,7 @@ public class CreateOfferController implements Initializable, ChildController
         navigationController.navigateToView(NavigationController.ORDER_BOOK, "Orderbook");
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -279,6 +280,7 @@ public class CreateOfferController implements Initializable, ChildController
         return BtcFormatter.stringValueToSatoshis(amountTextField.getText());
     }
 
+    //TODO
     private boolean inputValid()
     {
         double priceAsDouble = BitSquareConverter.stringToDouble2(priceTextField.getText());

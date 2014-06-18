@@ -84,6 +84,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     @FXML
     private ConfidenceProgressIndicator progressIndicator;
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -112,6 +113,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
             payCollateralTitledPane.setVisible(false);
         }
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: Initializable
@@ -200,6 +202,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
         });
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -275,7 +278,6 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
             methodsTextField.setText(BitSquareFormatter.arbitrationMethodsToString(methodList));
             methodsComboBox.getSelectionModel().clearSelection();
         }
-
     }
 
     @FXML
@@ -302,14 +304,12 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
         idVerificationsComboBox.getSelectionModel().clearSelection();
     }
 
-
     @FXML
     public void onClearIDVerifications(ActionEvent actionEvent)
     {
         idVerificationList.clear();
         idVerificationsTextField.setText("");
     }
-
 
     @FXML
     public void onSaveProfile(ActionEvent actionEvent)
@@ -345,6 +345,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
         //To change body of created methods use File | Settings | File Templates.
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -358,7 +359,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
                 "depending on the overall relation of negative to positive ratings you received after a dispute resolution.\n\n" +
                 "Please pay in " + arbitrator.getMaxTradeVolume() * 10 + " BTC");
 
-        String collateralAddress = walletFacade.getRegistrationAddress().toString();
+        String collateralAddress = walletFacade.getRegistrationAddressInfo().toString();
         collateralAddressTextField.setText(collateralAddress);
 
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
@@ -448,7 +449,6 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
             languageList = arbitrator.getLanguages();
             methodList = arbitrator.getArbitrationMethods();
             idVerificationList = arbitrator.getIdVerifications();
-
         }
     }
 
@@ -464,7 +464,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
             BitSquareValidator.resetTextFields(hasDoubleValueTextFields);
             BitSquareValidator.textFieldsHasDoubleValue(hasDoubleValueTextFields);
 
-            String pubKeyAsHex = walletFacade.getArbitratorPubKeyAsHex();
+            String pubKeyAsHex = walletFacade.getNewArbitratorAddressInfo().getPubKeyAsHexString();
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey());
             String name = nameTextField.getText();
 
@@ -496,23 +496,6 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
         {
             return null;
         }
-    }
-
-    private boolean isInputValid()
-    {
-        String[] stringInputs = {nameTextField.getText(),
-                descriptionTextArea.getText()
-        };
-        boolean result = BitSquareValidator.validateStringsNotEmpty(stringInputs);
-
-        String[] doubleInputs = {maxTradeVolumeTextField.getText(),
-                passiveServiceFeeTextField.getText(),
-                minPassiveServiceFeeTextField.getText(),
-                arbitrationFeeTextField.getText(),
-                minArbitrationFeeTextField.getText()
-        };
-        result &= BitSquareValidator.validateStringsAsDouble(doubleInputs);
-        return result;
     }
 
     private void close()
