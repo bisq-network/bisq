@@ -4,8 +4,9 @@ import com.google.inject.Inject;
 import io.bitsquare.BitSquare;
 import io.bitsquare.msg.listeners.*;
 import io.bitsquare.trade.Offer;
-import io.bitsquare.trade.offerer.OffererPaymentProtocol;
-import io.bitsquare.trade.taker.TakerPaymentProtocol;
+import io.bitsquare.trade.payment.offerer.OffererPaymentProtocol;
+import io.bitsquare.trade.payment.taker.TakerPaymentProtocol;
+import io.bitsquare.user.Arbitrator;
 import io.bitsquare.util.DSAKeyUtil;
 import io.bitsquare.util.Utilities;
 import javafx.application.Platform;
@@ -51,6 +52,7 @@ public class MessageFacade
     private Peer masterPeer;
     private List<OrderBookListener> orderBookListeners = new ArrayList<>();
     private List<TakeOfferRequestListener> takeOfferRequestListeners = new ArrayList<>();
+    private List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
 
     // //TODO change to map (key: offerID) instead of list (offererPaymentProtocols, takerPaymentProtocols)
     private List<TakerPaymentProtocol> takerPaymentProtocols = new ArrayList<>();
@@ -98,7 +100,7 @@ public class MessageFacade
         try
         {
             createMyPeerInstance(keyName, port);
-            setupStorage();
+            //setupStorage();
             //TODO save periodically or get informed if network address changes
             saveMyAddressToDHT();
             setupReplyHandler();
@@ -153,6 +155,55 @@ public class MessageFacade
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Arbitrators
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addArbitrator(Arbitrator arbitrator) throws IOException
+    {
+        Number160 locationKey = Number160.createHash("Arbitrators");
+        final Number160 contentKey = Number160.createHash(arbitrator.getUID());
+        final Data arbitratorData = new Data(arbitrator);
+        //offerData.setTTLSeconds(5);
+        final FutureDHT addFuture = myPeer.put(locationKey).setData(contentKey, arbitratorData).start();
+        //final FutureDHT addFuture = myPeer.add(locationKey).setData(offerData).start();
+        addFuture.addListener(new BaseFutureAdapter<BaseFuture>()
+        {
+            @Override
+            public void operationComplete(BaseFuture future) throws Exception
+            {
+                Platform.runLater(() -> onArbitratorAdded(arbitratorData, future.isSuccess(), locationKey));
+            }
+        });
+    }
+
+    private void onArbitratorAdded(Data arbitratorData, boolean success, Number160 locationKey)
+    {
+    }
+
+
+    public void getArbitrators(Locale languageLocale)
+    {
+        final Number160 locationKey = Number160.createHash("Arbitrators");
+        final FutureDHT getArbitratorsFuture = myPeer.get(locationKey).setAll().start();
+        getArbitratorsFuture.addListener(new BaseFutureAdapter<BaseFuture>()
+        {
+            @Override
+            public void operationComplete(BaseFuture future) throws Exception
+            {
+                final Map<Number160, Data> dataMap = getArbitratorsFuture.getDataMap();
+                Platform.runLater(() -> onArbitratorsReceived(dataMap, future.isSuccess()));
+            }
+        });
+    }
+
+    private void onArbitratorsReceived(Map<Number160, Data> dataMap, boolean success)
+    {
+        for (ArbitratorListener arbitratorListener : arbitratorListeners)
+            arbitratorListener.onArbitratorsReceived(dataMap, success);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Publish offer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -160,7 +211,7 @@ public class MessageFacade
     public void addOffer(Offer offer) throws IOException
     {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
-        final Number160 contentKey = Number160.createHash(offer.getUid());
+        final Number160 contentKey = Number160.createHash(offer.getUID());
         final Data offerData = new Data(offer);
         //offerData.setTTLSeconds(5);
         final FutureDHT addFuture = myPeer.put(locationKey).setData(contentKey, offerData).start();
@@ -216,7 +267,7 @@ public class MessageFacade
     public void removeOffer(Offer offer) throws IOException
     {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
-        Number160 contentKey = Number160.createHash(offer.getUid());
+        Number160 contentKey = Number160.createHash(offer.getUID());
         log.debug("removeOffer");
         FutureDHT removeFuture = myPeer.remove(locationKey).setReturnResults().setContentKey(contentKey).start();
         removeFuture.addListener(new BaseFutureAdapter<BaseFuture>()
@@ -636,6 +687,15 @@ public class MessageFacade
         pingPeerListeners.remove(listener);
     }
 
+    public void addArbitratorListener(ArbitratorListener listener)
+    {
+        arbitratorListeners.add(listener);
+    }
+
+    public void removeArbitratorListener(ArbitratorListener listener)
+    {
+        arbitratorListeners.remove(listener);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private Methods

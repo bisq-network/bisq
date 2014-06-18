@@ -1,4 +1,4 @@
-package io.bitsquare.trade.taker;
+package io.bitsquare.trade.payment.taker;
 
 import io.bitsquare.msg.TradeMessage;
 

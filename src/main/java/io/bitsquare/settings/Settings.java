@@ -1,6 +1,7 @@
 package io.bitsquare.settings;
 
 import com.google.inject.Inject;
+import io.bitsquare.locale.Country;
 import io.bitsquare.user.Arbitrator;
 
 import java.io.Serializable;
@@ -14,7 +15,7 @@ public class Settings implements Serializable
     private static final long serialVersionUID = 7995048077355006861L;
 
     private List<Locale> acceptedLanguageLocales = new ArrayList<>();
-    private List<Locale> acceptedCountryLocales = new ArrayList<>();
+    private List<Country> acceptedCountryLocales = new ArrayList<>();
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
     private int maxCollateral;
     private int minCollateral;
@@ -38,7 +39,7 @@ public class Settings implements Serializable
         if (savedSettings != null)
         {
             acceptedLanguageLocales = savedSettings.getAcceptedLanguageLocales();
-            acceptedCountryLocales = savedSettings.getAcceptedCountryLocales();
+            acceptedCountryLocales = savedSettings.getAcceptedCountries();
             acceptedArbitrators = savedSettings.getAcceptedArbitrators();
             maxCollateral = savedSettings.getMaxCollateral();
             minCollateral = savedSettings.getMinCollateral();
@@ -51,16 +52,31 @@ public class Settings implements Serializable
             acceptedLanguageLocales.add(locale);
     }
 
-    public void addAcceptedCountryLocale(Locale locale)
+    public void removeAcceptedLanguageLocale(Locale item)
+    {
+        acceptedLanguageLocales.remove(item);
+    }
+
+    public void addAcceptedCountry(Country locale)
     {
         if (!acceptedCountryLocales.contains(locale))
             acceptedCountryLocales.add(locale);
+    }
+
+    public void removeAcceptedCountry(Country item)
+    {
+        acceptedCountryLocales.remove(item);
     }
 
     public void addAcceptedArbitrator(Arbitrator arbitrator)
     {
         if (!acceptedArbitrators.contains(arbitrator))
             acceptedArbitrators.add(arbitrator);
+    }
+
+    public void removeAcceptedArbitrator(Arbitrator item)
+    {
+        acceptedArbitrators.remove(item);
     }
 
     public void setMaxCollateral(int maxCollateral)
@@ -87,7 +103,7 @@ public class Settings implements Serializable
         return acceptedLanguageLocales;
     }
 
-    public List<Locale> getAcceptedCountryLocales()
+    public List<Country> getAcceptedCountries()
     {
         return acceptedCountryLocales;
     }
@@ -116,5 +132,6 @@ public class Settings implements Serializable
     {
         return minCollateral;
     }
+
 
 }

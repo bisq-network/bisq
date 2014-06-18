@@ -11,7 +11,7 @@ import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.market.MarketController;
 import io.bitsquare.gui.setup.SetupController;
 import io.bitsquare.gui.util.Icons;
-import io.bitsquare.gui.util.Localisation;
+import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.TradeMessage;
 import io.bitsquare.trade.Direction;
@@ -43,6 +43,7 @@ import java.util.ResourceBundle;
 public class MainController implements Initializable, NavigationController
 {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
+    private static MainController mainController;
 
     private User user;
     private WalletFacade walletFacade;
@@ -80,6 +81,13 @@ public class MainController implements Initializable, NavigationController
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
         this.trading = trading;
+
+        MainController.mainController = this;
+    }
+
+    public static MainController getInstance()
+    {
+        return mainController;
     }
 
 
@@ -113,7 +121,7 @@ public class MainController implements Initializable, NavigationController
 
         walletFacade.initWallet();
 
-        if (user.getAccountID() == null)
+        /*if (user.getAccountID() == null)
         {
             buildSetupView();
             anchorPane.setVisible(false);
@@ -121,14 +129,17 @@ public class MainController implements Initializable, NavigationController
             rootContainer.getChildren().add(setupView);
         }
         else
-        {
-            buildNavigation();
+        {  */
+        buildNavigation();
 
-            sellButton.fire();
-            // ordersButton.fire();
-            // homeButton.fire();
-            // msgButton.fire();
-        }
+        //homeButton.fire();
+        //settingsButton.fire();
+        fundsButton.fire();
+        // sellButton.fire();
+        // ordersButton.fire();
+        // homeButton.fire();
+        // msgButton.fire();
+        //   }
 
         AnchorPane.setBottomAnchor(networkSyncPane, 0.0);
         AnchorPane.setLeftAnchor(networkSyncPane, 0.0);
@@ -158,9 +169,38 @@ public class MainController implements Initializable, NavigationController
         }
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public ChildController navigateToView(String fxmlView)
+    {
+        // use the buttons to trigger the change to get the correct button states
+        switch (fxmlView)
+        {
+            case NavigationController.HOME:
+                homeButton.fire();
+                break;
+            case NavigationController.FUNDS:
+                fundsButton.fire();
+                break;
+            case NavigationController.HISTORY:
+                historyButton.fire();
+                break;
+            case NavigationController.MSG:
+                msgButton.fire();
+                break;
+            case NavigationController.ORDERS:
+                ordersButton.fire();
+                break;
+            case NavigationController.SETTINGS:
+                settingsButton.fire();
+                break;
+        }
+        return navigateToView(fxmlView, "");
+    }
 
     @Override
     public ChildController navigateToView(String fxmlView, String title)
@@ -218,7 +258,7 @@ public class MainController implements Initializable, NavigationController
     {
         toggleGroup = new ToggleGroup();
 
-        homeButton = addNavButton(leftNavPane, "Overview", Icons.HOME, Icons.HOME, NavigationController.HOME);
+        homeButton = addNavButton(leftNavPane, "Overview", Icons.HOME, Icons.HOME_ACTIVE, NavigationController.HOME);
 
         buyButtonHolder = new Pane();
         buyButton = addNavButton(buyButtonHolder, "Buy BTC", Icons.NAV_BUY, Icons.NAV_BUY_ACTIVE, NavigationController.MARKET, Direction.BUY);
@@ -229,20 +269,20 @@ public class MainController implements Initializable, NavigationController
         leftNavPane.getChildren().add(sellButtonHolder);
 
         ordersButtonButtonHolder = new Pane();
-        ordersButton = addNavButton(ordersButtonButtonHolder, "Orders", Icons.ORDERS, Icons.ORDERS, NavigationController.ORDERS);
+        ordersButton = addNavButton(ordersButtonButtonHolder, "Orders", Icons.ORDERS, Icons.ORDERS_ACTIVE, NavigationController.ORDERS);
         leftNavPane.getChildren().add(ordersButtonButtonHolder);
 
-        historyButton = addNavButton(leftNavPane, "History", Icons.HISTORY, Icons.HISTORY, NavigationController.HISTORY);
-        fundsButton = addNavButton(leftNavPane, "Funds", Icons.FUNDS, Icons.FUNDS, NavigationController.FUNDS);
+        historyButton = addNavButton(leftNavPane, "History", Icons.HISTORY, Icons.HISTORY_ACTIVE, NavigationController.HISTORY);
+        fundsButton = addNavButton(leftNavPane, "Funds", Icons.FUNDS, Icons.FUNDS_ACTIVE, NavigationController.FUNDS);
 
         msgButtonHolder = new Pane();
-        msgButton = addNavButton(msgButtonHolder, "Message", Icons.MSG, Icons.MSG, NavigationController.MSG);
+        msgButton = addNavButton(msgButtonHolder, "Message", Icons.MSG, Icons.MSG_ACTIVE, NavigationController.MSG);
         leftNavPane.getChildren().add(msgButtonHolder);
 
         addBalanceInfo(rightNavPane);
         addAccountComboBox(rightNavPane);
 
-        settingsButton = addNavButton(rightNavPane, "Settings", Icons.SETTINGS, Icons.SETTINGS, NavigationController.SETTINGS);
+        settingsButton = addNavButton(rightNavPane, "Settings", Icons.SETTINGS, Icons.SETTINGS_ACTIVE, NavigationController.SETTINGS);
     }
 
     private ToggleButton addNavButton(Pane parent, String title, String iconId, String iconIdActivated, String navTarget)

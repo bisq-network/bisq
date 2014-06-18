@@ -1,22 +1,19 @@
 package io.bitsquare;
 
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Utils;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import io.bitsquare.bank.BankAccount;
-import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.di.GuiceFXMLLoader;
-import io.bitsquare.gui.util.Localisation;
+import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Arbitrator;
+import io.bitsquare.user.Reputation;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
-import io.bitsquare.util.MockData;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -24,15 +21,16 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PublicKey;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class BitSquare extends Application
 {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
     public static String ID = "bitsquare";
+    private static Stage stage;
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
 
@@ -48,6 +46,7 @@ public class BitSquare extends Application
     @Override
     public void start(Stage stage) throws Exception
     {
+        BitSquare.stage = stage;
         log.debug("Startup: start");
         final Injector injector = Guice.createInjector(new BitSquareModule());
         walletFacade = injector.getInstance(WalletFacade.class);
@@ -62,7 +61,8 @@ public class BitSquare extends Application
         user.updateFromStorage((User) storage.read(user.getClass().getName()));
 
         // mock
-        initSettings(settings, storage, user);
+        //initSettings(settings, storage, user);
+
 
         settings.updateFromStorage((Settings) storage.read(settings.getClass().getName()));
 
@@ -89,6 +89,46 @@ public class BitSquare extends Application
 
         stage.show();
         log.debug("Startup: stage displayed");
+
+        addMockArbitrator();
+    }
+
+    private void addMockArbitrator()
+    {
+        String pubKeyAsHex = walletFacade.getArbitratorPubKeyAsHex();
+        String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey());
+        List<Locale> languages = new ArrayList<>();
+        languages.add(LanguageUtil.getDefaultLanguageLocale());
+        List<Arbitrator.METHODS> arbitrationMethods = new ArrayList<>();
+        arbitrationMethods.add(Arbitrator.METHODS.TLS_NOTARY);
+        List<Arbitrator.ID_VERIFICATIONS> idVerifications = new ArrayList<>();
+        idVerifications.add(Arbitrator.ID_VERIFICATIONS.PASSPORT);
+        idVerifications.add(Arbitrator.ID_VERIFICATIONS.GOV_ID);
+
+        Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
+                messagePubKeyAsHex,
+                "Manfred Karrer",
+                Arbitrator.ID_TYPE.REAL_LIFE_ID,
+                languages,
+                new Reputation(),
+                1,
+                0.01,
+                0.001,
+                10,
+                0.1,
+                arbitrationMethods,
+                idVerifications,
+                "http://bitsquare.io/",
+                "Bla bla..."
+        );
+
+        try
+        {
+            messageFacade.addArbitrator(arbitrator);
+        } catch (IOException e)
+        {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
     }
 
     @Override
@@ -100,24 +140,29 @@ public class BitSquare extends Application
         super.stop();
     }
 
-    private void initSettings(Settings settings, Storage storage, User user)
+    public static Stage getStage()
+    {
+        return stage;
+    }
+
+   /* private void initSettings(Settings settings, Storage storage, User user)
     {
         Settings savedSettings = (Settings) storage.read(settings.getClass().getName());
         if (savedSettings == null)
         {
             // write default settings
-            settings.getAcceptedCountryLocales().clear();
+            settings.getAcceptedCountries().clear();
             // settings.addAcceptedLanguageLocale(Locale.getDefault());
             settings.addAcceptedLanguageLocale(MockData.getLocales().get(0));
             settings.addAcceptedLanguageLocale(new Locale("en", "US"));
             settings.addAcceptedLanguageLocale(new Locale("es", "ES"));
 
-            settings.getAcceptedCountryLocales().clear();
-            //settings.addAcceptedCountryLocale(Locale.getDefault());
-            settings.addAcceptedCountryLocale(MockData.getLocales().get(0));
-            settings.addAcceptedCountryLocale(new Locale("en", "US"));
-            settings.addAcceptedCountryLocale(new Locale("de", "DE"));
-            settings.addAcceptedCountryLocale(new Locale("es", "ES"));
+            settings.getAcceptedCountries().clear();
+            //settings.addAcceptedCountry(Locale.getDefault());
+            settings.addAcceptedCountry(MockData.getLocales().get(0));
+            settings.addAcceptedCountry(new Locale("en", "US"));
+            settings.addAcceptedCountry(new Locale("de", "DE"));
+            settings.addAcceptedCountry(new Locale("es", "ES"));
 
 
             settings.getAcceptedArbitrators().clear();
@@ -137,9 +182,9 @@ public class BitSquare extends Application
 
             //initMockUser(storage, user);
         }
-    }
+    }     */
 
-    private String getMessagePubKey()
+  /*  private String getMessagePubKey()
     {
         try
         {
@@ -152,10 +197,10 @@ public class BitSquare extends Application
         {
             return null;
         }
-    }
+    }     */
 
 
-    private void initMockUser(Storage storage, User user)
+  /*  private void initMockUser(Storage storage, User user)
     {
         user.getBankAccounts().clear();
 
@@ -182,5 +227,5 @@ public class BitSquare extends Application
         user.setAccountID(Utils.bytesToHexString(new ECKey().getPubKey()));
 
         storage.write(user.getClass().getName(), user);
-    }
+    } */
 }

@@ -1,4 +1,4 @@
-package io.bitsquare.trade.offerer;
+package io.bitsquare.trade.payment.offerer;
 
 import com.google.bitcoin.core.TransactionConfidence;
 

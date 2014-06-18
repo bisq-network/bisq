@@ -4,7 +4,7 @@ import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.market.orderbook.OrderBookController;
-import io.bitsquare.gui.util.Localisation;
+import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -41,6 +41,12 @@ public class MarketController implements Initializable, NavigationController, Ch
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public ChildController navigateToView(String fxmlView)
+    {
+        return navigateToView(fxmlView, "");
+    }
 
     @Override
     public ChildController navigateToView(String fxmlView, String title)
@@ -111,7 +117,8 @@ public class MarketController implements Initializable, NavigationController, Ch
     public void setDirection(Direction direction)
     {
         tabPane.getSelectionModel().select(0);
-        orderBookController.setDirection(direction);
+        if (orderBookController != null)
+            orderBookController.setDirection(direction);
     }
 
 }

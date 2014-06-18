@@ -43,8 +43,21 @@ public class User implements Serializable
 
     public void addBankAccount(BankAccount bankAccount)
     {
-        bankAccounts.add(bankAccount);
+        if (!bankAccounts.contains(bankAccount))
+            bankAccounts.add(bankAccount);
+
         currentBankAccount = bankAccount;
+    }
+
+    public void removeCurrentBankAccount()
+    {
+        if (currentBankAccount != null)
+            bankAccounts.remove(currentBankAccount);
+
+        if (bankAccounts.size() > 0)
+            currentBankAccount = bankAccounts.get(0);
+        else
+            currentBankAccount = null;
     }
 
 
@@ -86,13 +99,14 @@ public class User implements Serializable
     public String getStringifiedBankAccounts()
     {
         String bankAccountUIDs = "";
-        for (Iterator<BankAccount> iterator = getBankAccounts().iterator(); iterator.hasNext(); )
+        for (int i = 0; i < bankAccounts.size(); i++)
         {
-            BankAccount bankAccount = iterator.next();
+            BankAccount bankAccount = bankAccounts.get(i);
             bankAccountUIDs += bankAccount.toString();
 
-            if (iterator.hasNext())
+            if (i < bankAccounts.size() - 1)
                 bankAccountUIDs += ", ";
+
         }
         return bankAccountUIDs;
     }

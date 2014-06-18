@@ -1,7 +1,8 @@
 package io.bitsquare.trade;
 
-import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.bank.BankAccountTypeInfo;
 import io.bitsquare.btc.BtcFormatter;
+import io.bitsquare.locale.Country;
 import io.bitsquare.user.Arbitrator;
 
 import java.io.Serializable;
@@ -25,11 +26,11 @@ public class Offer implements Serializable
     private BigInteger amount;
     private BigInteger minAmount;
     private String messagePubKeyAsHex;
-    private BankAccountType.BankAccountTypeEnum bankAccountTypeEnum;
-    private Locale bankAccountCountryLocale;
+    private BankAccountTypeInfo.BankAccountType bankAccountType;
+    private Country bankAccountCountry;
 
     private int collateral;
-    private List<Locale> acceptedCountryLocales;
+    private List<Country> acceptedCountries;
     private List<Locale> acceptedLanguageLocales;
     private String offerFeePaymentTxID;
     private String bankAccountUID;
@@ -45,13 +46,13 @@ public class Offer implements Serializable
                  double price,
                  BigInteger amount,
                  BigInteger minAmount,
-                 BankAccountType.BankAccountTypeEnum bankAccountTypeEnum,
+                 BankAccountTypeInfo.BankAccountType bankAccountType,
                  Currency currency,
-                 Locale bankAccountCountryLocale,
+                 Country bankAccountCountry,
                  String bankAccountUID,
                  Arbitrator arbitrator,
                  int collateral,
-                 List<Locale> acceptedCountryLocales,
+                 List<Country> acceptedCountries,
                  List<Locale> acceptedLanguageLocales)
     {
         this.messagePubKeyAsHex = messagePubKeyAsHex;
@@ -59,13 +60,13 @@ public class Offer implements Serializable
         this.price = price;
         this.amount = amount;
         this.minAmount = minAmount;
-        this.bankAccountTypeEnum = bankAccountTypeEnum;
+        this.bankAccountType = bankAccountType;
         this.currency = currency;
-        this.bankAccountCountryLocale = bankAccountCountryLocale;
+        this.bankAccountCountry = bankAccountCountry;
         this.bankAccountUID = bankAccountUID;
         this.arbitrator = arbitrator;
         this.collateral = collateral;
-        this.acceptedCountryLocales = acceptedCountryLocales;
+        this.acceptedCountries = acceptedCountries;
         this.acceptedLanguageLocales = acceptedLanguageLocales;
 
         this.uid = UUID.randomUUID().toString();
@@ -91,7 +92,7 @@ public class Offer implements Serializable
         return messagePubKeyAsHex;
     }
 
-    public String getUid()
+    public String getUID()
     {
         return uid;
     }
@@ -116,9 +117,9 @@ public class Offer implements Serializable
         return direction;
     }
 
-    public BankAccountType.BankAccountTypeEnum getBankAccountTypeEnum()
+    public BankAccountTypeInfo.BankAccountType getBankAccountType()
     {
-        return bankAccountTypeEnum;
+        return bankAccountType;
     }
 
     public Currency getCurrency()
@@ -126,14 +127,14 @@ public class Offer implements Serializable
         return currency;
     }
 
-    public Locale getBankAccountCountryLocale()
+    public Country getBankAccountCountry()
     {
-        return bankAccountCountryLocale;
+        return bankAccountCountry;
     }
 
-    public List<Locale> getAcceptedCountryLocales()
+    public List<Country> getAcceptedCountries()
     {
-        return acceptedCountryLocales;
+        return acceptedCountries;
     }
 
     public List<Locale> getAcceptedLanguageLocales()
@@ -182,10 +183,10 @@ public class Offer implements Serializable
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +
                 ", messagePubKey=" + messagePubKeyAsHex.hashCode() +
-                ", bankAccountTypeEnum=" + bankAccountTypeEnum +
-                ", bankAccountCountryLocale=" + bankAccountCountryLocale +
+                ", bankAccountTypeEnum=" + bankAccountType +
+                ", bankAccountCountryLocale=" + bankAccountCountry +
                 ", collateral=" + collateral +
-                ", acceptedCountryLocales=" + acceptedCountryLocales +
+                ", acceptedCountryLocales=" + acceptedCountries +
                 ", acceptedLanguageLocales=" + acceptedLanguageLocales +
                 ", offerFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
                 ", bankAccountUID='" + bankAccountUID + '\'' +

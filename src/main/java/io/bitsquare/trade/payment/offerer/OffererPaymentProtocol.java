@@ -1,4 +1,4 @@
-package io.bitsquare.trade.offerer;
+package io.bitsquare.trade.payment.offerer;
 
 import com.google.bitcoin.core.*;
 import com.google.common.util.concurrent.FutureCallback;
@@ -217,7 +217,7 @@ public class OffererPaymentProtocol
         BigInteger offererInputAmount = trade.getCollateralAmount();
         String offererPubKey = walletFacade.getPubKeyAsHex();
         String takerPubKey = requestTradeMessage.getTakerMultiSigPubKey();
-        String arbitratorPubKey = offer.getArbitrator().getPubKey();
+        String arbitratorPubKey = offer.getArbitrator().getPubKeyAsHex();
 
         checkNotNull(requestTradeMessage.getTakerMultiSigPubKey());
         checkNotNull(offererPubKey);

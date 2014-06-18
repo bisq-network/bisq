@@ -9,11 +9,12 @@ import io.bitsquare.btc.Fees;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.components.processbar.ProcessStepBar;
 import io.bitsquare.gui.components.processbar.ProcessStepItem;
-import io.bitsquare.gui.util.Converter;
+import io.bitsquare.gui.util.BitSquareConverter;
+import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.FormBuilder;
-import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.gui.util.Popups;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.TradeMessage;
@@ -21,8 +22,8 @@ import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.Trading;
-import io.bitsquare.trade.taker.TakerPaymentProtocol;
-import io.bitsquare.trade.taker.TakerPaymentProtocolListener;
+import io.bitsquare.trade.payment.taker.TakerPaymentProtocol;
+import io.bitsquare.trade.payment.taker.TakerPaymentProtocolListener;
 import io.bitsquare.util.Utilities;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
@@ -167,15 +168,15 @@ public class TakerTradeController implements Initializable, ChildController
         Label amountRangeLabel = new Label("(" + BtcFormatter.formatSatoshis(offer.getMinAmount(), false) + " - " + BtcFormatter.formatSatoshis(offer.getAmount(), false) + ")");
         gridPane.add(amountRangeLabel, 2, row);
 
-        FormBuilder.addTextField(gridPane, "Price (" + offer.getCurrency() + "/BTC):", Formatter.formatPrice(offer.getPrice()), ++row);
-        totalLabel = FormBuilder.addTextField(gridPane, "Total (" + offer.getCurrency() + "):", Formatter.formatVolume(getVolume()), ++row);
+        FormBuilder.addTextField(gridPane, "Price (" + offer.getCurrency() + "/BTC):", BitSquareFormatter.formatPrice(offer.getPrice()), ++row);
+        totalLabel = FormBuilder.addTextField(gridPane, "Total (" + offer.getCurrency() + "):", BitSquareFormatter.formatVolume(getVolume()), ++row);
         collateralTextField = FormBuilder.addTextField(gridPane, "Collateral (BTC):", "", ++row);
         applyCollateral();
         FormBuilder.addTextField(gridPane, "Offer fee (BTC):", Utils.bitcoinValueToFriendlyString(Fees.OFFER_TAKER_FEE.add(Fees.TX_FEE)), ++row);
         totalToPayLabel = FormBuilder.addTextField(gridPane, "Total to pay (BTC):", getTotalToPay(), ++row);
 
         isOnlineTextField = FormBuilder.addTextField(gridPane, "Online status:", "Checking offerers online status...", ++row);
-        ProgressIndicator isOnlineChecker = new ProgressIndicator();
+        ConfidenceProgressIndicator isOnlineChecker = new ConfidenceProgressIndicator();
         isOnlineChecker.setPrefSize(20, 20);
         isOnlineChecker.setLayoutY(3);
         isOnlineCheckerHolder = new Pane();
@@ -196,24 +197,24 @@ public class TakerTradeController implements Initializable, ChildController
         // details
         FormBuilder.addVSpacer(gridPane, ++row);
         FormBuilder.addHeaderLabel(gridPane, "Offerer details:", ++row);
-        FormBuilder.addTextField(gridPane, "Bank account type:", offer.getBankAccountTypeEnum().toString(), ++row);
-        FormBuilder.addTextField(gridPane, "Country:", offer.getBankAccountCountryLocale().getDisplayCountry(), ++row);
+        FormBuilder.addTextField(gridPane, "Bank account type:", offer.getBankAccountType().toString(), ++row);
+        FormBuilder.addTextField(gridPane, "Country:", offer.getBankAccountCountry().getName(), ++row);
         FormBuilder.addTextField(gridPane, "Arbitrator:", offer.getArbitrator().getName(), ++row);
-        Label arbitratorLink = new Label(offer.getArbitrator().getUrl());
+        Label arbitratorLink = new Label(offer.getArbitrator().getWebUrl());
         arbitratorLink.setId("label-url");
         gridPane.add(arbitratorLink, 2, row);
         arbitratorLink.setOnMouseClicked(e -> {
             try
             {
-                Utilities.openURL(offer.getArbitrator().getUrl());
+                Utilities.openURL(offer.getArbitrator().getWebUrl());
             } catch (Exception e1)
             {
                 log.warn(e1.toString());
             }
         });
 
-        FormBuilder.addTextField(gridPane, "Supported languages:", Formatter.languageLocalesToString(offer.getAcceptedLanguageLocales()), ++row);
-        FormBuilder.addTextField(gridPane, "Supported countries:", Formatter.countryLocalesToString(offer.getAcceptedCountryLocales()), ++row);
+        FormBuilder.addTextField(gridPane, "Supported languages:", BitSquareFormatter.languageLocalesToString(offer.getAcceptedLanguageLocales()), ++row);
+        FormBuilder.addTextField(gridPane, "Supported countries:", BitSquareFormatter.countryLocalesToString(offer.getAcceptedCountries()), ++row);
     }
 
     private void takeOffer()
@@ -253,7 +254,7 @@ public class TakerTradeController implements Initializable, ChildController
         gridPane.add(progressBar, 1, row);
 
         FormBuilder.addLabel(gridPane, "Status:", "", ++row);
-        ProgressIndicator progressIndicator = new ProgressIndicator();
+        ConfidenceProgressIndicator progressIndicator = new ConfidenceProgressIndicator();
         progressIndicator.setPrefSize(20, 20);
         progressIndicator.setLayoutY(2);
         Pane progressIndicatorHolder = new Pane();
@@ -362,7 +363,7 @@ public class TakerTradeController implements Initializable, ChildController
         row = -1;
         FormBuilder.addHeaderLabel(gridPane, "Trade successfully completed", ++row);
 
-        String fiatReceived = Formatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount()));
+        String fiatReceived = BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount()));
 
         FormBuilder.addTextField(gridPane, "You have sold (BTC):", Utils.bitcoinValueToFriendlyString(trade.getTradeAmount()), ++row);
         if (takerIsSelling())
@@ -375,7 +376,7 @@ public class TakerTradeController implements Initializable, ChildController
         {
             //TODO
             FormBuilder.addTextField(gridPane, "You got returned collateral (BTC):", BtcFormatter.formatSatoshis(getCollateralInSatoshis(), false), ++row);
-            FormBuilder.addTextField(gridPane, "You have received (" + offer.getCurrency() + "):", Formatter.formatVolume(getVolume()), ++row);
+            FormBuilder.addTextField(gridPane, "You have received (" + offer.getCurrency() + "):", BitSquareFormatter.formatVolume(getVolume()), ++row);
             FormBuilder.addTextField(gridPane, "You have received (BTC):", BtcFormatter.formatSatoshis(offer.getAmount(), false), ++row);
         }
 
@@ -426,12 +427,12 @@ public class TakerTradeController implements Initializable, ChildController
 
     private void applyVolume()
     {
-        totalLabel.setText(Formatter.formatVolume(getVolume(), offer.getCurrency()));
+        totalLabel.setText(BitSquareFormatter.formatVolume(getVolume(), offer.getCurrency()));
     }
 
     private double getVolume()
     {
-        return offer.getPrice() * Converter.stringToDouble(amountTextField.getText());
+        return offer.getPrice() * BitSquareConverter.stringToDouble2(amountTextField.getText());
     }
 
     private String getTotalToPay()
@@ -443,7 +444,7 @@ public class TakerTradeController implements Initializable, ChildController
         else
         {
             return BtcFormatter.formatSatoshis(Fees.OFFER_TAKER_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(Fees.TX_FEE).add(getCollateralInSatoshis()), false) + "\n" +
-                    Formatter.formatVolume(getVolume(), offer.getCurrency());
+                    BitSquareFormatter.formatVolume(getVolume(), offer.getCurrency());
         }
     }
 
@@ -455,7 +456,7 @@ public class TakerTradeController implements Initializable, ChildController
 
     private BigInteger getCollateralInSatoshis()
     {
-        double amount = Converter.stringToDouble(amountTextField.getText());
+        double amount = BitSquareConverter.stringToDouble2(amountTextField.getText());
         double resultDouble = amount * (double) offer.getCollateral() / 100.0;
         BigInteger result = BtcFormatter.doubleValueToSatoshis(resultDouble);
         return result;

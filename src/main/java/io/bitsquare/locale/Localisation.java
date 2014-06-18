@@ -1,4 +1,7 @@
-package io.bitsquare.gui.util;
+package io.bitsquare.locale;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,11 +10,14 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.text.MessageFormat;
 import java.util.Locale;
+import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
 public class Localisation
 {
+    private static final Logger log = LoggerFactory.getLogger(Localisation.class);
+
     public static ResourceBundle getResourceBundle()
     {
         return ResourceBundle.getBundle("i18n.displayStrings", new UTF8Control());
@@ -19,7 +25,15 @@ public class Localisation
 
     public static String get(String key)
     {
-        return Localisation.getResourceBundle().getString(key);
+        try
+        {
+            return Localisation.getResourceBundle().getString(key);
+        } catch (MissingResourceException e)
+        {
+            log.error("MissingResourceException for key: " + key);
+            log.error("MissingResourceException for key: " + key);
+            return key + " is missing";
+        }
     }
 
     public static String get(String key, String... arguments)

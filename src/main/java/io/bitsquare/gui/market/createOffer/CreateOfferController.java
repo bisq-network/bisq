@@ -10,7 +10,12 @@ import io.bitsquare.btc.Fees;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
-import io.bitsquare.gui.util.*;
+import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.util.BitSquareConverter;
+import io.bitsquare.gui.util.BitSquareFormatter;
+import io.bitsquare.gui.util.ConfidenceDisplay;
+import io.bitsquare.gui.util.Popups;
+import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
@@ -24,7 +29,10 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
+import java.util.Random;
 import java.util.ResourceBundle;
 
 public class CreateOfferController implements Initializable, ChildController
@@ -60,7 +69,7 @@ public class CreateOfferController implements Initializable, ChildController
     private TextField collateralTextField, minAmountTextField, bankAccountTypeTextField, bankAccountCurrencyTextField, bankAccountCountyTextField,
             acceptedCountriesTextField, acceptedLanguagesTextField, feeLabel, txTextField;
     @FXML
-    private ProgressIndicator progressIndicator;
+    private ConfidenceProgressIndicator progressIndicator;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -85,17 +94,17 @@ public class CreateOfferController implements Initializable, ChildController
     public void setOrderBookFilter(OrderBookFilter orderBookFilter)
     {
         direction = orderBookFilter.getDirection();
-        amountTextField.setText(Formatter.formatPrice(orderBookFilter.getAmount()));
-        minAmountTextField.setText(Formatter.formatPrice(orderBookFilter.getAmount()));
-        priceTextField.setText(Formatter.formatPrice(orderBookFilter.getPrice()));
-        buyLabel.setText(Formatter.formatDirection(direction, false) + ":");
-        collateralTextField.setText(Formatter.formatVolume(settings.getMinCollateral()));
+        amountTextField.setText(BitSquareFormatter.formatPrice(orderBookFilter.getAmount()));
+        minAmountTextField.setText(BitSquareFormatter.formatPrice(orderBookFilter.getAmount()));
+        priceTextField.setText(BitSquareFormatter.formatPrice(orderBookFilter.getPrice()));
+        buyLabel.setText(BitSquareFormatter.formatDirection(direction, false) + ":");
+        collateralTextField.setText(BitSquareFormatter.formatVolume(settings.getMinCollateral()));
         updateVolume();
 
 
         //TODO
-       /* amountTextField.setText(""+(int)(new Random().nextDouble()*100/10+1));
-        priceTextField.setText(""+ (int)(499 - new Random().nextDouble()*1000/100)); */
+        amountTextField.setText("" + (int) (new Random().nextDouble() * 100 / 10 + 1));
+        priceTextField.setText("" + (int) (499 - new Random().nextDouble() * 1000 / 100));
         minAmountTextField.setText("0,1");
         collateralTextField.setText("10");
         updateVolume();
@@ -127,11 +136,11 @@ public class CreateOfferController implements Initializable, ChildController
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        bankAccountTypeTextField.setText(Localisation.get(user.getCurrentBankAccount().getBankAccountType().getType().toString()));
+        bankAccountTypeTextField.setText(Localisation.get(user.getCurrentBankAccount().getBankAccountTypeInfo().getType().toString()));
         bankAccountCurrencyTextField.setText(user.getCurrentBankAccount().getCurrency().getCurrencyCode());
-        bankAccountCountyTextField.setText(user.getCurrentBankAccount().getCountryLocale().getDisplayCountry());
-        acceptedCountriesTextField.setText(Formatter.countryLocalesToString(settings.getAcceptedCountryLocales()));
-        acceptedLanguagesTextField.setText(Formatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
+        bankAccountCountyTextField.setText(user.getCurrentBankAccount().getCountry().getName());
+        acceptedCountriesTextField.setText(BitSquareFormatter.countryLocalesToString(settings.getAcceptedCountries()));
+        acceptedLanguagesTextField.setText(BitSquareFormatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
         feeLabel.setText(Utils.bitcoinValueToFriendlyString(Fees.OFFER_CREATION_FEE));
     }
 
@@ -164,7 +173,7 @@ public class CreateOfferController implements Initializable, ChildController
             return;
         }
 
-        int collateral = (int) (Converter.stringToDouble(collateralTextField.getText()));
+        int collateral = (int) (BitSquareConverter.stringToDouble2(collateralTextField.getText()));
         Arbitrator arbitrator = settings.getRandomArbitrator(collateral, getAmountAsBI());
         if (arbitrator == null)
         {
@@ -176,16 +185,16 @@ public class CreateOfferController implements Initializable, ChildController
 
         offer = new Offer(user.getMessagePubKeyAsHex(),
                 direction,
-                Converter.stringToDouble(priceTextField.getText()),
+                BitSquareConverter.stringToDouble2(priceTextField.getText()),
                 BtcFormatter.stringValueToSatoshis(amountTextField.getText()),
                 BtcFormatter.stringValueToSatoshis(minAmountTextField.getText()),
-                user.getCurrentBankAccount().getBankAccountType().getType(),
+                user.getCurrentBankAccount().getBankAccountTypeInfo().getType(),
                 user.getCurrentBankAccount().getCurrency(),
-                user.getCurrentBankAccount().getCountryLocale(),
+                user.getCurrentBankAccount().getCountry(),
                 user.getCurrentBankAccount().getUid(),
                 arbitrator,
                 collateral,
-                settings.getAcceptedCountryLocales(),
+                settings.getAcceptedCountries(),
                 settings.getAcceptedLanguageLocales());
 
         FutureCallback callback = new FutureCallback<Transaction>()
@@ -255,13 +264,13 @@ public class CreateOfferController implements Initializable, ChildController
 
     private void updateVolume()
     {
-        volumeTextField.setText(Formatter.formatVolume(getVolume()));
+        volumeTextField.setText(BitSquareFormatter.formatVolume(getVolume()));
     }
 
     private double getVolume()
     {
-        double amountAsDouble = Converter.stringToDouble(amountTextField.getText());
-        double priceAsDouble = Converter.stringToDouble(priceTextField.getText());
+        double amountAsDouble = BitSquareConverter.stringToDouble2(amountTextField.getText());
+        double priceAsDouble = BitSquareConverter.stringToDouble2(priceTextField.getText());
         return amountAsDouble * priceAsDouble;
     }
 
@@ -272,10 +281,10 @@ public class CreateOfferController implements Initializable, ChildController
 
     private boolean inputValid()
     {
-        double priceAsDouble = Converter.stringToDouble(priceTextField.getText());
-        double minAmountAsDouble = Converter.stringToDouble(minAmountTextField.getText());
-        double amountAsDouble = Converter.stringToDouble(amountTextField.getText());
-        double collateralAsDouble = Converter.stringToDouble(collateralTextField.getText());
+        double priceAsDouble = BitSquareConverter.stringToDouble2(priceTextField.getText());
+        double minAmountAsDouble = BitSquareConverter.stringToDouble2(minAmountTextField.getText());
+        double amountAsDouble = BitSquareConverter.stringToDouble2(amountTextField.getText());
+        double collateralAsDouble = BitSquareConverter.stringToDouble2(collateralTextField.getText());
 
         return priceAsDouble > 0 &&
                 amountAsDouble > 0 &&

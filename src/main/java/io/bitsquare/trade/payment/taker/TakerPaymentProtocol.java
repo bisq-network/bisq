@@ -1,4 +1,4 @@
-package io.bitsquare.trade.taker;
+package io.bitsquare.trade.payment.taker;
 
 import com.google.bitcoin.core.AddressFormatException;
 import com.google.bitcoin.core.InsufficientMoneyException;
@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-//TODO refactor to process based pattern
+//TODO use states
 public class TakerPaymentProtocol
 {
     private static final Logger log = LoggerFactory.getLogger(TakerPaymentProtocol.class);
@@ -77,6 +77,8 @@ public class TakerPaymentProtocol
     {
         log.debug("1 takeOffer");
         findPeerAddress();
+
+
     }
 
 
@@ -368,7 +370,7 @@ public class TakerPaymentProtocol
 
         String offererPubKey = requestTradeMessage.getOffererPubKey();
         String takerPubKey = walletFacade.getPubKeyAsHex();
-        String arbitratorPubKey = offer.getArbitrator().getPubKey();
+        String arbitratorPubKey = offer.getArbitrator().getPubKeyAsHex();
         String preparedOffererDepositTxAsHex = requestTradeMessage.getPreparedOffererDepositTxAsHex();
 
         checkNotNull(takerInputAmount);

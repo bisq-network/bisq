@@ -2,8 +2,8 @@ package io.bitsquare.gui.util;
 
 import com.google.bitcoin.core.*;
 import com.google.bitcoin.script.Script;
+import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +22,7 @@ public class ConfidenceDisplay
     private Label confirmationLabel;
     private TextField balanceTextField;
     private Transaction transaction;
-    private ProgressIndicator progressIndicator;
+    private ConfidenceProgressIndicator progressIndicator;
 
     /**
      * We got the confidence for the actual updating tx.
@@ -32,7 +32,7 @@ public class ConfidenceDisplay
      * @param balanceTextField
      * @param progressIndicator
      */
-    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, TextField balanceTextField, ProgressIndicator progressIndicator)
+    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, TextField balanceTextField, ConfidenceProgressIndicator progressIndicator)
     {
         this.wallet = wallet;
         this.confirmationLabel = confirmationLabel;
@@ -96,7 +96,7 @@ public class ConfidenceDisplay
      * @param transaction       We want the confidence for only that tx, not the lasted changed in the wallet
      * @param progressIndicator
      */
-    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, final Transaction transaction, ProgressIndicator progressIndicator)
+    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, final Transaction transaction, ConfidenceProgressIndicator progressIndicator)
     {
         this.wallet = wallet;
         this.confirmationLabel = confirmationLabel;

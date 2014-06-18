@@ -6,20 +6,22 @@ import com.google.inject.Inject;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.bank.BankAccountTypeInfo;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.components.NetworkSyncPane;
+import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.ConfidenceDisplay;
-import io.bitsquare.gui.util.Localisation;
 import io.bitsquare.gui.util.Popups;
-import io.bitsquare.gui.util.Verification;
+import io.bitsquare.locale.Country;
+import io.bitsquare.locale.CountryUtil;
+import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
-import io.bitsquare.util.Utilities;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -36,7 +38,6 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.util.Currency;
 import java.util.List;
-import java.util.Locale;
 import java.util.ResourceBundle;
 
 public class SetupController implements Initializable, ChildController
@@ -63,13 +64,13 @@ public class SetupController implements Initializable, ChildController
     @FXML
     private Accordion accordion;
     @FXML
-    private ComboBox<Locale> countryComboBox;
+    private ComboBox<Country> countryComboBox;
     @FXML
-    private ComboBox<BankAccountType> bankAccountTypesComboBox;
+    private ComboBox<BankAccountTypeInfo> bankAccountTypesComboBox;
     @FXML
     private ComboBox<Currency> currencyComboBox;
     @FXML
-    private ProgressIndicator progressIndicator;
+    private ConfidenceProgressIndicator progressIndicator;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +185,7 @@ public class SetupController implements Initializable, ChildController
 
     public void onClose(ActionEvent actionEvent)
     {
-        navigationController.navigateToView(NavigationController.FUNDS, "");
+        navigationController.navigateToView(NavigationController.FUNDS);
     }
 
 
@@ -263,20 +264,20 @@ public class SetupController implements Initializable, ChildController
                 "That data will be stored in the blockchain in a way that your privacy is protected.\n" +
                 "Only your trading partners will be able to read those data, so your privacy will be protected.");
 
-        bankAccountTypesComboBox.setItems(FXCollections.observableArrayList(Utilities.getAllBankAccountTypes()));
-        currencyComboBox.setItems(FXCollections.observableArrayList(Utilities.getAllCurrencies()));
-        countryComboBox.setItems(FXCollections.observableArrayList(Utilities.getAllLocales()));
+        bankAccountTypesComboBox.setItems(FXCollections.observableArrayList(BankAccountTypeInfo.getAllBankAccountTypeInfoObjects()));
+        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllCurrencies()));
+        countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllCountries()));
 
-        bankAccountTypesComboBox.setConverter(new StringConverter<BankAccountType>()
+        bankAccountTypesComboBox.setConverter(new StringConverter<BankAccountTypeInfo>()
         {
             @Override
-            public String toString(BankAccountType bankAccountType)
+            public String toString(BankAccountTypeInfo bankAccountTypeInfo)
             {
-                return Localisation.get(bankAccountType.toString());
+                return Localisation.get(bankAccountTypeInfo.toString());
             }
 
             @Override
-            public BankAccountType fromString(String s)
+            public BankAccountTypeInfo fromString(String s)
             {
                 return null;
             }
@@ -297,23 +298,23 @@ public class SetupController implements Initializable, ChildController
             }
         });
 
-        countryComboBox.setConverter(new StringConverter<Locale>()
+        countryComboBox.setConverter(new StringConverter<Country>()
         {
             @Override
-            public String toString(Locale locale)
+            public String toString(Country country)
             {
-                return locale.getDisplayCountry();
+                return country.getName();
             }
 
             @Override
-            public Locale fromString(String s)
+            public Country fromString(String s)
             {
                 return null;
             }
         });
 
         bankAccountTypesComboBox.valueProperty().addListener((ov, oldValue, newValue) -> {
-            if (newValue != null && newValue instanceof BankAccountType)
+            if (newValue != null && newValue instanceof BankAccountTypeInfo)
             {
                 accountPrimaryID.setText("");
                 accountPrimaryID.setPromptText(newValue.getPrimaryIDName());
@@ -379,18 +380,13 @@ public class SetupController implements Initializable, ChildController
 
     private boolean verifyBankAccountData()
     {
-        boolean accountIDsByBankTransferTypeValid = Verification.verifyAccountIDsByBankTransferType(bankAccountTypesComboBox.getSelectionModel().getSelectedItem(),
-                accountPrimaryID.getText(),
-                accountSecondaryID.getText());
-
         return bankAccountTypesComboBox.getSelectionModel().getSelectedItem() != null
                 && countryComboBox.getSelectionModel().getSelectedItem() != null
                 && currencyComboBox.getSelectionModel().getSelectedItem() != null
                 && accountTitle.getText().length() > 0
                 && accountHolderName.getText().length() > 0
                 && accountPrimaryID.getText().length() > 0
-                && accountSecondaryID.getText().length() > 0
-                && accountIDsByBankTransferTypeValid;
+                && accountSecondaryID.getText().length() > 0;
     }
 
 }

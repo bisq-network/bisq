@@ -1,6 +1,6 @@
 package io.bitsquare.gui.util;
 
-import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.bank.BankAccountTypeInfo;
 import io.bitsquare.gui.components.VSpacer;
 import javafx.collections.FXCollections;
 import javafx.scene.control.Button;
@@ -86,10 +86,10 @@ public class FormBuilder
         return comboBox;
     }
 
-    public static ComboBox<BankAccountType> addBankAccountComboBox(GridPane gridPane, String title, List<BankAccountType> list, int row)
+    public static ComboBox<BankAccountTypeInfo> addBankAccountComboBox(GridPane gridPane, String title, List<BankAccountTypeInfo> list, int row)
     {
         gridPane.add(new Label(title), 0, row);
-        ComboBox<BankAccountType> comboBox = new ComboBox<>(FXCollections.observableArrayList(list));
+        ComboBox<BankAccountTypeInfo> comboBox = new ComboBox<>(FXCollections.observableArrayList(list));
         gridPane.add(comboBox, 1, row);
         return comboBox;
     }

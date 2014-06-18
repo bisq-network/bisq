@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -36,12 +37,12 @@
 
                                                 <Label text="Balance:" GridPane.rowIndex="1"/>
                                                 <TextField fx:id="balanceTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                                                <ProgressIndicator fx:id="progressIndicator" id="confidence-progress-indicator" GridPane.columnIndex="2" GridPane.halignment="LEFT"
-                                                                   GridPane.rowIndex="1" GridPane.rowSpan="2" GridPane.valignment="TOP">
+                                                <ConfidenceProgressIndicator fx:id="progressIndicator" GridPane.columnIndex="2" GridPane.halignment="LEFT"
+                                                                             GridPane.rowIndex="1" GridPane.rowSpan="2" GridPane.valignment="TOP">
                                                     <GridPane.margin>
                                                         <Insets top="2.0"/>
                                                     </GridPane.margin>
-                                                </ProgressIndicator>
+                                                </ConfidenceProgressIndicator>
                                                 <Label fx:id="confirmationLabel" text="Checking confirmations..." GridPane.columnIndex="3" GridPane.rowIndex="1"/>
 
                                                 <Button fx:id="paymentDoneButton" defaultButton="true" onAction="#onPaymentDone" text="Payment done" disable="true" GridPane.columnIndex="1"

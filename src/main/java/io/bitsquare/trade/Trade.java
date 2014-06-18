@@ -95,7 +95,7 @@ public class Trade implements Serializable
 
     public String getUid()
     {
-        return offer.getUid();
+        return offer.getUID();
     }
 
     public Offer getOffer()

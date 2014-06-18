@@ -1,10 +1,10 @@
 package io.bitsquare.gui.components.processbar;
 
+import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.util.Utilities;
 import javafx.animation.AnimationTimer;
 import javafx.scene.control.Button;
 import javafx.scene.control.Control;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.Pane;
 
 import java.util.ArrayList;
@@ -57,7 +57,7 @@ public class ProcessStepsBuilder
 
             if (processStepItem.hasProgressIndicator())
             {
-                final ProgressIndicator progressIndicator = new ProgressIndicator();
+                final ConfidenceProgressIndicator progressIndicator = new ConfidenceProgressIndicator();
                 progressIndicator.setProgress(-1.0);
                 progressIndicator.setPrefSize(30.0, 30.0);
                 controlHolder.getChildren().add(progressIndicator);

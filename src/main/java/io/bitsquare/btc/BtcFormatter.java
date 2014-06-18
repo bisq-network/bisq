@@ -1,8 +1,8 @@
 package io.bitsquare.btc;
 
 import com.google.bitcoin.core.Utils;
-import io.bitsquare.gui.util.Converter;
-import io.bitsquare.gui.util.Formatter;
+import io.bitsquare.gui.util.BitSquareConverter;
+import io.bitsquare.gui.util.BitSquareFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +25,7 @@ public class BtcFormatter
 
     public static BigInteger stringValueToSatoshis(String value)
     {
-        return Utils.toNanoCoins(String.valueOf(Converter.stringToDouble(value)));
+        return Utils.toNanoCoins(String.valueOf(BitSquareConverter.stringToDouble2(value)));
     }
 
     public static BigInteger doubleValueToSatoshis(double value)
@@ -48,8 +48,8 @@ public class BtcFormatter
     public static String formatSatoshis(BigInteger satoshis, boolean useBTC)
     {
         if (useBTC)
-            return Formatter.formatDouble(satoshiToBTC(satoshis), 8) + " BTC";
+            return BitSquareFormatter.formatDouble(satoshiToBTC(satoshis), 8) + " BTC";
         else
-            return Formatter.formatDouble(satoshiToBTC(satoshis), 8);
+            return BitSquareFormatter.formatDouble(satoshiToBTC(satoshis), 8);
     }
 }

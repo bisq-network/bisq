@@ -6,16 +6,18 @@ import com.google.inject.Inject;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.bank.BankAccountTypeInfo;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.Fees;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.ConfidenceDisplay;
-import io.bitsquare.gui.util.Formatter;
 import io.bitsquare.gui.util.Icons;
-import io.bitsquare.gui.util.Localisation;
+import io.bitsquare.locale.Country;
+import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
@@ -65,7 +67,7 @@ public class OrdersController implements Initializable, ChildController
     @FXML
     private TableColumn<String, TradesTableItem> directionColumn, countryColumn, bankAccountTypeColumn, priceColumn, amountColumn, volumeColumn, statusColumn, selectColumn;
     @FXML
-    private ProgressIndicator progressIndicator;
+    private ConfidenceProgressIndicator progressIndicator;
     @FXML
     private Label txTitleLabel, txHeaderLabel, confirmationLabel, txIDCopyIcon, holderNameCopyIcon, primaryBankAccountIDCopyIcon, secondaryBankAccountIDCopyIcon, bankAccountDetailsHeaderLabel,
             bankAccountTypeTitleLabel, holderNameTitleLabel, primaryBankAccountIDTitleLabel, secondaryBankAccountIDTitleLabel;
@@ -309,7 +311,7 @@ public class OrdersController implements Initializable, ChildController
             primaryBankAccountIDTitleLabel.setText("Total fees (offer fee + tx fee):");
             secondaryBankAccountIDTitleLabel.setText("Refunded collateral:");
 
-            String fiatPayed = Formatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount()));
+            String fiatPayed = BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount()));
 
             bankAccountTypeTextField.setText(Utils.bitcoinValueToFriendlyString(trade.getTradeAmount()));
             holderNameTextField.setText(fiatPayed);
@@ -327,7 +329,7 @@ public class OrdersController implements Initializable, ChildController
     private void setBankData(Trade trade)
     {
         BankAccount bankAccount = trade.getContract().getTakerBankAccount();
-        bankAccountTypeTextField.setText(bankAccount.getBankAccountType().getType().toString());
+        bankAccountTypeTextField.setText(bankAccount.getBankAccountTypeInfo().getType().toString());
         holderNameTextField.setText(bankAccount.getAccountHolderName());
         primaryBankAccountIDTextField.setText(bankAccount.getAccountPrimaryID());
         secondaryBankAccountIDTextField.setText(bankAccount.getAccountSecondaryID());
@@ -399,16 +401,16 @@ public class OrdersController implements Initializable, ChildController
                         hBox.getChildren().clear();
                         if (tradesTableItem != null)
                         {
-                            Locale countryLocale = tradesTableItem.getTrade().getOffer().getBankAccountCountryLocale();
+                            Country country = tradesTableItem.getTrade().getOffer().getBankAccountCountry();
                             try
                             {
-                                hBox.getChildren().add(Icons.getIconImageView("/images/countries/" + countryLocale.getCountry().toLowerCase() + ".png"));
+                                hBox.getChildren().add(Icons.getIconImageView("/images/countries/" + country.getCode().toLowerCase() + ".png"));
 
                             } catch (Exception e)
                             {
-                                log.warn("Country icon not found: " + "/images/countries/" + countryLocale.getCountry().toLowerCase() + ".png country name: " + countryLocale.getDisplayCountry());
+                                log.warn("Country icon not found: " + "/images/countries/" + country.getCode().toLowerCase() + ".png country name: " + country.getName());
                             }
-                            Tooltip.install(this, new Tooltip(countryLocale.getDisplayCountry()));
+                            Tooltip.install(this, new Tooltip(country.getName()));
                         }
                     }
                 };
@@ -433,8 +435,8 @@ public class OrdersController implements Initializable, ChildController
 
                         if (tradesTableItem != null)
                         {
-                            BankAccountType.BankAccountTypeEnum bankAccountTypeEnum = tradesTableItem.getTrade().getOffer().getBankAccountTypeEnum();
-                            setText(Localisation.get(bankAccountTypeEnum.toString()));
+                            BankAccountTypeInfo.BankAccountType bankAccountType = tradesTableItem.getTrade().getOffer().getBankAccountType();
+                            setText(Localisation.get(bankAccountType.toString()));
                         }
                         else
                         {
@@ -478,12 +480,12 @@ public class OrdersController implements Initializable, ChildController
                             if (offer.getDirection() == Direction.SELL)
                             {
                                 icon = buyIcon;
-                                title = io.bitsquare.gui.util.Formatter.formatDirection(Direction.BUY, true);
+                                title = BitSquareFormatter.formatDirection(Direction.BUY, true);
                             }
                             else
                             {
                                 icon = sellIcon;
-                                title = io.bitsquare.gui.util.Formatter.formatDirection(Direction.SELL, true);
+                                title = BitSquareFormatter.formatDirection(Direction.SELL, true);
                             }
                             button.setDisable(true);
                             iconView.setImage(icon);

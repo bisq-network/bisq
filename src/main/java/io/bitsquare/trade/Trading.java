@@ -14,10 +14,10 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.TradeMessage;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.offerer.OffererPaymentProtocol;
-import io.bitsquare.trade.offerer.OffererPaymentProtocolListener;
-import io.bitsquare.trade.taker.TakerPaymentProtocol;
-import io.bitsquare.trade.taker.TakerPaymentProtocolListener;
+import io.bitsquare.trade.payment.offerer.OffererPaymentProtocol;
+import io.bitsquare.trade.payment.offerer.OffererPaymentProtocolListener;
+import io.bitsquare.trade.payment.taker.TakerPaymentProtocol;
+import io.bitsquare.trade.payment.taker.TakerPaymentProtocolListener;
 import io.bitsquare.user.User;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -99,10 +99,10 @@ public class Trading
 
     public void placeNewOffer(Offer offer, FutureCallback<Transaction> callback) throws InsufficientMoneyException
     {
-        if (myOffers.containsKey(offer.getUid()))
-            throw new IllegalStateException("offers contains already a offer with the ID " + offer.getUid());
+        if (myOffers.containsKey(offer.getUID()))
+            throw new IllegalStateException("offers contains already a offer with the ID " + offer.getUID());
 
-        myOffers.put(offer.getUid(), offer);
+        myOffers.put(offer.getUID(), offer);
         //TODO for testing
         //storage.write(storageKey + ".offers", myOffers);
         walletFacade.payOfferFee(Fees.OFFER_CREATION_FEE, callback);
@@ -110,17 +110,17 @@ public class Trading
 
     public void removeOffer(Offer offer) throws IOException
     {
-        myOffers.remove(offer.getUid());
+        myOffers.remove(offer.getUID());
         storage.write(storageKey + ".offers", myOffers);
     }
 
     public Trade createTrade(Offer offer)
     {
-        if (trades.containsKey(offer.getUid()))
-            throw new IllegalStateException("trades contains already a trade with the ID " + offer.getUid());
+        if (trades.containsKey(offer.getUID()))
+            throw new IllegalStateException("trades contains already a trade with the ID " + offer.getUID());
 
         Trade trade = new Trade(offer);
-        trades.put(offer.getUid(), trade);
+        trades.put(offer.getUID(), trade);
         //TODO for testing
         //storage.write(storageKey + ".trades", trades);
 

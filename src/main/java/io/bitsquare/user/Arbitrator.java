@@ -1,46 +1,154 @@
 package io.bitsquare.user;
 
 import java.io.Serializable;
-import java.math.BigInteger;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
 public class Arbitrator implements Serializable
 {
-    private static final long serialVersionUID = -2625059604136756635L;
 
-    private String name;
-    private String pubKey;
-    private String messagePubKeyAsHex;
-    private String url;
-    private int baseFeePercent;      // in percent int 1 for 1%
-    private int arbitrationFeePercent;
-    private BigInteger minArbitrationAmount; // in Satoshis
-    private String uid;
 
-    public Arbitrator(String uid, String name, String pubKey, String messagePubKeyAsHex, String url, int baseFeePercent, int arbitrationFeePercent, BigInteger minArbitrationAmount)
+    public enum ID_TYPE
     {
-        this.uid = uid;
-        this.name = name;
-        this.pubKey = pubKey;
-        this.messagePubKeyAsHex = messagePubKeyAsHex;
-        this.url = url;
-        this.baseFeePercent = baseFeePercent;
-        this.arbitrationFeePercent = arbitrationFeePercent;
-        this.minArbitrationAmount = minArbitrationAmount;
+        REAL_LIFE_ID,
+        NICKNAME,
+        COMPANY
     }
 
+    public enum METHODS
+    {
+        TLS_NOTARY,
+        SKYPE_SCREEN_SHARING,
+        SMART_PHONE_VIDEO_CHAT,
+        REQUIRE_REAL_ID,
+        BANK_STATEMENT,
+        OTHER
+    }
+
+    public enum ID_VERIFICATIONS
+    {
+        PASSPORT,
+        GOV_ID,
+        UTILITY_BILLS,
+        FACEBOOK,
+        GOOGLE_PLUS,
+        TWITTER,
+        PGP,
+        BTC_OTC,
+        OTHER
+    }
+
+    private static final long serialVersionUID = -2625059604136756635L;
+
+    private String UID;
+
+    private String pubKeyAsHex;
+    private String messagePubKeyAsHex;
+    private String name;
+    private ID_TYPE idType;
+    private List<Locale> languages;
+    private Reputation reputation;
+    private double maxTradeVolume;
+    private double passiveServiceFee;
+    private double minPassiveServiceFee;
+    private double arbitrationFee;
+    private double minArbitrationFee;
+    private List<METHODS> arbitrationMethods;
+    private List<ID_VERIFICATIONS> idVerifications;
+    private String webUrl;
+    private String description;
+
+    public Arbitrator()
+    {
+    }
+
+    public Arbitrator(String pubKeyAsHex,
+                      String messagePubKeyAsHex,
+                      String name,
+                      ID_TYPE idType,
+                      List<Locale> languages,
+                      Reputation reputation,
+                      double maxTradeVolume,
+                      double passiveServiceFee,
+                      double minPassiveServiceFee,
+                      double arbitrationFee,
+                      double minArbitrationFee,
+                      List<METHODS> arbitrationMethods,
+                      List<ID_VERIFICATIONS> idVerifications,
+                      String webUrl,
+                      String description)
+    {
+        this.pubKeyAsHex = pubKeyAsHex;
+        this.messagePubKeyAsHex = messagePubKeyAsHex;
+        this.name = name;
+        this.idType = idType;
+        this.languages = languages;
+        this.reputation = reputation;
+        this.maxTradeVolume = maxTradeVolume;
+        this.passiveServiceFee = passiveServiceFee;
+        this.minPassiveServiceFee = minPassiveServiceFee;
+        this.arbitrationFee = arbitrationFee;
+        this.minArbitrationFee = minArbitrationFee;
+        this.arbitrationMethods = arbitrationMethods;
+        this.idVerifications = idVerifications;
+        this.webUrl = webUrl;
+        this.description = description;
+
+        //TODO use pubKeyAsHex
+        UID = name;
+    }
+
+
+    public void updateFromStorage(Arbitrator savedArbitrator)
+    {
+        this.pubKeyAsHex = savedArbitrator.getPubKeyAsHex();
+        this.messagePubKeyAsHex = savedArbitrator.getPubKeyAsHex();
+        this.name = savedArbitrator.getName();
+        this.idType = savedArbitrator.getIdType();
+        this.languages = savedArbitrator.getLanguages();
+        this.reputation = savedArbitrator.getReputation();
+        this.maxTradeVolume = savedArbitrator.getMaxTradeVolume();
+        this.passiveServiceFee = savedArbitrator.getPassiveServiceFee();
+        this.minPassiveServiceFee = savedArbitrator.getMinPassiveServiceFee();
+        this.arbitrationFee = savedArbitrator.getArbitrationFee();
+        this.minArbitrationFee = savedArbitrator.getMinArbitrationFee();
+        this.arbitrationMethods = savedArbitrator.getArbitrationMethods();
+        this.idVerifications = savedArbitrator.getIdVerifications();
+        this.webUrl = savedArbitrator.getWebUrl();
+        this.description = savedArbitrator.getDescription();
+
+        UID = pubKeyAsHex;
+    }
+
+    public int hashCode()
+    {
+        return Objects.hashCode(UID);
+    }
+
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof Arbitrator))
+            return false;
+        if (obj == this)
+            return true;
+
+        Arbitrator other = (Arbitrator) obj;
+        return other.getUID().equals(UID);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getName()
+    public String getUID()
     {
-        return name;
+        return UID;
     }
 
-    public String getPubKey()
+    public String getPubKeyAsHex()
     {
-        return pubKey;
+        return pubKeyAsHex;
     }
 
     public String getMessagePubKeyAsHex()
@@ -48,43 +156,68 @@ public class Arbitrator implements Serializable
         return messagePubKeyAsHex;
     }
 
-    public String getUrl()
+    public String getName()
     {
-        return url;
+        return name;
     }
 
-    public BigInteger getMinArbitrationAmount()
+    public ID_TYPE getIdType()
     {
-        return minArbitrationAmount;
+        return idType;
     }
 
-    public int getBaseFeePercent()
+    public List<Locale> getLanguages()
     {
-        return baseFeePercent;
+        return languages;
     }
 
-    public int getArbitrationFeePercent()
+    public Reputation getReputation()
     {
-        return arbitrationFeePercent;
+        return reputation;
     }
 
-    public Object getUid()
+    public double getMaxTradeVolume()
     {
-        return uid;
+        return maxTradeVolume;
     }
 
-    @Override
-    public String toString()
+    public double getPassiveServiceFee()
     {
-        return "Arbitrator{" +
-                "name='" + name + '\'' +
-                ", pubKey='" + pubKey + '\'' +
-                ", messagePubKeyAsHex='" + messagePubKeyAsHex + '\'' +
-                ", url='" + url + '\'' +
-                ", baseFeePercent=" + baseFeePercent +
-                ", arbitrationFeePercent=" + arbitrationFeePercent +
-                ", minArbitrationAmount=" + minArbitrationAmount +
-                ", uid='" + uid + '\'' +
-                '}';
+        return passiveServiceFee;
+    }
+
+    public double getMinPassiveServiceFee()
+    {
+        return minPassiveServiceFee;
+    }
+
+    public double getArbitrationFee()
+    {
+        return arbitrationFee;
+    }
+
+    public double getMinArbitrationFee()
+    {
+        return minArbitrationFee;
+    }
+
+    public List<METHODS> getArbitrationMethods()
+    {
+        return arbitrationMethods;
+    }
+
+    public List<ID_VERIFICATIONS> getIdVerifications()
+    {
+        return idVerifications;
+    }
+
+    public String getWebUrl()
+    {
+        return webUrl;
+    }
+
+    public String getDescription()
+    {
+        return description;
     }
 }

@@ -1,13 +1,16 @@
 package io.bitsquare.gui.util;
 
+import io.bitsquare.locale.Country;
+import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
+import io.bitsquare.user.Arbitrator;
 
 import java.text.DecimalFormat;
 import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 
-public class Formatter
+public class BitSquareFormatter
 {
     public static String formatPrice(double price)
     {
@@ -111,15 +114,15 @@ public class Formatter
         return value * 100 + "%";
     }
 
-    public static String countryLocalesToString(List<Locale> countryLocales)
+    public static String countryLocalesToString(List<Country> countries)
     {
         String result = "";
         int i = 0;
-        for (Locale locale : countryLocales)
+        for (Country country : countries)
         {
-            result += locale.getCountry();
+            result += country.getName();
             i++;
-            if (i < countryLocales.size())
+            if (i < countries.size())
                 result += ", ";
         }
         return result;
@@ -139,4 +142,31 @@ public class Formatter
         return result;
     }
 
+    public static String arbitrationMethodsToString(List<Arbitrator.METHODS> items)
+    {
+        String result = "";
+        int i = 0;
+        for (Arbitrator.METHODS item : items)
+        {
+            result += Localisation.get(item.toString());
+            i++;
+            if (i < items.size())
+                result += ", ";
+        }
+        return result;
+    }
+
+    public static String arbitrationIDVerificationsToString(List<Arbitrator.ID_VERIFICATIONS> items)
+    {
+        String result = "";
+        int i = 0;
+        for (Arbitrator.ID_VERIFICATIONS item : items)
+        {
+            result += Localisation.get(item.toString());
+            i++;
+            if (i < items.size())
+                result += ", ";
+        }
+        return result;
+    }
 }

@@ -23,13 +23,9 @@
     -fx-fill: red;
 }
 
-#confidence-progress-indicator {
-    -fx-fill: null;
-}
-
 /* main nav */
-
 #nav-button {
+    -fx-cursor: hand;
     -fx-background-color: transparent;
     -fx-alignment: center;
 }
@@ -76,6 +72,11 @@
     -fx-cursor: hand;
     -fx-text-fill: blue;
     -fx-underline: true;
+}
+
+#icon-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
 }
 
 /* table */

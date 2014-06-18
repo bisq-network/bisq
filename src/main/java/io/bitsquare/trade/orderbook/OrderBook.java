@@ -3,6 +3,8 @@ package io.bitsquare.trade.orderbook;
 import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.market.orderbook.OrderBookListItem;
+import io.bitsquare.locale.Country;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OrderBookListener;
 import io.bitsquare.settings.Settings;
@@ -72,7 +74,10 @@ public class OrderBook implements OrderBookListener
 
     public void loadOffers()
     {
-        messageFacade.getOffers(user.getCurrentBankAccount().getCurrency().getCurrencyCode());
+        if (user.getCurrentBankAccount() != null)
+            messageFacade.getOffers(user.getCurrentBankAccount().getCurrency().getCurrencyCode());
+        else
+            messageFacade.getOffers(CurrencyUtil.getDefaultCurrency().getCurrencyCode());
     }
 
     public void removeOffer(Offer offer) throws IOException
@@ -101,7 +106,7 @@ public class OrderBook implements OrderBookListener
                 boolean currencyResult = currentBankAccount.getCurrency().equals(offer.getCurrency());
 
                 // The offer bank account country must match one of the accepted countries defined in the settings (1 to n)
-                boolean countryResult = countryInList(offer.getBankAccountCountryLocale(), settings.getAcceptedCountryLocales());
+                boolean countryResult = countryInList(offer.getBankAccountCountry(), settings.getAcceptedCountries());
 
                 // One of the supported languages from the settings must match one of the offer languages (n to n)
                 boolean languageResult = languagesInList(settings.getAcceptedLanguageLocales(), offer.getAcceptedLanguageLocales());
@@ -151,7 +156,7 @@ public class OrderBook implements OrderBookListener
                 log.debug("currentBankAccount.getCurrency() = " + currentBankAccount.getCurrency() +
                         ", offer.getCurrency() = " + offer.getCurrency());
                 log.debug("offer.getCountryLocale() = " + offer.getBankAccountCountryLocale() +
-                        ", settings.getAcceptedCountryLocales() = " + settings.getAcceptedCountryLocales().toString());
+                        ", settings.getAcceptedCountries() = " + settings.getAcceptedCountries().toString());
                 log.debug("settings.getAcceptedLanguageLocales() = " + settings.getAcceptedLanguageLocales() +
                         ", offer.getAcceptedLanguageLocales() = " + offer.getAcceptedLanguageLocales());
                 log.debug("currentBankAccount.getBankAccountType().getType() = " + currentBankAccount.getBankAccountType().getType() +
@@ -237,7 +242,7 @@ public class OrderBook implements OrderBookListener
                         @Override
                         public boolean test(OrderBookListItem orderBookListItem)
                         {
-                            return orderBookListItem.getOffer().getUid().equals(offer.getUid());
+                            return orderBookListItem.getOffer().getUID().equals(offer.getUID());
                         }
                     });
                 }
@@ -267,11 +272,11 @@ public class OrderBook implements OrderBookListener
     // Private Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean countryInList(Locale localeToMatch, List<Locale> list)
+    private boolean countryInList(Country countryToMatch, List<Country> list)
     {
-        for (Locale locale : list)
+        for (Country country : list)
         {
-            if (locale.getCountry().equals(localeToMatch.getCountry()))
+            if (country.getCode().equals(countryToMatch.getCode()))
                 return true;
         }
         return false;
@@ -298,7 +303,7 @@ public class OrderBook implements OrderBookListener
             {
                 try
                 {
-                    if (arbitrator.getUid().equals(arbitratorToMatch.getUid()))
+                    if (arbitrator.getUID().equals(arbitratorToMatch.getUID()))
                         return true;
                 } catch (Exception e)
                 {

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
@@ -71,12 +72,12 @@
                         <Tooltip text="Copy address to clipboard"/>
                     </tooltip>
                 </Label>
-                <ProgressIndicator fx:id="progressIndicator" id="confidence-progress-indicator" visible="false" progress="0" GridPane.columnIndex="3" GridPane.halignment="LEFT" GridPane.rowIndex="1"
-                                   GridPane.rowSpan="2" GridPane.valignment="TOP">
+                <ConfidenceProgressIndicator fx:id="progressIndicator" visible="false" progress="0" GridPane.columnIndex="3" GridPane.halignment="LEFT" GridPane.rowIndex="1"
+                                             GridPane.rowSpan="2" GridPane.valignment="TOP">
                     <GridPane.margin>
                         <Insets top="2.0"/>
                     </GridPane.margin>
-                </ProgressIndicator>
+                </ConfidenceProgressIndicator>
                 <Label fx:id="confirmationLabel" visible="false" GridPane.columnIndex="4" GridPane.rowIndex="1"/>
 
                 <!-- row 2 -->
