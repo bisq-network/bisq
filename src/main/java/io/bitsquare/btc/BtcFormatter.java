@@ -18,6 +18,12 @@ public class BtcFormatter
     public static BigInteger BTC = new BigInteger("100000000");
     public static BigInteger mBTC = new BigInteger("100000");
 
+
+    public static String btcToString(BigInteger value)
+    {
+        return Utils.bitcoinValueToFriendlyString(value);
+    }
+
     //TODO
     public static double satoshiToBTC(BigInteger satoshis)
     {

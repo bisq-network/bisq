@@ -12,6 +12,7 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.bitsquare.btc.BitSquareWalletAppKit;
 import io.bitsquare.btc.BlockChainFacade;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.msg.MessageFacade;
@@ -39,6 +40,8 @@ public class BitSquareModule extends AbstractModule
 
         bind(CryptoFacade.class).asEagerSingleton();
         bind(WalletFacade.class).asEagerSingleton();
+        bind(FeePolicy.class).asEagerSingleton();
+
         bind(BlockChainFacade.class).asEagerSingleton();
         bind(MessageFacade.class).asEagerSingleton();
 

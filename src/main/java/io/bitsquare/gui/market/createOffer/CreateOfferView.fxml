@@ -29,7 +29,6 @@
                 <Label text="Collateral (%):" GridPane.rowIndex="3"/>
                 <TextField fx:id="collateralTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
-
                 <Label id="form-header-text" text="Offer details" GridPane.rowIndex="4">
                     <GridPane.margin>
                         <Insets top="10.0"/>
@@ -72,7 +71,6 @@
                     </GridPane.margin>
                 </ConfidenceProgressIndicator>
                 <Label fx:id="confirmationLabel" text="Checking confirmations..." visible="false" GridPane.columnIndex="3" GridPane.rowIndex="12"/>
-
 
                 <Button fx:id="closeButton" visible="false" defaultButton="true" onAction="#onClose" text="Close" GridPane.columnIndex="1" GridPane.rowIndex="13"/>
 

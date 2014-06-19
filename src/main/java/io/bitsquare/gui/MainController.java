@@ -1,6 +1,9 @@
 package io.bitsquare.gui;
 
-import com.google.bitcoin.core.*;
+import com.google.bitcoin.core.ECKey;
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.Wallet;
+import com.google.bitcoin.core.WalletEventListener;
 import com.google.bitcoin.script.Script;
 import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccount;
@@ -123,8 +126,8 @@ public class MainController implements Initializable, NavigationController
 
         //homeButton.fire();
         //settingsButton.fire();
-        fundsButton.fire();
-        // sellButton.fire();
+        //fundsButton.fire();
+        sellButton.fire();
         // ordersButton.fire();
         // homeButton.fire();
         // msgButton.fire();
@@ -334,31 +337,31 @@ public class MainController implements Initializable, NavigationController
         vBox.getChildren().setAll(hBox, titleLabel);
         parent.getChildren().add(vBox);
 
-        balanceTextField.setText(Utils.bitcoinValueToFriendlyString(walletFacade.getWalletBalance()));
+        balanceTextField.setText(BtcFormatter.btcToString(walletFacade.getWalletBalance()));
         walletFacade.getWallet().addEventListener(new WalletEventListener()
         {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
             {
-                balanceTextField.setText(Utils.bitcoinValueToFriendlyString(newBalance));
+                balanceTextField.setText(BtcFormatter.btcToString(newBalance));
             }
 
             @Override
             public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
             {
-                balanceTextField.setText(Utils.bitcoinValueToFriendlyString(walletFacade.getWallet().getBalance()));
+                balanceTextField.setText(BtcFormatter.btcToString(walletFacade.getWallet().getBalance()));
             }
 
             @Override
             public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
             {
-                balanceTextField.setText(Utils.bitcoinValueToFriendlyString(newBalance));
+                balanceTextField.setText(BtcFormatter.btcToString(newBalance));
             }
 
             @Override
             public void onReorganize(Wallet wallet)
             {
-                balanceTextField.setText(Utils.bitcoinValueToFriendlyString(walletFacade.getWallet().getBalance()));
+                balanceTextField.setText(BtcFormatter.btcToString(walletFacade.getWallet().getBalance()));
             }
 
             @Override

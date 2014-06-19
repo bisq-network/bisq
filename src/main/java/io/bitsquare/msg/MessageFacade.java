@@ -211,7 +211,7 @@ public class MessageFacade
     public void addOffer(Offer offer) throws IOException
     {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
-        final Number160 contentKey = Number160.createHash(offer.getUID());
+        final Number160 contentKey = Number160.createHash(offer.getId());
         final Data offerData = new Data(offer);
         //offerData.setTTLSeconds(5);
         final FutureDHT addFuture = myPeer.put(locationKey).setData(contentKey, offerData).start();
@@ -267,7 +267,7 @@ public class MessageFacade
     public void removeOffer(Offer offer) throws IOException
     {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
-        Number160 contentKey = Number160.createHash(offer.getUID());
+        Number160 contentKey = Number160.createHash(offer.getId());
         log.debug("removeOffer");
         FutureDHT removeFuture = myPeer.remove(locationKey).setReturnResults().setContentKey(contentKey).start();
         removeFuture.addListener(new BaseFutureAdapter<BaseFuture>()

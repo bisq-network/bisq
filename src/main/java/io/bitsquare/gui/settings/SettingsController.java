@@ -135,47 +135,52 @@ public class SettingsController implements Initializable, ChildController, Navig
     public void initialize(URL url, ResourceBundle rb)
     {
         setupGeneralSettingsScreen();
-
         initBankAccountScreen();
-
         addMockArbitrator();
     }
 
     private void addMockArbitrator()
     {
-        String pubKeyAsHex = Utils.bytesToHexString(new ECKey().getPubKey());
-        String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey());
-        List<Locale> languages = new ArrayList<>();
-        languages.add(LanguageUtil.getDefaultLanguageLocale());
-        List<Arbitrator.METHODS> arbitrationMethods = new ArrayList<>();
-        arbitrationMethods.add(Arbitrator.METHODS.TLS_NOTARY);
-        List<Arbitrator.ID_VERIFICATIONS> idVerifications = new ArrayList<>();
-        idVerifications.add(Arbitrator.ID_VERIFICATIONS.PASSPORT);
-        idVerifications.add(Arbitrator.ID_VERIFICATIONS.GOV_ID);
-
-        Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
-                messagePubKeyAsHex,
-                "Manfred Karrer",
-                Arbitrator.ID_TYPE.REAL_LIFE_ID,
-                languages,
-                new Reputation(),
-                1,
-                0.01,
-                0.001,
-                10,
-                0.1,
-                arbitrationMethods,
-                idVerifications,
-                "http://bitsquare.io/",
-                "Bla bla..."
-        );
-
-        try
+        if (settings.getAcceptedArbitrators() == null || settings.getAcceptedArbitrators().size() == 0)
         {
-            messageFacade.addArbitrator(arbitrator);
-        } catch (IOException e)
-        {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            String pubKeyAsHex = Utils.bytesToHexString(new ECKey().getPubKey());
+            String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey());
+            List<Locale> languages = new ArrayList<>();
+            languages.add(LanguageUtil.getDefaultLanguageLocale());
+            List<Arbitrator.METHODS> arbitrationMethods = new ArrayList<>();
+            arbitrationMethods.add(Arbitrator.METHODS.TLS_NOTARY);
+            List<Arbitrator.ID_VERIFICATIONS> idVerifications = new ArrayList<>();
+            idVerifications.add(Arbitrator.ID_VERIFICATIONS.PASSPORT);
+            idVerifications.add(Arbitrator.ID_VERIFICATIONS.GOV_ID);
+
+            Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
+                    messagePubKeyAsHex,
+                    "Manfred Karrer",
+                    Arbitrator.ID_TYPE.REAL_LIFE_ID,
+                    languages,
+                    new Reputation(),
+                    1,
+                    0.01,
+                    0.001,
+                    10,
+                    0.1,
+                    arbitrationMethods,
+                    idVerifications,
+                    "http://bitsquare.io/",
+                    "Bla bla..."
+            );
+
+            arbitratorList.add(arbitrator);
+            settings.addAcceptedArbitrator(arbitrator);
+            storage.write(settings.getClass().getName(), settings);
+
+            try
+            {
+                messageFacade.addArbitrator(arbitrator);
+            } catch (IOException e)
+            {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
         }
     }
 
@@ -651,6 +656,18 @@ public class SettingsController implements Initializable, ChildController, Navig
         {
             resetBankAccountInput();
         }
+
+        //TODO
+        bankAccountTypesComboBox.getSelectionModel().selectFirst();
+        bankAccountCurrencyComboBox.getSelectionModel().selectFirst();
+        bankAccountRegionComboBox.getSelectionModel().select(3);
+        bankAccountCountryComboBox.getSelectionModel().select(5);
+        bankAccountTitleTextField.setText("dummy");
+        bankAccountHolderNameTextField.setText("dummy");
+        bankAccountPrimaryIDTextField.setText("dummy");
+        bankAccountSecondaryIDTextField.setText("dummy");
+        if (user.getCurrentBankAccount() == null)
+            onSaveBankAccount(null);
     }
 
     private void resetBankAccountInput()
@@ -798,7 +815,6 @@ public class SettingsController implements Initializable, ChildController, Navig
             bankAccountCountryComboBox.setVisible(true);
             int countryIndex = bankAccountCountryComboBox.getItems().indexOf(currentCountry);
             bankAccountCountryComboBox.getSelectionModel().select(countryIndex);
-
         }
     }
 

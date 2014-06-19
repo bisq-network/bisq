@@ -1,11 +1,11 @@
 package io.bitsquare.gui.funds;
 
 import com.google.bitcoin.core.TransactionConfidence;
-import com.google.bitcoin.core.Utils;
 import com.google.inject.Inject;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.btc.AddressInfo;
+import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.ConfidenceListener;
@@ -30,7 +30,6 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
-
 
 public class FundsController implements Initializable, ChildController
 {
@@ -105,9 +104,9 @@ public class FundsController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
-    public void onAddNewAddress(ActionEvent actionEvent)
+    public void onAddNewTradeAddress(ActionEvent actionEvent)
     {
-        AddressInfo addressInfo = walletFacade.getNewAddressInfo("New address");
+        AddressInfo addressInfo = walletFacade.getNewTradeAddressInfo();
         addressList.add(new AddressListItem(addressInfo.getLabel(), addressInfo.getAddress(), false));
     }
 
@@ -147,7 +146,7 @@ public class FundsController implements Initializable, ChildController
                                 }
                             });
 
-                            updateBalance(walletFacade.getBalance(item.getAddress()), balanceLabel);
+                            updateBalance(walletFacade.getBalanceForAddress(item.getAddress()), balanceLabel);
                             setGraphic(balanceLabel);
                         }
                         else
@@ -243,7 +242,7 @@ public class FundsController implements Initializable, ChildController
                                 }
                             });
 
-                            updateConfidence(walletFacade.getConfidence(item.getAddress()), progressIndicator, tooltip);
+                            updateConfidence(walletFacade.getConfidenceForAddress(item.getAddress()), progressIndicator, tooltip);
                             setGraphic(progressIndicator);
                         }
                         else
@@ -262,7 +261,7 @@ public class FundsController implements Initializable, ChildController
     private void updateBalance(BigInteger balance, Label balanceLabel)
     {
         if (balance != null)
-            balanceLabel.setText(Utils.bitcoinValueToFriendlyString(balance));
+            balanceLabel.setText(BtcFormatter.btcToString(balance));
     }
 
     private void updateConfidence(TransactionConfidence confidence, ConfidenceProgressIndicator progressIndicator, Tooltip tooltip)

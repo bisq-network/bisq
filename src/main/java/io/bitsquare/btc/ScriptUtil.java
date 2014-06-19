@@ -9,11 +9,14 @@ import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
 
 public class ScriptUtil
 {
-    public static Script getEmptyOP_RETURNScript()
+    public static Script getOpReturnScript()
     {
-        return new ScriptBuilder()
-                .op(OP_RETURN)
-                .build();
+        return new ScriptBuilder().op(OP_RETURN).build();
+    }
+
+    public static Script getOpReturnScriptWithData(byte[] data)
+    {
+        return new ScriptBuilder().op(OP_RETURN).data(data).build();
     }
 
     public static boolean isOpReturnScript(TransactionOutput transactionOutput)

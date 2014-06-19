@@ -7,7 +7,6 @@ import com.google.bitcoin.core.Utils;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
-import io.bitsquare.btc.Fees;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.msg.MessageFacade;
@@ -99,39 +98,37 @@ public class Trading
 
     public void placeNewOffer(Offer offer, FutureCallback<Transaction> callback) throws InsufficientMoneyException
     {
-        if (myOffers.containsKey(offer.getUID()))
-            throw new IllegalStateException("offers contains already a offer with the ID " + offer.getUID());
+        if (myOffers.containsKey(offer.getId()))
+            throw new IllegalStateException("offers contains already a offer with the ID " + offer.getId());
 
-        myOffers.put(offer.getUID(), offer);
-        //TODO for testing
-        //storage.write(storageKey + ".offers", myOffers);
-        walletFacade.payOfferFee(Fees.OFFER_CREATION_FEE, callback);
+        myOffers.put(offer.getId(), offer);
+        walletFacade.payCreateOfferFee(callback);
     }
 
     public void removeOffer(Offer offer) throws IOException
     {
-        myOffers.remove(offer.getUID());
+        myOffers.remove(offer.getId());
         storage.write(storageKey + ".offers", myOffers);
     }
 
     public Trade createTrade(Offer offer)
     {
-        if (trades.containsKey(offer.getUID()))
-            throw new IllegalStateException("trades contains already a trade with the ID " + offer.getUID());
+        if (trades.containsKey(offer.getId()))
+            throw new IllegalStateException("trades contains already a trade with the ID " + offer.getId());
 
         Trade trade = new Trade(offer);
-        trades.put(offer.getUID(), trade);
+        trades.put(offer.getId(), trade);
         //TODO for testing
         //storage.write(storageKey + ".trades", trades);
 
-        this.newTradeProperty.set(trade.getUid());
+        this.newTradeProperty.set(trade.getId());
 
         return trade;
     }
 
     public void removeTrade(Trade trade) throws IOException
     {
-        trades.remove(trade.getUid());
+        trades.remove(trade.getId());
         storage.write(storageKey + ".trades", trades);
     }
 
@@ -143,14 +140,14 @@ public class Trading
     public TakerPaymentProtocol addTakerPaymentProtocol(Trade trade, TakerPaymentProtocolListener listener)
     {
         TakerPaymentProtocol takerPaymentProtocol = new TakerPaymentProtocol(trade, listener, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
-        takerPaymentProtocols.put(trade.getUid(), takerPaymentProtocol);
+        takerPaymentProtocols.put(trade.getId(), takerPaymentProtocol);
         return takerPaymentProtocol;
     }
 
     public OffererPaymentProtocol addOffererPaymentProtocol(Trade trade, OffererPaymentProtocolListener listener)
     {
         OffererPaymentProtocol offererPaymentProtocol = new OffererPaymentProtocol(trade, listener, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
-        offererPaymentProtocols.put(trade.getUid(), offererPaymentProtocol);
+        offererPaymentProtocols.put(trade.getId(), offererPaymentProtocol);
         return offererPaymentProtocol;
     }
 

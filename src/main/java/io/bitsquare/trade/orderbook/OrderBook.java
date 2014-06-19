@@ -141,7 +141,7 @@ public class OrderBook implements OrderBookListener
                         && priceResult
                         && arbitratorResult;
 
-                           /*
+                      /*
                 log.debug("result = " + result +
                         ", currencyResult = " + currencyResult +
                         ", countryResult = " + countryResult +
@@ -241,7 +241,7 @@ public class OrderBook implements OrderBookListener
                         @Override
                         public boolean test(OrderBookListItem orderBookListItem)
                         {
-                            return orderBookListItem.getOffer().getUID().equals(offer.getUID());
+                            return orderBookListItem.getOffer().getId().equals(offer.getId());
                         }
                     });
                 }

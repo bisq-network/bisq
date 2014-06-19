@@ -371,8 +371,8 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
         });
 
         confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, balanceTextField, progressIndicator);
-        paymentDoneButton.setDisable(walletFacade.getCollateralBalance().compareTo(BigInteger.ZERO) == 0);
-        log.debug("getCollateralBalance " + walletFacade.getCollateralBalance().toString());
+        paymentDoneButton.setDisable(walletFacade.getArbitratorDepositBalance().compareTo(BigInteger.ZERO) == 0);
+        log.debug("getArbitratorDepositBalance " + walletFacade.getArbitratorDepositBalance().toString());
         walletFacade.getWallet().addEventListener(new WalletEventListener()
         {
             @Override
@@ -464,7 +464,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
             BitSquareValidator.resetTextFields(hasDoubleValueTextFields);
             BitSquareValidator.textFieldsHasDoubleValue(hasDoubleValueTextFields);
 
-            String pubKeyAsHex = walletFacade.getNewArbitratorAddressInfo().getPubKeyAsHexString();
+            String pubKeyAsHex = walletFacade.getArbitratorDepositAddressInfo().getPubKeyAsHexString();
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey());
             String name = nameTextField.getText();
 

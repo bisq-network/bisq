@@ -93,7 +93,8 @@ public class Arbitrator implements Serializable
         this.webUrl = webUrl;
         this.description = description;
 
-        UID = pubKeyAsHex;
+        //TODO for mock arbitrator
+        UID = name;
     }
 
 

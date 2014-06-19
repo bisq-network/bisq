@@ -1,6 +1,8 @@
 package io.bitsquare.gui.market.orderbook;
 
 import com.google.bitcoin.core.InsufficientMoneyException;
+import com.google.bitcoin.core.Transaction;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccountTypeInfo;
 import io.bitsquare.btc.BtcFormatter;
@@ -109,6 +111,67 @@ public class OrderBookController implements Initializable, ChildController
     // Interface implementation: Initializable
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private boolean isRegistered()
+    {
+        if (user.getAccountID() == null)
+        {
+            Dialogs.CommandLink settingsCommandLink = new Dialogs.CommandLink("Open settings", "You need to configure your settings before you can actively trade.");
+            Dialogs.CommandLink depositFeeCommandLink = new Dialogs.CommandLink("Deposit funds", "You need to pay the registration fee before you can actively trade. That is needed as prevention against fraud.");
+            Dialogs.CommandLink sendRegistrationCommandLink = new Dialogs.CommandLink("Publish registration", "When settings are configured and the fee deposit is done your registration transaction will be published to the Bitcoin \nnetwork.");
+            List<Dialogs.CommandLink> commandLinks = Arrays.asList(settingsCommandLink, depositFeeCommandLink, sendRegistrationCommandLink);
+
+            boolean settingsValid = settings.getAcceptedLanguageLocales().size() > 0;
+            settingsValid &= settings.getAcceptedCountries().size() > 0;
+            settingsValid &= settings.getAcceptedArbitrators().size() > 0;
+            settingsValid &= user.getCurrentBankAccount() != null;
+
+            boolean registrationFeeDeposited = walletFacade.getRegistrationBalance().compareTo(BigInteger.ZERO) > 0;
+            int selectedIndex = settingsValid ? (registrationFeeDeposited ? 2 : 1) : 0;
+
+            Action registrationMissingAction = Popups.openRegistrationMissingPopup("Registration missing", "Please follow these steps:", "You need to register before you can place an offer.", commandLinks, selectedIndex);
+            if (registrationMissingAction == settingsCommandLink)
+            {
+                MainController.getInstance().navigateToView(NavigationController.SETTINGS);
+            }
+            else if (registrationMissingAction == depositFeeCommandLink)
+            {
+                MainController.getInstance().navigateToView(NavigationController.FUNDS);
+            }
+            else if (registrationMissingAction == sendRegistrationCommandLink)
+            {
+                FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
+                {
+                    @Override
+                    public void onSuccess(Transaction transaction)
+                    {
+                        log.debug("payRegistrationFee onSuccess");
+                        log.info("payRegistrationFee onSuccess txid:" + transaction.getHashAsString());
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t)
+                    {
+                        log.debug("payRegistrationFee onFailure");
+                    }
+                };
+                try
+                {
+                    walletFacade.payRegistrationFee(user.getStringifiedBankAccounts(), callback);
+                    user.setAccountID(walletFacade.getRegistrationAddressInfo().toString());
+                    user.setMessagePubKeyAsHex(DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey()));
+
+                    storage.write(user.getClass().getName(), user);
+                } catch (InsufficientMoneyException e1)
+                {
+                    Popups.openErrorPopup("Not enough money available", "There is not enough money available. Please pay in first to your wallet.");
+                }
+            }
+            return false;
+        }
+
+        return true;
+    }
+
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
@@ -166,46 +229,7 @@ public class OrderBookController implements Initializable, ChildController
         });
 
         createOfferButton.setOnAction(e -> {
-            if (user.getAccountID() == null)
-            {
-                Dialogs.CommandLink settingsCommandLink = new Dialogs.CommandLink("Open settings", "You need to configure your settings before you can actively trade.");
-                Dialogs.CommandLink depositFeeCommandLink = new Dialogs.CommandLink("Deposit funds", "You need to pay the registration fee before you can actively trade. That is needed as prevention against fraud.");
-                Dialogs.CommandLink sendRegistrationCommandLink = new Dialogs.CommandLink("Publish registration", "When settings are configured and the fee deposit is done your registration transaction will be published to the Bitcoin \nnetwork.");
-                List<Dialogs.CommandLink> commandLinks = Arrays.asList(settingsCommandLink, depositFeeCommandLink, sendRegistrationCommandLink);
-
-                boolean settingsValid = settings.getAcceptedLanguageLocales().size() > 0;
-                settingsValid &= settings.getAcceptedCountries().size() > 0;
-                settingsValid &= settings.getAcceptedArbitrators().size() > 0;
-                settingsValid &= user.getCurrentBankAccount() != null;
-
-                boolean registrationFeeDeposited = walletFacade.getRegistrationBalance().compareTo(BigInteger.ZERO) > 0;
-                int selectedIndex = settingsValid ? (registrationFeeDeposited ? 2 : 1) : 0;
-
-                Action registrationMissingAction = Popups.openRegistrationMissingPopup("Registration missing", "Please follow these steps:", "You need to register before you can place an offer.", commandLinks, selectedIndex);
-                if (registrationMissingAction == settingsCommandLink)
-                {
-                    MainController.getInstance().navigateToView(NavigationController.SETTINGS);
-                }
-                else if (registrationMissingAction == depositFeeCommandLink)
-                {
-                    MainController.getInstance().navigateToView(NavigationController.FUNDS);
-                }
-                else if (registrationMissingAction == sendRegistrationCommandLink)
-                {
-                    try
-                    {
-                        walletFacade.publishRegistrationTxWithExtraData(user.getStringifiedBankAccounts());
-                        user.setAccountID(walletFacade.getRegistrationAddressInfo().toString());
-                        user.setMessagePubKeyAsHex(DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey()));
-
-                        storage.write(user.getClass().getName(), user);
-                    } catch (InsufficientMoneyException e1)
-                    {
-                        Popups.openErrorPopup("Not enough money available", "There is not enough money available. Please pay in first to your wallet.");
-                    }
-                }
-            }
-            else
+            if (isRegistered())
             {
                 ChildController nextController = navigationController.navigateToView(NavigationController.CREATE_OFFER, "Create offer");
                 ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
@@ -262,14 +286,17 @@ public class OrderBookController implements Initializable, ChildController
 
     private void takeOffer(Offer offer)
     {
-        String title = offer.getDirection() == Direction.BUY ? "Trade: Sell Bitcoin" : "Trade: Buy Bitcoin";
-        TakerTradeController takerTradeController = (TakerTradeController) navigationController.navigateToView(NavigationController.TAKER_TRADE, title);
+        if (isRegistered())
+        {
+            String title = offer.getDirection() == Direction.BUY ? "Trade: Sell Bitcoin" : "Trade: Buy Bitcoin";
+            TakerTradeController takerTradeController = (TakerTradeController) navigationController.navigateToView(NavigationController.TAKER_TRADE, title);
 
-        BigInteger requestedAmount = offer.getAmount();
-        if (!amount.getText().equals(""))
-            requestedAmount = BtcFormatter.stringValueToSatoshis(amount.getText());
+            BigInteger requestedAmount = offer.getAmount();
+            if (!amount.getText().equals(""))
+                requestedAmount = BtcFormatter.stringValueToSatoshis(amount.getText());
 
-        takerTradeController.initWithData(offer, requestedAmount);
+            takerTradeController.initWithData(offer, requestedAmount);
+        }
     }
 
     private void removeOffer(Offer offer)

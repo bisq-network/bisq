@@ -48,10 +48,7 @@ public class CountryUtil
             @Override
             public boolean apply(@Nullable Country country)
             {
-                if (selectedRegion != null && country != null)
-                    return country.getRegion().equals(selectedRegion);
-                else
-                    return false;
+                return selectedRegion != null && country != null && country.getRegion().equals(selectedRegion);
             }
         }));
 

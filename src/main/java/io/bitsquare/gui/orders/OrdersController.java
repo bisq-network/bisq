@@ -1,6 +1,9 @@
 package io.bitsquare.gui.orders;
 
-import com.google.bitcoin.core.*;
+import com.google.bitcoin.core.ECKey;
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.Wallet;
+import com.google.bitcoin.core.WalletEventListener;
 import com.google.bitcoin.script.Script;
 import com.google.inject.Inject;
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -8,7 +11,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountTypeInfo;
 import io.bitsquare.btc.BtcFormatter;
-import io.bitsquare.btc.Fees;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
@@ -172,7 +175,7 @@ public class OrdersController implements Initializable, ChildController
 
     public void bankTransferInited(ActionEvent actionEvent)
     {
-        trading.onBankTransferInited(currentTrade.getUid());
+        trading.onBankTransferInited(currentTrade.getId());
         bankTransferInitedButton.setDisable(true);
     }
 
@@ -311,10 +314,10 @@ public class OrdersController implements Initializable, ChildController
 
             String fiatPayed = BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount()));
 
-            bankAccountTypeTextField.setText(Utils.bitcoinValueToFriendlyString(trade.getTradeAmount()));
+            bankAccountTypeTextField.setText(BtcFormatter.btcToString(trade.getTradeAmount()));
             holderNameTextField.setText(fiatPayed);
-            primaryBankAccountIDTextField.setText(Utils.bitcoinValueToFriendlyString(Fees.OFFER_CREATION_FEE.add(Fees.TX_FEE)));
-            secondaryBankAccountIDTextField.setText(Utils.bitcoinValueToFriendlyString(trade.getCollateralAmount()));
+            primaryBankAccountIDTextField.setText(BtcFormatter.btcToString(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+            secondaryBankAccountIDTextField.setText(BtcFormatter.btcToString(trade.getCollateralAmount()));
 
             holderNameCopyIcon.setVisible(false);
             primaryBankAccountIDCopyIcon.setVisible(false);

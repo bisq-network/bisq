@@ -2,6 +2,7 @@ package io.bitsquare.gui.util;
 
 import com.google.bitcoin.core.*;
 import com.google.bitcoin.script.Script;
+import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -205,7 +206,7 @@ public class ConfidenceDisplay
         }
 
         if (balanceTextField != null)
-            balanceTextField.setText(Utils.bitcoinValueToFriendlyString(balance));
+            balanceTextField.setText(BtcFormatter.btcToString(balance));
     }
 
     private void updateConfidence(Transaction tx)

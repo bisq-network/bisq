@@ -5,21 +5,33 @@ import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.NetworkParameters;
 import com.google.bitcoin.core.Utils;
 
-import java.beans.Transient;
 import java.io.Serializable;
 
 public class AddressInfo implements Serializable
 {
     private static final long serialVersionUID = 5501603992599920416L;
 
+    public static enum AddressContext
+    {
+        REGISTRATION_FEE,
+        CREATE_OFFER_FEE,
+        TAKE_OFFER_FEE,
+        TRADE,
+        ARBITRATOR_DEPOSIT
+    }
+
     private ECKey key;
     private NetworkParameters params;
     private String label;
+    private String tradeId = null;
 
-    public AddressInfo(ECKey key, NetworkParameters params, String label)
+    private AddressContext addressContext;
+
+    public AddressInfo(ECKey key, NetworkParameters params, AddressContext addressContext, String label)
     {
         this.key = key;
         this.params = params;
+        this.addressContext = addressContext;
         this.label = label;
     }
 
@@ -28,9 +40,25 @@ public class AddressInfo implements Serializable
         this.label = label;
     }
 
+    public void setTradeId(String tradeId)
+    {
+        this.tradeId = tradeId;
+    }
+
+    public String getTradeId()
+    {
+        return tradeId;
+    }
+
+
     public String getLabel()
     {
         return label;
+    }
+
+    public AddressContext getAddressContext()
+    {
+        return addressContext;
     }
 
     public String getAddressString()
@@ -43,13 +71,11 @@ public class AddressInfo implements Serializable
         return Utils.bytesToHexString(key.getPubKey());
     }
 
-    @Transient
     public ECKey getKey()
     {
         return key;
     }
 
-    @Transient
     public Address getAddress()
     {
         return key.toAddress(params);

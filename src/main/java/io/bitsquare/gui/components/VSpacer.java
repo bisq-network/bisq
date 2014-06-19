@@ -5,6 +5,9 @@ import javafx.scene.layout.Pane;
 
 public class VSpacer extends Pane
 {
+    public VSpacer()
+    {
+    }
 
     public VSpacer(double height)
     {

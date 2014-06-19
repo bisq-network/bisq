@@ -2,11 +2,10 @@ package io.bitsquare.gui.market.createOffer;
 
 import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.Utils;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bitsquare.btc.BtcFormatter;
-import io.bitsquare.btc.Fees;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
@@ -103,7 +102,8 @@ public class CreateOfferController implements Initializable, ChildController
 
 
         //TODO
-        amountTextField.setText("" + (int) (new Random().nextDouble() * 100 / 10 + 1));
+        //amountTextField.setText("" + (int) (new Random().nextDouble() * 100 / 10 + 1));
+        amountTextField.setText("1");
         priceTextField.setText("" + (int) (499 - new Random().nextDouble() * 1000 / 100));
         minAmountTextField.setText("0,1");
         collateralTextField.setText("10");
@@ -117,7 +117,6 @@ public class CreateOfferController implements Initializable, ChildController
                 updateVolume();
             }
         });
-
         priceTextField.textProperty().addListener(new ChangeListener<String>()
         {
             @Override
@@ -141,7 +140,7 @@ public class CreateOfferController implements Initializable, ChildController
         bankAccountCountyTextField.setText(user.getCurrentBankAccount().getCountry().getName());
         acceptedCountriesTextField.setText(BitSquareFormatter.countryLocalesToString(settings.getAcceptedCountries()));
         acceptedLanguagesTextField.setText(BitSquareFormatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
-        feeLabel.setText(Utils.bitcoinValueToFriendlyString(Fees.OFFER_CREATION_FEE));
+        feeLabel.setText(BtcFormatter.btcToString(FeePolicy.CREATE_OFFER_FEE));
     }
 
 

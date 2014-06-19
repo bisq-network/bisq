@@ -20,7 +20,7 @@ public class Offer implements Serializable
     private Direction direction;
     private Currency currency;
 
-    private String uid;
+    private String id;
 
     private double price;
     private BigInteger amount;
@@ -69,7 +69,7 @@ public class Offer implements Serializable
         this.acceptedCountries = acceptedCountries;
         this.acceptedLanguageLocales = acceptedLanguageLocales;
 
-        this.uid = UUID.randomUUID().toString();
+        this.id = UUID.randomUUID().toString();
     }
 
 
@@ -92,9 +92,9 @@ public class Offer implements Serializable
         return messagePubKeyAsHex;
     }
 
-    public String getUID()
+    public String getId()
     {
-        return uid;
+        return id;
     }
 
     public double getPrice()
@@ -178,7 +178,7 @@ public class Offer implements Serializable
         return "Offer{" +
                 "direction=" + direction +
                 ", currency=" + currency +
-                ", uid='" + uid + '\'' +
+                ", uid='" + id + '\'' +
                 ", price=" + price +
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +

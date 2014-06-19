@@ -5,6 +5,9 @@ import javafx.scene.layout.Pane;
 
 public class HSpacer extends Pane
 {
+    public HSpacer()
+    {
+    }
 
     public HSpacer(double width)
     {

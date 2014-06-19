@@ -7,7 +7,7 @@ import com.google.bitcoin.core.Utils;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BlockChainFacade;
-import io.bitsquare.btc.Fees;
+import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.msg.MessageFacade;
@@ -152,7 +152,7 @@ public class TakerPaymentProtocol
         takerPaymentProtocolListener.onProgress(getProgress());
 
         // Send the take offer request
-        TradeMessage tradeMessage = new TradeMessage(TradeMessageType.REQUEST_TAKE_OFFER, trade.getUid());
+        TradeMessage tradeMessage = new TradeMessage(TradeMessageType.REQUEST_TAKE_OFFER, trade.getId());
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
     }
 
@@ -190,13 +190,13 @@ public class TakerPaymentProtocol
 
     private void payOfferFee(Trade trade)
     {
-        log.debug("2.1 payOfferFee");
+        log.debug("2.1 payTakeOfferFee");
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
         {
             @Override
             public void onSuccess(Transaction transaction)
             {
-                log.debug("2.1 payOfferFee onSuccess");
+                log.debug("2.1 payTakeOfferFee onSuccess");
                 log.info("sendResult onSuccess txid:" + transaction.getHashAsString());
 
                 // Offer fee payed successfully.
@@ -211,15 +211,15 @@ public class TakerPaymentProtocol
             @Override
             public void onFailure(Throwable t)
             {
-                log.debug("2.1 payOfferFee onFailure");
-                takerPaymentProtocolListener.onFailure("payOfferFee onFailure " + t.getMessage());
+                log.debug("2.1 payTakeOfferFee onFailure");
+                takerPaymentProtocolListener.onFailure("payTakeOfferFee onFailure " + t.getMessage());
             }
         };
         try
         {
             // Pay the offer fee
             takerPaymentProtocolListener.onProgress(getProgress());
-            walletFacade.payOfferFee(Fees.OFFER_TAKER_FEE, callback);
+            walletFacade.payTakeOfferFee(callback);
         } catch (InsufficientMoneyException e)
         {
             takerPaymentProtocolListener.onProgress(getProgress());
@@ -263,10 +263,10 @@ public class TakerPaymentProtocol
 
         // 2.3. send request for the account details and send fee tx id so offerer can verify that the fee has been paid.
         TradeMessage tradeMessage = new TradeMessage(TradeMessageType.TAKE_OFFER_FEE_PAYED,
-                trade.getUid(),
+                trade.getId(),
                 trade.getTradeAmount(),
                 takeOfferFeeTxID,
-                walletFacade.getPubKeyAsHex());
+                walletFacade.getAddressInfoByTradeID(trade.getId()).getPubKeyAsHexString());
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
     }
 
@@ -343,7 +343,7 @@ public class TakerPaymentProtocol
 
         log.debug("2.9 contract created: " + contract.toString());
         String contractAsJson = Utilities.objectToJson(contract);
-        String signature = cryptoFacade.signContract(walletFacade.getRegistrationKey(), contractAsJson);
+        String signature = cryptoFacade.signContract(walletFacade.getRegistrationAddressInfo().getKey(), contractAsJson);
 
         //log.debug("2.9 contractAsJson: " + contractAsJson);
         log.debug("2.9 contract signature: " + signature);
@@ -369,7 +369,7 @@ public class TakerPaymentProtocol
         BigInteger msOutputAmount = trade.getTradeAmount().add(collateralAmount).add(collateralAmount);
 
         String offererPubKey = requestTradeMessage.getOffererPubKey();
-        String takerPubKey = walletFacade.getPubKeyAsHex();
+        String takerPubKey = walletFacade.getAddressInfoByTradeID(trade.getId()).getPubKeyAsHexString();
         String arbitratorPubKey = offer.getArbitrator().getPubKeyAsHex();
         String preparedOffererDepositTxAsHex = requestTradeMessage.getPreparedOffererDepositTxAsHex();
 
@@ -381,17 +381,18 @@ public class TakerPaymentProtocol
         checkNotNull(preparedOffererDepositTxAsHex);
 
         log.debug("2.10 offererCreatesMSTxAndAddPayment");
-        log.debug("takerAmount     " + Utils.bitcoinValueToFriendlyString(takerInputAmount));
-        log.debug("msOutputAmount     " + Utils.bitcoinValueToFriendlyString(msOutputAmount));
+        log.debug("takerAmount     " + BtcFormatter.btcToString(takerInputAmount));
+        log.debug("msOutputAmount     " + BtcFormatter.btcToString(msOutputAmount));
         log.debug("offerer pubkey    " + offererPubKey);
         log.debug("taker pubkey      " + takerPubKey);
         log.debug("arbitrator pubkey " + arbitratorPubKey);
         log.debug("preparedOffererDepositTxAsHex " + preparedOffererDepositTxAsHex);
         try
         {
-            Transaction signedTakerDepositTx = walletFacade.takerAddPaymentAndSignTx(takerInputAmount, msOutputAmount, offererPubKey, takerPubKey, arbitratorPubKey, preparedOffererDepositTxAsHex);
+            Transaction signedTakerDepositTx = walletFacade.takerAddPaymentAndSignTx(takerInputAmount, msOutputAmount, offererPubKey, takerPubKey, arbitratorPubKey, preparedOffererDepositTxAsHex, trade.getId());
             log.debug("2.10 deposit tx created: " + signedTakerDepositTx);
-            sendSignedTakerDepositTxAsHex(signedTakerDepositTx);
+            long takerTxOutIndex = signedTakerDepositTx.getInput(1).getOutpoint().getIndex();
+            sendSignedTakerDepositTxAsHex(signedTakerDepositTx, takerTxOutIndex, requestTradeMessage.getOffererTxOutIndex());
         } catch (InterruptedException | AddressFormatException | ExecutionException | InsufficientMoneyException e)
         {
             log.error("2.10 error at walletFacade.takerAddPaymentAndSign: " + e.getMessage());
@@ -403,7 +404,7 @@ public class TakerPaymentProtocol
     // Step 2.11  Send the tx to the offerer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void sendSignedTakerDepositTxAsHex(Transaction signedTakerDepositTx)
+    private void sendSignedTakerDepositTxAsHex(Transaction signedTakerDepositTx, long takerTxOutIndex, long offererTxOutIndex)
     {
         log.debug("2.11 sendSignedTakerDepositTxAsHex");
 
@@ -437,14 +438,14 @@ public class TakerPaymentProtocol
         String txScriptSigAsHex = com.google.bitcoin.core.Utils.bytesToHexString(signedTakerDepositTx.getInput(1).getScriptBytes());
         String txConnOutAsHex = com.google.bitcoin.core.Utils.bytesToHexString(signedTakerDepositTx.getInput(1).getConnectedOutput().getParentTransaction().bitcoinSerialize());
         //TODO just 1 address supported yet
-        String payoutAddress = walletFacade.getTradingAddress();
+        String payoutAddress = walletFacade.getAddressInfoByTradeID(trade.getId()).getAddressString();
         log.debug("2.10 deposit txAsHex: " + signedTakerDepositTxAsHex);
         log.debug("2.10 txScriptSigAsHex: " + txScriptSigAsHex);
         log.debug("2.10 txConnOutAsHex: " + txConnOutAsHex);
         log.debug("2.10 payoutAddress: " + payoutAddress);
 
         TradeMessage tradeMessage = new TradeMessage(TradeMessageType.REQUEST_OFFERER_DEPOSIT_PUBLICATION,
-                trade.getUid(),
+                trade.getId(),
                 bankAccount,
                 accountID,
                 messagePubKey,
@@ -453,7 +454,10 @@ public class TakerPaymentProtocol
                 txConnOutAsHex,
                 contractAsJson,
                 signature,
-                payoutAddress);
+                payoutAddress,
+                takerTxOutIndex,
+                offererTxOutIndex
+        );
 
         log.debug("2.11 sendTradingMessage");
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
@@ -542,6 +546,7 @@ public class TakerPaymentProtocol
                     offererPaybackAmount,
                     takerPaybackAmount,
                     offererPayoutAddress,
+                    trade.getId(),
                     callback);
         } catch (InsufficientMoneyException e)
         {
@@ -577,7 +582,7 @@ public class TakerPaymentProtocol
             }
         };
 
-        TradeMessage tradeMessage = new TradeMessage(TradeMessageType.PAYOUT_TX_PUBLISHED, trade.getUid());
+        TradeMessage tradeMessage = new TradeMessage(TradeMessageType.PAYOUT_TX_PUBLISHED, trade.getId());
         tradeMessage.setPayoutTxAsHex(payoutTxAsHex);
         log.debug("3.13 sendTradeMessage PAYOUT_TX_PUBLISHED");
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
