@@ -1,31 +1,41 @@
 package io.bitsquare.gui.funds;
 
 import com.google.bitcoin.core.Address;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import io.bitsquare.btc.AddressInfo;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class AddressListItem
 {
-    private final StringProperty label = new SimpleStringProperty();
     private final StringProperty addressString = new SimpleStringProperty();
-    private final BooleanProperty isUsed = new SimpleBooleanProperty();
-    private Address address;
+    private AddressInfo addressInfo;
 
-    public AddressListItem(String label, Address address, boolean isUsed)
+    public AddressListItem(AddressInfo addressInfo)
     {
-        this.address = address;
-        this.label.set(label);
-        this.addressString.set(address.toString());
+        this.addressInfo = addressInfo;
+        this.addressString.set(getAddress().toString());
 
-        this.isUsed.set(isUsed);
     }
 
-    // called form table columns
-    public final StringProperty labelProperty()
+    public final String getLabel()
     {
-        return this.label;
+        switch (addressInfo.getAddressContext())
+        {
+            case REGISTRATION_FEE:
+                return "Registration fee";
+            case CREATE_OFFER_FEE:
+                return "Create offer fee";
+            case TAKE_OFFER_FEE:
+                return "Take offer fee";
+            case TRADE:
+                if (addressInfo.getTradeId() != null)
+                    return "Trade ID: " + addressInfo.getTradeId();
+                else
+                    return "Unused";
+            case ARBITRATOR_DEPOSIT:
+                return "Arbitration deposit";
+        }
+        return "";
     }
 
     public final StringProperty addressStringProperty()
@@ -33,13 +43,14 @@ public class AddressListItem
         return this.addressString;
     }
 
-    public final BooleanProperty isUsedProperty()
-    {
-        return this.isUsed;
-    }
 
     public Address getAddress()
     {
-        return address;
+        return addressInfo.getAddress();
+    }
+
+    public AddressInfo getAddressInfo()
+    {
+        return addressInfo;
     }
 }

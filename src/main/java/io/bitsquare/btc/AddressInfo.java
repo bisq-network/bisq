@@ -22,22 +22,15 @@ public class AddressInfo implements Serializable
 
     private ECKey key;
     private NetworkParameters params;
-    private String label;
     private String tradeId = null;
 
     private AddressContext addressContext;
 
-    public AddressInfo(ECKey key, NetworkParameters params, AddressContext addressContext, String label)
+    public AddressInfo(ECKey key, NetworkParameters params, AddressContext addressContext)
     {
         this.key = key;
         this.params = params;
         this.addressContext = addressContext;
-        this.label = label;
-    }
-
-    public void setLabel(String label)
-    {
-        this.label = label;
     }
 
     public void setTradeId(String tradeId)
@@ -48,12 +41,6 @@ public class AddressInfo implements Serializable
     public String getTradeId()
     {
         return tradeId;
-    }
-
-
-    public String getLabel()
-    {
-        return label;
     }
 
     public AddressContext getAddressContext()

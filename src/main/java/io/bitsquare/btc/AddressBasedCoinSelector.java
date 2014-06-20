@@ -54,7 +54,7 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
 
     protected boolean matchesRequiredAddress(TransactionOutput transactionOutput)
     {
-        if (!ScriptUtil.isOpReturnScript(transactionOutput))
+        if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
         {
             Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
             if (addressInfo != null && addressOutput.equals(addressInfo.getAddress()))

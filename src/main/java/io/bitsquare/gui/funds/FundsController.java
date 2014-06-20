@@ -17,11 +17,13 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.MouseEvent;
 import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +69,7 @@ public class FundsController implements Initializable, ChildController
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
+        setLabelColumnCellFactory();
         setBalanceColumnCellFactory();
         setCopyColumnCellFactory();
         setConfidenceColumnCellFactory();
@@ -76,7 +79,7 @@ public class FundsController implements Initializable, ChildController
         for (int i = 0; i < addressInfoList.size(); i++)
         {
             AddressInfo addressInfo = addressInfoList.get(i);
-            addressList.add(new AddressListItem(addressInfo.getLabel(), addressInfo.getAddress(), false));
+            addressList.add(new AddressListItem(addressInfo));
         }
 
         addressesTable.setItems(addressList);
@@ -107,13 +110,66 @@ public class FundsController implements Initializable, ChildController
     public void onAddNewTradeAddress(ActionEvent actionEvent)
     {
         AddressInfo addressInfo = walletFacade.getNewTradeAddressInfo();
-        addressList.add(new AddressListItem(addressInfo.getLabel(), addressInfo.getAddress(), false));
+        addressList.add(new AddressListItem(addressInfo));
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    private void setLabelColumnCellFactory()
+    {
+        labelColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
+        labelColumn.setCellFactory(new Callback<TableColumn<String, AddressListItem>, TableCell<String, AddressListItem>>()
+        {
+            @Override
+            public TableCell<String, AddressListItem> call(TableColumn<String, AddressListItem> column)
+            {
+                return new TableCell<String, AddressListItem>()
+                {
+                    Label label;
+
+                    @Override
+                    public void updateItem(final AddressListItem item, boolean empty)
+                    {
+                        super.updateItem(item, empty);
+
+                        if (item != null)
+                        {
+                            label = new Label(item.getLabel());
+
+                            if (item.getAddressInfo().getTradeId() != null)
+                            {
+                                setId("funds-link-cell");
+
+                                Tooltip tooltip = new Tooltip(item.getAddressInfo().getTradeId());
+                                Tooltip.install(label, tooltip);
+
+                                label.setUnderline(true);
+                                label.setStyle("-fx-cursor: hand");
+                                label.setOnMouseClicked(new EventHandler<MouseEvent>()
+                                {
+                                    @Override
+                                    public void handle(MouseEvent mouseEvent)
+                                    {
+                                        log.info("Show trade details " + item.getAddressInfo().getTradeId());
+                                    }
+                                });
+                            }
+                            setGraphic(label);
+                        }
+                        else
+                        {
+                            setGraphic(null);
+                            setId(null);
+                        }
+                    }
+                };
+            }
+        });
+    }
 
     private void setBalanceColumnCellFactory()
     {
@@ -175,7 +231,7 @@ public class FundsController implements Initializable, ChildController
                     Label copyIcon = new Label();
 
                     {
-                        copyIcon.setId("copy-icon");
+                        setId("funds-link-cell");
                         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
                         Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
                     }
@@ -194,6 +250,7 @@ public class FundsController implements Initializable, ChildController
                                 content.putString(item.addressStringProperty().get());
                                 clipboard.setContent(content);
                             });
+
                         }
                         else
                         {
@@ -226,6 +283,7 @@ public class FundsController implements Initializable, ChildController
                         if (item != null)
                         {
                             progressIndicator = new ConfidenceProgressIndicator();
+                            progressIndicator.setId("funds-confidence");
                             Tooltip tooltip = new Tooltip("Not used yet");
                             progressIndicator.setProgress(0);
                             progressIndicator.setPrefHeight(30);

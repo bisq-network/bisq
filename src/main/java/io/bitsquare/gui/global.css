@@ -79,7 +79,7 @@
     -fx-background-color: transparent;
 }
 
-/* table */
+/* order book table */
 
 #orderbook-table .table-cell {
     -fx-alignment: center;
@@ -91,6 +91,40 @@
 
 #orderbook-table .focus {
     -fx-alignment: center;
+}
+
+/* funds table */
+
+#funds-table .table-cell {
+    -fx-alignment: center;
+}
+
+#funds-table .column-header .label {
+    -fx-alignment-alignment: center;
+}
+
+#funds-table .focus {
+    -fx-alignment: center;
+}
+
+#funds-table .table-row-cell:selected .text {
+    -fx-fill: white;
+}
+
+#funds-table .table-row-cell:selected .text:hover {
+    -fx-fill: black;
+}
+
+#funds-link-cell .text:hover {
+    -fx-fill: black;
+}
+
+#funds-link-cell .text {
+    -fx-fill: #0096c9;
+}
+
+#funds-confidence {
+    -fx-progress-color: dimgrey;
 }
 
 /* forms */

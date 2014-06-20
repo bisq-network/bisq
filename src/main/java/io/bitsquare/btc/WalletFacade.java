@@ -30,6 +30,8 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
+import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
+
 public class WalletFacade
 {
     public static final String MAIN_NET = "MAIN_NET";
@@ -128,6 +130,7 @@ public class WalletFacade
             public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
             {
                 log.debug("onTransactionConfidenceChanged " + tx.getConfidence());
+                log.debug("onTransactionConfidenceChanged " + tx);
                 notifyConfidenceListeners(tx);
             }
 
@@ -168,7 +171,7 @@ public class WalletFacade
         else
         {
             ECKey registrationKey = wallet.getKeys().get(0);
-            AddressInfo registrationAddressInfo = new AddressInfo(registrationKey, params, AddressInfo.AddressContext.REGISTRATION_FEE, "Registration");
+            AddressInfo registrationAddressInfo = new AddressInfo(registrationKey, params, AddressInfo.AddressContext.REGISTRATION_FEE);
             addressInfoList.add(registrationAddressInfo);
             saveAddressInfoList();
 
@@ -241,13 +244,15 @@ public class WalletFacade
             for (int n = 0; n < transactionOutputs.size(); n++)
             {
                 TransactionOutput transactionOutput = transactionOutputs.get(n);
-                if (!ScriptUtil.isOpReturnScript(transactionOutput))
+                if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
                 {
                     Address address = transactionOutput.getScriptPubKey().getToAddress(params);
                     if (address.equals(confidenceListener.getAddress()))
                     {
+                        log.debug("notifyConfidenceListeners address " + address.toString() + " / " + tx.getConfidence());
                         confidenceListener.onTransactionConfidenceChanged(tx.getConfidence());
                     }
+
                 }
             }
         }
@@ -262,7 +267,7 @@ public class WalletFacade
             for (int n = 0; n < transactionOutputs.size(); n++)
             {
                 TransactionOutput transactionOutput = transactionOutputs.get(n);
-                if (!ScriptUtil.isOpReturnScript(transactionOutput))
+                if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
                 {
                     Address address = transactionOutput.getScriptPubKey().getToAddress(params);
                     if (address.equals(balanceListener.getAddress()))
@@ -324,9 +329,9 @@ public class WalletFacade
             if (filteredList != null && filteredList.size() > 0)
                 return filteredList.get(0);
             else
-                return null;
+                return getNewTradeAddressInfo();
         }
-        return null;
+        return getNewTradeAddressInfo();
     }
 
     private AddressInfo getAddressInfoByAddressContext(AddressInfo.AddressContext addressContext)
@@ -363,20 +368,21 @@ public class WalletFacade
         return addressInfo;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Create new AddressInfo objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public AddressInfo getNewTradeAddressInfo()
     {
-        return getNewAddressInfo(AddressInfo.AddressContext.TRADE, "New trade");
+        return getNewAddressInfo(AddressInfo.AddressContext.TRADE);
     }
 
-    private AddressInfo getNewAddressInfo(AddressInfo.AddressContext addressContext, String label)
+    private AddressInfo getNewAddressInfo(AddressInfo.AddressContext addressContext)
     {
         ECKey key = new ECKey();
         wallet.addKey(key);
-        AddressInfo addressInfo = new AddressInfo(key, params, addressContext, label);
+        AddressInfo addressInfo = new AddressInfo(key, params, addressContext);
         addressInfoList.add(addressInfo);
         saveAddressInfoList();
         return addressInfo;
@@ -384,17 +390,17 @@ public class WalletFacade
 
     private AddressInfo getNewOfferFeeAddressInfo()
     {
-        return getNewAddressInfo(AddressInfo.AddressContext.CREATE_OFFER_FEE, "Create offer fee");
+        return getNewAddressInfo(AddressInfo.AddressContext.CREATE_OFFER_FEE);
     }
 
     private AddressInfo getNewTakerFeeAddressInfo()
     {
-        return getNewAddressInfo(AddressInfo.AddressContext.TAKE_OFFER_FEE, "Take offer fee");
+        return getNewAddressInfo(AddressInfo.AddressContext.TAKE_OFFER_FEE);
     }
 
     private AddressInfo getNewArbitratorDepositAddressInfo()
     {
-        return getNewAddressInfo(AddressInfo.AddressContext.ARBITRATOR_DEPOSIT, "Arbitrator deposit");
+        return getNewAddressInfo(AddressInfo.AddressContext.ARBITRATOR_DEPOSIT);
     }
 
 
@@ -413,7 +419,7 @@ public class WalletFacade
                 for (int n = 0; n < transactionOutputs.size(); n++)
                 {
                     TransactionOutput transactionOutput = transactionOutputs.get(n);
-                    if (!ScriptUtil.isOpReturnScript(transactionOutput))
+                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
                     {
                         Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
                         if (addressOutput.equals(address))
@@ -442,7 +448,7 @@ public class WalletFacade
         BigInteger value = BigInteger.ZERO;
         for (TransactionOutput transactionOutput : all)
         {
-            if (!ScriptUtil.isOpReturnScript(transactionOutput))
+            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
             {
                 Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
                 if (addressOutput.equals(address))
@@ -495,8 +501,8 @@ public class WalletFacade
 
         Transaction tx = new Transaction(params);
 
-        byte[] dataToEmbed = cryptoFacade.getEmbeddedAccountRegistrationData(getRegistrationAddressInfo().getKey(), stringifiedBankAccounts);
-        tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, ScriptUtil.getOpReturnScriptWithData(dataToEmbed));
+        byte[] data = cryptoFacade.getEmbeddedAccountRegistrationData(getRegistrationAddressInfo().getKey(), stringifiedBankAccounts);
+        tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 
         BigInteger fee = FeePolicy.ACCOUNT_REGISTRATION_FEE.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(FeePolicy.TX_FEE);
         log.trace("fee: " + BtcFormatter.btcToString(fee));
@@ -735,7 +741,6 @@ public class WalletFacade
         log.trace("takersSignedConnOutAsHex=" + takersSignedConnOutAsHex);
         log.trace("takersSignedScriptSigAsHex=" + takersSignedScriptSigAsHex);
         log.trace("callback=" + callback.toString());
-        log.trace("Wallet balance initial: " + wallet.getBalance());
 
         // We create an empty tx (did not find a way to manipulate a tx input, otherwise the takers tx could be used directly and add the offerers input and output)
         Transaction tx = new Transaction(params);
