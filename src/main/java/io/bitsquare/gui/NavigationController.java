@@ -21,6 +21,10 @@ public interface NavigationController
     public static final String ARBITRATOR_OVERVIEW = "/io/bitsquare/gui/arbitrators/overview/ArbitratorOverviewView.fxml";
     public static final String ARBITRATOR_REGISTRATION = "/io/bitsquare/gui/arbitrators/registration/ArbitratorRegistrationView.fxml";
 
+    public static final String CLOSED_TRADE = "/io/bitsquare/gui/orders/closed/ClosedTradeView.fxml";
+    public static final String OFFER = "/io/bitsquare/gui/orders/offer/OfferView.fxml";
+    public static final String PENDING_TRADE = "/io/bitsquare/gui/orders/pending/PendingTradeView.fxml";
+
     ChildController navigateToView(String fxmlView);
 
     ChildController navigateToView(String fxmlView, String title);

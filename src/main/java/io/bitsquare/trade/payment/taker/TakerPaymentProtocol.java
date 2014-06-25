@@ -219,7 +219,7 @@ public class TakerPaymentProtocol
         {
             // Pay the offer fee
             takerPaymentProtocolListener.onProgress(getProgress());
-            walletFacade.payTakeOfferFee(callback);
+            walletFacade.payTakeOfferFee(trade.getId(), callback);
         } catch (InsufficientMoneyException e)
         {
             takerPaymentProtocolListener.onProgress(getProgress());

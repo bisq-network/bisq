@@ -52,7 +52,7 @@ public class WalletFacade
     private List<DownloadListener> downloadListeners = new ArrayList<>();
     private List<ConfidenceListener> confidenceListeners = new ArrayList<>();
     private List<BalanceListener> balanceListeners = new ArrayList<>();
-    private List<AddressInfo> addressInfoList = new ArrayList<>();
+    private List<AddressEntry> addressEntryList = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -102,12 +102,13 @@ public class WalletFacade
 
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
-        walletAppKit.setDownloadListener(new BlockChainDownloadListener()).setBlockingStartup(false).setUserAgent("BitSquare", "0.1");
+        walletAppKit.setDownloadListener(new BlockChainDownloadListener());
+        walletAppKit.setBlockingStartup(false);
+        walletAppKit.setUserAgent("BitSquare", "0.1");
         walletAppKit.startAsync();
         walletAppKit.awaitRunning();
 
         wallet = (BitSquareWallet) walletAppKit.wallet();
-
 
         wallet.allowSpendingUnconfirmedTransactions();
         //walletAppKit.peerGroup().setMaxConnections(11);
@@ -162,21 +163,18 @@ public class WalletFacade
         };
         wallet.addEventListener(walletEventListener);
 
-
-        List<AddressInfo> savedAddressInfoList = (List<AddressInfo>) storage.read("addressInfoList");
-        if (savedAddressInfoList != null)
+        List<AddressEntry> savedAddressEntryList = (List<AddressEntry>) storage.read("addressInfoList");
+        if (savedAddressEntryList != null)
         {
-            addressInfoList = savedAddressInfoList;
+            addressEntryList = savedAddressEntryList;
         }
         else
         {
             ECKey registrationKey = wallet.getKeys().get(0);
-            AddressInfo registrationAddressInfo = new AddressInfo(registrationKey, params, AddressInfo.AddressContext.REGISTRATION_FEE);
-            addressInfoList.add(registrationAddressInfo);
+            AddressEntry registrationAddressEntry = new AddressEntry(registrationKey, params, AddressEntry.AddressContext.REGISTRATION_FEE);
+            addressEntryList.add(registrationAddressEntry);
             saveAddressInfoList();
 
-            getNewOfferFeeAddressInfo();
-            getNewTakerFeeAddressInfo();
             getNewTradeAddressInfo();
         }
     }
@@ -197,7 +195,7 @@ public class WalletFacade
     private void saveAddressInfoList()
     {
         // use wallet extension?
-        storage.write("addressInfoList", addressInfoList);
+        storage.write("addressInfoList", addressEntryList);
     }
 
 
@@ -284,45 +282,35 @@ public class WalletFacade
     // Get AddressInfo objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<AddressInfo> getAddressInfoList()
+    public List<AddressEntry> getAddressEntryList()
     {
-        return addressInfoList;
+        return addressEntryList;
     }
 
-    public AddressInfo getRegistrationAddressInfo()
+    public AddressEntry getRegistrationAddressInfo()
     {
-        return getAddressInfoByAddressContext(AddressInfo.AddressContext.REGISTRATION_FEE);
+        return getAddressInfoByAddressContext(AddressEntry.AddressContext.REGISTRATION_FEE);
     }
 
-    public AddressInfo getCreateOfferFeeAddressInfo()
+    public AddressEntry getArbitratorDepositAddressInfo()
     {
-        return getAddressInfoByAddressContext(AddressInfo.AddressContext.CREATE_OFFER_FEE);
+        AddressEntry arbitratorDepositAddressEntry = getAddressInfoByAddressContext(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT);
+        if (arbitratorDepositAddressEntry == null)
+            arbitratorDepositAddressEntry = getNewArbitratorDepositAddressInfo();
+
+        return arbitratorDepositAddressEntry;
     }
 
-    public AddressInfo getTakerFeeAddressInfo()
+    public AddressEntry getUnusedTradeAddressInfo()
     {
-        return getAddressInfoByAddressContext(AddressInfo.AddressContext.TAKE_OFFER_FEE);
-    }
-
-    public AddressInfo getArbitratorDepositAddressInfo()
-    {
-        AddressInfo arbitratorDepositAddressInfo = getAddressInfoByAddressContext(AddressInfo.AddressContext.ARBITRATOR_DEPOSIT);
-        if (arbitratorDepositAddressInfo == null)
-            arbitratorDepositAddressInfo = getNewArbitratorDepositAddressInfo();
-
-        return arbitratorDepositAddressInfo;
-    }
-
-    private AddressInfo getUnusedTradeAddressInfo()
-    {
-        if (addressInfoList != null)
+        if (addressEntryList != null)
         {
-            List<AddressInfo> filteredList = Lists.newArrayList(Collections2.filter(addressInfoList, new Predicate<AddressInfo>()
+            List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(addressEntryList, new Predicate<AddressEntry>()
             {
                 @Override
-                public boolean apply(@Nullable AddressInfo addressInfo)
+                public boolean apply(@Nullable AddressEntry addressInfo)
                 {
-                    return (addressInfo != null && addressInfo.getAddressContext().equals(AddressInfo.AddressContext.TRADE) && addressInfo.getTradeId() == null);
+                    return (addressInfo != null && addressInfo.getAddressContext().equals(AddressEntry.AddressContext.TRADE) && addressInfo.getTradeId() == null);
                 }
             }));
 
@@ -334,14 +322,14 @@ public class WalletFacade
         return getNewTradeAddressInfo();
     }
 
-    private AddressInfo getAddressInfoByAddressContext(AddressInfo.AddressContext addressContext)
+    private AddressEntry getAddressInfoByAddressContext(AddressEntry.AddressContext addressContext)
     {
-        if (addressInfoList != null)
+        if (addressEntryList != null)
         {
-            List<AddressInfo> filteredList = Lists.newArrayList(Collections2.filter(addressInfoList, new Predicate<AddressInfo>()
+            List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(addressEntryList, new Predicate<AddressEntry>()
             {
                 @Override
-                public boolean apply(@Nullable AddressInfo addressInfo)
+                public boolean apply(@Nullable AddressEntry addressInfo)
                 {
                     return (addressInfo != null && addressContext != null && addressInfo.getAddressContext() != null && addressInfo.getAddressContext().equals(addressContext));
                 }
@@ -355,17 +343,17 @@ public class WalletFacade
         return null;
     }
 
-    public AddressInfo getAddressInfoByTradeID(String tradeId)
+    public AddressEntry getAddressInfoByTradeID(String tradeId)
     {
-        for (AddressInfo addressInfo : addressInfoList)
+        for (AddressEntry addressEntry : addressEntryList)
         {
-            if (addressInfo.getTradeId() != null && addressInfo.getTradeId().equals(tradeId))
-                return addressInfo;
+            if (addressEntry.getTradeId() != null && addressEntry.getTradeId().equals(tradeId))
+                return addressEntry;
         }
 
-        AddressInfo addressInfo = getUnusedTradeAddressInfo();
-        addressInfo.setTradeId(tradeId);
-        return addressInfo;
+        AddressEntry addressEntry = getUnusedTradeAddressInfo();
+        addressEntry.setTradeId(tradeId);
+        return addressEntry;
     }
 
 
@@ -373,34 +361,24 @@ public class WalletFacade
     // Create new AddressInfo objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AddressInfo getNewTradeAddressInfo()
+    public AddressEntry getNewTradeAddressInfo()
     {
-        return getNewAddressInfo(AddressInfo.AddressContext.TRADE);
+        return getNewAddressInfo(AddressEntry.AddressContext.TRADE);
     }
 
-    private AddressInfo getNewAddressInfo(AddressInfo.AddressContext addressContext)
+    private AddressEntry getNewAddressInfo(AddressEntry.AddressContext addressContext)
     {
         ECKey key = new ECKey();
         wallet.addKey(key);
-        AddressInfo addressInfo = new AddressInfo(key, params, addressContext);
-        addressInfoList.add(addressInfo);
+        AddressEntry addressEntry = new AddressEntry(key, params, addressContext);
+        addressEntryList.add(addressEntry);
         saveAddressInfoList();
-        return addressInfo;
+        return addressEntry;
     }
 
-    private AddressInfo getNewOfferFeeAddressInfo()
+    private AddressEntry getNewArbitratorDepositAddressInfo()
     {
-        return getNewAddressInfo(AddressInfo.AddressContext.CREATE_OFFER_FEE);
-    }
-
-    private AddressInfo getNewTakerFeeAddressInfo()
-    {
-        return getNewAddressInfo(AddressInfo.AddressContext.TAKE_OFFER_FEE);
-    }
-
-    private AddressInfo getNewArbitratorDepositAddressInfo()
-    {
-        return getNewAddressInfo(AddressInfo.AddressContext.ARBITRATOR_DEPOSIT);
+        return getNewAddressInfo(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT);
     }
 
 
@@ -422,19 +400,24 @@ public class WalletFacade
                     if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
                     {
                         Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
+                        //log.debug("addressOutput / address " + addressOutput.toString() + " / " + address.toString());
                         if (addressOutput.equals(address))
                         {
                             return tx.getConfidence();
                         }
                     }
-                    else
-                    {
-                        return null;
-                    }
                 }
+
+
             }
         }
         return null;
+    }
+
+    public boolean isRegistrationFeeConfirmed()
+    {
+        TransactionConfidence transactionConfidence = getConfidenceForAddress(getRegistrationAddressInfo().getAddress());
+        return transactionConfidence != null && transactionConfidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING);
     }
 
 
@@ -444,7 +427,7 @@ public class WalletFacade
 
     public BigInteger getBalanceForAddress(Address address)
     {
-        LinkedList<TransactionOutput> all = wallet.calculateAllSpendCandidates(false);
+        LinkedList<TransactionOutput> all = wallet.calculateAllSpendCandidates(true);
         BigInteger value = BigInteger.ZERO;
         for (TransactionOutput transactionOutput : all)
         {
@@ -475,6 +458,29 @@ public class WalletFacade
         return getBalanceForAddress(getArbitratorDepositAddressInfo().getAddress());
     }
 
+    public boolean isRegistrationFeeBalanceNonZero()
+    {
+        return getRegistrationBalance().compareTo(BigInteger.ZERO) > 0;
+    }
+
+    public boolean isRegistrationFeeBalanceSufficient()
+    {
+        return getRegistrationBalance().compareTo(FeePolicy.ACCOUNT_REGISTRATION_FEE) >= 0;
+    }
+
+    public boolean isUnusedTradeAddressBalanceAboveCreationFee()
+    {
+        AddressEntry unUsedAddressEntry = getUnusedTradeAddressInfo();
+        BigInteger unUsedAddressInfoBalance = getBalanceForAddress(unUsedAddressEntry.getAddress());
+        return unUsedAddressInfoBalance.compareTo(FeePolicy.CREATE_OFFER_FEE) > 0;
+    }
+
+    public boolean isUnusedTradeAddressBalanceAboveTakeOfferFee()
+    {
+        AddressEntry unUsedAddressEntry = getUnusedTradeAddressInfo();
+        BigInteger unUsedAddressInfoBalance = getBalanceForAddress(unUsedAddressEntry.getAddress());
+        return unUsedAddressInfoBalance.compareTo(FeePolicy.TAKE_OFFER_FEE) > 0;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TODO
@@ -509,7 +515,8 @@ public class WalletFacade
         tx.addOutput(fee, feePolicy.getAddressForRegistrationFee());
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getRegistrationAddressInfo());
+        // we don't allow spending of unconfirmed tx as with fake registrations we would open up doors for spam and market manipulation with fake offers
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getRegistrationAddressInfo(), false);
         sendRequest.changeAddress = getRegistrationAddressInfo().getAddress();
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);
@@ -518,16 +525,17 @@ public class WalletFacade
         printInputs("payRegistrationFee", tx);
     }
 
-    public String payCreateOfferFee(FutureCallback<Transaction> callback) throws InsufficientMoneyException
+    public String payCreateOfferFee(String offerId, FutureCallback<Transaction> callback) throws InsufficientMoneyException
     {
         Transaction tx = new Transaction(params);
         BigInteger fee = FeePolicy.CREATE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
         log.trace("fee: " + BtcFormatter.btcToString(fee));
-        tx.addOutput(fee, feePolicy.getAddressForOfferFee());
+        tx.addOutput(fee, feePolicy.getAddressForCreateOfferFee());
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getCreateOfferFeeAddressInfo());
-        sendRequest.changeAddress = getCreateOfferFeeAddressInfo().getAddress();
+        // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getAddressInfoByTradeID(offerId), true);
+        sendRequest.changeAddress = getAddressInfoByTradeID(offerId).getAddress();
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
@@ -537,16 +545,17 @@ public class WalletFacade
         return tx.getHashAsString();
     }
 
-    public String payTakeOfferFee(FutureCallback<Transaction> callback) throws InsufficientMoneyException
+    public String payTakeOfferFee(String offerId, FutureCallback<Transaction> callback) throws InsufficientMoneyException
     {
         Transaction tx = new Transaction(params);
         BigInteger fee = FeePolicy.TAKE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
         log.trace("fee: " + BtcFormatter.btcToString(fee));
-        tx.addOutput(fee, feePolicy.getAddressForOfferFee());
+        tx.addOutput(fee, feePolicy.getAddressForTakeOfferFee());
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getTakerFeeAddressInfo());
-        sendRequest.changeAddress = getTakerFeeAddressInfo().getAddress();
+        // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getAddressInfoByTradeID(offerId), true);
+        sendRequest.changeAddress = getAddressInfoByTradeID(offerId).getAddress();
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
@@ -583,10 +592,11 @@ public class WalletFacade
         tx.addOutput(offererInputAmount, multiSigOutputScript);
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
-        AddressInfo addressInfo = getAddressInfoByTradeID(tradeId);
-        addressInfo.setTradeId(tradeId);
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressInfo);
-        sendRequest.changeAddress = addressInfo.getAddress();
+        AddressEntry addressEntry = getAddressInfoByTradeID(tradeId);
+        addressEntry.setTradeId(tradeId);
+        // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
+        sendRequest.changeAddress = addressEntry.getAddress();
         wallet.completeTx(sendRequest);
 
         // The completeTx() call signs the input, but we don't want to pass over a signed tx so we remove the
@@ -641,10 +651,11 @@ public class WalletFacade
         tempTx.addOutput(takerInputAmount, multiSigOutputScript);
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tempTx);
-        AddressInfo addressInfo = getAddressInfoByTradeID(tradeId);
-        addressInfo.setTradeId(tradeId);
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressInfo);
-        sendRequest.changeAddress = addressInfo.getAddress();
+        AddressEntry addressEntry = getAddressInfoByTradeID(tradeId);
+        addressEntry.setTradeId(tradeId);
+        // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
+        sendRequest.changeAddress = addressEntry.getAddress();
         wallet.completeTx(sendRequest);
 
         printInputs("tempTx", tempTx);

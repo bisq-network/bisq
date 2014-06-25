@@ -1,10 +1,8 @@
 package io.bitsquare.trade;
 
-import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.TransactionConfidence;
 import com.google.bitcoin.core.Utils;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
@@ -91,24 +89,28 @@ public class Trading
     {
     }
 
+    private void saveOffers()
+    {
+        storage.write(storageKey + ".offers", myOffers);
+    }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Offer, trade, contract
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void placeNewOffer(Offer offer, FutureCallback<Transaction> callback) throws InsufficientMoneyException
+    public void addOffer(Offer offer) throws IOException
     {
         if (myOffers.containsKey(offer.getId()))
             throw new IllegalStateException("offers contains already a offer with the ID " + offer.getId());
 
         myOffers.put(offer.getId(), offer);
-        walletFacade.payCreateOfferFee(callback);
+        saveOffers();
+
+        messageFacade.addOffer(offer);
     }
 
     public void removeOffer(Offer offer) throws IOException
     {
         myOffers.remove(offer.getId());
-        storage.write(storageKey + ".offers", myOffers);
+        saveOffers();
+
+        messageFacade.removeOffer(offer);
     }
 
     public Trade createTrade(Offer offer)
@@ -228,6 +230,11 @@ public class Trading
     public Map<String, Trade> getTrades()
     {
         return trades;
+    }
+
+    public Map<String, Offer> getOffers()
+    {
+        return myOffers;
     }
 
     public Offer getOffer(String offerUID)

@@ -1,4 +1,4 @@
-package io.bitsquare.gui.orders;
+package io.bitsquare.gui.orders.pending;
 
 import io.bitsquare.gui.market.orderbook.OrderBookListItem;
 import io.bitsquare.trade.Trade;

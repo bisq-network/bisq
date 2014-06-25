@@ -16,8 +16,9 @@ public class FeePolicy
     public static BigInteger CREATE_OFFER_FEE = Utils.toNanoCoins("0.001");
     public static BigInteger TAKE_OFFER_FEE = CREATE_OFFER_FEE;
 
-    private static final String registrationFee = "mvkDXt4QmN4Nq9dRUsRigBCaovde9nLkZR";
-    private static final String offerFee = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";
+    private static final String registrationFeeAddress = "mvkDXt4QmN4Nq9dRUsRigBCaovde9nLkZR";
+    private static final String createOfferFeeAddress = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";
+    private static final String takeOfferFeeAddress = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";
 
     private final NetworkParameters params;
 
@@ -27,12 +28,12 @@ public class FeePolicy
         this.params = params;
     }
 
-    //TODO
+    //TODO other users or dev address? use donation option list? (dev, other users, wikileaks, tor, sub projects (bitcoinj, tomp2p,...)...)
     public Address getAddressForRegistrationFee()
     {
         try
         {
-            return new Address(params, registrationFee);
+            return new Address(params, registrationFeeAddress);
         } catch (AddressFormatException e)
         {
             e.printStackTrace();
@@ -40,12 +41,25 @@ public class FeePolicy
         }
     }
 
-    //TODO
-    public Address getAddressForOfferFee()
+    //TODO get address form arbitrator list
+    public Address getAddressForCreateOfferFee()
     {
         try
         {
-            return new Address(params, offerFee);
+            return new Address(params, createOfferFeeAddress);
+        } catch (AddressFormatException e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    //TODO get address form the intersection of  both traders arbitrator lists
+    public Address getAddressForTakeOfferFee()
+    {
+        try
+        {
+            return new Address(params, takeOfferFeeAddress);
         } catch (AddressFormatException e)
         {
             e.printStackTrace();

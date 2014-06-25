@@ -55,7 +55,6 @@ public class MainController implements Initializable, NavigationController
     private ToggleGroup toggleGroup;
     private ToggleButton prevToggleButton;
     private Image prevToggleButtonIcon;
-    private Pane setupView;
     private NetworkSyncPane networkSyncPane;
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, historyButton, fundsButton, settingsButton;
     private Pane msgButtonHolder, buyButtonHolder, sellButtonHolder, ordersButtonButtonHolder;
@@ -127,8 +126,8 @@ public class MainController implements Initializable, NavigationController
         //homeButton.fire();
         //settingsButton.fire();
         //fundsButton.fire();
-        sellButton.fire();
-        // ordersButton.fire();
+        // sellButton.fire();
+        ordersButton.fire();
         // homeButton.fire();
         // msgButton.fire();
 
@@ -196,17 +195,6 @@ public class MainController implements Initializable, NavigationController
     @Override
     public ChildController navigateToView(String fxmlView, String title)
     {
-        if (setupView != null)
-        {
-            anchorPane.getChildren().add(networkSyncPane);
-
-            anchorPane.setVisible(true);
-            rootContainer.getChildren().remove(setupView);
-            setupView = null;
-
-            buildNavigation();
-        }
-
         if (childController != null)
             childController.cleanup();
 

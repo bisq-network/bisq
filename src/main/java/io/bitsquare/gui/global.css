@@ -51,14 +51,6 @@
     -fx-text-alignment: left;
 }
 
-#copy-icon {
-    -fx-cursor: hand;
-}
-
-#copy-icon:hover {
-    -fx-text-fill: #0096c9;
-}
-
 .text-field:readonly {
     -fx-text-fill: #000000;
     -fx-background-color: #ffffff;
@@ -79,52 +71,70 @@
     -fx-background-color: transparent;
 }
 
-/* order book table */
-
-#orderbook-table .table-cell {
-    -fx-alignment: center;
-}
-
-#orderbook-table .column-header .label {
-    -fx-alignment-alignment: center;
-}
-
-#orderbook-table .focus {
-    -fx-alignment: center;
-}
-
-/* funds table */
-
-#funds-table .table-cell {
-    -fx-alignment: center;
-}
-
-#funds-table .column-header .label {
-    -fx-alignment-alignment: center;
-}
-
-#funds-table .focus {
-    -fx-alignment: center;
-}
-
-#funds-table .table-row-cell:selected .text {
-    -fx-fill: white;
-}
-
-#funds-table .table-row-cell:selected .text:hover {
-    -fx-fill: black;
-}
-
-#funds-link-cell .text:hover {
-    -fx-fill: black;
-}
-
-#funds-link-cell .text {
+.copy-icon {
     -fx-fill: #0096c9;
+    -fx-cursor: hand;
+}
+
+.copy-icon:hover {
+    -fx-fill: black;
 }
 
 #funds-confidence {
     -fx-progress-color: dimgrey;
+}
+
+/* .table-view */
+.table-view .table-cell {
+    -fx-alignment: center;
+}
+
+.table-view .column-header .label {
+    -fx-alignment-alignment: center;
+}
+
+.table-view .focus {
+    -fx-alignment: center;
+}
+
+.table-view .table-row-cell:selected .text {
+    -fx-fill: white;
+}
+
+.table-view .table-row-cell:selected .button .text {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell .copy-icon .text {
+    -fx-fill: #0096c9;
+}
+
+.table-view .table-row-cell .copy-icon .text:hover {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell:selected .copy-icon .text {
+    -fx-fill: white;
+}
+
+.table-view .table-row-cell:selected .copy-icon .text:hover {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell .hyperlink .text {
+    -fx-fill: #0096c9;
+}
+
+.table-view .table-row-cell .hyperlink .text:hover {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell:selected .hyperlink .text {
+    -fx-fill: white;
+}
+
+.table-view .table-row-cell:selected .hyperlink .text:hover {
+    -fx-fill: black;
 }
 
 /* forms */
@@ -161,7 +171,7 @@
     -fx-background-color: transparent;
 }
 
-/* tableview */
+/* table-view */
 .table-view:focused {
     -fx-background-color: transparent;
 }

@@ -205,14 +205,12 @@ public class CreateOfferController implements Initializable, ChildController
                 offer.setOfferFeePaymentTxID(transaction.getHashAsString());
                 setupSuccessScreen(transaction);
                 placeOfferTitle.setText("Transaction sent:");
-
                 try
                 {
-                    log.info("send offer to P2P orderbook");
-                    messageFacade.addOffer(offer);
+                    trading.addOffer(offer);
                 } catch (IOException e)
                 {
-                    Popups.openErrorPopup("Could not publish offer", "Could not publish offer. " + e.getMessage());
+                    Popups.openErrorPopup("Error on adding offer", "Could not add offer to orderbook. " + e.getMessage());
                 }
             }
 
@@ -224,9 +222,10 @@ public class CreateOfferController implements Initializable, ChildController
                 placeOfferButton.setDisable(false);
             }
         };
+
         try
         {
-            trading.placeNewOffer(offer, callback);
+            walletFacade.payCreateOfferFee(offer.getId(), callback);
             placeOfferButton.setDisable(true);
         } catch (InsufficientMoneyException e1)
         {

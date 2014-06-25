@@ -1,37 +1,33 @@
 package io.bitsquare.gui.funds;
 
 import com.google.bitcoin.core.Address;
-import io.bitsquare.btc.AddressInfo;
+import io.bitsquare.btc.AddressEntry;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class AddressListItem
 {
     private final StringProperty addressString = new SimpleStringProperty();
-    private AddressInfo addressInfo;
+    private AddressEntry addressEntry;
 
-    public AddressListItem(AddressInfo addressInfo)
+    public AddressListItem(AddressEntry addressEntry)
     {
-        this.addressInfo = addressInfo;
+        this.addressEntry = addressEntry;
         this.addressString.set(getAddress().toString());
 
     }
 
     public final String getLabel()
     {
-        switch (addressInfo.getAddressContext())
+        switch (addressEntry.getAddressContext())
         {
             case REGISTRATION_FEE:
                 return "Registration fee";
-            case CREATE_OFFER_FEE:
-                return "Create offer fee";
-            case TAKE_OFFER_FEE:
-                return "Take offer fee";
             case TRADE:
-                if (addressInfo.getTradeId() != null)
-                    return "Trade ID: " + addressInfo.getTradeId();
+                if (addressEntry.getTradeId() != null)
+                    return "Trade ID: " + addressEntry.getTradeId();
                 else
-                    return "Unused";
+                    return "Trade (not used yet)";
             case ARBITRATOR_DEPOSIT:
                 return "Arbitration deposit";
         }
@@ -46,11 +42,11 @@ public class AddressListItem
 
     public Address getAddress()
     {
-        return addressInfo.getAddress();
+        return addressEntry.getAddress();
     }
 
-    public AddressInfo getAddressInfo()
+    public AddressEntry getAddressEntry()
     {
-        return addressInfo;
+        return addressEntry;
     }
 }

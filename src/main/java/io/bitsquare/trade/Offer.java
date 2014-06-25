@@ -7,34 +7,32 @@ import io.bitsquare.user.Arbitrator;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.Currency;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
 
 public class Offer implements Serializable
 {
     private static final long serialVersionUID = -971164804305475826L;
 
     // key attributes for lookup
-    private Direction direction;
-    private Currency currency;
+    private final Direction direction;
+    private final Currency currency;
 
-    private String id;
+    private final String id;
+    private final Date creationDate;
 
     private double price;
-    private BigInteger amount;
-    private BigInteger minAmount;
-    private String messagePubKeyAsHex;
-    private BankAccountTypeInfo.BankAccountType bankAccountType;
-    private Country bankAccountCountry;
+    private final BigInteger amount;
+    private final BigInteger minAmount;
+    private final String messagePubKeyAsHex;
+    private final BankAccountTypeInfo.BankAccountType bankAccountType;
+    private final Country bankAccountCountry;
 
-    private int collateral;
-    private List<Country> acceptedCountries;
-    private List<Locale> acceptedLanguageLocales;
+    private final int collateral;
+    private final List<Country> acceptedCountries;
+    private final List<Locale> acceptedLanguageLocales;
     private String offerFeePaymentTxID;
-    private String bankAccountUID;
-    private Arbitrator arbitrator;
+    private final String bankAccountUID;
+    private final Arbitrator arbitrator;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,9 +65,11 @@ public class Offer implements Serializable
         this.arbitrator = arbitrator;
         this.collateral = collateral;
         this.acceptedCountries = acceptedCountries;
+
         this.acceptedLanguageLocales = acceptedLanguageLocales;
 
-        this.id = UUID.randomUUID().toString();
+        creationDate = new Date();
+        id = UUID.randomUUID().toString();
     }
 
 
@@ -192,5 +192,10 @@ public class Offer implements Serializable
                 ", bankAccountUID='" + bankAccountUID + '\'' +
                 ", arbitrator=" + arbitrator +
                 '}';
+    }
+
+    public Date getCreationDate()
+    {
+        return creationDate;
     }
 }

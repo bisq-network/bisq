@@ -43,7 +43,7 @@
         <Button fx:id="createOfferButton" text="Create new offer" AnchorPane.topAnchor="10.0"
                 AnchorPane.rightAnchor="10.0"/>
 
-        <TableView fx:id="orderBookTable" id="orderbook-table" AnchorPane.leftAnchor="10.0"
+        <TableView fx:id="orderBookTable" AnchorPane.leftAnchor="10.0"
                    AnchorPane.topAnchor="45.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
             <columns>
                 <TableColumn text="Amount (Min.)" fx:id="amountColumn" minWidth="120">

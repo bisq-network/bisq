@@ -221,9 +221,9 @@ public class TakerTradeController implements Initializable, ChildController
 
         // offerId = tradeId
         // we don't want to create the trade before the balance check
-        AddressInfo addressInfo = walletFacade.getAddressInfoByTradeID(offer.getId());
-        log.debug("balance " + walletFacade.getBalanceForAddress(addressInfo.getAddress()).toString());
-        if (getTotalToPay().compareTo(walletFacade.getBalanceForAddress(addressInfo.getAddress())) > 0)
+        AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(offer.getId());
+        log.debug("balance " + walletFacade.getBalanceForAddress(addressEntry.getAddress()).toString());
+        if (getTotalToPay().compareTo(walletFacade.getBalanceForAddress(addressEntry.getAddress())) > 0)
         {
             Popups.openErrorPopup("Insufficient money", "You don't have enough funds for that trade.");
             return;

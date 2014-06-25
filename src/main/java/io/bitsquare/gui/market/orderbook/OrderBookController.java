@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccountTypeInfo;
 import io.bitsquare.btc.BtcFormatter;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.MainController;
@@ -44,6 +45,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import org.controlsfx.control.action.Action;
+import org.controlsfx.dialog.Dialog;
 import org.controlsfx.dialog.Dialogs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,67 +113,6 @@ public class OrderBookController implements Initializable, ChildController
     // Interface implementation: Initializable
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean isRegistered()
-    {
-        if (user.getAccountID() == null)
-        {
-            Dialogs.CommandLink settingsCommandLink = new Dialogs.CommandLink("Open settings", "You need to configure your settings before you can actively trade.");
-            Dialogs.CommandLink depositFeeCommandLink = new Dialogs.CommandLink("Deposit funds", "You need to pay the registration fee before you can actively trade. That is needed as prevention against fraud.");
-            Dialogs.CommandLink sendRegistrationCommandLink = new Dialogs.CommandLink("Publish registration", "When settings are configured and the fee deposit is done your registration transaction will be published to the Bitcoin \nnetwork.");
-            List<Dialogs.CommandLink> commandLinks = Arrays.asList(settingsCommandLink, depositFeeCommandLink, sendRegistrationCommandLink);
-
-            boolean settingsValid = settings.getAcceptedLanguageLocales().size() > 0;
-            settingsValid &= settings.getAcceptedCountries().size() > 0;
-            settingsValid &= settings.getAcceptedArbitrators().size() > 0;
-            settingsValid &= user.getCurrentBankAccount() != null;
-
-            boolean registrationFeeDeposited = walletFacade.getRegistrationBalance().compareTo(BigInteger.ZERO) > 0;
-            int selectedIndex = settingsValid ? (registrationFeeDeposited ? 2 : 1) : 0;
-
-            Action registrationMissingAction = Popups.openRegistrationMissingPopup("Registration missing", "Please follow these steps:", "You need to register before you can place an offer.", commandLinks, selectedIndex);
-            if (registrationMissingAction == settingsCommandLink)
-            {
-                MainController.getInstance().navigateToView(NavigationController.SETTINGS);
-            }
-            else if (registrationMissingAction == depositFeeCommandLink)
-            {
-                MainController.getInstance().navigateToView(NavigationController.FUNDS);
-            }
-            else if (registrationMissingAction == sendRegistrationCommandLink)
-            {
-                FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
-                {
-                    @Override
-                    public void onSuccess(Transaction transaction)
-                    {
-                        log.debug("payRegistrationFee onSuccess");
-                        log.info("payRegistrationFee onSuccess txid:" + transaction.getHashAsString());
-                    }
-
-                    @Override
-                    public void onFailure(Throwable t)
-                    {
-                        log.debug("payRegistrationFee onFailure");
-                    }
-                };
-                try
-                {
-                    walletFacade.payRegistrationFee(user.getStringifiedBankAccounts(), callback);
-                    user.setAccountID(walletFacade.getRegistrationAddressInfo().toString());
-                    user.setMessagePubKeyAsHex(DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey()));
-
-                    storage.write(user.getClass().getName(), user);
-                } catch (InsufficientMoneyException e1)
-                {
-                    Popups.openErrorPopup("Not enough money available", "There is not enough money available. Please pay in first to your wallet.");
-                }
-            }
-            return false;
-        }
-
-        return true;
-    }
-
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
@@ -228,13 +169,7 @@ public class OrderBookController implements Initializable, ChildController
             }
         });
 
-        createOfferButton.setOnAction(e -> {
-            if (isRegistered())
-            {
-                ChildController nextController = navigationController.navigateToView(NavigationController.CREATE_OFFER, "Create offer");
-                ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
-            }
-        });
+        createOfferButton.setOnAction(e -> createOffer());
 
         //TODO do polling until broadcast works
         setupPolling();
@@ -284,6 +219,138 @@ public class OrderBookController implements Initializable, ChildController
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+
+    private boolean isRegistered()
+    {
+        return user.getAccountID() != null;
+    }
+
+    private boolean areSettingsValid()
+    {
+        return settings.getAcceptedLanguageLocales().size() > 0 &&
+                settings.getAcceptedCountries().size() > 0 &&
+                settings.getAcceptedArbitrators().size() > 0 &&
+                user.getCurrentBankAccount() != null;
+    }
+
+    private void showRegistrationDialog()
+    {
+        int selectedIndex = -1;
+        if (areSettingsValid())
+        {
+            if (walletFacade.isRegistrationFeeBalanceNonZero())
+            {
+                if (walletFacade.isRegistrationFeeBalanceSufficient())
+                {
+                    if (walletFacade.isRegistrationFeeConfirmed())
+                    {
+                        selectedIndex = 2;
+                    }
+                    else
+                    {
+                        Action response = Popups.openErrorPopup("Registration fee not confirmed yet", "The registration fee transaction has not been confirmed yet in the blockchain. Please wait until it has at least 1 confirmation.");
+                        if (response == Dialog.Actions.OK)
+                        {
+                            MainController.getInstance().navigateToView(NavigationController.FUNDS);
+                        }
+                    }
+                }
+                else
+                {
+                    Action response = Popups.openErrorPopup("Missing registration fee", "You have not funded the full registration fee of " + BtcFormatter.btcToString(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
+                    if (response == Dialog.Actions.OK)
+                    {
+                        MainController.getInstance().navigateToView(NavigationController.FUNDS);
+                    }
+                }
+            }
+            else
+            {
+                selectedIndex = 1;
+            }
+        }
+        else
+        {
+            selectedIndex = 0;
+        }
+
+        if (selectedIndex >= 0)
+        {
+            Dialogs.CommandLink settingsCommandLink = new Dialogs.CommandLink("Open settings", "You need to configure your settings before you can actively trade.");
+            Dialogs.CommandLink depositFeeCommandLink = new Dialogs.CommandLink("Deposit funds", "You need to pay the registration fee before you can actively trade. That is needed as prevention against fraud.");
+            Dialogs.CommandLink sendRegistrationCommandLink = new Dialogs.CommandLink("Publish registration", "When settings are configured and the fee deposit is done your registration transaction will be published to the Bitcoin \nnetwork.");
+            List<Dialogs.CommandLink> commandLinks = Arrays.asList(settingsCommandLink, depositFeeCommandLink, sendRegistrationCommandLink);
+            Action registrationMissingAction = Popups.openRegistrationMissingPopup("Not registered yet", "Please follow these steps:", "You need to register before you can place an offer.", commandLinks, selectedIndex);
+            if (registrationMissingAction == settingsCommandLink)
+            {
+                MainController.getInstance().navigateToView(NavigationController.SETTINGS);
+            }
+            else if (registrationMissingAction == depositFeeCommandLink)
+            {
+                MainController.getInstance().navigateToView(NavigationController.FUNDS);
+            }
+            else if (registrationMissingAction == sendRegistrationCommandLink)
+            {
+                payRegistrationFee();
+            }
+        }
+    }
+
+    private void payRegistrationFee()
+    {
+        FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
+        {
+            @Override
+            public void onSuccess(Transaction transaction)
+            {
+                log.debug("payRegistrationFee onSuccess");
+                log.info("payRegistrationFee onSuccess txid:" + transaction.getHashAsString());
+            }
+
+            @Override
+            public void onFailure(Throwable t)
+            {
+                log.debug("payRegistrationFee onFailure");
+            }
+        };
+        try
+        {
+            walletFacade.payRegistrationFee(user.getStringifiedBankAccounts(), callback);
+            user.setAccountID(walletFacade.getRegistrationAddressInfo().toString());
+            user.setMessagePubKeyAsHex(DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey()));
+
+            storage.write(user.getClass().getName(), user);
+        } catch (InsufficientMoneyException e1)
+        {
+            Popups.openErrorPopup("Not enough money available", "There is not enough money available. Please pay in first to your wallet.");
+        }
+    }
+
+
+    private void createOffer()
+    {
+        if (isRegistered())
+        {
+            if (walletFacade.isUnusedTradeAddressBalanceAboveCreationFee())
+            {
+                ChildController nextController = navigationController.navigateToView(NavigationController.CREATE_OFFER, "Create offer");
+                ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
+            }
+            else
+            {
+                Action response = Popups.openErrorPopup("No funds for a trade", "You have to add some funds before you create a new offer.");
+                if (response == Dialog.Actions.OK)
+                {
+                    MainController.getInstance().navigateToView(NavigationController.FUNDS);
+                }
+            }
+        }
+        else
+        {
+            showRegistrationDialog();
+        }
+    }
+
     private void takeOffer(Offer offer)
     {
         if (isRegistered())
@@ -296,6 +363,10 @@ public class OrderBookController implements Initializable, ChildController
                 requestedAmount = BtcFormatter.stringValueToSatoshis(amount.getText());
 
             takerTradeController.initWithData(offer, requestedAmount);
+        }
+        else
+        {
+            showRegistrationDialog();
         }
     }
 
@@ -348,6 +419,7 @@ public class OrderBookController implements Initializable, ChildController
             }
         });
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Table columns

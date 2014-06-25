@@ -346,7 +346,7 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
 
             degProgress = (int) (360 * control.getProgress());
             arcShape.setLength(-degProgress);
-            indicator.setOpacity(control.getProgress() == 0 ? 0.2 : 1);
+            indicator.setOpacity(control.getProgress() == 0 ? 0 : 1);
             requestLayout();
         }
 
@@ -368,7 +368,7 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
             final double areaH = control.getHeight() - top - bottom /*- textGap - doneTextHeight*/;
             final double radiusW = areaW / 2;
             final double radiusH = areaH / 2;
-            final double radius = Math.floor(Math.min(radiusW, radiusH));
+            final double radius = Math.round(Math.min(radiusW, radiusH)); // use round instead of floor
             final double centerX = snapPosition(left + radiusW);
             final double centerY = snapPosition(top + radius);
 

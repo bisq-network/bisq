@@ -7,15 +7,13 @@ import com.google.bitcoin.core.Utils;
 
 import java.io.Serializable;
 
-public class AddressInfo implements Serializable
+public class AddressEntry implements Serializable
 {
     private static final long serialVersionUID = 5501603992599920416L;
 
     public static enum AddressContext
     {
         REGISTRATION_FEE,
-        CREATE_OFFER_FEE,
-        TAKE_OFFER_FEE,
         TRADE,
         ARBITRATOR_DEPOSIT
     }
@@ -26,7 +24,7 @@ public class AddressInfo implements Serializable
 
     private AddressContext addressContext;
 
-    public AddressInfo(ECKey key, NetworkParameters params, AddressContext addressContext)
+    public AddressEntry(ECKey key, NetworkParameters params, AddressContext addressContext)
     {
         this.key = key;
         this.params = params;

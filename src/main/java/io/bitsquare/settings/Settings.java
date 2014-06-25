@@ -133,5 +133,4 @@ public class Settings implements Serializable
         return minCollateral;
     }
 
-
 }

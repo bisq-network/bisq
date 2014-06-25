@@ -7,9 +7,10 @@ import java.util.List;
 
 public class Popups
 {
-    public static void openErrorPopup(String title, String message)
+
+    public static Action openErrorPopup(String title, String message)
     {
-        Dialogs.create()
+        return Dialogs.create()
                 .title(title)
                 .message(message)
                 .nativeTitleBar()

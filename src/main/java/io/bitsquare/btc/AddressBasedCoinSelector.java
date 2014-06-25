@@ -19,37 +19,36 @@ import java.util.*;
 public class AddressBasedCoinSelector extends DefaultCoinSelector
 {
     private static final Logger log = LoggerFactory.getLogger(AddressBasedCoinSelector.class);
-    private String tradeUID;
     private NetworkParameters params;
-    private AddressInfo addressInfo;
+    private AddressEntry addressEntry;
+    private boolean includePending;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AddressBasedCoinSelector()
+    /*public AddressBasedCoinSelector(NetworkParameters params, AddressInfo addressInfo)
     {
+        this(params, addressInfo, false);
+    }   */
 
-    }
-
-    public AddressBasedCoinSelector(NetworkParameters params, AddressInfo addressInfo)
+    public AddressBasedCoinSelector(NetworkParameters params, AddressEntry addressEntry, boolean includePending)
     {
         this.params = params;
-        this.addressInfo = addressInfo;
+        this.addressEntry = addressEntry;
+        this.includePending = includePending;
     }
 
-    public AddressBasedCoinSelector(String tradeUID)
-    {
-
-        this.tradeUID = tradeUID;
-    }
 
     /**
      * Sub-classes can override this to just customize whether transactions are usable, but keep age sorting.
      */
     protected boolean shouldSelect(Transaction tx)
     {
-        return isSelectable(tx);
+        if (includePending)
+            return isInBlockChainOrPending(tx);
+        else
+            return isInBlockChain(tx);
     }
 
     protected boolean matchesRequiredAddress(TransactionOutput transactionOutput)
@@ -57,7 +56,7 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
         if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
         {
             Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-            if (addressInfo != null && addressOutput.equals(addressInfo.getAddress()))
+            if (addressEntry != null && addressOutput.equals(addressEntry.getAddress()))
             {
                 return true;
             }
@@ -130,17 +129,38 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
     }
 
 
-    public static boolean isSelectable(Transaction tx)
+    private static boolean isInBlockChainOrPending(Transaction tx)
+    {
+        // Pick chain-included transactions and transactions that are pending.
+        TransactionConfidence confidence = tx.getConfidence();
+        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
+        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
+                type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
+                        // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
+                        // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
+                        (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
+    }
+
+    private static boolean isInBlockChain(Transaction tx)
+    {
+        // Only pick chain-included transactions.
+        TransactionConfidence confidence = tx.getConfidence();
+        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
+        return type.equals(TransactionConfidence.ConfidenceType.BUILDING);
+    }
+
+    /*
+      public static boolean isSelectable(Transaction tx)
     {
         // Only pick chain-included transactions, or transactions that are ours and pending.
         TransactionConfidence confidence = tx.getConfidence();
         TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
         return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
-
                 type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
                         confidence.getSource().equals(TransactionConfidence.Source.SELF) &&
                         // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
                         // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
                         (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
     }
+     */
 }

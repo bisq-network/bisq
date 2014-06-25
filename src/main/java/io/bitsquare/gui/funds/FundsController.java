@@ -4,7 +4,7 @@ import com.google.bitcoin.core.TransactionConfidence;
 import com.google.inject.Inject;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.btc.AddressInfo;
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
@@ -23,7 +23,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.MouseEvent;
 import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,12 +73,12 @@ public class FundsController implements Initializable, ChildController
         setCopyColumnCellFactory();
         setConfidenceColumnCellFactory();
 
-        List<AddressInfo> addressInfoList = walletFacade.getAddressInfoList();
+        List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
 
-        for (int i = 0; i < addressInfoList.size(); i++)
+        for (int i = 0; i < addressEntryList.size(); i++)
         {
-            AddressInfo addressInfo = addressInfoList.get(i);
-            addressList.add(new AddressListItem(addressInfo));
+            AddressEntry addressEntry = addressEntryList.get(i);
+            addressList.add(new AddressListItem(addressEntry));
         }
 
         addressesTable.setItems(addressList);
@@ -109,15 +108,14 @@ public class FundsController implements Initializable, ChildController
     @FXML
     public void onAddNewTradeAddress(ActionEvent actionEvent)
     {
-        AddressInfo addressInfo = walletFacade.getNewTradeAddressInfo();
-        addressList.add(new AddressListItem(addressInfo));
+        AddressEntry addressEntry = walletFacade.getNewTradeAddressInfo();
+        addressList.add(new AddressListItem(addressEntry));
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     private void setLabelColumnCellFactory()
     {
@@ -129,7 +127,7 @@ public class FundsController implements Initializable, ChildController
             {
                 return new TableCell<String, AddressListItem>()
                 {
-                    Label label;
+                    Hyperlink hyperlink;
 
                     @Override
                     public void updateItem(final AddressListItem item, boolean empty)
@@ -138,27 +136,23 @@ public class FundsController implements Initializable, ChildController
 
                         if (item != null)
                         {
-                            label = new Label(item.getLabel());
-
-                            if (item.getAddressInfo().getTradeId() != null)
+                            hyperlink = new Hyperlink(item.getLabel());
+                            hyperlink.setId("id-link");
+                            if (item.getAddressEntry().getTradeId() != null)
                             {
-                                setId("funds-link-cell");
+                                Tooltip tooltip = new Tooltip(item.getAddressEntry().getTradeId());
+                                Tooltip.install(hyperlink, tooltip);
 
-                                Tooltip tooltip = new Tooltip(item.getAddressInfo().getTradeId());
-                                Tooltip.install(label, tooltip);
-
-                                label.setUnderline(true);
-                                label.setStyle("-fx-cursor: hand");
-                                label.setOnMouseClicked(new EventHandler<MouseEvent>()
+                                hyperlink.setOnAction(new EventHandler<ActionEvent>()
                                 {
                                     @Override
-                                    public void handle(MouseEvent mouseEvent)
+                                    public void handle(ActionEvent event)
                                     {
-                                        log.info("Show trade details " + item.getAddressInfo().getTradeId());
+                                        log.info("Show trade details " + item.getAddressEntry().getTradeId());
                                     }
                                 });
                             }
-                            setGraphic(label);
+                            setGraphic(hyperlink);
                         }
                         else
                         {
@@ -231,7 +225,9 @@ public class FundsController implements Initializable, ChildController
                     Label copyIcon = new Label();
 
                     {
-                        setId("funds-link-cell");
+                        //setId("hyperlink");
+                        copyIcon.getStyleClass().add("copy-icon");
+                        //copyIcon.getStyleClass().setAll("copy-icon");
                         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
                         Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
                     }
@@ -319,13 +315,16 @@ public class FundsController implements Initializable, ChildController
     private void updateBalance(BigInteger balance, Label balanceLabel)
     {
         if (balance != null)
+        {
             balanceLabel.setText(BtcFormatter.btcToString(balance));
+        }
     }
 
     private void updateConfidence(TransactionConfidence confidence, ConfidenceProgressIndicator progressIndicator, Tooltip tooltip)
     {
         if (confidence != null)
         {
+            //log.debug("Type numBroadcastPeers getDepthInBlocks " + confidence.getConfidenceType() + " / " + confidence.numBroadcastPeers() + " / " + confidence.getDepthInBlocks());
             switch (confidence.getConfidenceType())
             {
                 case UNKNOWN:
@@ -342,8 +341,11 @@ public class FundsController implements Initializable, ChildController
                     break;
                 case DEAD:
                     tooltip.setText("Transaction is invalid.");
+                    progressIndicator.setProgress(0);
                     break;
             }
+
+            progressIndicator.setPrefSize(24, 24);
         }
     }
 }
