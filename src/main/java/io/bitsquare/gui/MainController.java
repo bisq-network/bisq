@@ -16,6 +16,7 @@ import io.bitsquare.gui.util.Icons;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.TradeMessage;
+import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Trading;
 import io.bitsquare.user.User;
@@ -59,6 +60,9 @@ public class MainController implements Initializable, NavigationController
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, historyButton, fundsButton, settingsButton;
     private Pane msgButtonHolder, buyButtonHolder, sellButtonHolder, ordersButtonButtonHolder;
     private TextField balanceTextField;
+    private Storage storage;
+    private String storageId;
+    private ToggleButton selectedNavigationItem;
 
     @FXML
     public Pane contentPane;
@@ -75,14 +79,17 @@ public class MainController implements Initializable, NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MainController(User user, WalletFacade walletFacade, MessageFacade messageFacade, Trading trading)
+    public MainController(User user, WalletFacade walletFacade, MessageFacade messageFacade, Trading trading, Storage storage)
     {
         this.user = user;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
         this.trading = trading;
+        this.storage = storage;
 
         MainController.mainController = this;
+        storageId = this.getClass().getName() + ".selectedNavigationItem";
+
     }
 
     public static MainController getInstance()
@@ -123,9 +130,14 @@ public class MainController implements Initializable, NavigationController
 
         buildNavigation();
 
+        selectedNavigationItem = (ToggleButton) storage.read(storageId);
+        if (selectedNavigationItem == null)
+            selectedNavigationItem = homeButton;
+
+        selectedNavigationItem.fire();
         //homeButton.fire();
         //settingsButton.fire();
-        fundsButton.fire();
+        //fundsButton.fire();
         // sellButton.fire();
         // ordersButton.fire();
         // homeButton.fire();

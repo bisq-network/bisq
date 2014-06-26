@@ -26,12 +26,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.GuardedBy;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
 
+/**
+ * TODO: use walletextension (with protobuffer) instead of saving addressEntryList via storage
+ */
 public class WalletFacade
 {
     public static final String MAIN_NET = "MAIN_NET";
@@ -41,6 +46,8 @@ public class WalletFacade
     public static String WALLET_PREFIX = BitSquare.ID;
 
     private static final Logger log = LoggerFactory.getLogger(WalletFacade.class);
+
+    private final ReentrantLock lock = Threading.lock("lock");
 
     private String saveAddressEntryListId;
     private NetworkParameters params;
@@ -53,8 +60,8 @@ public class WalletFacade
     private List<DownloadListener> downloadListeners = new ArrayList<>();
     private List<ConfidenceListener> confidenceListeners = new ArrayList<>();
     private List<BalanceListener> balanceListeners = new ArrayList<>();
+    @GuardedBy("lock")
     private List<AddressEntry> addressEntryList = new ArrayList<>();
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -68,6 +75,8 @@ public class WalletFacade
         this.feePolicy = feePolicy;
         this.cryptoFacade = cryptoFacade;
         this.storage = storage;
+
+        saveAddressEntryListId = this.getClass().getName() + ".addressEntryList";
     }
 
 
@@ -162,7 +171,6 @@ public class WalletFacade
         };
         wallet.addEventListener(walletEventListener);
 
-        saveAddressEntryListId = this.getClass().getName() + ".addressEntryList";
         List<AddressEntry> savedAddressEntryList = (List<AddressEntry>) storage.read(saveAddressEntryListId);
         if (savedAddressEntryList != null)
         {
@@ -170,14 +178,22 @@ public class WalletFacade
         }
         else
         {
-            ECKey registrationKey = wallet.getKeys().get(0);
-            AddressEntry registrationAddressEntry = new AddressEntry(registrationKey, params, AddressEntry.AddressContext.REGISTRATION_FEE);
-            addressEntryList.add(registrationAddressEntry);
-            saveAddressInfoList();
+            lock.lock();
+            try
+            {
+                ECKey registrationKey = wallet.getKeys().get(0);
+                AddressEntry registrationAddressEntry = new AddressEntry(registrationKey, params, AddressEntry.AddressContext.REGISTRATION_FEE);
+                addressEntryList.add(registrationAddressEntry);
+            } finally
+            {
+                lock.unlock();
+            }
 
+            saveAddressInfoList();
             getNewTradeAddressEntry();
         }
     }
+
 
     public void shutDown()
     {
@@ -190,12 +206,6 @@ public class WalletFacade
     public Wallet getWallet()
     {
         return wallet;
-    }
-
-    private void saveAddressInfoList()
-    {
-        // use wallet extension?
-        storage.write(saveAddressEntryListId, addressEntryList);
     }
 
 
@@ -243,7 +253,7 @@ public class WalletFacade
 
     public List<AddressEntry> getAddressEntryList()
     {
-        return addressEntryList;
+        return ImmutableList.copyOf(addressEntryList);
     }
 
     public AddressEntry getRegistrationAddressInfo()
@@ -262,7 +272,7 @@ public class WalletFacade
 
     public AddressEntry getUnusedTradeAddressInfo()
     {
-        List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(addressEntryList, new Predicate<AddressEntry>()
+        List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(ImmutableList.copyOf(addressEntryList), new Predicate<AddressEntry>()
         {
             @Override
             public boolean apply(@Nullable AddressEntry addressInfo)
@@ -279,7 +289,7 @@ public class WalletFacade
 
     private AddressEntry getAddressInfoByAddressContext(AddressEntry.AddressContext addressContext)
     {
-        List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(addressEntryList, new Predicate<AddressEntry>()
+        List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(ImmutableList.copyOf(addressEntryList), new Predicate<AddressEntry>()
         {
             @Override
             public boolean apply(@Nullable AddressEntry addressInfo)
@@ -296,7 +306,7 @@ public class WalletFacade
 
     public AddressEntry getAddressInfoByTradeID(String tradeId)
     {
-        for (AddressEntry addressEntry : addressEntryList)
+        for (AddressEntry addressEntry : ImmutableList.copyOf(addressEntryList))
         {
             if (addressEntry.getTradeId() != null && addressEntry.getTradeId().equals(tradeId))
                 return addressEntry;
@@ -319,12 +329,23 @@ public class WalletFacade
 
     private AddressEntry getNewAddressEntry(AddressEntry.AddressContext addressContext)
     {
-        ECKey key = new ECKey();
-        wallet.addKey(key);
-        wallet.addWatchedAddress(key.toAddress(params));
-        AddressEntry addressEntry = new AddressEntry(key, params, addressContext);
-        addressEntryList.add(addressEntry);
-        saveAddressInfoList();
+        AddressEntry addressEntry = null;
+        lock.lock();
+        wallet.getLock().lock();
+        try
+        {
+            ECKey key = new ECKey();
+            wallet.addKey(key);
+            wallet.addWatchedAddress(key.toAddress(params));
+            addressEntry = new AddressEntry(key, params, addressContext);
+            addressEntryList.add(addressEntry);
+            saveAddressInfoList();
+        } finally
+        {
+            lock.unlock();
+            wallet.getLock().unlock();
+        }
+
         return addressEntry;
     }
 
@@ -1037,6 +1058,19 @@ public class WalletFacade
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void saveAddressInfoList()
+    {
+        // use wallet extension?
+        lock.lock();
+        try
+        {
+            storage.write(saveAddressEntryListId, addressEntryList);
+        } finally
+        {
+            lock.unlock();
+        }
+    }
+
     private Script getMultiSigScript(String offererPubKey, String takerPubKey, String arbitratorPubKey)
     {
         ECKey offererKey = new ECKey(null, Utils.parseAsHexOrBase58(offererPubKey));
@@ -1047,11 +1081,12 @@ public class WalletFacade
         return ScriptBuilder.createMultiSigOutputScript(2, keys);
     }
 
-    public Transaction createPayoutTx(String depositTxAsHex,
-                                      BigInteger offererPaybackAmount,
-                                      BigInteger takerPaybackAmount,
-                                      String offererAddress,
-                                      String takerAddress) throws AddressFormatException
+
+    private Transaction createPayoutTx(String depositTxAsHex,
+                                       BigInteger offererPaybackAmount,
+                                       BigInteger takerPaybackAmount,
+                                       String offererAddress,
+                                       String takerAddress) throws AddressFormatException
     {
         log.trace("createPayoutTx");
         log.trace("inputs: ");
