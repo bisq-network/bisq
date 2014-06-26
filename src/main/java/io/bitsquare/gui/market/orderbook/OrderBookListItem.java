@@ -6,9 +6,6 @@ import io.bitsquare.trade.Offer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-/**
- * Wrapper for observable properties used by orderbook table view
- */
 public class OrderBookListItem
 {
     protected final StringProperty price = new SimpleStringProperty();

@@ -2,6 +2,7 @@ package io.bitsquare.gui.orders.closed;
 
 import com.google.inject.Inject;
 import io.bitsquare.gui.ChildController;
+import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
 import javafx.fxml.Initializable;
 import org.slf4j.Logger;
@@ -10,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class ClosedTradeController implements Initializable, ChildController
+public class ClosedTradeController implements Initializable, ChildController, Hibernate
 {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradeController.class);
 
@@ -50,6 +51,23 @@ public class ClosedTradeController implements Initializable, ChildController
     {
         log.debug("cleanup" + this);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface implementation: Hibernate
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void sleep()
+    {
+        cleanup();
+    }
+
+    @Override
+    public void awake()
+    {
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // GUI Event handlers

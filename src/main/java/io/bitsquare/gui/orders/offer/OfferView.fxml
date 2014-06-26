@@ -34,10 +34,10 @@
             </TableColumn>
             <TableColumn text="Volume (Min.)" fx:id="volumeColumn" minWidth="70" sortable="false">
                 <cellValueFactory>
-                    <PropertyValueFactory property="price"/>
+                    <PropertyValueFactory property="volume"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Status" fx:id="removeColumn" minWidth="70" sortable="false"/>
+            <TableColumn text="" fx:id="removeColumn" minWidth="50" sortable="false"/>
         </columns>
     </TableView>
 

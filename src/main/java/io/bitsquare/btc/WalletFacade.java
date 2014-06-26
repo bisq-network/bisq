@@ -31,8 +31,6 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class WalletFacade
 {
@@ -177,7 +175,7 @@ public class WalletFacade
             addressEntryList.add(registrationAddressEntry);
             saveAddressInfoList();
 
-            getNewTradeAddressInfo();
+            getNewTradeAddressEntry();
         }
     }
 
@@ -257,7 +255,7 @@ public class WalletFacade
     {
         AddressEntry arbitratorDepositAddressEntry = getAddressInfoByAddressContext(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT);
         if (arbitratorDepositAddressEntry == null)
-            arbitratorDepositAddressEntry = getNewArbitratorDepositAddressInfo();
+            arbitratorDepositAddressEntry = getNewArbitratorDepositAddressEntry();
 
         return arbitratorDepositAddressEntry;
     }
@@ -276,7 +274,7 @@ public class WalletFacade
         if (filteredList != null && filteredList.size() > 0)
             return filteredList.get(0);
         else
-            return getNewTradeAddressInfo();
+            return getNewTradeAddressEntry();
     }
 
     private AddressEntry getAddressInfoByAddressContext(AddressEntry.AddressContext addressContext)
@@ -314,12 +312,12 @@ public class WalletFacade
     // Create new AddressInfo objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AddressEntry getNewTradeAddressInfo()
+    public AddressEntry getNewTradeAddressEntry()
     {
-        return getNewAddressInfo(AddressEntry.AddressContext.TRADE);
+        return getNewAddressEntry(AddressEntry.AddressContext.TRADE);
     }
 
-    private AddressEntry getNewAddressInfo(AddressEntry.AddressContext addressContext)
+    private AddressEntry getNewAddressEntry(AddressEntry.AddressContext addressContext)
     {
         ECKey key = new ECKey();
         wallet.addKey(key);
@@ -330,11 +328,20 @@ public class WalletFacade
         return addressEntry;
     }
 
-    private AddressEntry getNewArbitratorDepositAddressInfo()
+    private AddressEntry getNewArbitratorDepositAddressEntry()
     {
-        return getNewAddressInfo(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT);
+        return getNewAddressEntry(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT);
     }
 
+    private AddressEntry getAddressEntryByAddressString(String address)
+    {
+        for (AddressEntry addressEntry : addressEntryList)
+        {
+            if (addressEntry.getAddressString().equals(address))
+                return addressEntry;
+        }
+        return null;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TransactionConfidence
@@ -369,7 +376,26 @@ public class WalletFacade
 
     private TransactionConfidence getTransactionConfidence(Transaction tx, Address address)
     {
+        List<TransactionOutput> mergedOutputs = getOutputsWithConnectedOutputs(tx);
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
+
+        for (int i = 0; i < mergedOutputs.size(); i++)
+        {
+            TransactionOutput transactionOutput = mergedOutputs.get(i);
+            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
+            {
+                Address outputAddress = transactionOutput.getScriptPubKey().getToAddress(params);
+                if (address.equals(outputAddress))
+                {
+                    transactionConfidenceList.add(tx.getConfidence());
+                }
+            }
+        }
+        return getMostRecentConfidence(transactionConfidenceList);
+    }
+
+    private List<TransactionOutput> getOutputsWithConnectedOutputs(Transaction tx)
+    {
         List<TransactionOutput> transactionOutputs = tx.getOutputs();
         List<TransactionOutput> connectedOutputs = new ArrayList<>();
 
@@ -386,20 +412,7 @@ public class WalletFacade
         List<TransactionOutput> mergedOutputs = new ArrayList<>();
         mergedOutputs.addAll(transactionOutputs);
         mergedOutputs.addAll(connectedOutputs);
-
-        for (int i = 0; i < mergedOutputs.size(); i++)
-        {
-            TransactionOutput transactionOutput = mergedOutputs.get(i);
-            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
-            {
-                Address outputAddress = transactionOutput.getScriptPubKey().getToAddress(params);
-                if (address.equals(outputAddress))
-                {
-                    transactionConfidenceList.add(tx.getConfidence());
-                }
-            }
-        }
-        return getMostRecentConfidence(transactionConfidenceList);
+        return mergedOutputs;
     }
 
     private TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList)
@@ -431,26 +444,31 @@ public class WalletFacade
         return transactionConfidence != null && transactionConfidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Balance
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BigInteger getBalanceForAddress(Address address)
     {
-        LinkedList<TransactionOutput> all = wallet.calculateAllSpendCandidates(true);
-        BigInteger value = BigInteger.ZERO;
-        for (TransactionOutput transactionOutput : all)
+        return getBalance(wallet.calculateAllSpendCandidates(true), address);
+    }
+
+    private BigInteger getBalance(LinkedList<TransactionOutput> transactionOutputs, Address address)
+    {
+        BigInteger balance = BigInteger.ZERO;
+        for (TransactionOutput transactionOutput : transactionOutputs)
         {
             if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
             {
                 Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
                 if (addressOutput.equals(address))
                 {
-                    value = value.add(transactionOutput.getValue());
+                    balance = balance.add(transactionOutput.getValue());
                 }
             }
         }
-        return value;
+        return balance;
     }
 
     private void notifyBalanceListeners(Transaction tx)
@@ -458,38 +476,9 @@ public class WalletFacade
         for (int i = 0; i < balanceListeners.size(); i++)
         {
             BalanceListener balanceListener = balanceListeners.get(i);
-            List<TransactionOutput> transactionOutputs = tx.getOutputs();
-            for (int n = 0; n < transactionOutputs.size(); n++)
-            {
-                TransactionOutput transactionOutput = transactionOutputs.get(n);
-                if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
-                {
-                    Address address = transactionOutput.getScriptPubKey().getToAddress(params);
-                    log.debug("notifyBalanceListeners transactionOutput address/balanceListener.getAddress() " + address.toString() + " / " + balanceListener.getAddress().toString());
 
-                    if (address.equals(balanceListener.getAddress()))
-                    {
-                        balanceListener.onBalanceChanged(getBalanceForAddress(address));
-                    }
-                }
-            }
-
-            List<TransactionInput> transactionInputs = tx.getInputs();
-            for (int n = 0; n < transactionInputs.size(); n++)
-            {
-                TransactionInput transactionInput = transactionInputs.get(n);
-                TransactionOutput transactionOutput = transactionInput.getConnectedOutput();
-                log.debug("notifyBalanceListeners transactionInput.getConnectedOutput() " + transactionInput.getConnectedOutput());
-                if (transactionOutput != null && (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH()))
-                {
-                    Address address = transactionOutput.getScriptPubKey().getToAddress(params);
-                    log.debug("notifyBalanceListeners transactionInput address/balanceListener.getAddress() " + address.toString() + " / " + balanceListener.getAddress().toString());
-                    if (address.equals(balanceListener.getAddress()))
-                    {
-                        balanceListener.onBalanceChanged(getBalanceForAddress(address));
-                    }
-                }
-            }
+            BigInteger balance = getBalanceForAddress(balanceListener.getAddress());
+            balanceListener.onBalanceChanged(balance);
         }
     }
 
@@ -620,19 +609,21 @@ public class WalletFacade
     // Withdrawal
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String sendFunds(AddressEntry withdrawFromAddressEntry, String withdrawToAddress, BigInteger amount, FutureCallback<Transaction> callback) throws AddressFormatException, InsufficientMoneyException, IllegalArgumentException
+    public String sendFunds(String withdrawFromAddress,
+                            String withdrawToAddress,
+                            String changeAddress,
+                            BigInteger amount,
+                            FutureCallback<Transaction> callback) throws AddressFormatException, InsufficientMoneyException, IllegalArgumentException
     {
-        checkNotNull(withdrawFromAddressEntry);
-        checkArgument(withdrawToAddress.length() > 0);
-        checkArgument(amount.compareTo(FeePolicy.TX_FEE) > 0);
-
         Transaction tx = new Transaction(params);
         tx.addOutput(amount.subtract(FeePolicy.TX_FEE), new Address(params, withdrawToAddress));
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, withdrawFromAddressEntry, true);
-        sendRequest.changeAddress = withdrawFromAddressEntry.getAddress();
+
+
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getAddressEntryByAddressString(withdrawFromAddress), true);
+        sendRequest.changeAddress = getAddressEntryByAddressString(changeAddress).getAddress();
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);
 

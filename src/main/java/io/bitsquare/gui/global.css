@@ -97,7 +97,11 @@
     -fx-alignment: center;
 }
 
-.table-view .table-row-cell:selected .text {
+.table-view .text {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection  .text {
     -fx-fill: white;
 }
 

@@ -2,6 +2,7 @@ package io.bitsquare.gui.orders.offer;
 
 import com.google.inject.Inject;
 import io.bitsquare.gui.ChildController;
+import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.trade.Offer;
@@ -26,10 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-public class OfferController implements Initializable, ChildController
+public class OfferController implements Initializable, ChildController, Hibernate
 {
     private static final Logger log = LoggerFactory.getLogger(OfferController.class);
-    protected ObservableList<OfferListItem> offerListItems = FXCollections.observableArrayList();
+    protected ObservableList<OfferListItem> offerListItems;
 
     @FXML
     private TableColumn<String, OfferListItem> offerIdColumn, dateColumn, amountColumn, priceColumn, volumeColumn, removeColumn;
@@ -56,16 +57,9 @@ public class OfferController implements Initializable, ChildController
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
+        awake();
         setOfferIdColumnColumnCellFactory();
         setRemoveColumnCellFactory();
-
-        Map<String, Offer> offerMap = trading.getOffers();
-        List<Offer> offerList = new ArrayList<>(offerMap.values());
-        for (int i = 0; i < offerList.size(); i++)
-        {
-            offerListItems.add(new OfferListItem(offerList.get(i)));
-        }
-        offerTable.setItems(offerListItems);
         offerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
@@ -84,6 +78,31 @@ public class OfferController implements Initializable, ChildController
     {
         log.debug("cleanup" + this);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface implementation: Hibernate
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void sleep()
+    {
+        cleanup();
+    }
+
+    @Override
+    public void awake()
+    {
+        offerListItems = FXCollections.observableArrayList();
+        Map<String, Offer> offerMap = trading.getOffers();
+        List<Offer> offerList = new ArrayList<>(offerMap.values());
+        for (int i = 0; i < offerList.size(); i++)
+        {
+            offerListItems.add(new OfferListItem(offerList.get(i)));
+        }
+        offerTable.setItems(offerListItems);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // GUI Event handlers

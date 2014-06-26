@@ -43,7 +43,6 @@ public class WithdrawalController implements Initializable, ChildController, Hib
 
     private WalletFacade walletFacade;
     protected ObservableList<WithdrawalListItem> addressList;
-    private AddressEntry selectedAddressEntry;
 
     @FXML
     private TableView tableView;
@@ -52,7 +51,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
     @FXML
     private Button addNewAddressButton;
     @FXML
-    private TextField withdrawFromTextField, withdrawToTextField, amountTextField;
+    private TextField withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -88,13 +87,13 @@ public class WithdrawalController implements Initializable, ChildController, Hib
             {
                 if (newValue != null)
                 {
-                    BitSquareValidator.resetTextFields(withdrawFromTextField, withdrawToTextField, amountTextField);
+                    BitSquareValidator.resetTextFields(withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField);
 
                     if (newValue.getBalance().compareTo(BigInteger.ZERO) > 0)
                     {
                         amountTextField.setText(BtcFormatter.satoshiToString(newValue.getBalance()));
-                        selectedAddressEntry = newValue.getAddressEntry();
                         withdrawFromTextField.setText(newValue.getAddressEntry().getAddressString());
+                        changeAddressTextField.setText(newValue.getAddressEntry().getAddressString());
                     }
                     else
                     {
@@ -161,7 +160,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
     {
         try
         {
-            BitSquareValidator.textFieldsNotEmpty(amountTextField, withdrawFromTextField, withdrawToTextField);
+            BitSquareValidator.textFieldsNotEmpty(amountTextField, withdrawFromTextField, withdrawToTextField, changeAddressTextField);
             BitSquareValidator.textFieldsHasDoubleValueWithReset(amountTextField);
 
             BigInteger amount = BtcFormatter.stringValueToSatoshis(amountTextField.getText());
@@ -172,7 +171,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                     @Override
                     public void onSuccess(Transaction transaction)
                     {
-                        BitSquareValidator.resetTextFields(withdrawFromTextField, withdrawToTextField, amountTextField);
+                        BitSquareValidator.resetTextFields(withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField);
                         log.info("onWithdraw onSuccess txid:" + transaction.getHashAsString());
                     }
 
@@ -194,7 +193,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                 {
                     try
                     {
-                        walletFacade.sendFunds(selectedAddressEntry, withdrawToTextField.getText(), amount, callback);
+                        walletFacade.sendFunds(withdrawFromTextField.getText(), withdrawToTextField.getText(), changeAddressTextField.getText(), amount, callback);
                     } catch (AddressFormatException e)
                     {
                         Popups.openErrorPopup("Address invalid", "The address is not correct. Please check the address format.");

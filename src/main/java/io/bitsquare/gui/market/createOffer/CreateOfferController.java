@@ -8,6 +8,7 @@ import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
+import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BitSquareConverter;
@@ -42,7 +43,7 @@ import java.net.URL;
 import java.util.Random;
 import java.util.ResourceBundle;
 
-public class CreateOfferController implements Initializable, ChildController
+public class CreateOfferController implements Initializable, ChildController, Hibernate
 {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferController.class);
 
@@ -156,6 +157,22 @@ public class CreateOfferController implements Initializable, ChildController
 
     @Override
     public void cleanup()
+    {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface implementation: Hibernate
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void sleep()
+    {
+        cleanup();
+    }
+
+    @Override
+    public void awake()
     {
     }
 

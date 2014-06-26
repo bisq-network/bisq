@@ -9,25 +9,18 @@ import javafx.beans.property.StringProperty;
 import java.text.DateFormat;
 import java.util.Locale;
 
-/**
- * Wrapper for observable properties used by orderbook table view
- */
 public class OfferListItem
 {
     protected final StringProperty price = new SimpleStringProperty();
     protected final StringProperty amount = new SimpleStringProperty();
     protected final StringProperty date = new SimpleStringProperty();
     protected final StringProperty volume = new SimpleStringProperty();
-
     private final String offerId;
-
     protected Offer offer;
-
 
     public OfferListItem(Offer offer)
     {
         this.offer = offer;
-
 
         DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.getDefault());
         DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, Locale.getDefault());

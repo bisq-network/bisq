@@ -119,7 +119,7 @@ public class DepositController implements Initializable, ChildController, Hibern
     @FXML
     public void onAddNewTradeAddress(ActionEvent actionEvent)
     {
-        addressList.add(new DepositListItem(walletFacade.getNewTradeAddressInfo(), walletFacade));
+        addressList.add(new DepositListItem(walletFacade.getNewTradeAddressEntry(), walletFacade));
     }
 
 
