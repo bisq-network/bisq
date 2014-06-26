@@ -147,11 +147,11 @@ public class SettingsController implements Initializable, ChildController, Navig
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey());
             List<Locale> languages = new ArrayList<>();
             languages.add(LanguageUtil.getDefaultLanguageLocale());
-            List<Arbitrator.METHODS> arbitrationMethods = new ArrayList<>();
-            arbitrationMethods.add(Arbitrator.METHODS.TLS_NOTARY);
-            List<Arbitrator.ID_VERIFICATIONS> idVerifications = new ArrayList<>();
-            idVerifications.add(Arbitrator.ID_VERIFICATIONS.PASSPORT);
-            idVerifications.add(Arbitrator.ID_VERIFICATIONS.GOV_ID);
+            List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
+            arbitrationMethods.add(Arbitrator.METHOD.TLS_NOTARY);
+            List<Arbitrator.ID_VERIFICATION> idVerifications = new ArrayList<>();
+            idVerifications.add(Arbitrator.ID_VERIFICATION.PASSPORT);
+            idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
 
             Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
                     messagePubKeyAsHex,
@@ -393,7 +393,7 @@ public class SettingsController implements Initializable, ChildController, Navig
                     public void updateItem(final Locale item, boolean empty)
                     {
                         super.updateItem(item, empty);
-                        if (item != null)
+                        if (item != null && !empty)
                         {
                             label.setText(item.getDisplayName());
 
@@ -485,7 +485,7 @@ public class SettingsController implements Initializable, ChildController, Navig
                     public void updateItem(final Country item, boolean empty)
                     {
                         super.updateItem(item, empty);
-                        if (item != null)
+                        if (item != null && !empty)
                         {
                             label.setText(item.getName());
 
@@ -561,7 +561,7 @@ public class SettingsController implements Initializable, ChildController, Navig
                     public void updateItem(final Arbitrator item, boolean empty)
                     {
                         super.updateItem(item, empty);
-                        if (item != null)
+                        if (item != null && !empty)
                         {
                             label.setText(item.getName());
 
@@ -851,9 +851,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     {
         try
         {
-            TextField[] textFields = {bankAccountTitleTextField, bankAccountHolderNameTextField, bankAccountPrimaryIDTextField, bankAccountSecondaryIDTextField};
-            BitSquareValidator.resetTextFields(textFields);
-            BitSquareValidator.textFieldsNotEmpty(textFields);
+            BitSquareValidator.textFieldsNotEmptyWithReset(bankAccountTitleTextField, bankAccountHolderNameTextField, bankAccountPrimaryIDTextField, bankAccountSecondaryIDTextField);
 
             BankAccountTypeInfo bankAccountTypeInfo = bankAccountTypesComboBox.getSelectionModel().getSelectedItem();
             BitSquareValidator.textFieldBankAccountPrimaryIDIsValid(bankAccountPrimaryIDTextField, bankAccountTypeInfo);

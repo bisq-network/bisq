@@ -142,11 +142,11 @@ public class BitSquareFormatter
         return result;
     }
 
-    public static String arbitrationMethodsToString(List<Arbitrator.METHODS> items)
+    public static String arbitrationMethodsToString(List<Arbitrator.METHOD> items)
     {
         String result = "";
         int i = 0;
-        for (Arbitrator.METHODS item : items)
+        for (Arbitrator.METHOD item : items)
         {
             result += Localisation.get(item.toString());
             i++;
@@ -156,11 +156,11 @@ public class BitSquareFormatter
         return result;
     }
 
-    public static String arbitrationIDVerificationsToString(List<Arbitrator.ID_VERIFICATIONS> items)
+    public static String arbitrationIDVerificationsToString(List<Arbitrator.ID_VERIFICATION> items)
     {
         String result = "";
         int i = 0;
-        for (Arbitrator.ID_VERIFICATIONS item : items)
+        for (Arbitrator.ID_VERIFICATION item : items)
         {
             result += Localisation.get(item.toString());
             i++;

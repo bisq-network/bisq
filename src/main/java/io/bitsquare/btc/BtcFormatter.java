@@ -19,7 +19,7 @@ public class BtcFormatter
     public static BigInteger mBTC = new BigInteger("100000");
 
 
-    public static String btcToString(BigInteger value)
+    public static String satoshiToString(BigInteger value)
     {
         return Utils.bitcoinValueToFriendlyString(value);
     }

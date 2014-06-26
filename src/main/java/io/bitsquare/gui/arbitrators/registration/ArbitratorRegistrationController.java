@@ -53,8 +53,8 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     private ArbitratorProfileController arbitratorProfileController;
     private boolean isEditMode;
     private List<Locale> languageList = new ArrayList<>();
-    private List<Arbitrator.METHODS> methodList = new ArrayList<>();
-    private List<Arbitrator.ID_VERIFICATIONS> idVerificationList = new ArrayList<>();
+    private List<Arbitrator.METHOD> methodList = new ArrayList<>();
+    private List<Arbitrator.ID_VERIFICATION> idVerificationList = new ArrayList<>();
     private Arbitrator.ID_TYPE idType;
     private ConfidenceDisplay confidenceDisplay;
 
@@ -73,9 +73,9 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     @FXML
     private ComboBox<Arbitrator.ID_TYPE> idTypeComboBox;
     @FXML
-    private ComboBox<Arbitrator.METHODS> methodsComboBox;
+    private ComboBox<Arbitrator.METHOD> methodsComboBox;
     @FXML
-    private ComboBox<Arbitrator.ID_VERIFICATIONS> idVerificationsComboBox;
+    private ComboBox<Arbitrator.ID_VERIFICATION> idVerificationsComboBox;
     @FXML
     private TextField nameTextField, idTypeTextField, languagesTextField, maxTradeVolumeTextField, passiveServiceFeeTextField, minPassiveServiceFeeTextField,
             arbitrationFeeTextField, minArbitrationFeeTextField, methodsTextField, idVerificationsTextField, webPageTextField, collateralAddressTextField, balanceTextField;
@@ -169,33 +169,33 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
             }
         });
 
-        methodsComboBox.setItems(FXCollections.observableArrayList(new ArrayList<>(EnumSet.allOf(Arbitrator.METHODS.class))));
-        methodsComboBox.setConverter(new StringConverter<Arbitrator.METHODS>()
+        methodsComboBox.setItems(FXCollections.observableArrayList(new ArrayList<>(EnumSet.allOf(Arbitrator.METHOD.class))));
+        methodsComboBox.setConverter(new StringConverter<Arbitrator.METHOD>()
         {
             @Override
-            public String toString(Arbitrator.METHODS item)
+            public String toString(Arbitrator.METHOD item)
             {
                 return Localisation.get(item.toString());
             }
 
             @Override
-            public Arbitrator.METHODS fromString(String s)
+            public Arbitrator.METHOD fromString(String s)
             {
                 return null;
             }
         });
 
-        idVerificationsComboBox.setItems(FXCollections.observableArrayList(new ArrayList<>(EnumSet.allOf(Arbitrator.ID_VERIFICATIONS.class))));
-        idVerificationsComboBox.setConverter(new StringConverter<Arbitrator.ID_VERIFICATIONS>()
+        idVerificationsComboBox.setItems(FXCollections.observableArrayList(new ArrayList<>(EnumSet.allOf(Arbitrator.ID_VERIFICATION.class))));
+        idVerificationsComboBox.setConverter(new StringConverter<Arbitrator.ID_VERIFICATION>()
         {
             @Override
-            public String toString(Arbitrator.ID_VERIFICATIONS item)
+            public String toString(Arbitrator.ID_VERIFICATION item)
             {
                 return Localisation.get(item.toString());
             }
 
             @Override
-            public Arbitrator.ID_VERIFICATIONS fromString(String s)
+            public Arbitrator.ID_VERIFICATION fromString(String s)
             {
                 return null;
             }
@@ -271,7 +271,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     @FXML
     public void onAddMethod(ActionEvent actionEvent)
     {
-        Arbitrator.METHODS item = methodsComboBox.getSelectionModel().getSelectedItem();
+        Arbitrator.METHOD item = methodsComboBox.getSelectionModel().getSelectedItem();
         if (!methodList.contains(item) && item != null)
         {
             methodList.add(item);
@@ -291,12 +291,12 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     @FXML
     public void onAddIDVerification(ActionEvent actionEvent)
     {
-        Arbitrator.ID_VERIFICATIONS item = idVerificationsComboBox.getSelectionModel().getSelectedItem();
-        if (item != null)
+        Arbitrator.ID_VERIFICATION idVerification = idVerificationsComboBox.getSelectionModel().getSelectedItem();
+        if (idVerification != null)
         {
-            if (!idVerificationList.contains(item))
+            if (!idVerificationList.contains(idVerification))
             {
-                idVerificationList.add(item);
+                idVerificationList.add(idVerification);
                 idVerificationsTextField.setText(BitSquareFormatter.arbitrationIDVerificationsToString(idVerificationList));
             }
         }
@@ -456,13 +456,8 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     {
         try
         {
-            TextField[] notEmptyTextFields = {nameTextField, idTypeTextField, languagesTextField, methodsTextField, idVerificationsTextField};
-            BitSquareValidator.resetTextFields(notEmptyTextFields);
-            BitSquareValidator.textFieldsNotEmpty(notEmptyTextFields);
-
-            TextField[] hasDoubleValueTextFields = {maxTradeVolumeTextField, passiveServiceFeeTextField, minPassiveServiceFeeTextField, arbitrationFeeTextField, minArbitrationFeeTextField};
-            BitSquareValidator.resetTextFields(hasDoubleValueTextFields);
-            BitSquareValidator.textFieldsHasDoubleValue(hasDoubleValueTextFields);
+            BitSquareValidator.textFieldsNotEmptyWithReset(nameTextField, idTypeTextField, languagesTextField, methodsTextField, idVerificationsTextField);
+            BitSquareValidator.textFieldsHasDoubleValueWithReset(maxTradeVolumeTextField, passiveServiceFeeTextField, minPassiveServiceFeeTextField, arbitrationFeeTextField, minArbitrationFeeTextField);
 
             String pubKeyAsHex = walletFacade.getArbitratorDepositAddressInfo().getPubKeyAsHexString();
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey());

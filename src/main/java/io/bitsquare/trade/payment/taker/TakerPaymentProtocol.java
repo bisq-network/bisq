@@ -381,8 +381,8 @@ public class TakerPaymentProtocol
         checkNotNull(preparedOffererDepositTxAsHex);
 
         log.debug("2.10 offererCreatesMSTxAndAddPayment");
-        log.debug("takerAmount     " + BtcFormatter.btcToString(takerInputAmount));
-        log.debug("msOutputAmount     " + BtcFormatter.btcToString(msOutputAmount));
+        log.debug("takerAmount     " + BtcFormatter.satoshiToString(takerInputAmount));
+        log.debug("msOutputAmount     " + BtcFormatter.satoshiToString(msOutputAmount));
         log.debug("offerer pubkey    " + offererPubKey);
         log.debug("taker pubkey      " + takerPubKey);
         log.debug("arbitrator pubkey " + arbitratorPubKey);

@@ -14,7 +14,7 @@ public class Arbitrator implements Serializable
         COMPANY
     }
 
-    public enum METHODS
+    public enum METHOD
     {
         TLS_NOTARY,
         SKYPE_SCREEN_SHARING,
@@ -24,7 +24,7 @@ public class Arbitrator implements Serializable
         OTHER
     }
 
-    public enum ID_VERIFICATIONS
+    public enum ID_VERIFICATION
     {
         PASSPORT,
         GOV_ID,
@@ -52,8 +52,8 @@ public class Arbitrator implements Serializable
     private double minPassiveServiceFee;
     private double arbitrationFee;
     private double minArbitrationFee;
-    private List<METHODS> arbitrationMethods;
-    private List<ID_VERIFICATIONS> idVerifications;
+    private List<METHOD> arbitrationMethods;
+    private List<ID_VERIFICATION> idVerifications;
     private String webUrl;
     private String description;
 
@@ -72,8 +72,8 @@ public class Arbitrator implements Serializable
                       double minPassiveServiceFee,
                       double arbitrationFee,
                       double minArbitrationFee,
-                      List<METHODS> arbitrationMethods,
-                      List<ID_VERIFICATIONS> idVerifications,
+                      List<METHOD> arbitrationMethods,
+                      List<ID_VERIFICATION> idVerifications,
                       String webUrl,
                       String description)
     {
@@ -199,12 +199,12 @@ public class Arbitrator implements Serializable
         return minArbitrationFee;
     }
 
-    public List<METHODS> getArbitrationMethods()
+    public List<METHOD> getArbitrationMethods()
     {
         return arbitrationMethods;
     }
 
-    public List<ID_VERIFICATIONS> getIdVerifications()
+    public List<ID_VERIFICATION> getIdVerifications()
     {
         return idVerifications;
     }

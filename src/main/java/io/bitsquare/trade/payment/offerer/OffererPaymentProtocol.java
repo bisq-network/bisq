@@ -226,7 +226,7 @@ public class OffererPaymentProtocol
         checkNotNull(arbitratorPubKey);
 
         log.debug("2.5 offererCreatesMSTxAndAddPayment");
-        log.debug("offererInputAmount     " + BtcFormatter.btcToString(offererInputAmount));
+        log.debug("offererInputAmount     " + BtcFormatter.satoshiToString(offererInputAmount));
         log.debug("offerer pubkey    " + offererPubKey);
         log.debug("taker pubkey      " + takerPubKey);
         log.debug("arbitrator pubkey " + arbitratorPubKey);

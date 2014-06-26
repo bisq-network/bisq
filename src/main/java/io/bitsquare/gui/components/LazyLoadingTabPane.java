@@ -2,6 +2,7 @@ package io.bitsquare.gui.components;
 
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ChildController;
+import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.storage.Storage;
@@ -90,10 +91,10 @@ public class LazyLoadingTabPane extends TabPane
     private void onTabSelectedIndexChanged()
     {
         int index = selectionModel.getSelectedIndex();
-        if (index < tabContentFXMLUrls.length && index > -1)
+        if (index < tabContentFXMLUrls.length && index >= 0)
         {
             if (childController != null)
-                childController.cleanup();
+                ((Hibernate) childController).sleep();
 
             Node view = null;
             if (index < views.size())
@@ -120,8 +121,12 @@ public class LazyLoadingTabPane extends TabPane
             }
 
             selectionModel.getSelectedItem().setContent(view);
-            childController.setNavigationController(navigationController);
 
+            if (childController != null)
+            {
+                childController.setNavigationController(navigationController);
+                ((Hibernate) childController).awake();
+            }
             storage.write(storageId, index);
         }
     }

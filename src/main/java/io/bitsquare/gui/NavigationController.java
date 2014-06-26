@@ -25,6 +25,9 @@ public interface NavigationController
     public static final String OFFER = "/io/bitsquare/gui/orders/offer/OfferView.fxml";
     public static final String PENDING_TRADE = "/io/bitsquare/gui/orders/pending/PendingTradeView.fxml";
 
+    public static final String DEPOSIT = "/io/bitsquare/gui/funds/deposit/DepositView.fxml";
+    public static final String WITHDRAWAL = "/io/bitsquare/gui/funds/withdrawal/WithdrawalView.fxml";
+
     ChildController navigateToView(String fxmlView);
 
     ChildController navigateToView(String fxmlView, String title);

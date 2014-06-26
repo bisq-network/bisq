@@ -166,7 +166,7 @@ public class TakerTradeController implements Initializable, ChildController
         totalLabel = FormBuilder.addTextField(gridPane, "Total (" + offer.getCurrency() + "):", BitSquareFormatter.formatVolume(getVolume()), ++row);
         collateralTextField = FormBuilder.addTextField(gridPane, "Collateral (BTC):", "", ++row);
         applyCollateral();
-        FormBuilder.addTextField(gridPane, "Offer fee (BTC):", BtcFormatter.btcToString(FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)), ++row);
+        FormBuilder.addTextField(gridPane, "Offer fee (BTC):", BtcFormatter.satoshiToString(FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)), ++row);
         totalToPayLabel = FormBuilder.addTextField(gridPane, "Total to pay (BTC):", getTotalToPayAsString(), ++row);
 
         isOnlineTextField = FormBuilder.addTextField(gridPane, "Online status:", "Checking offerers online status...", ++row);
@@ -369,12 +369,12 @@ public class TakerTradeController implements Initializable, ChildController
 
         String fiatReceived = BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount()));
 
-        FormBuilder.addTextField(gridPane, "You have sold (BTC):", BtcFormatter.btcToString(trade.getTradeAmount()), ++row);
+        FormBuilder.addTextField(gridPane, "You have sold (BTC):", BtcFormatter.satoshiToString(trade.getTradeAmount()), ++row);
         if (takerIsSelling())
         {
             FormBuilder.addTextField(gridPane, "You have received (" + offer.getCurrency() + "):\"", fiatReceived, ++row);
-            FormBuilder.addTextField(gridPane, "Total fees (take offer fee + tx fee):", BtcFormatter.btcToString(FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)), ++row);
-            FormBuilder.addTextField(gridPane, "Refunded collateral:", BtcFormatter.btcToString(trade.getCollateralAmount()), ++row);
+            FormBuilder.addTextField(gridPane, "Total fees (take offer fee + tx fee):", BtcFormatter.satoshiToString(FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)), ++row);
+            FormBuilder.addTextField(gridPane, "Refunded collateral:", BtcFormatter.satoshiToString(trade.getCollateralAmount()), ++row);
         }
         else
         {

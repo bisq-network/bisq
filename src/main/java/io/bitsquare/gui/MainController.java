@@ -125,9 +125,9 @@ public class MainController implements Initializable, NavigationController
 
         //homeButton.fire();
         //settingsButton.fire();
-        //fundsButton.fire();
+        fundsButton.fire();
         // sellButton.fire();
-        ordersButton.fire();
+        // ordersButton.fire();
         // homeButton.fire();
         // msgButton.fire();
 
@@ -325,31 +325,31 @@ public class MainController implements Initializable, NavigationController
         vBox.getChildren().setAll(hBox, titleLabel);
         parent.getChildren().add(vBox);
 
-        balanceTextField.setText(BtcFormatter.btcToString(walletFacade.getWalletBalance()));
+        balanceTextField.setText(BtcFormatter.satoshiToString(walletFacade.getWalletBalance()));
         walletFacade.getWallet().addEventListener(new WalletEventListener()
         {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
             {
-                balanceTextField.setText(BtcFormatter.btcToString(newBalance));
+                balanceTextField.setText(BtcFormatter.satoshiToString(newBalance));
             }
 
             @Override
             public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
             {
-                balanceTextField.setText(BtcFormatter.btcToString(walletFacade.getWallet().getBalance()));
+                balanceTextField.setText(BtcFormatter.satoshiToString(walletFacade.getWallet().getBalance()));
             }
 
             @Override
             public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
             {
-                balanceTextField.setText(BtcFormatter.btcToString(newBalance));
+                balanceTextField.setText(BtcFormatter.satoshiToString(newBalance));
             }
 
             @Override
             public void onReorganize(Wallet wallet)
             {
-                balanceTextField.setText(BtcFormatter.btcToString(walletFacade.getWallet().getBalance()));
+                balanceTextField.setText(BtcFormatter.satoshiToString(walletFacade.getWallet().getBalance()));
             }
 
             @Override

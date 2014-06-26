@@ -1,47 +1,25 @@
 package io.bitsquare.gui.funds;
 
 import com.google.inject.Inject;
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
-import io.bitsquare.gui.util.ConfidenceDisplay;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import io.bitsquare.gui.components.LazyLoadingTabPane;
+import io.bitsquare.storage.Storage;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
-import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
-import java.util.List;
 import java.util.ResourceBundle;
 
-public class FundsController implements Initializable, ChildController
+public class FundsController implements Initializable, ChildController, NavigationController
 {
     private static final Logger log = LoggerFactory.getLogger(FundsController.class);
-
-    private WalletFacade walletFacade;
-    private ConfidenceDisplay confidenceDisplay;
-    protected ObservableList<AddressListItem> addressList = FXCollections.observableArrayList();
+    private Storage storage;
 
     @FXML
-    private TableView addressesTable;
-    @FXML
-    private TableColumn<String, AddressListItem> labelColumn, addressColumn, balanceColumn, copyColumn, confidenceColumn;
-    @FXML
-    private Button addNewAddressButton;
-    @FXML
-    private TextField labelTextField;
+    private LazyLoadingTabPane tabPane;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -49,9 +27,9 @@ public class FundsController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FundsController(WalletFacade walletFacade)
+    public FundsController(Storage storage)
     {
-        this.walletFacade = walletFacade;
+        this.storage = storage;
     }
 
 
@@ -62,19 +40,7 @@ public class FundsController implements Initializable, ChildController
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
-        for (int i = 0; i < addressEntryList.size(); i++)
-        {
-            addressList.add(new AddressListItem(addressEntryList.get(i), walletFacade));
-        }
-
-        addressesTable.setItems(addressList);
-        addressesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        setLabelColumnCellFactory();
-        setBalanceColumnCellFactory();
-        setCopyColumnCellFactory();
-        setConfidenceColumnCellFactory();
+        tabPane.initialize(this, storage, NavigationController.DEPOSIT, NavigationController.WITHDRAWAL);
     }
 
 
@@ -90,177 +56,23 @@ public class FundsController implements Initializable, ChildController
     @Override
     public void cleanup()
     {
-        for (int i = 0; i < addressList.size(); i++)
-        {
-            addressList.get(i).cleanup();
-        }
+        tabPane.cleanup();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI handlers
+    // Interface implementation: NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @FXML
-    public void onAddNewTradeAddress(ActionEvent actionEvent)
+    @Override
+    public ChildController navigateToView(String fxmlView)
     {
-        addressList.add(new AddressListItem(walletFacade.getNewTradeAddressInfo(), walletFacade));
+        return navigateToView(fxmlView, "");
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void setLabelColumnCellFactory()
+    @Override
+    public ChildController navigateToView(String fxmlView, String title)
     {
-        labelColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        labelColumn.setCellFactory(new Callback<TableColumn<String, AddressListItem>, TableCell<String, AddressListItem>>()
-        {
-            @Override
-            public TableCell<String, AddressListItem> call(TableColumn<String, AddressListItem> column)
-            {
-                return new TableCell<String, AddressListItem>()
-                {
-                    Hyperlink hyperlink;
-
-                    @Override
-                    public void updateItem(final AddressListItem item, boolean empty)
-                    {
-                        super.updateItem(item, empty);
-
-                        if (item != null && !empty)
-                        {
-                            hyperlink = new Hyperlink(item.getLabel());
-                            hyperlink.setId("id-link");
-                            if (item.getAddressEntry().getTradeId() != null)
-                            {
-                                Tooltip tooltip = new Tooltip(item.getAddressEntry().getTradeId());
-                                Tooltip.install(hyperlink, tooltip);
-
-                                hyperlink.setOnAction(new EventHandler<ActionEvent>()
-                                {
-                                    @Override
-                                    public void handle(ActionEvent event)
-                                    {
-                                        log.info("Show trade details " + item.getAddressEntry().getTradeId());
-                                    }
-                                });
-                            }
-                            setGraphic(hyperlink);
-                        }
-                        else
-                        {
-                            setGraphic(null);
-                            setId(null);
-                        }
-                    }
-                };
-            }
-        });
-    }
-
-    private void setBalanceColumnCellFactory()
-    {
-        balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        balanceColumn.setCellFactory(new Callback<TableColumn<String, AddressListItem>, TableCell<String, AddressListItem>>()
-        {
-            @Override
-            public TableCell<String, AddressListItem> call(TableColumn<String, AddressListItem> column)
-            {
-                return new TableCell<String, AddressListItem>()
-                {
-                    @Override
-                    public void updateItem(final AddressListItem item, boolean empty)
-                    {
-                        super.updateItem(item, empty);
-
-                        if (item != null && !empty)
-                        {
-                            setGraphic(item.getBalanceLabel());
-                        }
-                        else
-                        {
-                            setGraphic(null);
-                        }
-                    }
-                };
-            }
-        });
-    }
-
-    private void setCopyColumnCellFactory()
-    {
-        copyColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        copyColumn.setCellFactory(new Callback<TableColumn<String, AddressListItem>, TableCell<String, AddressListItem>>()
-        {
-            @Override
-            public TableCell<String, AddressListItem> call(TableColumn<String, AddressListItem> column)
-            {
-                return new TableCell<String, AddressListItem>()
-                {
-                    Label copyIcon = new Label();
-
-                    {
-                        copyIcon.getStyleClass().add("copy-icon");
-                        AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
-                        Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
-                    }
-
-                    @Override
-                    public void updateItem(final AddressListItem item, boolean empty)
-                    {
-                        super.updateItem(item, empty);
-
-                        if (item != null && !empty)
-                        {
-                            setGraphic(copyIcon);
-                            copyIcon.setOnMouseClicked(e -> {
-                                Clipboard clipboard = Clipboard.getSystemClipboard();
-                                ClipboardContent content = new ClipboardContent();
-                                content.putString(item.addressStringProperty().get());
-                                clipboard.setContent(content);
-                            });
-
-                        }
-                        else
-                        {
-                            setGraphic(null);
-                        }
-                    }
-                };
-            }
-        });
-    }
-
-    private void setConfidenceColumnCellFactory()
-    {
-        confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        confidenceColumn.setCellFactory(new Callback<TableColumn<String, AddressListItem>, TableCell<String, AddressListItem>>()
-        {
-            @Override
-            public TableCell<String, AddressListItem> call(TableColumn<String, AddressListItem> column)
-            {
-                return new TableCell<String, AddressListItem>()
-                {
-
-                    @Override
-                    public void updateItem(final AddressListItem item, boolean empty)
-                    {
-                        super.updateItem(item, empty);
-
-                        if (item != null && !empty)
-                        {
-                            setGraphic(item.getProgressIndicator());
-                        }
-                        else
-                        {
-                            setGraphic(null);
-                        }
-                    }
-                };
-            }
-        });
+        return tabPane.navigateToView(fxmlView);
     }
 
 }

@@ -140,7 +140,7 @@ public class CreateOfferController implements Initializable, ChildController
         bankAccountCountyTextField.setText(user.getCurrentBankAccount().getCountry().getName());
         acceptedCountriesTextField.setText(BitSquareFormatter.countryLocalesToString(settings.getAcceptedCountries()));
         acceptedLanguagesTextField.setText(BitSquareFormatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
-        feeLabel.setText(BtcFormatter.btcToString(FeePolicy.CREATE_OFFER_FEE));
+        feeLabel.setText(BtcFormatter.satoshiToString(FeePolicy.CREATE_OFFER_FEE));
     }
 
 
@@ -229,7 +229,7 @@ public class CreateOfferController implements Initializable, ChildController
             placeOfferButton.setDisable(true);
         } catch (InsufficientMoneyException e1)
         {
-            Popups.openErrorPopup("Not enough money available", "There is not enough money available. Please pay in first to your wallet. " + e1.getMessage());
+            Popups.openInsufficientMoneyPopup();
         }
     }
 

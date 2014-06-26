@@ -206,7 +206,7 @@ public class ConfidenceDisplay
         }
 
         if (balanceTextField != null)
-            balanceTextField.setText(BtcFormatter.btcToString(balance));
+            balanceTextField.setText(BtcFormatter.satoshiToString(balance));
     }
 
     private void updateConfidence(Transaction tx)

@@ -256,7 +256,7 @@ public class OrderBookController implements Initializable, ChildController
                 }
                 else
                 {
-                    Action response = Popups.openErrorPopup("Missing registration fee", "You have not funded the full registration fee of " + BtcFormatter.btcToString(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
+                    Action response = Popups.openErrorPopup("Missing registration fee", "You have not funded the full registration fee of " + BtcFormatter.satoshiToString(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
                     if (response == Dialog.Actions.OK)
                     {
                         MainController.getInstance().navigateToView(NavigationController.FUNDS);
@@ -321,7 +321,7 @@ public class OrderBookController implements Initializable, ChildController
             storage.write(user.getClass().getName(), user);
         } catch (InsufficientMoneyException e1)
         {
-            Popups.openErrorPopup("Not enough money available", "There is not enough money available. Please pay in first to your wallet.");
+            Popups.openInsufficientMoneyPopup();
         }
     }
 

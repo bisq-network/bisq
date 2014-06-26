@@ -16,7 +16,13 @@ public class BitSquareValidator
     {
     }
 
-    public static void resetTextFields(TextField[] textFields)
+    public static void textFieldsNotEmptyWithReset(TextField... textFields) throws ValidationException
+    {
+        resetTextFields(textFields);
+        textFieldsNotEmpty(textFields);
+    }
+
+    public static void resetTextFields(TextField... textFields)
     {
         for (int i = 0; i < textFields.length; i++)
         {
@@ -26,7 +32,7 @@ public class BitSquareValidator
         }
     }
 
-    public static void textFieldsNotEmpty(TextField[] textFields) throws ValidationException
+    public static void textFieldsNotEmpty(TextField... textFields) throws ValidationException
     {
         for (int i = 0; i < textFields.length; i++)
         {
@@ -45,8 +51,13 @@ public class BitSquareValidator
         }
     }
 
+    public static void textFieldsHasDoubleValueWithReset(TextField... textFields) throws ValidationException
+    {
+        resetTextFields(textFields);
+        textFieldsHasDoubleValue(textFields);
+    }
 
-    public static void textFieldsHasDoubleValue(TextField[] textFields) throws ValidationException
+    public static void textFieldsHasDoubleValue(TextField... textFields) throws ValidationException
     {
         for (int i = 0; i < textFields.length; i++)
         {
@@ -87,7 +98,7 @@ public class BitSquareValidator
         }
     }
 
-    public static boolean validateStringsAsDouble(String[] inputs)
+    public static boolean validateStringsAsDouble(String... inputs)
     {
         boolean result = true;
         for (int i = 0; i < inputs.length; i++)
@@ -111,7 +122,7 @@ public class BitSquareValidator
         }
     }
 
-    public static boolean validateStringsNotEmpty(String[] inputs)
+    public static boolean validateStringsNotEmpty(String... inputs)
     {
         boolean result = true;
         for (int i = 0; i < inputs.length; i++)

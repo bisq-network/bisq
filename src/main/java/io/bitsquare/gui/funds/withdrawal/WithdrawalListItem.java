@@ -1,4 +1,4 @@
-package io.bitsquare.gui.funds;
+package io.bitsquare.gui.funds.withdrawal;
 
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.TransactionConfidence;
@@ -15,7 +15,7 @@ import javafx.scene.control.Tooltip;
 
 import java.math.BigInteger;
 
-public class AddressListItem
+public class WithdrawalListItem
 {
     private final StringProperty addressString = new SimpleStringProperty();
     private final BalanceListener balanceListener;
@@ -25,13 +25,15 @@ public class AddressListItem
     private ConfidenceListener confidenceListener;
     private ConfidenceProgressIndicator progressIndicator;
     private Tooltip tooltip;
+    private BigInteger balance;
 
-    public AddressListItem(AddressEntry addressEntry, WalletFacade walletFacade)
+    public WithdrawalListItem(AddressEntry addressEntry, WalletFacade walletFacade)
     {
         this.addressEntry = addressEntry;
         this.walletFacade = walletFacade;
         this.addressString.set(getAddress().toString());
 
+        // confidence
         progressIndicator = new ConfidenceProgressIndicator();
         progressIndicator.setId("funds-confidence");
         tooltip = new Tooltip("Not used yet");
@@ -52,9 +54,9 @@ public class AddressListItem
         updateConfidence(walletFacade.getConfidenceForAddress(getAddress()));
 
 
-        balanceListener = new BalanceListener(getAddress());
+        // balance
         balanceLabel = new Label();
-        walletFacade.addBalanceListener(new BalanceListener(getAddress())
+        balanceListener = walletFacade.addBalanceListener(new BalanceListener(getAddress())
         {
             @Override
             public void onBalanceChanged(BigInteger balance)
@@ -74,9 +76,10 @@ public class AddressListItem
 
     private void updateBalance(BigInteger balance)
     {
+        this.balance = balance;
         if (balance != null)
         {
-            balanceLabel.setText(BtcFormatter.btcToString(balance));
+            balanceLabel.setText(BtcFormatter.satoshiToString(balance));
         }
     }
 
@@ -131,7 +134,6 @@ public class AddressListItem
         return this.addressString;
     }
 
-
     public Address getAddress()
     {
         return addressEntry.getAddress();
@@ -142,28 +144,18 @@ public class AddressListItem
         return addressEntry;
     }
 
-    public ConfidenceListener getConfidenceListener()
-    {
-        return confidenceListener;
-    }
-
     public ConfidenceProgressIndicator getProgressIndicator()
     {
         return progressIndicator;
     }
 
-    public Tooltip getTooltip()
-    {
-        return tooltip;
-    }
-
-    public BalanceListener getBalanceListener()
-    {
-        return balanceListener;
-    }
-
     public Label getBalanceLabel()
     {
         return balanceLabel;
+    }
+
+    public BigInteger getBalance()
+    {
+        return balance;
     }
 }

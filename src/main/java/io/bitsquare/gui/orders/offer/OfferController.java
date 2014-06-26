@@ -134,11 +134,11 @@ public class OfferController implements Initializable, ChildController
                     {
                         super.updateItem(item, empty);
 
-                        if (item != null)
+                        if (item != null && !empty)
                         {
                             hyperlink = new Hyperlink(item.getOfferId());
                             //hyperlink.getStyleClass().setAll("aaa");
-                            if (item != null)
+                            if (item != null && !empty)
                             {
                                 Tooltip tooltip = new Tooltip(item.getOfferId());
                                 Tooltip.install(hyperlink, tooltip);

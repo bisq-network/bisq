@@ -31,6 +31,8 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class WalletFacade
 {
@@ -131,8 +133,6 @@ public class WalletFacade
             @Override
             public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
             {
-                log.debug("onTransactionConfidenceChanged " + tx.getConfidence());
-                log.debug("onTransactionConfidenceChanged " + tx);
                 notifyConfidenceListeners(tx);
             }
 
@@ -205,9 +205,10 @@ public class WalletFacade
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addDownloadListener(DownloadListener listener)
+    public DownloadListener addDownloadListener(DownloadListener listener)
     {
         downloadListeners.add(listener);
+        return listener;
     }
 
     public void removeDownloadListener(DownloadListener listener)
@@ -217,69 +218,24 @@ public class WalletFacade
 
     public ConfidenceListener addConfidenceListener(ConfidenceListener listener)
     {
-        log.debug("addConfidenceListener " + listener.getAddress().toString());
         confidenceListeners.add(listener);
         return listener;
     }
 
     public void removeConfidenceListener(ConfidenceListener listener)
     {
-        log.debug("removeConfidenceListener " + listener.getAddress().toString());
         confidenceListeners.remove(listener);
     }
 
-    public void addBalanceListener(BalanceListener listener)
+    public BalanceListener addBalanceListener(BalanceListener listener)
     {
         balanceListeners.add(listener);
+        return listener;
     }
 
     public void removeBalanceListener(BalanceListener listener)
     {
         balanceListeners.remove(listener);
-    }
-
-    private void notifyConfidenceListeners(Transaction tx)
-    {
-        for (int i = 0; i < confidenceListeners.size(); i++)
-        {
-            ConfidenceListener confidenceListener = confidenceListeners.get(i);
-            List<TransactionOutput> transactionOutputs = tx.getOutputs();
-            for (int n = 0; n < transactionOutputs.size(); n++)
-            {
-                TransactionOutput transactionOutput = transactionOutputs.get(n);
-                if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
-                {
-                    Address address = transactionOutput.getScriptPubKey().getToAddress(params);
-                    if (address.equals(confidenceListener.getAddress()))
-                    {
-                        log.debug("notifyConfidenceListeners address " + address.toString() + " / " + tx.getConfidence());
-                        confidenceListener.onTransactionConfidenceChanged(tx.getConfidence());
-                    }
-
-                }
-            }
-        }
-    }
-
-    private void notifyBalanceListeners(Transaction tx)
-    {
-        for (int i = 0; i < balanceListeners.size(); i++)
-        {
-            BalanceListener balanceListener = balanceListeners.get(i);
-            List<TransactionOutput> transactionOutputs = tx.getOutputs();
-            for (int n = 0; n < transactionOutputs.size(); n++)
-            {
-                TransactionOutput transactionOutput = transactionOutputs.get(n);
-                if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
-                {
-                    Address address = transactionOutput.getScriptPubKey().getToAddress(params);
-                    if (address.equals(balanceListener.getAddress()))
-                    {
-                        balanceListener.onBalanceChanged(getBalanceForAddress(address));
-                    }
-                }
-            }
-        }
     }
 
 
@@ -386,38 +342,94 @@ public class WalletFacade
 
     public TransactionConfidence getConfidenceForAddress(Address address)
     {
+        List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
         Set<Transaction> transactions = wallet.getTransactions(true);
         if (transactions != null)
         {
             for (Transaction tx : transactions)
             {
-                List<TransactionOutput> transactionOutputs = tx.getOutputs();
-                for (int n = 0; n < transactionOutputs.size(); n++)
-                {
-                    TransactionOutput transactionOutput = transactionOutputs.get(n);
-                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
-                    {
-                        Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-                        //log.debug("addressOutput / address " + addressOutput.toString() + " / " + address.toString());
-                        if (addressOutput.equals(address))
-                        {
-                            return tx.getConfidence();
-                        }
-                    }
-                }
-
-
+                transactionConfidenceList.add(getTransactionConfidence(tx, address));
             }
         }
-        return null;
+        return getMostRecentConfidence(transactionConfidenceList);
     }
+
+    private void notifyConfidenceListeners(Transaction tx)
+    {
+        for (int i = 0; i < confidenceListeners.size(); i++)
+        {
+            List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
+            ConfidenceListener confidenceListener = confidenceListeners.get(i);
+            transactionConfidenceList.add(getTransactionConfidence(tx, confidenceListener.getAddress()));
+
+            TransactionConfidence transactionConfidence = getMostRecentConfidence(transactionConfidenceList);
+            confidenceListener.onTransactionConfidenceChanged(transactionConfidence);
+        }
+    }
+
+    private TransactionConfidence getTransactionConfidence(Transaction tx, Address address)
+    {
+        List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
+        List<TransactionOutput> transactionOutputs = tx.getOutputs();
+        List<TransactionOutput> connectedOutputs = new ArrayList<>();
+
+        // add all connected outputs from any inputs as well
+        List<TransactionInput> transactionInputs = tx.getInputs();
+        for (int i = 0; i < transactionInputs.size(); i++)
+        {
+            TransactionInput transactionInput = transactionInputs.get(i);
+            TransactionOutput transactionOutput = transactionInput.getConnectedOutput();
+            if (transactionOutput != null)
+                connectedOutputs.add(transactionOutput);
+        }
+
+        List<TransactionOutput> mergedOutputs = new ArrayList<>();
+        mergedOutputs.addAll(transactionOutputs);
+        mergedOutputs.addAll(connectedOutputs);
+
+        for (int i = 0; i < mergedOutputs.size(); i++)
+        {
+            TransactionOutput transactionOutput = mergedOutputs.get(i);
+            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
+            {
+                Address outputAddress = transactionOutput.getScriptPubKey().getToAddress(params);
+                if (address.equals(outputAddress))
+                {
+                    transactionConfidenceList.add(tx.getConfidence());
+                }
+            }
+        }
+        return getMostRecentConfidence(transactionConfidenceList);
+    }
+
+    private TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList)
+    {
+        TransactionConfidence transactionConfidence = null;
+        for (int i = 0; i < transactionConfidenceList.size(); i++)
+        {
+            TransactionConfidence confidence = transactionConfidenceList.get(i);
+            if (confidence != null)
+            {
+                if (transactionConfidence == null ||
+                        confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.PENDING) ||
+                        (confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING) &&
+                                transactionConfidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING) &&
+                                confidence.getDepthInBlocks() < transactionConfidence.getDepthInBlocks()))
+                {
+                    transactionConfidence = confidence;
+                }
+            }
+
+        }
+        return transactionConfidence;
+    }
+
 
     public boolean isRegistrationFeeConfirmed()
     {
         TransactionConfidence transactionConfidence = getConfidenceForAddress(getRegistrationAddressInfo().getAddress());
         return transactionConfidence != null && transactionConfidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Balance
@@ -439,6 +451,46 @@ public class WalletFacade
             }
         }
         return value;
+    }
+
+    private void notifyBalanceListeners(Transaction tx)
+    {
+        for (int i = 0; i < balanceListeners.size(); i++)
+        {
+            BalanceListener balanceListener = balanceListeners.get(i);
+            List<TransactionOutput> transactionOutputs = tx.getOutputs();
+            for (int n = 0; n < transactionOutputs.size(); n++)
+            {
+                TransactionOutput transactionOutput = transactionOutputs.get(n);
+                if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
+                {
+                    Address address = transactionOutput.getScriptPubKey().getToAddress(params);
+                    log.debug("notifyBalanceListeners transactionOutput address/balanceListener.getAddress() " + address.toString() + " / " + balanceListener.getAddress().toString());
+
+                    if (address.equals(balanceListener.getAddress()))
+                    {
+                        balanceListener.onBalanceChanged(getBalanceForAddress(address));
+                    }
+                }
+            }
+
+            List<TransactionInput> transactionInputs = tx.getInputs();
+            for (int n = 0; n < transactionInputs.size(); n++)
+            {
+                TransactionInput transactionInput = transactionInputs.get(n);
+                TransactionOutput transactionOutput = transactionInput.getConnectedOutput();
+                log.debug("notifyBalanceListeners transactionInput.getConnectedOutput() " + transactionInput.getConnectedOutput());
+                if (transactionOutput != null && (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH()))
+                {
+                    Address address = transactionOutput.getScriptPubKey().getToAddress(params);
+                    log.debug("notifyBalanceListeners transactionInput address/balanceListener.getAddress() " + address.toString() + " / " + balanceListener.getAddress().toString());
+                    if (address.equals(balanceListener.getAddress()))
+                    {
+                        balanceListener.onBalanceChanged(getBalanceForAddress(address));
+                    }
+                }
+            }
+        }
     }
 
     public BigInteger getWalletBalance()
@@ -509,7 +561,7 @@ public class WalletFacade
         tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 
         BigInteger fee = FeePolicy.ACCOUNT_REGISTRATION_FEE.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(FeePolicy.TX_FEE);
-        log.trace("fee: " + BtcFormatter.btcToString(fee));
+        log.trace("fee: " + BtcFormatter.satoshiToString(fee));
         tx.addOutput(fee, feePolicy.getAddressForRegistrationFee());
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
@@ -527,7 +579,7 @@ public class WalletFacade
     {
         Transaction tx = new Transaction(params);
         BigInteger fee = FeePolicy.CREATE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
-        log.trace("fee: " + BtcFormatter.btcToString(fee));
+        log.trace("fee: " + BtcFormatter.satoshiToString(fee));
         tx.addOutput(fee, feePolicy.getAddressForCreateOfferFee());
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
@@ -547,7 +599,7 @@ public class WalletFacade
     {
         Transaction tx = new Transaction(params);
         BigInteger fee = FeePolicy.TAKE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
-        log.trace("fee: " + BtcFormatter.btcToString(fee));
+        log.trace("fee: " + BtcFormatter.satoshiToString(fee));
         tx.addOutput(fee, feePolicy.getAddressForTakeOfferFee());
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
@@ -565,6 +617,33 @@ public class WalletFacade
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Withdrawal
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String sendFunds(AddressEntry withdrawFromAddressEntry, String withdrawToAddress, BigInteger amount, FutureCallback<Transaction> callback) throws AddressFormatException, InsufficientMoneyException, IllegalArgumentException
+    {
+        checkNotNull(withdrawFromAddressEntry);
+        checkArgument(withdrawToAddress.length() > 0);
+        checkArgument(amount.compareTo(FeePolicy.TX_FEE) > 0);
+
+        Transaction tx = new Transaction(params);
+        tx.addOutput(amount.subtract(FeePolicy.TX_FEE), new Address(params, withdrawToAddress));
+
+        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+        // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, withdrawFromAddressEntry, true);
+        sendRequest.changeAddress = withdrawFromAddressEntry.getAddress();
+        Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
+        Futures.addCallback(sendResult.broadcastComplete, callback);
+
+        printInputs("sendFunds", tx);
+        log.debug("tx=" + tx.toString());
+
+        return tx.getHashAsString();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Trade process
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -574,7 +653,7 @@ public class WalletFacade
     {
         log.debug("offererCreatesMSTxAndAddPayment");
         log.trace("inputs: ");
-        log.trace("offererInputAmount=" + BtcFormatter.btcToString(offererInputAmount));
+        log.trace("offererInputAmount=" + BtcFormatter.satoshiToString(offererInputAmount));
         log.trace("offererPubKey=" + offererPubKey);
         log.trace("takerPubKey=" + takerPubKey);
         log.trace("arbitratorPubKey=" + arbitratorPubKey);
@@ -631,8 +710,8 @@ public class WalletFacade
     {
         log.debug("takerAddPaymentAndSignTx");
         log.trace("inputs: ");
-        log.trace("takerInputAmount=" + BtcFormatter.btcToString(takerInputAmount));
-        log.trace("msOutputAmount=" + BtcFormatter.btcToString(msOutputAmount));
+        log.trace("takerInputAmount=" + BtcFormatter.satoshiToString(takerInputAmount));
+        log.trace("msOutputAmount=" + BtcFormatter.satoshiToString(msOutputAmount));
         log.trace("offererPubKey=" + offererPubKey);
         log.trace("takerPubKey=" + takerPubKey);
         log.trace("arbitratorPubKey=" + arbitratorPubKey);
@@ -880,8 +959,8 @@ public class WalletFacade
         log.debug("offererCreatesAndSignsPayoutTx");
         log.trace("inputs: ");
         log.trace("depositTxID=" + depositTxID);
-        log.trace("offererPaybackAmount=" + BtcFormatter.btcToString(offererPaybackAmount));
-        log.trace("takerPaybackAmount=" + BtcFormatter.btcToString(takerPaybackAmount));
+        log.trace("offererPaybackAmount=" + BtcFormatter.satoshiToString(offererPaybackAmount));
+        log.trace("takerPaybackAmount=" + BtcFormatter.satoshiToString(takerPaybackAmount));
         log.trace("takerAddress=" + takerAddress);
 
         // Offerer has published depositTx earlier, so he has it in his wallet
@@ -920,8 +999,8 @@ public class WalletFacade
         log.trace("depositTxAsHex=" + depositTxAsHex);
         log.trace("offererSignatureR=" + offererSignatureR);
         log.trace("offererSignatureS=" + offererSignatureS);
-        log.trace("offererPaybackAmount=" + BtcFormatter.btcToString(offererPaybackAmount));
-        log.trace("takerPaybackAmount=" + BtcFormatter.btcToString(takerPaybackAmount));
+        log.trace("offererPaybackAmount=" + BtcFormatter.satoshiToString(offererPaybackAmount));
+        log.trace("takerPaybackAmount=" + BtcFormatter.satoshiToString(takerPaybackAmount));
         log.trace("offererAddress=" + offererAddress);
         log.trace("callback=" + callback.toString());
 
@@ -986,8 +1065,8 @@ public class WalletFacade
         log.trace("createPayoutTx");
         log.trace("inputs: ");
         log.trace("depositTxAsHex=" + depositTxAsHex);
-        log.trace("offererPaybackAmount=" + BtcFormatter.btcToString(offererPaybackAmount));
-        log.trace("takerPaybackAmount=" + BtcFormatter.btcToString(takerPaybackAmount));
+        log.trace("offererPaybackAmount=" + BtcFormatter.satoshiToString(offererPaybackAmount));
+        log.trace("takerPaybackAmount=" + BtcFormatter.satoshiToString(takerPaybackAmount));
         log.trace("offererAddress=" + offererAddress);
         log.trace("takerAddress=" + takerAddress);
 
@@ -1005,7 +1084,7 @@ public class WalletFacade
     {
         for (TransactionInput input : tx.getInputs())
             if (input.getConnectedOutput() != null)
-                log.trace(tracePrefix + ": " + BtcFormatter.btcToString(input.getConnectedOutput().getValue()));
+                log.trace(tracePrefix + ": " + BtcFormatter.satoshiToString(input.getConnectedOutput().getValue()));
             else
                 log.trace(tracePrefix + ": " + "Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
     }
