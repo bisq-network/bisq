@@ -95,15 +95,22 @@ public class OfferController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    private void removeOffer(Offer offer)
+    private void removeOffer(OfferListItem offerListItem)
     {
         try
         {
-            trading.removeOffer(offer);
+            trading.removeOffer(offerListItem.getOffer());
+
         } catch (IOException e)
         {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
+        offerListItems.remove(offerListItem);
+    }
+
+    private void openOfferDetails(OfferListItem offerListItem)
+    {
+
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -140,18 +147,9 @@ public class OfferController implements Initializable, ChildController
                                     @Override
                                     public void handle(ActionEvent event)
                                     {
-                                        log.info("Show offer details " + item.getOfferId());
+                                        openOfferDetails(item);
                                     }
                                 });
-
-                               /* hyperlink.setOnMouseEntered(new EventHandler<MouseEvent>()
-                                {
-                                    @Override
-                                    public void handle(MouseEvent event)
-                                    {
-                                        log.info("Show offer details " + item.getOfferId());
-                                    }
-                                });  */
                             }
                             setGraphic(hyperlink);
                         }
@@ -192,7 +190,7 @@ public class OfferController implements Initializable, ChildController
 
                         if (offerListItem != null)
                         {
-                            button.setOnAction(event -> removeOffer(offerListItem.getOffer()));
+                            button.setOnAction(event -> removeOffer(offerListItem));
                             setGraphic(button);
                         }
                         else

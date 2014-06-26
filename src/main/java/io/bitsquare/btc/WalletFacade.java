@@ -42,6 +42,7 @@ public class WalletFacade
 
     private static final Logger log = LoggerFactory.getLogger(WalletFacade.class);
 
+    private String saveAddressEntryListId;
     private NetworkParameters params;
     private BitSquareWalletAppKit walletAppKit;
     private FeePolicy feePolicy;
@@ -163,7 +164,8 @@ public class WalletFacade
         };
         wallet.addEventListener(walletEventListener);
 
-        List<AddressEntry> savedAddressEntryList = (List<AddressEntry>) storage.read("addressInfoList");
+        saveAddressEntryListId = this.getClass().getName() + ".addressEntryList";
+        List<AddressEntry> savedAddressEntryList = (List<AddressEntry>) storage.read(saveAddressEntryListId);
         if (savedAddressEntryList != null)
         {
             addressEntryList = savedAddressEntryList;
@@ -195,7 +197,7 @@ public class WalletFacade
     private void saveAddressInfoList()
     {
         // use wallet extension?
-        storage.write("addressInfoList", addressEntryList);
+        storage.write(saveAddressEntryListId, addressEntryList);
     }
 
 
@@ -213,13 +215,16 @@ public class WalletFacade
         downloadListeners.remove(listener);
     }
 
-    public void addConfidenceListener(ConfidenceListener listener)
+    public ConfidenceListener addConfidenceListener(ConfidenceListener listener)
     {
+        log.debug("addConfidenceListener " + listener.getAddress().toString());
         confidenceListeners.add(listener);
+        return listener;
     }
 
     public void removeConfidenceListener(ConfidenceListener listener)
     {
+        log.debug("removeConfidenceListener " + listener.getAddress().toString());
         confidenceListeners.remove(listener);
     }
 
@@ -303,44 +308,36 @@ public class WalletFacade
 
     public AddressEntry getUnusedTradeAddressInfo()
     {
-        if (addressEntryList != null)
+        List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(addressEntryList, new Predicate<AddressEntry>()
         {
-            List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(addressEntryList, new Predicate<AddressEntry>()
+            @Override
+            public boolean apply(@Nullable AddressEntry addressInfo)
             {
-                @Override
-                public boolean apply(@Nullable AddressEntry addressInfo)
-                {
-                    return (addressInfo != null && addressInfo.getAddressContext().equals(AddressEntry.AddressContext.TRADE) && addressInfo.getTradeId() == null);
-                }
-            }));
+                return (addressInfo != null && addressInfo.getAddressContext().equals(AddressEntry.AddressContext.TRADE) && addressInfo.getTradeId() == null);
+            }
+        }));
 
-            if (filteredList != null && filteredList.size() > 0)
-                return filteredList.get(0);
-            else
-                return getNewTradeAddressInfo();
-        }
-        return getNewTradeAddressInfo();
+        if (filteredList != null && filteredList.size() > 0)
+            return filteredList.get(0);
+        else
+            return getNewTradeAddressInfo();
     }
 
     private AddressEntry getAddressInfoByAddressContext(AddressEntry.AddressContext addressContext)
     {
-        if (addressEntryList != null)
+        List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(addressEntryList, new Predicate<AddressEntry>()
         {
-            List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(addressEntryList, new Predicate<AddressEntry>()
+            @Override
+            public boolean apply(@Nullable AddressEntry addressInfo)
             {
-                @Override
-                public boolean apply(@Nullable AddressEntry addressInfo)
-                {
-                    return (addressInfo != null && addressContext != null && addressInfo.getAddressContext() != null && addressInfo.getAddressContext().equals(addressContext));
-                }
-            }));
+                return (addressInfo != null && addressContext != null && addressInfo.getAddressContext() != null && addressInfo.getAddressContext().equals(addressContext));
+            }
+        }));
 
-            if (filteredList != null && filteredList.size() > 0)
-                return filteredList.get(0);
-            else
-                return null;
-        }
-        return null;
+        if (filteredList != null && filteredList.size() > 0)
+            return filteredList.get(0);
+        else
+            return null;
     }
 
     public AddressEntry getAddressInfoByTradeID(String tradeId)
@@ -370,6 +367,7 @@ public class WalletFacade
     {
         ECKey key = new ECKey();
         wallet.addKey(key);
+        wallet.addWatchedAddress(key.toAddress(params));
         AddressEntry addressEntry = new AddressEntry(key, params, addressContext);
         addressEntryList.add(addressEntry);
         saveAddressInfoList();

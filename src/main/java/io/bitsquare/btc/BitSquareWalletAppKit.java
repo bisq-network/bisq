@@ -60,6 +60,9 @@ public class BitSquareWalletAppKit extends WalletAppKit
             }
             vChain = new BlockChain(params, vStore);
             vPeerGroup = createPeerGroup();
+
+            vPeerGroup.setBloomFilterFalsePositiveRate(0.001);  // 0,1% instead of default 0,05%
+
             if (this.userAgent != null)
                 vPeerGroup.setUserAgent(userAgent, version);
             if (vWalletFile.exists())

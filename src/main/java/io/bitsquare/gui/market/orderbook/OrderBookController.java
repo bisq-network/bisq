@@ -219,7 +219,6 @@ public class OrderBookController implements Initializable, ChildController
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     private boolean isRegistered()
     {
         return user.getAccountID() != null;

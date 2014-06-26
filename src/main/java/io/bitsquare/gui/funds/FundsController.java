@@ -1,17 +1,12 @@
 package io.bitsquare.gui.funds;
 
-import com.google.bitcoin.core.TransactionConfidence;
 import com.google.inject.Inject;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
-import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.ConfidenceDisplay;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
@@ -27,7 +22,6 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -68,21 +62,19 @@ public class FundsController implements Initializable, ChildController
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        setLabelColumnCellFactory();
-        setBalanceColumnCellFactory();
-        setCopyColumnCellFactory();
-        setConfidenceColumnCellFactory();
-
         List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
-
         for (int i = 0; i < addressEntryList.size(); i++)
         {
-            AddressEntry addressEntry = addressEntryList.get(i);
-            addressList.add(new AddressListItem(addressEntry));
+            addressList.add(new AddressListItem(addressEntryList.get(i), walletFacade));
         }
 
         addressesTable.setItems(addressList);
         addressesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        setLabelColumnCellFactory();
+        setBalanceColumnCellFactory();
+        setCopyColumnCellFactory();
+        setConfidenceColumnCellFactory();
     }
 
 
@@ -98,6 +90,10 @@ public class FundsController implements Initializable, ChildController
     @Override
     public void cleanup()
     {
+        for (int i = 0; i < addressList.size(); i++)
+        {
+            addressList.get(i).cleanup();
+        }
     }
 
 
@@ -108,8 +104,7 @@ public class FundsController implements Initializable, ChildController
     @FXML
     public void onAddNewTradeAddress(ActionEvent actionEvent)
     {
-        AddressEntry addressEntry = walletFacade.getNewTradeAddressInfo();
-        addressList.add(new AddressListItem(addressEntry));
+        addressList.add(new AddressListItem(walletFacade.getNewTradeAddressInfo(), walletFacade));
     }
 
 
@@ -134,7 +129,7 @@ public class FundsController implements Initializable, ChildController
                     {
                         super.updateItem(item, empty);
 
-                        if (item != null)
+                        if (item != null && !empty)
                         {
                             hyperlink = new Hyperlink(item.getLabel());
                             hyperlink.setId("id-link");
@@ -175,35 +170,17 @@ public class FundsController implements Initializable, ChildController
             {
                 return new TableCell<String, AddressListItem>()
                 {
-                    Label balanceLabel;
-                    BalanceListener balanceListener;
-
                     @Override
                     public void updateItem(final AddressListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
 
-                        if (item != null)
+                        if (item != null && !empty)
                         {
-                            balanceListener = new BalanceListener(item.getAddress());
-                            balanceLabel = new Label();
-                            walletFacade.addBalanceListener(new BalanceListener(item.getAddress())
-                            {
-                                @Override
-                                public void onBalanceChanged(BigInteger balance)
-                                {
-                                    updateBalance(balance, balanceLabel);
-                                }
-                            });
-
-                            updateBalance(walletFacade.getBalanceForAddress(item.getAddress()), balanceLabel);
-                            setGraphic(balanceLabel);
+                            setGraphic(item.getBalanceLabel());
                         }
                         else
                         {
-                            if (balanceListener != null)
-                                walletFacade.removeBalanceListener(balanceListener);
-
                             setGraphic(null);
                         }
                     }
@@ -225,9 +202,7 @@ public class FundsController implements Initializable, ChildController
                     Label copyIcon = new Label();
 
                     {
-                        //setId("hyperlink");
                         copyIcon.getStyleClass().add("copy-icon");
-                        //copyIcon.getStyleClass().setAll("copy-icon");
                         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
                         Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
                     }
@@ -237,7 +212,7 @@ public class FundsController implements Initializable, ChildController
                     {
                         super.updateItem(item, empty);
 
-                        if (item != null)
+                        if (item != null && !empty)
                         {
                             setGraphic(copyIcon);
                             copyIcon.setOnMouseClicked(e -> {
@@ -268,42 +243,18 @@ public class FundsController implements Initializable, ChildController
             {
                 return new TableCell<String, AddressListItem>()
                 {
-                    ConfidenceListener confidenceListener;
-                    ConfidenceProgressIndicator progressIndicator;
 
                     @Override
                     public void updateItem(final AddressListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
 
-                        if (item != null)
+                        if (item != null && !empty)
                         {
-                            progressIndicator = new ConfidenceProgressIndicator();
-                            progressIndicator.setId("funds-confidence");
-                            Tooltip tooltip = new Tooltip("Not used yet");
-                            progressIndicator.setProgress(0);
-                            progressIndicator.setPrefHeight(30);
-                            progressIndicator.setPrefWidth(30);
-                            Tooltip.install(progressIndicator, tooltip);
-
-                            confidenceListener = new ConfidenceListener(item.getAddress());
-                            walletFacade.addConfidenceListener(new ConfidenceListener(item.getAddress())
-                            {
-                                @Override
-                                public void onTransactionConfidenceChanged(TransactionConfidence confidence)
-                                {
-                                    updateConfidence(confidence, progressIndicator, tooltip);
-                                }
-                            });
-
-                            updateConfidence(walletFacade.getConfidenceForAddress(item.getAddress()), progressIndicator, tooltip);
-                            setGraphic(progressIndicator);
+                            setGraphic(item.getProgressIndicator());
                         }
                         else
                         {
-                            if (confidenceListener != null)
-                                walletFacade.removeConfidenceListener(confidenceListener);
-
                             setGraphic(null);
                         }
                     }
@@ -312,41 +263,5 @@ public class FundsController implements Initializable, ChildController
         });
     }
 
-    private void updateBalance(BigInteger balance, Label balanceLabel)
-    {
-        if (balance != null)
-        {
-            balanceLabel.setText(BtcFormatter.btcToString(balance));
-        }
-    }
-
-    private void updateConfidence(TransactionConfidence confidence, ConfidenceProgressIndicator progressIndicator, Tooltip tooltip)
-    {
-        if (confidence != null)
-        {
-            //log.debug("Type numBroadcastPeers getDepthInBlocks " + confidence.getConfidenceType() + " / " + confidence.numBroadcastPeers() + " / " + confidence.getDepthInBlocks());
-            switch (confidence.getConfidenceType())
-            {
-                case UNKNOWN:
-                    tooltip.setText("Unknown transaction status");
-                    progressIndicator.setProgress(0);
-                    break;
-                case PENDING:
-                    tooltip.setText("Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 confirmations");
-                    progressIndicator.setProgress(-1.0);
-                    break;
-                case BUILDING:
-                    tooltip.setText("Confirmed in " + confidence.getDepthInBlocks() + " block(s)");
-                    progressIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
-                    break;
-                case DEAD:
-                    tooltip.setText("Transaction is invalid.");
-                    progressIndicator.setProgress(0);
-                    break;
-            }
-
-            progressIndicator.setPrefSize(24, 24);
-        }
-    }
 }
 
