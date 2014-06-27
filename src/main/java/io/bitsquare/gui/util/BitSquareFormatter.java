@@ -5,8 +5,10 @@ import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.user.Arbitrator;
 
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.util.Currency;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -169,4 +171,13 @@ public class BitSquareFormatter
         }
         return result;
     }
+
+    public static String formatDateTime(Date date)
+    {
+        DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.getDefault());
+        DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, Locale.getDefault());
+        return dateFormatter.format(date) + " " + timeFormatter.format(date);
+    }
+
+
 }

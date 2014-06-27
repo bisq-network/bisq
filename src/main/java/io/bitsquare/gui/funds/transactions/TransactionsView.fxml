@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.VBox?>
+<VBox spacing="10" fx:controller="io.bitsquare.gui.funds.transactions.TransactionsController" xmlns="http://javafx.com/javafx/8"
+      xmlns:fx="http://javafx.com/fxml/1">
+    <padding>
+        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+    </padding>
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn text="Date" fx:id="dateColumn" minWidth="100" sortable="false">
+                <cellValueFactory>
+                    <PropertyValueFactory property="date"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn text="Type" fx:id="typeColumn" minWidth="70" sortable="false">
+                <cellValueFactory>
+                    <PropertyValueFactory property="type"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn text="Address" fx:id="addressColumn" minWidth="240" sortable="false"/>
+            <TableColumn text="Amount" fx:id="amountColumn" minWidth="70" sortable="false">
+                <cellValueFactory>
+                    <PropertyValueFactory property="amount"/>
+                </cellValueFactory>
+            </TableColumn>
+
+            <TableColumn text="Status" fx:id="confidenceColumn" minWidth="30" sortable="false"/>
+        </columns>
+    </TableView>
+</VBox>

@@ -62,8 +62,6 @@ public class WithdrawalController implements Initializable, ChildController, Hib
     public WithdrawalController(WalletFacade walletFacade)
     {
         this.walletFacade = walletFacade;
-        if (walletFacade == null)
-            walletFacade = null;
     }
 
 

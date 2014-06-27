@@ -13,8 +13,8 @@ public class Icons
     public static final String NAV_SELL_ACTIVE = "/images/nav/nav_sell_active.png";
     public static final String ORDERS = "/images/nav/orders.png";
     public static final String ORDERS_ACTIVE = "/images/nav/orders_active.png";
-    public static final String HISTORY = "/images/nav/history.png";
-    public static final String HISTORY_ACTIVE = "/images/nav/history_active.png";
+    public static final String HISTORY = "/images/unused/history.png";
+    public static final String HISTORY_ACTIVE = "/images/unused/history_active.png";
     public static final String FUNDS = "/images/nav/funds.png";
     public static final String FUNDS_ACTIVE = "/images/nav/funds_active.png";
     public static final String MSG = "/images/nav/msg.png";

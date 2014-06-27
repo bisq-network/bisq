@@ -9,6 +9,7 @@
 
         <Tab text="Deposit" closable="false"/>
         <Tab text="Withdrawal" closable="false"/>
+        <Tab text="Transactions" closable="false"/>
 
     </LazyLoadingTabPane>
 </AnchorPane>

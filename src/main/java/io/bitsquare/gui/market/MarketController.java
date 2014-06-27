@@ -3,6 +3,8 @@ package io.bitsquare.gui.market;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.NavigationViewURL;
 import io.bitsquare.gui.market.orderbook.OrderBookController;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
@@ -34,7 +36,7 @@ public class MarketController implements Initializable, NavigationController, Ch
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        navigateToView(NavigationController.ORDER_BOOK, "Orderbook");
+        navigateToView(NavigationViewURL.ORDER_BOOK);
     }
 
 
@@ -43,15 +45,15 @@ public class MarketController implements Initializable, NavigationController, Ch
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ChildController navigateToView(String fxmlView)
+    public ChildController navigateToView(NavigationItem navigationItem)
     {
-        return navigateToView(fxmlView, "");
+        return navigateToView(navigationItem);
     }
 
     @Override
-    public ChildController navigateToView(String fxmlView, String title)
+    public ChildController navigateToView(String fxmlView)
     {
-        if (fxmlView.equals(NavigationController.ORDER_BOOK) && orderbookCreated)
+        if (fxmlView.equals(NavigationViewURL.ORDER_BOOK) && orderbookCreated)
         {
             tabPane.getSelectionModel().select(0);
             return null;
@@ -67,11 +69,11 @@ public class MarketController implements Initializable, NavigationController, Ch
             if (childController instanceof OrderBookController)
                 orderBookController = (OrderBookController) childController;
 
-            Tab tab = new Tab(title);
+            Tab tab = new Tab("Orderbook");
             tab.setContent(view);
             tabPane.getTabs().add(tab);
 
-            if (fxmlView.equals(NavigationController.ORDER_BOOK))
+            if (fxmlView.equals(NavigationViewURL.ORDER_BOOK))
             {
                 tab.setClosable(false);
                 orderbookCreated = true;

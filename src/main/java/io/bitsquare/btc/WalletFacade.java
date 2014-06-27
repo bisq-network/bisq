@@ -498,7 +498,12 @@ public class WalletFacade
         {
             BalanceListener balanceListener = balanceListeners.get(i);
 
-            BigInteger balance = getBalanceForAddress(balanceListener.getAddress());
+            BigInteger balance;
+            if (balanceListener.getAddress() != null)
+                balance = getBalanceForAddress(balanceListener.getAddress());
+            else
+                balance = getWalletBalance();
+
             balanceListener.onBalanceChanged(balance);
         }
     }

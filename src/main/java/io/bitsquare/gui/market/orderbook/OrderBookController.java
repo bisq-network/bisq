@@ -8,9 +8,7 @@ import io.bitsquare.bank.BankAccountTypeInfo;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.MainController;
-import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.*;
 import io.bitsquare.gui.market.createOffer.CreateOfferController;
 import io.bitsquare.gui.market.trade.TakerTradeController;
 import io.bitsquare.gui.util.BitSquareConverter;
@@ -250,7 +248,7 @@ public class OrderBookController implements Initializable, ChildController
                         Action response = Popups.openErrorPopup("Registration fee not confirmed yet", "The registration fee transaction has not been confirmed yet in the blockchain. Please wait until it has at least 1 confirmation.");
                         if (response == Dialog.Actions.OK)
                         {
-                            MainController.getInstance().navigateToView(NavigationController.FUNDS);
+                            MainController.getInstance().navigateToView(NavigationItem.FUNDS);
                         }
                     }
                 }
@@ -259,7 +257,7 @@ public class OrderBookController implements Initializable, ChildController
                     Action response = Popups.openErrorPopup("Missing registration fee", "You have not funded the full registration fee of " + BtcFormatter.satoshiToString(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
                     if (response == Dialog.Actions.OK)
                     {
-                        MainController.getInstance().navigateToView(NavigationController.FUNDS);
+                        MainController.getInstance().navigateToView(NavigationItem.FUNDS);
                     }
                 }
             }
@@ -282,11 +280,11 @@ public class OrderBookController implements Initializable, ChildController
             Action registrationMissingAction = Popups.openRegistrationMissingPopup("Not registered yet", "Please follow these steps:", "You need to register before you can place an offer.", commandLinks, selectedIndex);
             if (registrationMissingAction == settingsCommandLink)
             {
-                MainController.getInstance().navigateToView(NavigationController.SETTINGS);
+                MainController.getInstance().navigateToView(NavigationItem.SETTINGS);
             }
             else if (registrationMissingAction == depositFeeCommandLink)
             {
-                MainController.getInstance().navigateToView(NavigationController.FUNDS);
+                MainController.getInstance().navigateToView(NavigationItem.FUNDS);
             }
             else if (registrationMissingAction == sendRegistrationCommandLink)
             {
@@ -332,7 +330,7 @@ public class OrderBookController implements Initializable, ChildController
         {
             if (walletFacade.isUnusedTradeAddressBalanceAboveCreationFee())
             {
-                ChildController nextController = navigationController.navigateToView(NavigationController.CREATE_OFFER, "Create offer");
+                ChildController nextController = navigationController.navigateToView(NavigationViewURL.CREATE_OFFER);
                 ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
             }
             else
@@ -340,7 +338,7 @@ public class OrderBookController implements Initializable, ChildController
                 Action response = Popups.openErrorPopup("No funds for a trade", "You have to add some funds before you create a new offer.");
                 if (response == Dialog.Actions.OK)
                 {
-                    MainController.getInstance().navigateToView(NavigationController.FUNDS);
+                    MainController.getInstance().navigateToView(NavigationItem.FUNDS);
                 }
             }
         }
@@ -355,7 +353,7 @@ public class OrderBookController implements Initializable, ChildController
         if (isRegistered())
         {
             String title = offer.getDirection() == Direction.BUY ? "Trade: Sell Bitcoin" : "Trade: Buy Bitcoin";
-            TakerTradeController takerTradeController = (TakerTradeController) navigationController.navigateToView(NavigationController.TAKER_TRADE, title);
+            TakerTradeController takerTradeController = (TakerTradeController) navigationController.navigateToView(NavigationViewURL.TAKER_TRADE);
 
             BigInteger requestedAmount = offer.getAmount();
             if (!amount.getText().equals(""))

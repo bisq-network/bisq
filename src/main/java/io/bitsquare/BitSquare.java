@@ -66,8 +66,8 @@ public class BitSquare extends Application
         final Scene scene = new Scene(mainView, 800, 600);
         stage.setScene(scene);
 
-        final String global = getClass().getResource("/io/bitsquare/gui/global.css").toExternalForm();
-        scene.getStylesheets().setAll(global);
+        final String bitsquare = getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm();
+        scene.getStylesheets().setAll(bitsquare);
 
         stage.setMinWidth(800);
         stage.setMinHeight(400);

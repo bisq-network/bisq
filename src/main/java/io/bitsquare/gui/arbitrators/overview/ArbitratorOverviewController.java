@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.NavigationViewURL;
 import io.bitsquare.gui.arbitrators.profile.ArbitratorProfileController;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.Localisation;
@@ -72,7 +74,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        navigateToView(NavigationController.ARBITRATOR_PROFILE, "");
+        navigateToView(NavigationViewURL.ARBITRATOR_PROFILE);
         checkButtonState();
     }
 
@@ -99,13 +101,13 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ChildController navigateToView(String fxmlView)
+    public ChildController navigateToView(NavigationItem navigationItem)
     {
-        return navigateToView(fxmlView, "");
+        return navigateToView(navigationItem);
     }
 
     @Override
-    public ChildController navigateToView(String fxmlView, String title)
+    public ChildController navigateToView(String fxmlView)
     {
 
         if (arbitratorProfileController != null)

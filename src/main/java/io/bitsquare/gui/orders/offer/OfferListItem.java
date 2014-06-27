@@ -6,9 +6,6 @@ import io.bitsquare.trade.Offer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import java.text.DateFormat;
-import java.util.Locale;
-
 public class OfferListItem
 {
     protected final StringProperty price = new SimpleStringProperty();
@@ -22,10 +19,7 @@ public class OfferListItem
     {
         this.offer = offer;
 
-        DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.getDefault());
-        DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, Locale.getDefault());
-        this.date.set(dateFormatter.format(offer.getCreationDate()) + " " + timeFormatter.format(offer.getCreationDate()));
-
+        this.date.set(BitSquareFormatter.formatDateTime(offer.getCreationDate()));
         this.price.set(BitSquareFormatter.formatPrice(offer.getPrice()));
 
         double amountAsBtcDouble = BtcFormatter.satoshiToBTC(offer.getAmount());

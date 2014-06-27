@@ -4,6 +4,8 @@ import io.bitsquare.BitSquare;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.NavigationViewURL;
 import io.bitsquare.gui.arbitrators.registration.ArbitratorRegistrationController;
 import io.bitsquare.locale.Localisation;
 import javafx.event.ActionEvent;
@@ -50,13 +52,13 @@ public class HomeController implements Initializable, ChildController, Navigatio
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ChildController navigateToView(String fxmlView)
+    public ChildController navigateToView(NavigationItem navigationItem)
     {
-        return navigateToView(fxmlView, "");
+        return navigateToView(navigationItem);
     }
 
     @Override
-    public ChildController navigateToView(String fxmlView, String title)
+    public ChildController navigateToView(String fxmlView)
     {
 
         if (arbitratorRegistrationController != null)
@@ -71,7 +73,7 @@ public class HomeController implements Initializable, ChildController, Navigatio
 
             final Stage rootStage = BitSquare.getStage();
             final Stage stage = new Stage();
-            stage.setTitle(title);
+            stage.setTitle("Arbitrator");
             stage.setMinWidth(800);
             stage.setMinHeight(400);
             stage.setWidth(800);
@@ -95,13 +97,13 @@ public class HomeController implements Initializable, ChildController, Navigatio
     @FXML
     public void onArbitratorRegistration(ActionEvent actionEvent)
     {
-        navigateToView(NavigationController.ARBITRATOR_REGISTRATION, "Registration as Arbitrator");
+        navigateToView(NavigationViewURL.ARBITRATOR_REGISTRATION);
     }
 
     @FXML
     public void onArbitratorEdit(ActionEvent actionEvent)
     {
-        navigateToView(NavigationController.ARBITRATOR_REGISTRATION, "Edit my arbitrator details");
+        navigateToView(NavigationViewURL.ARBITRATOR_REGISTRATION);
         arbitratorRegistrationController.setEditMode(true);
     }
 

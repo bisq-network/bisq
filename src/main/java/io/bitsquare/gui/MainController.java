@@ -1,14 +1,10 @@
 package io.bitsquare.gui;
 
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.Wallet;
-import com.google.bitcoin.core.WalletEventListener;
-import com.google.bitcoin.script.Script;
 import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.market.MarketController;
@@ -30,7 +26,10 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
@@ -40,7 +39,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.Date;
-import java.util.List;
 import java.util.ResourceBundle;
 
 public class MainController implements Initializable, NavigationController
@@ -48,31 +46,30 @@ public class MainController implements Initializable, NavigationController
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
     private static MainController mainController;
 
+
     private User user;
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
     private Trading trading;
     private ChildController childController;
-    private ToggleGroup toggleGroup;
+    private Storage storage;
+    private String selectedNavigationItemStorageId;
+    private NavigationItem selectedNavigationItem;
+    private NetworkSyncPane networkSyncPane;
+    private ToggleGroup toggleGroup = new ToggleGroup();
     private ToggleButton prevToggleButton;
     private Image prevToggleButtonIcon;
-    private NetworkSyncPane networkSyncPane;
-    private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, historyButton, fundsButton, settingsButton;
-    private Pane msgButtonHolder, buyButtonHolder, sellButtonHolder, ordersButtonButtonHolder;
+    private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton;
+    private Pane msgButtonHolder, ordersButtonButtonHolder;
     private TextField balanceTextField;
-    private Storage storage;
-    private String storageId;
-    private ToggleButton selectedNavigationItem;
+
 
     @FXML
     public Pane contentPane;
     @FXML
     public HBox leftNavPane, rightNavPane;
     @FXML
-    public StackPane rootContainer;
-    @FXML
     public AnchorPane anchorPane;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -88,8 +85,8 @@ public class MainController implements Initializable, NavigationController
         this.storage = storage;
 
         MainController.mainController = this;
-        storageId = this.getClass().getName() + ".selectedNavigationItem";
 
+        selectedNavigationItemStorageId = this.getClass().getName() + ".selectedNavigationItem";
     }
 
     public static MainController getInstance()
@@ -130,24 +127,19 @@ public class MainController implements Initializable, NavigationController
 
         buildNavigation();
 
-        selectedNavigationItem = (ToggleButton) storage.read(storageId);
+        Object f = storage.read(selectedNavigationItemStorageId);
+        selectedNavigationItem = (NavigationItem) storage.read(selectedNavigationItemStorageId);
         if (selectedNavigationItem == null)
-            selectedNavigationItem = homeButton;
+            selectedNavigationItem = NavigationItem.HOME;
 
-        selectedNavigationItem.fire();
-        //homeButton.fire();
-        //settingsButton.fire();
-        //fundsButton.fire();
-        // sellButton.fire();
-        // ordersButton.fire();
-        // homeButton.fire();
-        // msgButton.fire();
+        navigateToView(selectedNavigationItem);
 
         AnchorPane.setBottomAnchor(networkSyncPane, 0.0);
         AnchorPane.setLeftAnchor(networkSyncPane, 0.0);
 
         messageFacade.addTakeOfferRequestListener((tradingMessage, sender) -> showTakeOfferRequest(tradingMessage, sender));
     }
+
 
     private void showTakeOfferRequest(final TradeMessage tradeMessage, PeerAddress sender)
     {
@@ -177,35 +169,37 @@ public class MainController implements Initializable, NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ChildController navigateToView(String fxmlView)
+    public ChildController navigateToView(NavigationItem navigationItem)
     {
-        // use the buttons to trigger the change to get the correct button states
-        switch (fxmlView)
+        switch (navigationItem)
         {
-            case NavigationController.HOME:
+            case HOME:
                 homeButton.fire();
                 break;
-            case NavigationController.FUNDS:
+            case FUNDS:
                 fundsButton.fire();
                 break;
-            case NavigationController.HISTORY:
-                historyButton.fire();
-                break;
-            case NavigationController.MSG:
+            case MSG:
                 msgButton.fire();
                 break;
-            case NavigationController.ORDERS:
+            case ORDERS:
                 ordersButton.fire();
                 break;
-            case NavigationController.SETTINGS:
+            case SETTINGS:
                 settingsButton.fire();
                 break;
+            case SELL:
+                sellButton.fire();
+                break;
+            case BUY:
+                buyButton.fire();
+                break;
         }
-        return navigateToView(fxmlView, "");
+        return null;
     }
 
     @Override
-    public ChildController navigateToView(String fxmlView, String title)
+    public ChildController navigateToView(String fxmlView)
     {
         if (childController != null)
             childController.cleanup();
@@ -232,41 +226,29 @@ public class MainController implements Initializable, NavigationController
 
     private void buildNavigation()
     {
-        toggleGroup = new ToggleGroup();
+        homeButton = addNavButton(leftNavPane, "Overview", Icons.HOME, Icons.HOME_ACTIVE, NavigationViewURL.HOME, NavigationItem.HOME);
 
-        homeButton = addNavButton(leftNavPane, "Overview", Icons.HOME, Icons.HOME_ACTIVE, NavigationController.HOME);
+        buyButton = addNavButton(leftNavPane, "Buy BTC", Icons.NAV_BUY, Icons.NAV_BUY_ACTIVE, NavigationViewURL.MARKET, NavigationItem.BUY);
 
-        buyButtonHolder = new Pane();
-        buyButton = addNavButton(buyButtonHolder, "Buy BTC", Icons.NAV_BUY, Icons.NAV_BUY_ACTIVE, NavigationController.MARKET, Direction.BUY);
-        leftNavPane.getChildren().add(buyButtonHolder);
-
-        sellButtonHolder = new Pane();
-        sellButton = addNavButton(sellButtonHolder, "Sell BTC", Icons.NAV_SELL, Icons.NAV_SELL_ACTIVE, NavigationController.MARKET, Direction.SELL);
-        leftNavPane.getChildren().add(sellButtonHolder);
+        sellButton = addNavButton(leftNavPane, "Sell BTC", Icons.NAV_SELL, Icons.NAV_SELL_ACTIVE, NavigationViewURL.MARKET, NavigationItem.SELL);
 
         ordersButtonButtonHolder = new Pane();
-        ordersButton = addNavButton(ordersButtonButtonHolder, "Orders", Icons.ORDERS, Icons.ORDERS_ACTIVE, NavigationController.ORDERS);
+        ordersButton = addNavButton(ordersButtonButtonHolder, "Orders", Icons.ORDERS, Icons.ORDERS_ACTIVE, NavigationViewURL.ORDERS, NavigationItem.ORDERS);
         leftNavPane.getChildren().add(ordersButtonButtonHolder);
 
-        historyButton = addNavButton(leftNavPane, "History", Icons.HISTORY, Icons.HISTORY_ACTIVE, NavigationController.HISTORY);
-        fundsButton = addNavButton(leftNavPane, "Funds", Icons.FUNDS, Icons.FUNDS_ACTIVE, NavigationController.FUNDS);
+        fundsButton = addNavButton(leftNavPane, "Funds", Icons.FUNDS, Icons.FUNDS_ACTIVE, NavigationViewURL.FUNDS, NavigationItem.FUNDS);
 
         msgButtonHolder = new Pane();
-        msgButton = addNavButton(msgButtonHolder, "Message", Icons.MSG, Icons.MSG_ACTIVE, NavigationController.MSG);
+        msgButton = addNavButton(msgButtonHolder, "Message", Icons.MSG, Icons.MSG_ACTIVE, NavigationViewURL.MSG, NavigationItem.MSG);
         leftNavPane.getChildren().add(msgButtonHolder);
 
         addBalanceInfo(rightNavPane);
         addAccountComboBox(rightNavPane);
 
-        settingsButton = addNavButton(rightNavPane, "Settings", Icons.SETTINGS, Icons.SETTINGS_ACTIVE, NavigationController.SETTINGS);
+        settingsButton = addNavButton(rightNavPane, "Settings", Icons.SETTINGS, Icons.SETTINGS_ACTIVE, NavigationViewURL.SETTINGS, NavigationItem.SETTINGS);
     }
 
-    private ToggleButton addNavButton(Pane parent, String title, String iconId, String iconIdActivated, String navTarget)
-    {
-        return addNavButton(parent, title, iconId, iconIdActivated, navTarget, null);
-    }
-
-    private ToggleButton addNavButton(Pane parent, String title, String iconId, String iconIdActivated, String navTarget, Direction direction)
+    private ToggleButton addNavButton(Pane parent, String title, String iconId, String iconIdActivated, String navTarget, NavigationItem navigationItem)
     {
         Pane pane = new Pane();
         pane.setPrefSize(50, 50);
@@ -282,18 +264,12 @@ public class MainController implements Initializable, NavigationController
             prevToggleButtonIcon = ((ImageView) (toggleButton.getGraphic())).getImage();
             ((ImageView) (toggleButton.getGraphic())).setImage(Icons.getIconImage(iconIdActivated));
 
-            if (childController instanceof MarketController && direction != null)
-            {
-                ((MarketController) childController).setDirection(direction);
-            }
-            else
-            {
-                childController = navigateToView(navTarget, direction == Direction.BUY ? "Orderbook Buy" : "Orderbook Sell");
-                if (childController instanceof MarketController && direction != null)
-                {
-                    ((MarketController) childController).setDirection(direction);
-                }
-            }
+            childController = navigateToView(navTarget);
+
+            if (childController instanceof MarketController)
+                ((MarketController) childController).setDirection(navigationItem == NavigationItem.BUY ? Direction.BUY : Direction.SELL);
+
+            storage.write(selectedNavigationItemStorageId, navigationItem);
 
             prevToggleButton = toggleButton;
 
@@ -338,45 +314,13 @@ public class MainController implements Initializable, NavigationController
         parent.getChildren().add(vBox);
 
         balanceTextField.setText(BtcFormatter.satoshiToString(walletFacade.getWalletBalance()));
-        walletFacade.getWallet().addEventListener(new WalletEventListener()
+
+        walletFacade.addBalanceListener(new BalanceListener()
         {
             @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            public void onBalanceChanged(BigInteger balance)
             {
-                balanceTextField.setText(BtcFormatter.satoshiToString(newBalance));
-            }
-
-            @Override
-            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
-            {
-                balanceTextField.setText(BtcFormatter.satoshiToString(walletFacade.getWallet().getBalance()));
-            }
-
-            @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
-            {
-                balanceTextField.setText(BtcFormatter.satoshiToString(newBalance));
-            }
-
-            @Override
-            public void onReorganize(Wallet wallet)
-            {
-                balanceTextField.setText(BtcFormatter.satoshiToString(walletFacade.getWallet().getBalance()));
-            }
-
-            @Override
-            public void onWalletChanged(Wallet wallet)
-            {
-            }
-
-            @Override
-            public void onKeysAdded(Wallet wallet, List<ECKey> keys)
-            {
-            }
-
-            @Override
-            public void onScriptsAdded(Wallet wallet, List<Script> scripts)
-            {
+                balanceTextField.setText(BtcFormatter.satoshiToString(balance));
             }
         });
 
