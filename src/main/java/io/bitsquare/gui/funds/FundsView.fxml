@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import io.bitsquare.gui.components.LazyLoadingTabPane?>
 <?import javafx.scene.control.Tab?>
-<?import javafx.scene.layout.*?>
-<AnchorPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
-            xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.bitsquare.gui.funds.FundsController">
+<?import javafx.scene.layout.AnchorPane?>
+<LazyLoadingTabPane fx:id="tabPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8"
+                    xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.bitsquare.gui.funds.FundsController">
 
-    <LazyLoadingTabPane fx:id="tabPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+    <Tab text="Deposit" closable="false"/>
+    <Tab text="Withdrawal" closable="false"/>
+    <Tab text="Transactions" closable="false"/>
 
-        <Tab text="Deposit" closable="false"/>
-        <Tab text="Withdrawal" closable="false"/>
-        <Tab text="Transactions" closable="false"/>
-
-    </LazyLoadingTabPane>
-</AnchorPane>
+</LazyLoadingTabPane>

@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import io.bitsquare.gui.components.LazyLoadingTabPane?>
 <?import javafx.scene.control.Tab?>
-<?import javafx.scene.layout.*?>
-<AnchorPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
-            xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.bitsquare.gui.orders.OrdersController">
+<?import javafx.scene.layout.AnchorPane?>
+<LazyLoadingTabPane fx:id="tabPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8"
+                    xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.bitsquare.gui.orders.OrdersController">
 
-    <LazyLoadingTabPane fx:id="tabPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+    <Tab text="Open offers" closable="false"/>
+    <Tab text="Pending trades" closable="false"/>
+    <Tab text="Closed trades" closable="false"/>
 
-        <Tab text="Open offers" closable="false"/>
-        <Tab text="Pending trades" closable="false"/>
-        <Tab text="Closed trades" closable="false"/>
-
-    </LazyLoadingTabPane>
-</AnchorPane>
+</LazyLoadingTabPane>

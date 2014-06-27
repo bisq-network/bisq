@@ -3,110 +3,107 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane prefHeight="600.0" prefWidth="800.0" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
-            xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.bitsquare.gui.settings.SettingsController">
+<TabPane fx:id="tabPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8"
+         xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.bitsquare.gui.settings.SettingsController">
 
-    <TabPane fx:id="tabPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+    <Tab text="General" closable="false">
+        <GridPane hgap="5.0" vgap="5.0">
+            <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+            </padding>
+            <children>
+                <Label text="Accepted languages:"/>
+                <ListView fx:id="languagesListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1"/>
+                <Label text="Accepted countries:" GridPane.rowIndex="2"/>
+                <Label text="Accepted arbitrators:" GridPane.rowIndex="4"/>
+                <ListView fx:id="countriesListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                <ListView fx:id="arbitratorsListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                <ComboBox fx:id="languageComboBox" onAction="#onAddLanguage" prefWidth="150.0" promptText="Add language" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-        <Tab text="General" closable="false">
-            <GridPane hgap="5.0" vgap="5.0">
-                <padding>
-                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
-                </padding>
-                <children>
-                    <Label text="Accepted languages:"/>
-                    <ListView fx:id="languagesListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1"/>
-                    <Label text="Accepted countries:" GridPane.rowIndex="2"/>
-                    <Label text="Accepted arbitrators:" GridPane.rowIndex="4"/>
-                    <ListView fx:id="countriesListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-                    <ListView fx:id="arbitratorsListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
-                    <ComboBox fx:id="languageComboBox" onAction="#onAddLanguage" prefWidth="150.0" promptText="Add language" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                    <ComboBox fx:id="regionComboBox" onAction="#onSelectRegion" prefWidth="150.0" promptText="Select region"/>
+                    <ComboBox fx:id="countryComboBox" onAction="#onAddCountry" visible="false" prefWidth="150.0" promptText="Add country"/>
+                </HBox>
 
-                    <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                        <ComboBox fx:id="regionComboBox" onAction="#onSelectRegion" prefWidth="150.0" promptText="Select region"/>
-                        <ComboBox fx:id="countryComboBox" onAction="#onAddCountry" visible="false" prefWidth="150.0" promptText="Add country"/>
-                    </HBox>
+                <Button onAction="#onAddArbitrator" text="Add arbitrator" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+            </children>
 
-                    <Button onAction="#onAddArbitrator" text="Add arbitrator" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
-                </children>
+            <columnConstraints>
+                <ColumnConstraints/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0"/>
+            </columnConstraints>
 
-                <columnConstraints>
-                    <ColumnConstraints/>
-                    <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0"/>
-                </columnConstraints>
+            <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS"/>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER"/>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS"/>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER"/>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS"/>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER"/>
+            </rowConstraints>
 
-                <rowConstraints>
-                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS"/>
-                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER"/>
-                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS"/>
-                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER"/>
-                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS"/>
-                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER"/>
-                </rowConstraints>
+        </GridPane>
+    </Tab>
 
-            </GridPane>
-        </Tab>
+    <Tab text="Bank accounts" closable="false">
 
-        <Tab text="Bank accounts" closable="false">
+        <GridPane hgap="5.0" vgap="5.0">
+            <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+            </padding>
+            <children>
+                <Label text="Bank account:"/>
+                <ComboBox fx:id="bankAccountComboBox" onAction="#selectBankAccount" GridPane.columnIndex="1"/>
 
-            <GridPane hgap="5.0" vgap="5.0">
-                <padding>
-                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
-                </padding>
-                <children>
-                    <Label text="Bank account:"/>
-                    <ComboBox fx:id="bankAccountComboBox" onAction="#selectBankAccount" GridPane.columnIndex="1"/>
+                <Label text="Bank account type:" GridPane.rowIndex="1"/>
+                <ComboBox fx:id="bankAccountTypesComboBox" promptText="Select bank account type" onAction="#selectBankAccountType" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-                    <Label text="Bank account type:" GridPane.rowIndex="1"/>
-                    <ComboBox fx:id="bankAccountTypesComboBox" promptText="Select bank account type" onAction="#selectBankAccountType" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                <Label text="Bank account title:" GridPane.rowIndex="2"/>
+                <TextField fx:id="bankAccountTitleTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
-                    <Label text="Bank account title:" GridPane.rowIndex="2"/>
-                    <TextField fx:id="bankAccountTitleTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                <Label text="Bank account holder name" GridPane.rowIndex="3"/>
+                <TextField fx:id="bankAccountHolderNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
-                    <Label text="Bank account holder name" GridPane.rowIndex="3"/>
-                    <TextField fx:id="bankAccountHolderNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                <Label text="Bank account primary ID" GridPane.rowIndex="4"/>
+                <TextField fx:id="bankAccountPrimaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
 
-                    <Label text="Bank account primary ID" GridPane.rowIndex="4"/>
-                    <TextField fx:id="bankAccountPrimaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                <Label text="Bank account secondary ID" GridPane.rowIndex="5"/>
+                <TextField fx:id="bankAccountSecondaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
 
-                    <Label text="Bank account secondary ID" GridPane.rowIndex="5"/>
-                    <TextField fx:id="bankAccountSecondaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+                <Label text="Currency used for bank account:" GridPane.rowIndex="6"/>
+                <ComboBox fx:id="bankAccountCurrencyComboBox" promptText="Select currency" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
 
-                    <Label text="Currency used for bank account:" GridPane.rowIndex="6"/>
-                    <ComboBox fx:id="bankAccountCurrencyComboBox" promptText="Select currency" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+                <Label text="Country of bank account" GridPane.rowIndex="7"/>
+                <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="7">
+                    <ComboBox fx:id="bankAccountRegionComboBox" onAction="#onSelectBankAccountRegion" prefWidth="150.0" promptText="Select region"/>
+                    <ComboBox fx:id="bankAccountCountryComboBox" visible="false" prefWidth="150.0" promptText="Select country"/>
+                </HBox>
 
-                    <Label text="Country of bank account" GridPane.rowIndex="7"/>
-                    <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="7">
-                        <ComboBox fx:id="bankAccountRegionComboBox" onAction="#onSelectBankAccountRegion" prefWidth="150.0" promptText="Select region"/>
-                        <ComboBox fx:id="bankAccountCountryComboBox" visible="false" prefWidth="150.0" promptText="Select country"/>
-                    </HBox>
-
-                    <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="8">
-                        <Button fx:id="saveBankAccountButton" defaultButton="true" onAction="#onSaveBankAccount" text="Save bank account"/>
-                        <Button fx:id="addBankAccountButton" onAction="#onAddBankAccount" text="Add new bank account"/>
-                        <Button fx:id="removeBankAccountButton" onAction="#onRemoveBankAccount" text="Remove bank account"/>
-                    </HBox>
+                <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="8">
+                    <Button fx:id="saveBankAccountButton" defaultButton="true" onAction="#onSaveBankAccount" text="Save bank account"/>
+                    <Button fx:id="addBankAccountButton" onAction="#onAddBankAccount" text="Add new bank account"/>
+                    <Button fx:id="removeBankAccountButton" onAction="#onRemoveBankAccount" text="Remove bank account"/>
+                </HBox>
 
 
-                </children>
+            </children>
 
-                <columnConstraints>
-                    <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>
-                    <ColumnConstraints hgrow="ALWAYS"/>
-                </columnConstraints>
-                <rowConstraints>
-                    <RowConstraints vgrow="NEVER"/>
-                    <RowConstraints vgrow="NEVER"/>
-                    <RowConstraints vgrow="NEVER"/>
-                    <RowConstraints vgrow="NEVER"/>
-                    <RowConstraints vgrow="NEVER"/>
-                    <RowConstraints vgrow="NEVER"/>
-                    <RowConstraints vgrow="NEVER"/>
-                    <RowConstraints vgrow="NEVER"/>
-                </rowConstraints>
-            </GridPane>
+            <columnConstraints>
+                <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints vgrow="NEVER"/>
+                <RowConstraints vgrow="NEVER"/>
+                <RowConstraints vgrow="NEVER"/>
+                <RowConstraints vgrow="NEVER"/>
+                <RowConstraints vgrow="NEVER"/>
+                <RowConstraints vgrow="NEVER"/>
+                <RowConstraints vgrow="NEVER"/>
+                <RowConstraints vgrow="NEVER"/>
+            </rowConstraints>
+        </GridPane>
 
-        </Tab>
+    </Tab>
 
-    </TabPane>
-</AnchorPane>
+</TabPane>
