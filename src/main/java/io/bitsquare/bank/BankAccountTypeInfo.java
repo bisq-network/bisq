@@ -7,10 +7,15 @@ import java.util.Objects;
 public class BankAccountTypeInfo implements Serializable
 {
     private static final long serialVersionUID = -8772708150197835288L;
+    private final BankAccountType type;
+    private final String primaryIDName;
+    private final String secondaryIDName;
 
-    public static enum BankAccountType
+    public BankAccountTypeInfo(BankAccountType type, String primaryIDName, String secondaryIDName)
     {
-        SEPA, WIRE, INTERNATIONAL, OK_PAY, NET_TELLER, PERFECT_MONEY, OTHER
+        this.type = type;
+        this.primaryIDName = primaryIDName;
+        this.secondaryIDName = secondaryIDName;
     }
 
     public static ArrayList<BankAccountTypeInfo> getAllBankAccountTypeInfoObjects()
@@ -24,17 +29,6 @@ public class BankAccountTypeInfo implements Serializable
         bankTransferTypes.add(new BankAccountTypeInfo(BankAccountType.PERFECT_MONEY, "Prim_todo", "Sec_todo"));
         bankTransferTypes.add(new BankAccountTypeInfo(BankAccountType.OTHER, "Prim_todo", "Sec_todo"));
         return bankTransferTypes;
-    }
-
-    private BankAccountType type;
-    private String primaryIDName;
-    private String secondaryIDName;
-
-    public BankAccountTypeInfo(BankAccountType type, String primaryIDName, String secondaryIDName)
-    {
-        this.type = type;
-        this.primaryIDName = primaryIDName;
-        this.secondaryIDName = secondaryIDName;
     }
 
     public int hashCode()
@@ -66,5 +60,10 @@ public class BankAccountTypeInfo implements Serializable
     public String getSecondaryIDName()
     {
         return secondaryIDName;
+    }
+
+    public static enum BankAccountType
+    {
+        SEPA, WIRE, INTERNATIONAL, OK_PAY, NET_TELLER, PERFECT_MONEY, OTHER
     }
 }

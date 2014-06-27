@@ -11,10 +11,10 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.*;
 import io.bitsquare.gui.market.createOffer.CreateOfferController;
 import io.bitsquare.gui.market.trade.TakerTradeController;
+import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.gui.util.BitSquareConverter;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.Icons;
-import io.bitsquare.gui.util.Popups;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.Localisation;
@@ -28,10 +28,16 @@ import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 import io.bitsquare.util.Utilities;
+import java.math.BigInteger;
+import java.net.URL;
+import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -48,32 +54,18 @@ import org.controlsfx.dialog.Dialogs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.net.URL;
-import java.text.DecimalFormat;
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
-
 public class OrderBookController implements Initializable, ChildController
 {
     private static final Logger log = LoggerFactory.getLogger(OrderBookController.class);
-    private NavigationController navigationController;
-    private OrderBook orderBook;
-    private SortedList<OrderBookListItem> offerList;
+    private final OrderBook orderBook;
     private final OrderBookFilter orderBookFilter;
-    private User user;
-    private MessageFacade messageFacade;
-    private WalletFacade walletFacade;
-    private Settings settings;
-    private Storage storage;
-    private AnimationTimer pollingTimer;
-    private Image buyIcon = Icons.getIconImage(Icons.BUY);
-    private Image sellIcon = Icons.getIconImage(Icons.SELL);
-
+    private final User user;
+    private final MessageFacade messageFacade;
+    private final WalletFacade walletFacade;
+    private final Settings settings;
+    private final Storage storage;
+    private final Image buyIcon = Icons.getIconImage(Icons.BUY);
+    private final Image sellIcon = Icons.getIconImage(Icons.SELL);
     @FXML
     public AnchorPane holderPane;
     @FXML
@@ -83,11 +75,14 @@ public class OrderBookController implements Initializable, ChildController
     @FXML
     public TableView<OrderBookListItem> orderBookTable;
     @FXML
-    public TableColumn priceColumn, amountColumn, volumeColumn;
-    @FXML
-    private TableColumn<String, OrderBookListItem> directionColumn, countryColumn, bankAccountTypeColumn;
+    public TableColumn<OrderBookListItem, String> priceColumn, amountColumn, volumeColumn;
     @FXML
     public Button createOfferButton;
+    private NavigationController navigationController;
+    private SortedList<OrderBookListItem> offerList;
+    private AnimationTimer pollingTimer;
+    @FXML
+    private TableColumn<String, OrderBookListItem> directionColumn, countryColumn, bankAccountTypeColumn;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -129,43 +124,19 @@ public class OrderBookController implements Initializable, ChildController
         orderBook.loadOffers();
 
         // handlers
-        amount.textProperty().addListener(new ChangeListener<String>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue)
-            {
-                orderBookFilter.setAmount(textInputToNumber(oldValue, newValue));
-                updateVolume();
-            }
+        amount.textProperty().addListener((observable, oldValue, newValue) -> {
+            orderBookFilter.setAmount(textInputToNumber(oldValue, newValue));
+            updateVolume();
         });
 
-        price.textProperty().addListener(new ChangeListener<String>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue)
-            {
-                orderBookFilter.setPrice(textInputToNumber(oldValue, newValue));
-                updateVolume();
-            }
+        price.textProperty().addListener((observable, oldValue, newValue) -> {
+            orderBookFilter.setPrice(textInputToNumber(oldValue, newValue));
+            updateVolume();
         });
 
-        orderBookFilter.getDirectionChangedProperty().addListener(new ChangeListener<Boolean>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
-            {
-                applyOffers();
-            }
-        });
+        orderBookFilter.getDirectionChangedProperty().addListener((observable, oldValue, newValue) -> applyOffers());
 
-        user.getBankAccountChangedProperty().addListener(new ChangeListener<Boolean>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
-            {
-                orderBook.loadOffers();
-            }
-        });
+        user.getBankAccountChangedProperty().addListener((observable, oldValue, newValue) -> orderBook.loadOffers());
 
         createOfferButton.setOnAction(e -> createOffer());
 
@@ -369,13 +340,7 @@ public class OrderBookController implements Initializable, ChildController
 
     private void removeOffer(Offer offer)
     {
-        try
-        {
-            orderBook.removeOffer(offer);
-        } catch (IOException e)
-        {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
+        orderBook.removeOffer(offer);
     }
 
     private void applyOffers()
@@ -393,28 +358,13 @@ public class OrderBookController implements Initializable, ChildController
     {
 
         pollingTimer = Utilities.setInterval(1000, (AnimationTimer animationTimer) -> {
-            try
-            {
-                if (user.getCurrentBankAccount() != null)
-                    messageFacade.getDirtyFlag(user.getCurrentBankAccount().getCurrency());
-                else
-                    messageFacade.getDirtyFlag(CurrencyUtil.getDefaultCurrency());
-
-            } catch (IOException e)
-            {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
+            if (user.getCurrentBankAccount() != null)
+                messageFacade.getDirtyFlag(user.getCurrentBankAccount().getCurrency());
+            else
+                messageFacade.getDirtyFlag(CurrencyUtil.getDefaultCurrency());
             return null;
         });
-        messageFacade.getIsDirtyProperty().addListener(new ChangeListener<Boolean>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observableValue, Boolean oldValue, Boolean newValue)
-            {
-                //log.info("getIsDirtyProperty changed " + oldValue + "/" + newValue);
-                orderBook.loadOffers();
-            }
-        });
+        messageFacade.getIsDirtyProperty().addListener((observableValue, oldValue, newValue) -> orderBook.loadOffers());
     }
 
 

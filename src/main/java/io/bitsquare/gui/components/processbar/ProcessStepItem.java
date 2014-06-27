@@ -5,9 +5,9 @@ import javafx.scene.paint.Paint;
 
 public class ProcessStepItem
 {
-    private String label;
-    private Paint color;
-    private boolean progressIndicator;
+    private final String label;
+    private final Paint color;
+    private final boolean progressIndicator;
 
     public ProcessStepItem(String label)
     {

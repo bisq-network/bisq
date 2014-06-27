@@ -8,6 +8,9 @@ import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.NavigationViewURL;
 import io.bitsquare.gui.arbitrators.registration.ArbitratorRegistrationController;
 import io.bitsquare.locale.Localisation;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -18,16 +21,11 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-
 public class HomeController implements Initializable, ChildController, NavigationController
 {
-    private NavigationController navigationController;
-
     @FXML
     public Pane rootContainer;
+    private NavigationController navigationController;
     private ArbitratorRegistrationController arbitratorRegistrationController;
 
     @Override

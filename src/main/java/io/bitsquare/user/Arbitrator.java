@@ -7,40 +7,8 @@ import java.util.Objects;
 
 public class Arbitrator implements Serializable
 {
-    public enum ID_TYPE
-    {
-        REAL_LIFE_ID,
-        NICKNAME,
-        COMPANY
-    }
-
-    public enum METHOD
-    {
-        TLS_NOTARY,
-        SKYPE_SCREEN_SHARING,
-        SMART_PHONE_VIDEO_CHAT,
-        REQUIRE_REAL_ID,
-        BANK_STATEMENT,
-        OTHER
-    }
-
-    public enum ID_VERIFICATION
-    {
-        PASSPORT,
-        GOV_ID,
-        UTILITY_BILLS,
-        FACEBOOK,
-        GOOGLE_PLUS,
-        TWITTER,
-        PGP,
-        BTC_OTC,
-        OTHER
-    }
-
     private static final long serialVersionUID = -2625059604136756635L;
-
     private String UID;
-
     private String pubKeyAsHex;
     private String messagePubKeyAsHex;
     private String name;
@@ -97,7 +65,6 @@ public class Arbitrator implements Serializable
         UID = name;
     }
 
-
     public void updateFromStorage(Arbitrator savedArbitrator)
     {
         this.pubKeyAsHex = savedArbitrator.getPubKeyAsHex();
@@ -135,10 +102,6 @@ public class Arbitrator implements Serializable
         return other.getUID().equals(UID);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public String getUID()
     {
         return UID;
@@ -153,6 +116,10 @@ public class Arbitrator implements Serializable
     {
         return messagePubKeyAsHex;
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getName()
     {
@@ -217,5 +184,35 @@ public class Arbitrator implements Serializable
     public String getDescription()
     {
         return description;
+    }
+
+    public enum ID_TYPE
+    {
+        REAL_LIFE_ID,
+        NICKNAME,
+        COMPANY
+    }
+
+    public enum METHOD
+    {
+        TLS_NOTARY,
+        SKYPE_SCREEN_SHARING,
+        SMART_PHONE_VIDEO_CHAT,
+        REQUIRE_REAL_ID,
+        BANK_STATEMENT,
+        OTHER
+    }
+
+    public enum ID_VERIFICATION
+    {
+        PASSPORT,
+        GOV_ID,
+        UTILITY_BILLS,
+        FACEBOOK,
+        GOOGLE_PLUS,
+        TWITTER,
+        PGP,
+        BTC_OTC,
+        OTHER
     }
 }

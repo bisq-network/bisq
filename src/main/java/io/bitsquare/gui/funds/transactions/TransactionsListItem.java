@@ -9,27 +9,25 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BitSquareFormatter;
+import java.math.BigInteger;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Tooltip;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
-
-public class TransactionsListItem
+class TransactionsListItem
 {
     private static final Logger log = LoggerFactory.getLogger(TransactionsListItem.class);
     private final StringProperty date = new SimpleStringProperty();
     private final StringProperty amount = new SimpleStringProperty();
     private final StringProperty type = new SimpleStringProperty();
+    private final Transaction transaction;
+    private final WalletFacade walletFacade;
+    private final ConfidenceProgressIndicator progressIndicator;
+    private final Tooltip tooltip;
     private String addressString;
-
-    private Transaction transaction;
-    private WalletFacade walletFacade;
     private ConfidenceListener confidenceListener;
-    private ConfidenceProgressIndicator progressIndicator;
-    private Tooltip tooltip;
 
     public TransactionsListItem(Transaction transaction, WalletFacade walletFacade)
     {

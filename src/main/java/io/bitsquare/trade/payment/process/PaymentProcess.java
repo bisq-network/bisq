@@ -11,22 +11,19 @@ import org.slf4j.LoggerFactory;
 public class PaymentProcess
 {
     private static final Logger log = LoggerFactory.getLogger(PaymentProcess.class);
-    private MessageFacade messageService;
-    private BlockChainFacade bitcoinServices;
-
     protected String offererDepositPubKey;
     protected String offererPayoutAddress;
     protected String offererChangeAddress;
     protected String offererTotalInputPayment;
     protected String offererOutputPayment;
-
     protected String takerDepositPubKey;
     protected String takerPayoutAddress;
     protected String takerChangeAddress;
     protected String takerTotalInputPayment;
     protected String takerOutputPayment;
-
     protected String multiSigAddress;
+    private MessageFacade messageService;
+    private BlockChainFacade bitcoinServices;
     private WalletFacade wallet;
 
     public PaymentProcess()

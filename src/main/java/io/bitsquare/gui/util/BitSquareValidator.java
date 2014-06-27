@@ -9,12 +9,8 @@ import javafx.scene.paint.Color;
 
 public class BitSquareValidator
 {
-    private static Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
-    private static String invalidStyle = "-fx-border-color: red";
-
-    public static class ValidationException extends Exception
-    {
-    }
+    private static final Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
+    private static final String invalidStyle = "-fx-border-color: red";
 
     public static void textFieldsNotEmptyWithReset(TextField... textFields) throws ValidationException
     {
@@ -24,9 +20,8 @@ public class BitSquareValidator
 
     public static void resetTextFields(TextField... textFields)
     {
-        for (int i = 0; i < textFields.length; i++)
+        for (TextField textField : textFields)
         {
-            TextField textField = textFields[i];
             textField.setStyle("-fx-border-color: null");
             textField.setEffect(null);
         }
@@ -34,9 +29,8 @@ public class BitSquareValidator
 
     public static void textFieldsNotEmpty(TextField... textFields) throws ValidationException
     {
-        for (int i = 0; i < textFields.length; i++)
+        for (TextField textField : textFields)
         {
-            TextField textField = textFields[i];
             textFieldNotEmpty(textField);
         }
     }
@@ -59,9 +53,8 @@ public class BitSquareValidator
 
     public static void textFieldsHasDoubleValue(TextField... textFields) throws ValidationException
     {
-        for (int i = 0; i < textFields.length; i++)
+        for (TextField textField : textFields)
         {
-            TextField textField = textFields[i];
             textFieldHasDoubleValue(textField);
         }
     }
@@ -101,9 +94,8 @@ public class BitSquareValidator
     public static boolean validateStringsAsDouble(String... inputs)
     {
         boolean result = true;
-        for (int i = 0; i < inputs.length; i++)
+        for (String input : inputs)
         {
-            String input = inputs[i];
             result &= validateStringAsDouble(input);
         }
         return result;
@@ -125,9 +117,8 @@ public class BitSquareValidator
     public static boolean validateStringsNotEmpty(String... inputs)
     {
         boolean result = true;
-        for (int i = 0; i < inputs.length; i++)
+        for (String input : inputs)
         {
-            String input = inputs[i];
             result &= validateStringNotEmpty(input);
         }
         return result;
@@ -136,6 +127,10 @@ public class BitSquareValidator
     public static boolean validateStringNotEmpty(String input)
     {
         return input != null && input.length() > 0 && !input.equals(" ");
+    }
+
+    public static class ValidationException extends Exception
+    {
     }
 
 }

@@ -16,8 +16,12 @@ import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Trading;
 import io.bitsquare.user.User;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.net.URL;
+import java.util.Date;
+import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -35,41 +39,40 @@ import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.net.URL;
-import java.util.Date;
-import java.util.ResourceBundle;
-
 public class MainController implements Initializable, NavigationController
 {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
     private static MainController mainController;
 
 
-    private User user;
-    private WalletFacade walletFacade;
-    private MessageFacade messageFacade;
-    private Trading trading;
+    private final User user;
+    private final WalletFacade walletFacade;
+    private final MessageFacade messageFacade;
+    private final Trading trading;
+    private final Storage storage;
+    private final String selectedNavigationItemStorageId;
+    private final ToggleGroup toggleGroup = new ToggleGroup();
+
     private ChildController childController;
-    private Storage storage;
-    private String selectedNavigationItemStorageId;
     private NavigationItem selectedNavigationItem;
     private NetworkSyncPane networkSyncPane;
-    private ToggleGroup toggleGroup = new ToggleGroup();
     private ToggleButton prevToggleButton;
     private Image prevToggleButtonIcon;
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton;
     private Pane msgButtonHolder, ordersButtonButtonHolder;
     private TextField balanceTextField;
 
+    @FXML
+    private Pane contentPane;
+    @FXML
+    private HBox leftNavPane, rightNavPane;
+    @FXML
+    private ProgressBar loadingBar;
+    @FXML
+    private AnchorPane rootPane;
+    @FXML
+    private Label loadingLabel;
 
-    @FXML
-    public Pane contentPane;
-    @FXML
-    public HBox leftNavPane, rightNavPane;
-    @FXML
-    public AnchorPane anchorPane;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -101,6 +104,11 @@ public class MainController implements Initializable, NavigationController
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
+    {
+        Platform.runLater(this::init);
+    }
+
+    public void init()
     {
         networkSyncPane = new NetworkSyncPane();
         networkSyncPane.setSpacing(10);
@@ -137,7 +145,14 @@ public class MainController implements Initializable, NavigationController
         AnchorPane.setBottomAnchor(networkSyncPane, 0.0);
         AnchorPane.setLeftAnchor(networkSyncPane, 0.0);
 
-        messageFacade.addTakeOfferRequestListener((tradingMessage, sender) -> showTakeOfferRequest(tradingMessage, sender));
+        messageFacade.addTakeOfferRequestListener(this::showTakeOfferRequest);
+
+        loadingBar.setProgress(-1);
+        rootPane.getChildren().removeAll(loadingLabel, loadingBar);
+
+        leftNavPane.setVisible(true);
+        rightNavPane.setVisible(true);
+        contentPane.setVisible(true);
     }
 
 
@@ -152,9 +167,7 @@ public class MainController implements Initializable, NavigationController
             alertButton.relocate(36, 19);
             Tooltip.install(alertButton, new Tooltip("Someone accepted your offer"));
 
-            alertButton.setOnAction((e) -> {
-                ordersButton.fire();
-            });
+            alertButton.setOnAction((e) -> ordersButton.fire());
             ordersButtonButtonHolder.getChildren().add(alertButton);
 
         } catch (NullPointerException e)
@@ -331,7 +344,7 @@ public class MainController implements Initializable, NavigationController
     {
         if (user.getBankAccounts().size() > 1)
         {
-            ComboBox accountComboBox = new ComboBox(FXCollections.observableArrayList(user.getBankAccounts()));
+            ComboBox<BankAccount> accountComboBox = new ComboBox(FXCollections.observableArrayList(user.getBankAccounts()));
             accountComboBox.setLayoutY(12);
             accountComboBox.setValue(user.getCurrentBankAccount());
             accountComboBox.setConverter(new StringConverter<BankAccount>()
@@ -360,14 +373,7 @@ public class MainController implements Initializable, NavigationController
             vBox.getChildren().setAll(accountComboBox, titleLabel);
             parent.getChildren().add(vBox);
 
-            accountComboBox.valueProperty().addListener(new ChangeListener<BankAccount>()
-            {
-                @Override
-                public void changed(ObservableValue ov, BankAccount oldValue, BankAccount newValue)
-                {
-                    user.setCurrentBankAccount(newValue);
-                }
-            });
+            accountComboBox.valueProperty().addListener((ov, oldValue, newValue) -> user.setCurrentBankAccount(newValue));
 
         }
     }

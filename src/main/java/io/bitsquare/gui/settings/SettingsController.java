@@ -22,10 +22,12 @@ import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.Reputation;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
+import java.io.IOException;
+import java.net.URL;
+import java.util.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -37,26 +39,21 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.*;
 
 // TODO separate in 2 view/controllers
 public class SettingsController implements Initializable, ChildController, NavigationController
 {
-    private User user;
-    private Settings settings;
-    private Storage storage;
-    private WalletFacade walletFacade;
-    private MessageFacade messageFacade;
+    private final User user;
+    private final Settings settings;
+    private final Storage storage;
+    private final WalletFacade walletFacade;
+    private final MessageFacade messageFacade;
+    private final ObservableList<Locale> languageList;
+    private final ObservableList<Country> countryList;
     private NavigationController navigationController;
     private ChildController childController;
-    private ObservableList<Locale> languageList;
-    private ObservableList<Country> countryList;
     private List<String> regionList;
     private ObservableList<Arbitrator> arbitratorList;
     private Region selectedRegion, selectedBankAccountRegion;
@@ -240,14 +237,9 @@ public class SettingsController implements Initializable, ChildController, Navig
             stage.initOwner(rootStage);
             Scene scene = new Scene((Parent) view, 800, 600);
             stage.setScene(scene);
-            stage.setOnHidden(new EventHandler<WindowEvent>()
-            {
-                @Override
-                public void handle(WindowEvent windowEvent)
-                {
-                    if (fxmlView.equals(NavigationViewURL.ARBITRATOR_OVERVIEW))
-                        updateArbitrators();
-                }
+            stage.setOnHidden(windowEvent -> {
+                if (fxmlView.equals(NavigationViewURL.ARBITRATOR_OVERVIEW))
+                    updateArbitrators();
             });
             stage.show();
 
@@ -399,15 +391,7 @@ public class SettingsController implements Initializable, ChildController, Navig
                                                          {
                                                              label.setText(item.getDisplayName());
 
-                                                             removeButton.setOnAction(new EventHandler<ActionEvent>()
-                                                             {
-                                                                 @Override
-                                                                 public void handle(ActionEvent actionEvent)
-                                                                 {
-                                                                     removeLanguage(item);
-                                                                 }
-
-                                                             });
+                                                             removeButton.setOnAction(actionEvent -> removeLanguage(item));
 
                                                              setGraphic(hBox);
                                                          }
@@ -491,15 +475,7 @@ public class SettingsController implements Initializable, ChildController, Navig
                                                          {
                                                              label.setText(item.getName());
 
-                                                             removeButton.setOnAction(new EventHandler<ActionEvent>()
-                                                             {
-                                                                 @Override
-                                                                 public void handle(ActionEvent actionEvent)
-                                                                 {
-                                                                     removeCountry(item);
-                                                                 }
-
-                                                             });
+                                                             removeButton.setOnAction(actionEvent -> removeCountry(item));
 
                                                              setGraphic(hBox);
                                                          }
@@ -567,15 +543,7 @@ public class SettingsController implements Initializable, ChildController, Navig
                                                            {
                                                                label.setText(item.getName());
 
-                                                               removeButton.setOnAction(new EventHandler<ActionEvent>()
-                                                               {
-                                                                   @Override
-                                                                   public void handle(ActionEvent actionEvent)
-                                                                   {
-                                                                       removeArbitrator(item);
-                                                                   }
-
-                                                               });
+                                                               removeButton.setOnAction(actionEvent -> removeArbitrator(item));
 
                                                                setGraphic(hBox);
                                                            }

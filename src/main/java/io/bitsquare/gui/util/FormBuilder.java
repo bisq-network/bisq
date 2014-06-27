@@ -2,16 +2,15 @@ package io.bitsquare.gui.util;
 
 import io.bitsquare.bank.BankAccountTypeInfo;
 import io.bitsquare.gui.components.VSpacer;
+import java.util.Currency;
+import java.util.List;
+import java.util.Locale;
 import javafx.collections.FXCollections;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-
-import java.util.Currency;
-import java.util.List;
-import java.util.Locale;
 
 //TODO to be removed
 public class FormBuilder

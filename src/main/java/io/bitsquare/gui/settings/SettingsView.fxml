@@ -3,30 +3,28 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<TabPane fx:id="tabPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8"
-         xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.bitsquare.gui.settings.SettingsController">
+<TabPane xmlns:fx="http://javafx.com/fxml/1" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
+         xmlns="http://javafx.com/javafx/8" fx:controller="io.bitsquare.gui.settings.SettingsController">
 
     <Tab text="General" closable="false">
         <GridPane hgap="5.0" vgap="5.0">
             <padding>
                 <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
             </padding>
-            <children>
-                <Label text="Accepted languages:"/>
-                <ListView fx:id="languagesListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1"/>
-                <Label text="Accepted countries:" GridPane.rowIndex="2"/>
-                <Label text="Accepted arbitrators:" GridPane.rowIndex="4"/>
-                <ListView fx:id="countriesListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-                <ListView fx:id="arbitratorsListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
-                <ComboBox fx:id="languageComboBox" onAction="#onAddLanguage" prefWidth="150.0" promptText="Add language" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+            <Label text="Accepted languages:"/>
+            <ListView fx:id="languagesListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1"/>
+            <Label text="Accepted countries:" GridPane.rowIndex="2"/>
+            <Label text="Accepted arbitrators:" GridPane.rowIndex="4"/>
+            <ListView fx:id="countriesListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+            <ListView fx:id="arbitratorsListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+            <ComboBox fx:id="languageComboBox" onAction="#onAddLanguage" prefWidth="150.0" promptText="Add language" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-                <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                    <ComboBox fx:id="regionComboBox" onAction="#onSelectRegion" prefWidth="150.0" promptText="Select region"/>
-                    <ComboBox fx:id="countryComboBox" onAction="#onAddCountry" visible="false" prefWidth="150.0" promptText="Add country"/>
-                </HBox>
+            <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                <ComboBox fx:id="regionComboBox" onAction="#onSelectRegion" prefWidth="150.0" promptText="Select region"/>
+                <ComboBox fx:id="countryComboBox" onAction="#onAddCountry" visible="false" prefWidth="150.0" promptText="Add country"/>
+            </HBox>
 
-                <Button onAction="#onAddArbitrator" text="Add arbitrator" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
-            </children>
+            <Button onAction="#onAddArbitrator" text="Add arbitrator" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
 
             <columnConstraints>
                 <ColumnConstraints/>
@@ -82,7 +80,7 @@
                 <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="8">
                     <Button fx:id="saveBankAccountButton" defaultButton="true" onAction="#onSaveBankAccount" text="Save bank account"/>
                     <Button fx:id="addBankAccountButton" onAction="#onAddBankAccount" text="Add new bank account"/>
-                    <Button fx:id="removeBankAccountButton" onAction="#onRemoveBankAccount" text="Remove bank account"/>
+                    <Button onAction="#onRemoveBankAccount" text="Remove bank account"/>
                 </HBox>
 
 

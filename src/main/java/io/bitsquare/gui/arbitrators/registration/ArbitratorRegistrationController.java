@@ -24,6 +24,10 @@ import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.Reputation;
 import io.bitsquare.util.DSAKeyUtil;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.net.URL;
+import java.util.*;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -37,18 +41,13 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.net.URL;
-import java.util.*;
-
 public class ArbitratorRegistrationController implements Initializable, ChildController
 {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorRegistrationController.class);
 
-    private Storage storage;
-    private WalletFacade walletFacade;
-    private MessageFacade messageFacade;
+    private final Storage storage;
+    private final WalletFacade walletFacade;
+    private final MessageFacade messageFacade;
     private Arbitrator arbitrator;
     private ArbitratorProfileController arbitratorProfileController;
     private boolean isEditMode;

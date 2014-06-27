@@ -43,22 +43,22 @@ import javafx.scene.control.Skin;
  * <p>
  * ProgressIndicator sets focusTraversable to false.
  * </p>
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * This first example creates a ProgressIndicator with an indeterminate value :
  * <pre><code>
  * import javafx.scene.control.ProgressIndicator;
  * ProgressIndicator p1 = new ProgressIndicator();
  * </code></pre>
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * This next example creates a ProgressIndicator which is 25% complete :
  * <pre><code>
  * import javafx.scene.control.ProgressIndicator;
  * ProgressIndicator p2 = new ProgressIndicator();
  * p2.setProgress(0.25F);
  * </code></pre>
- * <p/>
+ * <p>
  * Implementation of ProgressIndicator According to JavaFX UI Control API Specification
  *
  * @since JavaFX 2.0
@@ -79,6 +79,44 @@ public class ConfidenceProgressIndicator extends Control
      * Constructors                                                            *
      *                                                                         *
      **************************************************************************/
+    /**
+     * Initialize the style class to 'progress-indicator'.
+     * <p>
+     * This is the selector class from which CSS can be used to style
+     * this control.
+     */
+    private static final String DEFAULT_STYLE_CLASS = "progress-indicator";
+    /**
+     * Pseudoclass indicating this is a determinate (i.e., progress can be
+     * determined) progress indicator.
+     */
+    private static final PseudoClass PSEUDO_CLASS_DETERMINATE =
+            PseudoClass.getPseudoClass("determinate");
+    /***************************************************************************
+     *                                                                         *
+     * Properties                                                              *
+     *                                                                         *
+     **************************************************************************/
+    /**
+     * Pseudoclass indicating this is an indeterminate (i.e., progress cannot
+     * be determined) progress indicator.
+     */
+    private static final PseudoClass PSEUDO_CLASS_INDETERMINATE =
+            PseudoClass.getPseudoClass("indeterminate");
+    /**
+     * A flag indicating whether it is possible to determine the progress
+     * of the ProgressIndicator. Typically indeterminate progress bars are
+     * rendered with some form of animation indicating potentially "infinite"
+     * progress.
+     */
+    private ReadOnlyBooleanWrapper indeterminate;
+    /**
+     * The actual progress of the ProgressIndicator. A negative value for
+     * progress indicates that the progress is indeterminate. A positive value
+     * between 0 and 1 indicates the percentage of progress where 0 is 0% and 1
+     * is 100%. Any value greater than 1 is interpreted as 100%.
+     */
+    private DoubleProperty progress;
 
     /**
      * Creates a new indeterminate ProgressIndicator.
@@ -91,10 +129,11 @@ public class ConfidenceProgressIndicator extends Control
     /**
      * Creates a new ProgressIndicator with the given progress value.
      */
+    @SuppressWarnings("unchecked")
     public ConfidenceProgressIndicator(double progress)
     {
         // focusTraversable is styleable through css. Calling setFocusTraversable
-        // makes it look to css like the user set the value and css will not 
+        // makes it look to css like the user set the value and css will not
         // override. Initializing focusTraversable by calling applyStyle with null
         // StyleOrigin ensures that css will be able to override the value.
         ((StyleableProperty) focusTraversableProperty()).applyStyle(null, Boolean.FALSE);
@@ -106,27 +145,15 @@ public class ConfidenceProgressIndicator extends Control
         pseudoClassStateChanged(PSEUDO_CLASS_INDETERMINATE, c == 0);
         pseudoClassStateChanged(PSEUDO_CLASS_DETERMINATE, c != 0);
     }
-    /***************************************************************************
-     *                                                                         *
-     * Properties                                                              *
-     *                                                                         *
-     **************************************************************************/
-    /**
-     * A flag indicating whether it is possible to determine the progress
-     * of the ProgressIndicator. Typically indeterminate progress bars are
-     * rendered with some form of animation indicating potentially "infinite"
-     * progress.
-     */
-    private ReadOnlyBooleanWrapper indeterminate;
+
+    public final boolean isIndeterminate()
+    {
+        return indeterminate == null || indeterminate.get();
+    }
 
     private void setIndeterminate(boolean value)
     {
         indeterminatePropertyImpl().set(value);
-    }
-
-    public final boolean isIndeterminate()
-    {
-        return indeterminate == null ? true : indeterminate.get();
     }
 
     public final ReadOnlyBooleanProperty indeterminateProperty()
@@ -165,21 +192,29 @@ public class ConfidenceProgressIndicator extends Control
     }
 
     /**
-     * The actual progress of the ProgressIndicator. A negative value for
-     * progress indicates that the progress is indeterminate. A positive value
-     * between 0 and 1 indicates the percentage of progress where 0 is 0% and 1
-     * is 100%. Any value greater than 1 is interpreted as 100%.
+     * ************************************************************************
+     * *
+     * Methods                                                                 *
+     * *
+     * ************************************************************************
      */
-    private DoubleProperty progress;
-
-    public final void setProgress(double value)
-    {
-        progressProperty().set(value);
-    }
 
     public final double getProgress()
     {
         return progress == null ? INDETERMINATE_PROGRESS : progress.get();
+    }
+
+    /**
+     * ************************************************************************
+     * *
+     * Stylesheet Handling                                                     *
+     * *
+     * ************************************************************************
+     */
+
+    public final void setProgress(double value)
+    {
+        progressProperty().set(value);
     }
 
     public final DoubleProperty progressProperty()
@@ -210,12 +245,6 @@ public class ConfidenceProgressIndicator extends Control
         return progress;
     }
 
-    /***************************************************************************
-     *                                                                         *
-     * Methods                                                                 *
-     *                                                                         *
-     **************************************************************************/
-
     /**
      * {@inheritDoc}
      */
@@ -224,34 +253,6 @@ public class ConfidenceProgressIndicator extends Control
     {
         return new ConfidenceProgressIndicatorSkin(this);
     }
-
-    /***************************************************************************
-     *                                                                         *
-     * Stylesheet Handling                                                     *
-     *                                                                         *
-     **************************************************************************/
-
-    /**
-     * Initialize the style class to 'progress-indicator'.
-     * <p/>
-     * This is the selector class from which CSS can be used to style
-     * this control.
-     */
-    private static final String DEFAULT_STYLE_CLASS = "progress-indicator";
-
-    /**
-     * Pseudoclass indicating this is a determinate (i.e., progress can be
-     * determined) progress indicator.
-     */
-    private static final PseudoClass PSEUDO_CLASS_DETERMINATE =
-            PseudoClass.getPseudoClass("determinate");
-
-    /**
-     * Pseudoclass indicating this is an indeterminate (i.e., progress cannot
-     * be determined) progress indicator.
-     */
-    private static final PseudoClass PSEUDO_CLASS_INDETERMINATE =
-            PseudoClass.getPseudoClass("indeterminate");
 
     /**
      * Most Controls return true for focusTraversable, so Control overrides
@@ -263,6 +264,7 @@ public class ConfidenceProgressIndicator extends Control
      */
     @Deprecated
     @Override
+    @SuppressWarnings("deprecation")
     protected /*do not make final*/ Boolean impl_cssGetFocusTraversableInitialValue()
     {
         return Boolean.FALSE;

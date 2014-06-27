@@ -5,7 +5,7 @@ import com.google.bitcoin.core.TransactionConfidence;
 
 public class ConfidenceListener
 {
-    private Address address;
+    private final Address address;
 
     public ConfidenceListener(Address address)
     {

@@ -20,12 +20,10 @@ import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
+import java.math.BigInteger;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.math.BigInteger;
-import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -34,17 +32,17 @@ public class TakerPaymentProtocol
 {
     private static final Logger log = LoggerFactory.getLogger(TakerPaymentProtocol.class);
 
-    private Trade trade;
-    private Offer offer;
+    private final Trade trade;
+    private final Offer offer;
+    private final TakerPaymentProtocolListener takerPaymentProtocolListener;
+    private final MessageFacade messageFacade;
+    private final WalletFacade walletFacade;
+    private final BlockChainFacade blockChainFacade;
+    private final CryptoFacade cryptoFacade;
+    private final User user;
+    private final int numberOfSteps = 10;//TODO
     private Contract contract;
-    private TakerPaymentProtocolListener takerPaymentProtocolListener;
-    private MessageFacade messageFacade;
-    private WalletFacade walletFacade;
-    private BlockChainFacade blockChainFacade;
-    private CryptoFacade cryptoFacade;
-    private User user;
     private PeerAddress peerAddress;
-    private int numberOfSteps = 10;//TODO
     private int currentStep = 0;
 
 
@@ -393,7 +391,7 @@ public class TakerPaymentProtocol
             log.debug("2.10 deposit tx created: " + signedTakerDepositTx);
             long takerTxOutIndex = signedTakerDepositTx.getInput(1).getOutpoint().getIndex();
             sendSignedTakerDepositTxAsHex(signedTakerDepositTx, takerTxOutIndex, requestTradeMessage.getOffererTxOutIndex());
-        } catch (InterruptedException | AddressFormatException | ExecutionException | InsufficientMoneyException e)
+        } catch (InsufficientMoneyException e)
         {
             log.error("2.10 error at walletFacade.takerAddPaymentAndSign: " + e.getMessage());
         }
@@ -548,9 +546,6 @@ public class TakerPaymentProtocol
                     offererPayoutAddress,
                     trade.getId(),
                     callback);
-        } catch (InsufficientMoneyException e)
-        {
-            log.error("3.12 offererCreatesAndSignsPayoutTx  onFailed InsufficientMoneyException " + e.getMessage());
         } catch (AddressFormatException e)
         {
             log.error("3.12 offererCreatesAndSignsPayoutTx  onFailed AddressFormatException " + e.getMessage());

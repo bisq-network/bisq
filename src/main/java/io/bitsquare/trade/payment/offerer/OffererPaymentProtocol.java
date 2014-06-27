@@ -16,13 +16,11 @@ import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
+import java.math.BigInteger;
 import javafx.util.Pair;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.math.BigInteger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -32,18 +30,18 @@ public class OffererPaymentProtocol
 
     private static final Logger log = LoggerFactory.getLogger(OffererPaymentProtocol.class);
 
-    private Trade trade;
-    private Offer offer;
+    private final Trade trade;
+    private final Offer offer;
+    private final OffererPaymentProtocolListener offererPaymentProtocolListener;
+    private final MessageFacade messageFacade;
+    private final WalletFacade walletFacade;
+    private final BlockChainFacade blockChainFacade;
+    private final CryptoFacade cryptoFacade;
+    private final User user;
+    private final int numberOfSteps = 10;//TODO
     private Contract contract;
-    private OffererPaymentProtocolListener offererPaymentProtocolListener;
-    private MessageFacade messageFacade;
-    private WalletFacade walletFacade;
-    private BlockChainFacade blockChainFacade;
-    private CryptoFacade cryptoFacade;
-    private User user;
     private PeerAddress peerAddress;
     private boolean isTakeOfferRequested;
-    private int numberOfSteps = 10;//TODO
     private int currentStep = 0;
     private String preparedOffererDepositTxAsHex;
     private Transaction depositTransaction;
@@ -117,15 +115,8 @@ public class OffererPaymentProtocol
                     offererPaymentProtocolListener.onProgress(getProgress());
 
                     isTakeOfferRequested = true;
-                    try
-                    {
-                        log.debug("1.3 messageFacade.removeOffer");
-                        messageFacade.removeOffer(offer);
-                    } catch (IOException e)
-                    {
-                        log.error("1.3 messageFacade.removeOffer failed " + e.getMessage());
-                        offererPaymentProtocolListener.onFailure("removeOffer failed " + e.getMessage());
-                    }
+                    log.debug("1.3 messageFacade.removeOffer");
+                    messageFacade.removeOffer(offer);
 
                     // It's the takers turn again, so we are in wait mode....
                 }
@@ -470,29 +461,29 @@ public class OffererPaymentProtocol
         onDepositTxConfirmedInBlockchain();
 
         transaction.getConfidence().addEventListener(new TransactionConfidence.Listener()
-        {
-            @Override
-            public void onConfidenceChanged(Transaction tx, ChangeReason reason)
-            {
-                if (reason == ChangeReason.SEEN_PEERS)
-                {
-                    updateConfirmation(tx.getConfidence());
+                                                     {
+                                                         @Override
+                                                         public void onConfidenceChanged(Transaction tx, ChangeReason reason)
+                                                         {
+                                                             if (reason == ChangeReason.SEEN_PEERS)
+                                                             {
+                                                                 updateConfirmation(tx.getConfidence());
 
-                    //todo just for testing now, dont like to wait so long...
+                                                                 //todo just for testing now, dont like to wait so long...
                    /* if (tx.getConfidenceForAddress().numBroadcastPeers() > 3)
                     {
                         onDepositTxConfirmedInBlockchain();
                         transaction.getConfidenceForAddress().removeEventListener(this);
                     }  */
 
-                }
-                if (reason == ChangeReason.TYPE && tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
-                {
-                    onDepositTxConfirmedInBlockchain();
-                    transaction.getConfidence().removeEventListener(this);
-                }
-            }
-        }
+                                                             }
+                                                             if (reason == ChangeReason.TYPE && tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
+                                                             {
+                                                                 onDepositTxConfirmedInBlockchain();
+                                                                 transaction.getConfidence().removeEventListener(this);
+                                                             }
+                                                         }
+                                                     }
         );
     }
 
@@ -583,9 +574,6 @@ public class OffererPaymentProtocol
             log.debug("3.10  sendTradingMessage BANK_TX_INITED");
             messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
 
-        } catch (InsufficientMoneyException e)
-        {
-            log.error("3.10 offererCreatesAndSignsPayoutTx  onFailed InsufficientMoneyException " + e.getMessage());
         } catch (AddressFormatException e)
         {
             log.error("3.10 offererCreatesAndSignsPayoutTx  onFailed AddressFormatException " + e.getMessage());

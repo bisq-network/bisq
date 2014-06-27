@@ -8,11 +8,13 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
+import java.net.URL;
+import java.util.List;
+import java.util.ResourceBundle;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -22,19 +24,15 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URL;
-import java.util.List;
-import java.util.ResourceBundle;
-
 public class DepositController implements Initializable, ChildController, Hibernate
 {
     private static final Logger log = LoggerFactory.getLogger(DepositController.class);
 
-    private WalletFacade walletFacade;
+    private final WalletFacade walletFacade;
     protected ObservableList<DepositListItem> addressList;
 
     @FXML
-    private TableView tableView;
+    private TableView<DepositListItem> tableView;
     @FXML
     private TableColumn<String, DepositListItem> labelColumn, addressColumn, balanceColumn, copyColumn, confidenceColumn;
     @FXML
@@ -81,9 +79,9 @@ public class DepositController implements Initializable, ChildController, Hibern
     @Override
     public void cleanup()
     {
-        for (int i = 0; i < addressList.size(); i++)
+        for (DepositListItem anAddressList : addressList)
         {
-            addressList.get(i).cleanup();
+            anAddressList.cleanup();
         }
     }
 
@@ -103,9 +101,9 @@ public class DepositController implements Initializable, ChildController, Hibern
     {
         List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
         addressList = FXCollections.observableArrayList();
-        for (int i = 0; i < addressEntryList.size(); i++)
+        for (AddressEntry anAddressEntryList : addressEntryList)
         {
-            addressList.add(new DepositListItem(addressEntryList.get(i), walletFacade));
+            addressList.add(new DepositListItem(anAddressEntryList, walletFacade));
         }
 
         tableView.setItems(addressList);
@@ -158,14 +156,7 @@ public class DepositController implements Initializable, ChildController, Hibern
                                 Tooltip tooltip = new Tooltip(item.getAddressEntry().getTradeId());
                                 Tooltip.install(hyperlink, tooltip);
 
-                                hyperlink.setOnAction(new EventHandler<ActionEvent>()
-                                {
-                                    @Override
-                                    public void handle(ActionEvent event)
-                                    {
-                                        log.info("Show trade details " + item.getAddressEntry().getTradeId());
-                                    }
-                                });
+                                hyperlink.setOnAction(event -> log.info("Show trade details " + item.getAddressEntry().getTradeId()));
                             }
                             setGraphic(hyperlink);
                         }
@@ -219,7 +210,7 @@ public class DepositController implements Initializable, ChildController, Hibern
             {
                 return new TableCell<String, DepositListItem>()
                 {
-                    Label copyIcon = new Label();
+                    final Label copyIcon = new Label();
 
                     {
                         copyIcon.getStyleClass().add("copy-icon");

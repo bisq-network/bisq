@@ -1,7 +1,6 @@
 package io.bitsquare.bank;
 
 import io.bitsquare.locale.Country;
-
 import java.io.Serializable;
 import java.util.Currency;
 import java.util.Objects;
@@ -10,14 +9,14 @@ public class BankAccount implements Serializable
 {
     private static final long serialVersionUID = 1792577576443221268L;
 
-    private BankAccountTypeInfo bankAccountTypeInfo;
-    private String accountPrimaryID;
-    private String accountSecondaryID;
-    private String accountHolderName;
-    private Country country;
-    private Currency currency;
-    private String uid;
-    private String accountTitle;
+    private final BankAccountTypeInfo bankAccountTypeInfo;
+    private final String accountPrimaryID;
+    private final String accountSecondaryID;
+    private final String accountHolderName;
+    private final Country country;
+    private final Currency currency;
+    private final String uid;
+    private final String accountTitle;
 
     public BankAccount(BankAccountTypeInfo bankAccountTypeInfo,
                        Currency currency,

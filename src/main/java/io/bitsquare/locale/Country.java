@@ -7,9 +7,9 @@ public class Country implements Serializable
 {
     private static final long serialVersionUID = -5930294199097793187L;
 
-    private String code;
-    private String name;
-    private Region region;
+    private final String code;
+    private final String name;
+    private final Region region;
 
     public Country(String code, String name, Region region)
     {

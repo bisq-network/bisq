@@ -14,6 +14,12 @@ import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Arbitrator;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -25,26 +31,19 @@ import javafx.stage.Stage;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.storage.Data;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
-
 public class ArbitratorOverviewController implements Initializable, ChildController, NavigationController, ArbitratorListener
 {
-    private Settings settings;
-    private Storage storage;
-    private MessageFacade messageFacade;
+    private final Settings settings;
+    private final Storage storage;
+    private final MessageFacade messageFacade;
+    private final List<Arbitrator> allArbitrators = new ArrayList<>();
     private Arbitrator currentArbitrator;
     private NavigationController navigationController;
     private ArbitratorProfileController arbitratorProfileController;
-    private List<Arbitrator> allArbitrators = new ArrayList<>();
     private int index = -1;
 
     @FXML
-    private Button prevButton, nextButton, selectButton;
+    private Button prevButton, nextButton, selectButton, closeButton;
     @FXML
     private AnchorPane rootContainer;
     @FXML

@@ -1,12 +1,10 @@
 package io.bitsquare.user;
 
 import io.bitsquare.bank.BankAccount;
-import javafx.beans.property.SimpleBooleanProperty;
-
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import javafx.beans.property.SimpleBooleanProperty;
 
 public class User implements Serializable
 {
@@ -65,37 +63,6 @@ public class User implements Serializable
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setMessagePubKeyAsHex(String messageID)
-    {
-        this.messagePubKeyAsHex = messageID;
-    }
-
-    public void setAccountID(String accountID)
-    {
-        this.accountID = accountID;
-    }
-
-    public void setBankAccounts(List<BankAccount> bankAccounts)
-    {
-        this.bankAccounts = bankAccounts;
-    }
-
-    public void setCurrentBankAccount(BankAccount currentBankAccount)
-    {
-        this.currentBankAccount = currentBankAccount;
-        bankAccountChangedProperty.set(!bankAccountChangedProperty.get());
-    }
-
-    public void setIsOnline(boolean isOnline)
-    {
-        this.isOnline = isOnline;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public String getStringifiedBankAccounts()
     {
         String bankAccountUIDs = "";
@@ -116,14 +83,34 @@ public class User implements Serializable
         return messagePubKeyAsHex;
     }
 
+    public void setMessagePubKeyAsHex(String messageID)
+    {
+        this.messagePubKeyAsHex = messageID;
+    }
+
     public String getAccountID()
     {
         return accountID;
     }
 
+    public void setAccountID(String accountID)
+    {
+        this.accountID = accountID;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public List<BankAccount> getBankAccounts()
     {
         return bankAccounts;
+    }
+
+    public void setBankAccounts(List<BankAccount> bankAccounts)
+    {
+        this.bankAccounts = bankAccounts;
     }
 
     public BankAccount getCurrentBankAccount()
@@ -131,11 +118,16 @@ public class User implements Serializable
         return currentBankAccount;
     }
 
+    public void setCurrentBankAccount(BankAccount currentBankAccount)
+    {
+        this.currentBankAccount = currentBankAccount;
+        bankAccountChangedProperty.set(!bankAccountChangedProperty.get());
+    }
+
     public BankAccount getBankAccount(String bankAccountUID)
     {
-        for (Iterator<BankAccount> iterator = bankAccounts.iterator(); iterator.hasNext(); )
+        for (BankAccount bankAccount : bankAccounts)
         {
-            BankAccount bankAccount = iterator.next();
             if (bankAccount.getUid().equals(bankAccountUID))
                 return bankAccount;
         }
@@ -145,6 +137,11 @@ public class User implements Serializable
     public boolean getIsOnline()
     {
         return isOnline;
+    }
+
+    public void setIsOnline(boolean isOnline)
+    {
+        this.isOnline = isOnline;
     }
 
     public SimpleBooleanProperty getBankAccountChangedProperty()

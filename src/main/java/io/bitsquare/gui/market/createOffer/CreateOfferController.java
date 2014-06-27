@@ -12,10 +12,10 @@ import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationViewURL;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.gui.util.BitSquareConverter;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.ConfidenceDisplay;
-import io.bitsquare.gui.util.Popups;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
@@ -25,8 +25,11 @@ import io.bitsquare.trade.Trading;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.User;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.net.URL;
+import java.util.Random;
+import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -38,22 +41,15 @@ import javafx.scene.layout.AnchorPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.net.URL;
-import java.util.Random;
-import java.util.ResourceBundle;
-
 public class CreateOfferController implements Initializable, ChildController, Hibernate
 {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferController.class);
-
+    private final Trading trading;
+    private final WalletFacade walletFacade;
+    private final MessageFacade messageFacade;
+    private final Settings settings;
+    private final User user;
     private NavigationController navigationController;
-    private Trading trading;
-    private WalletFacade walletFacade;
-    private MessageFacade messageFacade;
-    private Settings settings;
-    private User user;
     private Direction direction;
     private Offer offer;
     private ConfidenceDisplay confidenceDisplay;
@@ -111,22 +107,8 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         collateralTextField.setText("10");
         updateVolume();
 
-        amountTextField.textProperty().addListener(new ChangeListener<String>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue)
-            {
-                updateVolume();
-            }
-        });
-        priceTextField.textProperty().addListener(new ChangeListener<String>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue)
-            {
-                updateVolume();
-            }
-        });
+        amountTextField.textProperty().addListener((observable, oldValue, newValue) -> updateVolume());
+        priceTextField.textProperty().addListener((observable, oldValue, newValue) -> updateVolume());
     }
 
 

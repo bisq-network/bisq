@@ -11,15 +11,17 @@ import io.bitsquare.btc.*;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.gui.util.BitSquareValidator;
-import io.bitsquare.gui.util.Popups;
+import java.math.BigInteger;
+import java.net.URL;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -31,21 +33,16 @@ import org.controlsfx.dialog.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
-import java.net.URL;
-import java.util.List;
-import java.util.ResourceBundle;
-
 public class WithdrawalController implements Initializable, ChildController, Hibernate
 {
     private static final Logger log = LoggerFactory.getLogger(WithdrawalController.class);
 
 
-    private WalletFacade walletFacade;
+    private final WalletFacade walletFacade;
     protected ObservableList<WithdrawalListItem> addressList;
 
     @FXML
-    private TableView tableView;
+    private TableView<WithdrawalListItem> tableView;
     @FXML
     private TableColumn<String, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn, confidenceColumn;
     @FXML
@@ -80,28 +77,23 @@ public class WithdrawalController implements Initializable, ChildController, Hib
         setCopyColumnCellFactory();
         setConfidenceColumnCellFactory();
 
-        tableView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<WithdrawalListItem>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends WithdrawalListItem> observableValue, WithdrawalListItem oldValue, WithdrawalListItem newValue)
+        tableView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (newValue != null)
             {
-                if (newValue != null)
-                {
-                    BitSquareValidator.resetTextFields(withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField);
+                BitSquareValidator.resetTextFields(withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField);
 
-                    if (newValue.getBalance().compareTo(BigInteger.ZERO) > 0)
-                    {
-                        amountTextField.setText(BtcFormatter.satoshiToString(newValue.getBalance()));
-                        withdrawFromTextField.setText(newValue.getAddressEntry().getAddressString());
-                        changeAddressTextField.setText(newValue.getAddressEntry().getAddressString());
-                    }
-                    else
-                    {
-                        withdrawFromTextField.setText("");
-                        withdrawFromTextField.setPromptText("No fund to withdrawal on that address.");
-                        amountTextField.setText("");
-                        amountTextField.setPromptText("Invalid amount");
-                    }
+                if (newValue.getBalance().compareTo(BigInteger.ZERO) > 0)
+                {
+                    amountTextField.setText(BtcFormatter.satoshiToString(newValue.getBalance()));
+                    withdrawFromTextField.setText(newValue.getAddressEntry().getAddressString());
+                    changeAddressTextField.setText(newValue.getAddressEntry().getAddressString());
+                }
+                else
+                {
+                    withdrawFromTextField.setText("");
+                    withdrawFromTextField.setPromptText("No fund to withdrawal on that address.");
+                    amountTextField.setText("");
+                    amountTextField.setPromptText("Invalid amount");
                 }
             }
         });
@@ -120,9 +112,9 @@ public class WithdrawalController implements Initializable, ChildController, Hib
     @Override
     public void cleanup()
     {
-        for (int i = 0; i < addressList.size(); i++)
+        for (WithdrawalListItem anAddressList : addressList)
         {
-            addressList.get(i).cleanup();
+            anAddressList.cleanup();
         }
     }
 
@@ -142,10 +134,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
     {
         List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
         addressList = FXCollections.observableArrayList();
-        for (int i = 0; i < addressEntryList.size(); i++)
-        {
-            addressList.add(new WithdrawalListItem(addressEntryList.get(i), walletFacade));
-        }
+        addressList.addAll(addressEntryList.stream().map(anAddressEntryList -> new WithdrawalListItem(anAddressEntryList, walletFacade)).collect(Collectors.toList()));
 
         tableView.setItems(addressList);
     }
@@ -215,6 +204,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
 
         } catch (BitSquareValidator.ValidationException e)
         {
+            log.trace(e.toString());
         }
     }
 
@@ -254,14 +244,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                                 Tooltip tooltip = new Tooltip(item.getAddressEntry().getTradeId());
                                 Tooltip.install(hyperlink, tooltip);
 
-                                hyperlink.setOnAction(new EventHandler<ActionEvent>()
-                                {
-                                    @Override
-                                    public void handle(ActionEvent event)
-                                    {
-                                        log.info("Show trade details " + item.getAddressEntry().getTradeId());
-                                    }
-                                });
+                                hyperlink.setOnAction(event -> log.info("Show trade details " + item.getAddressEntry().getTradeId()));
                             }
                             setGraphic(hyperlink);
                         }
@@ -315,7 +298,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
             {
                 return new TableCell<String, WithdrawalListItem>()
                 {
-                    Label copyIcon = new Label();
+                    final Label copyIcon = new Label();
 
                     {
                         copyIcon.getStyleClass().add("copy-icon");

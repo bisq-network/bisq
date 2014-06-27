@@ -3,19 +3,17 @@ package io.bitsquare.btc;
 import com.google.bitcoin.core.Utils;
 import io.bitsquare.gui.util.BitSquareConverter;
 import io.bitsquare.gui.util.BitSquareFormatter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.Locale;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // TODO
 public class BtcFormatter
 {
+    public static final BigInteger BTC = new BigInteger("100000000");
     private static final Logger log = LoggerFactory.getLogger(BtcFormatter.class);
-
-    public static BigInteger BTC = new BigInteger("100000000");
     public static BigInteger mBTC = new BigInteger("100000");
 
 

@@ -9,10 +9,10 @@ import io.bitsquare.gui.NavigationViewURL;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.components.processbar.ProcessStepBar;
 import io.bitsquare.gui.components.processbar.ProcessStepItem;
+import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.gui.util.BitSquareConverter;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.FormBuilder;
-import io.bitsquare.gui.util.Popups;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.TradeMessage;
 import io.bitsquare.trade.Direction;
@@ -22,6 +22,11 @@ import io.bitsquare.trade.Trading;
 import io.bitsquare.trade.payment.taker.TakerPaymentProtocol;
 import io.bitsquare.trade.payment.taker.TakerPaymentProtocolListener;
 import io.bitsquare.util.Utilities;
+import java.math.BigInteger;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ResourceBundle;
 import javafx.animation.AnimationTimer;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -32,26 +37,20 @@ import javafx.scene.layout.Pane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
-
 public class TakerTradeController implements Initializable, ChildController
 {
     private static final Logger log = LoggerFactory.getLogger(TakerTradeController.class);
 
-    private Trading trading;
-    private WalletFacade walletFacade;
-    private BlockChainFacade blockChainFacade;
-    private MessageFacade messageFacade;
+    private final Trading trading;
+    private final WalletFacade walletFacade;
+    private final BlockChainFacade blockChainFacade;
+    private final MessageFacade messageFacade;
+    private final List<ProcessStepItem> processStepItems = new ArrayList<>();
     private Offer offer;
     private Trade trade;
     private BigInteger requestedAmount;
     private boolean offererIsOnline;
     private int row;
-    private List<ProcessStepItem> processStepItems = new ArrayList();
     private NavigationController navigationController;
     private TextField amountTextField, totalToPayLabel, totalLabel, collateralTextField, isOnlineTextField;
     private Label statusTextField, infoLabel;
@@ -474,8 +473,7 @@ public class TakerTradeController implements Initializable, ChildController
     {
         double amount = BitSquareConverter.stringToDouble2(amountTextField.getText());
         double resultDouble = amount * (double) offer.getCollateral() / 100.0;
-        BigInteger result = BtcFormatter.doubleValueToSatoshis(resultDouble);
-        return result;
+        return BtcFormatter.doubleValueToSatoshis(resultDouble);
     }
 
     private BigInteger getAmountInSatoshis()

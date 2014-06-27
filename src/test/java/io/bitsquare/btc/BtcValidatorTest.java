@@ -1,9 +1,8 @@
 package io.bitsquare.btc;
 
 import com.google.bitcoin.core.Transaction;
-import org.junit.Test;
-
 import java.math.BigInteger;
+import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

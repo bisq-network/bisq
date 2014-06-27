@@ -9,8 +9,8 @@ import javafx.util.Duration;
 
 public class NetworkSyncPane extends HBox
 {
-    private ProgressBar networkSyncProgressBar;
-    private Label networkSyncInfoLabel;
+    private final ProgressBar networkSyncProgressBar;
+    private final Label networkSyncInfoLabel;
 
     public NetworkSyncPane()
     {

@@ -4,10 +4,9 @@ import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Utils;
 import com.google.common.base.Charsets;
 import com.google.inject.Inject;
+import java.security.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.security.SignatureException;
 
 /**
  * That facade delivers crypto functionality from the bitcoinJ library

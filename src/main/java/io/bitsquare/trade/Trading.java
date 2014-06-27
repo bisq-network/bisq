@@ -16,15 +16,14 @@ import io.bitsquare.trade.payment.offerer.OffererPaymentProtocolListener;
 import io.bitsquare.trade.payment.taker.TakerPaymentProtocol;
 import io.bitsquare.trade.payment.taker.TakerPaymentProtocolListener;
 import io.bitsquare.user.User;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Represents trade domain. Keeps complexity of process apart from view controller
@@ -32,20 +31,19 @@ import java.util.Map;
 public class Trading
 {
     private static final Logger log = LoggerFactory.getLogger(Trading.class);
-
-    private Map<String, Offer> myOffers = new HashMap<>();
-    private Map<String, Trade> trades = new HashMap<>();
     private final Map<String, TakerPaymentProtocol> takerPaymentProtocols = new HashMap<>();
     private final Map<String, OffererPaymentProtocol> offererPaymentProtocols = new HashMap<>();
     private final String storageKey;
-    private User user;
-    private Storage storage;
-    private MessageFacade messageFacade;
-    private BlockChainFacade blockChainFacade;
-    private WalletFacade walletFacade;
-    private CryptoFacade cryptoFacade;
-    private Settings settings;
+    private final User user;
+    private final Storage storage;
+    private final MessageFacade messageFacade;
+    private final BlockChainFacade blockChainFacade;
+    private final WalletFacade walletFacade;
+    private final CryptoFacade cryptoFacade;
+    private final Settings settings;
     private final StringProperty newTradeProperty = new SimpleStringProperty();
+    private Map<String, Offer> myOffers = new HashMap<>();
+    private Map<String, Trade> trades = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,11 +71,11 @@ public class Trading
 
         Object offersObject = storage.read(storageKey + ".offers");
         if (offersObject != null && offersObject instanceof HashMap)
-            myOffers = (Map) offersObject;
+            myOffers = (Map<String, Offer>) offersObject;
 
         Object tradesObject = storage.read(storageKey + ".trades");
         if (tradesObject != null && tradesObject instanceof HashMap)
-            trades = (Map) tradesObject;
+            trades = (Map<String, Trade>) tradesObject;
     }
 
 
@@ -105,7 +103,7 @@ public class Trading
         messageFacade.addOffer(offer);
     }
 
-    public void removeOffer(Offer offer) throws IOException
+    public void removeOffer(Offer offer)
     {
         myOffers.remove(offer.getId());
         saveOffers();
@@ -128,7 +126,7 @@ public class Trading
         return trade;
     }
 
-    public void removeTrade(Trade trade) throws IOException
+    public void removeTrade(Trade trade)
     {
         trades.remove(trade.getId());
         storage.write(storageKey + ".trades", trades);
@@ -200,7 +198,7 @@ public class Trading
 
         });
 
-        // the handler was not called there because the obejct was not created when the event occurred (and therefor no listener)
+        // the handler was not called there because the object was not created when the event occurred (and therefor no listener)
         // will probably created earlier, so let it for the moment like that....
         offererPaymentProtocol.onTakeOfferRequested(sender);
     }
@@ -237,8 +235,8 @@ public class Trading
         return myOffers;
     }
 
-    public Offer getOffer(String offerUID)
+    public Offer getOffer(String offerId)
     {
-        return myOffers.get(offerUID.toString());
+        return myOffers.get(offerId);
     }
 }

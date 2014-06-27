@@ -5,29 +5,27 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="rootContainer" fx:controller="io.bitsquare.gui.market.trade.TakerTradeController"
-            xmlns:fx="http://javafx.com/fxml">
+<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:id="rootContainer"
+            fx:controller="io.bitsquare.gui.market.trade.TakerTradeController">
     <ScrollPane fitToWidth="true" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
                 AnchorPane.bottomAnchor="0">
 
-        <content>
-            <VBox spacing="10">
+        <VBox spacing="10">
+            <padding>
+                <Insets left="10" right="10" top="10" bottom="10"/>
+            </padding>
+            <ProcessStepBar fx:id="processStepBar"/>
+            <VSpacer prefHeight="5"/>
+            <GridPane fx:id="gridPane" vgap="5" hgap="5">
                 <padding>
-                    <Insets left="10" right="10" top="10" bottom="10"/>
+                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
                 </padding>
-                <ProcessStepBar fx:id="processStepBar"/>
-                <VSpacer prefHeight="5"/>
-                <GridPane fx:id="gridPane" vgap="5" hgap="5">
-                    <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
-                    </padding>
-                    <columnConstraints>
-                        <ColumnConstraints halignment="RIGHT"/>
-                        <ColumnConstraints halignment="LEFT" prefWidth="400"/>
-                        <ColumnConstraints halignment="LEFT"/>
-                    </columnConstraints>
-                </GridPane>
-            </VBox>
-        </content>
+                <columnConstraints>
+                    <ColumnConstraints halignment="RIGHT"/>
+                    <ColumnConstraints halignment="LEFT" prefWidth="400"/>
+                    <ColumnConstraints halignment="LEFT"/>
+                </columnConstraints>
+            </GridPane>
+        </VBox>
     </ScrollPane>
 </AnchorPane>

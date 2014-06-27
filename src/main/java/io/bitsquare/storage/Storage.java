@@ -2,12 +2,11 @@ package io.bitsquare.storage;
 
 import io.bitsquare.BitSquare;
 import io.bitsquare.util.Utilities;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simple storage solution for serialized data
@@ -53,9 +52,7 @@ public class Storage
     public Object read(String key)
     {
         dict = readDataVO();
-        Object result = dict.get(key);
-        //log.info("Read object with key = " + key + " result = " + result);
-        return result;
+        return dict.get(key);
     }
 
 
@@ -88,15 +85,14 @@ public class Storage
             {
                 FileInputStream fileIn = new FileInputStream(file);
                 ObjectInputStream in = new ObjectInputStream(fileIn);
-                dict = (Map<String, Object>) in.readObject();
+                Object object = in.readObject();
+                if (object instanceof Map)
+                    dict = (Map<String, Object>) object;
                 in.close();
                 fileIn.close();
-            } catch (IOException i)
+            } catch (IOException | ClassNotFoundException i)
             {
                 i.printStackTrace();
-            } catch (ClassNotFoundException c)
-            {
-                c.printStackTrace();
             }
         }
         return dict;

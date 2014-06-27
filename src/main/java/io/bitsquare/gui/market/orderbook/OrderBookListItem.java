@@ -12,7 +12,7 @@ public class OrderBookListItem
     protected final StringProperty amount = new SimpleStringProperty();
     protected final StringProperty volume = new SimpleStringProperty();
 
-    protected Offer offer;
+    protected final Offer offer;
 
 
     public OrderBookListItem(Offer offer)

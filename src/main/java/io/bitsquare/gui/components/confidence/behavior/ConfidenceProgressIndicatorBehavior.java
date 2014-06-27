@@ -26,7 +26,6 @@ package io.bitsquare.gui.components.confidence.behavior;
 
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
-
 import java.util.Collections;
 
 public class ConfidenceProgressIndicatorBehavior<C extends ConfidenceProgressIndicator> extends BehaviorBase<C>

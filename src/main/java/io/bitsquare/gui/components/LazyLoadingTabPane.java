@@ -6,28 +6,24 @@ import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.storage.Storage;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import javafx.scene.Node;
 import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 public class LazyLoadingTabPane extends TabPane
 {
+    private final Map<Integer, Node> views = new HashMap<>();
+    private final Map<Integer, ChildController> controllers = new HashMap<>();
+    SingleSelectionModel<Tab> selectionModel;
     private String storageId;
     private NavigationController navigationController;
     private String[] tabContentFXMLUrls;
     private Storage storage;
-    SingleSelectionModel<Tab> selectionModel;
     private ChildController childController;
-
-    private Map<Integer, Node> views = new HashMap<>();
-    private Map<Integer, ChildController> controllers = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -52,14 +48,7 @@ public class LazyLoadingTabPane extends TabPane
         storageId = navigationController.getClass().getName() + ".selectedTabIndex";
 
         selectionModel = getSelectionModel();
-        selectionModel.selectedItemProperty().addListener(new ChangeListener<Tab>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends Tab> observableValue, Tab oldTab, Tab newTab)
-            {
-                onTabSelectedIndexChanged();
-            }
-        });
+        selectionModel.selectedItemProperty().addListener((observableValue, oldTab, newTab) -> onTabSelectedIndexChanged());
 
         Object indexObject = storage.read(storageId);
         if (indexObject != null)

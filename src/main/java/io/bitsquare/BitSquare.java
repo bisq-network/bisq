@@ -1,19 +1,25 @@
 package io.bitsquare;
 
+import com.google.common.base.Throwables;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.di.GuiceFXMLLoader;
+import io.bitsquare.gui.NavigationViewURL;
+import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.User;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.controlsfx.control.action.Action;
+import org.controlsfx.dialog.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,14 +40,26 @@ public class BitSquare extends Application
         launch(args);
     }
 
+    public static Stage getStage()
+    {
+        return stage;
+    }
+
     @Override
-    public void start(Stage stage) throws Exception
+    public void start(Stage stage)
+    {
+        Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
+        init(stage);
+    }
+
+    private void init(Stage stage)
     {
         BitSquare.stage = stage;
+
         log.debug("Startup: start");
         final Injector injector = Guice.createInjector(new BitSquareModule());
-        walletFacade = injector.getInstance(WalletFacade.class);
 
+        walletFacade = injector.getInstance(WalletFacade.class);
         messageFacade = injector.getInstance(MessageFacade.class);
         log.debug("Startup: messageFacade, walletFacade inited");
 
@@ -60,22 +78,31 @@ public class BitSquare extends Application
 
 
         GuiceFXMLLoader.setInjector(injector);
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource("/io/bitsquare/gui/MainView.fxml"), Localisation.getResourceBundle());
-        final Parent mainView = loader.load();
-
-        final Scene scene = new Scene(mainView, 800, 600);
-        stage.setScene(scene);
-
-        final String bitsquare = getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm();
-        scene.getStylesheets().setAll(bitsquare);
 
         stage.setMinWidth(800);
         stage.setMinHeight(400);
         stage.setWidth(800);
         stage.setHeight(600);
 
-        stage.show();
-        log.debug("Startup: stage displayed");
+        try
+        {
+            final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationViewURL.MAIN), Localisation.getResourceBundle());
+            final Parent mainView = loader.load();
+            final Scene scene = new Scene(mainView, 800, 600);
+            stage.setScene(scene);
+
+            final String bitsquare = getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm();
+            scene.getStylesheets().setAll(bitsquare);
+
+            stage.show();
+            log.debug("Startup: stage displayed");
+        } catch (Exception e)
+        {
+            stage.show();
+            Action response = Popups.openExceptionPopup(e);
+            if (response == Dialog.Actions.OK)
+                Platform.exit();
+        }
     }
 
     @Override
@@ -85,10 +112,5 @@ public class BitSquare extends Application
         messageFacade.shutDown();
 
         super.stop();
-    }
-
-    public static Stage getStage()
-    {
-        return stage;
     }
 }

@@ -16,30 +16,14 @@ public class OrderBookFilter
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setAmount(double amount)
-    {
-        this.amount = amount;
-    }
-
-    public void setPrice(double price)
-    {
-        this.price = price;
-    }
-
-    public void setDirection(Direction direction)
-    {
-        this.direction = direction;
-        directionChangedProperty.set(!directionChangedProperty.get());
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public double getAmount()
     {
         return amount;
+    }
+
+    public void setAmount(double amount)
+    {
+        this.amount = amount;
     }
 
     public Direction getDirection()
@@ -47,9 +31,25 @@ public class OrderBookFilter
         return direction;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setDirection(Direction direction)
+    {
+        this.direction = direction;
+        directionChangedProperty.set(!directionChangedProperty.get());
+    }
+
     public double getPrice()
     {
         return price;
+    }
+
+    public void setPrice(double price)
+    {
+        this.price = price;
     }
 
     public SimpleBooleanProperty getDirectionChangedProperty()

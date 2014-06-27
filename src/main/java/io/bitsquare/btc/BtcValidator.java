@@ -5,7 +5,6 @@ import com.google.bitcoin.core.AddressFormatException;
 import com.google.bitcoin.core.NetworkParameters;
 import com.google.bitcoin.core.Transaction;
 import com.google.inject.Inject;
-
 import java.math.BigInteger;
 
 public class BtcValidator

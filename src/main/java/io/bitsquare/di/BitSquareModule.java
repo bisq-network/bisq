@@ -23,7 +23,6 @@ import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
-
 import java.io.File;
 
 public class BitSquareModule extends AbstractModule
@@ -59,7 +58,7 @@ public class BitSquareModule extends AbstractModule
 
 class BitSquareWalletAppKitProvider implements Provider<BitSquareWalletAppKit>
 {
-    private NetworkParameters networkParameters;
+    private final NetworkParameters networkParameters;
 
     @Inject
     public BitSquareWalletAppKitProvider(NetworkParameters networkParameters)
@@ -75,7 +74,7 @@ class BitSquareWalletAppKitProvider implements Provider<BitSquareWalletAppKit>
 
 class NetworkParametersProvider implements Provider<NetworkParameters>
 {
-    private String networkType;
+    private final String networkType;
 
     @Inject
     public NetworkParametersProvider(@Named("networkType") String networkType)

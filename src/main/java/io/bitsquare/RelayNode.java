@@ -9,8 +9,8 @@ import net.tomp2p.peers.Number160;
  */
 public class RelayNode
 {
+    public static final Number160 ID = Number160.createHash(1);
     private static Peer masterPeer = null;
-    public static Number160 ID = Number160.createHash(1);
 
     public static void main(String[] args) throws Exception
     {

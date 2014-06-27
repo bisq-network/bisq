@@ -5,11 +5,13 @@ import com.google.bitcoin.params.RegTestParams;
 import com.google.bitcoin.wallet.CoinSelection;
 import com.google.bitcoin.wallet.DefaultCoinSelector;
 import com.google.common.annotations.VisibleForTesting;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.math.BigInteger;
-import java.util.*;
 
 /**
  * This class implements a {@link com.google.bitcoin.wallet.CoinSelector} which attempts to get the highest priority
@@ -19,9 +21,9 @@ import java.util.*;
 public class AddressBasedCoinSelector extends DefaultCoinSelector
 {
     private static final Logger log = LoggerFactory.getLogger(AddressBasedCoinSelector.class);
-    private NetworkParameters params;
-    private AddressEntry addressEntry;
-    private boolean includePending;
+    private final NetworkParameters params;
+    private final AddressEntry addressEntry;
+    private final boolean includePending;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -39,6 +41,53 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
         this.includePending = includePending;
     }
 
+    @VisibleForTesting
+    static void sortOutputs(ArrayList<TransactionOutput> outputs)
+    {
+        Collections.sort(outputs, (a, b) -> {
+            int depth1 = 0;
+            int depth2 = 0;
+            TransactionConfidence conf1 = a.getParentTransaction().getConfidence();
+            TransactionConfidence conf2 = b.getParentTransaction().getConfidence();
+            if (conf1.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
+                depth1 = conf1.getDepthInBlocks();
+            if (conf2.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
+                depth2 = conf2.getDepthInBlocks();
+            BigInteger aValue = a.getValue();
+            BigInteger bValue = b.getValue();
+            BigInteger aCoinDepth = aValue.multiply(BigInteger.valueOf(depth1));
+            BigInteger bCoinDepth = bValue.multiply(BigInteger.valueOf(depth2));
+            int c1 = bCoinDepth.compareTo(aCoinDepth);
+            if (c1 != 0) return c1;
+            // The "coin*days" destroyed are equal, sort by value alone to get the lowest transaction size.
+            int c2 = bValue.compareTo(aValue);
+            if (c2 != 0) return c2;
+            // They are entirely equivalent (possibly pending) so sort by hash to ensure a total ordering.
+            BigInteger aHash = a.getParentTransaction().getHash().toBigInteger();
+            BigInteger bHash = b.getParentTransaction().getHash().toBigInteger();
+            return aHash.compareTo(bHash);
+        });
+    }
+
+    private static boolean isInBlockChainOrPending(Transaction tx)
+    {
+        // Pick chain-included transactions and transactions that are pending.
+        TransactionConfidence confidence = tx.getConfidence();
+        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
+        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
+                type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
+                        // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
+                        // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
+                        (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
+    }
+
+    private static boolean isInBlockChain(Transaction tx)
+    {
+        // Only pick chain-included transactions.
+        TransactionConfidence confidence = tx.getConfidence();
+        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
+        return type.equals(TransactionConfidence.ConfidenceType.BUILDING);
+    }
 
     /**
      * Sub-classes can override this to just customize whether transactions are usable, but keep age sorting.
@@ -67,10 +116,10 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
     public CoinSelection select(BigInteger biTarget, LinkedList<TransactionOutput> candidates)
     {
         long target = biTarget.longValue();
-        HashSet<TransactionOutput> selected = new HashSet<TransactionOutput>();
+        HashSet<TransactionOutput> selected = new HashSet<>();
         // Sort the inputs by age*value so we get the highest "coindays" spent.
         // TODO: Consider changing the wallets internal format to track just outputs and keep them ordered.
-        ArrayList<TransactionOutput> sortedOutputs = new ArrayList<TransactionOutput>(candidates);
+        ArrayList<TransactionOutput> sortedOutputs = new ArrayList<>(candidates);
         // When calculating the wallet balance, we may be asked to select all possible coins, if so, avoid sorting
         // them in order to improve performance.
         if (!biTarget.equals(NetworkParameters.MAX_MONEY))
@@ -94,59 +143,6 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
         // Total may be lower than target here, if the given candidates were insufficient to create to requested
         // transaction.
         return new CoinSelection(BigInteger.valueOf(total), selected);
-    }
-
-    @VisibleForTesting
-    static void sortOutputs(ArrayList<TransactionOutput> outputs)
-    {
-        Collections.sort(outputs, new Comparator<TransactionOutput>()
-        {
-            public int compare(TransactionOutput a, TransactionOutput b)
-            {
-                int depth1 = 0;
-                int depth2 = 0;
-                TransactionConfidence conf1 = a.getParentTransaction().getConfidence();
-                TransactionConfidence conf2 = b.getParentTransaction().getConfidence();
-                if (conf1.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
-                    depth1 = conf1.getDepthInBlocks();
-                if (conf2.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
-                    depth2 = conf2.getDepthInBlocks();
-                BigInteger aValue = a.getValue();
-                BigInteger bValue = b.getValue();
-                BigInteger aCoinDepth = aValue.multiply(BigInteger.valueOf(depth1));
-                BigInteger bCoinDepth = bValue.multiply(BigInteger.valueOf(depth2));
-                int c1 = bCoinDepth.compareTo(aCoinDepth);
-                if (c1 != 0) return c1;
-                // The "coin*days" destroyed are equal, sort by value alone to get the lowest transaction size.
-                int c2 = bValue.compareTo(aValue);
-                if (c2 != 0) return c2;
-                // They are entirely equivalent (possibly pending) so sort by hash to ensure a total ordering.
-                BigInteger aHash = a.getParentTransaction().getHash().toBigInteger();
-                BigInteger bHash = b.getParentTransaction().getHash().toBigInteger();
-                return aHash.compareTo(bHash);
-            }
-        });
-    }
-
-
-    private static boolean isInBlockChainOrPending(Transaction tx)
-    {
-        // Pick chain-included transactions and transactions that are pending.
-        TransactionConfidence confidence = tx.getConfidence();
-        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
-        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
-                type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
-                        // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
-                        // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
-                        (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
-    }
-
-    private static boolean isInBlockChain(Transaction tx)
-    {
-        // Only pick chain-included transactions.
-        TransactionConfidence confidence = tx.getConfidence();
-        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
-        return type.equals(TransactionConfidence.ConfidenceType.BUILDING);
     }
 
     /*

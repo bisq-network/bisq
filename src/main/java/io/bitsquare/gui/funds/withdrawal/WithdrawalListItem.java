@@ -8,23 +8,22 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import java.math.BigInteger;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-
-import java.math.BigInteger;
 
 public class WithdrawalListItem
 {
     private final StringProperty addressString = new SimpleStringProperty();
     private final BalanceListener balanceListener;
     private final Label balanceLabel;
-    private AddressEntry addressEntry;
-    private WalletFacade walletFacade;
-    private ConfidenceListener confidenceListener;
-    private ConfidenceProgressIndicator progressIndicator;
-    private Tooltip tooltip;
+    private final AddressEntry addressEntry;
+    private final WalletFacade walletFacade;
+    private final ConfidenceListener confidenceListener;
+    private final ConfidenceProgressIndicator progressIndicator;
+    private final Tooltip tooltip;
     private BigInteger balance;
 
     public WithdrawalListItem(AddressEntry addressEntry, WalletFacade walletFacade)

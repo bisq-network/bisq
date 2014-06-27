@@ -3,6 +3,9 @@ package io.bitsquare.gui.components.processbar;
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -14,17 +17,12 @@ import javafx.scene.layout.BorderWidths;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
 
 public class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, BehaviorBase<ProcessStepBar<T>>>
 {
+    final ProcessStepBar<T> controller;
     LabelWithBorder currentLabelWithBorder;
     LabelWithBorder prevLabelWithBorder;
-    final ProcessStepBar<T> controller;
     int index;
     List<LabelWithBorder> labelWithBorders;
 
@@ -49,9 +47,8 @@ public class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, B
             int i = 0;
             labelWithBorders = new ArrayList<>();
             int size = controller.getProcessStepItems().size();
-            for (Iterator<ProcessStepItem> iterator = controller.getProcessStepItems().iterator(); iterator.hasNext(); )
+            for (ProcessStepItem processStepItem : controller.getProcessStepItems())
             {
-                ProcessStepItem processStepItem = iterator.next();
                 LabelWithBorder labelWithBorder = new LabelWithBorder(processStepItem, i == 0, i == size - 1);
                 getChildren().add(labelWithBorder);
                 labelWithBorders.add(labelWithBorder);
@@ -105,12 +102,12 @@ public class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, B
 
     public static class LabelWithBorder extends Label
     {
+        final double borderWidth = 1;
         private final double arrowWidth = 10;
         private final double arrowHeight = 30;
-        private ProcessStepItem processStepItem;
-        private boolean isFirst;
-        private boolean isLast;
-        double borderWidth = 1;
+        private final ProcessStepItem processStepItem;
+        private final boolean isFirst;
+        private final boolean isLast;
 
         public LabelWithBorder(ProcessStepItem processStepItem, boolean isFirst, boolean isLast)
         {

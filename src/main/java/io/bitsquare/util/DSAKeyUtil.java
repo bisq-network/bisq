@@ -1,9 +1,6 @@
 package io.bitsquare.util;
 
 import com.google.bitcoin.core.Utils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,6 +9,8 @@ import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DSAKeyUtil
 {
@@ -53,9 +52,7 @@ public class DSAKeyUtil
     {
         try
         {
-            KeyPair loadedKeyPair = loadKeyPair(pubKeyPath, privKeyPath, "DSA");
-            //System.out.println("Loaded Key Pair");
-            return loadedKeyPair;
+            return loadKeyPair(pubKeyPath, privKeyPath, "DSA");
         } catch (Exception e)
         {
             try
@@ -88,9 +85,9 @@ public class DSAKeyUtil
     private static String getHexString(byte[] b)
     {
         String result = "";
-        for (int i = 0; i < b.length; i++)
+        for (byte aB : b)
         {
-            result += Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1);
+            result += Integer.toString((aB & 0xff) + 0x100, 16).substring(1);
         }
         return result;
     }

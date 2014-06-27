@@ -4,7 +4,6 @@ import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.user.Arbitrator;
-
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.util.Currency;

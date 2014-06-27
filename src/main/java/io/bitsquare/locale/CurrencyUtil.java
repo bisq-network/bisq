@@ -23,14 +23,7 @@ public class CurrencyUtil
 
         allCurrenciesSet.removeAll(mainCurrencies);
         List<Currency> allCurrenciesList = new ArrayList<>(allCurrenciesSet);
-        allCurrenciesList.sort(new Comparator<Currency>()
-        {
-            @Override
-            public int compare(Currency a, Currency b)
-            {
-                return a.getCurrencyCode().compareTo(b.getCurrencyCode());
-            }
-        });
+        allCurrenciesList.sort((a, b) -> a.getCurrencyCode().compareTo(b.getCurrencyCode()));
 
         List<Currency> resultList = new ArrayList<>(mainCurrencies);
         resultList.addAll(allCurrenciesList);

@@ -1,7 +1,6 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.bank.BankAccount;
-
 import java.io.Serializable;
 import java.math.BigInteger;
 
@@ -9,15 +8,15 @@ public class Contract implements Serializable
 {
     private static final long serialVersionUID = 71472356206100158L;
 
-    private Offer offer;
-    private String takeOfferFeeTxID;
-    private BigInteger tradeAmount;
-    private String offererAccountID;
-    private String takerAccountID;
-    private BankAccount offererBankAccount;
-    private BankAccount takerBankAccount;
-    private String offererMessagePubKeyAsHex;
-    private String takerMessagePubKeyAsHex;
+    private final Offer offer;
+    private final String takeOfferFeeTxID;
+    private final BigInteger tradeAmount;
+    private final String offererAccountID;
+    private final String takerAccountID;
+    private final BankAccount offererBankAccount;
+    private final BankAccount takerBankAccount;
+    private final String offererMessagePubKeyAsHex;
+    private final String takerMessagePubKeyAsHex;
 
     public Contract(Offer offer,
                     BigInteger tradeAmount,

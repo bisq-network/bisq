@@ -12,8 +12,8 @@ public class OfferListItem
     protected final StringProperty amount = new SimpleStringProperty();
     protected final StringProperty date = new SimpleStringProperty();
     protected final StringProperty volume = new SimpleStringProperty();
+    protected final Offer offer;
     private final String offerId;
-    protected Offer offer;
 
     public OfferListItem(Offer offer)
     {

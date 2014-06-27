@@ -8,7 +8,6 @@ import com.google.bitcoin.store.SPVBlockStore;
 import com.google.bitcoin.store.WalletProtobufSerializer;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -98,7 +97,8 @@ public class BitSquareWalletAppKit extends WalletAppKit
 
             if (blockingStartup)
             {
-                vPeerGroup.startAndWait();
+                vPeerGroup.startAsync();
+                vPeerGroup.awaitRunning();
                 // Make sure we shut down cleanly.
                 installShutdownHook();
                 // TODO: Be able to use the provided download listener when doing a blocking startup.
@@ -142,7 +142,9 @@ public class BitSquareWalletAppKit extends WalletAppKit
             {
                 try
                 {
-                    BitSquareWalletAppKit.this.stopAndWait();
+                    BitSquareWalletAppKit.this.stopAsync();
+                    BitSquareWalletAppKit.this.awaitTerminated();
+
                 } catch (Exception e)
                 {
                     throw new RuntimeException(e);

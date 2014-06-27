@@ -7,19 +7,18 @@ import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Arbitrator;
+import java.net.URL;
+import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
 public class ArbitratorProfileController implements Initializable, ChildController
 {
-    private Settings settings;
-    private Storage storage;
+    private final Settings settings;
+    private final Storage storage;
     private Arbitrator arbitrator;
     private NavigationController navigationController;
 

@@ -4,24 +4,23 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
+import java.awt.Desktop;
+import java.io.*;
+import java.net.URI;
+import java.util.function.Function;
 import javafx.animation.AnimationTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
-import java.io.*;
-import java.net.URI;
-import java.util.function.Function;
-
 public class Utilities
 {
     private static final Logger log = LoggerFactory.getLogger(Utilities.class);
+    private static long lastTimeStamp = System.currentTimeMillis();
 
     public static String getRootDir()
     {
         return Utilities.class.getProtectionDomain().getCodeSource().getLocation().getFile() + "/../";
     }
-
 
     public static String objectToJson(Object object)
     {
@@ -42,9 +41,8 @@ public class Utilities
         {
             ByteInputStream byteInputStream = new ByteInputStream();
             byteInputStream.setBuf(com.google.bitcoin.core.Utils.parseAsHexOrBase58(serializedHexString));
-            ObjectInputStream objectInputStream = new ObjectInputStream(byteInputStream);
 
-            try
+            try (ObjectInputStream objectInputStream = new ObjectInputStream(byteInputStream))
             {
                 result = objectInputStream.readObject();
             } catch (ClassNotFoundException e)
@@ -53,7 +51,7 @@ public class Utilities
             } finally
             {
                 byteInputStream.close();
-                objectInputStream.close();
+
             }
 
         } catch (IOException i)
@@ -82,8 +80,6 @@ public class Utilities
         }
         return result;
     }
-
-    private static long lastTimeStamp = System.currentTimeMillis();
 
     public static void printElapsedTime(String msg)
     {
@@ -122,12 +118,9 @@ public class Utilities
             // a copy of the object back in.
             ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
             obj = in.readObject();
-        } catch (IOException e)
+        } catch (IOException | ClassNotFoundException e)
         {
             e.printStackTrace();
-        } catch (ClassNotFoundException cnfe)
-        {
-            cnfe.printStackTrace();
         }
         return obj;
     }
@@ -136,7 +129,7 @@ public class Utilities
     {
         AnimationTimer animationTimer = new AnimationTimer()
         {
-            long lastTimeStamp = System.currentTimeMillis();
+            final long lastTimeStamp = System.currentTimeMillis();
 
             @Override
             public void handle(long arg0)

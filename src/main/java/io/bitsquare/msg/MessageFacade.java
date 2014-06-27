@@ -9,6 +9,11 @@ import io.bitsquare.trade.payment.taker.TakerPaymentProtocol;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.util.DSAKeyUtil;
 import io.bitsquare.util.Utilities;
+import java.io.File;
+import java.io.IOException;
+import java.security.KeyPair;
+import java.security.PublicKey;
+import java.util.*;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -19,18 +24,11 @@ import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerMaker;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
-import net.tomp2p.rpc.ObjectDataReply;
 import net.tomp2p.storage.Data;
 import net.tomp2p.storage.StorageDisk;
 import net.tomp2p.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.security.KeyPair;
-import java.security.PublicKey;
-import java.util.*;
 
 /**
  * That facade delivers messaging functionality from the TomP2P library
@@ -39,31 +37,24 @@ import java.util.*;
  */
 public class MessageFacade
 {
-    private static final Logger log = LoggerFactory.getLogger(MessageFacade.class);
-
     public static final String PING = "ping";
     public static final String PONG = "pong";
+    private static final Logger log = LoggerFactory.getLogger(MessageFacade.class);
     private static final int MASTER_PEER_PORT = 5000;
     private static String MASTER_PEER_IP = "192.168.1.33";
-
+    private final List<OrderBookListener> orderBookListeners = new ArrayList<>();
+    private final List<TakeOfferRequestListener> takeOfferRequestListeners = new ArrayList<>();
+    private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
+    // //TODO change to map (key: offerID) instead of list (offererPaymentProtocols, takerPaymentProtocols)
+    private final List<TakerPaymentProtocol> takerPaymentProtocols = new ArrayList<>();
+    private final List<OffererPaymentProtocol> offererPaymentProtocols = new ArrayList<>();
+    private final List<PingPeerListener> pingPeerListeners = new ArrayList<>();
+    private final BooleanProperty isDirty = new SimpleBooleanProperty(false);
     private Peer myPeer;
     private int port;
     private KeyPair keyPair;
     private Peer masterPeer;
-    private List<OrderBookListener> orderBookListeners = new ArrayList<>();
-    private List<TakeOfferRequestListener> takeOfferRequestListeners = new ArrayList<>();
-    private List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
-
-    // //TODO change to map (key: offerID) instead of list (offererPaymentProtocols, takerPaymentProtocols)
-    private List<TakerPaymentProtocol> takerPaymentProtocols = new ArrayList<>();
-    private List<OffererPaymentProtocol> offererPaymentProtocols = new ArrayList<>();
-
-    private List<PingPeerListener> pingPeerListeners = new ArrayList<>();
-
     private Long lastTimeStamp = -3L;
-
-
-    private BooleanProperty isDirty = new SimpleBooleanProperty(false);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -264,7 +255,7 @@ public class MessageFacade
     // Remove offer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void removeOffer(Offer offer) throws IOException
+    public void removeOffer(Offer offer)
     {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         Number160 contentKey = Number160.createHash(offer.getId());
@@ -300,7 +291,7 @@ public class MessageFacade
         return isDirty;
     }
 
-    public void getDirtyFlag(Currency currency) throws IOException
+    public void getDirtyFlag(Currency currency)
     {
         Number160 locationKey = Number160.createHash(currency.getCurrencyCode());
         FutureDHT getFuture = myPeer.get(getDirtyLocationKey(locationKey)).start();
@@ -343,7 +334,7 @@ public class MessageFacade
             lastTimeStamp++;
     }
 
-    private Number160 getDirtyLocationKey(Number160 locationKey) throws IOException
+    private Number160 getDirtyLocationKey(Number160 locationKey)
     {
         return Number160.createHash(locationKey.toString() + "Dirty");
     }
@@ -352,28 +343,27 @@ public class MessageFacade
     {
         // we don't want to get an update from dirty for own changes, so update the lastTimeStamp to omit a change trigger
         lastTimeStamp = System.currentTimeMillis();
-        FutureDHT putFuture = null;
         try
         {
-            putFuture = myPeer.put(getDirtyLocationKey(locationKey)).setData(new Data(lastTimeStamp)).start();
+            FutureDHT putFuture = myPeer.put(getDirtyLocationKey(locationKey)).setData(new Data(lastTimeStamp)).start();
+            putFuture.addListener(new BaseFutureListener<BaseFuture>()
+            {
+                @Override
+                public void operationComplete(BaseFuture future) throws Exception
+                {
+                    //System.out.println("operationComplete");
+                }
+
+                @Override
+                public void exceptionCaught(Throwable t) throws Exception
+                {
+                    System.err.println("exceptionCaught");
+                }
+            });
         } catch (IOException e)
         {
             log.warn("Error at writing dirty flag (timeStamp) " + e.getMessage());
         }
-        putFuture.addListener(new BaseFutureListener<BaseFuture>()
-        {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception
-            {
-                //System.out.println("operationComplete");
-            }
-
-            @Override
-            public void exceptionCaught(Throwable t) throws Exception
-            {
-                System.err.println("exceptionCaught");
-            }
-        });
     }
 
 
@@ -475,20 +465,20 @@ public class MessageFacade
         final PeerConnection peerConnection = myPeer.createPeerConnection(peerAddress, 10);
         final FutureResponse sendFuture = myPeer.sendDirect(peerConnection).setObject(tradeMessage).start();
         sendFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-        {
-            @Override
-            public void operationComplete(BaseFuture baseFuture) throws Exception
-            {
-                if (sendFuture.isSuccess())
-                {
-                    Platform.runLater(() -> onSendTradingMessageResult(listener));
-                }
-                else
-                {
-                    Platform.runLater(() -> onSendTradingMessageFailed(listener));
-                }
-            }
-        }
+                               {
+                                   @Override
+                                   public void operationComplete(BaseFuture baseFuture) throws Exception
+                                   {
+                                       if (sendFuture.isSuccess())
+                                       {
+                                           Platform.runLater(() -> onSendTradingMessageResult(listener));
+                                       }
+                                       else
+                                       {
+                                           Platform.runLater(() -> onSendTradingMessageFailed(listener));
+                                       }
+                                   }
+                               }
         );
     }
 
@@ -591,23 +581,23 @@ public class MessageFacade
             {
                 FutureResponse sendFuture = myPeer.sendDirect(peerConnection).setObject(PING).start();
                 sendFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-                {
-                    @Override
-                    public void operationComplete(BaseFuture baseFuture) throws Exception
-                    {
-                        if (sendFuture.isSuccess())
-                        {
-                            final String pong = (String) sendFuture.getObject();
-                            if (pong != null)
-                                Platform.runLater(() -> onResponseFromPing(pong.equals(PONG)));
-                        }
-                        else
-                        {
-                            peerConnection.close();
-                            Platform.runLater(() -> onResponseFromPing(false));
-                        }
-                    }
-                }
+                                       {
+                                           @Override
+                                           public void operationComplete(BaseFuture baseFuture) throws Exception
+                                           {
+                                               if (sendFuture.isSuccess())
+                                               {
+                                                   final String pong = (String) sendFuture.getObject();
+                                                   if (pong != null)
+                                                       Platform.runLater(() -> onResponseFromPing(pong.equals(PONG)));
+                                               }
+                                               else
+                                               {
+                                                   peerConnection.close();
+                                                   Platform.runLater(() -> onResponseFromPing(false));
+                                               }
+                                           }
+                                       }
                 );
             }
         } catch (Exception e)
@@ -736,7 +726,7 @@ public class MessageFacade
         });
     }
 
-    private void setupStorage() throws IOException
+    private void setupStorage()
     {
         //TODO BitSquare.ID just temp...
         String dirPath = Utilities.getRootDir() + BitSquare.ID + "_tomP2P";
@@ -765,17 +755,12 @@ public class MessageFacade
 
     private void setupReplyHandler()
     {
-        myPeer.setObjectDataReply(new ObjectDataReply()
-        {
-            @Override
-            public Object reply(PeerAddress sender, Object request) throws Exception
+        myPeer.setObjectDataReply((sender, request) -> {
+            if (!sender.equals(myPeer.getPeerAddress()))
             {
-                if (!sender.equals(myPeer.getPeerAddress()))
-                {
-                    Platform.runLater(() -> onMessage(request, sender));
-                }
-                return null;
+                Platform.runLater(() -> onMessage(request, sender));
             }
+            return null;
         });
     }
 

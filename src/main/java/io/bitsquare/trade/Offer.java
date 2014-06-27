@@ -4,7 +4,6 @@ import io.bitsquare.bank.BankAccountTypeInfo;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.user.Arbitrator;
-
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.*;
@@ -20,7 +19,7 @@ public class Offer implements Serializable
     private final String id;
     private final Date creationDate;
 
-    private double price;
+    private final double price;
     private final BigInteger amount;
     private final BigInteger minAmount;
     private final String messagePubKeyAsHex;
@@ -30,9 +29,9 @@ public class Offer implements Serializable
     private final int collateral;
     private final List<Country> acceptedCountries;
     private final List<Locale> acceptedLanguageLocales;
-    private String offerFeePaymentTxID;
     private final String bankAccountUID;
     private final Arbitrator arbitrator;
+    private String offerFeePaymentTxID;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -77,20 +76,15 @@ public class Offer implements Serializable
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setOfferFeePaymentTxID(String offerFeePaymentTxID)
+    public String getMessagePubKeyAsHex()
     {
-        this.offerFeePaymentTxID = offerFeePaymentTxID;
+        return messagePubKeyAsHex;
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getMessagePubKeyAsHex()
-    {
-        return messagePubKeyAsHex;
-    }
 
     public String getId()
     {
@@ -155,6 +149,11 @@ public class Offer implements Serializable
     public String getOfferFeePaymentTxID()
     {
         return offerFeePaymentTxID;
+    }
+
+    public void setOfferFeePaymentTxID(String offerFeePaymentTxID)
+    {
+        this.offerFeePaymentTxID = offerFeePaymentTxID;
     }
 
     public Arbitrator getArbitrator()

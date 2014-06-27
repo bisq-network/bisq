@@ -9,7 +9,7 @@ public class TradesTableItem extends OrderBookListItem
 {
     private static final Logger log = LoggerFactory.getLogger(TradesTableItem.class);
 
-    private Trade trade;
+    private final Trade trade;
 
     public TradesTableItem(Trade trade)
     {

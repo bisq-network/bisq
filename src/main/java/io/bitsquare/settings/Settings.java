@@ -3,7 +3,6 @@ package io.bitsquare.settings;
 import com.google.inject.Inject;
 import io.bitsquare.locale.Country;
 import io.bitsquare.user.Arbitrator;
-
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -79,20 +78,6 @@ public class Settings implements Serializable
         acceptedArbitrators.remove(item);
     }
 
-    public void setMaxCollateral(int maxCollateral)
-    {
-        this.maxCollateral = maxCollateral;
-    }
-
-    public void setMinCollateral(int minCollateral)
-    {
-        this.minCollateral = minCollateral;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public List<Arbitrator> getAcceptedArbitrators()
     {
         return acceptedArbitrators;
@@ -102,6 +87,10 @@ public class Settings implements Serializable
     {
         return acceptedLanguageLocales;
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public List<Country> getAcceptedCountries()
     {
@@ -128,9 +117,19 @@ public class Settings implements Serializable
         return maxCollateral;
     }
 
+    public void setMaxCollateral(int maxCollateral)
+    {
+        this.maxCollateral = maxCollateral;
+    }
+
     public int getMinCollateral()
     {
         return minCollateral;
+    }
+
+    public void setMinCollateral(int minCollateral)
+    {
+        this.minCollateral = minCollateral;
     }
 
 }

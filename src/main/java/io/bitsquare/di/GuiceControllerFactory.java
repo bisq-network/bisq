@@ -7,14 +7,14 @@ import javafx.util.Callback;
  * A JavaFX controller factory for constructing controllers via Guice DI. To
  * install this in the {@link javafx.fxml.FXMLLoader}, pass it as a parameter to
  * {@link javafx.fxml.FXMLLoader#setControllerFactory(Callback)}.
- * <p/>
+ * <p>
  * Once set, make sure you do <b>not</b> use the static methods on
  * {@link javafx.fxml.FXMLLoader} when creating your JavaFX node.
  */
 public class GuiceControllerFactory implements Callback<Class<?>, Object>
 {
 
-    private Injector injector;
+    private final Injector injector;
 
     public GuiceControllerFactory(Injector injector)
     {

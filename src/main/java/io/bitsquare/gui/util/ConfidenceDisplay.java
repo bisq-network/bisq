@@ -4,15 +4,13 @@ import com.google.bitcoin.core.*;
 import com.google.bitcoin.script.Script;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import java.math.BigInteger;
+import java.util.List;
+import java.util.Set;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.math.BigInteger;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
 public class ConfidenceDisplay
 {
@@ -186,9 +184,8 @@ public class ConfidenceDisplay
 
             Set<Transaction> transactions = wallet.getTransactions(false);
             Transaction latestTransaction = null;
-            for (Iterator<Transaction> iterator = transactions.iterator(); iterator.hasNext(); )
+            for (Transaction transaction : transactions)
             {
-                Transaction transaction = iterator.next();
                 if (latestTransaction != null)
                 {
                     if (transaction.getUpdateTime().compareTo(latestTransaction.getUpdateTime()) > 0)

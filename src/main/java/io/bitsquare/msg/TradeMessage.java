@@ -1,7 +1,6 @@
 package io.bitsquare.msg;
 
 import io.bitsquare.bank.BankAccount;
-
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.UUID;
@@ -12,8 +11,9 @@ public class TradeMessage implements Serializable
     private static final long serialVersionUID = 7916445031849763995L;
 
 
-    private String uid;
-
+    private final String uid;
+    private final TradeMessageType type;
+    private final String offerUID;
     private String takerMessagePubKey;
     private String signedTakerDepositTxAsHex;
     private String txScriptSigAsHex;
@@ -21,10 +21,8 @@ public class TradeMessage implements Serializable
     private String contractAsJson;
     private String takerContractSignature;
     private String takerPayoutAddress;
-    private TradeMessageType type;
     private String depositTxID;
     private String depositTxAsHex;
-
     private String offererSignatureR;
     private String offererSignatureS;
     private BigInteger offererPaybackAmount;
@@ -33,7 +31,6 @@ public class TradeMessage implements Serializable
     private BigInteger tradeAmount;
     private String takeOfferFeeTxID;
     private String takerMultiSigPubKey;
-    private String offerUID;
     private BankAccount bankAccount;
     private String accountID;
     private String offererPubKey;
@@ -257,14 +254,14 @@ public class TradeMessage implements Serializable
         return depositTxAsHex;
     }
 
-    public void setPayoutTxAsHex(String payoutTxAsHex)
-    {
-        this.payoutTxAsHex = payoutTxAsHex;
-    }
-
     public String getPayoutTxAsHex()
     {
         return payoutTxAsHex;
+    }
+
+    public void setPayoutTxAsHex(String payoutTxAsHex)
+    {
+        this.payoutTxAsHex = payoutTxAsHex;
     }
 
     public long getOffererTxOutIndex()

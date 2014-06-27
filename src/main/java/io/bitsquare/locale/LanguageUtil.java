@@ -1,6 +1,7 @@
 package io.bitsquare.locale;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class LanguageUtil
 {
@@ -24,25 +25,10 @@ public class LanguageUtil
     public static List<Locale> getAllLanguageLocales()
     {
         List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
-        Set<Locale> allLocalesAsSet = new HashSet<>();
-        for (int i = 0; i < allLocales.size(); i++)
-        {
-            Locale locale = allLocales.get(i);
-            if (!locale.getLanguage().equals(""))
-            {
-                allLocalesAsSet.add(new Locale(locale.getLanguage(), ""));
-            }
-        }
+        Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !locale.getLanguage().equals("")).map(locale -> new Locale(locale.getLanguage(), "")).collect(Collectors.toSet());
         allLocales = new ArrayList<>();
         allLocales.addAll(allLocalesAsSet);
-        allLocales.sort(new Comparator<Locale>()
-        {
-            @Override
-            public int compare(Locale locale1, Locale locale2)
-            {
-                return locale1.getDisplayLanguage().compareTo(locale2.getDisplayLanguage());
-            }
-        });
+        allLocales.sort((locale1, locale2) -> locale1.getDisplayLanguage().compareTo(locale2.getDisplayLanguage()));
 
         return allLocales;
     }
