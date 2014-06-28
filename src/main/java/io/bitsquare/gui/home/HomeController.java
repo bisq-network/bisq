@@ -5,7 +5,6 @@ import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.NavigationViewURL;
 import io.bitsquare.gui.arbitrators.registration.ArbitratorRegistrationController;
 import io.bitsquare.locale.Localisation;
 import java.io.IOException;
@@ -52,17 +51,10 @@ public class HomeController implements Initializable, ChildController, Navigatio
     @Override
     public ChildController navigateToView(NavigationItem navigationItem)
     {
-        return navigateToView(navigationItem);
-    }
-
-    @Override
-    public ChildController navigateToView(String fxmlView)
-    {
-
         if (arbitratorRegistrationController != null)
             arbitratorRegistrationController.cleanup();
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
         {
             final Node view = loader.load();
@@ -95,13 +87,13 @@ public class HomeController implements Initializable, ChildController, Navigatio
     @FXML
     public void onArbitratorRegistration(ActionEvent actionEvent)
     {
-        navigateToView(NavigationViewURL.ARBITRATOR_REGISTRATION);
+        navigateToView(NavigationItem.ARBITRATOR_REGISTRATION);
     }
 
     @FXML
     public void onArbitratorEdit(ActionEvent actionEvent)
     {
-        navigateToView(NavigationViewURL.ARBITRATOR_REGISTRATION);
+        navigateToView(NavigationItem.ARBITRATOR_REGISTRATION);
         arbitratorRegistrationController.setEditMode(true);
     }
 

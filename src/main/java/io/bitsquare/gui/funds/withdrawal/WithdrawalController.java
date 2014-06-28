@@ -273,15 +273,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                     public void updateItem(final WithdrawalListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
-
-                        if (item != null && !empty)
-                        {
-                            setGraphic(item.getBalanceLabel());
-                        }
-                        else
-                        {
-                            setGraphic(null);
-                        }
+                        setGraphic((item != null && !empty) ? item.getBalanceLabel() : null);
                     }
                 };
             }

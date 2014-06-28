@@ -10,7 +10,7 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
-import io.bitsquare.gui.NavigationViewURL;
+import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.gui.util.BitSquareConverter;
@@ -238,7 +238,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
 
-        navigationController.navigateToView(NavigationViewURL.ORDER_BOOK);
+        navigationController.navigateToView(NavigationItem.ORDER_BOOK);
     }
 
 

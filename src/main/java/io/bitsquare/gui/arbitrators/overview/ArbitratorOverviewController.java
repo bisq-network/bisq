@@ -5,7 +5,6 @@ import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.NavigationViewURL;
 import io.bitsquare.gui.arbitrators.profile.ArbitratorProfileController;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.Localisation;
@@ -73,7 +72,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        navigateToView(NavigationViewURL.ARBITRATOR_PROFILE);
+        navigateToView(NavigationItem.ARBITRATOR_PROFILE);
         checkButtonState();
     }
 
@@ -102,17 +101,10 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     @Override
     public ChildController navigateToView(NavigationItem navigationItem)
     {
-        return navigateToView(navigationItem);
-    }
-
-    @Override
-    public ChildController navigateToView(String fxmlView)
-    {
-
         if (arbitratorProfileController != null)
             arbitratorProfileController.cleanup();
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
         {
             final Node view = loader.load();

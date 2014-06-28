@@ -304,17 +304,6 @@ public class CountryUtil
         allLocales = new ArrayList<>();
         allLocales.addAll(allLocalesAsSet);
         allLocales.sort((locale1, locale2) -> locale1.getDisplayCountry().compareTo(locale2.getDisplayCountry()));
-          /*
-            allLocales.sort(new Comparator<Locale>()
-        {
-            @Override
-            public int compare(Locale locale1, Locale locale2)
-            {
-                return locale1.getDisplayCountry().compareTo(locale2.getDisplayCountry());
-            }
-        });
-
-           */
         return allLocales;
     }
 

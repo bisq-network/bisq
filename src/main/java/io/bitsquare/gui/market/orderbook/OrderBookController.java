@@ -8,7 +8,10 @@ import io.bitsquare.bank.BankAccountTypeInfo;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.*;
+import io.bitsquare.gui.ChildController;
+import io.bitsquare.gui.MainController;
+import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.market.createOffer.CreateOfferController;
 import io.bitsquare.gui.market.trade.TakerTradeController;
 import io.bitsquare.gui.popups.Popups;
@@ -301,7 +304,7 @@ public class OrderBookController implements Initializable, ChildController
         {
             if (walletFacade.isUnusedTradeAddressBalanceAboveCreationFee())
             {
-                ChildController nextController = navigationController.navigateToView(NavigationViewURL.CREATE_OFFER);
+                ChildController nextController = navigationController.navigateToView(NavigationItem.CREATE_OFFER);
                 ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
             }
             else
@@ -324,7 +327,7 @@ public class OrderBookController implements Initializable, ChildController
         if (isRegistered())
         {
             String title = offer.getDirection() == Direction.BUY ? "Trade: Sell Bitcoin" : "Trade: Buy Bitcoin";
-            TakerTradeController takerTradeController = (TakerTradeController) navigationController.navigateToView(NavigationViewURL.TAKER_TRADE);
+            TakerTradeController takerTradeController = (TakerTradeController) navigationController.navigateToView(NavigationItem.TAKER_TRADE);
 
             BigInteger requestedAmount = offer.getAmount();
             if (!amount.getText().equals(""))

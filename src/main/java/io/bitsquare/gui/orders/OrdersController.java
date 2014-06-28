@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.NavigationViewURL;
 import io.bitsquare.gui.components.LazyLoadingTabPane;
 import io.bitsquare.storage.Storage;
 import java.net.URL;
@@ -41,7 +40,7 @@ public class OrdersController implements Initializable, ChildController, Navigat
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        tabPane.initialize(this, storage, NavigationViewURL.OFFER, NavigationViewURL.PENDING_TRADE, NavigationViewURL.CLOSED_TRADE);
+        tabPane.initialize(this, storage, NavigationItem.OFFER.getFxmlUrl(), NavigationItem.PENDING_TRADE.getFxmlUrl(), NavigationItem.CLOSED_TRADE.getFxmlUrl());
     }
 
 
@@ -67,13 +66,7 @@ public class OrdersController implements Initializable, ChildController, Navigat
     @Override
     public ChildController navigateToView(NavigationItem navigationItem)
     {
-        return navigateToView(navigationItem);
-    }
-
-    @Override
-    public ChildController navigateToView(String fxmlView)
-    {
-        return tabPane.navigateToView(fxmlView);
+        return tabPane.navigateToView(navigationItem.getFxmlUrl());
     }
 
 }

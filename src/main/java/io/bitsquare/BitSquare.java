@@ -6,7 +6,7 @@ import com.google.inject.Injector;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.di.GuiceFXMLLoader;
-import io.bitsquare.gui.NavigationViewURL;
+import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
@@ -20,8 +20,11 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 public class BitSquare extends Application
 {
@@ -31,10 +34,10 @@ public class BitSquare extends Application
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
 
-    public static void main(String[] args)
+    public static void main(@Nullable String[] args)
     {
         log.debug("Startup: main");
-        if (args.length > 0)
+        if (args != null && args.length > 0)
             ID = args[0];
 
         launch(args);
@@ -46,13 +49,13 @@ public class BitSquare extends Application
     }
 
     @Override
-    public void start(Stage stage)
+    public void start(@NotNull Stage stage)
     {
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
         init(stage);
     }
 
-    private void init(Stage stage)
+    private void init(@NotNull Stage stage)
     {
         BitSquare.stage = stage;
 
@@ -71,11 +74,10 @@ public class BitSquare extends Application
 
         settings.updateFromStorage((Settings) storage.read(settings.getClass().getName()));
 
-        if (ID.length() > 0)
-            stage.setTitle("BitSquare (" + ID + ")");
-        else
+        if (ID.isEmpty())
             stage.setTitle("BitSquare");
-
+        else
+            stage.setTitle("BitSquare (" + ID + ")");
 
         GuiceFXMLLoader.setInjector(injector);
 
@@ -86,7 +88,7 @@ public class BitSquare extends Application
 
         try
         {
-            final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationViewURL.MAIN), Localisation.getResourceBundle());
+            final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), Localisation.getResourceBundle());
             final Parent mainView = loader.load();
             final Scene scene = new Scene(mainView, 800, 600);
             stage.setScene(scene);

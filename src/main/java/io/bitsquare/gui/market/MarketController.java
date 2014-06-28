@@ -4,7 +4,6 @@ import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.NavigationViewURL;
 import io.bitsquare.gui.market.orderbook.OrderBookController;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
@@ -35,7 +34,7 @@ public class MarketController implements Initializable, NavigationController, Ch
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        navigateToView(NavigationViewURL.ORDER_BOOK);
+        navigateToView(NavigationItem.ORDER_BOOK);
     }
 
 
@@ -46,19 +45,14 @@ public class MarketController implements Initializable, NavigationController, Ch
     @Override
     public ChildController navigateToView(NavigationItem navigationItem)
     {
-        return navigateToView(navigationItem);
-    }
 
-    @Override
-    public ChildController navigateToView(String fxmlView)
-    {
-        if (fxmlView.equals(NavigationViewURL.ORDER_BOOK) && orderbookCreated)
+        if (navigationItem == NavigationItem.ORDER_BOOK && orderbookCreated)
         {
             tabPane.getSelectionModel().select(0);
             return null;
         }
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
         {
             Pane view = loader.load();
@@ -72,7 +66,7 @@ public class MarketController implements Initializable, NavigationController, Ch
             tab.setContent(view);
             tabPane.getTabs().add(tab);
 
-            if (fxmlView.equals(NavigationViewURL.ORDER_BOOK))
+            if (navigationItem == NavigationItem.ORDER_BOOK)
             {
                 tab.setClosable(false);
                 orderbookCreated = true;

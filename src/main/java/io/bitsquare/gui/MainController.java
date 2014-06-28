@@ -211,13 +211,12 @@ public class MainController implements Initializable, NavigationController
         return null;
     }
 
-    @Override
-    public ChildController navigateToView(String fxmlView)
+    private ChildController loadView(NavigationItem navigationItem)
     {
         if (childController != null)
             childController.cleanup();
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
         {
             final Node view = loader.load();
@@ -232,40 +231,39 @@ public class MainController implements Initializable, NavigationController
         return null;
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void buildNavigation()
     {
-        homeButton = addNavButton(leftNavPane, "Overview", Icons.HOME, Icons.HOME_ACTIVE, NavigationViewURL.HOME, NavigationItem.HOME);
+        homeButton = addNavButton(leftNavPane, "Overview", NavigationItem.HOME);
 
-        buyButton = addNavButton(leftNavPane, "Buy BTC", Icons.NAV_BUY, Icons.NAV_BUY_ACTIVE, NavigationViewURL.MARKET, NavigationItem.BUY);
+        buyButton = addNavButton(leftNavPane, "Buy BTC", NavigationItem.BUY);
 
-        sellButton = addNavButton(leftNavPane, "Sell BTC", Icons.NAV_SELL, Icons.NAV_SELL_ACTIVE, NavigationViewURL.MARKET, NavigationItem.SELL);
+        sellButton = addNavButton(leftNavPane, "Sell BTC", NavigationItem.SELL);
 
         ordersButtonButtonHolder = new Pane();
-        ordersButton = addNavButton(ordersButtonButtonHolder, "Orders", Icons.ORDERS, Icons.ORDERS_ACTIVE, NavigationViewURL.ORDERS, NavigationItem.ORDERS);
+        ordersButton = addNavButton(ordersButtonButtonHolder, "Orders", NavigationItem.ORDERS);
         leftNavPane.getChildren().add(ordersButtonButtonHolder);
 
-        fundsButton = addNavButton(leftNavPane, "Funds", Icons.FUNDS, Icons.FUNDS_ACTIVE, NavigationViewURL.FUNDS, NavigationItem.FUNDS);
+        fundsButton = addNavButton(leftNavPane, "Funds", NavigationItem.FUNDS);
 
         msgButtonHolder = new Pane();
-        msgButton = addNavButton(msgButtonHolder, "Message", Icons.MSG, Icons.MSG_ACTIVE, NavigationViewURL.MSG, NavigationItem.MSG);
+        msgButton = addNavButton(msgButtonHolder, "Message", NavigationItem.MSG);
         leftNavPane.getChildren().add(msgButtonHolder);
 
         addBalanceInfo(rightNavPane);
         addAccountComboBox(rightNavPane);
 
-        settingsButton = addNavButton(rightNavPane, "Settings", Icons.SETTINGS, Icons.SETTINGS_ACTIVE, NavigationViewURL.SETTINGS, NavigationItem.SETTINGS);
+        settingsButton = addNavButton(rightNavPane, "Settings", NavigationItem.SETTINGS);
     }
 
-    private ToggleButton addNavButton(Pane parent, String title, String iconId, String iconIdActivated, String navTarget, NavigationItem navigationItem)
+    private ToggleButton addNavButton(Pane parent, String title, NavigationItem navigationItem)
     {
         Pane pane = new Pane();
         pane.setPrefSize(50, 50);
-        ToggleButton toggleButton = new ToggleButton("", Icons.getIconImageView(iconId));
+        ToggleButton toggleButton = new ToggleButton("", Icons.getIconImageView(navigationItem.getIcon()));
         toggleButton.setToggleGroup(toggleGroup);
         toggleButton.setId("nav-button");
         toggleButton.setPrefSize(50, 50);
@@ -275,9 +273,9 @@ public class MainController implements Initializable, NavigationController
                 ((ImageView) (prevToggleButton.getGraphic())).setImage(prevToggleButtonIcon);
             }
             prevToggleButtonIcon = ((ImageView) (toggleButton.getGraphic())).getImage();
-            ((ImageView) (toggleButton.getGraphic())).setImage(Icons.getIconImage(iconIdActivated));
+            ((ImageView) (toggleButton.getGraphic())).setImage(Icons.getIconImage(navigationItem.getActiveIcon()));
 
-            childController = navigateToView(navTarget);
+            childController = loadView(navigationItem);
 
             if (childController instanceof MarketController)
                 ((MarketController) childController).setDirection(navigationItem == NavigationItem.BUY ? Direction.BUY : Direction.SELL);

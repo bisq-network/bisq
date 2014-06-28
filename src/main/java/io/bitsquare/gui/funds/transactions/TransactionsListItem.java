@@ -16,7 +16,7 @@ import javafx.scene.control.Tooltip;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class TransactionsListItem
+public class TransactionsListItem
 {
     private static final Logger log = LoggerFactory.getLogger(TransactionsListItem.class);
     private final StringProperty date = new SimpleStringProperty();
@@ -123,7 +123,6 @@ class TransactionsListItem
         progressIndicator.setPrefHeight(30);
         progressIndicator.setPrefWidth(30);
         Tooltip.install(progressIndicator, tooltip);
-
 
         if (address != null)
         {

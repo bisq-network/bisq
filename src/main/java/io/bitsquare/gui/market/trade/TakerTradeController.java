@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import io.bitsquare.btc.*;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
-import io.bitsquare.gui.NavigationViewURL;
+import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.components.processbar.ProcessStepBar;
 import io.bitsquare.gui.components.processbar.ProcessStepItem;
@@ -398,7 +398,7 @@ public class TakerTradeController implements Initializable, ChildController
         TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
 
-        navigationController.navigateToView(NavigationViewURL.ORDER_BOOK);
+        navigationController.navigateToView(NavigationItem.ORDER_BOOK);
     }
 
     // Other Private methods

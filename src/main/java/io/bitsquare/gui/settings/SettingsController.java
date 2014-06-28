@@ -11,7 +11,6 @@ import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.NavigationViewURL;
 import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.locale.*;
@@ -208,16 +207,11 @@ public class SettingsController implements Initializable, ChildController, Navig
     @Override
     public ChildController navigateToView(NavigationItem navigationItem)
     {
-        return navigateToView(navigationItem);
-    }
 
-    @Override
-    public ChildController navigateToView(String fxmlView)
-    {
         if (childController != null)
             childController.cleanup();
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
         {
             final Node view = loader.load();
@@ -238,7 +232,7 @@ public class SettingsController implements Initializable, ChildController, Navig
             Scene scene = new Scene((Parent) view, 800, 600);
             stage.setScene(scene);
             stage.setOnHidden(windowEvent -> {
-                if (fxmlView.equals(NavigationViewURL.ARBITRATOR_OVERVIEW))
+                if (navigationItem == NavigationItem.ARBITRATOR_OVERVIEW)
                     updateArbitrators();
             });
             stage.show();
@@ -283,7 +277,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     @FXML
     public void onAddArbitrator(ActionEvent actionEvent)
     {
-        navigateToView(NavigationViewURL.ARBITRATOR_OVERVIEW);
+        navigateToView(NavigationItem.ARBITRATOR_OVERVIEW);
     }
 
 

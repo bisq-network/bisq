@@ -115,6 +115,9 @@ public class Popups
     // Support handling of uncaught exception from any thread (also non gui thread)
     public static void handleUncaughtExceptions(Throwable throwable)
     {
+        // while dev
+        throwable.printStackTrace();
+
         Runnable runnable = () ->
         {
             if (Throwables.getRootCause(throwable) instanceof BlockStoreException)
@@ -135,6 +138,8 @@ public class Popups
             runnable.run();
         else
             Platform.runLater(runnable);
+
+
     }
 
     // custom
