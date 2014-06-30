@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import io.bitsquare.gui.components.NetworkSyncPane?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.layout.*?>
 <AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:id="rootPane" id="root-pane" fx:controller="io.bitsquare.gui.MainController"
             stylesheets="/io/bitsquare/gui/bitsquare.css" xmlns="http://javafx.com/javafx/8">
-    <HBox fx:id="leftNavPane" visible="false" spacing="10" AnchorPane.leftAnchor="0" AnchorPane.topAnchor="0"/>
-    <HBox fx:id="rightNavPane" visible="false" spacing="10" AnchorPane.rightAnchor="10" AnchorPane.topAnchor="0"/>
-    <AnchorPane fx:id="contentPane" id="content-pane" visible="false" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="60"/>
+    <HBox fx:id="leftNavPane" opacity="0" spacing="10" AnchorPane.leftAnchor="0" AnchorPane.topAnchor="0"/>
+    <HBox fx:id="rightNavPane" opacity="0" spacing="10" AnchorPane.rightAnchor="10" AnchorPane.topAnchor="0"/>
+    <AnchorPane fx:id="contentPane" id="content-pane" opacity="0" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="60"/>
+    <NetworkSyncPane fx:id="networkSyncPane" spacing="10" prefHeight="20" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"/>
 
-    <ProgressBar fx:id="loadingBar" prefHeight="20" prefWidth="200" AnchorPane.topAnchor="250" AnchorPane.leftAnchor="300"/>
+    <ProgressBar fx:id="loadingBar" progress="-1" prefHeight="20" prefWidth="200" AnchorPane.topAnchor="250" AnchorPane.leftAnchor="300"/>
     <Label fx:id="loadingLabel" text="Loading..." textAlignment="CENTER" alignment="CENTER" prefHeight="20" prefWidth="200" AnchorPane.topAnchor="280" AnchorPane.leftAnchor="300"/>
 </AnchorPane>

@@ -11,7 +11,7 @@ import javafx.util.Callback;
  * Once set, make sure you do <b>not</b> use the static methods on
  * {@link javafx.fxml.FXMLLoader} when creating your JavaFX node.
  */
-public class GuiceControllerFactory implements Callback<Class<?>, Object>
+class GuiceControllerFactory implements Callback<Class<?>, Object>
 {
 
     private final Injector injector;

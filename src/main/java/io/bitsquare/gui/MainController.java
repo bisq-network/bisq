@@ -9,6 +9,7 @@ import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.market.MarketController;
 import io.bitsquare.gui.util.Icons;
+import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.TradeMessage;
@@ -19,7 +20,6 @@ import io.bitsquare.user.User;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
-import java.util.Date;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -36,6 +36,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import net.tomp2p.peers.PeerAddress;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,23 +46,19 @@ public class MainController implements Initializable, NavigationController
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
     private static MainController mainController;
 
-
     private final User user;
     private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
     private final Trading trading;
     private final Storage storage;
-    private final String selectedNavigationItemStorageId;
     private final ToggleGroup toggleGroup = new ToggleGroup();
 
+    @Nullable
     private ChildController childController;
-    private NavigationItem selectedNavigationItem;
-    private NetworkSyncPane networkSyncPane;
     private ToggleButton prevToggleButton;
     private Image prevToggleButtonIcon;
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton;
-    private Pane msgButtonHolder, ordersButtonButtonHolder;
-    private TextField balanceTextField;
+    private Pane ordersButtonButtonHolder;
 
     @FXML
     private Pane contentPane;
@@ -72,6 +70,8 @@ public class MainController implements Initializable, NavigationController
     private AnchorPane rootPane;
     @FXML
     private Label loadingLabel;
+    @FXML
+    private NetworkSyncPane networkSyncPane;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +79,7 @@ public class MainController implements Initializable, NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MainController(User user, WalletFacade walletFacade, MessageFacade messageFacade, Trading trading, Storage storage)
+    private MainController(User user, WalletFacade walletFacade, MessageFacade messageFacade, Trading trading, Storage storage)
     {
         this.user = user;
         this.walletFacade = walletFacade;
@@ -88,11 +88,14 @@ public class MainController implements Initializable, NavigationController
         this.storage = storage;
 
         MainController.mainController = this;
-
-        selectedNavigationItemStorageId = this.getClass().getName() + ".selectedNavigationItem";
     }
 
-    public static MainController getInstance()
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @NotNull
+    public static MainController INSTANCE()
     {
         return mainController;
     }
@@ -108,81 +111,14 @@ public class MainController implements Initializable, NavigationController
         Platform.runLater(this::init);
     }
 
-    public void init()
-    {
-        networkSyncPane = new NetworkSyncPane();
-        networkSyncPane.setSpacing(10);
-        networkSyncPane.setPrefHeight(20);
-
-        messageFacade.init();
-
-        walletFacade.addDownloadListener(new WalletFacade.DownloadListener()
-        {
-            @Override
-            public void progress(double percent, int blocksSoFar, Date date)
-            {
-                networkSyncPane.setProgress(percent);
-            }
-
-            @Override
-            public void doneDownload()
-            {
-                networkSyncPane.doneDownload();
-            }
-        });
-
-        walletFacade.initWallet();
-
-        buildNavigation();
-
-        Object f = storage.read(selectedNavigationItemStorageId);
-        selectedNavigationItem = (NavigationItem) storage.read(selectedNavigationItemStorageId);
-        if (selectedNavigationItem == null)
-            selectedNavigationItem = NavigationItem.HOME;
-
-        navigateToView(selectedNavigationItem);
-
-        AnchorPane.setBottomAnchor(networkSyncPane, 0.0);
-        AnchorPane.setLeftAnchor(networkSyncPane, 0.0);
-
-        messageFacade.addTakeOfferRequestListener(this::showTakeOfferRequest);
-
-        loadingBar.setProgress(-1);
-        rootPane.getChildren().removeAll(loadingLabel, loadingBar);
-
-        leftNavPane.setVisible(true);
-        rightNavPane.setVisible(true);
-        contentPane.setVisible(true);
-    }
-
-
-    private void showTakeOfferRequest(final TradeMessage tradeMessage, PeerAddress sender)
-    {
-        trading.createOffererPaymentProtocol(tradeMessage, sender);
-        try
-        {
-            ImageView newTradeRequestIcon = Icons.getIconImageView(Icons.MSG_ALERT);
-            Button alertButton = new Button("", newTradeRequestIcon);
-            alertButton.setId("nav-alert-button");
-            alertButton.relocate(36, 19);
-            Tooltip.install(alertButton, new Tooltip("Someone accepted your offer"));
-
-            alertButton.setOnAction((e) -> ordersButton.fire());
-            ordersButtonButtonHolder.getChildren().add(alertButton);
-
-        } catch (NullPointerException e)
-        {
-            log.warn("showTakeOfferRequest failed because of a NullPointerException");
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Nullable
     @Override
-    public ChildController navigateToView(NavigationItem navigationItem)
+    public ChildController navigateToView(@NotNull NavigationItem navigationItem)
     {
         switch (navigationItem)
         {
@@ -208,10 +144,11 @@ public class MainController implements Initializable, NavigationController
                 buyButton.fire();
                 break;
         }
-        return null;
+        return childController;
     }
 
-    private ChildController loadView(NavigationItem navigationItem)
+    @Nullable
+    private ChildController loadView(@NotNull NavigationItem navigationItem)
     {
         if (childController != null)
             childController.cleanup();
@@ -223,17 +160,67 @@ public class MainController implements Initializable, NavigationController
             contentPane.getChildren().setAll(view);
             childController = loader.getController();
             childController.setNavigationController(this);
-            return childController;
         } catch (IOException e)
         {
             e.printStackTrace();
+            log.error("Loading view failed. " + navigationItem.getFxmlUrl());
         }
-        return null;
+        return childController;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void init()
+    {
+        messageFacade.init();
+        messageFacade.addTakeOfferRequestListener(this::showTakeOfferRequest);
+
+        walletFacade.addDownloadListener(new WalletFacade.DownloadListener()
+        {
+            @Override
+            public void progress(double percent)
+            {
+                networkSyncPane.setProgress(percent);
+            }
+
+            @Override
+            public void doneDownload()
+            {
+                networkSyncPane.doneDownload();
+            }
+        });
+
+        walletFacade.initWallet();
+
+        buildNavigation();
+
+        Transitions.fadeOutAndRemove(loadingLabel);
+        Transitions.fadeOutAndRemove(loadingBar);
+
+        Transitions.fadeIn(leftNavPane);
+        Transitions.fadeIn(rightNavPane);
+        Transitions.fadeIn(contentPane);
+
+        NavigationItem selectedNavigationItem = (NavigationItem) storage.read(this, "selectedNavigationItem");
+        if (selectedNavigationItem == null)
+            selectedNavigationItem = NavigationItem.HOME;
+
+        navigateToView(selectedNavigationItem);
+    }
+
+
+    private void showTakeOfferRequest(@NotNull TradeMessage tradeMessage, @NotNull PeerAddress sender)
+    {
+        trading.createOffererPaymentProtocol(tradeMessage, sender);
+        final Button alertButton = new Button("", Icons.getIconImageView(Icons.MSG_ALERT));
+        alertButton.setId("nav-alert-button");
+        alertButton.relocate(36, 19);
+        alertButton.setOnAction((e) -> ordersButton.fire());
+        Tooltip.install(alertButton, new Tooltip("Someone accepted your offer"));
+        ordersButtonButtonHolder.getChildren().add(alertButton);
+    }
 
     private void buildNavigation()
     {
@@ -249,7 +236,7 @@ public class MainController implements Initializable, NavigationController
 
         fundsButton = addNavButton(leftNavPane, "Funds", NavigationItem.FUNDS);
 
-        msgButtonHolder = new Pane();
+        final Pane msgButtonHolder = new Pane();
         msgButton = addNavButton(msgButtonHolder, "Message", NavigationItem.MSG);
         leftNavPane.getChildren().add(msgButtonHolder);
 
@@ -259,11 +246,12 @@ public class MainController implements Initializable, NavigationController
         settingsButton = addNavButton(rightNavPane, "Settings", NavigationItem.SETTINGS);
     }
 
-    private ToggleButton addNavButton(Pane parent, String title, NavigationItem navigationItem)
+    @NotNull
+    private ToggleButton addNavButton(@NotNull Pane parent, @NotNull String title, @NotNull NavigationItem navigationItem)
     {
-        Pane pane = new Pane();
+        final Pane pane = new Pane();
         pane.setPrefSize(50, 50);
-        ToggleButton toggleButton = new ToggleButton("", Icons.getIconImageView(navigationItem.getIcon()));
+        final ToggleButton toggleButton = new ToggleButton("", Icons.getIconImageView(navigationItem.getIcon()));
         toggleButton.setToggleGroup(toggleGroup);
         toggleButton.setId("nav-button");
         toggleButton.setPrefSize(50, 50);
@@ -280,13 +268,12 @@ public class MainController implements Initializable, NavigationController
             if (childController instanceof MarketController)
                 ((MarketController) childController).setDirection(navigationItem == NavigationItem.BUY ? Direction.BUY : Direction.SELL);
 
-            storage.write(selectedNavigationItemStorageId, navigationItem);
+            storage.write(this, "selectedNavigationItem", navigationItem);
 
             prevToggleButton = toggleButton;
-
         });
 
-        Label titleLabel = new Label(title);
+        final Label titleLabel = new Label(title);
         titleLabel.setPrefWidth(60);
         titleLabel.setLayoutY(40);
         titleLabel.setId("nav-button-label");
@@ -298,34 +285,13 @@ public class MainController implements Initializable, NavigationController
         return toggleButton;
     }
 
-    private TextField addBalanceInfo(Pane parent)
+    private void addBalanceInfo(@NotNull Pane parent)
     {
-        balanceTextField = new TextField();
+        final TextField balanceTextField = new TextField();
         balanceTextField.setEditable(false);
         balanceTextField.setPrefWidth(90);
         balanceTextField.setId("nav-balance-label");
-
-        balanceTextField.setText(BtcFormatter.formatSatoshis(walletFacade.getWalletBalance(), false));
-
-        Label balanceCurrencyLabel = new Label("BTC");
-        balanceCurrencyLabel.setPadding(new Insets(6, 0, 0, 0));
-        HBox hBox = new HBox();
-        hBox.setSpacing(2);
-        hBox.getChildren().setAll(balanceTextField, balanceCurrencyLabel);
-
-        VBox vBox = new VBox();
-        vBox.setPadding(new Insets(12, 0, 0, 0));
-        vBox.setSpacing(2);
-        Label titleLabel = new Label("Balance");
-        titleLabel.setMouseTransparent(true);
-        titleLabel.setPrefWidth(90);
-        titleLabel.setId("nav-button-label");
-
-        vBox.getChildren().setAll(hBox, titleLabel);
-        parent.getChildren().add(vBox);
-
         balanceTextField.setText(BtcFormatter.satoshiToString(walletFacade.getWalletBalance()));
-
         walletFacade.addBalanceListener(new BalanceListener()
         {
             @Override
@@ -335,24 +301,43 @@ public class MainController implements Initializable, NavigationController
             }
         });
 
-        return balanceTextField;
+        final Label balanceCurrencyLabel = new Label("BTC");
+        balanceCurrencyLabel.setPadding(new Insets(6, 0, 0, 0));
+
+        final HBox hBox = new HBox();
+        hBox.setSpacing(2);
+        hBox.getChildren().setAll(balanceTextField, balanceCurrencyLabel);
+
+        final Label titleLabel = new Label("Balance");
+        titleLabel.setMouseTransparent(true);
+        titleLabel.setPrefWidth(90);
+        titleLabel.setId("nav-button-label");
+
+        final VBox vBox = new VBox();
+        vBox.setPadding(new Insets(12, 0, 0, 0));
+        vBox.setSpacing(2);
+        vBox.getChildren().setAll(hBox, titleLabel);
+        parent.getChildren().add(vBox);
     }
 
-    private void addAccountComboBox(Pane parent)
+    private void addAccountComboBox(@NotNull Pane parent)
     {
         if (user.getBankAccounts().size() > 1)
         {
-            ComboBox<BankAccount> accountComboBox = new ComboBox(FXCollections.observableArrayList(user.getBankAccounts()));
+            final ComboBox<BankAccount> accountComboBox = new ComboBox<>(FXCollections.observableArrayList(user.getBankAccounts()));
             accountComboBox.setLayoutY(12);
             accountComboBox.setValue(user.getCurrentBankAccount());
+            accountComboBox.valueProperty().addListener((ov, oldValue, newValue) -> user.setCurrentBankAccount(newValue));
             accountComboBox.setConverter(new StringConverter<BankAccount>()
             {
+                @NotNull
                 @Override
-                public String toString(BankAccount bankAccount)
+                public String toString(@NotNull BankAccount bankAccount)
                 {
                     return bankAccount.getAccountTitle();
                 }
 
+                @Nullable
                 @Override
                 public BankAccount fromString(String s)
                 {
@@ -360,21 +345,17 @@ public class MainController implements Initializable, NavigationController
                 }
             });
 
-            VBox vBox = new VBox();
-            vBox.setPadding(new Insets(12, 0, 0, 0));
-            vBox.setSpacing(2);
-            Label titleLabel = new Label("Bank account");
+
+            final Label titleLabel = new Label("Bank account");
             titleLabel.setMouseTransparent(true);
             titleLabel.setPrefWidth(90);
             titleLabel.setId("nav-button-label");
 
+            final VBox vBox = new VBox();
+            vBox.setPadding(new Insets(12, 0, 0, 0));
+            vBox.setSpacing(2);
             vBox.getChildren().setAll(accountComboBox, titleLabel);
             parent.getChildren().add(vBox);
-
-            accountComboBox.valueProperty().addListener((ov, oldValue, newValue) -> user.setCurrentBankAccount(newValue));
-
         }
     }
-
-
 }

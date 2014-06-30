@@ -10,6 +10,8 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,12 +19,14 @@ public class Localisation
 {
     private static final Logger log = LoggerFactory.getLogger(Localisation.class);
 
+    @NotNull
     public static ResourceBundle getResourceBundle()
     {
         return ResourceBundle.getBundle("i18n.displayStrings", new UTF8Control());
     }
 
-    public static String get(String key)
+    @NotNull
+    public static String get(@NotNull String key)
     {
         try
         {
@@ -30,12 +34,12 @@ public class Localisation
         } catch (MissingResourceException e)
         {
             log.error("MissingResourceException for key: " + key);
-            log.error("MissingResourceException for key: " + key);
             return key + " is missing";
         }
     }
 
-    public static String get(String key, String... arguments)
+    @NotNull
+    public static String get(@NotNull String key, String... arguments)
     {
         return MessageFormat.format(Localisation.get(key), arguments);
     }
@@ -43,22 +47,20 @@ public class Localisation
 
 class UTF8Control extends ResourceBundle.Control
 {
-
-    public ResourceBundle newBundle
-            (String baseName, Locale locale, String format, ClassLoader loader, boolean reload)
-            throws IllegalAccessException, InstantiationException, IOException
+    @Nullable
+    public ResourceBundle newBundle(@NotNull String baseName, @NotNull Locale locale, @NotNull String format, @NotNull ClassLoader loader, boolean reload) throws IllegalAccessException, InstantiationException, IOException
     {
         // The below is a copy of the default implementation.
-        String bundleName = toBundleName(baseName, locale);
-        String resourceName = toResourceName(bundleName, "properties");
-        ResourceBundle bundle = null;
-        InputStream stream = null;
+        final String bundleName = toBundleName(baseName, locale);
+        final String resourceName = toResourceName(bundleName, "properties");
+        @Nullable ResourceBundle bundle = null;
+        @Nullable InputStream stream = null;
         if (reload)
         {
-            URL url = loader.getResource(resourceName);
+            final URL url = loader.getResource(resourceName);
             if (url != null)
             {
-                URLConnection connection = url.openConnection();
+                final URLConnection connection = url.openConnection();
                 if (connection != null)
                 {
                     connection.setUseCaches(false);

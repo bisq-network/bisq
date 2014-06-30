@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 //TODO not used but let it for reference until all use cases are impl.
+@SuppressWarnings({"WeakerAccess", "EmptyMethod"})
 public class PaymentProcess
 {
     private static final Logger log = LoggerFactory.getLogger(PaymentProcess.class);
@@ -22,9 +23,6 @@ public class PaymentProcess
     protected String takerTotalInputPayment;
     protected String takerOutputPayment;
     protected String multiSigAddress;
-    private MessageFacade messageService;
-    private BlockChainFacade bitcoinServices;
-    private WalletFacade wallet;
 
     public PaymentProcess()
     {
@@ -33,19 +31,16 @@ public class PaymentProcess
     @Inject
     public void setMessageService(MessageFacade messageService)
     {
-        this.messageService = messageService;
     }
 
     @Inject
     public void setWallet(WalletFacade wallet)
     {
-        this.wallet = wallet;
     }
 
     @Inject
     public void setBtcServices(BlockChainFacade bitcoinServices)
     {
-        this.bitcoinServices = bitcoinServices;
     }
 
 

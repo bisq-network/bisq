@@ -13,12 +13,14 @@ import javafx.scene.Node;
 import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class LazyLoadingTabPane extends TabPane
 {
     private final Map<Integer, Node> views = new HashMap<>();
     private final Map<Integer, ChildController> controllers = new HashMap<>();
-    SingleSelectionModel<Tab> selectionModel;
+    private SingleSelectionModel<Tab> selectionModel;
     private String storageId;
     private NavigationController navigationController;
     private String[] tabContentFXMLUrls;
@@ -35,7 +37,7 @@ public class LazyLoadingTabPane extends TabPane
         super();
     }
 
-    public void initialize(NavigationController navigationController, Storage storage, String... tabContentFXMLUrls)
+    public void initialize(@NotNull NavigationController navigationController, @NotNull Storage storage, @NotNull String... tabContentFXMLUrls)
     {
         if (tabContentFXMLUrls.length == 0)
             throw new IllegalArgumentException("No tabContentFXMLUrls defined");
@@ -63,6 +65,7 @@ public class LazyLoadingTabPane extends TabPane
             childController.cleanup();
     }
 
+    @Nullable
     public ChildController navigateToView(String fxmlView)
     {
         for (int i = 0; i < tabContentFXMLUrls.length; i++)
@@ -85,7 +88,7 @@ public class LazyLoadingTabPane extends TabPane
             if (childController != null)
                 ((Hibernate) childController).sleep();
 
-            Node view = null;
+            @Nullable Node view = null;
             if (index < views.size())
             {
                 view = views.get(index);
@@ -94,7 +97,7 @@ public class LazyLoadingTabPane extends TabPane
             if (view == null)
             {
                 String fxmlView = tabContentFXMLUrls[index];
-                final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
+                @NotNull final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
                 try
                 {
                     view = loader.load();

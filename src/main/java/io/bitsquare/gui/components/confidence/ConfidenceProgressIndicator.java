@@ -34,6 +34,7 @@ import javafx.css.PseudoClass;
 import javafx.css.StyleableProperty;
 import javafx.scene.control.Control;
 import javafx.scene.control.Skin;
+import org.jetbrains.annotations.NotNull;
 
 
 /**
@@ -64,6 +65,7 @@ import javafx.scene.control.Skin;
  * @since JavaFX 2.0
  */
 
+@SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class ConfidenceProgressIndicator extends Control
 {
 
@@ -175,12 +177,14 @@ public class ConfidenceProgressIndicator extends Control
                     pseudoClassStateChanged(PSEUDO_CLASS_DETERMINATE, !active);
                 }
 
+                @NotNull
                 @Override
                 public Object getBean()
                 {
                     return ConfidenceProgressIndicator.this;
                 }
 
+                @NotNull
                 @Override
                 public String getName()
                 {
@@ -229,12 +233,14 @@ public class ConfidenceProgressIndicator extends Control
                     setIndeterminate(getProgress() < 0.0);
                 }
 
+                @NotNull
                 @Override
                 public Object getBean()
                 {
                     return ConfidenceProgressIndicator.this;
                 }
 
+                @NotNull
                 @Override
                 public String getName()
                 {
@@ -248,6 +254,7 @@ public class ConfidenceProgressIndicator extends Control
     /**
      * {@inheritDoc}
      */
+    @NotNull
     @Override
     protected Skin<?> createDefaultSkin()
     {
@@ -259,8 +266,6 @@ public class ConfidenceProgressIndicator extends Control
      * this method to return true, but ProgressIndicator returns false for
      * focusTraversable's initial value; hence the override of the override.
      * This method is called from CSS code to get the correct initial value.
-     *
-     * @treatAsPrivate implementation detail
      */
     @Deprecated
     @Override

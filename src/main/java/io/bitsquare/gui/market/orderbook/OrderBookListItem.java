@@ -5,17 +5,19 @@ import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.trade.Offer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import org.jetbrains.annotations.NotNull;
 
 public class OrderBookListItem
 {
-    protected final StringProperty price = new SimpleStringProperty();
-    protected final StringProperty amount = new SimpleStringProperty();
-    protected final StringProperty volume = new SimpleStringProperty();
+    private final StringProperty price = new SimpleStringProperty();
+    private final StringProperty amount = new SimpleStringProperty();
+    private final StringProperty volume = new SimpleStringProperty();
 
-    protected final Offer offer;
+    @NotNull
+    private final Offer offer;
 
 
-    public OrderBookListItem(Offer offer)
+    public OrderBookListItem(@NotNull Offer offer)
     {
         this.offer = offer;
         this.price.set(BitSquareFormatter.formatPrice(offer.getPrice()));
@@ -27,22 +29,26 @@ public class OrderBookListItem
         this.volume.set(BitSquareFormatter.formatVolumeWithMinVolume(offer.getVolume(), offer.getMinVolume()));
     }
 
+    @NotNull
     public Offer getOffer()
     {
         return offer;
     }
 
     // called form table columns
+    @NotNull
     public final StringProperty priceProperty()
     {
         return this.price;
     }
 
+    @NotNull
     public final StringProperty amountProperty()
     {
         return this.amount;
     }
 
+    @NotNull
     public final StringProperty volumeProperty()
     {
         return this.volume;

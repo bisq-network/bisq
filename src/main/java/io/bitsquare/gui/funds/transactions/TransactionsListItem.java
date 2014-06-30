@@ -13,6 +13,8 @@ import java.math.BigInteger;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Tooltip;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,26 +24,27 @@ public class TransactionsListItem
     private final StringProperty date = new SimpleStringProperty();
     private final StringProperty amount = new SimpleStringProperty();
     private final StringProperty type = new SimpleStringProperty();
-    private final Transaction transaction;
+    @NotNull
     private final WalletFacade walletFacade;
+    @NotNull
     private final ConfidenceProgressIndicator progressIndicator;
+    @NotNull
     private final Tooltip tooltip;
     private String addressString;
     private ConfidenceListener confidenceListener;
 
-    public TransactionsListItem(Transaction transaction, WalletFacade walletFacade)
+    public TransactionsListItem(@NotNull Transaction transaction, @NotNull WalletFacade walletFacade)
     {
-        this.transaction = transaction;
         this.walletFacade = walletFacade;
 
         BigInteger valueSentToMe = transaction.getValueSentToMe(walletFacade.getWallet());
         BigInteger valueSentFromMe = transaction.getValueSentFromMe(walletFacade.getWallet());
-        Address address = null;
+        @Nullable Address address = null;
         if (valueSentToMe.compareTo(BigInteger.ZERO) == 0)
         {
             amount.set("-" + BtcFormatter.satoshiToString(valueSentFromMe));
 
-            for (TransactionOutput transactionOutput : transaction.getOutputs())
+            for (@NotNull TransactionOutput transactionOutput : transaction.getOutputs())
             {
                 if (!transactionOutput.isMine(walletFacade.getWallet()))
                 {
@@ -64,7 +67,7 @@ public class TransactionsListItem
             amount.set(BtcFormatter.satoshiToString(valueSentToMe));
             type.set("Received with");
 
-            for (TransactionOutput transactionOutput : transaction.getOutputs())
+            for (@NotNull TransactionOutput transactionOutput : transaction.getOutputs())
             {
                 if (transactionOutput.isMine(walletFacade.getWallet()))
                 {
@@ -85,7 +88,7 @@ public class TransactionsListItem
             amount.set(BtcFormatter.satoshiToString(valueSentToMe.subtract(valueSentFromMe)));
 
             boolean outgoing = false;
-            for (TransactionOutput transactionOutput : transaction.getOutputs())
+            for (@NotNull TransactionOutput transactionOutput : transaction.getOutputs())
             {
                 if (!transactionOutput.isMine(walletFacade.getWallet()))
                 {
@@ -145,7 +148,7 @@ public class TransactionsListItem
         walletFacade.removeConfidenceListener(confidenceListener);
     }
 
-    private void updateConfidence(TransactionConfidence confidence)
+    private void updateConfidence(@Nullable TransactionConfidence confidence)
     {
         if (confidence != null)
         {
@@ -175,21 +178,25 @@ public class TransactionsListItem
     }
 
 
+    @NotNull
     public ConfidenceProgressIndicator getProgressIndicator()
     {
         return progressIndicator;
     }
 
+    @NotNull
     public final StringProperty dateProperty()
     {
         return this.date;
     }
 
+    @NotNull
     public final StringProperty amountProperty()
     {
         return this.amount;
     }
 
+    @NotNull
     public final StringProperty typeProperty()
     {
         return this.type;

@@ -7,6 +7,7 @@ import io.bitsquare.gui.NavigationController;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.Initializable;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +21,7 @@ public class PendingTradeController implements Initializable, ChildController, H
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradeController()
+    private PendingTradeController()
     {
     }
 
@@ -40,7 +41,7 @@ public class PendingTradeController implements Initializable, ChildController, H
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void setNavigationController(@NotNull NavigationController navigationController)
     {
         log.debug("setNavigationController" + this);
     }

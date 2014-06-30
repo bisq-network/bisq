@@ -70,8 +70,8 @@ public class BitSquare extends Application
         final User user = injector.getInstance(User.class);
         final Settings settings = injector.getInstance(Settings.class);
         final Storage storage = injector.getInstance(Storage.class);
+        storage.init();
         user.updateFromStorage((User) storage.read(user.getClass().getName()));
-
         settings.updateFromStorage((Settings) storage.read(settings.getClass().getName()));
 
         if (ID.isEmpty())
@@ -88,9 +88,9 @@ public class BitSquare extends Application
 
         try
         {
-            final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), Localisation.getResourceBundle());
+            @NotNull final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), Localisation.getResourceBundle());
             final Parent mainView = loader.load();
-            final Scene scene = new Scene(mainView, 800, 600);
+            @NotNull final Scene scene = new Scene(mainView, 800, 600);
             stage.setScene(scene);
 
             final String bitsquare = getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm();

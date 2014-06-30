@@ -4,6 +4,7 @@ import java.util.Map;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.storage.Data;
 
+@SuppressWarnings({"EmptyMethod", "UnusedParameters"})
 public interface ArbitratorListener
 {
     void onArbitratorAdded(Data offerData, boolean success);

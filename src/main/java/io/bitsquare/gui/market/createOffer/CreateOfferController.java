@@ -4,6 +4,7 @@ import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
+import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
@@ -15,9 +16,7 @@ import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.gui.util.BitSquareConverter;
 import io.bitsquare.gui.util.BitSquareFormatter;
-import io.bitsquare.gui.util.ConfidenceDisplay;
 import io.bitsquare.locale.Localisation;
-import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
@@ -30,7 +29,6 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.util.Random;
 import java.util.ResourceBundle;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -38,21 +36,24 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CreateOfferController implements Initializable, ChildController, Hibernate
 {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferController.class);
+    @NotNull
     private final Trading trading;
+    @NotNull
     private final WalletFacade walletFacade;
-    private final MessageFacade messageFacade;
+    @NotNull
     private final Settings settings;
+    @NotNull
     private final User user;
     private NavigationController navigationController;
     private Direction direction;
     private Offer offer;
-    private ConfidenceDisplay confidenceDisplay;
 
     @FXML
     private AnchorPane rootContainer;
@@ -74,11 +75,10 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public CreateOfferController(Trading trading, WalletFacade walletFacade, MessageFacade messageFacade, Settings settings, User user)
+    private CreateOfferController(@NotNull Trading trading, @NotNull WalletFacade walletFacade, @NotNull Settings settings, @NotNull User user)
     {
         this.trading = trading;
         this.walletFacade = walletFacade;
-        this.messageFacade = messageFacade;
         this.settings = settings;
         this.user = user;
     }
@@ -88,7 +88,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setOrderBookFilter(OrderBookFilter orderBookFilter)
+    public void setOrderBookFilter(@NotNull OrderBookFilter orderBookFilter)
     {
         direction = orderBookFilter.getDirection();
         amountTextField.setText(BitSquareFormatter.formatPrice(orderBookFilter.getAmount()));
@@ -119,9 +119,13 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        bankAccountTypeTextField.setText(Localisation.get(user.getCurrentBankAccount().getBankAccountTypeInfo().getType().toString()));
-        bankAccountCurrencyTextField.setText(user.getCurrentBankAccount().getCurrency().getCurrencyCode());
-        bankAccountCountyTextField.setText(user.getCurrentBankAccount().getCountry().getName());
+        BankAccount currentBankAccount = user.getCurrentBankAccount();
+        if (currentBankAccount != null)
+        {
+            bankAccountTypeTextField.setText(Localisation.get(currentBankAccount.getBankAccountType().toString()));
+            bankAccountCurrencyTextField.setText(currentBankAccount.getCurrency().getCurrencyCode());
+            bankAccountCountyTextField.setText(currentBankAccount.getCountry().getName());
+        }
         acceptedCountriesTextField.setText(BitSquareFormatter.countryLocalesToString(settings.getAcceptedCountries()));
         acceptedLanguagesTextField.setText(BitSquareFormatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
         feeLabel.setText(BtcFormatter.satoshiToString(FeePolicy.CREATE_OFFER_FEE));
@@ -133,7 +137,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void setNavigationController(@NotNull NavigationController navigationController)
     {
         this.navigationController = navigationController;
     }
@@ -164,7 +168,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onPlaceOffer(ActionEvent actionEvent)
+    public void onPlaceOffer()
     {
         if (!inputValid())
         {
@@ -182,60 +186,68 @@ public class CreateOfferController implements Initializable, ChildController, Hi
 
         log.debug("create offer pubkey " + user.getMessagePubKeyAsHex());
 
-        offer = new Offer(user.getMessagePubKeyAsHex(),
-                direction,
-                BitSquareConverter.stringToDouble2(priceTextField.getText()),
-                BtcFormatter.stringValueToSatoshis(amountTextField.getText()),
-                BtcFormatter.stringValueToSatoshis(minAmountTextField.getText()),
-                user.getCurrentBankAccount().getBankAccountTypeInfo().getType(),
-                user.getCurrentBankAccount().getCurrency(),
-                user.getCurrentBankAccount().getCountry(),
-                user.getCurrentBankAccount().getUid(),
-                arbitrator,
-                collateral,
-                settings.getAcceptedCountries(),
-                settings.getAcceptedLanguageLocales());
-
-        FutureCallback callback = new FutureCallback<Transaction>()
+        if (user.getCurrentBankAccount() != null)
         {
-            @Override
-            public void onSuccess(Transaction transaction)
+            offer = new Offer(user.getMessagePubKeyAsHex(),
+                    direction,
+                    BitSquareConverter.stringToDouble2(priceTextField.getText()),
+                    BtcFormatter.stringValueToSatoshis(amountTextField.getText()),
+                    BtcFormatter.stringValueToSatoshis(minAmountTextField.getText()),
+                    user.getCurrentBankAccount().getBankAccountType(),
+                    user.getCurrentBankAccount().getCurrency(),
+                    user.getCurrentBankAccount().getCountry(),
+                    user.getCurrentBankAccount().getUid(),
+                    arbitrator,
+                    collateral,
+                    settings.getAcceptedCountries(),
+                    settings.getAcceptedLanguageLocales());
+
+
+            @NotNull FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
             {
-                log.info("sendResult onSuccess:" + transaction.toString());
-                offer.setOfferFeePaymentTxID(transaction.getHashAsString());
-                setupSuccessScreen(transaction);
-                placeOfferTitle.setText("Transaction sent:");
-                try
+                @Override
+                public void onSuccess(@javax.annotation.Nullable Transaction transaction)
                 {
-                    trading.addOffer(offer);
-                } catch (IOException e)
-                {
-                    Popups.openErrorPopup("Error on adding offer", "Could not add offer to orderbook. " + e.getMessage());
+                    log.info("sendResult onSuccess:" + transaction);
+                    if (transaction != null)
+                    {
+                        offer.setOfferFeePaymentTxID(transaction.getHashAsString());
+                        setupSuccessScreen(transaction);
+
+                        placeOfferTitle.setText("Transaction sent:");
+                        try
+                        {
+                            trading.addOffer(offer);
+                        } catch (IOException e)
+                        {
+                            Popups.openErrorPopup("Error on adding offer", "Could not add offer to orderbook. " + e.getMessage());
+                        }
+                    }
                 }
-            }
 
-            @Override
-            public void onFailure(Throwable t)
+                @Override
+                public void onFailure(@NotNull Throwable t)
+                {
+                    log.warn("sendResult onFailure:" + t);
+                    Popups.openErrorPopup("Fee payment failed", "Fee payment failed. " + t);
+                    placeOfferButton.setDisable(false);
+                }
+            };
+            try
             {
-                log.warn("sendResult onFailure:" + t.toString());
-                Popups.openErrorPopup("Fee payment failed", "Fee payment failed. " + t.toString());
-                placeOfferButton.setDisable(false);
+                walletFacade.payCreateOfferFee(offer.getId(), callback);
+                placeOfferButton.setDisable(true);
+            } catch (InsufficientMoneyException e1)
+            {
+                Popups.openInsufficientMoneyPopup();
             }
-        };
-
-        try
-        {
-            walletFacade.payCreateOfferFee(offer.getId(), callback);
-            placeOfferButton.setDisable(true);
-        } catch (InsufficientMoneyException e1)
-        {
-            Popups.openInsufficientMoneyPopup();
         }
     }
 
-    public void onClose(ActionEvent actionEvent)
+
+    public void onClose()
     {
-        TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
+        @NotNull TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
 
         navigationController.navigateToView(NavigationItem.ORDER_BOOK);
@@ -246,7 +258,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupSuccessScreen(Transaction newTransaction)
+    private void setupSuccessScreen(@NotNull Transaction newTransaction)
     {
         placeOfferButton.setVisible(false);
 
@@ -258,7 +270,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
 
         txTextField.setText(newTransaction.getHashAsString());
 
-        confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, newTransaction, progressIndicator);
+        // ConfidenceDisplay confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, newTransaction, progressIndicator);
     }
 
     private void updateVolume()
@@ -279,6 +291,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     }
 
     //TODO
+    @SuppressWarnings("UnusedAssignment")
     private boolean inputValid()
     {
         double priceAsDouble = BitSquareConverter.stringToDouble2(priceTextField.getText());

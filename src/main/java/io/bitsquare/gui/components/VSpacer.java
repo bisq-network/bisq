@@ -9,6 +9,7 @@ public class VSpacer extends Pane
     {
     }
 
+    @SuppressWarnings("SameParameterValue")
     public VSpacer(double height)
     {
         setPrefHeight(height);

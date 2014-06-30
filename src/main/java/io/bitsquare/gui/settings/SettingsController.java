@@ -5,8 +5,7 @@ import com.google.bitcoin.core.Utils;
 import com.google.inject.Inject;
 import io.bitsquare.BitSquare;
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.bank.BankAccountTypeInfo;
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
@@ -26,7 +25,6 @@ import java.net.URL;
 import java.util.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -40,22 +38,23 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 // TODO separate in 2 view/controllers
 public class SettingsController implements Initializable, ChildController, NavigationController
 {
     private final User user;
+    @NotNull
     private final Settings settings;
+    @NotNull
     private final Storage storage;
-    private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
     private final ObservableList<Locale> languageList;
     private final ObservableList<Country> countryList;
-    private NavigationController navigationController;
     private ChildController childController;
     private List<String> regionList;
     private ObservableList<Arbitrator> arbitratorList;
-    private Region selectedRegion, selectedBankAccountRegion;
 
     @FXML
     private ListView<Locale> languagesListView;
@@ -76,7 +75,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     @FXML
     private ComboBox<BankAccount> bankAccountComboBox;
     @FXML
-    private ComboBox<BankAccountTypeInfo> bankAccountTypesComboBox;
+    private ComboBox<BankAccountType> bankAccountTypesComboBox;
     @FXML
     private ComboBox<Currency> bankAccountCurrencyComboBox;
 
@@ -86,12 +85,11 @@ public class SettingsController implements Initializable, ChildController, Navig
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SettingsController(User user, Settings settings, Storage storage, WalletFacade walletFacade, MessageFacade messageFacade)
+    public SettingsController(User user, @NotNull Settings settings, @NotNull Storage storage, MessageFacade messageFacade)
     {
         this.user = user;
         this.settings = settings;
         this.storage = storage;
-        this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
 
         Settings savedSettings = (Settings) storage.read(settings.getClass().getName());
@@ -118,7 +116,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void updateArbitrators()
+    void updateArbitrators()
     {
         arbitratorList = FXCollections.observableArrayList(settings.getAcceptedArbitrators());
         initArbitrators();
@@ -137,21 +135,22 @@ public class SettingsController implements Initializable, ChildController, Navig
         addMockArbitrator();
     }
 
+    @SuppressWarnings("ConstantConditions")
     private void addMockArbitrator()
     {
-        if (settings.getAcceptedArbitrators() == null || settings.getAcceptedArbitrators().size() == 0)
+        if (settings.getAcceptedArbitrators().isEmpty())
         {
             String pubKeyAsHex = Utils.bytesToHexString(new ECKey().getPubKey());
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey());
-            List<Locale> languages = new ArrayList<>();
+            @NotNull List<Locale> languages = new ArrayList<>();
             languages.add(LanguageUtil.getDefaultLanguageLocale());
-            List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
+            @NotNull List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
             arbitrationMethods.add(Arbitrator.METHOD.TLS_NOTARY);
-            List<Arbitrator.ID_VERIFICATION> idVerifications = new ArrayList<>();
+            @NotNull List<Arbitrator.ID_VERIFICATION> idVerifications = new ArrayList<>();
             idVerifications.add(Arbitrator.ID_VERIFICATION.PASSPORT);
             idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
 
-            Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
+            @NotNull Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
                     messagePubKeyAsHex,
                     "Manfred Karrer",
                     Arbitrator.ID_TYPE.REAL_LIFE_ID,
@@ -188,9 +187,9 @@ public class SettingsController implements Initializable, ChildController, Navig
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void setNavigationController(@NotNull NavigationController navigationController)
     {
-        this.navigationController = navigationController;
+
     }
 
     @Override
@@ -204,14 +203,15 @@ public class SettingsController implements Initializable, ChildController, Navig
     // Interface implementation: NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Nullable
     @Override
-    public ChildController navigateToView(NavigationItem navigationItem)
+    public ChildController navigateToView(@NotNull NavigationItem navigationItem)
     {
 
         if (childController != null)
             childController.cleanup();
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
+        @NotNull final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
         {
             final Node view = loader.load();
@@ -219,7 +219,7 @@ public class SettingsController implements Initializable, ChildController, Navig
             childController.setNavigationController(this);
 
             final Stage rootStage = BitSquare.getStage();
-            final Stage stage = new Stage();
+            @NotNull final Stage stage = new Stage();
             stage.setTitle("Arbitrator selection");
             stage.setMinWidth(800);
             stage.setMinHeight(500);
@@ -229,7 +229,7 @@ public class SettingsController implements Initializable, ChildController, Navig
             stage.setY(rootStage.getY() + 50);
             stage.initModality(Modality.WINDOW_MODAL);
             stage.initOwner(rootStage);
-            Scene scene = new Scene((Parent) view, 800, 600);
+            @NotNull Scene scene = new Scene((Parent) view, 800, 600);
             stage.setScene(scene);
             stage.setOnHidden(windowEvent -> {
                 if (navigationItem == NavigationItem.ARBITRATOR_OVERVIEW)
@@ -253,29 +253,29 @@ public class SettingsController implements Initializable, ChildController, Navig
 
     // General Settings
     @FXML
-    public void onAddLanguage(ActionEvent actionEvent)
+    public void onAddLanguage()
     {
         addLanguage(languageComboBox.getSelectionModel().getSelectedItem());
         languageComboBox.getSelectionModel().clearSelection();
     }
 
     @FXML
-    public void onSelectRegion(ActionEvent actionEvent)
+    public void onSelectRegion()
     {
         countryComboBox.setVisible(true);
-        selectedRegion = regionComboBox.getSelectionModel().getSelectedItem();
+        Region selectedRegion = regionComboBox.getSelectionModel().getSelectedItem();
         countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllCountriesFor(selectedRegion)));
     }
 
     @FXML
-    public void onAddCountry(ActionEvent actionEvent)
+    public void onAddCountry()
     {
         addCountry(countryComboBox.getSelectionModel().getSelectedItem());
         countryComboBox.getSelectionModel().clearSelection();
     }
 
     @FXML
-    public void onAddArbitrator(ActionEvent actionEvent)
+    public void onAddArbitrator()
     {
         navigateToView(NavigationItem.ARBITRATOR_OVERVIEW);
     }
@@ -283,7 +283,7 @@ public class SettingsController implements Initializable, ChildController, Navig
 
     // Bank Account Settings
     @FXML
-    public void selectBankAccount(ActionEvent actionEvent)
+    public void selectBankAccount()
     {
         BankAccount bankAccount = bankAccountComboBox.getSelectionModel().getSelectedItem();
         if (bankAccount != null && bankAccount != user.getCurrentBankAccount())
@@ -295,41 +295,41 @@ public class SettingsController implements Initializable, ChildController, Navig
     }
 
     @FXML
-    public void selectBankAccountType(ActionEvent actionEvent)
+    public void selectBankAccountType()
     {
-        BankAccountTypeInfo bankAccountTypeInfo = bankAccountTypesComboBox.getSelectionModel().getSelectedItem();
-        if (bankAccountTypeInfo != null)
+        BankAccountType bankAccountType = bankAccountTypesComboBox.getSelectionModel().getSelectedItem();
+        if (bankAccountType != null)
         {
             bankAccountTitleTextField.setText("");
             bankAccountPrimaryIDTextField.setText("");
-            bankAccountPrimaryIDTextField.setPromptText(bankAccountTypeInfo.getPrimaryIDName());
+            bankAccountPrimaryIDTextField.setPromptText(bankAccountType.getPrimaryId());
             bankAccountSecondaryIDTextField.setText("");
-            bankAccountSecondaryIDTextField.setPromptText(bankAccountTypeInfo.getSecondaryIDName());
+            bankAccountSecondaryIDTextField.setPromptText(bankAccountType.getSecondaryId());
         }
     }
 
     @FXML
-    public void onSelectBankAccountRegion(ActionEvent actionEvent)
+    public void onSelectBankAccountRegion()
     {
         bankAccountCountryComboBox.setVisible(true);
-        selectedBankAccountRegion = bankAccountRegionComboBox.getSelectionModel().getSelectedItem();
+        Region selectedBankAccountRegion = bankAccountRegionComboBox.getSelectionModel().getSelectedItem();
         bankAccountCountryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllCountriesFor(selectedBankAccountRegion)));
     }
 
     @FXML
-    public void onAddBankAccount(ActionEvent actionEvent)
+    public void onAddBankAccount()
     {
         resetBankAccountInput();
     }
 
     @FXML
-    public void onRemoveBankAccount(ActionEvent actionEvent)
+    public void onRemoveBankAccount()
     {
         removeBankAccount();
     }
 
     @FXML
-    public void onSaveBankAccount(ActionEvent actionEvent)
+    void onSaveBankAccount()
     {
         saveBankAccount();
 
@@ -354,6 +354,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     {
         languagesListView.setCellFactory(new Callback<ListView<Locale>, ListCell<Locale>>()
                                          {
+                                             @Nullable
                                              @Override
                                              public ListCell<Locale> call(ListView<Locale> list)
                                              {
@@ -378,7 +379,7 @@ public class SettingsController implements Initializable, ChildController, Navig
                                                      }
 
                                                      @Override
-                                                     public void updateItem(final Locale item, boolean empty)
+                                                     public void updateItem(@Nullable final Locale item, boolean empty)
                                                      {
                                                          super.updateItem(item, empty);
                                                          if (item != null && !empty)
@@ -404,11 +405,12 @@ public class SettingsController implements Initializable, ChildController, Navig
         languageComboBox.setConverter(new StringConverter<Locale>()
         {
             @Override
-            public String toString(Locale locale)
+            public String toString(@NotNull Locale locale)
             {
                 return locale.getDisplayLanguage();
             }
 
+            @Nullable
             @Override
             public Locale fromString(String s)
             {
@@ -423,11 +425,12 @@ public class SettingsController implements Initializable, ChildController, Navig
         regionComboBox.setConverter(new StringConverter<Region>()
         {
             @Override
-            public String toString(Region region)
+            public String toString(@NotNull Region region)
             {
                 return region.getName();
             }
 
+            @Nullable
             @Override
             public Region fromString(String s)
             {
@@ -437,6 +440,7 @@ public class SettingsController implements Initializable, ChildController, Navig
 
         countriesListView.setCellFactory(new Callback<ListView<Country>, ListCell<Country>>()
                                          {
+                                             @Nullable
                                              @Override
                                              public ListCell<Country> call(ListView<Country> list)
                                              {
@@ -462,7 +466,7 @@ public class SettingsController implements Initializable, ChildController, Navig
 
 
                                                      @Override
-                                                     public void updateItem(final Country item, boolean empty)
+                                                     public void updateItem(@Nullable final Country item, boolean empty)
                                                      {
                                                          super.updateItem(item, empty);
                                                          if (item != null && !empty)
@@ -486,12 +490,14 @@ public class SettingsController implements Initializable, ChildController, Navig
 
         countryComboBox.setConverter(new StringConverter<Country>()
         {
+            @NotNull
             @Override
-            public String toString(Country country)
+            public String toString(@NotNull Country country)
             {
                 return country.getName();
             }
 
+            @Nullable
             @Override
             public Country fromString(String s)
             {
@@ -505,6 +511,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     {
         arbitratorsListView.setCellFactory(new Callback<ListView<Arbitrator>, ListCell<Arbitrator>>()
                                            {
+                                               @Nullable
                                                @Override
                                                public ListCell<Arbitrator> call(ListView<Arbitrator> list)
                                                {
@@ -530,7 +537,7 @@ public class SettingsController implements Initializable, ChildController, Navig
 
 
                                                        @Override
-                                                       public void updateItem(final Arbitrator item, boolean empty)
+                                                       public void updateItem(@Nullable final Arbitrator item, boolean empty)
                                                        {
                                                            super.updateItem(item, empty);
                                                            if (item != null && !empty)
@@ -553,47 +560,56 @@ public class SettingsController implements Initializable, ChildController, Navig
         arbitratorsListView.setItems(arbitratorList);
     }
 
-    private void addLanguage(Locale item)
+    private void addLanguage(@Nullable Locale item)
     {
         if (!languageList.contains(item) && item != null)
         {
             languageList.add(item);
             settings.addAcceptedLanguageLocale(item);
-            storage.write(settings.getClass().getName(), settings);
+
         }
     }
 
-    private void removeLanguage(Locale item)
+    private void removeLanguage(@NotNull Locale item)
     {
         languageList.remove(item);
         settings.removeAcceptedLanguageLocale(item);
-        storage.write(settings.getClass().getName(), settings);
+        saveSettings();
     }
 
-    private void addCountry(Country item)
+    private void addCountry(@Nullable Country item)
     {
         if (!countryList.contains(item) && item != null)
         {
             countryList.add(item);
             settings.addAcceptedCountry(item);
-            storage.write(settings.getClass().getName(), settings);
+            saveSettings();
         }
     }
 
-    private void removeCountry(Country item)
+    private void removeCountry(@NotNull Country item)
     {
         countryList.remove(item);
         settings.removeAcceptedCountry(item);
-        storage.write(settings.getClass().getName(), settings);
+        saveSettings();
     }
 
-    private void removeArbitrator(Arbitrator item)
+    private void removeArbitrator(@NotNull Arbitrator item)
     {
         arbitratorList.remove(item);
         settings.removeAcceptedArbitrator(item);
+        saveSettings();
+    }
+
+    private void saveSettings()
+    {
         storage.write(settings.getClass().getName(), settings);
     }
 
+    private void saveUser()
+    {
+        storage.write(user.getClass().getName(), user);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Bank Account Settings
@@ -612,9 +628,9 @@ public class SettingsController implements Initializable, ChildController, Navig
             bankAccountTitleTextField.setText(currentBankAccount.getAccountTitle());
             bankAccountHolderNameTextField.setText(currentBankAccount.getAccountHolderName());
             bankAccountPrimaryIDTextField.setText(currentBankAccount.getAccountPrimaryID());
-            bankAccountPrimaryIDTextField.setPromptText(currentBankAccount.getBankAccountTypeInfo().getPrimaryIDName());
+            bankAccountPrimaryIDTextField.setPromptText(currentBankAccount.getBankAccountType().getPrimaryId());
             bankAccountSecondaryIDTextField.setText(currentBankAccount.getAccountSecondaryID());
-            bankAccountSecondaryIDTextField.setPromptText(currentBankAccount.getBankAccountTypeInfo().getSecondaryIDName());
+            bankAccountSecondaryIDTextField.setPromptText(currentBankAccount.getBankAccountType().getSecondaryId());
         }
         else
         {
@@ -631,7 +647,7 @@ public class SettingsController implements Initializable, ChildController, Navig
         bankAccountPrimaryIDTextField.setText("dummy");
         bankAccountSecondaryIDTextField.setText("dummy");
         if (user.getCurrentBankAccount() == null)
-            onSaveBankAccount(null);
+            onSaveBankAccount();
     }
 
     private void resetBankAccountInput()
@@ -649,19 +665,26 @@ public class SettingsController implements Initializable, ChildController, Navig
 
     private void initBankAccountComboBox()
     {
-        if (user.getBankAccounts().size() > 0)
+        if (user.getBankAccounts().isEmpty())
+        {
+            bankAccountComboBox.setPromptText("No bank account available");
+            bankAccountComboBox.setDisable(true);
+        }
+        else
         {
             bankAccountComboBox.setPromptText("Select bank account");
             bankAccountComboBox.setDisable(false);
             bankAccountComboBox.setItems(FXCollections.observableArrayList(user.getBankAccounts()));
             bankAccountComboBox.setConverter(new StringConverter<BankAccount>()
             {
+                @NotNull
                 @Override
-                public String toString(BankAccount bankAccount)
+                public String toString(@NotNull BankAccount bankAccount)
                 {
                     return bankAccount.getAccountTitle();
                 }
 
+                @Nullable
                 @Override
                 public BankAccount fromString(String s)
                 {
@@ -675,26 +698,23 @@ public class SettingsController implements Initializable, ChildController, Navig
                 bankAccountComboBox.getSelectionModel().select(index);
             }
         }
-        else
-        {
-            bankAccountComboBox.setPromptText("No bank account available");
-            bankAccountComboBox.setDisable(true);
-        }
     }
 
     private void initBankAccountTypesComboBox()
     {
-        bankAccountTypesComboBox.setItems(FXCollections.observableArrayList(BankAccountTypeInfo.getAllBankAccountTypeInfoObjects()));
-        bankAccountTypesComboBox.setConverter(new StringConverter<BankAccountTypeInfo>()
+        bankAccountTypesComboBox.setItems(FXCollections.observableArrayList(BankAccountType.getAllBankAccountTypes()));
+        bankAccountTypesComboBox.setConverter(new StringConverter<BankAccountType>()
         {
+            @NotNull
             @Override
-            public String toString(BankAccountTypeInfo bankAccountTypeInfo)
+            public String toString(@NotNull BankAccountType bankAccountTypeInfo)
             {
-                return Localisation.get(bankAccountTypeInfo.getType().toString());
+                return Localisation.get(bankAccountTypeInfo.toString());
             }
 
+            @Nullable
             @Override
-            public BankAccountTypeInfo fromString(String s)
+            public BankAccountType fromString(String s)
             {
                 return null;
             }
@@ -703,7 +723,7 @@ public class SettingsController implements Initializable, ChildController, Navig
         BankAccount currentBankAccount = user.getCurrentBankAccount();
         if (currentBankAccount != null)
         {
-            int index = bankAccountTypesComboBox.getItems().indexOf(currentBankAccount.getBankAccountTypeInfo());
+            int index = bankAccountTypesComboBox.getItems().indexOf(currentBankAccount.getBankAccountType());
             bankAccountTypesComboBox.getSelectionModel().select(index);
         }
     }
@@ -713,12 +733,14 @@ public class SettingsController implements Initializable, ChildController, Navig
         bankAccountCurrencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllCurrencies()));
         bankAccountCurrencyComboBox.setConverter(new StringConverter<Currency>()
         {
+            @NotNull
             @Override
-            public String toString(Currency currency)
+            public String toString(@NotNull Currency currency)
             {
                 return currency.getCurrencyCode() + " (" + currency.getDisplayName() + ")";
             }
 
+            @Nullable
             @Override
             public Currency fromString(String s)
             {
@@ -741,11 +763,12 @@ public class SettingsController implements Initializable, ChildController, Navig
         bankAccountRegionComboBox.setConverter(new StringConverter<Region>()
         {
             @Override
-            public String toString(Region region)
+            public String toString(@NotNull Region region)
             {
                 return region.getName();
             }
 
+            @Nullable
             @Override
             public Region fromString(String s)
             {
@@ -755,12 +778,14 @@ public class SettingsController implements Initializable, ChildController, Navig
 
         bankAccountCountryComboBox.setConverter(new StringConverter<Country>()
         {
+            @NotNull
             @Override
-            public String toString(Country country)
+            public String toString(@NotNull Country country)
             {
                 return country.getName();
             }
 
+            @Nullable
             @Override
             public Country fromString(String s)
             {
@@ -786,7 +811,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     {
         if (verifyBankAccountData())
         {
-            BankAccount bankAccount = new BankAccount(
+            @NotNull BankAccount bankAccount = new BankAccount(
                     bankAccountTypesComboBox.getSelectionModel().getSelectedItem(),
                     bankAccountCurrencyComboBox.getSelectionModel().getSelectedItem(),
                     bankAccountCountryComboBox.getSelectionModel().getSelectedItem(),
@@ -796,7 +821,7 @@ public class SettingsController implements Initializable, ChildController, Navig
                     bankAccountSecondaryIDTextField.getText());
             user.addBankAccount(bankAccount);
 
-            storage.write(user.getClass().getName(), user);
+            saveUser();
 
             initBankAccountScreen();
         }
@@ -806,8 +831,8 @@ public class SettingsController implements Initializable, ChildController, Navig
     {
         user.removeCurrentBankAccount();
 
-        storage.write(user.getClass().getName(), user);
-
+        saveUser();
+        saveSettings();
         initBankAccountScreen();
     }
 
@@ -817,7 +842,7 @@ public class SettingsController implements Initializable, ChildController, Navig
         {
             BitSquareValidator.textFieldsNotEmptyWithReset(bankAccountTitleTextField, bankAccountHolderNameTextField, bankAccountPrimaryIDTextField, bankAccountSecondaryIDTextField);
 
-            BankAccountTypeInfo bankAccountTypeInfo = bankAccountTypesComboBox.getSelectionModel().getSelectedItem();
+            BankAccountType bankAccountTypeInfo = bankAccountTypesComboBox.getSelectionModel().getSelectedItem();
             BitSquareValidator.textFieldBankAccountPrimaryIDIsValid(bankAccountPrimaryIDTextField, bankAccountTypeInfo);
             BitSquareValidator.textFieldBankAccountSecondaryIDIsValid(bankAccountSecondaryIDTextField, bankAccountTypeInfo);
 

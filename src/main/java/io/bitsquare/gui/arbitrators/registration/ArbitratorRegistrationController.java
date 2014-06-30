@@ -38,9 +38,12 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings({"ALL", "EmptyMethod", "UnusedParameters"})
 public class ArbitratorRegistrationController implements Initializable, ChildController
 {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorRegistrationController.class);
@@ -48,11 +51,14 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     private final Storage storage;
     private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
-    private Arbitrator arbitrator;
+    private Arbitrator arbitrator = new Arbitrator();
     private ArbitratorProfileController arbitratorProfileController;
     private boolean isEditMode;
+    @NotNull
     private List<Locale> languageList = new ArrayList<>();
+    @NotNull
     private List<Arbitrator.METHOD> methodList = new ArrayList<>();
+    @NotNull
     private List<Arbitrator.ID_VERIFICATION> idVerificationList = new ArrayList<>();
     private Arbitrator.ID_TYPE idType;
     private ConfidenceDisplay confidenceDisplay;
@@ -89,7 +95,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorRegistrationController(Storage storage, WalletFacade walletFacade, MessageFacade messageFacade)
+    private ArbitratorRegistrationController(Storage storage, WalletFacade walletFacade, MessageFacade messageFacade)
     {
         this.storage = storage;
         this.walletFacade = walletFacade;
@@ -101,7 +107,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setEditMode(boolean isEditMode)
+    public void setEditMode(@SuppressWarnings("SameParameterValue") boolean isEditMode)
     {
         this.isEditMode = isEditMode;
 
@@ -123,7 +129,6 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     {
         accordion.setExpandedPane(profileTitledPane);
 
-        arbitrator = new Arbitrator();
         Arbitrator savedArbitrator = (Arbitrator) storage.read(arbitrator.getClass().getName());
         if (savedArbitrator != null)
         {
@@ -140,11 +145,12 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
         languageComboBox.setConverter(new StringConverter<Locale>()
         {
             @Override
-            public String toString(Locale locale)
+            public String toString(@NotNull Locale locale)
             {
                 return locale.getDisplayLanguage();
             }
 
+            @Nullable
             @Override
             public Locale fromString(String s)
             {
@@ -155,12 +161,14 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
         idTypeComboBox.setItems(FXCollections.observableArrayList(new ArrayList<>(EnumSet.allOf(Arbitrator.ID_TYPE.class))));
         idTypeComboBox.setConverter(new StringConverter<Arbitrator.ID_TYPE>()
         {
+            @NotNull
             @Override
-            public String toString(Arbitrator.ID_TYPE item)
+            public String toString(@NotNull Arbitrator.ID_TYPE item)
             {
                 return Localisation.get(item.toString());
             }
 
+            @Nullable
             @Override
             public Arbitrator.ID_TYPE fromString(String s)
             {
@@ -171,12 +179,14 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
         methodsComboBox.setItems(FXCollections.observableArrayList(new ArrayList<>(EnumSet.allOf(Arbitrator.METHOD.class))));
         methodsComboBox.setConverter(new StringConverter<Arbitrator.METHOD>()
         {
+            @NotNull
             @Override
-            public String toString(Arbitrator.METHOD item)
+            public String toString(@NotNull Arbitrator.METHOD item)
             {
                 return Localisation.get(item.toString());
             }
 
+            @Nullable
             @Override
             public Arbitrator.METHOD fromString(String s)
             {
@@ -187,12 +197,14 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
         idVerificationsComboBox.setItems(FXCollections.observableArrayList(new ArrayList<>(EnumSet.allOf(Arbitrator.ID_VERIFICATION.class))));
         idVerificationsComboBox.setConverter(new StringConverter<Arbitrator.ID_VERIFICATION>()
         {
+            @NotNull
             @Override
-            public String toString(Arbitrator.ID_VERIFICATION item)
+            public String toString(@NotNull Arbitrator.ID_VERIFICATION item)
             {
                 return Localisation.get(item.toString());
             }
 
+            @Nullable
             @Override
             public Arbitrator.ID_VERIFICATION fromString(String s)
             {
@@ -207,7 +219,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void setNavigationController(@NotNull NavigationController navigationController)
     {
     }
 
@@ -229,7 +241,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
         {
             idTypeTextField.setText(Localisation.get(idType.toString()));
 
-            String name = "";
+            @NotNull String name = "";
             switch (idType)
             {
                 case REAL_LIFE_ID:
@@ -358,24 +370,25 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
                 "depending on the overall relation of negative to positive ratings you received after a dispute resolution.\n\n" +
                 "Please pay in " + arbitrator.getMaxTradeVolume() * 10 + " BTC");
 
-        String collateralAddress = walletFacade.getRegistrationAddressInfo().toString();
+
+        String collateralAddress = walletFacade.getRegistrationAddressInfo() != null ? walletFacade.getRegistrationAddressInfo().toString() : "";
         collateralAddressTextField.setText(collateralAddress);
 
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> {
             Clipboard clipboard = Clipboard.getSystemClipboard();
-            ClipboardContent content = new ClipboardContent();
+            @NotNull ClipboardContent content = new ClipboardContent();
             content.putString(collateralAddress);
             clipboard.setContent(content);
         });
 
         confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, balanceTextField, progressIndicator);
         paymentDoneButton.setDisable(walletFacade.getArbitratorDepositBalance().compareTo(BigInteger.ZERO) == 0);
-        log.debug("getArbitratorDepositBalance " + walletFacade.getArbitratorDepositBalance().toString());
+        log.debug("getArbitratorDepositBalance " + walletFacade.getArbitratorDepositBalance());
         walletFacade.getWallet().addEventListener(new WalletEventListener()
         {
             @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, @NotNull BigInteger newBalance)
             {
                 paymentDoneButton.setDisable(newBalance.compareTo(BigInteger.ZERO) == 0);
             }
@@ -416,7 +429,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     {
         if (arbitrator != null)
         {
-            String name = "";
+            @NotNull String name = "";
             switch (arbitrator.getIdType())
             {
                 case REAL_LIFE_ID:
@@ -451,6 +464,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
         }
     }
 
+    @Nullable
     private Arbitrator getEditedArbitrator()
     {
         try
@@ -494,7 +508,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
 
     private void close()
     {
-        Stage stage = (Stage) rootContainer.getScene().getWindow();
+        @NotNull Stage stage = (Stage) rootContainer.getScene().getWindow();
         stage.close();
     }
 

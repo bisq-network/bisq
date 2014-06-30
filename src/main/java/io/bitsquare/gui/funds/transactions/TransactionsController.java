@@ -17,6 +17,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.util.Callback;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +27,7 @@ public class TransactionsController implements Initializable, ChildController, H
     private static final Logger log = LoggerFactory.getLogger(TransactionsController.class);
 
     private final WalletFacade walletFacade;
-    protected ObservableList<TransactionsListItem> transactionsListItems;
+    private ObservableList<TransactionsListItem> transactionsListItems;
 
     @FXML
     private TableView<TransactionsListItem> tableView;
@@ -40,7 +42,7 @@ public class TransactionsController implements Initializable, ChildController, H
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TransactionsController(WalletFacade walletFacade)
+    private TransactionsController(WalletFacade walletFacade)
     {
         this.walletFacade = walletFacade;
     }
@@ -66,14 +68,14 @@ public class TransactionsController implements Initializable, ChildController, H
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void setNavigationController(@NotNull NavigationController navigationController)
     {
     }
 
     @Override
     public void cleanup()
     {
-        for (TransactionsListItem transactionsListItem : transactionsListItems)
+        for (@NotNull TransactionsListItem transactionsListItem : transactionsListItems)
         {
             transactionsListItem.cleanup();
         }
@@ -120,6 +122,7 @@ public class TransactionsController implements Initializable, ChildController, H
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
         addressColumn.setCellFactory(new Callback<TableColumn<String, TransactionsListItem>, TableCell<String, TransactionsListItem>>()
         {
+            @Nullable
             @Override
             public TableCell<String, TransactionsListItem> call(TableColumn<String, TransactionsListItem> column)
             {
@@ -128,7 +131,7 @@ public class TransactionsController implements Initializable, ChildController, H
                     Hyperlink hyperlink;
 
                     @Override
-                    public void updateItem(final TransactionsListItem item, boolean empty)
+                    public void updateItem(@Nullable final TransactionsListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
 
@@ -155,6 +158,7 @@ public class TransactionsController implements Initializable, ChildController, H
         confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
         confidenceColumn.setCellFactory(new Callback<TableColumn<String, TransactionsListItem>, TableCell<String, TransactionsListItem>>()
         {
+            @Nullable
             @Override
             public TableCell<String, TransactionsListItem> call(TableColumn<String, TransactionsListItem> column)
             {
@@ -162,7 +166,7 @@ public class TransactionsController implements Initializable, ChildController, H
                 {
 
                     @Override
-                    public void updateItem(final TransactionsListItem item, boolean empty)
+                    public void updateItem(@Nullable final TransactionsListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
 

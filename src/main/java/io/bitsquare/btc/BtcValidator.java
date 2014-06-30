@@ -6,6 +6,7 @@ import com.google.bitcoin.core.NetworkParameters;
 import com.google.bitcoin.core.Transaction;
 import com.google.inject.Inject;
 import java.math.BigInteger;
+import org.jetbrains.annotations.Nullable;
 
 public class BtcValidator
 {
@@ -17,7 +18,7 @@ public class BtcValidator
         BtcValidator.params = params;
     }
 
-    public static boolean isMinSpendableAmount(BigInteger amount)
+    public static boolean isMinSpendableAmount(@Nullable BigInteger amount)
     {
         return amount != null && amount.compareTo(FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT)) > 0;
     }

@@ -14,10 +14,15 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("ALL")
 public class ArbitratorProfileController implements Initializable, ChildController
 {
+    @NotNull
     private final Settings settings;
+    @NotNull
     private final Storage storage;
     private Arbitrator arbitrator;
     private NavigationController navigationController;
@@ -36,15 +41,13 @@ public class ArbitratorProfileController implements Initializable, ChildControll
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorProfileController(Settings settings, Storage storage)
+    public ArbitratorProfileController(@NotNull Settings settings, @NotNull Storage storage)
     {
-
         this.settings = settings;
         this.storage = storage;
 
-        Settings savedSettings = (Settings) storage.read(settings.getClass().getName());
-        if (savedSettings != null)
-            settings.updateFromStorage(savedSettings);
+        // @NotNull Settings savedSettings = (Settings) storage.read(settings.getClass().getName());
+        // settings.updateFromStorage(savedSettings);
     }
 
 
@@ -52,11 +55,11 @@ public class ArbitratorProfileController implements Initializable, ChildControll
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void applyArbitrator(Arbitrator arbitrator)
+    public void applyArbitrator(@Nullable Arbitrator arbitrator)
     {
         if (arbitrator != null)
         {
-            String name = "";
+            @NotNull String name = "";
             switch (arbitrator.getIdType())
             {
                 case REAL_LIFE_ID:
@@ -99,7 +102,7 @@ public class ArbitratorProfileController implements Initializable, ChildControll
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void setNavigationController(@NotNull NavigationController navigationController)
     {
         this.navigationController = navigationController;
     }

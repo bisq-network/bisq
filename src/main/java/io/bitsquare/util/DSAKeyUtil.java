@@ -1,146 +1,184 @@
 package io.bitsquare.util;
 
 import com.google.bitcoin.core.Utils;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import com.google.bitcoin.utils.Threading;
+import io.bitsquare.BitSquare;
+import java.io.*;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.concurrent.locks.ReentrantLock;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DSAKeyUtil
 {
     private static final Logger log = LoggerFactory.getLogger(DSAKeyUtil.class);
-    private static final String baseDir = Utilities.getRootDir();
+    private static final String prefix = BitSquare.ID + "_";
+    private static final ReentrantLock lock = Threading.lock("DSAKeyUtil");
 
-    public static KeyPair getKeyPair()
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @NotNull
+    public static String getHexStringFromPublicKey(@NotNull PublicKey publicKey)
     {
-        return getKeyPair("public.key", "private.key");
-    }
-
-    public static KeyPair getKeyPair(String keyName)
-    {
-        return getKeyPair(keyName + "_public" + ".key", keyName + "_private" + ".key");
-    }
-
-
-    public static String getHexStringFromPublicKey(PublicKey publicKey)
-    {
-        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
+        final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
         return Utils.bytesToHexString(x509EncodedKeySpec.getEncoded());
     }
 
-    public static PublicKey getPublicKeyFromHexString(String publicKeyAsHex)
+    //  not used yet
+    /*
+    @Nullable
+    public static PublicKey getPublicKeyFromHexString(String publicKeyAsHex) throws NoSuchAlgorithmException, InvalidKeySpecException
     {
-        byte[] bytes = Utils.parseAsHexOrBase58(publicKeyAsHex);
-        try
-        {
-            KeyFactory keyFactory = KeyFactory.getInstance("DSA");
-            return keyFactory.generatePublic(new X509EncodedKeySpec(bytes));
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e)
-        {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-        return null;
+        final byte[] bytes = Utils.parseAsHexOrBase58(publicKeyAsHex);
+        final KeyFactory keyFactory = KeyFactory.INSTANCE("DSA");
+        return keyFactory.generatePublic(new X509EncodedKeySpec(bytes));
+    } */
+
+    @Nullable
+    public static KeyPair getKeyPair()
+    {
+        return getKeyPair(FileUtil.getFile(prefix + "public", "key"), FileUtil.getFile(prefix + "private", "key"));
     }
 
-    public static KeyPair getKeyPair(String pubKeyPath, String privKeyPath)
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Nullable
+    private static KeyPair getKeyPair(@NotNull File pubKeyFile, @NotNull File privKeyFile)
     {
         try
         {
-            return loadKeyPair(pubKeyPath, privKeyPath, "DSA");
-        } catch (Exception e)
+            return readKeyPairFromFiles(pubKeyFile, privKeyFile);
+        } catch (Throwable throwable)
         {
+            if (throwable instanceof FileNotFoundException)
+                log.debug("Files not found. That is ok for the first run.");
+            else
+                log.error("Could not read key files. " + throwable);
+
             try
             {
-                KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA");
+                final KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA");
                 keyGen.initialize(1024);
                 KeyPair generatedKeyPair = keyGen.genKeyPair();
-
-                // System.out.println("Generated Key Pair");
-                dumpKeyPair(generatedKeyPair);
-                saveKeyPair(pubKeyPath, privKeyPath, generatedKeyPair);
+                try
+                {
+                    saveKeyPairToFiles(pubKeyFile, privKeyFile, generatedKeyPair);
+                } catch (Throwable t2)
+                {
+                    t2.printStackTrace();
+                    log.error("Saving key pair failed. " + t2);
+                }
                 return generatedKeyPair;
-            } catch (Exception e2)
+            } catch (Throwable t3)
             {
-                e2.printStackTrace();
+                t3.printStackTrace();
+                log.error("Generating key pair failed. " + t3);
                 return null;
             }
         }
     }
 
-    private static void dumpKeyPair(KeyPair keyPair)
-    {
-        PublicKey pub = keyPair.getPublic();
-        // System.out.println("Public Key: " + getHexString(pub.getEncoded()));
 
-        PrivateKey priv = keyPair.getPrivate();
-        // System.out.println("Private Key: " + getHexString(priv.getEncoded()));
-    }
-
-    private static String getHexString(byte[] b)
+    private static void saveKeyPairToFiles(@NotNull File pubKeyFile, @NotNull File privKeyFile, @NotNull KeyPair keyPair) throws IOException
     {
-        String result = "";
-        for (byte aB : b)
+        lock.lock();
+        final File pubKeyTempFile = FileUtil.getTempFile("pubKey_temp_" + prefix);
+        final File privKeyTempFile = FileUtil.getTempFile("privKey_temp_" + prefix);
+        try (final FileOutputStream pubKeyFileOutputStream = new FileOutputStream(pubKeyTempFile);
+             final FileOutputStream privKeyFileOutputStream = new FileOutputStream(privKeyTempFile))
         {
-            result += Integer.toString((aB & 0xff) + 0x100, 16).substring(1);
+
+            final PublicKey publicKey = keyPair.getPublic();
+            final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
+            pubKeyFileOutputStream.write(x509EncodedKeySpec.getEncoded());
+            pubKeyFileOutputStream.flush();
+            pubKeyFileOutputStream.getFD().sync();
+
+            final PrivateKey privateKey = keyPair.getPrivate();
+            final PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
+            privKeyFileOutputStream.write(pkcs8EncodedKeySpec.getEncoded());
+            privKeyFileOutputStream.flush();
+            privKeyFileOutputStream.getFD().sync();
+
+            if (Utils.isWindows())
+            {
+                // Work around an issue on Windows whereby you can't rename over existing files.
+                final File pubKeyCanonicalFile = pubKeyFile.getCanonicalFile();
+                if (pubKeyCanonicalFile.exists() && !pubKeyCanonicalFile.delete())
+                    throw new IOException("Failed to delete pubKeyCanonicalFile for replacement with save");
+                if (!pubKeyTempFile.renameTo(pubKeyCanonicalFile))
+                    throw new IOException("Failed to rename " + pubKeyTempFile + " to " + pubKeyCanonicalFile);
+
+                final File privKeyCanonicalFile = privKeyFile.getCanonicalFile();
+                if (privKeyCanonicalFile.exists() && !privKeyCanonicalFile.delete())
+                    throw new IOException("Failed to delete privKeyCanonicalFile for replacement with save");
+                if (!privKeyTempFile.renameTo(privKeyCanonicalFile))
+                    throw new IOException("Failed to rename " + privKeyTempFile + " to " + privKeyCanonicalFile);
+            }
+            else
+            {
+                if (!pubKeyTempFile.renameTo(pubKeyFile))
+                {
+                    throw new IOException("Failed to rename " + pubKeyTempFile + " to " + pubKeyFile);
+                }
+                if (!privKeyTempFile.renameTo(privKeyFile))
+                {
+                    throw new IOException("Failed to rename " + privKeyTempFile + " to " + privKeyFile);
+                }
+            }
+        } finally
+        {
+            if (pubKeyTempFile.exists())
+            {
+                log.warn("PubKeyTempFile still exists after failed save.");
+                if (!pubKeyTempFile.delete())
+                    log.warn("Cannot delete pubKeyTempFile.");
+            }
+            if (privKeyTempFile.exists())
+            {
+                log.warn("PrivKeyTempFile still exists after failed save.");
+                if (!privKeyTempFile.delete())
+                    log.warn("Cannot delete privKeyTempFile.");
+            }
+
+            lock.unlock();
         }
-        return result;
     }
 
-
-    public static void saveKeyPair(String pubKeyPath, String privKeyPath, KeyPair keyPair) throws IOException
+    @Nullable
+    private static KeyPair readKeyPairFromFiles(@NotNull File pubKeyFile, @NotNull File privKeyFile) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException
     {
-        PrivateKey privateKey = keyPair.getPrivate();
-        PublicKey publicKey = keyPair.getPublic();
+        lock.lock();
+        try (final FileInputStream pubKeyFileInputStream = new FileInputStream(pubKeyFile);
+             final FileInputStream privKeyFileInputStream = new FileInputStream(privKeyFile))
+        {
+            final KeyFactory keyFactory = KeyFactory.getInstance("DSA");
 
-        // Store Public Key.
-        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
-        FileOutputStream fos = new FileOutputStream(baseDir + pubKeyPath);
-        fos.write(x509EncodedKeySpec.getEncoded());
-        fos.close();
+            final byte[] encodedPubKey = new byte[(int) pubKeyFile.length()];
+            //noinspection ResultOfMethodCallIgnored
+            pubKeyFileInputStream.read(encodedPubKey);
+            final PublicKey pubKey = keyFactory.generatePublic(new X509EncodedKeySpec(encodedPubKey));
 
-        // Store Private Key.
-        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
-        fos = new FileOutputStream(baseDir + privKeyPath);
-        fos.write(pkcs8EncodedKeySpec.getEncoded());
-        fos.close();
+            final byte[] encodedPrivKey = new byte[(int) privKeyFile.length()];
+            //noinspection ResultOfMethodCallIgnored
+            privKeyFileInputStream.read(encodedPrivKey);
+            final PrivateKey privKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(encodedPrivKey));
+
+            return new KeyPair(pubKey, privKey);
+        } finally
+        {
+            lock.unlock();
+        }
     }
-
-
-    public static KeyPair loadKeyPair(String pubKeyPath, String privKeyPath, String algorithm)
-            throws IOException, NoSuchAlgorithmException,
-            InvalidKeySpecException
-    {
-        // Read Public Key.
-        File filePublicKey = new File(baseDir + pubKeyPath);
-        FileInputStream fis = new FileInputStream(baseDir + pubKeyPath);
-        byte[] encodedPublicKey = new byte[(int) filePublicKey.length()];
-        fis.read(encodedPublicKey);
-        fis.close();
-
-        // Read Private Key.
-        File filePrivateKey = new File(baseDir + privKeyPath);
-        fis = new FileInputStream(baseDir + privKeyPath);
-        byte[] encodedPrivateKey = new byte[(int) filePrivateKey.length()];
-        fis.read(encodedPrivateKey);
-        fis.close();
-
-        // Generate KeyPair.
-        KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
-        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(
-                encodedPublicKey);
-        PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
-
-        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(
-                encodedPrivateKey);
-        PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
-
-        return new KeyPair(publicKey, privateKey);
-    }
-
 }

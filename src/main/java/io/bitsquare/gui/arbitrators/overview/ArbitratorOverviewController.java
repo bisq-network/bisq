@@ -29,11 +29,15 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.storage.Data;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings({"ALL", "UnusedParameters"})
 public class ArbitratorOverviewController implements Initializable, ChildController, NavigationController, ArbitratorListener
 {
     private final Settings settings;
     private final Storage storage;
+    @NotNull
     private final MessageFacade messageFacade;
     private final List<Arbitrator> allArbitrators = new ArrayList<>();
     private Arbitrator currentArbitrator;
@@ -53,7 +57,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorOverviewController(Settings settings, Storage storage, MessageFacade messageFacade)
+    public ArbitratorOverviewController(Settings settings, Storage storage, @NotNull MessageFacade messageFacade)
     {
 
         this.settings = settings;
@@ -82,7 +86,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void setNavigationController(@NotNull NavigationController navigationController)
     {
         this.navigationController = navigationController;
     }
@@ -98,13 +102,14 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     // Interface implementation: NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Nullable
     @Override
-    public ChildController navigateToView(NavigationItem navigationItem)
+    public ChildController navigateToView(@NotNull NavigationItem navigationItem)
     {
         if (arbitratorProfileController != null)
             arbitratorProfileController.cleanup();
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
+        @NotNull final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
         {
             final Node view = loader.load();
@@ -131,23 +136,23 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     }
 
     @Override
-    public void onArbitratorsReceived(Map<Number160, Data> dataMap, boolean success)
+    public void onArbitratorsReceived(@Nullable Map<Number160, Data> dataMap, boolean success)
     {
         if (success && dataMap != null)
         {
             allArbitrators.clear();
 
-            for (Data arbitratorData : dataMap.values())
+            for (@NotNull Data arbitratorData : dataMap.values())
             {
                 try
                 {
                     Object arbitratorDataObject = arbitratorData.getObject();
-                    if (arbitratorDataObject instanceof Arbitrator && arbitratorDataObject != null)
+                    if (arbitratorDataObject instanceof Arbitrator)
                     {
-                        Arbitrator arbitrator = (Arbitrator) arbitratorDataObject;
+                        @NotNull Arbitrator arbitrator = (Arbitrator) arbitratorDataObject;
                         allArbitrators.add(arbitrator);
                     }
-                } catch (ClassNotFoundException | IOException e)
+                } catch (@NotNull ClassNotFoundException | IOException e)
                 {
                     e.printStackTrace();
                 }
@@ -158,7 +163,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
             allArbitrators.clear();
         }
 
-        if (allArbitrators.size() > 0)
+        if (!allArbitrators.isEmpty())
         {
             index = 0;
             currentArbitrator = allArbitrators.get(index);
@@ -211,7 +216,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     @FXML
     public void onClose(ActionEvent actionEvent)
     {
-        Stage stage = (Stage) rootContainer.getScene().getWindow();
+        @NotNull Stage stage = (Stage) rootContainer.getScene().getWindow();
         stage.close();
     }
 

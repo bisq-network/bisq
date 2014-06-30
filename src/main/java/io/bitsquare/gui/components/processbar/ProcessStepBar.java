@@ -3,11 +3,14 @@ package io.bitsquare.gui.components.processbar;
 import java.util.List;
 import javafx.scene.control.Control;
 import javafx.scene.control.Skin;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ProcessStepBar<T> extends Control
 {
 
 
+    @Nullable
     private List<ProcessStepItem> processStepItems = null;
 
     public ProcessStepBar()
@@ -15,23 +18,25 @@ public class ProcessStepBar<T> extends Control
     }
 
 
-    public ProcessStepBar(List<ProcessStepItem> processStepItems)
+    public ProcessStepBar(@Nullable List<ProcessStepItem> processStepItems)
     {
         this.processStepItems = processStepItems;
     }
 
+    @NotNull
     @Override
     protected Skin<?> createDefaultSkin()
     {
         return new ProcessStepBarSkin<>(this);
     }
 
+    @Nullable
     List<ProcessStepItem> getProcessStepItems()
     {
         return processStepItems;
     }
 
-    public void setProcessStepItems(List<ProcessStepItem> processStepItems)
+    public void setProcessStepItems(@Nullable List<ProcessStepItem> processStepItems)
     {
         this.processStepItems = processStepItems;
         if (getSkin() != null)

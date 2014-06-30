@@ -4,6 +4,8 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class CountryUtil
 {
@@ -104,7 +106,7 @@ public class CountryUtil
             "YE",
             "ZA"
     };
-    private static final List<String> regionCodeList = Arrays.asList(countryCodes);
+    private static final List<String> countryCodeList = Arrays.asList(countryCodes);
     private static final String[] regionCodes = new String[]{
             "AS",
             "EU",
@@ -203,7 +205,7 @@ public class CountryUtil
             "AS",
             "AF"
     };
-    private static final List<String> countryCodeList = Arrays.asList(regionCodes);
+    private static final List<String> regionCodeList = Arrays.asList(regionCodes);
     private static final String[][] regionCodeToName = new String[][]{
             {"NA", "North America"},
             {"SA", "South America"},
@@ -213,12 +215,13 @@ public class CountryUtil
             {"OC", "Oceania"}
     };
 
+    @NotNull
     public static List<Region> getAllRegions()
     {
-        List<Region> allRegions = new ArrayList<>();
+        final List<Region> allRegions = new ArrayList<>();
 
-        String regionCode = "NA";
-        Region region = new Region(regionCode, getRegionName(regionCode));
+        @NotNull String regionCode = "NA";
+        @NotNull Region region = new Region(regionCode, getRegionName(regionCode));
         allRegions.add(region);
 
         regionCode = "SA";
@@ -244,52 +247,50 @@ public class CountryUtil
         return allRegions;
     }
 
-    public static List<Country> getAllCountriesFor(Region selectedRegion)
+    public static List<Country> getAllCountriesFor(@Nullable Region selectedRegion)
     {
-        List<Country> allCountries = getAllCountries();
-        return Lists.newArrayList(Collections2.filter(allCountries, country -> selectedRegion != null && country != null && country.getRegion().equals(selectedRegion)));
+        return Lists.newArrayList(Collections2.filter(getAllCountries(), country -> selectedRegion != null && country != null && selectedRegion.equals(country.getRegion())));
     }
 
-    public static List<Country> getAllCountries()
+    @NotNull
+    private static List<Country> getAllCountries()
     {
-        List<Locale> allCountryLocales = getAllCountryLocales();
-        List<Country> allCountries = new ArrayList<>();
-
-        for (Locale locale : allCountryLocales)
+        final List<Country> allCountries = new ArrayList<>();
+        for (final Locale locale : getAllCountryLocales())
         {
             String regionCode = getRegionCode(locale.getCountry());
-            Region region = new Region(regionCode, getRegionName(regionCode));
-            Country country = new Country(locale.getCountry(), locale.getDisplayCountry(), region);
+            final Region region = new Region(regionCode, getRegionName(regionCode));
+            final Country country = new Country(locale.getCountry(), locale.getDisplayCountry(), region);
             allCountries.add(country);
         }
         return allCountries;
     }
 
+    @NotNull
     public static Country getDefaultCountry()
     {
-        Locale locale = new Locale("", Locale.getDefault().getCountry());
+        final Locale locale = new Locale("", Locale.getDefault().getCountry());
         String regionCode = getRegionCode(locale.getCountry());
-        Region region = new Region(regionCode, getRegionName(regionCode));
+        final Region region = new Region(regionCode, getRegionName(regionCode));
         return new Country(locale.getCountry(), locale.getDisplayCountry(), region);
     }
 
-    public static String getRegionName(String regionCode)
+    @NotNull
+    private static String getRegionName(@NotNull final String regionCode)
     {
-        for (String[] regionName : regionCodeToName)
+        for (final String[] regionName : regionCodeToName)
         {
             if (regionName[0].equals(regionCode))
-            {
                 return regionName[1];
-            }
         }
         return regionCode;
     }
 
+    @NotNull
     private static List<Locale> getAllCountryLocales()
     {
-        List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
-
-        Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !locale.getCountry().equals("")).map(locale -> new Locale("", locale.getCountry(), "")).collect(Collectors.toSet());
+        @NotNull List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
+        Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !"".equals(locale.getCountry())).map(locale -> new Locale("", locale.getCountry(), "")).collect(Collectors.toSet());
         /*
         same as:
         Set<Locale> allLocalesAsSet = new HashSet<>();
@@ -307,17 +308,13 @@ public class CountryUtil
         return allLocales;
     }
 
-    private static String getRegionCode(String countryCode)
+    @NotNull
+    private static String getRegionCode(@NotNull String countryCode)
     {
-        if (countryCode.length() > 0 && countryCodeList.contains(countryCode))
-        {
-            int index = countryCodeList.indexOf(countryCode);
-            return regionCodeList.get(index);
-        }
+        if (!countryCode.isEmpty() && countryCodeList.contains(countryCode))
+            return regionCodeList.get(countryCodeList.indexOf(countryCode));
         else
-        {
             return "Undefined";
-        }
     }
 
 }

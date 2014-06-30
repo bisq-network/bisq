@@ -10,7 +10,6 @@ import io.bitsquare.locale.Localisation;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -19,12 +18,13 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class HomeController implements Initializable, ChildController, NavigationController
 {
     @FXML
     public Pane rootContainer;
-    private NavigationController navigationController;
     private ArbitratorRegistrationController arbitratorRegistrationController;
 
     @Override
@@ -34,9 +34,8 @@ public class HomeController implements Initializable, ChildController, Navigatio
     }
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void setNavigationController(@NotNull NavigationController navigationController)
     {
-        this.navigationController = navigationController;
     }
 
     @Override
@@ -48,13 +47,14 @@ public class HomeController implements Initializable, ChildController, Navigatio
     // Interface implementation: NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Nullable
     @Override
-    public ChildController navigateToView(NavigationItem navigationItem)
+    public ChildController navigateToView(@NotNull NavigationItem navigationItem)
     {
         if (arbitratorRegistrationController != null)
             arbitratorRegistrationController.cleanup();
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
+        @NotNull final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
         {
             final Node view = loader.load();
@@ -62,7 +62,7 @@ public class HomeController implements Initializable, ChildController, Navigatio
             arbitratorRegistrationController.setNavigationController(this);
 
             final Stage rootStage = BitSquare.getStage();
-            final Stage stage = new Stage();
+            @NotNull final Stage stage = new Stage();
             stage.setTitle("Arbitrator");
             stage.setMinWidth(800);
             stage.setMinHeight(400);
@@ -72,7 +72,7 @@ public class HomeController implements Initializable, ChildController, Navigatio
             stage.setY(rootStage.getY() + 50);
             stage.initModality(Modality.WINDOW_MODAL);
             stage.initOwner(rootStage);
-            Scene scene = new Scene((Parent) view, 800, 600);
+            @NotNull Scene scene = new Scene((Parent) view, 800, 600);
             stage.setScene(scene);
             stage.show();
 
@@ -85,13 +85,13 @@ public class HomeController implements Initializable, ChildController, Navigatio
     }
 
     @FXML
-    public void onArbitratorRegistration(ActionEvent actionEvent)
+    public void onArbitratorRegistration()
     {
         navigateToView(NavigationItem.ARBITRATOR_REGISTRATION);
     }
 
     @FXML
-    public void onArbitratorEdit(ActionEvent actionEvent)
+    public void onArbitratorEdit()
     {
         navigateToView(NavigationItem.ARBITRATOR_REGISTRATION);
         arbitratorRegistrationController.setEditMode(true);

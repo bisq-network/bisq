@@ -3,13 +3,14 @@ package io.bitsquare.gui.components;
 
 import javafx.scene.layout.Pane;
 
+@SuppressWarnings("WeakerAccess")
 public class HSpacer extends Pane
 {
     public HSpacer()
     {
     }
 
-    public HSpacer(double width)
+    public HSpacer(@SuppressWarnings("SameParameterValue") double width)
     {
         setPrefWidth(width);
     }

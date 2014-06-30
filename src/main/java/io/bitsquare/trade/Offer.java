@@ -1,12 +1,13 @@
 package io.bitsquare.trade;
 
-import io.bitsquare.bank.BankAccountTypeInfo;
+import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.user.Arbitrator;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.*;
+import org.jetbrains.annotations.NotNull;
 
 public class Offer implements Serializable
 {
@@ -17,13 +18,14 @@ public class Offer implements Serializable
     private final Currency currency;
 
     private final String id;
+    @NotNull
     private final Date creationDate;
 
     private final double price;
     private final BigInteger amount;
     private final BigInteger minAmount;
     private final String messagePubKeyAsHex;
-    private final BankAccountTypeInfo.BankAccountType bankAccountType;
+    private final BankAccountType bankAccountType;
     private final Country bankAccountCountry;
 
     private final int collateral;
@@ -43,7 +45,7 @@ public class Offer implements Serializable
                  double price,
                  BigInteger amount,
                  BigInteger minAmount,
-                 BankAccountTypeInfo.BankAccountType bankAccountType,
+                 BankAccountType bankAccountType,
                  Currency currency,
                  Country bankAccountCountry,
                  String bankAccountUID,
@@ -111,7 +113,7 @@ public class Offer implements Serializable
         return direction;
     }
 
-    public BankAccountTypeInfo.BankAccountType getBankAccountType()
+    public BankAccountType getBankAccountType()
     {
         return bankAccountType;
     }
@@ -171,6 +173,7 @@ public class Offer implements Serializable
         return bankAccountUID;
     }
 
+    @NotNull
     @Override
     public String toString()
     {
@@ -193,6 +196,7 @@ public class Offer implements Serializable
                 '}';
     }
 
+    @NotNull
     public Date getCreationDate()
     {
         return creationDate;

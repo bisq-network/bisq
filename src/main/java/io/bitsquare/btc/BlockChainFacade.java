@@ -2,10 +2,12 @@ package io.bitsquare.btc;
 
 import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccount;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * That facade delivers blockchain functionality from the bitcoinJ library
  */
+@SuppressWarnings({"SameReturnValue", "UnusedParameters"})
 public class BlockChainFacade
 {
     @Inject
@@ -41,6 +43,7 @@ public class BlockChainFacade
         return true;
     }
 
+    @Nullable
     private byte[] getDataForTxWithAddress(String address)
     {
         // TODO

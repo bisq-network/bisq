@@ -15,12 +15,13 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.Pane;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class MarketController implements Initializable, NavigationController, ChildController
 {
-    private ChildController childController;
     private boolean orderbookCreated;
-    private NavigationController navigationController;
+    @Nullable
     private OrderBookController orderBookController;
 
     @FXML
@@ -42,8 +43,9 @@ public class MarketController implements Initializable, NavigationController, Ch
     // Interface implementation: NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Nullable
     @Override
-    public ChildController navigateToView(NavigationItem navigationItem)
+    public ChildController navigateToView(@NotNull NavigationItem navigationItem)
     {
 
         if (navigationItem == NavigationItem.ORDER_BOOK && orderbookCreated)
@@ -52,17 +54,17 @@ public class MarketController implements Initializable, NavigationController, Ch
             return null;
         }
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
+        @NotNull final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
         {
             Pane view = loader.load();
-            childController = loader.getController();
+            ChildController childController = loader.getController();
             childController.setNavigationController(this);
 
             if (childController instanceof OrderBookController)
                 orderBookController = (OrderBookController) childController;
 
-            Tab tab = new Tab("Orderbook");
+            @NotNull Tab tab = new Tab("Orderbook");
             tab.setContent(view);
             tabPane.getTabs().add(tab);
 
@@ -88,10 +90,9 @@ public class MarketController implements Initializable, NavigationController, Ch
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void setNavigationController(@NotNull NavigationController navigationController)
     {
 
-        this.navigationController = navigationController;
     }
 
     @Override

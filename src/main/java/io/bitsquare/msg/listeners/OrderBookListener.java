@@ -6,6 +6,7 @@ import net.tomp2p.storage.Data;
 
 public interface OrderBookListener
 {
+    @SuppressWarnings("UnusedParameters")
     void onOfferAdded(Data offerData, boolean success);
 
     void onOffersReceived(Map<Number160, Data> dataMap, boolean success);

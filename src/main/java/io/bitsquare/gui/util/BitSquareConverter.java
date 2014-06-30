@@ -1,5 +1,6 @@
 package io.bitsquare.gui.util;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,7 @@ public class BitSquareConverter
         try
         {
             return stringToDouble2(input);
-        } catch (NumberFormatException | NullPointerException e)
+        } catch (@NotNull NumberFormatException | NullPointerException e)
         {
             return Double.NEGATIVE_INFINITY;
         }

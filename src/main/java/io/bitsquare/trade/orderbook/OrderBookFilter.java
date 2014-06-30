@@ -2,10 +2,11 @@ package io.bitsquare.trade.orderbook;
 
 import io.bitsquare.trade.Direction;
 import javafx.beans.property.SimpleBooleanProperty;
+import org.jetbrains.annotations.NotNull;
 
 public class OrderBookFilter
 {
-    transient private final SimpleBooleanProperty directionChangedProperty = new SimpleBooleanProperty();
+    private final SimpleBooleanProperty directionChangedProperty = new SimpleBooleanProperty();
 
     private double price;
     private double amount;
@@ -52,6 +53,7 @@ public class OrderBookFilter
         this.price = price;
     }
 
+    @NotNull
     public SimpleBooleanProperty getDirectionChangedProperty()
     {
         return directionChangedProperty;

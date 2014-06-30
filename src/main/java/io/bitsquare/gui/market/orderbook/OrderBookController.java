@@ -4,7 +4,7 @@ import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
-import io.bitsquare.bank.BankAccountTypeInfo;
+import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
@@ -54,6 +54,8 @@ import javafx.util.Callback;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 import org.controlsfx.dialog.Dialogs;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,6 +85,7 @@ public class OrderBookController implements Initializable, ChildController
     public Button createOfferButton;
     private NavigationController navigationController;
     private SortedList<OrderBookListItem> offerList;
+    @Nullable
     private AnimationTimer pollingTimer;
     @FXML
     private TableColumn<String, OrderBookListItem> directionColumn, countryColumn, bankAccountTypeColumn;
@@ -93,7 +96,7 @@ public class OrderBookController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OrderBookController(OrderBook orderBook, OrderBookFilter orderBookFilter, User user, MessageFacade messageFacade, WalletFacade walletFacade, Settings settings, Storage storage)
+    private OrderBookController(OrderBook orderBook, OrderBookFilter orderBookFilter, User user, MessageFacade messageFacade, WalletFacade walletFacade, Settings settings, Storage storage)
     {
         this.orderBook = orderBook;
         this.orderBookFilter = orderBookFilter;
@@ -153,7 +156,7 @@ public class OrderBookController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void setNavigationController(@NotNull NavigationController navigationController)
     {
         this.navigationController = navigationController;
     }
@@ -198,9 +201,9 @@ public class OrderBookController implements Initializable, ChildController
 
     private boolean areSettingsValid()
     {
-        return settings.getAcceptedLanguageLocales().size() > 0 &&
-                settings.getAcceptedCountries().size() > 0 &&
-                settings.getAcceptedArbitrators().size() > 0 &&
+        return !settings.getAcceptedLanguageLocales().isEmpty() &&
+                !settings.getAcceptedCountries().isEmpty() &&
+                !settings.getAcceptedArbitrators().isEmpty() &&
                 user.getCurrentBankAccount() != null;
     }
 
@@ -222,7 +225,7 @@ public class OrderBookController implements Initializable, ChildController
                         Action response = Popups.openErrorPopup("Registration fee not confirmed yet", "The registration fee transaction has not been confirmed yet in the blockchain. Please wait until it has at least 1 confirmation.");
                         if (response == Dialog.Actions.OK)
                         {
-                            MainController.getInstance().navigateToView(NavigationItem.FUNDS);
+                            MainController.INSTANCE().navigateToView(NavigationItem.FUNDS);
                         }
                     }
                 }
@@ -231,7 +234,7 @@ public class OrderBookController implements Initializable, ChildController
                     Action response = Popups.openErrorPopup("Missing registration fee", "You have not funded the full registration fee of " + BtcFormatter.satoshiToString(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
                     if (response == Dialog.Actions.OK)
                     {
-                        MainController.getInstance().navigateToView(NavigationItem.FUNDS);
+                        MainController.INSTANCE().navigateToView(NavigationItem.FUNDS);
                     }
                 }
             }
@@ -247,18 +250,18 @@ public class OrderBookController implements Initializable, ChildController
 
         if (selectedIndex >= 0)
         {
-            Dialogs.CommandLink settingsCommandLink = new Dialogs.CommandLink("Open settings", "You need to configure your settings before you can actively trade.");
-            Dialogs.CommandLink depositFeeCommandLink = new Dialogs.CommandLink("Deposit funds", "You need to pay the registration fee before you can actively trade. That is needed as prevention against fraud.");
-            Dialogs.CommandLink sendRegistrationCommandLink = new Dialogs.CommandLink("Publish registration", "When settings are configured and the fee deposit is done your registration transaction will be published to the Bitcoin \nnetwork.");
-            List<Dialogs.CommandLink> commandLinks = Arrays.asList(settingsCommandLink, depositFeeCommandLink, sendRegistrationCommandLink);
+            @NotNull Dialogs.CommandLink settingsCommandLink = new Dialogs.CommandLink("Open settings", "You need to configure your settings before you can actively trade.");
+            @NotNull Dialogs.CommandLink depositFeeCommandLink = new Dialogs.CommandLink("Deposit funds", "You need to pay the registration fee before you can actively trade. That is needed as prevention against fraud.");
+            @NotNull Dialogs.CommandLink sendRegistrationCommandLink = new Dialogs.CommandLink("Publish registration", "When settings are configured and the fee deposit is done your registration transaction will be published to the Bitcoin \nnetwork.");
+            @NotNull List<Dialogs.CommandLink> commandLinks = Arrays.asList(settingsCommandLink, depositFeeCommandLink, sendRegistrationCommandLink);
             Action registrationMissingAction = Popups.openRegistrationMissingPopup("Not registered yet", "Please follow these steps:", "You need to register before you can place an offer.", commandLinks, selectedIndex);
             if (registrationMissingAction == settingsCommandLink)
             {
-                MainController.getInstance().navigateToView(NavigationItem.SETTINGS);
+                MainController.INSTANCE().navigateToView(NavigationItem.SETTINGS);
             }
             else if (registrationMissingAction == depositFeeCommandLink)
             {
-                MainController.getInstance().navigateToView(NavigationItem.FUNDS);
+                MainController.INSTANCE().navigateToView(NavigationItem.FUNDS);
             }
             else if (registrationMissingAction == sendRegistrationCommandLink)
             {
@@ -269,17 +272,17 @@ public class OrderBookController implements Initializable, ChildController
 
     private void payRegistrationFee()
     {
-        FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
+        @NotNull FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
         {
             @Override
-            public void onSuccess(Transaction transaction)
+            public void onSuccess(@javax.annotation.Nullable Transaction transaction)
             {
                 log.debug("payRegistrationFee onSuccess");
-                log.info("payRegistrationFee onSuccess txid:" + transaction.getHashAsString());
+                if (transaction != null) log.info("payRegistrationFee onSuccess tx id:" + transaction.getHashAsString());
             }
 
             @Override
-            public void onFailure(Throwable t)
+            public void onFailure(@NotNull Throwable t)
             {
                 log.debug("payRegistrationFee onFailure");
             }
@@ -287,8 +290,9 @@ public class OrderBookController implements Initializable, ChildController
         try
         {
             walletFacade.payRegistrationFee(user.getStringifiedBankAccounts(), callback);
-            user.setAccountID(walletFacade.getRegistrationAddressInfo().toString());
-            user.setMessagePubKeyAsHex(DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey()));
+            if (walletFacade.getRegistrationAddressInfo() != null)
+                user.setAccountID(walletFacade.getRegistrationAddressInfo().toString());
+            if (messageFacade != null && messageFacade.getPubKey() != null) user.setMessagePubKeyAsHex(DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey()));
 
             storage.write(user.getClass().getName(), user);
         } catch (InsufficientMoneyException e1)
@@ -305,14 +309,15 @@ public class OrderBookController implements Initializable, ChildController
             if (walletFacade.isUnusedTradeAddressBalanceAboveCreationFee())
             {
                 ChildController nextController = navigationController.navigateToView(NavigationItem.CREATE_OFFER);
-                ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
+                if (nextController != null)
+                    ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
             }
             else
             {
                 Action response = Popups.openErrorPopup("No funds for a trade", "You have to add some funds before you create a new offer.");
                 if (response == Dialog.Actions.OK)
                 {
-                    MainController.getInstance().navigateToView(NavigationItem.FUNDS);
+                    MainController.INSTANCE().navigateToView(NavigationItem.FUNDS);
                 }
             }
         }
@@ -322,18 +327,18 @@ public class OrderBookController implements Initializable, ChildController
         }
     }
 
-    private void takeOffer(Offer offer)
+    private void takeOffer(@NotNull Offer offer)
     {
         if (isRegistered())
         {
-            String title = offer.getDirection() == Direction.BUY ? "Trade: Sell Bitcoin" : "Trade: Buy Bitcoin";
-            TakerTradeController takerTradeController = (TakerTradeController) navigationController.navigateToView(NavigationItem.TAKER_TRADE);
+            @Nullable TakerTradeController takerTradeController = (TakerTradeController) navigationController.navigateToView(NavigationItem.TAKER_TRADE);
 
             BigInteger requestedAmount = offer.getAmount();
-            if (!amount.getText().equals(""))
+            if (!"".equals(amount.getText()))
                 requestedAmount = BtcFormatter.stringValueToSatoshis(amount.getText());
 
-            takerTradeController.initWithData(offer, requestedAmount);
+            if (takerTradeController != null)
+                takerTradeController.initWithData(offer, requestedAmount);
         }
         else
         {
@@ -341,7 +346,7 @@ public class OrderBookController implements Initializable, ChildController
         }
     }
 
-    private void removeOffer(Offer offer)
+    private void removeOffer(@NotNull Offer offer)
     {
         orderBook.removeOffer(offer);
     }
@@ -354,19 +359,19 @@ public class OrderBookController implements Initializable, ChildController
         orderBookTable.sort();
 
         if (orderBookTable.getItems() != null)
-            createOfferButton.setDefaultButton(orderBookTable.getItems().size() == 0);
+            createOfferButton.setDefaultButton(orderBookTable.getItems().isEmpty());
     }
 
     private void setupPolling()
     {
-
-        pollingTimer = Utilities.setInterval(1000, (AnimationTimer animationTimer) -> {
+        pollingTimer = Utilities.setInterval(1000, (animationTimer) -> {
             if (user.getCurrentBankAccount() != null)
                 messageFacade.getDirtyFlag(user.getCurrentBankAccount().getCurrency());
             else
                 messageFacade.getDirtyFlag(CurrencyUtil.getDefaultCurrency());
             return null;
         });
+
         messageFacade.getIsDirtyProperty().addListener((observableValue, oldValue, newValue) -> orderBook.loadOffers());
     }
 
@@ -380,6 +385,7 @@ public class OrderBookController implements Initializable, ChildController
         directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
         directionColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>()
         {
+            @Nullable
             @Override
             public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn)
             {
@@ -394,7 +400,7 @@ public class OrderBookController implements Initializable, ChildController
                     }
 
                     @Override
-                    public void updateItem(final OrderBookListItem orderBookListItem, boolean empty)
+                    public void updateItem(@Nullable final OrderBookListItem orderBookListItem, boolean empty)
                     {
                         super.updateItem(orderBookListItem, empty);
 
@@ -402,7 +408,7 @@ public class OrderBookController implements Initializable, ChildController
                         {
                             String title;
                             Image icon;
-                            Offer offer = orderBookListItem.getOffer();
+                            @NotNull Offer offer = orderBookListItem.getOffer();
 
                             if (offer.getMessagePubKeyAsHex().equals(user.getMessagePubKeyAsHex()))
                             {
@@ -447,6 +453,7 @@ public class OrderBookController implements Initializable, ChildController
         countryColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
         countryColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>()
         {
+            @Nullable
             @Override
             public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn)
             {
@@ -461,7 +468,7 @@ public class OrderBookController implements Initializable, ChildController
                     }
 
                     @Override
-                    public void updateItem(final OrderBookListItem orderBookListItem, boolean empty)
+                    public void updateItem(@Nullable final OrderBookListItem orderBookListItem, boolean empty)
                     {
                         super.updateItem(orderBookListItem, empty);
 
@@ -490,19 +497,20 @@ public class OrderBookController implements Initializable, ChildController
         bankAccountTypeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
         bankAccountTypeColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>()
         {
+            @Nullable
             @Override
             public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn)
             {
                 return new TableCell<String, OrderBookListItem>()
                 {
                     @Override
-                    public void updateItem(final OrderBookListItem orderBookListItem, boolean empty)
+                    public void updateItem(@Nullable final OrderBookListItem orderBookListItem, boolean empty)
                     {
                         super.updateItem(orderBookListItem, empty);
 
                         if (orderBookListItem != null)
                         {
-                            BankAccountTypeInfo.BankAccountType bankAccountType = orderBookListItem.getOffer().getBankAccountType();
+                            BankAccountType bankAccountType = orderBookListItem.getOffer().getBankAccountType();
                             setText(Localisation.get(bankAccountType.toString()));
                         }
                         else
@@ -520,15 +528,15 @@ public class OrderBookController implements Initializable, ChildController
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private double textInputToNumber(String oldValue, String newValue)
+    private double textInputToNumber(String oldValue, @NotNull String newValue)
     {
         //TODO use regex.... or custom textfield component
         double d = 0.0;
-        if (!newValue.equals(""))
+        if (!"".equals(newValue))
         {
             try
             {
-                DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.getDefault());
+                @NotNull DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.getDefault());
                 d = decimalFormat.parse(newValue).doubleValue();
             } catch (ParseException e)
             {

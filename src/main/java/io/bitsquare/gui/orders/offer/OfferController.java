@@ -7,6 +7,7 @@ import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trading;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,14 +22,17 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.util.Callback;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("EmptyMethod")
 public class OfferController implements Initializable, ChildController, Hibernate
 {
     private static final Logger log = LoggerFactory.getLogger(OfferController.class);
     private final Trading trading;
-    protected ObservableList<OfferListItem> offerListItems;
+    private ObservableList<OfferListItem> offerListItems;
     @FXML
     private TableColumn<String, OfferListItem> offerIdColumn, dateColumn, amountColumn, priceColumn, volumeColumn, removeColumn;
     @FXML
@@ -40,7 +44,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferController(Trading trading)
+    private OfferController(Trading trading)
     {
         this.trading = trading;
     }
@@ -64,7 +68,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
     // Interface implementation: ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void setNavigationController(@NotNull NavigationController navigationController)
     {
         log.debug("setNavigationController" + this);
     }
@@ -91,7 +95,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
     {
         offerListItems = FXCollections.observableArrayList();
         Map<String, Offer> offerMap = trading.getOffers();
-        List<Offer> offerList = new ArrayList<>(offerMap.values());
+        @NotNull List<Offer> offerList = new ArrayList<>(offerMap.values());
         offerListItems.addAll(offerList.stream().map(OfferListItem::new).collect(Collectors.toList()));
         offerTable.setItems(offerListItems);
     }
@@ -107,12 +111,19 @@ public class OfferController implements Initializable, ChildController, Hibernat
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    private void removeOffer(OfferListItem offerListItem)
+    private void removeOffer(@NotNull OfferListItem offerListItem)
     {
-        trading.removeOffer(offerListItem.getOffer());
+        try
+        {
+            trading.removeOffer(offerListItem.getOffer());
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
         offerListItems.remove(offerListItem);
     }
 
+    @SuppressWarnings("UnusedParameters")
     private void openOfferDetails(OfferListItem offerListItem)
     {
 
@@ -127,6 +138,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
         offerIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper(offerListItem.getValue()));
         offerIdColumn.setCellFactory(new Callback<TableColumn<String, OfferListItem>, TableCell<String, OfferListItem>>()
         {
+            @Nullable
             @Override
             public TableCell<String, OfferListItem> call(TableColumn<String, OfferListItem> column)
             {
@@ -135,7 +147,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
                     Hyperlink hyperlink;
 
                     @Override
-                    public void updateItem(final OfferListItem item, boolean empty)
+                    public void updateItem(@Nullable final OfferListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
 
@@ -143,12 +155,9 @@ public class OfferController implements Initializable, ChildController, Hibernat
                         {
                             hyperlink = new Hyperlink(item.getOfferId());
                             //hyperlink.getStyleClass().setAll("aaa");
-                            if (item != null && !empty)
-                            {
-                                Tooltip tooltip = new Tooltip(item.getOfferId());
-                                Tooltip.install(hyperlink, tooltip);
-                                hyperlink.setOnAction(event -> openOfferDetails(item));
-                            }
+                            @NotNull Tooltip tooltip = new Tooltip(item.getOfferId());
+                            Tooltip.install(hyperlink, tooltip);
+                            hyperlink.setOnAction(event -> openOfferDetails(item));
                             setGraphic(hyperlink);
                         }
                         else
@@ -167,6 +176,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
         removeColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper(offerListItem.getValue()));
         removeColumn.setCellFactory(new Callback<TableColumn<String, OfferListItem>, TableCell<String, OfferListItem>>()
         {
+            @Nullable
             @Override
             public TableCell<String, OfferListItem> call(TableColumn<String, OfferListItem> directionColumn)
             {
@@ -182,7 +192,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
                     }
 
                     @Override
-                    public void updateItem(final OfferListItem offerListItem, boolean empty)
+                    public void updateItem(@Nullable final OfferListItem offerListItem, boolean empty)
                     {
                         super.updateItem(offerListItem, empty);
 

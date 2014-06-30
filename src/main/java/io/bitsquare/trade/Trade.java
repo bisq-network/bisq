@@ -5,7 +5,9 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
+import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("SameParameterValue")
 public class Trade implements Serializable
 {
     private static final long serialVersionUID = -8275323072940974077L;
@@ -21,6 +23,7 @@ public class Trade implements Serializable
     private String takerSignature;
     private Transaction depositTransaction;
     private Transaction payoutTransaction;
+    @NotNull
     private State state = State.NONE;
 
     public Trade(Offer offer)
@@ -120,32 +123,37 @@ public class Trade implements Serializable
         payoutTxChangedProperty.set(!payoutTxChangedProperty.get());
     }
 
+    @NotNull
     public State getState()
     {
         return state;
     }
 
-    public void setState(State state)
+    public void setState(@NotNull State state)
     {
         this.state = state;
         stateChangedProperty.set(state.toString());
     }
 
+    @NotNull
     public SimpleBooleanProperty getDepositTxChangedProperty()
     {
         return depositTxChangedProperty;
     }
 
+    @NotNull
     public SimpleBooleanProperty getContractChangedProperty()
     {
         return contractChangedProperty;
     }
 
+    @NotNull
     public SimpleBooleanProperty getPayoutTxChangedProperty()
     {
         return payoutTxChangedProperty;
     }
 
+    @NotNull
     public SimpleStringProperty getStateChangedProperty()
     {
         return stateChangedProperty;
@@ -156,6 +164,7 @@ public class Trade implements Serializable
         return getTradeAmount().multiply(BigInteger.valueOf(getOffer().getCollateral())).divide(BigInteger.valueOf(100));
     }
 
+    @NotNull
     @Override
     public String toString()
     {

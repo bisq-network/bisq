@@ -2,6 +2,7 @@ package io.bitsquare.btc;
 
 import com.google.bitcoin.core.Transaction;
 import java.math.BigInteger;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -12,7 +13,8 @@ public class BtcValidatorTest
     @Test
     public void testIsMinSpendableAmount()
     {
-        BigInteger amount = null;
+        @Nullable BigInteger amount = null;
+        //noinspection ConstantConditions
         assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
 
         amount = BigInteger.ZERO;

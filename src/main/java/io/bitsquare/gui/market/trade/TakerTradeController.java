@@ -2,7 +2,10 @@ package io.bitsquare.gui.market.trade;
 
 import com.google.bitcoin.core.Transaction;
 import com.google.inject.Inject;
-import io.bitsquare.btc.*;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.BtcFormatter;
+import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
@@ -34,31 +37,32 @@ import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("UnusedParameters")
 public class TakerTradeController implements Initializable, ChildController
 {
     private static final Logger log = LoggerFactory.getLogger(TakerTradeController.class);
 
     private final Trading trading;
     private final WalletFacade walletFacade;
-    private final BlockChainFacade blockChainFacade;
     private final MessageFacade messageFacade;
     private final List<ProcessStepItem> processStepItems = new ArrayList<>();
     private Offer offer;
     private Trade trade;
     private BigInteger requestedAmount;
-    private boolean offererIsOnline;
     private int row;
     private NavigationController navigationController;
     private TextField amountTextField, totalToPayLabel, totalLabel, collateralTextField, isOnlineTextField;
-    private Label statusTextField, infoLabel;
+    private Label infoLabel;
     private Button nextButton;
     private ProgressBar progressBar;
+    @Nullable
     private AnimationTimer checkOnlineStatusTimer;
     private Pane isOnlineCheckerHolder;
-    private TakerPaymentProtocol takerPaymentProtocol;
     private Label headerLabel;
 
     @FXML
@@ -74,11 +78,10 @@ public class TakerTradeController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TakerTradeController(Trading trading, WalletFacade walletFacade, BlockChainFacade blockChainFacade, MessageFacade messageFacade)
+    private TakerTradeController(Trading trading, WalletFacade walletFacade, MessageFacade messageFacade)
     {
         this.trading = trading;
         this.walletFacade = walletFacade;
-        this.blockChainFacade = blockChainFacade;
         this.messageFacade = messageFacade;
     }
 
@@ -87,7 +90,7 @@ public class TakerTradeController implements Initializable, ChildController
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initWithData(Offer offer, BigInteger requestedAmount)
+    public void initWithData(@NotNull Offer offer, @NotNull BigInteger requestedAmount)
     {
         this.offer = offer;
         this.requestedAmount = requestedAmount.compareTo(BigInteger.ZERO) > 0 ? requestedAmount : offer.getAmount();
@@ -120,7 +123,7 @@ public class TakerTradeController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void setNavigationController(@NotNull NavigationController navigationController)
     {
         this.navigationController = navigationController;
     }
@@ -152,14 +155,14 @@ public class TakerTradeController implements Initializable, ChildController
         row = -1;
 
         FormBuilder.addHeaderLabel(gridPane, "Take offer:", ++row);
-        amountTextField = FormBuilder.addTextField(gridPane, "Amount (BTC):", BtcFormatter.formatSatoshis(requestedAmount, false), ++row, true, true);
+        amountTextField = FormBuilder.addTextField(gridPane, "Amount (BTC):", BtcFormatter.satoshiToString(requestedAmount), ++row, true, true);
         amountTextField.textProperty().addListener(e -> {
             applyVolume();
             applyCollateral();
             totalToPayLabel.setText(getTotalToPayAsString());
 
         });
-        Label amountRangeLabel = new Label("(" + BtcFormatter.formatSatoshis(offer.getMinAmount(), false) + " - " + BtcFormatter.formatSatoshis(offer.getAmount(), false) + ")");
+        @NotNull Label amountRangeLabel = new Label("(" + BtcFormatter.satoshiToString(offer.getMinAmount()) + " - " + BtcFormatter.satoshiToString(offer.getAmount()) + ")");
         gridPane.add(amountRangeLabel, 2, row);
 
         FormBuilder.addTextField(gridPane, "Price (" + offer.getCurrency() + "/BTC):", BitSquareFormatter.formatPrice(offer.getPrice()), ++row);
@@ -170,7 +173,7 @@ public class TakerTradeController implements Initializable, ChildController
         totalToPayLabel = FormBuilder.addTextField(gridPane, "Total to pay (BTC):", getTotalToPayAsString(), ++row);
 
         isOnlineTextField = FormBuilder.addTextField(gridPane, "Online status:", "Checking offerers online status...", ++row);
-        ConfidenceProgressIndicator isOnlineChecker = new ConfidenceProgressIndicator();
+        @NotNull ConfidenceProgressIndicator isOnlineChecker = new ConfidenceProgressIndicator();
         isOnlineChecker.setPrefSize(20, 20);
         isOnlineChecker.setLayoutY(3);
         isOnlineCheckerHolder = new Pane();
@@ -181,6 +184,7 @@ public class TakerTradeController implements Initializable, ChildController
         messageFacade.pingPeer(offer.getMessagePubKeyAsHex());
         checkOnlineStatusTimer = Utilities.setTimeout(1000, (AnimationTimer animationTimer) -> {
             setIsOnlineStatus(true);
+            //noinspection ReturnOfNull
             return null;
         });
 
@@ -194,13 +198,14 @@ public class TakerTradeController implements Initializable, ChildController
         FormBuilder.addTextField(gridPane, "Bank account type:", offer.getBankAccountType().toString(), ++row);
         FormBuilder.addTextField(gridPane, "Country:", offer.getBankAccountCountry().getName(), ++row);
         FormBuilder.addTextField(gridPane, "Arbitrator:", offer.getArbitrator().getName(), ++row);
-        Label arbitratorLink = new Label(offer.getArbitrator().getWebUrl());
+        @NotNull Label arbitratorLink = new Label(offer.getArbitrator().getWebUrl());
         arbitratorLink.setId("label-url");
         gridPane.add(arbitratorLink, 2, row);
         arbitratorLink.setOnMouseClicked(e -> {
             try
             {
-                Utilities.openURL(offer.getArbitrator().getWebUrl());
+                if (offer.getArbitrator() != null && offer.getArbitrator().getWebUrl() != null)
+                    Utilities.openURL(offer.getArbitrator().getWebUrl());
             } catch (Exception e1)
             {
                 log.warn(e1.toString());
@@ -221,9 +226,9 @@ public class TakerTradeController implements Initializable, ChildController
 
         // offerId = tradeId
         // we don't want to create the trade before the balance check
-        AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(offer.getId());
-        log.debug("balance " + walletFacade.getBalanceForAddress(addressEntry.getAddress()).toString());
-        if (getTotalToPay().compareTo(walletFacade.getBalanceForAddress(addressEntry.getAddress())) > 0)
+        @Nullable AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(offer.getId());
+        // log.debug("balance " + walletFacade.getBalanceForAddress(addressEntry.getAddress()).toString());
+        if (getTotalToPay().compareTo(walletFacade.getBalanceForAddress(addressEntry != null ? addressEntry.getAddress() : null)) > 0)
         {
             Popups.openErrorPopup("Insufficient money", "You don't have enough funds for that trade.");
             return;
@@ -251,7 +256,7 @@ public class TakerTradeController implements Initializable, ChildController
         row = -1;
         FormBuilder.addHeaderLabel(gridPane, "Trade request inited", ++row, 0);
 
-        statusTextField = FormBuilder.addLabel(gridPane, "Current activity:", "Request confirmation from offerer to take that offer.", ++row);
+        Label statusTextField = FormBuilder.addLabel(gridPane, "Current activity:", "Request confirmation from offerer to take that offer.", ++row);
         GridPane.setColumnSpan(statusTextField, 2);
         FormBuilder.addLabel(gridPane, "Progress:", "", ++row);
         progressBar = new ProgressBar();
@@ -261,14 +266,14 @@ public class TakerTradeController implements Initializable, ChildController
         gridPane.add(progressBar, 1, row);
 
         FormBuilder.addLabel(gridPane, "Status:", "", ++row);
-        ConfidenceProgressIndicator progressIndicator = new ConfidenceProgressIndicator();
+        @NotNull ConfidenceProgressIndicator progressIndicator = new ConfidenceProgressIndicator();
         progressIndicator.setPrefSize(20, 20);
         progressIndicator.setLayoutY(2);
-        Pane progressIndicatorHolder = new Pane();
+        @NotNull Pane progressIndicatorHolder = new Pane();
         progressIndicatorHolder.getChildren().addAll(progressIndicator);
         gridPane.add(progressIndicatorHolder, 1, row);
 
-        takerPaymentProtocol = trading.addTakerPaymentProtocol(trade, new TakerPaymentProtocolListener()
+        TakerPaymentProtocol takerPaymentProtocol = trading.addTakerPaymentProtocol(trade, new TakerPaymentProtocolListener()
         {
             @Override
             public void onProgress(double progress)
@@ -311,7 +316,7 @@ public class TakerTradeController implements Initializable, ChildController
             }
 
             @Override
-            public void onBankTransferInited(TradeMessage tradeMessage)
+            public void onBankTransferInited(@NotNull TradeMessage tradeMessage)
             {
                 buildBankTransferInitedScreen(tradeMessage);
             }
@@ -326,6 +331,7 @@ public class TakerTradeController implements Initializable, ChildController
         takerPaymentProtocol.takeOffer();
     }
 
+    @SuppressWarnings("EmptyMethod")
     private void updateTx(Trade trade)
     {
 
@@ -344,7 +350,7 @@ public class TakerTradeController implements Initializable, ChildController
         //   confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, transaction, progressIndicator);
     }
 
-    private void buildBankTransferInitedScreen(TradeMessage tradeMessage)
+    private void buildBankTransferInitedScreen(@NotNull TradeMessage tradeMessage)
     {
         processStepBar.next();
 
@@ -355,7 +361,7 @@ public class TakerTradeController implements Initializable, ChildController
         nextButton.setOnAction(e -> releaseBTC(tradeMessage));
     }
 
-    private void releaseBTC(TradeMessage tradeMessage)
+    private void releaseBTC(@NotNull TradeMessage tradeMessage)
     {
         processStepBar.next();
         trading.releaseBTC(trade.getId(), tradeMessage);
@@ -379,9 +385,9 @@ public class TakerTradeController implements Initializable, ChildController
         else
         {
             //TODO
-            FormBuilder.addTextField(gridPane, "You got returned collateral (BTC):", BtcFormatter.formatSatoshis(getCollateralInSatoshis(), false), ++row);
+            FormBuilder.addTextField(gridPane, "You got returned collateral (BTC):", BtcFormatter.satoshiToString(getCollateralInSatoshis()), ++row);
             FormBuilder.addTextField(gridPane, "You have received (" + offer.getCurrency() + "):", BitSquareFormatter.formatVolume(getVolume()), ++row);
-            FormBuilder.addTextField(gridPane, "You have received (BTC):", BtcFormatter.formatSatoshis(offer.getAmount(), false), ++row);
+            FormBuilder.addTextField(gridPane, "You have received (BTC):", BtcFormatter.satoshiToString(offer.getAmount()), ++row);
         }
 
         gridPane.add(nextButton, 1, ++row);
@@ -395,7 +401,7 @@ public class TakerTradeController implements Initializable, ChildController
 
     private void close()
     {
-        TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
+        @NotNull TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
 
         navigationController.navigateToView(NavigationItem.ORDER_BOOK);
@@ -421,7 +427,8 @@ public class TakerTradeController implements Initializable, ChildController
             checkOnlineStatusTimer = null;
         }
 
-        offererIsOnline = isOnline;
+        //noinspection UnnecessaryLocalVariable
+        boolean offererIsOnline = isOnline;
         isOnlineTextField.setText(offererIsOnline ? "Online" : "Offline");
         gridPane.getChildren().remove(isOnlineCheckerHolder);
 
@@ -443,11 +450,11 @@ public class TakerTradeController implements Initializable, ChildController
     {
         if (takerIsSelling())
         {
-            return BtcFormatter.formatSatoshis(getTotalToPay(), false);
+            return BtcFormatter.satoshiToString(getTotalToPay());
         }
         else
         {
-            return BtcFormatter.formatSatoshis(getTotalToPay(), false) + "\n" +
+            return BtcFormatter.satoshiToString(getTotalToPay()) + "\n" +
                     BitSquareFormatter.formatVolume(getVolume(), offer.getCurrency());
         }
     }
@@ -466,7 +473,7 @@ public class TakerTradeController implements Initializable, ChildController
 
     private void applyCollateral()
     {
-        collateralTextField.setText(BtcFormatter.formatSatoshis(getCollateralInSatoshis(), false));
+        collateralTextField.setText(BtcFormatter.satoshiToString(getCollateralInSatoshis()));
     }
 
     private BigInteger getCollateralInSatoshis()

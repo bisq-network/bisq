@@ -9,29 +9,29 @@ import java.util.List;
 import java.util.Set;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("CanBeFinal")
 public class ConfidenceDisplay
 {
     private static final Logger log = LoggerFactory.getLogger(ConfidenceDisplay.class);
+    @Nullable
     private WalletEventListener walletEventListener;
 
+    @NotNull
     private Wallet wallet;
+    @NotNull
     private Label confirmationLabel;
+    @Nullable
     private TextField balanceTextField;
     private Transaction transaction;
+    @NotNull
     private ConfidenceProgressIndicator progressIndicator;
 
-    /**
-     * We got the confidence for the actual updating tx.
-     *
-     * @param wallet
-     * @param confirmationLabel
-     * @param balanceTextField
-     * @param progressIndicator
-     */
-    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, TextField balanceTextField, ConfidenceProgressIndicator progressIndicator)
+    public ConfidenceDisplay(@NotNull Wallet wallet, @NotNull Label confirmationLabel, @NotNull TextField balanceTextField, @NotNull ConfidenceProgressIndicator progressIndicator)
     {
         this.wallet = wallet;
         this.confirmationLabel = confirmationLabel;
@@ -47,21 +47,21 @@ public class ConfidenceDisplay
         walletEventListener = new WalletEventListener()
         {
             @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, @NotNull BigInteger newBalance)
             {
                 updateBalance(newBalance);
                 // log.debug("onCoinsReceived  " + newBalance);
             }
 
             @Override
-            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
+            public void onTransactionConfidenceChanged(Wallet wallet, @NotNull Transaction tx)
             {
                 updateConfidence(tx);
                 // log.debug("onTransactionConfidenceChanged tx " + tx.getHashAsString());
             }
 
             @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, @NotNull BigInteger newBalance)
             {
                 updateBalance(newBalance);
             }
@@ -89,21 +89,13 @@ public class ConfidenceDisplay
         wallet.addEventListener(walletEventListener);
     }
 
-    /**
-     * @param wallet
-     * @param confirmationLabel
-     * @param transaction       We want the confidence for only that tx, not the lasted changed in the wallet
-     * @param progressIndicator
-     */
-    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, final Transaction transaction, ConfidenceProgressIndicator progressIndicator)
+    public ConfidenceDisplay(@NotNull Wallet wallet, @NotNull Label confirmationLabel, @NotNull final Transaction transaction, @NotNull ConfidenceProgressIndicator progressIndicator)
     {
         this.wallet = wallet;
         this.confirmationLabel = confirmationLabel;
         this.transaction = transaction;
         this.progressIndicator = progressIndicator;
 
-        if (balanceTextField != null)
-            balanceTextField.setText("");
         confirmationLabel.setVisible(false);
         progressIndicator.setVisible(false);
         progressIndicator.setProgress(0);
@@ -114,7 +106,7 @@ public class ConfidenceDisplay
         walletEventListener = new WalletEventListener()
         {
             @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            public void onCoinsReceived(Wallet wallet, @NotNull Transaction tx, BigInteger prevBalance, @NotNull BigInteger newBalance)
             {
                 if (tx.getHashAsString().equals(transaction.getHashAsString()))
                     updateBalance(newBalance);
@@ -122,7 +114,7 @@ public class ConfidenceDisplay
             }
 
             @Override
-            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
+            public void onTransactionConfidenceChanged(Wallet wallet, @NotNull Transaction tx)
             {
                 if (tx.getHashAsString().equals(transaction.getHashAsString()))
                     updateConfidence(transaction);
@@ -130,7 +122,7 @@ public class ConfidenceDisplay
             }
 
             @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            public void onCoinsSent(Wallet wallet, @NotNull Transaction tx, BigInteger prevBalance, @NotNull BigInteger newBalance)
             {
                 if (tx.getHashAsString().equals(transaction.getHashAsString()))
                     updateBalance(newBalance);
@@ -166,15 +158,9 @@ public class ConfidenceDisplay
         confirmationLabel.setText("");
         if (balanceTextField != null)
             balanceTextField.setText("");
-
-        walletEventListener = null;
-        wallet = null;
-        confirmationLabel = null;
-        progressIndicator = null;
-        balanceTextField = null;
     }
 
-    private void updateBalance(BigInteger balance)
+    private void updateBalance(@NotNull BigInteger balance)
     {
         if (balance.compareTo(BigInteger.ZERO) > 0)
         {
@@ -183,8 +169,8 @@ public class ConfidenceDisplay
             progressIndicator.setProgress(-1);
 
             Set<Transaction> transactions = wallet.getTransactions(false);
-            Transaction latestTransaction = null;
-            for (Transaction transaction : transactions)
+            @Nullable Transaction latestTransaction = null;
+            for (@NotNull Transaction transaction : transactions)
             {
                 if (latestTransaction != null)
                 {
@@ -206,7 +192,7 @@ public class ConfidenceDisplay
             balanceTextField.setText(BtcFormatter.satoshiToString(balance));
     }
 
-    private void updateConfidence(Transaction tx)
+    private void updateConfidence(@NotNull Transaction tx)
     {
         TransactionConfidence confidence = tx.getConfidence();
         double progressIndicatorSize = 50;

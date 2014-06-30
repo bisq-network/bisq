@@ -9,6 +9,8 @@ import java.io.*;
 import java.net.URI;
 import java.util.function.Function;
 import javafx.animation.AnimationTimer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,11 +18,6 @@ public class Utilities
 {
     private static final Logger log = LoggerFactory.getLogger(Utilities.class);
     private static long lastTimeStamp = System.currentTimeMillis();
-
-    public static String getRootDir()
-    {
-        return Utilities.class.getProtectionDomain().getCodeSource().getLocation().getFile() + "/../";
-    }
 
     public static String objectToJson(Object object)
     {
@@ -34,15 +31,16 @@ public class Utilities
         return gson.fromJson(jsonString, classOfT);
     }
 
+    @Nullable
     public static Object deserializeHexStringToObject(String serializedHexString)
     {
-        Object result = null;
+        @Nullable Object result = null;
         try
         {
-            ByteInputStream byteInputStream = new ByteInputStream();
+            @NotNull ByteInputStream byteInputStream = new ByteInputStream();
             byteInputStream.setBuf(com.google.bitcoin.core.Utils.parseAsHexOrBase58(serializedHexString));
 
-            try (ObjectInputStream objectInputStream = new ObjectInputStream(byteInputStream))
+            try (@NotNull ObjectInputStream objectInputStream = new ObjectInputStream(byteInputStream))
             {
                 result = objectInputStream.readObject();
             } catch (ClassNotFoundException e)
@@ -61,13 +59,14 @@ public class Utilities
         return result;
     }
 
-    public static String serializeObjectToHexString(Object serializable)
+    @Nullable
+    public static String serializeObjectToHexString(Serializable serializable)
     {
-        String result = null;
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        @Nullable String result = null;
+        @NotNull ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try
         {
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            @NotNull ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
             objectOutputStream.writeObject(serializable);
 
             result = com.google.bitcoin.core.Utils.bytesToHexString(byteArrayOutputStream.toByteArray());
@@ -81,9 +80,10 @@ public class Utilities
         return result;
     }
 
-    public static void printElapsedTime(String msg)
+    @SuppressWarnings("SameParameterValue")
+    private static void printElapsedTime(@NotNull String msg)
     {
-        if (msg.length() > 0)
+        if (!msg.isEmpty())
             msg += " / ";
         long timeStamp = System.currentTimeMillis();
         log.debug(msg + "Elapsed: " + String.valueOf(timeStamp - lastTimeStamp));
@@ -96,38 +96,41 @@ public class Utilities
     }
 
 
-    public static void openURL(String url) throws Exception
+    public static void openURL(@NotNull String url) throws Exception
     {
         Desktop.getDesktop().browse(new URI(url));
     }
 
 
-    public static Object copy(Object orig)
+    @Nullable
+    public static Object copy(Serializable orig)
     {
-        Object obj = null;
+        @Nullable Object obj = null;
         try
         {
             // Write the object out to a byte array
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ObjectOutputStream out = new ObjectOutputStream(bos);
+            @NotNull ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            @NotNull ObjectOutputStream out = new ObjectOutputStream(bos);
             out.writeObject(orig);
             out.flush();
             out.close();
 
             // Make an input stream from the byte array and read
             // a copy of the object back in.
-            ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
+            @NotNull ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
             obj = in.readObject();
-        } catch (IOException | ClassNotFoundException e)
+        } catch (@NotNull IOException | ClassNotFoundException e)
         {
             e.printStackTrace();
         }
         return obj;
     }
 
-    public static AnimationTimer setTimeout(int delay, Function<AnimationTimer, Void> callback)
+    @SuppressWarnings("SameParameterValue")
+    @NotNull
+    public static AnimationTimer setTimeout(int delay, @NotNull Function<AnimationTimer, Void> callback)
     {
-        AnimationTimer animationTimer = new AnimationTimer()
+        @NotNull AnimationTimer animationTimer = new AnimationTimer()
         {
             final long lastTimeStamp = System.currentTimeMillis();
 
@@ -145,9 +148,11 @@ public class Utilities
         return animationTimer;
     }
 
-    public static AnimationTimer setInterval(int delay, Function<AnimationTimer, Void> callback)
+    @SuppressWarnings("SameParameterValue")
+    @NotNull
+    public static AnimationTimer setInterval(int delay, @NotNull Function<AnimationTimer, Void> callback)
     {
-        AnimationTimer animationTimer = new AnimationTimer()
+        @NotNull AnimationTimer animationTimer = new AnimationTimer()
         {
             long lastTimeStamp = System.currentTimeMillis();
 

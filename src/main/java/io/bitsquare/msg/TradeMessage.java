@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.util.UUID;
 
 //TODO refactor
+@SuppressWarnings("SameParameterValue")
 public class TradeMessage implements Serializable
 {
     private static final long serialVersionUID = 7916445031849763995L;

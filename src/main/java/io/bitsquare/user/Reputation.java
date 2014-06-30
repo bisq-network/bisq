@@ -1,6 +1,7 @@
 package io.bitsquare.user;
 
 import java.io.Serializable;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,9 +14,9 @@ public class Reputation implements Serializable
     //TODO
     public Reputation()
     {
-
     }
 
+    @NotNull
     @Override
     public String toString()
     {

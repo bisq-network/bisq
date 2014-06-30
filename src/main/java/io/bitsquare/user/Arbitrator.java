@@ -4,11 +4,14 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class Arbitrator implements Serializable
 {
     private static final long serialVersionUID = -2625059604136756635L;
-    private String UID;
+
+    private String id;
     private String pubKeyAsHex;
     private String messagePubKeyAsHex;
     private String name;
@@ -22,28 +25,30 @@ public class Arbitrator implements Serializable
     private double minArbitrationFee;
     private List<METHOD> arbitrationMethods;
     private List<ID_VERIFICATION> idVerifications;
+    @Nullable
     private String webUrl;
+    @Nullable
     private String description;
 
     public Arbitrator()
     {
     }
 
-    public Arbitrator(String pubKeyAsHex,
-                      String messagePubKeyAsHex,
-                      String name,
-                      ID_TYPE idType,
-                      List<Locale> languages,
-                      Reputation reputation,
+    public Arbitrator(@NotNull String pubKeyAsHex,
+                      @NotNull String messagePubKeyAsHex,
+                      @NotNull String name,
+                      @NotNull ID_TYPE idType,
+                      @NotNull List<Locale> languages,
+                      @NotNull Reputation reputation,
                       double maxTradeVolume,
                       double passiveServiceFee,
                       double minPassiveServiceFee,
                       double arbitrationFee,
                       double minArbitrationFee,
-                      List<METHOD> arbitrationMethods,
-                      List<ID_VERIFICATION> idVerifications,
-                      String webUrl,
-                      String description)
+                      @NotNull List<METHOD> arbitrationMethods,
+                      @NotNull List<ID_VERIFICATION> idVerifications,
+                      @Nullable String webUrl,
+                      @Nullable String description)
     {
         this.pubKeyAsHex = pubKeyAsHex;
         this.messagePubKeyAsHex = messagePubKeyAsHex;
@@ -62,10 +67,10 @@ public class Arbitrator implements Serializable
         this.description = description;
 
         //TODO for mock arbitrator
-        UID = name;
+        id = name;
     }
 
-    public void updateFromStorage(Arbitrator savedArbitrator)
+    public void updateFromStorage(@NotNull Arbitrator savedArbitrator)
     {
         this.pubKeyAsHex = savedArbitrator.getPubKeyAsHex();
         this.messagePubKeyAsHex = savedArbitrator.getPubKeyAsHex();
@@ -83,15 +88,21 @@ public class Arbitrator implements Serializable
         this.webUrl = savedArbitrator.getWebUrl();
         this.description = savedArbitrator.getDescription();
 
-        UID = pubKeyAsHex;
+        //TODO for mock arbitrator
+        id = name;
     }
 
+    @SuppressWarnings("NonFinalFieldReferencedInHashCode")
     public int hashCode()
     {
-        return Objects.hashCode(UID);
+        if (id != null)
+            return Objects.hashCode(id);
+        else
+            return 0;
     }
 
-    public boolean equals(Object obj)
+    @SuppressWarnings("NonFinalFieldReferenceInEquals")
+    public boolean equals(@Nullable Object obj)
     {
         if (!(obj instanceof Arbitrator))
             return false;
@@ -99,43 +110,51 @@ public class Arbitrator implements Serializable
             return true;
 
         Arbitrator other = (Arbitrator) obj;
-        return other.getUID().equals(UID);
+        return id != null && id.equals(other.getId());
     }
 
-    public String getUID()
+    @NotNull
+    public String getId()
     {
-        return UID;
+        return id;
     }
 
+    @NotNull
     public String getPubKeyAsHex()
     {
         return pubKeyAsHex;
     }
 
+    @NotNull
     public String getMessagePubKeyAsHex()
     {
         return messagePubKeyAsHex;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @NotNull
     public String getName()
     {
         return name;
     }
 
+    @NotNull
     public ID_TYPE getIdType()
     {
         return idType;
     }
 
+    @NotNull
     public List<Locale> getLanguages()
     {
         return languages;
     }
 
+    @NotNull
     public Reputation getReputation()
     {
         return reputation;
@@ -166,25 +185,34 @@ public class Arbitrator implements Serializable
         return minArbitrationFee;
     }
 
+    @NotNull
     public List<METHOD> getArbitrationMethods()
     {
         return arbitrationMethods;
     }
 
+    @NotNull
     public List<ID_VERIFICATION> getIdVerifications()
     {
         return idVerifications;
     }
 
+    @Nullable
     public String getWebUrl()
     {
         return webUrl;
     }
 
+    @Nullable
     public String getDescription()
     {
         return description;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Enums
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public enum ID_TYPE
     {

@@ -19,6 +19,8 @@ import io.bitsquare.util.Utilities;
 import java.math.BigInteger;
 import javafx.util.Pair;
 import net.tomp2p.peers.PeerAddress;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,16 +32,20 @@ public class OffererPaymentProtocol
 
     private static final Logger log = LoggerFactory.getLogger(OffererPaymentProtocol.class);
 
+    @NotNull
     private final Trade trade;
     private final Offer offer;
     private final OffererPaymentProtocolListener offererPaymentProtocolListener;
+    @NotNull
     private final MessageFacade messageFacade;
+    @NotNull
     private final WalletFacade walletFacade;
+    @NotNull
     private final BlockChainFacade blockChainFacade;
+    @NotNull
     private final CryptoFacade cryptoFacade;
+    @NotNull
     private final User user;
-    private final int numberOfSteps = 10;//TODO
-    private Contract contract;
     private PeerAddress peerAddress;
     private boolean isTakeOfferRequested;
     private int currentStep = 0;
@@ -51,13 +57,13 @@ public class OffererPaymentProtocol
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OffererPaymentProtocol(Trade trade,
+    public OffererPaymentProtocol(@NotNull Trade trade,
                                   OffererPaymentProtocolListener offererPaymentProtocolListener,
-                                  MessageFacade messageFacade,
-                                  WalletFacade walletFacade,
-                                  BlockChainFacade blockChainFacade,
-                                  CryptoFacade cryptoFacade,
-                                  User user)
+                                  @NotNull MessageFacade messageFacade,
+                                  @NotNull WalletFacade walletFacade,
+                                  @NotNull BlockChainFacade blockChainFacade,
+                                  @NotNull CryptoFacade cryptoFacade,
+                                  @NotNull User user)
     {
         checkNotNull(trade);
         checkNotNull(messageFacade);
@@ -101,10 +107,34 @@ public class OffererPaymentProtocol
         peerAddress = sender;
         // The offer must be still available.
         // TODO check also if offer is still in our offer list, if we canceled recently there might be inconsistency
-        if (!isTakeOfferRequested)
+        if (isTakeOfferRequested)
+        {
+            log.debug("1.3 offer already requested REJECT_TAKE_OFFER_REQUEST");
+            @NotNull TradeMessage tradeMessage = new TradeMessage(TradeMessageType.REJECT_TAKE_OFFER_REQUEST, trade.getId());
+            @NotNull TradeMessageListener listener = new TradeMessageListener()
+            {
+                @Override
+                public void onResult()
+                {
+                    log.debug("1.3 isTakeOfferRequested REJECT_TAKE_OFFER_REQUEST onResult");
+                    // no more steps are needed, as we are not interested in that trade
+                }
+
+                @Override
+                public void onFailed()
+                {
+                    log.warn("1.3 isTakeOfferRequested REJECT_TAKE_OFFER_REQUEST onFailed");
+                    // we can ignore that as we are not interested in that trade
+                }
+            };
+
+            // Offerer reject take offer because it's not available anymore
+            messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
+        }
+        else
         {
             log.debug("1.3 offer not yet requested");
-            TradeMessageListener listener = new TradeMessageListener()
+            @NotNull TradeMessageListener listener = new TradeMessageListener()
             {
                 @Override
                 public void onResult()
@@ -132,31 +162,7 @@ public class OffererPaymentProtocol
             offererPaymentProtocolListener.onProgress(getProgress());
 
             // 1.3a Send accept take offer message
-            TradeMessage tradeMessage = new TradeMessage(TradeMessageType.ACCEPT_TAKE_OFFER_REQUEST, trade.getId());
-            messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
-        }
-        else
-        {
-            log.debug("1.3 offer already requested REJECT_TAKE_OFFER_REQUEST");
-            TradeMessage tradeMessage = new TradeMessage(TradeMessageType.REJECT_TAKE_OFFER_REQUEST, trade.getId());
-            TradeMessageListener listener = new TradeMessageListener()
-            {
-                @Override
-                public void onResult()
-                {
-                    log.debug("1.3 isTakeOfferRequested REJECT_TAKE_OFFER_REQUEST onResult");
-                    // no more steps are needed, as we are not interested in that trade
-                }
-
-                @Override
-                public void onFailed()
-                {
-                    log.warn("1.3 isTakeOfferRequested REJECT_TAKE_OFFER_REQUEST onFailed");
-                    // we can ignore that as we are not interested in that trade
-                }
-            };
-
-            // Offerer reject take offer because it's not available anymore
+            @NotNull TradeMessage tradeMessage = new TradeMessage(TradeMessageType.ACCEPT_TAKE_OFFER_REQUEST, trade.getId());
             messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
         }
     }
@@ -171,7 +177,7 @@ public class OffererPaymentProtocol
     // Step 2.3
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onTakeOfferFeePayed(TradeMessage requestTradeMessage)
+    public void onTakeOfferFeePayed(@NotNull TradeMessage requestTradeMessage)
     {
         log.debug("2.3 onTakeOfferFeePayed");
         trade.setTakeOfferFeeTxID(requestTradeMessage.getTakeOfferFeeTxID());
@@ -184,7 +190,7 @@ public class OffererPaymentProtocol
     // Step 2.4
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void verifyTakeOfferFeePayment(TradeMessage requestTradeMessage)
+    private void verifyTakeOfferFeePayment(@NotNull TradeMessage requestTradeMessage)
     {
         log.debug("2.4 verifyTakeOfferFeePayment");
         //TODO just dummy now, will be async
@@ -200,7 +206,8 @@ public class OffererPaymentProtocol
     // Step 2.5
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createDepositTx(TradeMessage requestTradeMessage)
+    @SuppressWarnings("ConstantConditions")
+    private void createDepositTx(@NotNull TradeMessage requestTradeMessage)
     {
         checkNotNull(requestTradeMessage);
 
@@ -223,7 +230,7 @@ public class OffererPaymentProtocol
         log.debug("arbitrator pubkey " + arbitratorPubKey);
         try
         {
-            Transaction tx = walletFacade.offererCreatesMSTxAndAddPayment(offererInputAmount, offererPubKey, takerPubKey, arbitratorPubKey, trade.getId());
+            @NotNull Transaction tx = walletFacade.offererCreatesMSTxAndAddPayment(offererInputAmount, offererPubKey, takerPubKey, arbitratorPubKey, trade.getId());
             preparedOffererDepositTxAsHex = Utils.bytesToHexString(tx.bitcoinSerialize());
             long offererTxOutIndex = tx.getInput(0).getOutpoint().getIndex();
             log.debug("2.5 deposit tx created: " + tx);
@@ -243,12 +250,12 @@ public class OffererPaymentProtocol
     // Step 2.6
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void sendDepositTxAndDataForContract(String preparedOffererDepositTxAsHex, String offererPubKey, long offererTxOutIndex)
+    private void sendDepositTxAndDataForContract(@NotNull String preparedOffererDepositTxAsHex, String offererPubKey, long offererTxOutIndex)
     {
         log.debug("2.6 sendDepositTxAndDataForContract");
         // Send all the requested data
 
-        TradeMessageListener listener = new TradeMessageListener()
+        @NotNull TradeMessageListener listener = new TradeMessageListener()
         {
             @Override
             public void onResult()
@@ -270,15 +277,10 @@ public class OffererPaymentProtocol
 
         offererPaymentProtocolListener.onProgress(getProgress());
 
-        BankAccount bankAccount = user.getBankAccount(offer.getBankAccountUID());
+        @Nullable BankAccount bankAccount = user.getBankAccount(offer.getBankAccountUID());
         String accountID = user.getAccountID();
 
-        checkNotNull(trade.getId());
-        checkNotNull(bankAccount);
-        checkNotNull(accountID);
-        checkNotNull(preparedOffererDepositTxAsHex);
-
-        TradeMessage tradeMessage = new TradeMessage(TradeMessageType.REQUEST_TAKER_DEPOSIT_PAYMENT, trade.getId(), bankAccount, accountID, offererPubKey, preparedOffererDepositTxAsHex, offererTxOutIndex);
+        @NotNull TradeMessage tradeMessage = new TradeMessage(TradeMessageType.REQUEST_TAKER_DEPOSIT_PAYMENT, trade.getId(), bankAccount, accountID, offererPubKey, preparedOffererDepositTxAsHex, offererTxOutIndex);
         log.debug("2.6 sendTradingMessage");
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
     }
@@ -292,7 +294,7 @@ public class OffererPaymentProtocol
     // Step 3.1 Incoming msg from taker
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onDepositTxReadyForPublication(TradeMessage requestTradeMessage)
+    public void onDepositTxReadyForPublication(@NotNull TradeMessage requestTradeMessage)
     {
         log.debug("3.1 onDepositTxReadyForPublication");
         takerPayoutAddress = requestTradeMessage.getTakerPayoutAddress();
@@ -304,20 +306,20 @@ public class OffererPaymentProtocol
     // Step 3.2  Verify offerers account registration and against the blacklist
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void verifyTaker(TradeMessage requestTradeMessage)
+    private void verifyTaker(@NotNull TradeMessage requestTradeMessage)
     {
         log.debug("3.2 verifyTaker");
         log.debug("3.2.1 verifyAccountRegistration");
         if (blockChainFacade.verifyAccountRegistration())
         {
             log.debug("3.2.2 isAccountBlackListed");
-            if (!blockChainFacade.isAccountBlackListed(requestTradeMessage.getAccountID(), requestTradeMessage.getBankAccount()))
+            if (blockChainFacade.isAccountBlackListed(requestTradeMessage.getAccountID(), requestTradeMessage.getBankAccount()))
             {
-                verifyAndSignContract(requestTradeMessage);
+                offererPaymentProtocolListener.onFailure("Taker is blacklisted.");
             }
             else
             {
-                offererPaymentProtocolListener.onFailure("Taker is blacklisted.");
+                verifyAndSignContract(requestTradeMessage);
             }
         }
         else
@@ -330,9 +332,10 @@ public class OffererPaymentProtocol
     // Step 3.3  Verify and sign the contract
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void verifyAndSignContract(TradeMessage requestTradeMessage)
+    @SuppressWarnings("ConstantConditions")
+    private void verifyAndSignContract(@NotNull TradeMessage requestTradeMessage)
     {
-        contract = new Contract(offer,
+        Contract contract = new Contract(offer,
                 trade.getTradeAmount(),
                 trade.getTakeOfferFeeTxID(),
                 user.getAccountID(),
@@ -342,7 +345,7 @@ public class OffererPaymentProtocol
                 offer.getMessagePubKeyAsHex(),
                 requestTradeMessage.getTakerMessagePubKey());
 
-        log.debug("3.3 offerer contract created: " + contract.toString());
+        log.debug("3.3 offerer contract created: " + contract);
 
         String contractAsJson = Utilities.objectToJson(contract);
         // log.debug("3.3 contractAsJson: " + contractAsJson);
@@ -369,7 +372,7 @@ public class OffererPaymentProtocol
     // Step 3.4  Sign and publish the deposit tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void signAndPublishDepositTx(TradeMessage requestTradeMessage)
+    private void signAndPublishDepositTx(@NotNull TradeMessage requestTradeMessage)
     {
         log.debug("3.4 signAndPublishDepositTx");
 
@@ -377,12 +380,13 @@ public class OffererPaymentProtocol
         String txConnOutAsHex = requestTradeMessage.getTxConnOutAsHex();
         String txScriptSigAsHex = requestTradeMessage.getTxScriptSigAsHex();
 
-        FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
+        @NotNull FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
         {
+            @SuppressWarnings("ConstantConditions")
             @Override
-            public void onSuccess(Transaction transaction)
+            public void onSuccess(@javax.annotation.Nullable Transaction transaction)
             {
-                log.info("3.4 signAndPublishDepositTx offererSignAndSendTx onSuccess:" + transaction.toString());
+                log.info("3.4 signAndPublishDepositTx offererSignAndSendTx onSuccess:" + transaction);
 
                 String txID = transaction.getHashAsString();
                 trade.setDepositTransaction(transaction);
@@ -392,7 +396,7 @@ public class OffererPaymentProtocol
             }
 
             @Override
-            public void onFailure(Throwable t)
+            public void onFailure(@NotNull Throwable t)
             {
                 log.error("3.4 signAndPublishDepositTx offererSignAndSendTx onFailure:" + t.getMessage());
             }
@@ -414,11 +418,11 @@ public class OffererPaymentProtocol
     // Step 3.5  Send tx id of published deposit tx to taker
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void sendDepositTxIdToTaker(Transaction transaction)
+    private void sendDepositTxIdToTaker(@NotNull Transaction transaction)
     {
         log.debug("3.5 sendDepositTxIdToTaker");
 
-        TradeMessageListener listener = new TradeMessageListener()
+        @NotNull TradeMessageListener listener = new TradeMessageListener()
         {
             @Override
             public void onResult()
@@ -434,7 +438,7 @@ public class OffererPaymentProtocol
                 offererPaymentProtocolListener.onFailure("sendDepositTxAndDataForContract onSendTradingMessageFailed");
             }
         };
-        TradeMessage tradeMessage = new TradeMessage(TradeMessageType.DEPOSIT_TX_PUBLISHED, trade.getId(), Utils.bytesToHexString(transaction.bitcoinSerialize()));
+        @NotNull TradeMessage tradeMessage = new TradeMessage(TradeMessageType.DEPOSIT_TX_PUBLISHED, trade.getId(), Utils.bytesToHexString(transaction.bitcoinSerialize()));
         log.debug("3.5  sendTradingMessage");
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
 
@@ -452,7 +456,7 @@ public class OffererPaymentProtocol
     // Step 3.7  We setup a listener for block chain confirmation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupListenerForBlockChainConfirmation(Transaction transaction)
+    private void setupListenerForBlockChainConfirmation(@NotNull Transaction transaction)
     {
         log.debug("3.7  setupListenerForBlockChainConfirmation");
 
@@ -463,7 +467,7 @@ public class OffererPaymentProtocol
         transaction.getConfidence().addEventListener(new TransactionConfidence.Listener()
                                                      {
                                                          @Override
-                                                         public void onConfidenceChanged(Transaction tx, ChangeReason reason)
+                                                         public void onConfidenceChanged(@NotNull Transaction tx, ChangeReason reason)
                                                          {
                                                              if (reason == ChangeReason.SEEN_PEERS)
                                                              {
@@ -491,9 +495,9 @@ public class OffererPaymentProtocol
     // Step 3.8  We check if the block chain confirmation is >= 1
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void updateConfirmation(TransactionConfidence confidence)
+    private void updateConfirmation(@NotNull TransactionConfidence confidence)
     {
-        log.debug("3.8  updateConfirmation " + confidence.toString());
+        log.debug("3.8  updateConfirmation " + confidence);
         offererPaymentProtocolListener.onDepositTxConfirmedUpdate(confidence);
     }
 
@@ -516,11 +520,12 @@ public class OffererPaymentProtocol
     // Step 3.10  User clicked the "bank transfer inited" button, so we tell the peer that we started the bank tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("ConstantConditions")
     public void bankTransferInited()
     {
         log.debug("3.10 bankTransferInited");
 
-        TradeMessageListener listener = new TradeMessageListener()
+        @NotNull TradeMessageListener listener = new TradeMessageListener()
         {
             @Override
             public void onResult()
@@ -542,21 +547,22 @@ public class OffererPaymentProtocol
         {
             BigInteger collateral = trade.getCollateralAmount();
             BigInteger offererPaybackAmount = trade.getTradeAmount().add(collateral);
+            //noinspection UnnecessaryLocalVariable
             BigInteger takerPaybackAmount = collateral;
 
-            log.debug("offererPaybackAmount " + offererPaybackAmount.toString());
-            log.debug("takerPaybackAmount " + takerPaybackAmount.toString());
+            log.debug("offererPaybackAmount " + offererPaybackAmount);
+            log.debug("takerPaybackAmount " + takerPaybackAmount);
             log.debug("depositTransaction.getHashAsString() " + depositTransaction.getHashAsString());
             log.debug("takerPayoutAddress " + takerPayoutAddress);
             log.debug("walletFacade.offererCreatesAndSignsPayoutTx");
-            Pair<ECKey.ECDSASignature, String> result = walletFacade.offererCreatesAndSignsPayoutTx(depositTransaction.getHashAsString(), offererPaybackAmount, takerPaybackAmount, takerPayoutAddress, trade.getId());
+            @NotNull Pair<ECKey.ECDSASignature, String> result = walletFacade.offererCreatesAndSignsPayoutTx(depositTransaction.getHashAsString(), offererPaybackAmount, takerPaybackAmount, takerPayoutAddress, trade.getId());
 
             ECKey.ECDSASignature offererSignature = result.getKey();
             String offererSignatureR = offererSignature.r.toString();
             String offererSignatureS = offererSignature.s.toString();
             String depositTxAsHex = result.getValue();
             String offererPayoutAddress = walletFacade.getAddressInfoByTradeID(trade.getId()).getAddressString();
-            TradeMessage tradeMessage = new TradeMessage(TradeMessageType.BANK_TX_INITED, trade.getId(),
+            @NotNull TradeMessage tradeMessage = new TradeMessage(TradeMessageType.BANK_TX_INITED, trade.getId(),
                     depositTxAsHex,
                     offererSignatureR,
                     offererSignatureS,
@@ -567,8 +573,8 @@ public class OffererPaymentProtocol
             log.debug("depositTxAsHex " + depositTxAsHex);
             log.debug("offererSignatureR " + offererSignatureR);
             log.debug("offererSignatureS " + offererSignatureS);
-            log.debug("offererPaybackAmount " + offererPaybackAmount.toString());
-            log.debug("takerPaybackAmount " + takerPaybackAmount.toString());
+            log.debug("offererPaybackAmount " + offererPaybackAmount);
+            log.debug("takerPaybackAmount " + takerPaybackAmount);
             log.debug("offererPayoutAddress " + offererPayoutAddress);
 
             log.debug("3.10  sendTradingMessage BANK_TX_INITED");
@@ -590,7 +596,7 @@ public class OffererPaymentProtocol
     // Step 3.14  We received the payout tx. Trade is completed
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onPayoutTxPublished(TradeMessage tradeMessage)
+    public void onPayoutTxPublished(@NotNull TradeMessage tradeMessage)
     {
         log.debug("3.14  onPayoutTxPublished");
         log.debug("3.14  TRADE COMPLETE!!!!!!!!!!!");
@@ -606,6 +612,7 @@ public class OffererPaymentProtocol
     private double getProgress()
     {
         currentStep++;
+        int numberOfSteps = 10;
         return (double) currentStep / (double) numberOfSteps;
     }
 

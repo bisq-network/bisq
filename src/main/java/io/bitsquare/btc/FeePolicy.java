@@ -3,6 +3,7 @@ package io.bitsquare.btc;
 import com.google.bitcoin.core.*;
 import com.google.inject.Inject;
 import java.math.BigInteger;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,7 @@ public class FeePolicy
     }
 
     //TODO other users or dev address? use donation option list? (dev, other users, wikileaks, tor, sub projects (bitcoinj, tomp2p,...)...)
+    @Nullable
     public Address getAddressForRegistrationFee()
     {
         try
@@ -39,6 +41,7 @@ public class FeePolicy
     }
 
     //TODO get address form arbitrator list
+    @Nullable
     public Address getAddressForCreateOfferFee()
     {
         try
@@ -52,6 +55,7 @@ public class FeePolicy
     }
 
     //TODO get address form the intersection of  both traders arbitrator lists
+    @Nullable
     public Address getAddressForTakeOfferFee()
     {
         try

@@ -9,7 +9,9 @@ import javafx.application.Platform;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 import org.controlsfx.dialog.Dialogs;
+import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class Popups
 {
 
@@ -37,7 +39,7 @@ public class Popups
 
     public static Action openConfirmPopup(String title, String message, String masthead)
     {
-        List<Action> actions = new ArrayList<>();
+        @NotNull List<Action> actions = new ArrayList<>();
         actions.add(Dialog.Actions.OK);
         actions.add(Dialog.Actions.CANCEL);
         return Dialogs.create()
@@ -113,12 +115,13 @@ public class Popups
     }
 
     // Support handling of uncaught exception from any thread (also non gui thread)
-    public static void handleUncaughtExceptions(Throwable throwable)
+    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+    public static void handleUncaughtExceptions(@NotNull Throwable throwable)
     {
         // while dev
         throwable.printStackTrace();
 
-        Runnable runnable = () ->
+        @NotNull Runnable runnable = () ->
         {
             if (Throwables.getRootCause(throwable) instanceof BlockStoreException)
             {
@@ -148,7 +151,7 @@ public class Popups
         openWarningPopup("Not enough money available", "There is not enough money available. Please pay in first to your wallet.", null);
     }
 
-    public static Action openRegistrationMissingPopup(String title, String message, String masthead, List<Dialogs.CommandLink> commandLinks, int selectedIndex)
+    public static Action openRegistrationMissingPopup(String title, String message, String masthead, @NotNull List<Dialogs.CommandLink> commandLinks, int selectedIndex)
     {
         return Dialogs.create()
                 .owner(BitSquare.getStage())

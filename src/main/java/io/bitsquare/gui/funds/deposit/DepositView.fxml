@@ -14,7 +14,7 @@
             <TableColumn text="Label" fx:id="labelColumn" minWidth="100" sortable="false"/>
             <TableColumn text="Address" fx:id="addressColumn" minWidth="240" sortable="false">
                 <cellValueFactory>
-                    <PropertyValueFactory property="address"/>
+                    <PropertyValueFactory property="addressString"/>
                 </cellValueFactory>
             </TableColumn>
             <TableColumn text="Balance" fx:id="balanceColumn" minWidth="50" sortable="false"/>

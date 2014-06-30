@@ -12,13 +12,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class BitSquareWalletAppKit extends WalletAppKit
 {
 
-    public BitSquareWalletAppKit(NetworkParameters params, File directory, String filePrefix)
+    public BitSquareWalletAppKit(NetworkParameters params, File directory)
     {
-        super(params, directory, filePrefix);
+        super(params, directory, WalletFacade.WALLET_PREFIX);
     }
 
     @Override
@@ -32,10 +34,10 @@ public class BitSquareWalletAppKit extends WalletAppKit
                 throw new IOException("Could not create named directory.");
             }
         }
-        FileInputStream walletStream = null;
+        @Nullable FileInputStream walletStream = null;
         try
         {
-            File chainFile = new File(directory, filePrefix + ".spvchain");
+            @NotNull File chainFile = new File(directory, filePrefix + ".spvchain");
             boolean chainFileExists = chainFile.exists();
             vWalletFile = new File(directory, filePrefix + ".wallet");
             boolean shouldReplayWallet = vWalletFile.exists() && !chainFileExists;
@@ -50,8 +52,8 @@ public class BitSquareWalletAppKit extends WalletAppKit
                 long time = Long.MAX_VALUE;
                 if (vWalletFile.exists())
                 {
-                    Wallet wallet = new BitSquareWallet(params);
-                    FileInputStream stream = new FileInputStream(vWalletFile);
+                    @NotNull Wallet wallet = new BitSquareWallet(params);
+                    @NotNull FileInputStream stream = new FileInputStream(vWalletFile);
                     new WalletProtobufSerializer().readWallet(WalletProtobufSerializer.parseToProto(stream), wallet);
                     time = wallet.getEarliestKeyCreationTime();
                 }
@@ -102,23 +104,24 @@ public class BitSquareWalletAppKit extends WalletAppKit
                 // Make sure we shut down cleanly.
                 installShutdownHook();
                 // TODO: Be able to use the provided download listener when doing a blocking startup.
-                final DownloadListener listener = new DownloadListener();
+                @NotNull final DownloadListener listener = new DownloadListener();
                 vPeerGroup.startBlockChainDownload(listener);
                 listener.await();
             }
             else
             {
+                //TODO
                 Futures.addCallback(vPeerGroup.start(), new FutureCallback<State>()
                 {
                     @Override
                     public void onSuccess(State result)
                     {
-                        final PeerEventListener l = downloadListener == null ? new DownloadListener() : downloadListener;
+                        @NotNull final PeerEventListener l = downloadListener == null ? new DownloadListener() : downloadListener;
                         vPeerGroup.startBlockChainDownload(l);
                     }
 
                     @Override
-                    public void onFailure(Throwable t)
+                    public void onFailure(@NotNull Throwable t)
                     {
                         throw new RuntimeException(t);
                     }

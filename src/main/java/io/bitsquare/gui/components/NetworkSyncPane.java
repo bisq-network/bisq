@@ -6,10 +6,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.HBox;
 import javafx.util.Duration;
+import org.jetbrains.annotations.NotNull;
 
 public class NetworkSyncPane extends HBox
 {
+    @NotNull
     private final ProgressBar networkSyncProgressBar;
+    @NotNull
     private final Label networkSyncInfoLabel;
 
     public NetworkSyncPane()
@@ -34,7 +37,7 @@ public class NetworkSyncPane extends HBox
         networkSyncInfoLabel.setText("Sync with network: Done");
         networkSyncProgressBar.setProgress(1);
 
-        FadeTransition fade = new FadeTransition(Duration.millis(700), this);
+        @NotNull FadeTransition fade = new FadeTransition(Duration.millis(700), this);
         fade.setToValue(0.0);
         fade.setCycleCount(1);
         fade.setInterpolator(Interpolator.EASE_BOTH);

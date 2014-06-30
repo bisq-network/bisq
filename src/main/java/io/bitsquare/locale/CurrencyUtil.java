@@ -2,12 +2,14 @@ package io.bitsquare.locale;
 
 import java.text.NumberFormat;
 import java.util.*;
+import org.jetbrains.annotations.NotNull;
 
 public class CurrencyUtil
 {
+    @NotNull
     public static List<Currency> getAllCurrencies()
     {
-        ArrayList<Currency> mainCurrencies = new ArrayList<>();
+        final ArrayList<Currency> mainCurrencies = new ArrayList<>();
         mainCurrencies.add(Currency.getInstance("USD"));
         mainCurrencies.add(Currency.getInstance("EUR"));
         mainCurrencies.add(Currency.getInstance("CNY"));
@@ -22,10 +24,10 @@ public class CurrencyUtil
         Set<Currency> allCurrenciesSet = Currency.getAvailableCurrencies();
 
         allCurrenciesSet.removeAll(mainCurrencies);
-        List<Currency> allCurrenciesList = new ArrayList<>(allCurrenciesSet);
+        final List<Currency> allCurrenciesList = new ArrayList<>(allCurrenciesSet);
         allCurrenciesList.sort((a, b) -> a.getCurrencyCode().compareTo(b.getCurrencyCode()));
 
-        List<Currency> resultList = new ArrayList<>(mainCurrencies);
+        final List<Currency> resultList = new ArrayList<>(mainCurrencies);
         resultList.addAll(allCurrenciesList);
 
         Currency defaultCurrency = Currency.getInstance(Locale.getDefault());
@@ -35,6 +37,7 @@ public class CurrencyUtil
         return resultList;
     }
 
+    @NotNull
     public static Currency getDefaultCurrency()
     {
         return NumberFormat.getNumberInstance(Locale.getDefault()).getCurrency();

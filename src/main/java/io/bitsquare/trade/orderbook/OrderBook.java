@@ -23,13 +23,15 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.storage.Data;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class OrderBook implements OrderBookListener
 {
     private static final Logger log = LoggerFactory.getLogger(OrderBook.class);
-    protected final ObservableList<OrderBookListItem> allOffers = FXCollections.observableArrayList();
+    private final ObservableList<OrderBookListItem> allOffers = FXCollections.observableArrayList();
     private final FilteredList<OrderBookListItem> filteredList = new FilteredList<>(allOffers);
     // FilteredList does not support sorting, so we need to wrap it to a SortedList
     private final SortedList<OrderBookListItem> offerList = new SortedList<>(filteredList);
@@ -75,20 +77,25 @@ public class OrderBook implements OrderBookListener
             messageFacade.getOffers(CurrencyUtil.getDefaultCurrency().getCurrencyCode());
     }
 
-    public void removeOffer(Offer offer)
+    public void removeOffer(@NotNull Offer offer)
     {
-        trading.removeOffer(offer);
+        try
+        {
+            trading.removeOffer(offer);
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
         messageFacade.removeOffer(offer);
     }
 
-    public void applyFilter(OrderBookFilter orderBookFilter)
+    public void applyFilter(@Nullable OrderBookFilter orderBookFilter)
     {
         filteredList.setPredicate(orderBookListItem -> {
-            Offer offer = orderBookListItem.getOffer();
-            BankAccount currentBankAccount = user.getCurrentBankAccount();
+            @NotNull Offer offer = orderBookListItem.getOffer();
+            @Nullable BankAccount currentBankAccount = user.getCurrentBankAccount();
 
             if (orderBookFilter == null
-                    || offer == null
                     || currentBankAccount == null
                     || orderBookFilter.getDirection() == null)
                 return false;
@@ -125,6 +132,7 @@ public class OrderBook implements OrderBookListener
             boolean arbitratorResult = arbitratorInList(offer.getArbitrator(), settings.getAcceptedArbitrators());
 
 
+            //noinspection UnnecessaryLocalVariable
             boolean result = currencyResult
                     && countryResult
                     && languageResult
@@ -170,41 +178,41 @@ public class OrderBook implements OrderBookListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onOfferAdded(Data offerData, boolean success)
+    public void onOfferAdded(@NotNull Data offerData, boolean success)
     {
         try
         {
             Object offerDataObject = offerData.getObject();
             if (offerDataObject instanceof Offer)
             {
-                Offer offer = (Offer) offerDataObject;
+                @NotNull Offer offer = (Offer) offerDataObject;
                 allOffers.add(new OrderBookListItem(offer));
             }
-        } catch (ClassNotFoundException | IOException e)
+        } catch (@NotNull ClassNotFoundException | IOException e)
         {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
     }
 
     @Override
-    public void onOffersReceived(Map<Number160, Data> dataMap, boolean success)
+    public void onOffersReceived(@Nullable Map<Number160, Data> dataMap, boolean success)
     {
         if (success && dataMap != null)
         {
             allOffers.clear();
 
-            for (Data offerData : dataMap.values())
+            for (@NotNull Data offerData : dataMap.values())
             {
                 try
                 {
                     Object offerDataObject = offerData.getObject();
                     if (offerDataObject instanceof Offer)
                     {
-                        Offer offer = (Offer) offerDataObject;
-                        OrderBookListItem orderBookListItem = new OrderBookListItem(offer);
+                        @NotNull Offer offer = (Offer) offerDataObject;
+                        @NotNull OrderBookListItem orderBookListItem = new OrderBookListItem(offer);
                         allOffers.add(orderBookListItem);
                     }
-                } catch (ClassNotFoundException | IOException e)
+                } catch (@NotNull ClassNotFoundException | IOException e)
                 {
                     e.printStackTrace();
                 }
@@ -217,7 +225,7 @@ public class OrderBook implements OrderBookListener
     }
 
     @Override
-    public void onOfferRemoved(Data offerData, boolean success)
+    public void onOfferRemoved(@NotNull Data offerData, boolean success)
     {
         if (success)
         {
@@ -226,10 +234,10 @@ public class OrderBook implements OrderBookListener
                 Object offerDataObject = offerData.getObject();
                 if (offerDataObject instanceof Offer)
                 {
-                    Offer offer = (Offer) offerDataObject;
+                    @NotNull Offer offer = (Offer) offerDataObject;
                     allOffers.removeIf(orderBookListItem -> orderBookListItem.getOffer().getId().equals(offer.getId()));
                 }
-            } catch (ClassNotFoundException | IOException e)
+            } catch (@NotNull ClassNotFoundException | IOException e)
             {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
@@ -245,6 +253,7 @@ public class OrderBook implements OrderBookListener
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @NotNull
     public SortedList<OrderBookListItem> getOfferList()
     {
         return offerList;
@@ -255,9 +264,9 @@ public class OrderBook implements OrderBookListener
     // Private Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean countryInList(Country countryToMatch, List<Country> list)
+    private boolean countryInList(@NotNull Country countryToMatch, @NotNull List<Country> list)
     {
-        for (Country country : list)
+        for (@NotNull Country country : list)
         {
             if (country.getCode().equals(countryToMatch.getCode()))
                 return true;
@@ -265,11 +274,11 @@ public class OrderBook implements OrderBookListener
         return false;
     }
 
-    private boolean languagesInList(List<Locale> list1, List<Locale> list2)
+    private boolean languagesInList(@NotNull List<Locale> list1, @NotNull List<Locale> list2)
     {
-        for (Locale locale1 : list2)
+        for (@NotNull Locale locale1 : list2)
         {
-            for (Locale locale2 : list1)
+            for (@NotNull Locale locale2 : list1)
             {
                 if (locale1.getLanguage().equals(locale2.getLanguage()))
                     return true;
@@ -278,15 +287,15 @@ public class OrderBook implements OrderBookListener
         return false;
     }
 
-    private boolean arbitratorInList(Arbitrator arbitratorToMatch, List<Arbitrator> list)
+    private boolean arbitratorInList(@Nullable Arbitrator arbitratorToMatch, @NotNull List<Arbitrator> list)
     {
         if (arbitratorToMatch != null)
         {
-            for (Arbitrator arbitrator : list)
+            for (@NotNull Arbitrator arbitrator : list)
             {
                 try
                 {
-                    if (arbitrator.getUID().equals(arbitratorToMatch.getUID()))
+                    if (arbitrator.getId().equals(arbitratorToMatch.getId()))
                         return true;
                 } catch (Exception e)
                 {
