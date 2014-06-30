@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
+import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.TradeMessage;
 import io.bitsquare.storage.Storage;
@@ -114,12 +115,14 @@ public class Trading
         messageFacade.removeOffer(offer);
     }
 
+    public boolean isOfferTradable(@NotNull Offer offer)
+    {
+        return !trades.containsKey(offer.getId());
+    }
+
     @NotNull
     public Trade createTrade(@NotNull Offer offer)
     {
-        if (trades.containsKey(offer.getId()))
-            throw new IllegalStateException("trades contains already a trade with the ID " + offer.getId());
-
         @NotNull Trade trade = new Trade(offer);
         trades.put(offer.getId(), trade);
         //TODO for testing
@@ -161,53 +164,60 @@ public class Trading
     public void createOffererPaymentProtocol(@NotNull TradeMessage tradeMessage, PeerAddress sender)
     {
         Offer offer = myOffers.get(tradeMessage.getOfferUID());
-        @NotNull Trade trade = createTrade(offer);
-        @NotNull OffererPaymentProtocol offererPaymentProtocol = addOffererPaymentProtocol(trade, new OffererPaymentProtocolListener()
+        if (isOfferTradable(offer))
         {
-            @Override
-            public void onProgress(double progress)
+            @NotNull Trade trade = createTrade(offer);
+            @NotNull OffererPaymentProtocol offererPaymentProtocol = addOffererPaymentProtocol(trade, new OffererPaymentProtocolListener()
             {
-                //log.debug("onProgress " + progress);
-            }
+                @Override
+                public void onProgress(double progress)
+                {
+                    //log.debug("onProgress " + progress);
+                }
 
-            @Override
-            public void onFailure(String failureMessage)
-            {
-                log.warn(failureMessage);
-            }
+                @Override
+                public void onFailure(String failureMessage)
+                {
+                    log.warn(failureMessage);
+                }
 
-            @Override
-            public void onDepositTxPublished(String depositTxID)
-            {
-                log.debug("trading onDepositTxPublished " + depositTxID);
-            }
+                @Override
+                public void onDepositTxPublished(String depositTxID)
+                {
+                    log.debug("trading onDepositTxPublished " + depositTxID);
+                }
 
-            @Override
-            public void onDepositTxConfirmedUpdate(TransactionConfidence confidence)
-            {
-                log.debug("trading onDepositTxConfirmedUpdate");
-            }
+                @Override
+                public void onDepositTxConfirmedUpdate(TransactionConfidence confidence)
+                {
+                    log.debug("trading onDepositTxConfirmedUpdate");
+                }
 
-            @Override
-            public void onPayoutTxPublished(String payoutTxAsHex)
-            {
-                @NotNull Transaction payoutTx = new Transaction(walletFacade.getWallet().getParams(), Utils.parseAsHexOrBase58(payoutTxAsHex));
-                trade.setPayoutTransaction(payoutTx);
-                trade.setState(Trade.State.COMPLETED);
-                log.debug("trading onPayoutTxPublished");
-            }
+                @Override
+                public void onPayoutTxPublished(String payoutTxAsHex)
+                {
+                    @NotNull Transaction payoutTx = new Transaction(walletFacade.getWallet().getParams(), Utils.parseAsHexOrBase58(payoutTxAsHex));
+                    trade.setPayoutTransaction(payoutTx);
+                    trade.setState(Trade.State.COMPLETED);
+                    log.debug("trading onPayoutTxPublished");
+                }
 
-            @Override
-            public void onDepositTxConfirmedInBlockchain()
-            {
-                log.debug("trading onDepositTxConfirmedInBlockchain");
-            }
+                @Override
+                public void onDepositTxConfirmedInBlockchain()
+                {
+                    log.debug("trading onDepositTxConfirmedInBlockchain");
+                }
 
-        });
+            });
 
-        // the handler was not called there because the object was not created when the event occurred (and therefor no listener)
-        // will probably created earlier, so let it for the moment like that....
-        offererPaymentProtocol.onTakeOfferRequested(sender);
+            // the handler was not called there because the object was not created when the event occurred (and therefor no listener)
+            // will probably created earlier, so let it for the moment like that....
+            offererPaymentProtocol.onTakeOfferRequested(sender);
+        }
+        else
+        {
+            Popups.openWarningPopup("Offer already taken", "You have that offer already taken. Find that trade under Orders/Open or Pending.");
+        }
     }
 
 

@@ -86,7 +86,6 @@ public class OrderBook implements OrderBookListener
         {
             e.printStackTrace();
         }
-        messageFacade.removeOffer(offer);
     }
 
     public void applyFilter(@Nullable OrderBookFilter orderBookFilter)

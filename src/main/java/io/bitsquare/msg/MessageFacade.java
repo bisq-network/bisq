@@ -45,7 +45,6 @@ public class MessageFacade
     private static final Logger log = LoggerFactory.getLogger(MessageFacade.class);
     private static final int MASTER_PEER_PORT = 5000;
     @NotNull
-    private static String MASTER_PEER_IP = "192.168.1.33";
     private final List<OrderBookListener> orderBookListeners = new ArrayList<>();
     private final List<TakeOfferRequestListener> takeOfferRequestListeners = new ArrayList<>();
     private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
@@ -57,7 +56,6 @@ public class MessageFacade
     private Peer myPeer;
     @Nullable
     private KeyPair keyPair;
-    private Peer masterPeer;
     private Long lastTimeStamp = -3L;
 
 
@@ -86,9 +84,9 @@ public class MessageFacade
     public void init()
     {
         int port = Bindings.MAX_PORT - Math.abs(new Random().nextInt()) % (Bindings.MAX_PORT - Bindings.MIN_DYN_PORT);
-        if ("taker".equals(BitSquare.ID))
+        if (BitSquare.ID.contains("taker"))
             port = 4501;
-        else if ("offerer".equals(BitSquare.ID))
+        else if (BitSquare.ID.contains("offerer"))
             port = 4500;
 
         try
@@ -109,9 +107,6 @@ public class MessageFacade
     {
         if (myPeer != null)
             myPeer.shutdown();
-
-        if (masterPeer != null)
-            masterPeer.shutdown();
     }
 
 
@@ -272,13 +267,13 @@ public class MessageFacade
             @Override
             public void operationComplete(@NotNull BaseFuture future) throws Exception
             {
-                Data data = removeFuture.getData();
+                @NotNull Data data = removeFuture.getData();
                 Platform.runLater(() -> onOfferRemoved(data, future.isSuccess(), locationKey));
             }
         });
     }
 
-    private void onOfferRemoved(Data data, boolean success, @NotNull Number160 locationKey)
+    private void onOfferRemoved(@NotNull Data data, boolean success, @NotNull Number160 locationKey)
     {
         log.debug("onOfferRemoved");
         setDirty(locationKey);
@@ -595,7 +590,7 @@ public class MessageFacade
                                                if (sendFuture.isSuccess())
                                                {
                                                    @NotNull final String pong = (String) sendFuture.getObject();
-                                                   Platform.runLater(() -> onResponseFromPing(pong.equals(PONG)));
+                                                   Platform.runLater(() -> onResponseFromPing(PONG.equals(pong)));
                                                }
                                                else
                                                {
@@ -703,7 +698,7 @@ public class MessageFacade
         keyPair = DSAKeyUtil.getKeyPair();
         myPeer = new PeerMaker(keyPair).setPorts(port).makeAndListen();
         final FutureBootstrap futureBootstrap = myPeer.bootstrap().setBroadcast().setPorts(MASTER_PEER_PORT).start();
-        // futureBootstrap.awaitUninterruptibly();
+        futureBootstrap.awaitUninterruptibly();
         futureBootstrap.addListener(new BaseFutureAdapter<BaseFuture>()
         {
             @Override
@@ -713,7 +708,7 @@ public class MessageFacade
                 {
                     PeerAddress masterPeerAddress = futureBootstrap.getBootstrapTo().iterator().next();
                     final FutureDiscover futureDiscover = myPeer.discover().setPeerAddress(masterPeerAddress).start();
-                    //futureDiscover.awaitUninterruptibly();
+                    futureDiscover.awaitUninterruptibly();
                     futureDiscover.addListener(new BaseFutureListener<BaseFuture>()
                     {
                         @Override
@@ -752,22 +747,27 @@ public class MessageFacade
 
     private void setupReplyHandler()
     {
-        myPeer.setObjectDataReply((sender, request) -> {
+       /* myPeer.setObjectDataReply((sender, request) -> {
             if (!sender.equals(myPeer.getPeerAddress()))
             {
                 Platform.runLater(() -> onMessage(request, sender));
             }
             //noinspection ReturnOfNull
             return null;
-        });
+        });  */
 
         //noinspection Convert2Lambda
         myPeer.setObjectDataReply(new ObjectDataReply()
         {
             @Nullable
             @Override
-            public Object reply(PeerAddress peerAddress, Object o) throws Exception
+            public Object reply(PeerAddress sender, Object request) throws Exception
             {
+                if (!sender.equals(myPeer.getPeerAddress()))
+                {
+                    Platform.runLater(() -> onMessage(request, sender));
+                }
+                //noinspection ReturnOfNull
                 return null;
             }
         });

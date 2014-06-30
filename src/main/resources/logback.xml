@@ -20,9 +20,9 @@
 
     <!--
        -->
-    <logger name="com.google.bitcoin.core.Wallet" level="DEBUG"/>
-    <logger name="com.google.bitcoin.core.MemoryPool" level="INFO" additivity="false"/>
-    <logger name="com.google.bitcoin.net.discovery.DnsDiscovery" level="INFO" additivity="false"/>
+    <logger name="com.google.bitcoin.core.Wallet" level="INFO"/>
+    <logger name="com.google.bitcoin.core.MemoryPool" level="WARN" additivity="false"/>
+    <logger name="com.google.bitcoin.net.discovery.DnsDiscovery" level="WARN" additivity="false"/>
 
     <logger name="com.google.bitcoin.core.DownloadListener" level="WARN" additivity="false"/>
     <logger name="com.google.bitcoin.core.TransactionOutput" level="WARN" additivity="false"/>

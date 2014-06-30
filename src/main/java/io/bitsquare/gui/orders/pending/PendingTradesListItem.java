@@ -6,17 +6,16 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class TradesTableItem extends OrderBookListItem
+public class PendingTradesListItem extends OrderBookListItem
 {
-    private static final Logger log = LoggerFactory.getLogger(TradesTableItem.class);
+    private static final Logger log = LoggerFactory.getLogger(PendingTradesListItem.class);
 
     @NotNull
     private final Trade trade;
 
-    private TradesTableItem(@NotNull Trade trade)
+    public PendingTradesListItem(@NotNull Trade trade)
     {
         super(trade.getOffer());
-
         this.trade = trade;
     }
 

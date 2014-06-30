@@ -1,13 +1,52 @@
 package io.bitsquare.gui.orders.pending;
 
+import com.google.bitcoin.core.ECKey;
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.Wallet;
+import com.google.bitcoin.core.WalletEventListener;
+import com.google.bitcoin.script.Script;
 import com.google.inject.Inject;
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bitsquare.bank.BankAccount;
+import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.btc.BtcFormatter;
+import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.util.BitSquareFormatter;
+import io.bitsquare.gui.util.ConfidenceDisplay;
+import io.bitsquare.gui.util.Icons;
+import io.bitsquare.locale.Country;
+import io.bitsquare.locale.Localisation;
+import io.bitsquare.trade.Direction;
+import io.bitsquare.trade.Offer;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.Trading;
+import java.math.BigInteger;
 import java.net.URL;
-import java.util.ResourceBundle;
+import java.util.*;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import org.jetbrains.annotations.NotNull;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,14 +54,40 @@ public class PendingTradeController implements Initializable, ChildController, H
 {
     private static final Logger log = LoggerFactory.getLogger(PendingTradeController.class);
 
+    private Trading trading;
+    private WalletFacade walletFacade;
+    private Trade currentTrade;
+    private NavigationController navigationController;
+    private Image buyIcon = Icons.getIconImage(Icons.BUY);
+    private Image sellIcon = Icons.getIconImage(Icons.SELL);
+    private ConfidenceDisplay confidenceDisplay;
+
+    @FXML
+    private VBox rootContainer;
+    @FXML
+    private TableView openTradesTable;
+    @FXML
+    private TableColumn<String, PendingTradesListItem> directionColumn, countryColumn, bankAccountTypeColumn, priceColumn, amountColumn, volumeColumn, statusColumn, selectColumn;
+    @FXML
+    private ConfidenceProgressIndicator progressIndicator;
+    @FXML
+    private Label txTitleLabel, txHeaderLabel, confirmationLabel, txIDCopyIcon, holderNameCopyIcon, primaryBankAccountIDCopyIcon, secondaryBankAccountIDCopyIcon, bankAccountDetailsHeaderLabel,
+            bankAccountTypeTitleLabel, holderNameTitleLabel, primaryBankAccountIDTitleLabel, secondaryBankAccountIDTitleLabel;
+    @FXML
+    private TextField txTextField, bankAccountTypeTextField, holderNameTextField, primaryBankAccountIDTextField, secondaryBankAccountIDTextField;
+    @FXML
+    private Button bankTransferInitedButton;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private PendingTradeController()
+    public PendingTradeController(Trading trading, WalletFacade walletFacade)
     {
+        this.trading = trading;
+        this.walletFacade = walletFacade;
     }
 
 
@@ -33,6 +98,7 @@ public class PendingTradeController implements Initializable, ChildController, H
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
+        awake();
     }
 
 
@@ -41,18 +107,15 @@ public class PendingTradeController implements Initializable, ChildController, H
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(@NotNull NavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
-        log.debug("setNavigationController" + this);
+        this.navigationController = navigationController;
     }
 
     @Override
     public void cleanup()
     {
-        log.debug("cleanup" + this);
     }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: Hibernate
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -66,18 +129,425 @@ public class PendingTradeController implements Initializable, ChildController, H
     @Override
     public void awake()
     {
+        Map<String, Trade> trades = trading.getTrades();
+        List<Trade> tradeList = new ArrayList<>(trades.values());
+        ObservableList<PendingTradesListItem> tradeItems = FXCollections.observableArrayList();
+        for (Iterator<Trade> iterator = tradeList.iterator(); iterator.hasNext(); )
+        {
+            Trade trade = iterator.next();
+            tradeItems.add(new PendingTradesListItem(trade));
+        }
+
+        setCountryColumnCellFactory();
+        setBankAccountTypeColumnCellFactory();
+        setDirectionColumnCellFactory();
+        setSelectColumnCellFactory();
+
+        openTradesTable.setItems(tradeItems);
+        openTradesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        openTradesTable.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (newValue instanceof PendingTradesListItem)
+            {
+                showTradeDetails((PendingTradesListItem) newValue);
+            }
+        });
+
+        trading.getNewTradeProperty().addListener(new ChangeListener<String>()
+        {
+            @Override
+            public void changed(ObservableValue<? extends String> observableValue, String oldTradeUid, String newTradeUid)
+            {
+                Trade newTrade = trading.getTrades().get(newTradeUid);
+                tradeItems.add(new PendingTradesListItem(newTrade));
+            }
+        });
+
+        initCopyIcons();
+
+        if (tradeItems.size() > 0)
+        {
+            openTradesTable.getSelectionModel().select(0);
+        }
+
+        tradeItems.addListener(new ListChangeListener<PendingTradesListItem>()
+        {
+            @Override
+            public void onChanged(Change<? extends PendingTradesListItem> change)
+            {
+                if (openTradesTable.getSelectionModel().getSelectedItem() == null && tradeItems.size() > 0)
+                {
+                    openTradesTable.getSelectionModel().select(0);
+                }
+            }
+        });
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // GUI handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void bankTransferInited(ActionEvent actionEvent)
+    {
+        trading.onBankTransferInited(currentTrade.getId());
+        bankTransferInitedButton.setDisable(true);
+    }
+
+    public void close(ActionEvent actionEvent)
+    {
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // GUI Event handlers
+    // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void showTradeDetails(PendingTradesListItem tradesTableItem)
+    {
+        fillData(tradesTableItem.getTrade());
+    }
+
+    private void updateTx(Transaction transaction)
+    {
+        txTextField.setText(transaction.getHashAsString());
+
+        confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, transaction, progressIndicator);
+
+        int depthInBlocks = transaction.getConfidence().getDepthInBlocks();
+        bankTransferInitedButton.setDisable(depthInBlocks == 0);
+
+        walletFacade.getWallet().addEventListener(new WalletEventListener()
+        {
+            @Override
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
+            {
+                int depthInBlocks = tx.getConfidence().getDepthInBlocks();
+                bankTransferInitedButton.setDisable(depthInBlocks == 0);
+            }
+
+            @Override
+            public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            {
+            }
+
+            @Override
+            public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            {
+            }
+
+            @Override
+            public void onReorganize(Wallet wallet)
+            {
+            }
+
+
+            @Override
+            public void onWalletChanged(Wallet wallet)
+            {
+            }
+
+            @Override
+            public void onKeysAdded(Wallet wallet, List<ECKey> keys)
+            {
+            }
+
+            @Override
+            public void onScriptsAdded(Wallet wallet, List<Script> scripts)
+            {
+            }
+        });
+    }
+
+    private void fillData(Trade trade)
+    {
+        currentTrade = trade;
+        Transaction transaction = trade.getDepositTransaction();
+        if (transaction == null)
+        {
+            trade.getDepositTxChangedProperty().addListener(new ChangeListener<Boolean>()
+            {
+                @Override
+                public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean aBoolean2)
+                {
+                    updateTx(trade.getDepositTransaction());
+                }
+            });
+        }
+        else
+        {
+            updateTx(trade.getDepositTransaction());
+        }
+
+        // back details
+        if (trade.getContract() != null)
+        {
+            setBankData(trade);
+        }
+        else
+        {
+            trade.getContractChangedProperty().addListener(new ChangeListener<Boolean>()
+            {
+                @Override
+                public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean aBoolean2)
+                {
+                    setBankData(trade);
+                }
+            });
+        }
+
+        // state
+        trade.getStateChangedProperty().addListener(new ChangeListener<String>()
+        {
+            @Override
+            public void changed(ObservableValue<? extends String> observableValue, String aString, String aString2)
+            {
+                setState(trade);
+            }
+        });
+    }
+
+    private void setState(Trade trade)
+    {
+        if (trade.getState() == Trade.State.COMPLETED)
+        {
+            Transaction transaction = trade.getPayoutTransaction();
+
+            confidenceDisplay.destroy();
+            confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, transaction, progressIndicator);
+
+            txTextField.setText(transaction.getHashAsString());
+
+            txHeaderLabel.setText("Payout transaction");
+            txTitleLabel.setText("Payout transaction ID:");
+
+            bankAccountDetailsHeaderLabel.setText("Summary");
+            bankAccountTypeTitleLabel.setText("You have bought (BTC):");
+            holderNameTitleLabel.setText("You have payed (" + trade.getOffer().getCurrency() + "):");
+            primaryBankAccountIDTitleLabel.setText("Total fees (offer fee + tx fee):");
+            secondaryBankAccountIDTitleLabel.setText("Refunded collateral:");
+
+            String fiatPayed = BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount()));
+
+            bankAccountTypeTextField.setText(BtcFormatter.satoshiToString(trade.getTradeAmount()));
+            holderNameTextField.setText(fiatPayed);
+            primaryBankAccountIDTextField.setText(BtcFormatter.satoshiToString(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+            secondaryBankAccountIDTextField.setText(BtcFormatter.satoshiToString(trade.getCollateralAmount()));
+
+            holderNameCopyIcon.setVisible(false);
+            primaryBankAccountIDCopyIcon.setVisible(false);
+            secondaryBankAccountIDCopyIcon.setVisible(false);
+
+            bankTransferInitedButton.setVisible(false);
+        }
+    }
+
+    private void setBankData(Trade trade)
+    {
+        BankAccount bankAccount = trade.getContract().getTakerBankAccount();
+        bankAccountTypeTextField.setText(bankAccount.getBankAccountType().toString());
+        holderNameTextField.setText(bankAccount.getAccountHolderName());
+        primaryBankAccountIDTextField.setText(bankAccount.getAccountPrimaryID());
+        secondaryBankAccountIDTextField.setText(bankAccount.getAccountSecondaryID());
+    }
+
+    private void initCopyIcons()
+    {
+        AwesomeDude.setIcon(txIDCopyIcon, AwesomeIcon.COPY);
+        txIDCopyIcon.setOnMouseClicked(e -> {
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+            content.putString(txTextField.getText());
+            clipboard.setContent(content);
+        });
+
+        AwesomeDude.setIcon(holderNameCopyIcon, AwesomeIcon.COPY);
+        holderNameCopyIcon.setOnMouseClicked(e -> {
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+            content.putString(holderNameTextField.getText());
+            clipboard.setContent(content);
+        });
+
+        AwesomeDude.setIcon(primaryBankAccountIDCopyIcon, AwesomeIcon.COPY);
+        primaryBankAccountIDCopyIcon.setOnMouseClicked(e -> {
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+            content.putString(primaryBankAccountIDTextField.getText());
+            clipboard.setContent(content);
+        });
+
+        AwesomeDude.setIcon(secondaryBankAccountIDCopyIcon, AwesomeIcon.COPY);
+        secondaryBankAccountIDCopyIcon.setOnMouseClicked(e -> {
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+            content.putString(secondaryBankAccountIDTextField.getText());
+            clipboard.setContent(content);
+        });
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private Methods
+    // Table columns
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void setCountryColumnCellFactory()
+    {
+        countryColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
+        countryColumn.setCellFactory(new Callback<TableColumn<String, PendingTradesListItem>, TableCell<String, PendingTradesListItem>>()
+        {
+            @Override
+            public TableCell<String, PendingTradesListItem> call(TableColumn<String, PendingTradesListItem> directionColumn)
+            {
+                return new TableCell<String, PendingTradesListItem>()
+                {
+                    final HBox hBox = new HBox();
+
+                    {
+                        hBox.setSpacing(3);
+                        hBox.setAlignment(Pos.CENTER);
+                        setGraphic(hBox);
+                    }
+
+                    @Override
+                    public void updateItem(final PendingTradesListItem tradesTableItem, boolean empty)
+                    {
+                        super.updateItem(tradesTableItem, empty);
+
+                        hBox.getChildren().clear();
+                        if (tradesTableItem != null)
+                        {
+                            Country country = tradesTableItem.getTrade().getOffer().getBankAccountCountry();
+                            try
+                            {
+                                hBox.getChildren().add(Icons.getIconImageView("/images/countries/" + country.getCode().toLowerCase() + ".png"));
+
+                            } catch (Exception e)
+                            {
+                                log.warn("Country icon not found: " + "/images/countries/" + country.getCode().toLowerCase() + ".png country name: " + country.getName());
+                            }
+                            Tooltip.install(this, new Tooltip(country.getName()));
+                        }
+                    }
+                };
+            }
+        });
+    }
+
+    private void setBankAccountTypeColumnCellFactory()
+    {
+        bankAccountTypeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
+        bankAccountTypeColumn.setCellFactory(new Callback<TableColumn<String, PendingTradesListItem>, TableCell<String, PendingTradesListItem>>()
+        {
+            @Override
+            public TableCell<String, PendingTradesListItem> call(TableColumn<String, PendingTradesListItem> directionColumn)
+            {
+                return new TableCell<String, PendingTradesListItem>()
+                {
+                    @Override
+                    public void updateItem(final PendingTradesListItem tradesTableItem, boolean empty)
+                    {
+                        super.updateItem(tradesTableItem, empty);
+
+                        if (tradesTableItem != null)
+                        {
+                            BankAccountType bankAccountType = tradesTableItem.getTrade().getOffer().getBankAccountType();
+                            setText(Localisation.get(bankAccountType.toString()));
+                        }
+                        else
+                        {
+                            setText("");
+                        }
+                    }
+                };
+            }
+        });
+    }
+
+    private void setDirectionColumnCellFactory()
+    {
+        directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
+        directionColumn.setCellFactory(new Callback<TableColumn<String, PendingTradesListItem>, TableCell<String, PendingTradesListItem>>()
+        {
+            @Override
+            public TableCell<String, PendingTradesListItem> call(TableColumn<String, PendingTradesListItem> directionColumn)
+            {
+                return new TableCell<String, PendingTradesListItem>()
+                {
+                    final ImageView iconView = new ImageView();
+                    final Button button = new Button();
+
+                    {
+                        button.setGraphic(iconView);
+                        button.setMinWidth(70);
+                    }
+
+                    @Override
+                    public void updateItem(final PendingTradesListItem tradesTableItem, boolean empty)
+                    {
+                        super.updateItem(tradesTableItem, empty);
+
+                        if (tradesTableItem != null)
+                        {
+                            String title;
+                            Image icon;
+                            Offer offer = tradesTableItem.getTrade().getOffer();
+
+                            if (offer.getDirection() == Direction.SELL)
+                            {
+                                icon = buyIcon;
+                                title = BitSquareFormatter.formatDirection(Direction.BUY, true);
+                            }
+                            else
+                            {
+                                icon = sellIcon;
+                                title = BitSquareFormatter.formatDirection(Direction.SELL, true);
+                            }
+                            button.setDisable(true);
+                            iconView.setImage(icon);
+                            button.setText(title);
+                            setGraphic(button);
+                        }
+                        else
+                        {
+                            setGraphic(null);
+                        }
+                    }
+                };
+            }
+        });
+    }
+
+    private void setSelectColumnCellFactory()
+    {
+        selectColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
+        selectColumn.setCellFactory(new Callback<TableColumn<String, PendingTradesListItem>, TableCell<String, PendingTradesListItem>>()
+        {
+            @Override
+            public TableCell<String, PendingTradesListItem> call(TableColumn<String, PendingTradesListItem> directionColumn)
+            {
+                return new TableCell<String, PendingTradesListItem>()
+                {
+                    final Button button = new Button("Select");
+
+                    @Override
+                    public void updateItem(final PendingTradesListItem tradesTableItem, boolean empty)
+                    {
+                        super.updateItem(tradesTableItem, empty);
+
+                        if (tradesTableItem != null)
+                        {
+                            button.setOnAction(event -> showTradeDetails(tradesTableItem));
+                            setGraphic(button);
+                        }
+                        else
+                        {
+                            setGraphic(null);
+                        }
+                    }
+                };
+            }
+        });
+    }
 
 }
 

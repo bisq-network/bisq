@@ -234,8 +234,10 @@ public class TakerTradeController implements Initializable, ChildController
             return;
         }
 
-        trade = trading.createTrade(offer);
-        trade.setTradeAmount(BtcFormatter.stringValueToSatoshis(amountTextField.getText()));
+        if (trading.isOfferTradable(offer))
+        {
+            trade = trading.createTrade(offer);
+            trade.setTradeAmount(BtcFormatter.stringValueToSatoshis(amountTextField.getText()));
 
        /* if (!blockChainFacade.verifyAccountRegistration(offer.getAccountID()))
         {
@@ -249,36 +251,36 @@ public class TakerTradeController implements Initializable, ChildController
             return;
         }  */
 
-        amountTextField.setEditable(false);
+            amountTextField.setEditable(false);
 
-        gridPane.getChildren().clear();
+            gridPane.getChildren().clear();
 
-        row = -1;
-        FormBuilder.addHeaderLabel(gridPane, "Trade request inited", ++row, 0);
+            row = -1;
+            FormBuilder.addHeaderLabel(gridPane, "Trade request inited", ++row, 0);
 
-        Label statusTextField = FormBuilder.addLabel(gridPane, "Current activity:", "Request confirmation from offerer to take that offer.", ++row);
-        GridPane.setColumnSpan(statusTextField, 2);
-        FormBuilder.addLabel(gridPane, "Progress:", "", ++row);
-        progressBar = new ProgressBar();
-        progressBar.setProgress(0.0);
-        progressBar.setPrefWidth(300);
-        GridPane.setFillWidth(progressBar, true);
-        gridPane.add(progressBar, 1, row);
+            Label statusTextField = FormBuilder.addLabel(gridPane, "Current activity:", "Request confirmation from offerer to take that offer.", ++row);
+            GridPane.setColumnSpan(statusTextField, 2);
+            FormBuilder.addLabel(gridPane, "Progress:", "", ++row);
+            progressBar = new ProgressBar();
+            progressBar.setProgress(0.0);
+            progressBar.setPrefWidth(300);
+            GridPane.setFillWidth(progressBar, true);
+            gridPane.add(progressBar, 1, row);
 
-        FormBuilder.addLabel(gridPane, "Status:", "", ++row);
-        @NotNull ConfidenceProgressIndicator progressIndicator = new ConfidenceProgressIndicator();
-        progressIndicator.setPrefSize(20, 20);
-        progressIndicator.setLayoutY(2);
-        @NotNull Pane progressIndicatorHolder = new Pane();
-        progressIndicatorHolder.getChildren().addAll(progressIndicator);
-        gridPane.add(progressIndicatorHolder, 1, row);
+            FormBuilder.addLabel(gridPane, "Status:", "", ++row);
+            @NotNull ConfidenceProgressIndicator progressIndicator = new ConfidenceProgressIndicator();
+            progressIndicator.setPrefSize(20, 20);
+            progressIndicator.setLayoutY(2);
+            @NotNull Pane progressIndicatorHolder = new Pane();
+            progressIndicatorHolder.getChildren().addAll(progressIndicator);
+            gridPane.add(progressIndicatorHolder, 1, row);
 
-        TakerPaymentProtocol takerPaymentProtocol = trading.addTakerPaymentProtocol(trade, new TakerPaymentProtocolListener()
-        {
-            @Override
-            public void onProgress(double progress)
+            TakerPaymentProtocol takerPaymentProtocol = trading.addTakerPaymentProtocol(trade, new TakerPaymentProtocolListener()
             {
-                progressBar.setProgress(progress);
+                @Override
+                public void onProgress(double progress)
+                {
+                    progressBar.setProgress(progress);
 
                 /*switch (state)
                 {
@@ -301,34 +303,35 @@ public class TakerTradeController implements Initializable, ChildController
                         statusTextField.setText("Offer fee payed. Send offerer payment transaction ID for confirmation.");
                         break;
                 }  */
-            }
+                }
 
-            @Override
-            public void onFailure(String failureMessage)
-            {
-                log.warn(failureMessage);
-            }
+                @Override
+                public void onFailure(String failureMessage)
+                {
+                    log.warn(failureMessage);
+                }
 
-            @Override
-            public void onDepositTxPublished(String depositTxID)
-            {
-                buildDepositPublishedScreen(depositTxID);
-            }
+                @Override
+                public void onDepositTxPublished(String depositTxID)
+                {
+                    buildDepositPublishedScreen(depositTxID);
+                }
 
-            @Override
-            public void onBankTransferInited(@NotNull TradeMessage tradeMessage)
-            {
-                buildBankTransferInitedScreen(tradeMessage);
-            }
+                @Override
+                public void onBankTransferInited(@NotNull TradeMessage tradeMessage)
+                {
+                    buildBankTransferInitedScreen(tradeMessage);
+                }
 
-            @Override
-            public void onTradeCompleted(String hashAsString)
-            {
-                showSummary(hashAsString);
-            }
-        });
+                @Override
+                public void onTradeCompleted(String hashAsString)
+                {
+                    showSummary(hashAsString);
+                }
+            });
 
-        takerPaymentProtocol.takeOffer();
+            takerPaymentProtocol.takeOffer();
+        }
     }
 
     @SuppressWarnings("EmptyMethod")
