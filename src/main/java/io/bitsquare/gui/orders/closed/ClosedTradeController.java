@@ -7,7 +7,6 @@ import io.bitsquare.gui.NavigationController;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.Initializable;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +40,7 @@ public class ClosedTradeController implements Initializable, ChildController, Hi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(@NotNull NavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
         log.debug("setNavigationController" + this);
     }

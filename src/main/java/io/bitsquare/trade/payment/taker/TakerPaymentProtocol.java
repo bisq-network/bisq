@@ -22,8 +22,6 @@ import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
 import java.math.BigInteger;
 import net.tomp2p.peers.PeerAddress;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,11 +33,11 @@ public class TakerPaymentProtocol
 {
     private static final Logger log = LoggerFactory.getLogger(TakerPaymentProtocol.class);
 
-    @NotNull
+
     private final Trade trade;
     private final Offer offer;
     private final TakerPaymentProtocolListener takerPaymentProtocolListener;
-    @NotNull
+
     private final MessageFacade messageFacade;
     private final WalletFacade walletFacade;
     private final BlockChainFacade blockChainFacade;
@@ -53,9 +51,9 @@ public class TakerPaymentProtocol
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TakerPaymentProtocol(@NotNull Trade trade,
+    public TakerPaymentProtocol(Trade trade,
                                 TakerPaymentProtocolListener takerPaymentProtocolListener,
-                                @NotNull MessageFacade messageFacade,
+                                MessageFacade messageFacade,
                                 WalletFacade walletFacade,
                                 BlockChainFacade blockChainFacade,
                                 CryptoFacade cryptoFacade,
@@ -90,7 +88,7 @@ public class TakerPaymentProtocol
     private void findPeerAddress()
     {
         log.debug("1.1 findPeerAddress");
-        @NotNull AddressLookupListener addressLookupListener = new AddressLookupListener()
+        AddressLookupListener addressLookupListener = new AddressLookupListener()
         {
             @Override
             public void onResult(PeerAddress address)
@@ -127,7 +125,7 @@ public class TakerPaymentProtocol
     private void requestTakeOffer()
     {
         log.debug("1.2 requestTakeOffer");
-        @NotNull TradeMessageListener listener = new TradeMessageListener()
+        TradeMessageListener listener = new TradeMessageListener()
         {
             @Override
             public void onResult()
@@ -153,7 +151,7 @@ public class TakerPaymentProtocol
         takerPaymentProtocolListener.onProgress(getProgress());
 
         // Send the take offer request
-        @NotNull TradeMessage tradeMessage = new TradeMessage(TradeMessageType.REQUEST_TAKE_OFFER, trade.getId());
+        TradeMessage tradeMessage = new TradeMessage(TradeMessageType.REQUEST_TAKE_OFFER, trade.getId());
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);
     }
 
@@ -189,10 +187,10 @@ public class TakerPaymentProtocol
     // Step 2.1
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void payOfferFee(@NotNull Trade trade)
+    private void payOfferFee(Trade trade)
     {
         log.debug("2.1 payTakeOfferFee");
-        @NotNull FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
+        FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
         {
             @Override
             public void onSuccess(@javax.annotation.Nullable Transaction transaction)
@@ -210,7 +208,7 @@ public class TakerPaymentProtocol
             }
 
             @Override
-            public void onFailure(@NotNull Throwable t)
+            public void onFailure(Throwable t)
             {
                 log.debug("2.1 payTakeOfferFee onFailure");
                 takerPaymentProtocolListener.onFailure("payTakeOfferFee onFailure " + t.getMessage());
@@ -240,7 +238,7 @@ public class TakerPaymentProtocol
     private void sendTakerOfferFeeTxID(String takeOfferFeeTxID)
     {
         log.debug("2.2 sendTakerOfferFeeTxID");
-        @NotNull TradeMessageListener listener = new TradeMessageListener()
+        TradeMessageListener listener = new TradeMessageListener()
         {
             @Override
             public void onResult()
@@ -263,7 +261,7 @@ public class TakerPaymentProtocol
         takerPaymentProtocolListener.onProgress(getProgress());
 
         // 2.3. send request for the account details and send fee tx id so offerer can verify that the fee has been paid.
-        @NotNull TradeMessage tradeMessage = new TradeMessage(TradeMessageType.TAKE_OFFER_FEE_PAYED,
+        TradeMessage tradeMessage = new TradeMessage(TradeMessageType.TAKE_OFFER_FEE_PAYED,
                 trade.getId(),
                 trade.getTradeAmount(),
                 takeOfferFeeTxID,
@@ -281,7 +279,7 @@ public class TakerPaymentProtocol
     // Step 2.7  Incoming msg from offerer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onTakerDepositPaymentRequested(@NotNull TradeMessage requestTradeMessage)
+    public void onTakerDepositPaymentRequested(TradeMessage requestTradeMessage)
     {
         log.debug("2.7 onTakerDepositPaymentRequested");
         verifyOfferer(requestTradeMessage);
@@ -292,7 +290,7 @@ public class TakerPaymentProtocol
     // Step 2.8  Verify offerers account registration and against the blacklist
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void verifyOfferer(@NotNull TradeMessage requestTradeMessage)
+    private void verifyOfferer(TradeMessage requestTradeMessage)
     {
         log.debug("2.8 verifyOfferer");
         log.debug("2.8.1 verifyAccountRegistration");
@@ -319,7 +317,7 @@ public class TakerPaymentProtocol
     // Step 2.9  Create and sign the contract
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createAndSignContract(@NotNull TradeMessage requestTradeMessage)
+    private void createAndSignContract(TradeMessage requestTradeMessage)
     {
         log.debug("2.9 createAndSignContract");
         checkNotNull(offer);
@@ -361,7 +359,7 @@ public class TakerPaymentProtocol
     // Step 2.10  Pay in the funds to the deposit tx and sign it
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void payDeposit(@NotNull TradeMessage requestTradeMessage)
+    private void payDeposit(TradeMessage requestTradeMessage)
     {
         log.debug("2.10 payDeposit");
 
@@ -390,7 +388,7 @@ public class TakerPaymentProtocol
         log.debug("preparedOffererDepositTxAsHex " + preparedOffererDepositTxAsHex);
         try
         {
-            @NotNull Transaction signedTakerDepositTx = walletFacade.takerAddPaymentAndSignTx(takerInputAmount, msOutputAmount, offererPubKey, takerPubKey, arbitratorPubKey, preparedOffererDepositTxAsHex, trade.getId());
+            Transaction signedTakerDepositTx = walletFacade.takerAddPaymentAndSignTx(takerInputAmount, msOutputAmount, offererPubKey, takerPubKey, arbitratorPubKey, preparedOffererDepositTxAsHex, trade.getId());
             log.debug("2.10 deposit tx created: " + signedTakerDepositTx);
             long takerTxOutIndex = signedTakerDepositTx.getInput(1).getOutpoint().getIndex();
             sendSignedTakerDepositTxAsHex(signedTakerDepositTx, takerTxOutIndex, requestTradeMessage.getOffererTxOutIndex());
@@ -405,11 +403,11 @@ public class TakerPaymentProtocol
     // Step 2.11  Send the tx to the offerer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void sendSignedTakerDepositTxAsHex(@NotNull Transaction signedTakerDepositTx, long takerTxOutIndex, long offererTxOutIndex)
+    private void sendSignedTakerDepositTxAsHex(Transaction signedTakerDepositTx, long takerTxOutIndex, long offererTxOutIndex)
     {
         log.debug("2.11 sendSignedTakerDepositTxAsHex");
 
-        @NotNull TradeMessageListener listener = new TradeMessageListener()
+        TradeMessageListener listener = new TradeMessageListener()
         {
             @Override
             public void onResult()
@@ -429,7 +427,7 @@ public class TakerPaymentProtocol
 
         takerPaymentProtocolListener.onProgress(getProgress());
 
-        @Nullable BankAccount bankAccount = user.getCurrentBankAccount();
+        BankAccount bankAccount = user.getCurrentBankAccount();
         String accountID = user.getAccountID();
         String messagePubKey = user.getMessagePubKeyAsHex();
         String contractAsJson = trade.getContractAsJson();
@@ -445,7 +443,7 @@ public class TakerPaymentProtocol
         log.debug("2.10 txConnOutAsHex: " + txConnOutAsHex);
         log.debug("2.10 payoutAddress: " + payoutAddress);
 
-        @NotNull TradeMessage tradeMessage = new TradeMessage(TradeMessageType.REQUEST_OFFERER_DEPOSIT_PUBLICATION,
+        TradeMessage tradeMessage = new TradeMessage(TradeMessageType.REQUEST_OFFERER_DEPOSIT_PUBLICATION,
                 trade.getId(),
                 bankAccount,
                 accountID,
@@ -474,7 +472,7 @@ public class TakerPaymentProtocol
     // Step 3.6  Incoming msg from offerer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onDepositTxPublished(@NotNull TradeMessage tradeMessage)
+    public void onDepositTxPublished(TradeMessage tradeMessage)
     {
         log.debug("3.6 DepositTxID received: " + tradeMessage.getDepositTxAsHex());
 
@@ -508,10 +506,10 @@ public class TakerPaymentProtocol
     // Step 3.12  User clicked the "bank transfer received" button, so we release the funds for pay out
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void releaseBTC(@NotNull TradeMessage tradeMessage)
+    public void releaseBTC(TradeMessage tradeMessage)
     {
         log.debug("3.12 releaseBTC");
-        @NotNull FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
+        FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
         {
             @Override
             public void onSuccess(@javax.annotation.Nullable Transaction transaction)
@@ -524,7 +522,7 @@ public class TakerPaymentProtocol
             }
 
             @Override
-            public void onFailure(@NotNull Throwable t)
+            public void onFailure(Throwable t)
             {
                 log.error("######### 3.12 onFailure walletFacade.takerSignsAndSendsTx");
                 System.err.println("3.12 onFailure walletFacade.takerSignsAndSendsTx");
@@ -562,7 +560,7 @@ public class TakerPaymentProtocol
     void sendPayoutTxToOfferer(String payoutTxAsHex)
     {
         log.debug("3.13 sendPayoutTxToOfferer ");
-        @NotNull TradeMessageListener listener = new TradeMessageListener()
+        TradeMessageListener listener = new TradeMessageListener()
         {
             @Override
             public void onResult()
@@ -580,7 +578,7 @@ public class TakerPaymentProtocol
             }
         };
 
-        @NotNull TradeMessage tradeMessage = new TradeMessage(TradeMessageType.PAYOUT_TX_PUBLISHED, trade.getId());
+        TradeMessage tradeMessage = new TradeMessage(TradeMessageType.PAYOUT_TX_PUBLISHED, trade.getId());
         tradeMessage.setPayoutTxAsHex(payoutTxAsHex);
         log.debug("3.13 sendTradeMessage PAYOUT_TX_PUBLISHED");
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, listener);

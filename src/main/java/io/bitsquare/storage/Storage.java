@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.concurrent.GuardedBy;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +24,7 @@ public class Storage
 
     private final String prefix = BitSquare.ID + "_pref";
     private final File storageFile = FileUtil.getFile(prefix, "ser");
-    @NotNull
+
     @GuardedBy("lock")
     private Map<String, Serializable> rootMap = new HashMap<>();
     private boolean dirty;
@@ -74,49 +72,49 @@ public class Storage
     }
 
     // Map
-    public void write(@NotNull String key, @NotNull Map<String, ? extends Serializable> value)
+    public void write(String key, Map<String, ? extends Serializable> value)
     {
         write(key, (Serializable) value);
     }
 
-    public void write(@NotNull Object classInstance, @NotNull String propertyKey, @NotNull Map<String, ? extends Serializable> value)
+    public void write(Object classInstance, String propertyKey, Map<String, ? extends Serializable> value)
     {
         write(classInstance.getClass().getName() + "." + propertyKey, value);
     }
 
-    public void write(@NotNull Object classInstance, @NotNull Map<String, ? extends Serializable> value)
+    public void write(Object classInstance, Map<String, ? extends Serializable> value)
     {
         write(classInstance.getClass().getName(), value);
     }
 
     // List
-    public void write(@NotNull String key, @NotNull List<? extends Serializable> value)
+    public void write(String key, List<? extends Serializable> value)
     {
         write(key, (Serializable) value);
     }
 
-    public void write(@NotNull Object classInstance, @NotNull String propertyKey, @NotNull List<? extends Serializable> value)
+    public void write(Object classInstance, String propertyKey, List<? extends Serializable> value)
     {
         write(classInstance.getClass().getName() + "." + propertyKey, value);
     }
 
-    public void write(@NotNull Object classInstance, @NotNull List<? extends Serializable> value)
+    public void write(Object classInstance, List<? extends Serializable> value)
     {
         write(classInstance.getClass().getName(), value);
     }
 
     // Serializable
-    public void write(@NotNull Object classInstance, @NotNull String propertyKey, @NotNull Serializable value)
+    public void write(Object classInstance, String propertyKey, Serializable value)
     {
         write(classInstance.getClass().getName() + "." + propertyKey, value);
     }
 
-    public void write(@NotNull Object classInstance, @NotNull Serializable value)
+    public void write(Object classInstance, Serializable value)
     {
         write(classInstance.getClass().getName(), value);
     }
 
-    public void write(@NotNull String key, @NotNull Serializable value)
+    public void write(String key, Serializable value)
     {
         // log.trace("Write object with key = " + key + " / value = " + value);
         try
@@ -132,20 +130,19 @@ public class Storage
     }
 
 
-    @Nullable
-    public Serializable read(@NotNull Object classInstance)
+    public Serializable read(Object classInstance)
     {
         return read(classInstance.getClass().getName());
     }
 
-    @Nullable
-    public Serializable read(@NotNull Object classInstance, @NotNull String propertyKey)
+
+    public Serializable read(Object classInstance, String propertyKey)
     {
         return read(classInstance.getClass().getName() + "." + propertyKey);
     }
 
-    @Nullable
-    public Serializable read(@NotNull String key)
+
+    public Serializable read(String key)
     {
         try
         {
@@ -180,7 +177,7 @@ public class Storage
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
+
     private Map<String, Serializable> readRootMap()
     {
         try
@@ -205,12 +202,12 @@ public class Storage
                 }
             }
 
-        } catch (@NotNull FileNotFoundException e)
+        } catch (FileNotFoundException e)
         {
 
             log.trace("File not found is ok for the first run.");
             return null;
-        } catch (@NotNull ClassNotFoundException | IOException e2)
+        } catch (ClassNotFoundException | IOException e2)
         {
             e2.printStackTrace();
             log.error("Could not read rootMap. " + e2);
@@ -218,7 +215,7 @@ public class Storage
         }
     }
 
-    private void saveObjectToFile(@NotNull Serializable serializable)
+    private void saveObjectToFile(Serializable serializable)
     {
         try
         {
@@ -266,8 +263,8 @@ public class Storage
         }
     }
 
-    @Nullable
-    private Object readObjectFromFile(@NotNull File file) throws IOException, ClassNotFoundException
+
+    private Object readObjectFromFile(File file) throws IOException, ClassNotFoundException
     {
         lock.lock();
         try (final FileInputStream fileInputStream = new FileInputStream(file);

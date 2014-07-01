@@ -13,28 +13,26 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class WithdrawalListItem
 {
     private final StringProperty addressString = new SimpleStringProperty();
     private final BalanceListener balanceListener;
-    @NotNull
+
     private final Label balanceLabel;
-    @NotNull
+
     private final AddressEntry addressEntry;
-    @NotNull
+
     private final WalletFacade walletFacade;
     private final ConfidenceListener confidenceListener;
-    @NotNull
+
     private final ConfidenceProgressIndicator progressIndicator;
-    @NotNull
+
     private final Tooltip tooltip;
-    @Nullable
+
     private BigInteger balance;
 
-    public WithdrawalListItem(@NotNull AddressEntry addressEntry, @NotNull WalletFacade walletFacade)
+    public WithdrawalListItem(AddressEntry addressEntry, WalletFacade walletFacade)
     {
         this.addressEntry = addressEntry;
         this.walletFacade = walletFacade;
@@ -81,7 +79,7 @@ public class WithdrawalListItem
         walletFacade.removeBalanceListener(balanceListener);
     }
 
-    private void updateBalance(@Nullable BigInteger balance)
+    private void updateBalance(BigInteger balance)
     {
         this.balance = balance;
         if (balance != null)
@@ -90,7 +88,7 @@ public class WithdrawalListItem
         }
     }
 
-    private void updateConfidence(@Nullable TransactionConfidence confidence)
+    private void updateConfidence(TransactionConfidence confidence)
     {
         if (confidence != null)
         {
@@ -119,7 +117,7 @@ public class WithdrawalListItem
         }
     }
 
-    @Nullable
+
     public final String getLabel()
     {
         switch (addressEntry.getAddressContext())
@@ -137,7 +135,7 @@ public class WithdrawalListItem
         return "";
     }
 
-    @NotNull
+
     public final StringProperty addressStringProperty()
     {
         return this.addressString;
@@ -148,25 +146,25 @@ public class WithdrawalListItem
         return addressEntry.getAddress();
     }
 
-    @NotNull
+
     public AddressEntry getAddressEntry()
     {
         return addressEntry;
     }
 
-    @NotNull
+
     public ConfidenceProgressIndicator getProgressIndicator()
     {
         return progressIndicator;
     }
 
-    @NotNull
+
     public Label getBalanceLabel()
     {
         return balanceLabel;
     }
 
-    @Nullable
+
     public BigInteger getBalance()
     {
         return balance;

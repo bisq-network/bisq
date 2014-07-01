@@ -2,11 +2,10 @@ package io.bitsquare.locale;
 
 import java.text.NumberFormat;
 import java.util.*;
-import org.jetbrains.annotations.NotNull;
 
 public class CurrencyUtil
 {
-    @NotNull
+
     public static List<Currency> getAllCurrencies()
     {
         final ArrayList<Currency> mainCurrencies = new ArrayList<>();
@@ -37,7 +36,7 @@ public class CurrencyUtil
         return resultList;
     }
 
-    @NotNull
+
     public static Currency getDefaultCurrency()
     {
         return NumberFormat.getNumberInstance(Locale.getDefault()).getCurrency();

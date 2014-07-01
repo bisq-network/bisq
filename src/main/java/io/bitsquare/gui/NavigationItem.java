@@ -15,7 +15,7 @@ public enum NavigationItem
 
     ORDER_BOOK("/io/bitsquare/gui/market/orderbook/OrderBookView.fxml"),
     CREATE_OFFER("/io/bitsquare/gui/market/createOffer/CreateOfferView.fxml"),
-    TAKER_TRADE("/io/bitsquare/gui/market/trade/TakerTradeView.fxml"),
+    TAKE_OFFER("/io/bitsquare/gui/market/trade/TakeOfferView.fxml"),
     //OFFERER_TRADE("/io/bitsquare/gui/orders/OffererTradeView.fxml"),
 
     OFFER("/io/bitsquare/gui/orders/offer/OfferView.fxml"),

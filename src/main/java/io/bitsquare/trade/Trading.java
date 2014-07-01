@@ -22,7 +22,6 @@ import java.util.Map;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import net.tomp2p.peers.PeerAddress;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,16 +36,16 @@ public class Trading
     private final Map<String, OffererPaymentProtocol> offererPaymentProtocols = new HashMap<>();
     private final String storageKey;
     private final User user;
-    @NotNull
+
     private final Storage storage;
     private final MessageFacade messageFacade;
     private final BlockChainFacade blockChainFacade;
     private final WalletFacade walletFacade;
     private final CryptoFacade cryptoFacade;
     private final StringProperty newTradeProperty = new SimpleStringProperty();
-    @NotNull
+
     private Map<String, Offer> myOffers = new HashMap<>();
-    @NotNull
+
     private Map<String, Trade> trades = new HashMap<>();
 
 
@@ -57,7 +56,7 @@ public class Trading
     @SuppressWarnings("unchecked")
     @Inject
     public Trading(User user,
-                   @NotNull Storage storage,
+                   Storage storage,
                    MessageFacade messageFacade,
                    BlockChainFacade blockChainFacade,
                    WalletFacade walletFacade,
@@ -96,7 +95,7 @@ public class Trading
         storage.write(storageKey + ".offers", myOffers);
     }
 
-    public void addOffer(@NotNull Offer offer) throws IOException
+    public void addOffer(Offer offer) throws IOException
     {
         if (myOffers.containsKey(offer.getId()))
             throw new IllegalStateException("offers contains already a offer with the ID " + offer.getId());
@@ -107,7 +106,7 @@ public class Trading
         messageFacade.addOffer(offer);
     }
 
-    public void removeOffer(@NotNull Offer offer) throws IOException
+    public void removeOffer(Offer offer) throws IOException
     {
         myOffers.remove(offer.getId());
         saveOffers();
@@ -115,15 +114,15 @@ public class Trading
         messageFacade.removeOffer(offer);
     }
 
-    public boolean isOfferTradable(@NotNull Offer offer)
+    public boolean isOfferTradable(Offer offer)
     {
         return !trades.containsKey(offer.getId());
     }
 
-    @NotNull
-    public Trade createTrade(@NotNull Offer offer)
+
+    public Trade createTrade(Offer offer)
     {
-        @NotNull Trade trade = new Trade(offer);
+        Trade trade = new Trade(offer);
         trades.put(offer.getId(), trade);
         //TODO for testing
         //storage.write(storageKey + ".trades", trades);
@@ -133,41 +132,41 @@ public class Trading
         return trade;
     }
 
-    public void removeTrade(@NotNull Trade trade)
+    public void removeTrade(Trade trade)
     {
         trades.remove(trade.getId());
         storage.write(storageKey + ".trades", trades);
     }
 
-    @NotNull
+
     public final StringProperty getNewTradeProperty()
     {
         return this.newTradeProperty;
     }
 
-    @NotNull
-    public TakerPaymentProtocol addTakerPaymentProtocol(@NotNull Trade trade, TakerPaymentProtocolListener listener)
+
+    public TakerPaymentProtocol addTakerPaymentProtocol(Trade trade, TakerPaymentProtocolListener listener)
     {
-        @NotNull TakerPaymentProtocol takerPaymentProtocol = new TakerPaymentProtocol(trade, listener, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
+        TakerPaymentProtocol takerPaymentProtocol = new TakerPaymentProtocol(trade, listener, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
         takerPaymentProtocols.put(trade.getId(), takerPaymentProtocol);
         return takerPaymentProtocol;
     }
 
-    @NotNull
-    OffererPaymentProtocol addOffererPaymentProtocol(@NotNull Trade trade, OffererPaymentProtocolListener listener)
+
+    OffererPaymentProtocol addOffererPaymentProtocol(Trade trade, OffererPaymentProtocolListener listener)
     {
-        @NotNull OffererPaymentProtocol offererPaymentProtocol = new OffererPaymentProtocol(trade, listener, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
+        OffererPaymentProtocol offererPaymentProtocol = new OffererPaymentProtocol(trade, listener, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
         offererPaymentProtocols.put(trade.getId(), offererPaymentProtocol);
         return offererPaymentProtocol;
     }
 
-    public void createOffererPaymentProtocol(@NotNull TradeMessage tradeMessage, PeerAddress sender)
+    public void createOffererPaymentProtocol(TradeMessage tradeMessage, PeerAddress sender)
     {
         Offer offer = myOffers.get(tradeMessage.getOfferUID());
         if (isOfferTradable(offer))
         {
-            @NotNull Trade trade = createTrade(offer);
-            @NotNull OffererPaymentProtocol offererPaymentProtocol = addOffererPaymentProtocol(trade, new OffererPaymentProtocolListener()
+            Trade trade = createTrade(offer);
+            OffererPaymentProtocol offererPaymentProtocol = addOffererPaymentProtocol(trade, new OffererPaymentProtocolListener()
             {
                 @Override
                 public void onProgress(double progress)
@@ -196,7 +195,7 @@ public class Trading
                 @Override
                 public void onPayoutTxPublished(String payoutTxAsHex)
                 {
-                    @NotNull Transaction payoutTx = new Transaction(walletFacade.getWallet().getParams(), Utils.parseAsHexOrBase58(payoutTxAsHex));
+                    Transaction payoutTx = new Transaction(walletFacade.getWallet().getParams(), Utils.parseAsHexOrBase58(payoutTxAsHex));
                     trade.setPayoutTransaction(payoutTx);
                     trade.setState(Trade.State.COMPLETED);
                     log.debug("trading onPayoutTxPublished");
@@ -233,7 +232,7 @@ public class Trading
 
 
     // 6
-    public void releaseBTC(String tradeUID, @NotNull TradeMessage tradeMessage)
+    public void releaseBTC(String tradeUID, TradeMessage tradeMessage)
     {
         takerPaymentProtocols.get(tradeUID).releaseBTC(tradeMessage);
     }
@@ -242,13 +241,13 @@ public class Trading
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @NotNull
+
     public Map<String, Trade> getTrades()
     {
         return trades;
     }
 
-    @NotNull
+
     public Map<String, Offer> getOffers()
     {
         return myOffers;

@@ -54,8 +54,6 @@ import javafx.util.Callback;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 import org.controlsfx.dialog.Dialogs;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +83,7 @@ public class OrderBookController implements Initializable, ChildController
     public Button createOfferButton;
     private NavigationController navigationController;
     private SortedList<OrderBookListItem> offerList;
-    @Nullable
+
     private AnimationTimer pollingTimer;
     @FXML
     private TableColumn<String, OrderBookListItem> directionColumn, countryColumn, bankAccountTypeColumn;
@@ -156,7 +154,7 @@ public class OrderBookController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(@NotNull NavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
         this.navigationController = navigationController;
     }
@@ -231,7 +229,7 @@ public class OrderBookController implements Initializable, ChildController
                 }
                 else
                 {
-                    Action response = Popups.openErrorPopup("Missing registration fee", "You have not funded the full registration fee of " + BtcFormatter.satoshiToString(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
+                    Action response = Popups.openErrorPopup("Missing registration fee", "You have not funded the full registration fee of " + BtcFormatter.satoshiToString(FeePolicy.ACCOUNT_REGISTRATION_FEE_depr) + " BTC.");
                     if (response == Dialog.Actions.OK)
                     {
                         MainController.INSTANCE().navigateToView(NavigationItem.FUNDS);
@@ -250,10 +248,10 @@ public class OrderBookController implements Initializable, ChildController
 
         if (selectedIndex >= 0)
         {
-            @NotNull Dialogs.CommandLink settingsCommandLink = new Dialogs.CommandLink("Open settings", "You need to configure your settings before you can actively trade.");
-            @NotNull Dialogs.CommandLink depositFeeCommandLink = new Dialogs.CommandLink("Deposit funds", "You need to pay the registration fee before you can actively trade. That is needed as prevention against fraud.");
-            @NotNull Dialogs.CommandLink sendRegistrationCommandLink = new Dialogs.CommandLink("Publish registration", "When settings are configured and the fee deposit is done your registration transaction will be published to the Bitcoin \nnetwork.");
-            @NotNull List<Dialogs.CommandLink> commandLinks = Arrays.asList(settingsCommandLink, depositFeeCommandLink, sendRegistrationCommandLink);
+            Dialogs.CommandLink settingsCommandLink = new Dialogs.CommandLink("Open settings", "You need to configure your settings before you can actively trade.");
+            Dialogs.CommandLink depositFeeCommandLink = new Dialogs.CommandLink("Deposit funds", "You need to pay the registration fee before you can actively trade. That is needed as prevention against fraud.");
+            Dialogs.CommandLink sendRegistrationCommandLink = new Dialogs.CommandLink("Publish registration", "When settings are configured and the fee deposit is done your registration transaction will be published to the Bitcoin \nnetwork.");
+            List<Dialogs.CommandLink> commandLinks = Arrays.asList(settingsCommandLink, depositFeeCommandLink, sendRegistrationCommandLink);
             Action registrationMissingAction = Popups.openRegistrationMissingPopup("Not registered yet", "Please follow these steps:", "You need to register before you can place an offer.", commandLinks, selectedIndex);
             if (registrationMissingAction == settingsCommandLink)
             {
@@ -272,7 +270,7 @@ public class OrderBookController implements Initializable, ChildController
 
     private void payRegistrationFee()
     {
-        @NotNull FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
+        FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
         {
             @Override
             public void onSuccess(@javax.annotation.Nullable Transaction transaction)
@@ -282,7 +280,7 @@ public class OrderBookController implements Initializable, ChildController
             }
 
             @Override
-            public void onFailure(@NotNull Throwable t)
+            public void onFailure(Throwable t)
             {
                 log.debug("payRegistrationFee onFailure");
             }
@@ -327,15 +325,17 @@ public class OrderBookController implements Initializable, ChildController
         }
     }
 
-    private void takeOffer(@NotNull Offer offer)
+    private void takeOffer(Offer offer)
     {
         if (isRegistered())
         {
-            @Nullable TakerTradeController takerTradeController = (TakerTradeController) navigationController.navigateToView(NavigationItem.TAKER_TRADE);
+            TakerTradeController takerTradeController = (TakerTradeController) navigationController.navigateToView(NavigationItem.TAKE_OFFER);
 
-            BigInteger requestedAmount = offer.getAmount();
+            BigInteger requestedAmount;
             if (!"".equals(amount.getText()))
                 requestedAmount = BtcFormatter.stringValueToSatoshis(amount.getText());
+            else
+                requestedAmount = offer.getAmount();
 
             if (takerTradeController != null)
                 takerTradeController.initWithData(offer, requestedAmount);
@@ -346,7 +346,7 @@ public class OrderBookController implements Initializable, ChildController
         }
     }
 
-    private void removeOffer(@NotNull Offer offer)
+    private void removeOffer(Offer offer)
     {
         orderBook.removeOffer(offer);
     }
@@ -385,7 +385,7 @@ public class OrderBookController implements Initializable, ChildController
         directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
         directionColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>()
         {
-            @Nullable
+
             @Override
             public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn)
             {
@@ -400,7 +400,7 @@ public class OrderBookController implements Initializable, ChildController
                     }
 
                     @Override
-                    public void updateItem(@Nullable final OrderBookListItem orderBookListItem, boolean empty)
+                    public void updateItem(final OrderBookListItem orderBookListItem, boolean empty)
                     {
                         super.updateItem(orderBookListItem, empty);
 
@@ -408,7 +408,7 @@ public class OrderBookController implements Initializable, ChildController
                         {
                             String title;
                             Image icon;
-                            @NotNull Offer offer = orderBookListItem.getOffer();
+                            Offer offer = orderBookListItem.getOffer();
 
                             if (offer.getMessagePubKeyAsHex().equals(user.getMessagePubKeyAsHex()))
                             {
@@ -453,7 +453,7 @@ public class OrderBookController implements Initializable, ChildController
         countryColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
         countryColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>()
         {
-            @Nullable
+
             @Override
             public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn)
             {
@@ -468,7 +468,7 @@ public class OrderBookController implements Initializable, ChildController
                     }
 
                     @Override
-                    public void updateItem(@Nullable final OrderBookListItem orderBookListItem, boolean empty)
+                    public void updateItem(final OrderBookListItem orderBookListItem, boolean empty)
                     {
                         super.updateItem(orderBookListItem, empty);
 
@@ -497,14 +497,14 @@ public class OrderBookController implements Initializable, ChildController
         bankAccountTypeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
         bankAccountTypeColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>()
         {
-            @Nullable
+
             @Override
             public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn)
             {
                 return new TableCell<String, OrderBookListItem>()
                 {
                     @Override
-                    public void updateItem(@Nullable final OrderBookListItem orderBookListItem, boolean empty)
+                    public void updateItem(final OrderBookListItem orderBookListItem, boolean empty)
                     {
                         super.updateItem(orderBookListItem, empty);
 
@@ -528,7 +528,7 @@ public class OrderBookController implements Initializable, ChildController
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private double textInputToNumber(String oldValue, @NotNull String newValue)
+    private double textInputToNumber(String oldValue, String newValue)
     {
         //TODO use regex.... or custom textfield component
         double d = 0.0;
@@ -536,7 +536,7 @@ public class OrderBookController implements Initializable, ChildController
         {
             try
             {
-                @NotNull DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.getDefault());
+                DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.getDefault());
                 d = decimalFormat.parse(newValue).doubleValue();
             } catch (ParseException e)
             {

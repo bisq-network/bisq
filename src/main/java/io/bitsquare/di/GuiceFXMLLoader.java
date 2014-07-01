@@ -4,7 +4,6 @@ import com.google.inject.Injector;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXMLLoader;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Guice support for fxml controllers
@@ -12,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public class GuiceFXMLLoader extends FXMLLoader
 {
 
-    @Nullable
+
     private static Injector injector = null;
 
     // not used yet
@@ -41,7 +40,7 @@ public class GuiceFXMLLoader extends FXMLLoader
     }
 
 
-    public static void setInjector(@Nullable Injector injector)
+    public static void setInjector(Injector injector)
     {
         GuiceFXMLLoader.injector = injector;
     }

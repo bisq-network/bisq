@@ -18,8 +18,6 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class HomeController implements Initializable, ChildController, NavigationController
 {
@@ -34,7 +32,7 @@ public class HomeController implements Initializable, ChildController, Navigatio
     }
 
     @Override
-    public void setNavigationController(@NotNull NavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
     }
 
@@ -47,14 +45,14 @@ public class HomeController implements Initializable, ChildController, Navigatio
     // Interface implementation: NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
+
     @Override
-    public ChildController navigateToView(@NotNull NavigationItem navigationItem)
+    public ChildController navigateToView(NavigationItem navigationItem)
     {
         if (arbitratorRegistrationController != null)
             arbitratorRegistrationController.cleanup();
 
-        @NotNull final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
         {
             final Node view = loader.load();
@@ -62,7 +60,7 @@ public class HomeController implements Initializable, ChildController, Navigatio
             arbitratorRegistrationController.setNavigationController(this);
 
             final Stage rootStage = BitSquare.getStage();
-            @NotNull final Stage stage = new Stage();
+            final Stage stage = new Stage();
             stage.setTitle("Arbitrator");
             stage.setMinWidth(800);
             stage.setMinHeight(400);
@@ -72,7 +70,7 @@ public class HomeController implements Initializable, ChildController, Navigatio
             stage.setY(rootStage.getY() + 50);
             stage.initModality(Modality.WINDOW_MODAL);
             stage.initOwner(rootStage);
-            @NotNull Scene scene = new Scene((Parent) view, 800, 600);
+            Scene scene = new Scene((Parent) view, 800, 600);
             stage.setScene(scene);
             stage.show();
 

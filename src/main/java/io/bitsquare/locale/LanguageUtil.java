@@ -2,7 +2,6 @@ package io.bitsquare.locale;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.NotNull;
 
 public class LanguageUtil
 {
@@ -23,10 +22,10 @@ public class LanguageUtil
         return list;
     }  */
 
-    @NotNull
+
     public static List<Locale> getAllLanguageLocales()
     {
-        @NotNull List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
+        List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
         final Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !"".equals(locale.getLanguage())).map(locale -> new Locale(locale.getLanguage(), "")).collect(Collectors.toSet());
         allLocales = new ArrayList<>();
         allLocales.addAll(allLocalesAsSet);
@@ -34,7 +33,7 @@ public class LanguageUtil
         return allLocales;
     }
 
-    @NotNull
+
     public static Locale getDefaultLanguageLocale()
     {
         return new Locale(Locale.getDefault().getLanguage(), "");

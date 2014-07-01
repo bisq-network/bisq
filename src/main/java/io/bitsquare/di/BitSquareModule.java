@@ -23,8 +23,6 @@ import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
 import io.bitsquare.util.FileUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class BitSquareModule extends AbstractModule
 {
@@ -67,7 +65,7 @@ class BitSquareWalletAppKitProvider implements Provider<BitSquareWalletAppKit>
         this.networkParameters = networkParameters;
     }
 
-    @NotNull
+
     public BitSquareWalletAppKit get()
     {
         return new BitSquareWalletAppKit(networkParameters, FileUtil.getRootDirectory());
@@ -84,10 +82,10 @@ class NetworkParametersProvider implements Provider<NetworkParameters>
         this.networkType = networkType;
     }
 
-    @Nullable
+
     public NetworkParameters get()
     {
-        @Nullable NetworkParameters result = null;
+        NetworkParameters result = null;
 
         switch (networkType)
         {

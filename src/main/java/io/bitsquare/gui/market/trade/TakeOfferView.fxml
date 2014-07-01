@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:id="rootContainer"
+            fx:controller="io.bitsquare.gui.market.trade.TakerOfferController">
+    <Accordion fx:id="accordion" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+        <panes>
+
+            <TitledPane fx:id="profileTitledPane" text="Offer details">
+                <ScrollPane fitToWidth="true">
+                    <GridPane hgap="5.0" vgap="5.0">
+                        <padding>
+                            <Insets left="10" right="10" top="10" bottom="10"/>
+                        </padding>
+
+                        <Label text="Take offer:" id="headline-label"/>
+
+                        <Label text="Amount (BTC):" GridPane.rowIndex="1"/>
+                        <TextField fx:id="amountTextField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                        <Label text="Price (EUR/BTC):" GridPane.rowIndex="2"/>
+                        <TextField fx:id="priceTextField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                        <Label text="Volume (EUR):" GridPane.rowIndex="3"/>
+                        <TextField fx:id="volumeTextField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                        <Label text="Collateral (BTC):" GridPane.rowIndex="4"/>
+                        <TextField fx:id="collateralTextField" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                        <Label text="Fee (BTC):" GridPane.rowIndex="5"/>
+                        <TextField fx:id="feeTextField" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+                        <Label text="Total (BTC):" GridPane.rowIndex="6"/>
+                        <TextField fx:id="totalTextField" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+
+
+                        <Button text="Take offer and pay" onAction="#onTakeOffer" defaultButton="true" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+
+
+                        <Label text="Offer details:" id="headline-label" GridPane.rowIndex="8"/>
+
+                        <Label text="Bank account type:" GridPane.rowIndex="9"/>
+                        <TextField fx:id="bankAccountTypeTextField" GridPane.rowIndex="9" GridPane.columnIndex="1"/>
+
+                        <Label text="Country:" GridPane.rowIndex="10"/>
+                        <TextField fx:id="countryTextField" GridPane.rowIndex="10" GridPane.columnIndex="1"/>
+
+                        <Label text="Arbitrators:" GridPane.rowIndex="11"/>
+                        <TextField fx:id="arbitratorsTextField" GridPane.rowIndex="11" GridPane.columnIndex="1"/>
+
+                        <Label text="Supported languages:" GridPane.rowIndex="12"/>
+                        <TextField fx:id="supportedLanguagesTextField" GridPane.rowIndex="12" GridPane.columnIndex="1"/>
+
+                        <Label text="Supported countries:" GridPane.rowIndex="13"/>
+                        <TextField fx:id="supportedCountriesTextField" GridPane.rowIndex="13" GridPane.columnIndex="1"/>
+
+
+                        <columnConstraints>
+                            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="10.0"/>
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="10.0"/>
+                        </columnConstraints>
+
+                        <rowConstraints>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                        </rowConstraints>
+
+                    </GridPane>
+                </ScrollPane>
+            </TitledPane>
+
+            <TitledPane fx:id="payCollateralTitledPane" text="Wait for bank transfer">
+            </TitledPane>
+
+            <TitledPane fx:id="payCollateralTitledPane" text="Summary">
+            </TitledPane>
+
+        </panes>
+    </Accordion>
+</AnchorPane>

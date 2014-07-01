@@ -1,6 +1,7 @@
 package io.bitsquare;
 
 import io.bitsquare.btc.BtcValidatorTest;
+import io.bitsquare.currency.BitcoinTest;
 import io.bitsquare.gui.util.BitSquareConverterTest;
 import io.bitsquare.gui.util.BitSquareValidatorTest;
 import org.junit.runner.RunWith;
@@ -10,7 +11,8 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
         BtcValidatorTest.class,
         BitSquareConverterTest.class,
-        BitSquareValidatorTest.class
+        BitSquareValidatorTest.class,
+        BitcoinTest.class
 })
 
 public class BitSquareTestSuite

@@ -15,13 +15,11 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.Pane;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class MarketController implements Initializable, NavigationController, ChildController
 {
     private boolean orderbookCreated;
-    @Nullable
+
     private OrderBookController orderBookController;
 
     @FXML
@@ -36,6 +34,8 @@ public class MarketController implements Initializable, NavigationController, Ch
     public void initialize(URL url, ResourceBundle rb)
     {
         navigateToView(NavigationItem.ORDER_BOOK);
+
+        navigateToView(NavigationItem.TAKE_OFFER);
     }
 
 
@@ -43,9 +43,9 @@ public class MarketController implements Initializable, NavigationController, Ch
     // Interface implementation: NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
+
     @Override
-    public ChildController navigateToView(@NotNull NavigationItem navigationItem)
+    public ChildController navigateToView(NavigationItem navigationItem)
     {
 
         if (navigationItem == NavigationItem.ORDER_BOOK && orderbookCreated)
@@ -54,17 +54,30 @@ public class MarketController implements Initializable, NavigationController, Ch
             return null;
         }
 
-        @NotNull final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
         {
-            Pane view = loader.load();
+            final Pane view = loader.load();
             ChildController childController = loader.getController();
             childController.setNavigationController(this);
 
             if (childController instanceof OrderBookController)
                 orderBookController = (OrderBookController) childController;
 
-            @NotNull Tab tab = new Tab("Orderbook");
+            String tabLabel;
+            switch (navigationItem)
+            {
+                case CREATE_OFFER:
+                    tabLabel = "Create offer";
+                    break;
+                case TAKE_OFFER:
+                    tabLabel = "Take offer";
+                    break;
+                default:
+                    tabLabel = "Orderbook";
+                    break;
+            }
+            final Tab tab = new Tab(tabLabel);
             tab.setContent(view);
             tabPane.getTabs().add(tab);
 
@@ -90,7 +103,7 @@ public class MarketController implements Initializable, NavigationController, Ch
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(@NotNull NavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
 
     }

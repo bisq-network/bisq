@@ -34,7 +34,6 @@ import javafx.css.PseudoClass;
 import javafx.css.StyleableProperty;
 import javafx.scene.control.Control;
 import javafx.scene.control.Skin;
-import org.jetbrains.annotations.NotNull;
 
 
 /**
@@ -177,14 +176,14 @@ public class ConfidenceProgressIndicator extends Control
                     pseudoClassStateChanged(PSEUDO_CLASS_DETERMINATE, !active);
                 }
 
-                @NotNull
+
                 @Override
                 public Object getBean()
                 {
                     return ConfidenceProgressIndicator.this;
                 }
 
-                @NotNull
+
                 @Override
                 public String getName()
                 {
@@ -233,14 +232,14 @@ public class ConfidenceProgressIndicator extends Control
                     setIndeterminate(getProgress() < 0.0);
                 }
 
-                @NotNull
+
                 @Override
                 public Object getBean()
                 {
                     return ConfidenceProgressIndicator.this;
                 }
 
-                @NotNull
+
                 @Override
                 public String getName()
                 {
@@ -254,7 +253,7 @@ public class ConfidenceProgressIndicator extends Control
     /**
      * {@inheritDoc}
      */
-    @NotNull
+
     @Override
     protected Skin<?> createDefaultSkin()
     {

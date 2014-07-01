@@ -6,8 +6,6 @@ import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Effect;
 import javafx.scene.paint.Color;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("WeakerAccess")
 public class BitSquareValidator
@@ -21,24 +19,24 @@ public class BitSquareValidator
         textFieldsNotEmpty(textFields);
     }
 
-    public static void resetTextFields(@NotNull TextField... textFields)
+    public static void resetTextFields(TextField... textFields)
     {
-        for (@NotNull TextField textField : textFields)
+        for (TextField textField : textFields)
         {
             textField.setStyle("-fx-border-color: null");
             textField.setEffect(null);
         }
     }
 
-    public static void textFieldsNotEmpty(@NotNull TextField... textFields) throws ValidationException
+    public static void textFieldsNotEmpty(TextField... textFields) throws ValidationException
     {
-        for (@NotNull TextField textField : textFields)
+        for (TextField textField : textFields)
         {
             textFieldNotEmpty(textField);
         }
     }
 
-    public static void textFieldNotEmpty(@NotNull TextField textField) throws ValidationException
+    public static void textFieldNotEmpty(TextField textField) throws ValidationException
     {
         if (!validateStringNotEmpty(textField.getText()))
         {
@@ -54,15 +52,15 @@ public class BitSquareValidator
         textFieldsHasDoubleValue(textFields);
     }
 
-    public static void textFieldsHasDoubleValue(@NotNull TextField... textFields) throws ValidationException
+    public static void textFieldsHasDoubleValue(TextField... textFields) throws ValidationException
     {
-        for (@NotNull TextField textField : textFields)
+        for (TextField textField : textFields)
         {
             textFieldHasDoubleValue(textField);
         }
     }
 
-    public static void textFieldHasDoubleValue(@NotNull TextField textField) throws ValidationException
+    public static void textFieldHasDoubleValue(TextField textField) throws ValidationException
     {
         if (!validateStringAsDouble(textField.getText()))
         {
@@ -74,7 +72,7 @@ public class BitSquareValidator
 
     //TODO
     @SuppressWarnings("UnusedParameters")
-    public static void textFieldBankAccountPrimaryIDIsValid(@NotNull TextField textField, BankAccountType bankAccountType) throws ValidationException
+    public static void textFieldBankAccountPrimaryIDIsValid(TextField textField, BankAccountType bankAccountType) throws ValidationException
     {
         if (!validateStringNotEmpty(textField.getText()))
         {
@@ -86,7 +84,7 @@ public class BitSquareValidator
 
     //TODO
     @SuppressWarnings("UnusedParameters")
-    public static void textFieldBankAccountSecondaryIDIsValid(@NotNull TextField textField, BankAccountType bankAccountType) throws ValidationException
+    public static void textFieldBankAccountSecondaryIDIsValid(TextField textField, BankAccountType bankAccountType) throws ValidationException
     {
         if (!validateStringNotEmpty(textField.getText()))
         {
@@ -96,7 +94,7 @@ public class BitSquareValidator
         }
     }
 
-    public static boolean validateStringsAsDouble(@NotNull String... inputs)
+    public static boolean validateStringsAsDouble(String... inputs)
     {
         boolean result = true;
         for (String input : inputs)
@@ -114,13 +112,13 @@ public class BitSquareValidator
             //noinspection ResultOfMethodCallIgnored
             Double.parseDouble(input);
             return true;
-        } catch (@NotNull NumberFormatException | NullPointerException e)
+        } catch (NumberFormatException | NullPointerException e)
         {
             return false;
         }
     }
 
-    public static boolean validateStringsNotEmpty(@NotNull String... inputs)
+    public static boolean validateStringsNotEmpty(String... inputs)
     {
         boolean result = true;
         for (String input : inputs)
@@ -130,7 +128,7 @@ public class BitSquareValidator
         return result;
     }
 
-    public static boolean validateStringNotEmpty(@Nullable String input)
+    public static boolean validateStringNotEmpty(String input)
     {
         return input != null && !input.isEmpty() && !" ".equals(input);
     }

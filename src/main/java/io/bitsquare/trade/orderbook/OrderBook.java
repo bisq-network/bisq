@@ -23,8 +23,6 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.storage.Data;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +75,7 @@ public class OrderBook implements OrderBookListener
             messageFacade.getOffers(CurrencyUtil.getDefaultCurrency().getCurrencyCode());
     }
 
-    public void removeOffer(@NotNull Offer offer)
+    public void removeOffer(Offer offer)
     {
         try
         {
@@ -88,11 +86,11 @@ public class OrderBook implements OrderBookListener
         }
     }
 
-    public void applyFilter(@Nullable OrderBookFilter orderBookFilter)
+    public void applyFilter(OrderBookFilter orderBookFilter)
     {
         filteredList.setPredicate(orderBookListItem -> {
-            @NotNull Offer offer = orderBookListItem.getOffer();
-            @Nullable BankAccount currentBankAccount = user.getCurrentBankAccount();
+            Offer offer = orderBookListItem.getOffer();
+            BankAccount currentBankAccount = user.getCurrentBankAccount();
 
             if (orderBookFilter == null
                     || currentBankAccount == null
@@ -177,41 +175,41 @@ public class OrderBook implements OrderBookListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onOfferAdded(@NotNull Data offerData, boolean success)
+    public void onOfferAdded(Data offerData, boolean success)
     {
         try
         {
             Object offerDataObject = offerData.getObject();
             if (offerDataObject instanceof Offer)
             {
-                @NotNull Offer offer = (Offer) offerDataObject;
+                Offer offer = (Offer) offerDataObject;
                 allOffers.add(new OrderBookListItem(offer));
             }
-        } catch (@NotNull ClassNotFoundException | IOException e)
+        } catch (ClassNotFoundException | IOException e)
         {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
     }
 
     @Override
-    public void onOffersReceived(@Nullable Map<Number160, Data> dataMap, boolean success)
+    public void onOffersReceived(Map<Number160, Data> dataMap, boolean success)
     {
         if (success && dataMap != null)
         {
             allOffers.clear();
 
-            for (@NotNull Data offerData : dataMap.values())
+            for (Data offerData : dataMap.values())
             {
                 try
                 {
                     Object offerDataObject = offerData.getObject();
                     if (offerDataObject instanceof Offer)
                     {
-                        @NotNull Offer offer = (Offer) offerDataObject;
-                        @NotNull OrderBookListItem orderBookListItem = new OrderBookListItem(offer);
+                        Offer offer = (Offer) offerDataObject;
+                        OrderBookListItem orderBookListItem = new OrderBookListItem(offer);
                         allOffers.add(orderBookListItem);
                     }
-                } catch (@NotNull ClassNotFoundException | IOException e)
+                } catch (ClassNotFoundException | IOException e)
                 {
                     e.printStackTrace();
                 }
@@ -224,7 +222,7 @@ public class OrderBook implements OrderBookListener
     }
 
     @Override
-    public void onOfferRemoved(@NotNull Data offerData, boolean success)
+    public void onOfferRemoved(Data offerData, boolean success)
     {
         if (success)
         {
@@ -233,10 +231,10 @@ public class OrderBook implements OrderBookListener
                 Object offerDataObject = offerData.getObject();
                 if (offerDataObject instanceof Offer)
                 {
-                    @NotNull Offer offer = (Offer) offerDataObject;
+                    Offer offer = (Offer) offerDataObject;
                     allOffers.removeIf(orderBookListItem -> orderBookListItem.getOffer().getId().equals(offer.getId()));
                 }
-            } catch (@NotNull ClassNotFoundException | IOException e)
+            } catch (ClassNotFoundException | IOException e)
             {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
@@ -252,7 +250,7 @@ public class OrderBook implements OrderBookListener
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @NotNull
+
     public SortedList<OrderBookListItem> getOfferList()
     {
         return offerList;
@@ -263,9 +261,9 @@ public class OrderBook implements OrderBookListener
     // Private Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean countryInList(@NotNull Country countryToMatch, @NotNull List<Country> list)
+    private boolean countryInList(Country countryToMatch, List<Country> list)
     {
-        for (@NotNull Country country : list)
+        for (Country country : list)
         {
             if (country.getCode().equals(countryToMatch.getCode()))
                 return true;
@@ -273,11 +271,11 @@ public class OrderBook implements OrderBookListener
         return false;
     }
 
-    private boolean languagesInList(@NotNull List<Locale> list1, @NotNull List<Locale> list2)
+    private boolean languagesInList(List<Locale> list1, List<Locale> list2)
     {
-        for (@NotNull Locale locale1 : list2)
+        for (Locale locale1 : list2)
         {
-            for (@NotNull Locale locale2 : list1)
+            for (Locale locale2 : list1)
             {
                 if (locale1.getLanguage().equals(locale2.getLanguage()))
                     return true;
@@ -286,11 +284,11 @@ public class OrderBook implements OrderBookListener
         return false;
     }
 
-    private boolean arbitratorInList(@Nullable Arbitrator arbitratorToMatch, @NotNull List<Arbitrator> list)
+    private boolean arbitratorInList(Arbitrator arbitratorToMatch, List<Arbitrator> list)
     {
         if (arbitratorToMatch != null)
         {
-            for (@NotNull Arbitrator arbitrator : list)
+            for (Arbitrator arbitrator : list)
             {
                 try
                 {

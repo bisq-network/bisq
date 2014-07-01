@@ -5,8 +5,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.beans.property.SimpleBooleanProperty;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class User implements Serializable
 {
@@ -14,14 +12,14 @@ public class User implements Serializable
 
     transient private final SimpleBooleanProperty bankAccountChangedProperty = new SimpleBooleanProperty();
 
-    @Nullable
+
     private String accountID;
-    @Nullable
+
     private String messagePubKeyAsHex;
     private boolean isOnline;
-    @NotNull
+
     private List<BankAccount> bankAccounts = new ArrayList<>();
-    @Nullable
+
     private BankAccount currentBankAccount = null;
 
     public User()
@@ -33,7 +31,7 @@ public class User implements Serializable
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void updateFromStorage(@Nullable User savedUser)
+    public void updateFromStorage(User savedUser)
     {
         if (savedUser != null)
         {
@@ -45,7 +43,7 @@ public class User implements Serializable
         }
     }
 
-    public void addBankAccount(@NotNull BankAccount bankAccount)
+    public void addBankAccount(BankAccount bankAccount)
     {
         if (!bankAccounts.contains(bankAccount))
             bankAccounts.add(bankAccount);
@@ -66,10 +64,10 @@ public class User implements Serializable
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @NotNull
+
     public String getStringifiedBankAccounts()
     {
-        @NotNull String bankAccountUIDs = "";
+        String bankAccountUIDs = "";
         for (int i = 0; i < bankAccounts.size(); i++)
         {
             BankAccount bankAccount = bankAccounts.get(i);
@@ -82,24 +80,24 @@ public class User implements Serializable
         return bankAccountUIDs;
     }
 
-    @Nullable
+
     public String getMessagePubKeyAsHex()
     {
         return messagePubKeyAsHex;
     }
 
-    public void setMessagePubKeyAsHex(@Nullable String messageID)
+    public void setMessagePubKeyAsHex(String messageID)
     {
         this.messagePubKeyAsHex = messageID;
     }
 
-    @Nullable
+
     public String getAccountID()
     {
         return accountID;
     }
 
-    public void setAccountID(@Nullable String accountID)
+    public void setAccountID(String accountID)
     {
         this.accountID = accountID;
     }
@@ -109,31 +107,31 @@ public class User implements Serializable
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @NotNull
+
     public List<BankAccount> getBankAccounts()
     {
         return bankAccounts;
     }
 
-    public void setBankAccounts(@NotNull List<BankAccount> bankAccounts)
+    public void setBankAccounts(List<BankAccount> bankAccounts)
     {
         this.bankAccounts = bankAccounts;
     }
 
-    @Nullable
+
     public BankAccount getCurrentBankAccount()
     {
         return currentBankAccount;
     }
 
-    public void setCurrentBankAccount(@NotNull BankAccount bankAccount)
+    public void setCurrentBankAccount(BankAccount bankAccount)
     {
         this.currentBankAccount = bankAccount;
         bankAccountChangedProperty.set(!bankAccountChangedProperty.get());
     }
 
-    @Nullable
-    public BankAccount getBankAccount(@NotNull String bankAccountId)
+
+    public BankAccount getBankAccount(String bankAccountId)
     {
         for (final BankAccount bankAccount : bankAccounts)
         {
@@ -153,13 +151,13 @@ public class User implements Serializable
         this.isOnline = isOnline;
     }
 
-    @NotNull
+
     public SimpleBooleanProperty getBankAccountChangedProperty()
     {
         return bankAccountChangedProperty;
     }
 
-    @NotNull
+
     @Override
     public String toString()
     {

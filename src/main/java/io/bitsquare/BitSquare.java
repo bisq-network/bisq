@@ -20,8 +20,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +32,7 @@ public class BitSquare extends Application
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
 
-    public static void main(@Nullable String[] args)
+    public static void main(String[] args)
     {
         log.debug("Startup: main");
         if (args != null && args.length > 0)
@@ -49,13 +47,13 @@ public class BitSquare extends Application
     }
 
     @Override
-    public void start(@NotNull Stage stage)
+    public void start(Stage stage)
     {
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
         init(stage);
     }
 
-    private void init(@NotNull Stage stage)
+    private void init(Stage stage)
     {
         BitSquare.stage = stage;
 
@@ -88,9 +86,9 @@ public class BitSquare extends Application
 
         try
         {
-            @NotNull final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), Localisation.getResourceBundle());
+            final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), Localisation.getResourceBundle());
             final Parent mainView = loader.load();
-            @NotNull final Scene scene = new Scene(mainView, 800, 600);
+            final Scene scene = new Scene(mainView, 800, 600);
             stage.setScene(scene);
 
             final String bitsquare = getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm();

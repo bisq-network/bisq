@@ -27,8 +27,6 @@ import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.util.Pair;
 import javax.annotation.concurrent.GuardedBy;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +47,7 @@ public class WalletFacade
 
     private final ReentrantLock lock = Threading.lock("lock");
 
-    @NotNull
+
     private final String saveAddressEntryListId;
     private final NetworkParameters params;
     private final BitSquareWalletAppKit walletAppKit;
@@ -61,7 +59,7 @@ public class WalletFacade
     private final List<BalanceListener> balanceListeners = new ArrayList<>();
     private BitSquareWallet wallet;
     private WalletEventListener walletEventListener;
-    @NotNull
+
     @GuardedBy("lock")
     private List<AddressEntry> addressEntryList = new ArrayList<>();
 
@@ -140,7 +138,7 @@ public class WalletFacade
             }
 
             @Override
-            public void onTransactionConfidenceChanged(Wallet wallet, @NotNull Transaction tx)
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
             {
                 notifyConfidenceListeners(tx);
             }
@@ -253,23 +251,23 @@ public class WalletFacade
         return ImmutableList.copyOf(addressEntryList);
     }
 
-    @Nullable
+
     public AddressEntry getRegistrationAddressInfo()
     {
         return getAddressInfoByAddressContext(AddressEntry.AddressContext.REGISTRATION_FEE);
     }
 
-    @NotNull
+
     public AddressEntry getArbitratorDepositAddressInfo()
     {
-        @Nullable AddressEntry arbitratorDepositAddressEntry = getAddressInfoByAddressContext(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT);
+        AddressEntry arbitratorDepositAddressEntry = getAddressInfoByAddressContext(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT);
         if (arbitratorDepositAddressEntry == null)
             arbitratorDepositAddressEntry = getNewArbitratorDepositAddressEntry();
 
         return arbitratorDepositAddressEntry;
     }
 
-    @Nullable
+
     AddressEntry getUnusedTradeAddressInfo()
     {
         List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(ImmutableList.copyOf(addressEntryList), addressInfo -> (addressInfo != null && addressInfo.getAddressContext().equals(AddressEntry.AddressContext.TRADE) && addressInfo.getTradeId() == null)));
@@ -280,8 +278,8 @@ public class WalletFacade
             return getNewTradeAddressEntry();
     }
 
-    @Nullable
-    private AddressEntry getAddressInfoByAddressContext(@NotNull AddressEntry.AddressContext addressContext)
+
+    private AddressEntry getAddressInfoByAddressContext(AddressEntry.AddressContext addressContext)
     {
         List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(ImmutableList.copyOf(addressEntryList), addressInfo -> (addressInfo != null && addressInfo.getAddressContext() != null && addressInfo.getAddressContext().equals(addressContext))));
 
@@ -291,16 +289,16 @@ public class WalletFacade
             return null;
     }
 
-    @Nullable
+
     public AddressEntry getAddressInfoByTradeID(String tradeId)
     {
-        for (@NotNull AddressEntry addressEntry : ImmutableList.copyOf(addressEntryList))
+        for (AddressEntry addressEntry : ImmutableList.copyOf(addressEntryList))
         {
             if (addressEntry.getTradeId() != null && addressEntry.getTradeId().equals(tradeId))
                 return addressEntry;
         }
 
-        @Nullable AddressEntry addressEntry = getUnusedTradeAddressInfo();
+        AddressEntry addressEntry = getUnusedTradeAddressInfo();
         assert addressEntry != null;
         addressEntry.setTradeId(tradeId);
         return addressEntry;
@@ -311,18 +309,18 @@ public class WalletFacade
     // Create new AddressInfo objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @NotNull
+
     public AddressEntry getNewTradeAddressEntry()
     {
         return getNewAddressEntry(AddressEntry.AddressContext.TRADE);
     }
 
-    @NotNull
+
     private AddressEntry getNewAddressEntry(AddressEntry.AddressContext addressContext)
     {
         lock.lock();
         wallet.getLock().lock();
-        @NotNull ECKey key = new ECKey();
+        ECKey key = new ECKey();
         wallet.addKey(key);
         wallet.addWatchedAddress(key.toAddress(params));
         AddressEntry addressEntry = new AddressEntry(key, params, addressContext);
@@ -333,16 +331,16 @@ public class WalletFacade
         return addressEntry;
     }
 
-    @NotNull
+
     private AddressEntry getNewArbitratorDepositAddressEntry()
     {
         return getNewAddressEntry(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT);
     }
 
-    @Nullable
+
     private AddressEntry getAddressEntryByAddressString(String address)
     {
-        for (@NotNull AddressEntry addressEntry : addressEntryList)
+        for (AddressEntry addressEntry : addressEntryList)
         {
             if (addressEntry.getAddressString().equals(address))
                 return addressEntry;
@@ -354,10 +352,10 @@ public class WalletFacade
     // TransactionConfidence
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
-    public TransactionConfidence getConfidenceForAddress(@NotNull Address address)
+
+    public TransactionConfidence getConfidenceForAddress(Address address)
     {
-        @NotNull List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
+        List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
         Set<Transaction> transactions = wallet.getTransactions(true);
         if (transactions != null)
         {
@@ -372,23 +370,23 @@ public class WalletFacade
         return getMostRecentConfidence(transactionConfidenceList);
     }
 
-    private void notifyConfidenceListeners(@NotNull Transaction tx)
+    private void notifyConfidenceListeners(Transaction tx)
     {
-        for (@NotNull ConfidenceListener confidenceListener : confidenceListeners)
+        for (ConfidenceListener confidenceListener : confidenceListeners)
         {
-            @NotNull List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
+            List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
             transactionConfidenceList.add(getTransactionConfidence(tx, confidenceListener.getAddress()));
 
-            @Nullable TransactionConfidence transactionConfidence = getMostRecentConfidence(transactionConfidenceList);
+            TransactionConfidence transactionConfidence = getMostRecentConfidence(transactionConfidenceList);
             confidenceListener.onTransactionConfidenceChanged(transactionConfidence);
         }
     }
 
-    @Nullable
-    private TransactionConfidence getTransactionConfidence(@NotNull Transaction tx, @NotNull Address address)
+
+    private TransactionConfidence getTransactionConfidence(Transaction tx, Address address)
     {
-        @NotNull List<TransactionOutput> mergedOutputs = getOutputsWithConnectedOutputs(tx);
-        @NotNull List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
+        List<TransactionOutput> mergedOutputs = getOutputsWithConnectedOutputs(tx);
+        List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
 
         mergedOutputs.stream().filter(transactionOutput -> transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH()).forEach(transactionOutput -> {
             Address outputAddress = transactionOutput.getScriptPubKey().getToAddress(params);
@@ -414,32 +412,32 @@ public class WalletFacade
         return getMostRecentConfidence(transactionConfidenceList);
     }
 
-    @NotNull
-    private List<TransactionOutput> getOutputsWithConnectedOutputs(@NotNull Transaction tx)
+
+    private List<TransactionOutput> getOutputsWithConnectedOutputs(Transaction tx)
     {
         List<TransactionOutput> transactionOutputs = tx.getOutputs();
-        @NotNull List<TransactionOutput> connectedOutputs = new ArrayList<>();
+        List<TransactionOutput> connectedOutputs = new ArrayList<>();
 
         // add all connected outputs from any inputs as well
         List<TransactionInput> transactionInputs = tx.getInputs();
-        for (@NotNull TransactionInput transactionInput : transactionInputs)
+        for (TransactionInput transactionInput : transactionInputs)
         {
-            @Nullable TransactionOutput transactionOutput = transactionInput.getConnectedOutput();
+            TransactionOutput transactionOutput = transactionInput.getConnectedOutput();
             if (transactionOutput != null)
                 connectedOutputs.add(transactionOutput);
         }
 
-        @NotNull List<TransactionOutput> mergedOutputs = new ArrayList<>();
+        List<TransactionOutput> mergedOutputs = new ArrayList<>();
         mergedOutputs.addAll(transactionOutputs);
         mergedOutputs.addAll(connectedOutputs);
         return mergedOutputs;
     }
 
-    @Nullable
-    private TransactionConfidence getMostRecentConfidence(@NotNull List<TransactionConfidence> transactionConfidenceList)
+
+    private TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList)
     {
-        @Nullable TransactionConfidence transactionConfidence = null;
-        for (@Nullable TransactionConfidence confidence : transactionConfidenceList)
+        TransactionConfidence transactionConfidence = null;
+        for (TransactionConfidence confidence : transactionConfidenceList)
         {
             if (confidence != null)
             {
@@ -460,7 +458,7 @@ public class WalletFacade
 
     public boolean isRegistrationFeeConfirmed()
     {
-        @Nullable TransactionConfidence transactionConfidence = null;
+        TransactionConfidence transactionConfidence = null;
         if (getRegistrationAddressInfo() != null)
             transactionConfidence = getConfidenceForAddress(getRegistrationAddressInfo().getAddress());
         return transactionConfidence != null && transactionConfidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING);
@@ -476,10 +474,10 @@ public class WalletFacade
         return getBalance(wallet.calculateAllSpendCandidates(true), address);
     }
 
-    private BigInteger getBalance(@NotNull LinkedList<TransactionOutput> transactionOutputs, Address address)
+    private BigInteger getBalance(LinkedList<TransactionOutput> transactionOutputs, Address address)
     {
         BigInteger balance = BigInteger.ZERO;
-        for (@NotNull TransactionOutput transactionOutput : transactionOutputs)
+        for (TransactionOutput transactionOutput : transactionOutputs)
         {
             if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
             {
@@ -495,7 +493,7 @@ public class WalletFacade
 
     private void notifyBalanceListeners()
     {
-        for (@NotNull BalanceListener balanceListener : balanceListeners)
+        for (BalanceListener balanceListener : balanceListeners)
         {
             BigInteger balance;
             if (balanceListener.getAddress() != null)
@@ -529,21 +527,21 @@ public class WalletFacade
 
     public boolean isRegistrationFeeBalanceSufficient()
     {
-        return getRegistrationBalance().compareTo(FeePolicy.ACCOUNT_REGISTRATION_FEE) >= 0;
+        return getRegistrationBalance().compareTo(FeePolicy.ACCOUNT_REGISTRATION_FEE_depr) >= 0;
     }
 
     public boolean isUnusedTradeAddressBalanceAboveCreationFee()
     {
-        @Nullable AddressEntry unUsedAddressEntry = getUnusedTradeAddressInfo();
+        AddressEntry unUsedAddressEntry = getUnusedTradeAddressInfo();
         BigInteger unUsedAddressInfoBalance = getBalanceForAddress(unUsedAddressEntry.getAddress());
-        return unUsedAddressInfoBalance.compareTo(FeePolicy.CREATE_OFFER_FEE) > 0;
+        return unUsedAddressInfoBalance.compareTo(FeePolicy.CREATE_OFFER_FEE_depr) > 0;
     }
 
     public boolean isUnusedTradeAddressBalanceAboveTakeOfferFee()
     {
-        @Nullable AddressEntry unUsedAddressEntry = getUnusedTradeAddressInfo();
+        AddressEntry unUsedAddressEntry = getUnusedTradeAddressInfo();
         BigInteger unUsedAddressInfoBalance = getBalanceForAddress(unUsedAddressEntry.getAddress());
-        return unUsedAddressInfoBalance.compareTo(FeePolicy.TAKE_OFFER_FEE) > 0;
+        return unUsedAddressInfoBalance.compareTo(FeePolicy.TAKE_OFFER_FEE_depr) > 0;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -565,17 +563,17 @@ public class WalletFacade
     // Transactions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void payRegistrationFee(String stringifiedBankAccounts, @NotNull FutureCallback<Transaction> callback) throws InsufficientMoneyException
+    public void payRegistrationFee(String stringifiedBankAccounts, FutureCallback<Transaction> callback) throws InsufficientMoneyException
     {
         log.debug("payRegistrationFee");
         log.trace("stringifiedBankAccounts " + stringifiedBankAccounts);
 
-        @NotNull Transaction tx = new Transaction(params);
+        Transaction tx = new Transaction(params);
 
         byte[] data = cryptoFacade.getEmbeddedAccountRegistrationData(getRegistrationAddressInfo().getKey(), stringifiedBankAccounts);
         tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 
-        BigInteger fee = FeePolicy.ACCOUNT_REGISTRATION_FEE.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(FeePolicy.TX_FEE);
+        BigInteger fee = FeePolicy.ACCOUNT_REGISTRATION_FEE_depr.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(FeePolicy.TX_FEE_depr);
         log.trace("fee: " + BtcFormatter.satoshiToString(fee));
         tx.addOutput(fee, feePolicy.getAddressForRegistrationFee());
 
@@ -591,10 +589,10 @@ public class WalletFacade
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public String payCreateOfferFee(String offerId, @NotNull FutureCallback<Transaction> callback) throws InsufficientMoneyException
+    public String payCreateOfferFee(String offerId, FutureCallback<Transaction> callback) throws InsufficientMoneyException
     {
-        @NotNull Transaction tx = new Transaction(params);
-        BigInteger fee = FeePolicy.CREATE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
+        Transaction tx = new Transaction(params);
+        BigInteger fee = FeePolicy.CREATE_OFFER_FEE_depr.subtract(FeePolicy.TX_FEE_depr);
         log.trace("fee: " + BtcFormatter.satoshiToString(fee));
         tx.addOutput(fee, feePolicy.getAddressForCreateOfferFee());
 
@@ -612,10 +610,10 @@ public class WalletFacade
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public String payTakeOfferFee(String offerId, @NotNull FutureCallback<Transaction> callback) throws InsufficientMoneyException
+    public String payTakeOfferFee(String offerId, FutureCallback<Transaction> callback) throws InsufficientMoneyException
     {
-        @NotNull Transaction tx = new Transaction(params);
-        BigInteger fee = FeePolicy.TAKE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
+        Transaction tx = new Transaction(params);
+        BigInteger fee = FeePolicy.TAKE_OFFER_FEE_depr.subtract(FeePolicy.TX_FEE_depr);
         log.trace("fee: " + BtcFormatter.satoshiToString(fee));
         tx.addOutput(fee, feePolicy.getAddressForTakeOfferFee());
 
@@ -641,11 +639,11 @@ public class WalletFacade
     public String sendFunds(String withdrawFromAddress,
                             String withdrawToAddress,
                             String changeAddress,
-                            @NotNull BigInteger amount,
-                            @NotNull FutureCallback<Transaction> callback) throws AddressFormatException, InsufficientMoneyException, IllegalArgumentException
+                            BigInteger amount,
+                            FutureCallback<Transaction> callback) throws AddressFormatException, InsufficientMoneyException, IllegalArgumentException
     {
-        @NotNull Transaction tx = new Transaction(params);
-        tx.addOutput(amount.subtract(FeePolicy.TX_FEE), new Address(params, withdrawToAddress));
+        Transaction tx = new Transaction(params);
+        tx.addOutput(amount.subtract(FeePolicy.TX_FEE_depr), new Address(params, withdrawToAddress));
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
@@ -669,7 +667,7 @@ public class WalletFacade
 
     // 1. step: deposit tx
     // Offerer creates the 2of3 multiSig deposit tx with his unsigned input and change output
-    @NotNull
+
     public Transaction offererCreatesMSTxAndAddPayment(BigInteger offererInputAmount, String offererPubKey, String takerPubKey, String arbitratorPubKey, String tradeId) throws InsufficientMoneyException
     {
         log.debug("offererCreatesMSTxAndAddPayment");
@@ -685,12 +683,12 @@ public class WalletFacade
         // We don't commit that tx to the wallet as it will be changed later and it's not signed yet.
         // So it will not change the wallet balance.
         // The btc tx fee will be included by the completeTx() call, so we don't need to add it manually.
-        @NotNull Transaction tx = new Transaction(params);
+        Transaction tx = new Transaction(params);
         Script multiSigOutputScript = getMultiSigScript(offererPubKey, takerPubKey, arbitratorPubKey);
         tx.addOutput(offererInputAmount, multiSigOutputScript);
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
-        @Nullable AddressEntry addressEntry = getAddressInfoByTradeID(tradeId);
+        AddressEntry addressEntry = getAddressInfoByTradeID(tradeId);
         addressEntry.setTradeId(tradeId);
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
@@ -720,7 +718,7 @@ public class WalletFacade
 
     // 2. step: deposit tx
     // Taker adds his input and change output, changes the multiSig amount to the correct value and sign his input
-    @NotNull
+
     public Transaction takerAddPaymentAndSignTx(BigInteger takerInputAmount,
                                                 BigInteger msOutputAmount,
                                                 String offererPubKey,
@@ -745,12 +743,12 @@ public class WalletFacade
         // Both traders pay 1 times a fee, so it is equally split between them
 
         // We do exactly the same as in the 1. step but with the takers input.
-        @NotNull Transaction tempTx = new Transaction(params);
+        Transaction tempTx = new Transaction(params);
         Script multiSigOutputScript = getMultiSigScript(offererPubKey, takerPubKey, arbitratorPubKey);
         tempTx.addOutput(takerInputAmount, multiSigOutputScript);
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tempTx);
-        @Nullable AddressEntry addressEntry = getAddressInfoByTradeID(tradeId);
+        AddressEntry addressEntry = getAddressInfoByTradeID(tradeId);
         addressEntry.setTradeId(tradeId);
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
@@ -771,7 +769,7 @@ public class WalletFacade
 
 
         // Now we construct the real 2of3 multiSig tx from the serialized offerers tx
-        @NotNull Transaction tx = new Transaction(params, Utils.parseAsHexOrBase58(offerersPartialDepositTxAsHex));
+        Transaction tx = new Transaction(params, Utils.parseAsHexOrBase58(offerersPartialDepositTxAsHex));
         log.trace("offerersPartialDepositTx=" + tx);
 
         // The serialized offerers tx looks like:
@@ -788,7 +786,7 @@ public class WalletFacade
             tx.addOutput(tempTx.getOutput(1));
 
         // We add the btc tx fee to the msOutputAmount and apply the change to the multiSig output
-        msOutputAmount = msOutputAmount.add(FeePolicy.TX_FEE);
+        msOutputAmount = msOutputAmount.add(FeePolicy.TX_FEE_depr);
         tx.getOutput(0).setValue(msOutputAmount);
 
         // Now we sign our input
@@ -797,10 +795,10 @@ public class WalletFacade
             log.error("input or input.getConnectedOutput() is null: " + input);
 
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
-        @Nullable ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
+        ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
         Sha256Hash hash = tx.hashForSignature(1, scriptPubKey, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature ecSig = sigKey.sign(hash);
-        @NotNull TransactionSignature txSig = new TransactionSignature(ecSig, Transaction.SigHash.ALL, false);
+        TransactionSignature txSig = new TransactionSignature(ecSig, Transaction.SigHash.ALL, false);
         if (scriptPubKey.isSentToRawPubKey())
             input.setScriptSig(ScriptBuilder.createInputScript(txSig));
         else if (scriptPubKey.isSentToAddress())
@@ -836,14 +834,14 @@ public class WalletFacade
 
     // 3. step: deposit tx
     // Offerer signs tx and publishes it
-    @NotNull
+
     public Transaction offererSignAndPublishTx(String offerersFirstTxAsHex,
                                                String takersSignedTxAsHex,
                                                String takersSignedConnOutAsHex,
                                                String takersSignedScriptSigAsHex,
                                                long offererTxOutIndex,
                                                long takerTxOutIndex,
-                                               @NotNull FutureCallback<Transaction> callback)
+                                               FutureCallback<Transaction> callback)
     {
         log.debug("offererSignAndPublishTx");
         log.trace("inputs: ");
@@ -854,32 +852,32 @@ public class WalletFacade
         log.trace("callback=" + callback);
 
         // We create an empty tx (did not find a way to manipulate a tx input, otherwise the takers tx could be used directly and add the offerers input and output)
-        @NotNull Transaction tx = new Transaction(params);
+        Transaction tx = new Transaction(params);
 
         // offerers first tx
-        @NotNull Transaction offerersFirstTx = new Transaction(params, Utils.parseAsHexOrBase58(offerersFirstTxAsHex));
+        Transaction offerersFirstTx = new Transaction(params, Utils.parseAsHexOrBase58(offerersFirstTxAsHex));
 
         printInputs("offerersFirstTx", offerersFirstTx);
         log.trace("offerersFirstTx = " + offerersFirstTx);
 
         // add input
-        @Nullable Transaction offerersFirstTxConnOut = wallet.getTransaction(offerersFirstTx.getInput(0).getOutpoint().getHash());    // pass that around!
-        @NotNull TransactionOutPoint offerersFirstTxOutPoint = new TransactionOutPoint(params, offererTxOutIndex, offerersFirstTxConnOut);
+        Transaction offerersFirstTxConnOut = wallet.getTransaction(offerersFirstTx.getInput(0).getOutpoint().getHash());    // pass that around!
+        TransactionOutPoint offerersFirstTxOutPoint = new TransactionOutPoint(params, offererTxOutIndex, offerersFirstTxConnOut);
         //TransactionInput offerersFirstTxInput = new TransactionInput(params, tx, offerersFirstTx.getInput(0).getScriptBytes(), offerersFirstTxOutPoint);   // pass that around!  getScriptBytes = empty bytes array
-        @NotNull TransactionInput offerersFirstTxInput = new TransactionInput(params, tx, new byte[]{}, offerersFirstTxOutPoint);   // pass that around!  getScriptBytes = empty bytes array
+        TransactionInput offerersFirstTxInput = new TransactionInput(params, tx, new byte[]{}, offerersFirstTxOutPoint);   // pass that around!  getScriptBytes = empty bytes array
         offerersFirstTxInput.setParent(tx);
         tx.addInput(offerersFirstTxInput);
 
         // takers signed tx
-        @NotNull Transaction takersSignedTx = new Transaction(params, Utils.parseAsHexOrBase58(takersSignedTxAsHex));
+        Transaction takersSignedTx = new Transaction(params, Utils.parseAsHexOrBase58(takersSignedTxAsHex));
 
         printInputs("takersSignedTxInput", takersSignedTx);
         log.trace("takersSignedTx = " + takersSignedTx);
 
         // add input
-        @NotNull Transaction takersSignedTxConnOut = new Transaction(params, Utils.parseAsHexOrBase58(takersSignedConnOutAsHex));
-        @NotNull TransactionOutPoint takersSignedTxOutPoint = new TransactionOutPoint(params, takerTxOutIndex, takersSignedTxConnOut);
-        @NotNull TransactionInput takersSignedTxInput = new TransactionInput(params, tx, Utils.parseAsHexOrBase58(takersSignedScriptSigAsHex), takersSignedTxOutPoint);
+        Transaction takersSignedTxConnOut = new Transaction(params, Utils.parseAsHexOrBase58(takersSignedConnOutAsHex));
+        TransactionOutPoint takersSignedTxOutPoint = new TransactionOutPoint(params, takerTxOutIndex, takersSignedTxConnOut);
+        TransactionInput takersSignedTxInput = new TransactionInput(params, tx, Utils.parseAsHexOrBase58(takersSignedScriptSigAsHex), takersSignedTxOutPoint);
         takersSignedTxInput.setParent(tx);
         tx.addInput(takersSignedTxInput);
 
@@ -901,10 +899,10 @@ public class WalletFacade
             log.error("input or input.getConnectedOutput() is null: " + input);
 
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
-        @Nullable ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
+        ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
         Sha256Hash hash = tx.hashForSignature(0, scriptPubKey, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature ecSig = sigKey.sign(hash);
-        @NotNull TransactionSignature txSig = new TransactionSignature(ecSig, Transaction.SigHash.ALL, false);
+        TransactionSignature txSig = new TransactionSignature(ecSig, Transaction.SigHash.ALL, false);
         if (scriptPubKey.isSentToRawPubKey())
             input.setScriptSig(ScriptBuilder.createInputScript(txSig));
         else if (scriptPubKey.isSentToAddress())
@@ -953,7 +951,7 @@ public class WalletFacade
         log.trace("takerCommitDepositTx");
         log.trace("inputs: ");
         log.trace("depositTxID=" + depositTxAsHex);
-        @NotNull Transaction depositTx = new Transaction(params, Utils.parseAsHexOrBase58(depositTxAsHex));
+        Transaction depositTx = new Transaction(params, Utils.parseAsHexOrBase58(depositTxAsHex));
         log.trace("depositTx=" + depositTx);
         // boolean isAlreadyInWallet = wallet.maybeCommitTx(depositTx);
         //log.trace("isAlreadyInWallet=" + isAlreadyInWallet);
@@ -973,7 +971,7 @@ public class WalletFacade
     }
 
     // 5. step payout tx: Offerer creates payout tx and signs it
-    @NotNull
+
     public Pair<ECKey.ECDSASignature, String> offererCreatesAndSignsPayoutTx(String depositTxID,
                                                                              BigInteger offererPaybackAmount,
                                                                              BigInteger takerPaybackAmount,
@@ -988,19 +986,19 @@ public class WalletFacade
         log.trace("takerAddress=" + takerAddress);
 
         // Offerer has published depositTx earlier, so he has it in his wallet
-        @Nullable Transaction depositTx = wallet.getTransaction(new Sha256Hash(depositTxID));
+        Transaction depositTx = wallet.getTransaction(new Sha256Hash(depositTxID));
         String depositTxAsHex = Utils.bytesToHexString(depositTx.bitcoinSerialize());
 
         // We create the payout tx
-        @NotNull Transaction tx = createPayoutTx(depositTxAsHex, offererPaybackAmount, takerPaybackAmount, getAddressInfoByTradeID(tradeID).getAddressString(), takerAddress);
+        Transaction tx = createPayoutTx(depositTxAsHex, offererPaybackAmount, takerPaybackAmount, getAddressInfoByTradeID(tradeID).getAddressString(), takerAddress);
 
         // We create the signature for that tx
-        @Nullable TransactionOutput multiSigOutput = tx.getInput(0).getConnectedOutput();
+        TransactionOutput multiSigOutput = tx.getInput(0).getConnectedOutput();
         Script multiSigScript = multiSigOutput.getScriptPubKey();
         Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature offererSignature = getAddressInfoByTradeID(tradeID).getKey().sign(sigHash);
 
-        @NotNull TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
+        TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
         Script inputScript = ScriptBuilder.createMultiSigInputScript(ImmutableList.of(offererTxSig));
         tx.getInput(0).setScriptSig(inputScript);
 
@@ -1010,7 +1008,7 @@ public class WalletFacade
 
     // 6. step payout tx: Taker signs and publish tx
     @SuppressWarnings("UnusedReturnValue")
-    @NotNull
+
     public Transaction takerSignsAndSendsTx(String depositTxAsHex,
                                             String offererSignatureR,
                                             String offererSignatureS,
@@ -1018,7 +1016,7 @@ public class WalletFacade
                                             BigInteger takerPaybackAmount,
                                             String offererAddress,
                                             String tradeID,
-                                            @NotNull FutureCallback<Transaction> callback) throws AddressFormatException
+                                            FutureCallback<Transaction> callback) throws AddressFormatException
     {
         log.debug("takerSignsAndSendsTx");
         log.trace("inputs: ");
@@ -1031,19 +1029,19 @@ public class WalletFacade
         log.trace("callback=" + callback);
 
         // We create the payout tx
-        @NotNull Transaction tx = createPayoutTx(depositTxAsHex, offererPaybackAmount, takerPaybackAmount, offererAddress, getAddressInfoByTradeID(tradeID).getAddressString());
+        Transaction tx = createPayoutTx(depositTxAsHex, offererPaybackAmount, takerPaybackAmount, offererAddress, getAddressInfoByTradeID(tradeID).getAddressString());
 
         // We sign that tx with our key and apply the signature form the offerer
-        @Nullable TransactionOutput multiSigOutput = tx.getInput(0).getConnectedOutput();
+        TransactionOutput multiSigOutput = tx.getInput(0).getConnectedOutput();
         Script multiSigScript = multiSigOutput.getScriptPubKey();
         Sha256Hash sigHash = tx.hashForSignature(0, multiSigScript, Transaction.SigHash.ALL, false);
         log.trace("sigHash=" + sigHash);
 
         ECKey.ECDSASignature takerSignature = getAddressInfoByTradeID(tradeID).getKey().sign(sigHash);
-        @NotNull TransactionSignature takerTxSig = new TransactionSignature(takerSignature, Transaction.SigHash.ALL, false);
+        TransactionSignature takerTxSig = new TransactionSignature(takerSignature, Transaction.SigHash.ALL, false);
 
-        @NotNull ECKey.ECDSASignature offererSignature = new ECKey.ECDSASignature(new BigInteger(offererSignatureR), new BigInteger(offererSignatureS));
-        @NotNull TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
+        ECKey.ECDSASignature offererSignature = new ECKey.ECDSASignature(new BigInteger(offererSignatureR), new BigInteger(offererSignatureS));
+        TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
 
         Script inputScript = ScriptBuilder.createMultiSigInputScript(ImmutableList.of(offererTxSig, takerTxSig));
         tx.getInput(0).setScriptSig(inputScript);
@@ -1087,16 +1085,15 @@ public class WalletFacade
 
     private Script getMultiSigScript(String offererPubKey, String takerPubKey, String arbitratorPubKey)
     {
-        @NotNull ECKey offererKey = new ECKey(null, Utils.parseAsHexOrBase58(offererPubKey));
-        @NotNull ECKey takerKey = new ECKey(null, Utils.parseAsHexOrBase58(takerPubKey));
-        @NotNull ECKey arbitratorKey = new ECKey(null, Utils.parseAsHexOrBase58(arbitratorPubKey));
+        ECKey offererKey = new ECKey(null, Utils.parseAsHexOrBase58(offererPubKey));
+        ECKey takerKey = new ECKey(null, Utils.parseAsHexOrBase58(takerPubKey));
+        ECKey arbitratorKey = new ECKey(null, Utils.parseAsHexOrBase58(arbitratorPubKey));
 
         List<ECKey> keys = ImmutableList.of(offererKey, takerKey, arbitratorKey);
         return ScriptBuilder.createMultiSigOutputScript(2, keys);
     }
 
 
-    @NotNull
     private Transaction createPayoutTx(String depositTxAsHex,
                                        BigInteger offererPaybackAmount,
                                        BigInteger takerPaybackAmount,
@@ -1111,9 +1108,9 @@ public class WalletFacade
         log.trace("offererAddress=" + offererAddress);
         log.trace("takerAddress=" + takerAddress);
 
-        @NotNull Transaction depositTx = new Transaction(params, Utils.parseAsHexOrBase58(depositTxAsHex));
+        Transaction depositTx = new Transaction(params, Utils.parseAsHexOrBase58(depositTxAsHex));
         TransactionOutput multiSigOutput = depositTx.getOutput(0);
-        @NotNull Transaction tx = new Transaction(params);
+        Transaction tx = new Transaction(params);
         tx.addInput(multiSigOutput);
         tx.addOutput(offererPaybackAmount, new Address(params, offererAddress));
         tx.addOutput(takerPaybackAmount, new Address(params, takerAddress));
@@ -1121,9 +1118,9 @@ public class WalletFacade
         return tx;
     }
 
-    private void printInputs(String tracePrefix, @NotNull Transaction tx)
+    private void printInputs(String tracePrefix, Transaction tx)
     {
-        for (@NotNull TransactionInput input : tx.getInputs())
+        for (TransactionInput input : tx.getInputs())
             if (input.getConnectedOutput() != null)
                 log.trace(tracePrefix + ": " + BtcFormatter.satoshiToString(input.getConnectedOutput().getValue()));
             else
@@ -1160,13 +1157,13 @@ public class WalletFacade
 
         private void onProgressInUserThread(double percent, int blocksSoFar, final Date date)
         {
-            for (@NotNull DownloadListener downloadListener : downloadListeners)
+            for (DownloadListener downloadListener : downloadListeners)
                 downloadListener.progress(percent);
         }
 
         private void onDoneDownloadInUserThread()
         {
-            for (@NotNull DownloadListener downloadListener : downloadListeners)
+            for (DownloadListener downloadListener : downloadListeners)
                 downloadListener.doneDownload();
         }
     }

@@ -5,9 +5,10 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="rootContainer" fx:controller="io.bitsquare.gui.orders.pending.PendingTradeController" spacing="10" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
-      AnchorPane.topAnchor="0" xmlns="http://javafx.com/javafx/8"
-      xmlns:fx="http://javafx.com/fxml/1">
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:id="rootContainer" fx:controller="io.bitsquare.gui.orders.pending.PendingTradeController" spacing="10" AnchorPane.bottomAnchor="0"
+      AnchorPane.leftAnchor="0"
+      AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
+      xmlns="http://javafx.com/javafx/8">
     <TableView id="orderbook-table" fx:id="openTradesTable" prefHeight="150.0">
         <columns>
             <TableColumn fx:id="amountColumn" minWidth="120" text="Amount (Min.)">

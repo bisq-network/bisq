@@ -9,8 +9,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.concurrent.locks.ReentrantLock;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,8 +23,8 @@ public class DSAKeyUtil
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @NotNull
-    public static String getHexStringFromPublicKey(@NotNull PublicKey publicKey)
+
+    public static String getHexStringFromPublicKey(PublicKey publicKey)
     {
         final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
         return Utils.bytesToHexString(x509EncodedKeySpec.getEncoded());
@@ -34,7 +32,7 @@ public class DSAKeyUtil
 
     //  not used yet
     /*
-    @Nullable
+
     public static PublicKey getPublicKeyFromHexString(String publicKeyAsHex) throws NoSuchAlgorithmException, InvalidKeySpecException
     {
         final byte[] bytes = Utils.parseAsHexOrBase58(publicKeyAsHex);
@@ -42,7 +40,7 @@ public class DSAKeyUtil
         return keyFactory.generatePublic(new X509EncodedKeySpec(bytes));
     } */
 
-    @Nullable
+
     public static KeyPair getKeyPair()
     {
         return getKeyPair(FileUtil.getFile(prefix + "public", "key"), FileUtil.getFile(prefix + "private", "key"));
@@ -53,8 +51,8 @@ public class DSAKeyUtil
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
-    private static KeyPair getKeyPair(@NotNull File pubKeyFile, @NotNull File privKeyFile)
+
+    private static KeyPair getKeyPair(File pubKeyFile, File privKeyFile)
     {
         try
         {
@@ -90,7 +88,7 @@ public class DSAKeyUtil
     }
 
 
-    private static void saveKeyPairToFiles(@NotNull File pubKeyFile, @NotNull File privKeyFile, @NotNull KeyPair keyPair) throws IOException
+    private static void saveKeyPairToFiles(File pubKeyFile, File privKeyFile, KeyPair keyPair) throws IOException
     {
         lock.lock();
         final File pubKeyTempFile = FileUtil.getTempFile("pubKey_temp_" + prefix);
@@ -156,8 +154,8 @@ public class DSAKeyUtil
         }
     }
 
-    @Nullable
-    private static KeyPair readKeyPairFromFiles(@NotNull File pubKeyFile, @NotNull File privKeyFile) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException
+
+    private static KeyPair readKeyPairFromFiles(File pubKeyFile, File privKeyFile) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException
     {
         lock.lock();
         try (final FileInputStream pubKeyFileInputStream = new FileInputStream(pubKeyFile);

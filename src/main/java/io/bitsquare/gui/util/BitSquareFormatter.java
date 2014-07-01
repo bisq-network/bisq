@@ -10,7 +10,6 @@ import java.util.Currency;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("WeakerAccess")
 public class BitSquareFormatter
@@ -20,34 +19,34 @@ public class BitSquareFormatter
         return formatDouble(price);
     }
 
-    @NotNull
-    public static String formatPriceWithCurrencyPair(double price, @NotNull Currency currency)
+
+    public static String formatPriceWithCurrencyPair(double price, Currency currency)
     {
         return formatDouble(price) + " " + currency + "/BTC";
     }
 
     @SuppressWarnings("SameParameterValue")
-    @NotNull
+
     public static String formatAmount(double amount, boolean useBTC, boolean exact)
     {
         return formatDouble(amount, (exact ? 4 : 2)) + (useBTC ? " BTC" : "");
     }
 
     @SuppressWarnings("SameParameterValue")
-    @NotNull
+
     public static String formatAmount(double amount, boolean useBTC)
     {
         return formatAmount(amount, useBTC, false);
     }
 
-    @NotNull
+
     public static String formatAmount(double amount)
     {
         return formatAmount(amount, false);
     }
 
     @SuppressWarnings("SameParameterValue")
-    @NotNull
+
     public static String formatAmountWithMinAmount(double amount, double minAmount, boolean useBTC)
     {
         if (useBTC)
@@ -56,7 +55,7 @@ public class BitSquareFormatter
             return formatDouble(amount) + " (" + formatDouble(minAmount) + ")";
     }
 
-    @NotNull
+
     public static String formatAmountWithMinAmount(double amount, double minAmount)
     {
         return formatAmountWithMinAmount(amount, minAmount, false);
@@ -67,41 +66,41 @@ public class BitSquareFormatter
         return formatDouble(volume);
     }
 
-    @NotNull
-    public static String formatVolume(double volume, @NotNull Currency currency)
+
+    public static String formatVolume(double volume, Currency currency)
     {
         return formatDouble(volume) + " " + currency;
     }
 
-    @NotNull
-    public static String formatVolumeWithMinVolume(double volume, double minVolume, @NotNull Currency currency)
+
+    public static String formatVolumeWithMinVolume(double volume, double minVolume, Currency currency)
     {
         return formatDouble(volume) + " " + currency + " (" + formatDouble(minVolume) + " " + currency + ")";
     }
 
-    @NotNull
+
     public static String formatVolumeWithMinVolume(double volume, double minVolume)
     {
         return formatDouble(volume) + " (" + formatDouble(minVolume) + ")";
     }
 
-    @NotNull
+
     public static String formatCollateral(double collateral, double amount)
     {
         return formatPercent(collateral) + " (" + formatDouble(collateral * amount, 4) + " BTC)";
     }
 
-    @NotNull
+
     public static String formatDirection(Direction direction, boolean allUpperCase)
     {
-        @NotNull String result = (direction == Direction.BUY) ? "Buy" : "Sell";
+        String result = (direction == Direction.BUY) ? "Buy" : "Sell";
         if (allUpperCase)
             result = result.toUpperCase();
         return result;
     }
 
-    @NotNull
-    public static String formatList(@NotNull List<String> list)
+
+    public static String formatList(List<String> list)
     {
         String s = list.toString();
         return s.substring(1, s.length() - 1);
@@ -114,32 +113,32 @@ public class BitSquareFormatter
 
     public static String formatDouble(double value, int fractionDigits)
     {
-        @NotNull DecimalFormat decimalFormat = getDecimalFormat(fractionDigits);
+        DecimalFormat decimalFormat = getDecimalFormat(fractionDigits);
         return decimalFormat.format(value);
     }
 
-    @NotNull
+
     public static DecimalFormat getDecimalFormat(int fractionDigits)
     {
-        @NotNull DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.getDefault());
+        DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.getDefault());
         decimalFormat.setMinimumFractionDigits(fractionDigits);
         decimalFormat.setMaximumFractionDigits(fractionDigits);
         decimalFormat.setGroupingUsed(false);
         return decimalFormat;
     }
 
-    @NotNull
+
     private static String formatPercent(double value)
     {
         return value * 100 + "%";
     }
 
-    @NotNull
-    public static String countryLocalesToString(@NotNull List<Country> countries)
+
+    public static String countryLocalesToString(List<Country> countries)
     {
         String result = "";
         int i = 0;
-        for (@NotNull Country country : countries)
+        for (Country country : countries)
         {
             result += country.getName();
             i++;
@@ -149,11 +148,11 @@ public class BitSquareFormatter
         return result;
     }
 
-    public static String languageLocalesToString(@NotNull List<Locale> languageLocales)
+    public static String languageLocalesToString(List<Locale> languageLocales)
     {
         String result = "";
         int i = 0;
-        for (@NotNull Locale locale : languageLocales)
+        for (Locale locale : languageLocales)
         {
             result += locale.getDisplayLanguage();
             i++;
@@ -163,12 +162,12 @@ public class BitSquareFormatter
         return result;
     }
 
-    @NotNull
-    public static String arbitrationMethodsToString(@NotNull List<Arbitrator.METHOD> items)
+
+    public static String arbitrationMethodsToString(List<Arbitrator.METHOD> items)
     {
         String result = "";
         int i = 0;
-        for (@NotNull Arbitrator.METHOD item : items)
+        for (Arbitrator.METHOD item : items)
         {
             result += Localisation.get(item.toString());
             i++;
@@ -178,12 +177,12 @@ public class BitSquareFormatter
         return result;
     }
 
-    @NotNull
-    public static String arbitrationIDVerificationsToString(@NotNull List<Arbitrator.ID_VERIFICATION> items)
+
+    public static String arbitrationIDVerificationsToString(List<Arbitrator.ID_VERIFICATION> items)
     {
         String result = "";
         int i = 0;
-        for (@NotNull Arbitrator.ID_VERIFICATION item : items)
+        for (Arbitrator.ID_VERIFICATION item : items)
         {
             result += Localisation.get(item.toString());
             i++;
@@ -193,7 +192,7 @@ public class BitSquareFormatter
         return result;
     }
 
-    @NotNull
+
     public static String formatDateTime(Date date)
     {
         DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.getDefault());

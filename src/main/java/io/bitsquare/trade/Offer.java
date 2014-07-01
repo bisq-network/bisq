@@ -7,7 +7,6 @@ import io.bitsquare.user.Arbitrator;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.*;
-import org.jetbrains.annotations.NotNull;
 
 public class Offer implements Serializable
 {
@@ -18,7 +17,7 @@ public class Offer implements Serializable
     private final Currency currency;
 
     private final String id;
-    @NotNull
+
     private final Date creationDate;
 
     private final double price;
@@ -173,7 +172,7 @@ public class Offer implements Serializable
         return bankAccountUID;
     }
 
-    @NotNull
+
     @Override
     public String toString()
     {
@@ -196,7 +195,7 @@ public class Offer implements Serializable
                 '}';
     }
 
-    @NotNull
+
     public Date getCreationDate()
     {
         return creationDate;

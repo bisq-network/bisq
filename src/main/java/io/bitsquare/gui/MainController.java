@@ -36,8 +36,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import net.tomp2p.peers.PeerAddress;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +51,7 @@ public class MainController implements Initializable, NavigationController
     private final Storage storage;
     private final ToggleGroup toggleGroup = new ToggleGroup();
 
-    @Nullable
+
     private ChildController childController;
     private ToggleButton prevToggleButton;
     private Image prevToggleButtonIcon;
@@ -94,7 +92,7 @@ public class MainController implements Initializable, NavigationController
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @NotNull
+
     public static MainController INSTANCE()
     {
         return mainController;
@@ -116,9 +114,9 @@ public class MainController implements Initializable, NavigationController
     // Interface implementation: NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
+
     @Override
-    public ChildController navigateToView(@NotNull NavigationItem navigationItem)
+    public ChildController navigateToView(NavigationItem navigationItem)
     {
         switch (navigationItem)
         {
@@ -147,8 +145,8 @@ public class MainController implements Initializable, NavigationController
         return childController;
     }
 
-    @Nullable
-    private ChildController loadView(@NotNull NavigationItem navigationItem)
+
+    private ChildController loadView(NavigationItem navigationItem)
     {
         if (childController != null)
             childController.cleanup();
@@ -211,7 +209,7 @@ public class MainController implements Initializable, NavigationController
     }
 
 
-    private void showTakeOfferRequest(@NotNull TradeMessage tradeMessage, @NotNull PeerAddress sender)
+    private void showTakeOfferRequest(TradeMessage tradeMessage, PeerAddress sender)
     {
         trading.createOffererPaymentProtocol(tradeMessage, sender);
         final Button alertButton = new Button("", Icons.getIconImageView(Icons.MSG_ALERT));
@@ -246,8 +244,8 @@ public class MainController implements Initializable, NavigationController
         settingsButton = addNavButton(rightNavPane, "Settings", NavigationItem.SETTINGS);
     }
 
-    @NotNull
-    private ToggleButton addNavButton(@NotNull Pane parent, @NotNull String title, @NotNull NavigationItem navigationItem)
+
+    private ToggleButton addNavButton(Pane parent, String title, NavigationItem navigationItem)
     {
         final Pane pane = new Pane();
         pane.setPrefSize(50, 50);
@@ -285,7 +283,7 @@ public class MainController implements Initializable, NavigationController
         return toggleButton;
     }
 
-    private void addBalanceInfo(@NotNull Pane parent)
+    private void addBalanceInfo(Pane parent)
     {
         final TextField balanceTextField = new TextField();
         balanceTextField.setEditable(false);
@@ -320,7 +318,7 @@ public class MainController implements Initializable, NavigationController
         parent.getChildren().add(vBox);
     }
 
-    private void addAccountComboBox(@NotNull Pane parent)
+    private void addAccountComboBox(Pane parent)
     {
         if (user.getBankAccounts().size() > 1)
         {
@@ -330,14 +328,14 @@ public class MainController implements Initializable, NavigationController
             accountComboBox.valueProperty().addListener((ov, oldValue, newValue) -> user.setCurrentBankAccount(newValue));
             accountComboBox.setConverter(new StringConverter<BankAccount>()
             {
-                @NotNull
+
                 @Override
-                public String toString(@NotNull BankAccount bankAccount)
+                public String toString(BankAccount bankAccount)
                 {
                     return bankAccount.getAccountTitle();
                 }
 
-                @Nullable
+
                 @Override
                 public BankAccount fromString(String s)
                 {

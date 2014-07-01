@@ -2,7 +2,6 @@ package io.bitsquare.gui.util;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import org.jetbrains.annotations.NotNull;
 
 public class Icons
 {
@@ -27,13 +26,13 @@ public class Icons
     public static final String SELL = "/images/sell.png";
     public static final String REMOVE = "/images/removeOffer.png";
 
-    @NotNull
+
     public static Image getIconImage(String iconName)
     {
         return new Image(Icons.class.getResourceAsStream(iconName));
     }
 
-    @NotNull
+
     public static ImageView getIconImageView(String iconName)
     {
         return new ImageView(new Image(Icons.class.getResourceAsStream(iconName)));

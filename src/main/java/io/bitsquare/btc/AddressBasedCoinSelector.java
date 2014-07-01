@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +43,7 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
 
     @SuppressWarnings("WeakerAccess")
     @VisibleForTesting
-    static void sortOutputs(@NotNull ArrayList<TransactionOutput> outputs)
+    static void sortOutputs(ArrayList<TransactionOutput> outputs)
     {
         Collections.sort(outputs, (a, b) -> {
             int depth1 = 0;
@@ -71,7 +70,7 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
         });
     }
 
-    private static boolean isInBlockChainOrPending(@NotNull Transaction tx)
+    private static boolean isInBlockChainOrPending(Transaction tx)
     {
         // Pick chain-included transactions and transactions that are pending.
         TransactionConfidence confidence = tx.getConfidence();
@@ -83,7 +82,7 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
                         (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
     }
 
-    private static boolean isInBlockChain(@NotNull Transaction tx)
+    private static boolean isInBlockChain(Transaction tx)
     {
         // Only pick chain-included transactions.
         TransactionConfidence confidence = tx.getConfidence();
@@ -94,7 +93,7 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
     /**
      * Sub-classes can override this to just customize whether transactions are usable, but keep age sorting.
      */
-    protected boolean shouldSelect(@NotNull Transaction tx)
+    protected boolean shouldSelect(Transaction tx)
     {
         if (includePending)
             return isInBlockChainOrPending(tx);
@@ -103,7 +102,7 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
     }
 
     @SuppressWarnings("WeakerAccess")
-    protected boolean matchesRequiredAddress(@NotNull TransactionOutput transactionOutput)
+    protected boolean matchesRequiredAddress(TransactionOutput transactionOutput)
     {
         if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
         {
@@ -116,14 +115,14 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
         return false;
     }
 
-    @NotNull
-    public CoinSelection select(@NotNull BigInteger biTarget, @NotNull LinkedList<TransactionOutput> candidates)
+
+    public CoinSelection select(BigInteger biTarget, LinkedList<TransactionOutput> candidates)
     {
         long target = biTarget.longValue();
-        @NotNull HashSet<TransactionOutput> selected = new HashSet<>();
+        HashSet<TransactionOutput> selected = new HashSet<>();
         // Sort the inputs by age*value so we get the highest "coindays" spent.
         // TODO: Consider changing the wallets internal format to track just outputs and keep them ordered.
-        @NotNull ArrayList<TransactionOutput> sortedOutputs = new ArrayList<>(candidates);
+        ArrayList<TransactionOutput> sortedOutputs = new ArrayList<>(candidates);
         // When calculating the wallet balance, we may be asked to select all possible coins, if so, avoid sorting
         // them in order to improve performance.
         if (!biTarget.equals(NetworkParameters.MAX_MONEY))
@@ -133,7 +132,7 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
         // Now iterate over the sorted outputs until we have got as close to the target as possible or a little
         // bit over (excessive value will be change).
         long total = 0;
-        for (@NotNull TransactionOutput output : sortedOutputs)
+        for (TransactionOutput output : sortedOutputs)
         {
             if (total >= target) break;
             // Only pick chain-included transactions, or transactions that are ours and pending.

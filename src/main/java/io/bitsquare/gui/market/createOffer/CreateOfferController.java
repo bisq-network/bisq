@@ -36,20 +36,19 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CreateOfferController implements Initializable, ChildController, Hibernate
 {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferController.class);
-    @NotNull
+
     private final Trading trading;
-    @NotNull
+
     private final WalletFacade walletFacade;
-    @NotNull
+
     private final Settings settings;
-    @NotNull
+
     private final User user;
     private NavigationController navigationController;
     private Direction direction;
@@ -75,7 +74,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferController(@NotNull Trading trading, @NotNull WalletFacade walletFacade, @NotNull Settings settings, @NotNull User user)
+    private CreateOfferController(Trading trading, WalletFacade walletFacade, Settings settings, User user)
     {
         this.trading = trading;
         this.walletFacade = walletFacade;
@@ -88,7 +87,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setOrderBookFilter(@NotNull OrderBookFilter orderBookFilter)
+    public void setOrderBookFilter(OrderBookFilter orderBookFilter)
     {
         direction = orderBookFilter.getDirection();
         amountTextField.setText(BitSquareFormatter.formatPrice(orderBookFilter.getAmount()));
@@ -128,7 +127,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         }
         acceptedCountriesTextField.setText(BitSquareFormatter.countryLocalesToString(settings.getAcceptedCountries()));
         acceptedLanguagesTextField.setText(BitSquareFormatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
-        feeLabel.setText(BtcFormatter.satoshiToString(FeePolicy.CREATE_OFFER_FEE));
+        feeLabel.setText(BtcFormatter.satoshiToString(FeePolicy.CREATE_OFFER_FEE_depr));
     }
 
 
@@ -137,7 +136,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(@NotNull NavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
         this.navigationController = navigationController;
     }
@@ -203,7 +202,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
                     settings.getAcceptedLanguageLocales());
 
 
-            @NotNull FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
+            FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
             {
                 @Override
                 public void onSuccess(@javax.annotation.Nullable Transaction transaction)
@@ -226,7 +225,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
                 }
 
                 @Override
-                public void onFailure(@NotNull Throwable t)
+                public void onFailure(Throwable t)
                 {
                     log.warn("sendResult onFailure:" + t);
                     Popups.openErrorPopup("Fee payment failed", "Fee payment failed. " + t);
@@ -247,7 +246,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
 
     public void onClose()
     {
-        @NotNull TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
+        TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
 
         navigationController.navigateToView(NavigationItem.ORDER_BOOK);
@@ -258,7 +257,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupSuccessScreen(@NotNull Transaction newTransaction)
+    private void setupSuccessScreen(Transaction newTransaction)
     {
         placeOfferButton.setVisible(false);
 

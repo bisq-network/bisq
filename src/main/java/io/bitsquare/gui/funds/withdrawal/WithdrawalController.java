@@ -29,8 +29,6 @@ import javafx.scene.input.ClipboardContent;
 import javafx.util.Callback;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,14 +104,14 @@ public class WithdrawalController implements Initializable, ChildController, Hib
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(@NotNull NavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
     }
 
     @Override
     public void cleanup()
     {
-        for (@NotNull WithdrawalListItem anAddressList : addressList)
+        for (WithdrawalListItem anAddressList : addressList)
         {
             anAddressList.cleanup();
         }
@@ -156,7 +154,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
             BigInteger amount = BtcFormatter.stringValueToSatoshis(amountTextField.getText());
             if (BtcValidator.isMinSpendableAmount(amount))
             {
-                @NotNull FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
+                FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
                 {
                     @Override
                     public void onSuccess(@javax.annotation.Nullable Transaction transaction)
@@ -166,7 +164,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                     }
 
                     @Override
-                    public void onFailure(@NotNull Throwable t)
+                    public void onFailure(Throwable t)
                     {
                         log.debug("onWithdraw onFailure");
                     }
@@ -176,8 +174,8 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                         "Amount: " + amountTextField.getText() + " BTC\n" +
                         "Sending address: " + withdrawFromTextField.getText() + "\n" +
                         "Receiving address: " + withdrawToTextField.getText() + "\n" +
-                        "Transaction fee: " + BtcFormatter.satoshiToString(FeePolicy.TX_FEE) + "\n" +
-                        "You receive in total: " + BtcFormatter.satoshiToString(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
+                        "Transaction fee: " + BtcFormatter.satoshiToString(FeePolicy.TX_FEE_depr) + "\n" +
+                        "You receive in total: " + BtcFormatter.satoshiToString(amount.subtract(FeePolicy.TX_FEE_depr)) + " BTC\n\n" +
                         "Are you sure you withdraw that amount?");
                 if (response == Dialog.Actions.OK)
                 {
@@ -224,17 +222,17 @@ public class WithdrawalController implements Initializable, ChildController, Hib
         labelColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
         labelColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>()
         {
-            @Nullable
+
             @Override
             public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column)
             {
                 return new TableCell<String, WithdrawalListItem>()
                 {
-                    @Nullable
+
                     Hyperlink hyperlink;
 
                     @Override
-                    public void updateItem(@Nullable final WithdrawalListItem item, boolean empty)
+                    public void updateItem(final WithdrawalListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
 
@@ -244,7 +242,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                             hyperlink.setId("id-link");
                             if (item.getAddressEntry().getTradeId() != null)
                             {
-                                @NotNull Tooltip tooltip = new Tooltip(item.getAddressEntry().getTradeId());
+                                Tooltip tooltip = new Tooltip(item.getAddressEntry().getTradeId());
                                 Tooltip.install(hyperlink, tooltip);
 
                                 hyperlink.setOnAction(event -> log.info("Show trade details " + item.getAddressEntry().getTradeId()));
@@ -267,14 +265,14 @@ public class WithdrawalController implements Initializable, ChildController, Hib
         balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
         balanceColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>()
         {
-            @NotNull
+
             @Override
             public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column)
             {
                 return new TableCell<String, WithdrawalListItem>()
                 {
                     @Override
-                    public void updateItem(@Nullable final WithdrawalListItem item, boolean empty)
+                    public void updateItem(final WithdrawalListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
                         setGraphic((item != null && !empty) ? item.getBalanceLabel() : null);
@@ -289,7 +287,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
         copyColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
         copyColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>()
         {
-            @Nullable
+
             @Override
             public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column)
             {
@@ -304,7 +302,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                     }
 
                     @Override
-                    public void updateItem(@Nullable final WithdrawalListItem item, boolean empty)
+                    public void updateItem(final WithdrawalListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
 
@@ -313,7 +311,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                             setGraphic(copyIcon);
                             copyIcon.setOnMouseClicked(e -> {
                                 Clipboard clipboard = Clipboard.getSystemClipboard();
-                                @NotNull ClipboardContent content = new ClipboardContent();
+                                ClipboardContent content = new ClipboardContent();
                                 content.putString(item.addressStringProperty().get());
                                 clipboard.setContent(content);
                             });
@@ -334,7 +332,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
         confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
         confidenceColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>()
         {
-            @Nullable
+
             @Override
             public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column)
             {
@@ -342,7 +340,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                 {
 
                     @Override
-                    public void updateItem(@Nullable final WithdrawalListItem item, boolean empty)
+                    public void updateItem(final WithdrawalListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
 

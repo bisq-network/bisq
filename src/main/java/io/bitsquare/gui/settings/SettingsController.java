@@ -38,16 +38,14 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 // TODO separate in 2 view/controllers
 public class SettingsController implements Initializable, ChildController, NavigationController
 {
     private final User user;
-    @NotNull
+
     private final Settings settings;
-    @NotNull
+
     private final Storage storage;
     private final MessageFacade messageFacade;
     private final ObservableList<Locale> languageList;
@@ -85,7 +83,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SettingsController(User user, @NotNull Settings settings, @NotNull Storage storage, MessageFacade messageFacade)
+    public SettingsController(User user, Settings settings, Storage storage, MessageFacade messageFacade)
     {
         this.user = user;
         this.settings = settings;
@@ -142,15 +140,15 @@ public class SettingsController implements Initializable, ChildController, Navig
         {
             String pubKeyAsHex = Utils.bytesToHexString(new ECKey().getPubKey());
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey());
-            @NotNull List<Locale> languages = new ArrayList<>();
+            List<Locale> languages = new ArrayList<>();
             languages.add(LanguageUtil.getDefaultLanguageLocale());
-            @NotNull List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
+            List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
             arbitrationMethods.add(Arbitrator.METHOD.TLS_NOTARY);
-            @NotNull List<Arbitrator.ID_VERIFICATION> idVerifications = new ArrayList<>();
+            List<Arbitrator.ID_VERIFICATION> idVerifications = new ArrayList<>();
             idVerifications.add(Arbitrator.ID_VERIFICATION.PASSPORT);
             idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
 
-            @NotNull Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
+            Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
                     messagePubKeyAsHex,
                     "Manfred Karrer",
                     Arbitrator.ID_TYPE.REAL_LIFE_ID,
@@ -187,7 +185,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(@NotNull NavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
 
     }
@@ -203,15 +201,15 @@ public class SettingsController implements Initializable, ChildController, Navig
     // Interface implementation: NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
+
     @Override
-    public ChildController navigateToView(@NotNull NavigationItem navigationItem)
+    public ChildController navigateToView(NavigationItem navigationItem)
     {
 
         if (childController != null)
             childController.cleanup();
 
-        @NotNull final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
         {
             final Node view = loader.load();
@@ -219,7 +217,7 @@ public class SettingsController implements Initializable, ChildController, Navig
             childController.setNavigationController(this);
 
             final Stage rootStage = BitSquare.getStage();
-            @NotNull final Stage stage = new Stage();
+            final Stage stage = new Stage();
             stage.setTitle("Arbitrator selection");
             stage.setMinWidth(800);
             stage.setMinHeight(500);
@@ -229,7 +227,7 @@ public class SettingsController implements Initializable, ChildController, Navig
             stage.setY(rootStage.getY() + 50);
             stage.initModality(Modality.WINDOW_MODAL);
             stage.initOwner(rootStage);
-            @NotNull Scene scene = new Scene((Parent) view, 800, 600);
+            Scene scene = new Scene((Parent) view, 800, 600);
             stage.setScene(scene);
             stage.setOnHidden(windowEvent -> {
                 if (navigationItem == NavigationItem.ARBITRATOR_OVERVIEW)
@@ -354,7 +352,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     {
         languagesListView.setCellFactory(new Callback<ListView<Locale>, ListCell<Locale>>()
                                          {
-                                             @Nullable
+
                                              @Override
                                              public ListCell<Locale> call(ListView<Locale> list)
                                              {
@@ -379,7 +377,7 @@ public class SettingsController implements Initializable, ChildController, Navig
                                                      }
 
                                                      @Override
-                                                     public void updateItem(@Nullable final Locale item, boolean empty)
+                                                     public void updateItem(final Locale item, boolean empty)
                                                      {
                                                          super.updateItem(item, empty);
                                                          if (item != null && !empty)
@@ -405,12 +403,12 @@ public class SettingsController implements Initializable, ChildController, Navig
         languageComboBox.setConverter(new StringConverter<Locale>()
         {
             @Override
-            public String toString(@NotNull Locale locale)
+            public String toString(Locale locale)
             {
                 return locale.getDisplayLanguage();
             }
 
-            @Nullable
+
             @Override
             public Locale fromString(String s)
             {
@@ -425,12 +423,12 @@ public class SettingsController implements Initializable, ChildController, Navig
         regionComboBox.setConverter(new StringConverter<Region>()
         {
             @Override
-            public String toString(@NotNull Region region)
+            public String toString(Region region)
             {
                 return region.getName();
             }
 
-            @Nullable
+
             @Override
             public Region fromString(String s)
             {
@@ -440,7 +438,7 @@ public class SettingsController implements Initializable, ChildController, Navig
 
         countriesListView.setCellFactory(new Callback<ListView<Country>, ListCell<Country>>()
                                          {
-                                             @Nullable
+
                                              @Override
                                              public ListCell<Country> call(ListView<Country> list)
                                              {
@@ -466,7 +464,7 @@ public class SettingsController implements Initializable, ChildController, Navig
 
 
                                                      @Override
-                                                     public void updateItem(@Nullable final Country item, boolean empty)
+                                                     public void updateItem(final Country item, boolean empty)
                                                      {
                                                          super.updateItem(item, empty);
                                                          if (item != null && !empty)
@@ -490,14 +488,14 @@ public class SettingsController implements Initializable, ChildController, Navig
 
         countryComboBox.setConverter(new StringConverter<Country>()
         {
-            @NotNull
+
             @Override
-            public String toString(@NotNull Country country)
+            public String toString(Country country)
             {
                 return country.getName();
             }
 
-            @Nullable
+
             @Override
             public Country fromString(String s)
             {
@@ -511,7 +509,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     {
         arbitratorsListView.setCellFactory(new Callback<ListView<Arbitrator>, ListCell<Arbitrator>>()
                                            {
-                                               @Nullable
+
                                                @Override
                                                public ListCell<Arbitrator> call(ListView<Arbitrator> list)
                                                {
@@ -537,7 +535,7 @@ public class SettingsController implements Initializable, ChildController, Navig
 
 
                                                        @Override
-                                                       public void updateItem(@Nullable final Arbitrator item, boolean empty)
+                                                       public void updateItem(final Arbitrator item, boolean empty)
                                                        {
                                                            super.updateItem(item, empty);
                                                            if (item != null && !empty)
@@ -560,7 +558,7 @@ public class SettingsController implements Initializable, ChildController, Navig
         arbitratorsListView.setItems(arbitratorList);
     }
 
-    private void addLanguage(@Nullable Locale item)
+    private void addLanguage(Locale item)
     {
         if (!languageList.contains(item) && item != null)
         {
@@ -570,14 +568,14 @@ public class SettingsController implements Initializable, ChildController, Navig
         }
     }
 
-    private void removeLanguage(@NotNull Locale item)
+    private void removeLanguage(Locale item)
     {
         languageList.remove(item);
         settings.removeAcceptedLanguageLocale(item);
         saveSettings();
     }
 
-    private void addCountry(@Nullable Country item)
+    private void addCountry(Country item)
     {
         if (!countryList.contains(item) && item != null)
         {
@@ -587,14 +585,14 @@ public class SettingsController implements Initializable, ChildController, Navig
         }
     }
 
-    private void removeCountry(@NotNull Country item)
+    private void removeCountry(Country item)
     {
         countryList.remove(item);
         settings.removeAcceptedCountry(item);
         saveSettings();
     }
 
-    private void removeArbitrator(@NotNull Arbitrator item)
+    private void removeArbitrator(Arbitrator item)
     {
         arbitratorList.remove(item);
         settings.removeAcceptedArbitrator(item);
@@ -677,14 +675,14 @@ public class SettingsController implements Initializable, ChildController, Navig
             bankAccountComboBox.setItems(FXCollections.observableArrayList(user.getBankAccounts()));
             bankAccountComboBox.setConverter(new StringConverter<BankAccount>()
             {
-                @NotNull
+
                 @Override
-                public String toString(@NotNull BankAccount bankAccount)
+                public String toString(BankAccount bankAccount)
                 {
                     return bankAccount.getAccountTitle();
                 }
 
-                @Nullable
+
                 @Override
                 public BankAccount fromString(String s)
                 {
@@ -705,14 +703,14 @@ public class SettingsController implements Initializable, ChildController, Navig
         bankAccountTypesComboBox.setItems(FXCollections.observableArrayList(BankAccountType.getAllBankAccountTypes()));
         bankAccountTypesComboBox.setConverter(new StringConverter<BankAccountType>()
         {
-            @NotNull
+
             @Override
-            public String toString(@NotNull BankAccountType bankAccountTypeInfo)
+            public String toString(BankAccountType bankAccountTypeInfo)
             {
                 return Localisation.get(bankAccountTypeInfo.toString());
             }
 
-            @Nullable
+
             @Override
             public BankAccountType fromString(String s)
             {
@@ -733,14 +731,14 @@ public class SettingsController implements Initializable, ChildController, Navig
         bankAccountCurrencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllCurrencies()));
         bankAccountCurrencyComboBox.setConverter(new StringConverter<Currency>()
         {
-            @NotNull
+
             @Override
-            public String toString(@NotNull Currency currency)
+            public String toString(Currency currency)
             {
                 return currency.getCurrencyCode() + " (" + currency.getDisplayName() + ")";
             }
 
-            @Nullable
+
             @Override
             public Currency fromString(String s)
             {
@@ -763,12 +761,12 @@ public class SettingsController implements Initializable, ChildController, Navig
         bankAccountRegionComboBox.setConverter(new StringConverter<Region>()
         {
             @Override
-            public String toString(@NotNull Region region)
+            public String toString(Region region)
             {
                 return region.getName();
             }
 
-            @Nullable
+
             @Override
             public Region fromString(String s)
             {
@@ -778,14 +776,14 @@ public class SettingsController implements Initializable, ChildController, Navig
 
         bankAccountCountryComboBox.setConverter(new StringConverter<Country>()
         {
-            @NotNull
+
             @Override
-            public String toString(@NotNull Country country)
+            public String toString(Country country)
             {
                 return country.getName();
             }
 
-            @Nullable
+
             @Override
             public Country fromString(String s)
             {
@@ -811,7 +809,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     {
         if (verifyBankAccountData())
         {
-            @NotNull BankAccount bankAccount = new BankAccount(
+            BankAccount bankAccount = new BankAccount(
                     bankAccountTypesComboBox.getSelectionModel().getSelectedItem(),
                     bankAccountCurrencyComboBox.getSelectionModel().getSelectedItem(),
                     bankAccountCountryComboBox.getSelectionModel().getSelectedItem(),

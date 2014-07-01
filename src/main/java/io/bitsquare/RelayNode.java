@@ -3,7 +3,6 @@ package io.bitsquare;
 import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerMaker;
 import net.tomp2p.peers.Number160;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Network node for relaying p2p msg
@@ -11,10 +10,10 @@ import org.jetbrains.annotations.Nullable;
 class RelayNode
 {
     private static final Number160 ID = Number160.createHash(1);
-    @Nullable
+
     private static Peer masterPeer = null;
 
-    public static void main(@Nullable String[] args) throws Exception
+    public static void main(String[] args) throws Exception
     {
         if (args != null && args.length == 1)
             INSTANCE(new Integer(args[0]));

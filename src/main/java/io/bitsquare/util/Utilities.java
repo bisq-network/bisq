@@ -9,8 +9,6 @@ import java.io.*;
 import java.net.URI;
 import java.util.function.Function;
 import javafx.animation.AnimationTimer;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,16 +29,16 @@ public class Utilities
         return gson.fromJson(jsonString, classOfT);
     }
 
-    @Nullable
+
     public static Object deserializeHexStringToObject(String serializedHexString)
     {
-        @Nullable Object result = null;
+        Object result = null;
         try
         {
-            @NotNull ByteInputStream byteInputStream = new ByteInputStream();
+            ByteInputStream byteInputStream = new ByteInputStream();
             byteInputStream.setBuf(com.google.bitcoin.core.Utils.parseAsHexOrBase58(serializedHexString));
 
-            try (@NotNull ObjectInputStream objectInputStream = new ObjectInputStream(byteInputStream))
+            try (ObjectInputStream objectInputStream = new ObjectInputStream(byteInputStream))
             {
                 result = objectInputStream.readObject();
             } catch (ClassNotFoundException e)
@@ -59,14 +57,14 @@ public class Utilities
         return result;
     }
 
-    @Nullable
+
     public static String serializeObjectToHexString(Serializable serializable)
     {
-        @Nullable String result = null;
-        @NotNull ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        String result = null;
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try
         {
-            @NotNull ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
             objectOutputStream.writeObject(serializable);
 
             result = com.google.bitcoin.core.Utils.bytesToHexString(byteArrayOutputStream.toByteArray());
@@ -81,7 +79,7 @@ public class Utilities
     }
 
     @SuppressWarnings("SameParameterValue")
-    private static void printElapsedTime(@NotNull String msg)
+    private static void printElapsedTime(String msg)
     {
         if (!msg.isEmpty())
             msg += " / ";
@@ -96,30 +94,29 @@ public class Utilities
     }
 
 
-    public static void openURL(@NotNull String url) throws Exception
+    public static void openURL(String url) throws Exception
     {
         Desktop.getDesktop().browse(new URI(url));
     }
 
 
-    @Nullable
     public static Object copy(Serializable orig)
     {
-        @Nullable Object obj = null;
+        Object obj = null;
         try
         {
             // Write the object out to a byte array
-            @NotNull ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            @NotNull ObjectOutputStream out = new ObjectOutputStream(bos);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectOutputStream out = new ObjectOutputStream(bos);
             out.writeObject(orig);
             out.flush();
             out.close();
 
             // Make an input stream from the byte array and read
             // a copy of the object back in.
-            @NotNull ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
+            ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
             obj = in.readObject();
-        } catch (@NotNull IOException | ClassNotFoundException e)
+        } catch (IOException | ClassNotFoundException e)
         {
             e.printStackTrace();
         }
@@ -127,10 +124,10 @@ public class Utilities
     }
 
     @SuppressWarnings("SameParameterValue")
-    @NotNull
-    public static AnimationTimer setTimeout(int delay, @NotNull Function<AnimationTimer, Void> callback)
+
+    public static AnimationTimer setTimeout(int delay, Function<AnimationTimer, Void> callback)
     {
-        @NotNull AnimationTimer animationTimer = new AnimationTimer()
+        AnimationTimer animationTimer = new AnimationTimer()
         {
             final long lastTimeStamp = System.currentTimeMillis();
 
@@ -149,10 +146,10 @@ public class Utilities
     }
 
     @SuppressWarnings("SameParameterValue")
-    @NotNull
-    public static AnimationTimer setInterval(int delay, @NotNull Function<AnimationTimer, Void> callback)
+
+    public static AnimationTimer setInterval(int delay, Function<AnimationTimer, Void> callback)
     {
-        @NotNull AnimationTimer animationTimer = new AnimationTimer()
+        AnimationTimer animationTimer = new AnimationTimer()
         {
             long lastTimeStamp = System.currentTimeMillis();
 

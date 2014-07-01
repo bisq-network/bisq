@@ -16,7 +16,6 @@ import javafx.scene.layout.BorderStrokeStyle;
 import javafx.scene.layout.BorderWidths;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
-import org.jetbrains.annotations.NotNull;
 
 class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, BehaviorBase<ProcessStepBar<T>>>
 {
@@ -47,9 +46,9 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
             int i = 0;
             labelWithBorders = new ArrayList<>();
             int size = controller.getProcessStepItems().size();
-            for (@NotNull ProcessStepItem processStepItem : controller.getProcessStepItems())
+            for (ProcessStepItem processStepItem : controller.getProcessStepItems())
             {
-                @NotNull LabelWithBorder labelWithBorder = new LabelWithBorder(processStepItem, i == 0, i == size - 1);
+                LabelWithBorder labelWithBorder = new LabelWithBorder(processStepItem, i == 0, i == size - 1);
                 getChildren().add(labelWithBorder);
                 labelWithBorders.add(labelWithBorder);
                 if (i == 0)
@@ -106,12 +105,12 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
         final double borderWidth = 1;
         private final double arrowWidth = 10;
         private final double arrowHeight = 30;
-        @NotNull
+
         private final ProcessStepItem processStepItem;
         private final boolean isFirst;
         private final boolean isLast;
 
-        public LabelWithBorder(@NotNull ProcessStepItem processStepItem, boolean isFirst, boolean isLast)
+        public LabelWithBorder(ProcessStepItem processStepItem, boolean isFirst, boolean isLast)
         {
             super(processStepItem.getLabel());
             this.processStepItem = processStepItem;
@@ -125,14 +124,14 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
 
             this.setShape(createButtonShape());
 
-            @NotNull BorderStroke borderStroke = new BorderStroke(Color.LIGHTGRAY, BorderStrokeStyle.SOLID, null,
+            BorderStroke borderStroke = new BorderStroke(Color.LIGHTGRAY, BorderStrokeStyle.SOLID, null,
                     new BorderWidths(borderWidth, borderWidth, borderWidth, borderWidth), Insets.EMPTY);
             this.setBorder(new Border(borderStroke));
         }
 
         public void select()
         {
-            @NotNull BorderStroke borderStroke = new BorderStroke(processStepItem.getColor(), BorderStrokeStyle.SOLID, null,
+            BorderStroke borderStroke = new BorderStroke(processStepItem.getColor(), BorderStrokeStyle.SOLID, null,
                     new BorderWidths(borderWidth, borderWidth, borderWidth, borderWidth), Insets.EMPTY);
             this.setBorder(new Border(borderStroke));
             setTextFill(processStepItem.getColor());
@@ -152,7 +151,7 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
             return arrowWidth;
         }
 
-        @NotNull
+
         private Path createButtonShape()
         {
             // build the following shape (or home without left arrow)
@@ -161,14 +160,14 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
             //  \         \
             //  /         /
             //   --------
-            @NotNull Path path = new Path();
+            Path path = new Path();
 
             // begin in the upper left corner
-            @NotNull MoveTo e1 = new MoveTo(0, 0);
+            MoveTo e1 = new MoveTo(0, 0);
             path.getElements().add(e1);
 
             // draw a horizontal line that defines the width of the shape
-            @NotNull HLineTo e2 = new HLineTo();
+            HLineTo e2 = new HLineTo();
             // bind the width of the shape to the width of the button
             e2.xProperty().bind(this.widthProperty().subtract(arrowWidth));
             path.getElements().add(e2);
@@ -176,7 +175,7 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
             if (!isLast)
             {
                 // draw upper part of right arrow
-                @NotNull LineTo e3 = new LineTo();
+                LineTo e3 = new LineTo();
                 // the x endpoint of this line depends on the x property of line e2
                 e3.xProperty().bind(e2.xProperty().add(arrowWidth));
                 e3.setY(arrowHeight / 2.0);
@@ -185,24 +184,24 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
 
 
             // draw lower part of right arrow
-            @NotNull LineTo e4 = new LineTo();
+            LineTo e4 = new LineTo();
             // the x endpoint of this line depends on the x property of line e2
             e4.xProperty().bind(e2.xProperty());
             e4.setY(arrowHeight);
             path.getElements().add(e4);
 
             // draw lower horizontal line
-            @NotNull HLineTo e5 = new HLineTo(0);
+            HLineTo e5 = new HLineTo(0);
             path.getElements().add(e5);
 
             if (!isFirst)
             {
-                @NotNull LineTo e6 = new LineTo(arrowWidth, arrowHeight / 2.0);
+                LineTo e6 = new LineTo(arrowWidth, arrowHeight / 2.0);
                 path.getElements().add(e6);
             }
 
             // close path
-            @NotNull ClosePath e7 = new ClosePath();
+            ClosePath e7 = new ClosePath();
             path.getElements().add(e7);
             // this is a dummy color to fill the shape, it won't be visible
             path.setFill(Color.BLACK);

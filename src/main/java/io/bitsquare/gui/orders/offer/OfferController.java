@@ -22,8 +22,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.util.Callback;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +66,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
     // Interface implementation: ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
     @Override
-    public void setNavigationController(@NotNull NavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
         log.debug("setNavigationController" + this);
     }
@@ -95,7 +93,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
     {
         offerListItems = FXCollections.observableArrayList();
         Map<String, Offer> offerMap = trading.getOffers();
-        @NotNull List<Offer> offerList = new ArrayList<>(offerMap.values());
+        List<Offer> offerList = new ArrayList<>(offerMap.values());
         offerListItems.addAll(offerList.stream().map(OfferListItem::new).collect(Collectors.toList()));
         offerTable.setItems(offerListItems);
     }
@@ -111,7 +109,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    private void removeOffer(@NotNull OfferListItem offerListItem)
+    private void removeOffer(OfferListItem offerListItem)
     {
         try
         {
@@ -138,7 +136,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
         offerIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper(offerListItem.getValue()));
         offerIdColumn.setCellFactory(new Callback<TableColumn<String, OfferListItem>, TableCell<String, OfferListItem>>()
         {
-            @Nullable
+
             @Override
             public TableCell<String, OfferListItem> call(TableColumn<String, OfferListItem> column)
             {
@@ -147,7 +145,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
                     Hyperlink hyperlink;
 
                     @Override
-                    public void updateItem(@Nullable final OfferListItem item, boolean empty)
+                    public void updateItem(final OfferListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
 
@@ -155,7 +153,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
                         {
                             hyperlink = new Hyperlink(item.getOfferId());
                             //hyperlink.getStyleClass().setAll("aaa");
-                            @NotNull Tooltip tooltip = new Tooltip(item.getOfferId());
+                            Tooltip tooltip = new Tooltip(item.getOfferId());
                             Tooltip.install(hyperlink, tooltip);
                             hyperlink.setOnAction(event -> openOfferDetails(item));
                             setGraphic(hyperlink);
@@ -176,7 +174,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
         removeColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper(offerListItem.getValue()));
         removeColumn.setCellFactory(new Callback<TableColumn<String, OfferListItem>, TableCell<String, OfferListItem>>()
         {
-            @Nullable
+
             @Override
             public TableCell<String, OfferListItem> call(TableColumn<String, OfferListItem> directionColumn)
             {
@@ -192,7 +190,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
                     }
 
                     @Override
-                    public void updateItem(@Nullable final OfferListItem offerListItem, boolean empty)
+                    public void updateItem(final OfferListItem offerListItem, boolean empty)
                     {
                         super.updateItem(offerListItem, empty);
 

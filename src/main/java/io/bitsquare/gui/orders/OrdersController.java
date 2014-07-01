@@ -10,7 +10,6 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +49,7 @@ public class OrdersController implements Initializable, ChildController, Navigat
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(@NotNull NavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
     }
 
@@ -65,7 +64,7 @@ public class OrdersController implements Initializable, ChildController, Navigat
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ChildController navigateToView(@NotNull NavigationItem navigationItem)
+    public ChildController navigateToView(NavigationItem navigationItem)
     {
         return tabPane.navigateToView(navigationItem.getFxmlUrl());
     }

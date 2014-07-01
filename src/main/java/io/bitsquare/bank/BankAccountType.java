@@ -2,7 +2,6 @@ package io.bitsquare.bank;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import org.jetbrains.annotations.NotNull;
 
 public enum BankAccountType
 {
@@ -14,30 +13,30 @@ public enum BankAccountType
     PERFECT_MONEY("primary ID", "secondary ID"),
     OTHER("primary ID", "secondary ID");
 
-    @NotNull
+
     private final String primaryId;
-    @NotNull
+
     private final String secondaryId;
 
-    BankAccountType(@NotNull String primaryId, @NotNull String secondaryId)
+    BankAccountType(String primaryId, String secondaryId)
     {
         this.primaryId = primaryId;
         this.secondaryId = secondaryId;
     }
 
-    @NotNull
+
     public static ArrayList<BankAccountType> getAllBankAccountTypes()
     {
         return new ArrayList<>(Arrays.asList(BankAccountType.values()));
     }
 
-    @NotNull
+
     public String getPrimaryId()
     {
         return primaryId;
     }
 
-    @NotNull
+
     public String getSecondaryId()
     {
         return secondaryId;

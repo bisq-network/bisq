@@ -330,7 +330,7 @@ public class PendingTradeController implements Initializable, ChildController, H
 
             bankAccountTypeTextField.setText(BtcFormatter.satoshiToString(trade.getTradeAmount()));
             holderNameTextField.setText(fiatPayed);
-            primaryBankAccountIDTextField.setText(BtcFormatter.satoshiToString(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+            primaryBankAccountIDTextField.setText(BtcFormatter.satoshiToString(FeePolicy.CREATE_OFFER_FEE_depr.add(FeePolicy.TX_FEE_depr)));
             secondaryBankAccountIDTextField.setText(BtcFormatter.satoshiToString(trade.getCollateralAmount()));
 
             holderNameCopyIcon.setVisible(false);

@@ -13,8 +13,6 @@ import javafx.scene.Node;
 import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class LazyLoadingTabPane extends TabPane
 {
@@ -37,7 +35,7 @@ public class LazyLoadingTabPane extends TabPane
         super();
     }
 
-    public void initialize(@NotNull NavigationController navigationController, @NotNull Storage storage, @NotNull String... tabContentFXMLUrls)
+    public void initialize(NavigationController navigationController, Storage storage, String... tabContentFXMLUrls)
     {
         if (tabContentFXMLUrls.length == 0)
             throw new IllegalArgumentException("No tabContentFXMLUrls defined");
@@ -65,7 +63,7 @@ public class LazyLoadingTabPane extends TabPane
             childController.cleanup();
     }
 
-    @Nullable
+
     public ChildController navigateToView(String fxmlView)
     {
         for (int i = 0; i < tabContentFXMLUrls.length; i++)
@@ -88,7 +86,7 @@ public class LazyLoadingTabPane extends TabPane
             if (childController != null)
                 ((Hibernate) childController).sleep();
 
-            @Nullable Node view = null;
+            Node view = null;
             if (index < views.size())
             {
                 view = views.get(index);
@@ -97,7 +95,7 @@ public class LazyLoadingTabPane extends TabPane
             if (view == null)
             {
                 String fxmlView = tabContentFXMLUrls[index];
-                @NotNull final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
+                final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
                 try
                 {
                     view = loader.load();

@@ -3,7 +3,6 @@ package io.bitsquare.trade;
 import io.bitsquare.bank.BankAccount;
 import java.io.Serializable;
 import java.math.BigInteger;
-import org.jetbrains.annotations.NotNull;
 
 public class Contract implements Serializable
 {
@@ -90,7 +89,7 @@ public class Contract implements Serializable
         return offererMessagePubKeyAsHex;
     }
 
-    @NotNull
+
     @Override
     public String toString()
     {

@@ -21,8 +21,6 @@ import javafx.scene.control.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.util.Callback;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,14 +72,14 @@ public class DepositController implements Initializable, ChildController, Hibern
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(@NotNull NavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
     }
 
     @Override
     public void cleanup()
     {
-        for (@NotNull DepositListItem anAddressList : addressList)
+        for (DepositListItem anAddressList : addressList)
         {
             anAddressList.cleanup();
         }
@@ -134,17 +132,17 @@ public class DepositController implements Initializable, ChildController, Hibern
         labelColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
         labelColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>()
         {
-            @Nullable
+
             @Override
             public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column)
             {
                 return new TableCell<String, DepositListItem>()
                 {
-                    @Nullable
+
                     Hyperlink hyperlink;
 
                     @Override
-                    public void updateItem(@Nullable final DepositListItem item, boolean empty)
+                    public void updateItem(final DepositListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
 
@@ -154,7 +152,7 @@ public class DepositController implements Initializable, ChildController, Hibern
                             hyperlink.setId("id-link");
                             if (item.getAddressEntry().getTradeId() != null)
                             {
-                                @NotNull Tooltip tooltip = new Tooltip(item.getAddressEntry().getTradeId());
+                                Tooltip tooltip = new Tooltip(item.getAddressEntry().getTradeId());
                                 Tooltip.install(hyperlink, tooltip);
 
                                 hyperlink.setOnAction(event -> log.info("Show trade details " + item.getAddressEntry().getTradeId()));
@@ -177,14 +175,14 @@ public class DepositController implements Initializable, ChildController, Hibern
         balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
         balanceColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>()
         {
-            @Nullable
+
             @Override
             public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column)
             {
                 return new TableCell<String, DepositListItem>()
                 {
                     @Override
-                    public void updateItem(@Nullable final DepositListItem item, boolean empty)
+                    public void updateItem(final DepositListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
 
@@ -207,7 +205,7 @@ public class DepositController implements Initializable, ChildController, Hibern
         copyColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
         copyColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>()
         {
-            @Nullable
+
             @Override
             public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column)
             {
@@ -222,7 +220,7 @@ public class DepositController implements Initializable, ChildController, Hibern
                     }
 
                     @Override
-                    public void updateItem(@Nullable final DepositListItem item, boolean empty)
+                    public void updateItem(final DepositListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
 
@@ -231,7 +229,7 @@ public class DepositController implements Initializable, ChildController, Hibern
                             setGraphic(copyIcon);
                             copyIcon.setOnMouseClicked(e -> {
                                 Clipboard clipboard = Clipboard.getSystemClipboard();
-                                @NotNull ClipboardContent content = new ClipboardContent();
+                                ClipboardContent content = new ClipboardContent();
                                 content.putString(item.addressStringProperty().get());
                                 clipboard.setContent(content);
                             });
@@ -252,7 +250,7 @@ public class DepositController implements Initializable, ChildController, Hibern
         confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
         confidenceColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>()
         {
-            @Nullable
+
             @Override
             public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column)
             {
@@ -260,7 +258,7 @@ public class DepositController implements Initializable, ChildController, Hibern
                 {
 
                     @Override
-                    public void updateItem(@Nullable final DepositListItem item, boolean empty)
+                    public void updateItem(final DepositListItem item, boolean empty)
                     {
                         super.updateItem(item, empty);
 

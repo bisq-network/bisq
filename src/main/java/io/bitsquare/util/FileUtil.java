@@ -2,7 +2,6 @@ package io.bitsquare.util;
 
 import java.io.File;
 import java.io.IOException;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +16,7 @@ public class FileUtil
     }
 
     // not used yet
-   /* public static void setRootDirectory(@NotNull File rootDirectory)
+   /* public static void setRootDirectory( File rootDirectory)
     {
         FileUtil.rootDirectory = rootDirectory;
         if (!rootDirectory.exists())
@@ -27,8 +26,8 @@ public class FileUtil
         }
     } */
 
-    @NotNull
-    public static File getDirectory(@NotNull String name)
+
+    public static File getDirectory(String name)
     {
         final File dir = new File(rootDirectory, name);
         if (!dir.exists())
@@ -40,14 +39,14 @@ public class FileUtil
         return dir;
     }
 
-    @NotNull
-    public static File getFile(@NotNull String name, @NotNull String suffix)
+
+    public static File getFile(String name, String suffix)
     {
         return new File(rootDirectory, name + "." + suffix);
     }
 
-    @NotNull
-    public static File getTempFile(@NotNull String prefix) throws IOException
+
+    public static File getTempFile(String prefix) throws IOException
     {
         return File.createTempFile("temp_" + prefix, null, rootDirectory);
     }

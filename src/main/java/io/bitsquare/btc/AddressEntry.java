@@ -5,7 +5,6 @@ import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.NetworkParameters;
 import com.google.bitcoin.core.Utils;
 import java.io.Serializable;
-import org.jetbrains.annotations.Nullable;
 
 public class AddressEntry implements Serializable
 {
@@ -13,7 +12,7 @@ public class AddressEntry implements Serializable
     private final ECKey key;
     private final NetworkParameters params;
     private final AddressContext addressContext;
-    @Nullable
+
     private String tradeId = null;
 
     public AddressEntry(ECKey key, NetworkParameters params, AddressContext addressContext)
@@ -23,13 +22,13 @@ public class AddressEntry implements Serializable
         this.addressContext = addressContext;
     }
 
-    @Nullable
+
     public String getTradeId()
     {
         return tradeId;
     }
 
-    public void setTradeId(@Nullable String tradeId)
+    public void setTradeId(String tradeId)
     {
         this.tradeId = tradeId;
     }

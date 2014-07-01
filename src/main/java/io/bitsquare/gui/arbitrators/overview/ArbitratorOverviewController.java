@@ -29,15 +29,13 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.storage.Data;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings({"ALL", "UnusedParameters"})
 public class ArbitratorOverviewController implements Initializable, ChildController, NavigationController, ArbitratorListener
 {
     private final Settings settings;
     private final Storage storage;
-    @NotNull
+
     private final MessageFacade messageFacade;
     private final List<Arbitrator> allArbitrators = new ArrayList<>();
     private Arbitrator currentArbitrator;
@@ -57,7 +55,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorOverviewController(Settings settings, Storage storage, @NotNull MessageFacade messageFacade)
+    public ArbitratorOverviewController(Settings settings, Storage storage, MessageFacade messageFacade)
     {
 
         this.settings = settings;
@@ -86,7 +84,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(@NotNull NavigationController navigationController)
+    public void setNavigationController(NavigationController navigationController)
     {
         this.navigationController = navigationController;
     }
@@ -102,14 +100,14 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     // Interface implementation: NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
+
     @Override
-    public ChildController navigateToView(@NotNull NavigationItem navigationItem)
+    public ChildController navigateToView(NavigationItem navigationItem)
     {
         if (arbitratorProfileController != null)
             arbitratorProfileController.cleanup();
 
-        @NotNull final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
         {
             final Node view = loader.load();
@@ -136,23 +134,23 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     }
 
     @Override
-    public void onArbitratorsReceived(@Nullable Map<Number160, Data> dataMap, boolean success)
+    public void onArbitratorsReceived(Map<Number160, Data> dataMap, boolean success)
     {
         if (success && dataMap != null)
         {
             allArbitrators.clear();
 
-            for (@NotNull Data arbitratorData : dataMap.values())
+            for (Data arbitratorData : dataMap.values())
             {
                 try
                 {
                     Object arbitratorDataObject = arbitratorData.getObject();
                     if (arbitratorDataObject instanceof Arbitrator)
                     {
-                        @NotNull Arbitrator arbitrator = (Arbitrator) arbitratorDataObject;
+                        Arbitrator arbitrator = (Arbitrator) arbitratorDataObject;
                         allArbitrators.add(arbitrator);
                     }
-                } catch (@NotNull ClassNotFoundException | IOException e)
+                } catch (ClassNotFoundException | IOException e)
                 {
                     e.printStackTrace();
                 }
@@ -216,7 +214,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     @FXML
     public void onClose(ActionEvent actionEvent)
     {
-        @NotNull Stage stage = (Stage) rootContainer.getScene().getWindow();
+        Stage stage = (Stage) rootContainer.getScene().getWindow();
         stage.close();
     }
 
