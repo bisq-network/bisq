@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -181,7 +180,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
-    public void onPrevious(ActionEvent actionEvent)
+    public void onPrevious()
     {
         if (index > 0)
         {
@@ -193,7 +192,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     }
 
     @FXML
-    public void onNext(ActionEvent actionEvent)
+    public void onNext()
     {
         if (index < allArbitrators.size() - 1)
         {
@@ -205,14 +204,14 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     }
 
     @FXML
-    public void onSelect(ActionEvent actionEvent)
+    public void onSelect()
     {
         settings.addAcceptedArbitrator(currentArbitrator);
         storage.write(settings.getClass().getName(), settings);
     }
 
     @FXML
-    public void onClose(ActionEvent actionEvent)
+    public void onClose()
     {
         Stage stage = (Stage) rootContainer.getScene().getWindow();
         stage.close();

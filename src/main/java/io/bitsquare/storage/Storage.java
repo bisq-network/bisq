@@ -27,7 +27,6 @@ public class Storage
 
     @GuardedBy("lock")
     private Map<String, Serializable> rootMap = new HashMap<>();
-    private boolean dirty;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +119,6 @@ public class Storage
         try
         {
             lock.lock();
-            dirty = true;
             rootMap.put(key, value);
             saveObjectToFile((Serializable) rootMap);
         } finally
@@ -141,21 +139,12 @@ public class Storage
         return read(classInstance.getClass().getName() + "." + propertyKey);
     }
 
-
+    // read from local rootMap, just if not found read from disc
     public Serializable read(String key)
     {
         try
         {
             lock.lock();
-            if (dirty)
-            {
-                final Map<String, Serializable> map = readRootMap();
-                if (map != null)
-                {
-                    rootMap = map;
-                    dirty = false;
-                }
-            }
             if (rootMap.containsKey(key))
             {
                 // log.trace("Read object with key = " + key + " / value = " + rootMap.get(key));
@@ -163,8 +152,21 @@ public class Storage
             }
             else
             {
-                log.warn("Object with key = " + key + " not found.");
-                return null;
+                final Map<String, Serializable> map = readRootMap();
+                if (map != null)
+                {
+                    rootMap = map;
+                }
+                if (rootMap.containsKey(key))
+                {
+                    // log.trace("Read object with key = " + key + " / value = " + rootMap.get(key));
+                    return rootMap.get(key);
+                }
+                else
+                {
+                    log.info("Object with key = " + key + " not found.");
+                    return null;
+                }
             }
         } finally
         {
@@ -205,7 +207,7 @@ public class Storage
         } catch (FileNotFoundException e)
         {
 
-            log.trace("File not found is ok for the first run.");
+            log.trace("File not found is ok for the first execute.");
             return null;
         } catch (ClassNotFoundException | IOException e2)
         {

@@ -86,7 +86,7 @@ public class WalletFacade
 
     public void initWallet()
     {
-        // Tell bitcoinj to run event handlers on the JavaFX UI thread. This keeps things simple and means
+        // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
         // we cannot forget to switch threads when adding event handlers. Unfortunately, the DownloadListener
         // we give to the app kit is currently an exception and runs on a library thread. It'll get fixed in
         // a future version.
@@ -94,7 +94,7 @@ public class WalletFacade
 
         if (params == RegTestParams.get())
         {
-            walletAppKit.connectToLocalHost();   // You should run a regtest mode bitcoind locally.
+            walletAppKit.connectToLocalHost();   // You should execute a regtest mode bitcoind locally.
         }
         else if (params == MainNetParams.get())
         {
@@ -527,21 +527,21 @@ public class WalletFacade
 
     public boolean isRegistrationFeeBalanceSufficient()
     {
-        return getRegistrationBalance().compareTo(FeePolicy.ACCOUNT_REGISTRATION_FEE_depr) >= 0;
+        return getRegistrationBalance().compareTo(FeePolicy.ACCOUNT_REGISTRATION_FEE) >= 0;
     }
 
     public boolean isUnusedTradeAddressBalanceAboveCreationFee()
     {
         AddressEntry unUsedAddressEntry = getUnusedTradeAddressInfo();
         BigInteger unUsedAddressInfoBalance = getBalanceForAddress(unUsedAddressEntry.getAddress());
-        return unUsedAddressInfoBalance.compareTo(FeePolicy.CREATE_OFFER_FEE_depr) > 0;
+        return unUsedAddressInfoBalance.compareTo(FeePolicy.CREATE_OFFER_FEE) > 0;
     }
 
     public boolean isUnusedTradeAddressBalanceAboveTakeOfferFee()
     {
         AddressEntry unUsedAddressEntry = getUnusedTradeAddressInfo();
         BigInteger unUsedAddressInfoBalance = getBalanceForAddress(unUsedAddressEntry.getAddress());
-        return unUsedAddressInfoBalance.compareTo(FeePolicy.TAKE_OFFER_FEE_depr) > 0;
+        return unUsedAddressInfoBalance.compareTo(FeePolicy.TAKE_OFFER_FEE) > 0;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -573,8 +573,8 @@ public class WalletFacade
         byte[] data = cryptoFacade.getEmbeddedAccountRegistrationData(getRegistrationAddressInfo().getKey(), stringifiedBankAccounts);
         tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 
-        BigInteger fee = FeePolicy.ACCOUNT_REGISTRATION_FEE_depr.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(FeePolicy.TX_FEE_depr);
-        log.trace("fee: " + BtcFormatter.satoshiToString(fee));
+        BigInteger fee = FeePolicy.ACCOUNT_REGISTRATION_FEE.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(FeePolicy.TX_FEE);
+        log.trace("fee: " + BtcFormatter.formatSatoshis(fee));
         tx.addOutput(fee, feePolicy.getAddressForRegistrationFee());
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
@@ -588,12 +588,11 @@ public class WalletFacade
         printInputs("payRegistrationFee", tx);
     }
 
-    @SuppressWarnings("UnusedReturnValue")
     public String payCreateOfferFee(String offerId, FutureCallback<Transaction> callback) throws InsufficientMoneyException
     {
         Transaction tx = new Transaction(params);
-        BigInteger fee = FeePolicy.CREATE_OFFER_FEE_depr.subtract(FeePolicy.TX_FEE_depr);
-        log.trace("fee: " + BtcFormatter.satoshiToString(fee));
+        BigInteger fee = FeePolicy.CREATE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
+        log.trace("fee: " + BtcFormatter.formatSatoshis(fee));
         tx.addOutput(fee, feePolicy.getAddressForCreateOfferFee());
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
@@ -603,18 +602,18 @@ public class WalletFacade
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
-        printInputs("payTakeOfferFee", tx);
+        printInputs("payCreateOfferFee", tx);
         log.debug("tx=" + tx);
 
         return tx.getHashAsString();
     }
 
-    @SuppressWarnings("UnusedReturnValue")
+
     public String payTakeOfferFee(String offerId, FutureCallback<Transaction> callback) throws InsufficientMoneyException
     {
         Transaction tx = new Transaction(params);
-        BigInteger fee = FeePolicy.TAKE_OFFER_FEE_depr.subtract(FeePolicy.TX_FEE_depr);
-        log.trace("fee: " + BtcFormatter.satoshiToString(fee));
+        BigInteger fee = FeePolicy.TAKE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
+        log.trace("fee: " + BtcFormatter.formatSatoshis(fee));
         tx.addOutput(fee, feePolicy.getAddressForTakeOfferFee());
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
@@ -643,7 +642,7 @@ public class WalletFacade
                             FutureCallback<Transaction> callback) throws AddressFormatException, InsufficientMoneyException, IllegalArgumentException
     {
         Transaction tx = new Transaction(params);
-        tx.addOutput(amount.subtract(FeePolicy.TX_FEE_depr), new Address(params, withdrawToAddress));
+        tx.addOutput(amount.subtract(FeePolicy.TX_FEE), new Address(params, withdrawToAddress));
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
@@ -672,7 +671,7 @@ public class WalletFacade
     {
         log.debug("offererCreatesMSTxAndAddPayment");
         log.trace("inputs: ");
-        log.trace("offererInputAmount=" + BtcFormatter.satoshiToString(offererInputAmount));
+        log.trace("offererInputAmount=" + BtcFormatter.formatSatoshis(offererInputAmount));
         log.trace("offererPubKey=" + offererPubKey);
         log.trace("takerPubKey=" + takerPubKey);
         log.trace("arbitratorPubKey=" + arbitratorPubKey);
@@ -730,8 +729,8 @@ public class WalletFacade
     {
         log.debug("takerAddPaymentAndSignTx");
         log.trace("inputs: ");
-        log.trace("takerInputAmount=" + BtcFormatter.satoshiToString(takerInputAmount));
-        log.trace("msOutputAmount=" + BtcFormatter.satoshiToString(msOutputAmount));
+        log.trace("takerInputAmount=" + BtcFormatter.formatSatoshis(takerInputAmount));
+        log.trace("msOutputAmount=" + BtcFormatter.formatSatoshis(msOutputAmount));
         log.trace("offererPubKey=" + offererPubKey);
         log.trace("takerPubKey=" + takerPubKey);
         log.trace("arbitratorPubKey=" + arbitratorPubKey);
@@ -786,7 +785,7 @@ public class WalletFacade
             tx.addOutput(tempTx.getOutput(1));
 
         // We add the btc tx fee to the msOutputAmount and apply the change to the multiSig output
-        msOutputAmount = msOutputAmount.add(FeePolicy.TX_FEE_depr);
+        msOutputAmount = msOutputAmount.add(FeePolicy.TX_FEE);
         tx.getOutput(0).setValue(msOutputAmount);
 
         // Now we sign our input
@@ -835,13 +834,13 @@ public class WalletFacade
     // 3. step: deposit tx
     // Offerer signs tx and publishes it
 
-    public Transaction offererSignAndPublishTx(String offerersFirstTxAsHex,
-                                               String takersSignedTxAsHex,
-                                               String takersSignedConnOutAsHex,
-                                               String takersSignedScriptSigAsHex,
-                                               long offererTxOutIndex,
-                                               long takerTxOutIndex,
-                                               FutureCallback<Transaction> callback)
+    public void offererSignAndPublishTx(String offerersFirstTxAsHex,
+                                        String takersSignedTxAsHex,
+                                        String takersSignedConnOutAsHex,
+                                        String takersSignedScriptSigAsHex,
+                                        long offererTxOutIndex,
+                                        long takerTxOutIndex,
+                                        FutureCallback<Transaction> callback)
     {
         log.debug("offererSignAndPublishTx");
         log.trace("inputs: ");
@@ -881,7 +880,7 @@ public class WalletFacade
         takersSignedTxInput.setParent(tx);
         tx.addInput(takersSignedTxInput);
 
-        //TODO handle non change output cases
+        //TODO onResult non change output cases
         // add outputs from takers tx, they are already correct
         tx.addOutput(takersSignedTx.getOutput(0));
         if (takersSignedTx.getOutputs().size() > 1)
@@ -942,7 +941,6 @@ public class WalletFacade
         Futures.addCallback(broadcastComplete, callback);
         printInputs("tx", tx);
         log.debug("tx = " + tx);
-        return tx;
     }
 
     // 4 step deposit tx: Offerer send deposit tx to taker
@@ -981,8 +979,8 @@ public class WalletFacade
         log.debug("offererCreatesAndSignsPayoutTx");
         log.trace("inputs: ");
         log.trace("depositTxID=" + depositTxID);
-        log.trace("offererPaybackAmount=" + BtcFormatter.satoshiToString(offererPaybackAmount));
-        log.trace("takerPaybackAmount=" + BtcFormatter.satoshiToString(takerPaybackAmount));
+        log.trace("offererPaybackAmount=" + BtcFormatter.formatSatoshis(offererPaybackAmount));
+        log.trace("takerPaybackAmount=" + BtcFormatter.formatSatoshis(takerPaybackAmount));
         log.trace("takerAddress=" + takerAddress);
 
         // Offerer has published depositTx earlier, so he has it in his wallet
@@ -1007,24 +1005,22 @@ public class WalletFacade
     }
 
     // 6. step payout tx: Taker signs and publish tx
-    @SuppressWarnings("UnusedReturnValue")
-
-    public Transaction takerSignsAndSendsTx(String depositTxAsHex,
-                                            String offererSignatureR,
-                                            String offererSignatureS,
-                                            BigInteger offererPaybackAmount,
-                                            BigInteger takerPaybackAmount,
-                                            String offererAddress,
-                                            String tradeID,
-                                            FutureCallback<Transaction> callback) throws AddressFormatException
+    public void takerSignsAndSendsTx(String depositTxAsHex,
+                                     String offererSignatureR,
+                                     String offererSignatureS,
+                                     BigInteger offererPaybackAmount,
+                                     BigInteger takerPaybackAmount,
+                                     String offererAddress,
+                                     String tradeID,
+                                     FutureCallback<Transaction> callback) throws AddressFormatException
     {
         log.debug("takerSignsAndSendsTx");
         log.trace("inputs: ");
         log.trace("depositTxAsHex=" + depositTxAsHex);
         log.trace("offererSignatureR=" + offererSignatureR);
         log.trace("offererSignatureS=" + offererSignatureS);
-        log.trace("offererPaybackAmount=" + BtcFormatter.satoshiToString(offererPaybackAmount));
-        log.trace("takerPaybackAmount=" + BtcFormatter.satoshiToString(takerPaybackAmount));
+        log.trace("offererPaybackAmount=" + BtcFormatter.formatSatoshis(offererPaybackAmount));
+        log.trace("takerPaybackAmount=" + BtcFormatter.formatSatoshis(takerPaybackAmount));
         log.trace("offererAddress=" + offererAddress);
         log.trace("callback=" + callback);
 
@@ -1062,7 +1058,6 @@ public class WalletFacade
         log.trace("Check if wallet is consistent: result=" + wallet.isConsistent());
         printInputs("takerSignsAndSendsTx", tx);
         log.debug("tx = " + tx);
-        return tx;
     }
 
 
@@ -1103,8 +1098,8 @@ public class WalletFacade
         log.trace("createPayoutTx");
         log.trace("inputs: ");
         log.trace("depositTxAsHex=" + depositTxAsHex);
-        log.trace("offererPaybackAmount=" + BtcFormatter.satoshiToString(offererPaybackAmount));
-        log.trace("takerPaybackAmount=" + BtcFormatter.satoshiToString(takerPaybackAmount));
+        log.trace("offererPaybackAmount=" + BtcFormatter.formatSatoshis(offererPaybackAmount));
+        log.trace("takerPaybackAmount=" + BtcFormatter.formatSatoshis(takerPaybackAmount));
         log.trace("offererAddress=" + offererAddress);
         log.trace("takerAddress=" + takerAddress);
 
@@ -1122,7 +1117,7 @@ public class WalletFacade
     {
         for (TransactionInput input : tx.getInputs())
             if (input.getConnectedOutput() != null)
-                log.trace(tracePrefix + ": " + BtcFormatter.satoshiToString(input.getConnectedOutput().getValue()));
+                log.trace(tracePrefix + " input value : " + BtcFormatter.formatSatoshis(input.getConnectedOutput().getValue()));
             else
                 log.trace(tracePrefix + ": " + "Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
     }

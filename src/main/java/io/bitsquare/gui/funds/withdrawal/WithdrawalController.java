@@ -83,7 +83,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
 
                 if (BigInteger.ZERO.compareTo(newValue.getBalance()) <= 0)
                 {
-                    amountTextField.setText(BtcFormatter.satoshiToString(newValue.getBalance()));
+                    amountTextField.setText(BtcFormatter.formatSatoshis(newValue.getBalance()));
                     withdrawFromTextField.setText(newValue.getAddressEntry().getAddressString());
                     changeAddressTextField.setText(newValue.getAddressEntry().getAddressString());
                 }
@@ -174,8 +174,8 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                         "Amount: " + amountTextField.getText() + " BTC\n" +
                         "Sending address: " + withdrawFromTextField.getText() + "\n" +
                         "Receiving address: " + withdrawToTextField.getText() + "\n" +
-                        "Transaction fee: " + BtcFormatter.satoshiToString(FeePolicy.TX_FEE_depr) + "\n" +
-                        "You receive in total: " + BtcFormatter.satoshiToString(amount.subtract(FeePolicy.TX_FEE_depr)) + " BTC\n\n" +
+                        "Transaction fee: " + BtcFormatter.formatSatoshis(FeePolicy.TX_FEE) + "\n" +
+                        "You receive in total: " + BtcFormatter.formatSatoshis(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
                         "Are you sure you withdraw that amount?");
                 if (response == Dialog.Actions.OK)
                 {

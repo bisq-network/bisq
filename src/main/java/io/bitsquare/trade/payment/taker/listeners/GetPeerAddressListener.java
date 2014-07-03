@@ -1,8 +1,8 @@
-package io.bitsquare.msg.listeners;
+package io.bitsquare.trade.payment.taker.listeners;
 
 import net.tomp2p.peers.PeerAddress;
 
-public interface AddressLookupListener
+public interface GetPeerAddressListener
 {
     void onResult(PeerAddress peerAddress);
 

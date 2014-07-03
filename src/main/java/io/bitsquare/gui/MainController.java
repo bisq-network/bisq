@@ -8,11 +8,11 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.market.MarketController;
+import io.bitsquare.gui.orders.OrdersController;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.msg.TradeMessage;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Trading;
@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 public class MainController implements Initializable, NavigationController
 {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
-    private static MainController mainController;
+    private static MainController INSTANCE;
 
     private final User user;
     private final WalletFacade walletFacade;
@@ -85,7 +85,7 @@ public class MainController implements Initializable, NavigationController
         this.trading = trading;
         this.storage = storage;
 
-        MainController.mainController = this;
+        MainController.INSTANCE = this;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -93,9 +93,9 @@ public class MainController implements Initializable, NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public static MainController INSTANCE()
+    public static MainController GET_INSTANCE()
     {
-        return mainController;
+        return INSTANCE;
     }
 
 
@@ -173,7 +173,7 @@ public class MainController implements Initializable, NavigationController
     private void init()
     {
         messageFacade.init();
-        messageFacade.addTakeOfferRequestListener(this::showTakeOfferRequest);
+        messageFacade.addTakeOfferRequestListener(this::onTakeOfferRequested);
 
         walletFacade.addDownloadListener(new WalletFacade.DownloadListener()
         {
@@ -209,13 +209,15 @@ public class MainController implements Initializable, NavigationController
     }
 
 
-    private void showTakeOfferRequest(TradeMessage tradeMessage, PeerAddress sender)
+    private void onTakeOfferRequested(String offerId, PeerAddress sender)
     {
-        trading.createOffererPaymentProtocol(tradeMessage, sender);
         final Button alertButton = new Button("", Icons.getIconImageView(Icons.MSG_ALERT));
         alertButton.setId("nav-alert-button");
         alertButton.relocate(36, 19);
-        alertButton.setOnAction((e) -> ordersButton.fire());
+        alertButton.setOnAction((e) -> {
+            OrdersController.GET_INSTANCE().setSelectedTabIndex(1);
+            ordersButton.fire();
+        });
         Tooltip.install(alertButton, new Tooltip("Someone accepted your offer"));
         ordersButtonButtonHolder.getChildren().add(alertButton);
     }
@@ -289,13 +291,13 @@ public class MainController implements Initializable, NavigationController
         balanceTextField.setEditable(false);
         balanceTextField.setPrefWidth(90);
         balanceTextField.setId("nav-balance-label");
-        balanceTextField.setText(BtcFormatter.satoshiToString(walletFacade.getWalletBalance()));
+        balanceTextField.setText(BtcFormatter.formatSatoshis(walletFacade.getWalletBalance()));
         walletFacade.addBalanceListener(new BalanceListener()
         {
             @Override
             public void onBalanceChanged(BigInteger balance)
             {
-                balanceTextField.setText(BtcFormatter.satoshiToString(balance));
+                balanceTextField.setText(BtcFormatter.formatSatoshis(balance));
             }
         });
 

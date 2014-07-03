@@ -84,7 +84,7 @@ public class WithdrawalListItem
         this.balance = balance;
         if (balance != null)
         {
-            balanceLabel.setText(BtcFormatter.satoshiToString(balance));
+            balanceLabel.setText(BtcFormatter.formatSatoshis(balance));
         }
     }
 

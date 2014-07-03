@@ -23,7 +23,7 @@ public class Trade implements Serializable
     private Transaction depositTransaction;
     private Transaction payoutTransaction;
 
-    private State state = State.NONE;
+    private State state = State.OPEN;
 
     public Trade(Offer offer)
     {
@@ -38,21 +38,6 @@ public class Trade implements Serializable
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getId()
-    {
-        return offer.getId();
-    }
-
-    public Offer getOffer()
-    {
-        return offer;
-    }
-
-    public String getTakeOfferFeeTxID()
-    {
-        return takeOfferFeeTxID;
-    }
 
     public void setTakeOfferFeeTxID(String takeOfferFeeTxID)
     {
@@ -80,15 +65,30 @@ public class Trade implements Serializable
         contractChangedProperty.set(!contractChangedProperty.get());
     }
 
+    public String getId()
+    {
+        return offer.getId();
+    }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public Offer getOffer()
+    {
+        return offer;
+    }
+
+    public String getTakeOfferFeeTxId()
+    {
+        return takeOfferFeeTxID;
+    }
 
     public String getContractAsJson()
     {
         return contractAsJson;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setContractAsJson(String contractAsJson)
     {
@@ -122,7 +122,6 @@ public class Trade implements Serializable
         payoutTxChangedProperty.set(!payoutTxChangedProperty.get());
     }
 
-
     public State getState()
     {
         return state;
@@ -133,7 +132,6 @@ public class Trade implements Serializable
         this.state = state;
         stateChangedProperty.set(state.toString());
     }
-
 
     public SimpleBooleanProperty getDepositTxChangedProperty()
     {
@@ -186,7 +184,7 @@ public class Trade implements Serializable
 
     public static enum State
     {
-        NONE,
+        OPEN,
         ACCEPTED,
         COMPLETED
     }

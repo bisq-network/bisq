@@ -127,7 +127,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         }
         acceptedCountriesTextField.setText(BitSquareFormatter.countryLocalesToString(settings.getAcceptedCountries()));
         acceptedLanguagesTextField.setText(BitSquareFormatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
-        feeLabel.setText(BtcFormatter.satoshiToString(FeePolicy.CREATE_OFFER_FEE_depr));
+        feeLabel.setText(BtcFormatter.formatSatoshis(FeePolicy.CREATE_OFFER_FEE));
     }
 
 
@@ -175,7 +175,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
             return;
         }
 
-        int collateral = (int) (BitSquareConverter.stringToDouble2(collateralTextField.getText()));
+        int collateral = (int) (BitSquareConverter.stringToDouble(collateralTextField.getText()));
         Arbitrator arbitrator = settings.getRandomArbitrator(collateral, getAmountAsBI());
         if (arbitrator == null)
         {
@@ -189,7 +189,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         {
             offer = new Offer(user.getMessagePubKeyAsHex(),
                     direction,
-                    BitSquareConverter.stringToDouble2(priceTextField.getText()),
+                    BitSquareConverter.stringToDouble(priceTextField.getText()),
                     BtcFormatter.stringValueToSatoshis(amountTextField.getText()),
                     BtcFormatter.stringValueToSatoshis(minAmountTextField.getText()),
                     user.getCurrentBankAccount().getBankAccountType(),
@@ -202,39 +202,38 @@ public class CreateOfferController implements Initializable, ChildController, Hi
                     settings.getAcceptedLanguageLocales());
 
 
-            FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
-            {
-                @Override
-                public void onSuccess(@javax.annotation.Nullable Transaction transaction)
-                {
-                    log.info("sendResult onSuccess:" + transaction);
-                    if (transaction != null)
-                    {
-                        offer.setOfferFeePaymentTxID(transaction.getHashAsString());
-                        setupSuccessScreen(transaction);
-
-                        placeOfferTitle.setText("Transaction sent:");
-                        try
-                        {
-                            trading.addOffer(offer);
-                        } catch (IOException e)
-                        {
-                            Popups.openErrorPopup("Error on adding offer", "Could not add offer to orderbook. " + e.getMessage());
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(Throwable t)
-                {
-                    log.warn("sendResult onFailure:" + t);
-                    Popups.openErrorPopup("Fee payment failed", "Fee payment failed. " + t);
-                    placeOfferButton.setDisable(false);
-                }
-            };
             try
             {
-                walletFacade.payCreateOfferFee(offer.getId(), callback);
+                walletFacade.payCreateOfferFee(offer.getId(), new FutureCallback<Transaction>()
+                {
+                    @Override
+                    public void onSuccess(@javax.annotation.Nullable Transaction transaction)
+                    {
+                        log.info("sendResult onSuccess:" + transaction);
+                        if (transaction != null)
+                        {
+                            offer.setOfferFeePaymentTxID(transaction.getHashAsString());
+                            setupSuccessScreen(transaction);
+
+                            placeOfferTitle.setText("Transaction sent:");
+                            try
+                            {
+                                trading.addOffer(offer);
+                            } catch (IOException e)
+                            {
+                                Popups.openErrorPopup("Error on adding offer", "Could not add offer to orderbook. " + e.getMessage());
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t)
+                    {
+                        log.warn("sendResult onFailure:" + t);
+                        Popups.openErrorPopup("Fee payment failed", "Fee payment failed. " + t);
+                        placeOfferButton.setDisable(false);
+                    }
+                });
                 placeOfferButton.setDisable(true);
             } catch (InsufficientMoneyException e1)
             {
@@ -279,8 +278,8 @@ public class CreateOfferController implements Initializable, ChildController, Hi
 
     private double getVolume()
     {
-        double amountAsDouble = BitSquareConverter.stringToDouble2(amountTextField.getText());
-        double priceAsDouble = BitSquareConverter.stringToDouble2(priceTextField.getText());
+        double amountAsDouble = BitSquareConverter.stringToDouble(amountTextField.getText());
+        double priceAsDouble = BitSquareConverter.stringToDouble(priceTextField.getText());
         return amountAsDouble * priceAsDouble;
     }
 
@@ -293,10 +292,10 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     @SuppressWarnings("UnusedAssignment")
     private boolean inputValid()
     {
-        double priceAsDouble = BitSquareConverter.stringToDouble2(priceTextField.getText());
-        double minAmountAsDouble = BitSquareConverter.stringToDouble2(minAmountTextField.getText());
-        double amountAsDouble = BitSquareConverter.stringToDouble2(amountTextField.getText());
-        double collateralAsDouble = BitSquareConverter.stringToDouble2(collateralTextField.getText());
+        double priceAsDouble = BitSquareConverter.stringToDouble(priceTextField.getText());
+        double minAmountAsDouble = BitSquareConverter.stringToDouble(minAmountTextField.getText());
+        double amountAsDouble = BitSquareConverter.stringToDouble(amountTextField.getText());
+        double collateralAsDouble = BitSquareConverter.stringToDouble(collateralTextField.getText());
 
         return priceAsDouble > 0 &&
                 amountAsDouble > 0 &&

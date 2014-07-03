@@ -35,7 +35,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -165,20 +164,15 @@ public class PendingTradeController implements Initializable, ChildController, H
 
         initCopyIcons();
 
-        if (tradeItems.size() > 0)
-        {
-            openTradesTable.getSelectionModel().select(0);
-        }
+        // select
+        Optional<PendingTradesListItem> currentTradeItemOptional = tradeItems.stream().filter((e) -> e.getTrade().getId().equals(trading.getCurrentPendingTrade().getId())).findFirst();
+        if (currentTradeItemOptional.isPresent())
+            openTradesTable.getSelectionModel().select(currentTradeItemOptional.get());
 
-        tradeItems.addListener(new ListChangeListener<PendingTradesListItem>()
-        {
-            @Override
-            public void onChanged(Change<? extends PendingTradesListItem> change)
+        tradeItems.addListener((ListChangeListener<PendingTradesListItem>) change -> {
+            if (openTradesTable.getSelectionModel().getSelectedItem() == null && tradeItems.size() > 0)
             {
-                if (openTradesTable.getSelectionModel().getSelectedItem() == null && tradeItems.size() > 0)
-                {
-                    openTradesTable.getSelectionModel().select(0);
-                }
+                openTradesTable.getSelectionModel().select(0);
             }
         });
     }
@@ -187,13 +181,13 @@ public class PendingTradeController implements Initializable, ChildController, H
     // GUI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void bankTransferInited(ActionEvent actionEvent)
+    public void bankTransferInited()
     {
-        trading.onBankTransferInited(currentTrade.getId());
+        trading.onUIEventBankTransferInited(currentTrade.getId());
         bankTransferInitedButton.setDisable(true);
     }
 
-    public void close(ActionEvent actionEvent)
+    public void close()
     {
     }
 
@@ -328,10 +322,10 @@ public class PendingTradeController implements Initializable, ChildController, H
 
             String fiatPayed = BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount()));
 
-            bankAccountTypeTextField.setText(BtcFormatter.satoshiToString(trade.getTradeAmount()));
+            bankAccountTypeTextField.setText(BtcFormatter.formatSatoshis(trade.getTradeAmount()));
             holderNameTextField.setText(fiatPayed);
-            primaryBankAccountIDTextField.setText(BtcFormatter.satoshiToString(FeePolicy.CREATE_OFFER_FEE_depr.add(FeePolicy.TX_FEE_depr)));
-            secondaryBankAccountIDTextField.setText(BtcFormatter.satoshiToString(trade.getCollateralAmount()));
+            primaryBankAccountIDTextField.setText(BtcFormatter.formatSatoshis(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+            secondaryBankAccountIDTextField.setText(BtcFormatter.formatSatoshis(trade.getCollateralAmount()));
 
             holderNameCopyIcon.setVisible(false);
             primaryBankAccountIDCopyIcon.setVisible(false);

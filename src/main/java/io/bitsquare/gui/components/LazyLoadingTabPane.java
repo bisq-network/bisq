@@ -13,9 +13,12 @@ import javafx.scene.Node;
 import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LazyLoadingTabPane extends TabPane
 {
+    private static final Logger log = LoggerFactory.getLogger(LazyLoadingTabPane.class);
     private final Map<Integer, Node> views = new HashMap<>();
     private final Map<Integer, ChildController> controllers = new HashMap<>();
     private SingleSelectionModel<Tab> selectionModel;
@@ -24,6 +27,7 @@ public class LazyLoadingTabPane extends TabPane
     private String[] tabContentFXMLUrls;
     private Storage storage;
     private ChildController childController;
+    private int selectedTabIndex = -1;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -50,9 +54,17 @@ public class LazyLoadingTabPane extends TabPane
         selectionModel = getSelectionModel();
         selectionModel.selectedItemProperty().addListener((observableValue, oldTab, newTab) -> onTabSelectedIndexChanged());
 
-        Object indexObject = storage.read(storageId);
-        if (indexObject != null)
-            selectionModel.select((int) indexObject);
+        if (selectedTabIndex == -1)
+        {
+            Object indexObject = storage.read(storageId);
+            log.trace("saved index" + indexObject);
+            if (indexObject != null)
+                selectionModel.select((int) indexObject);
+        }
+        else
+        {
+            selectionModel.select(selectedTabIndex);
+        }
 
         onTabSelectedIndexChanged();
     }
@@ -81,6 +93,7 @@ public class LazyLoadingTabPane extends TabPane
     private void onTabSelectedIndexChanged()
     {
         int index = selectionModel.getSelectedIndex();
+        log.trace("onTabSelectedIndexChanged index" + index);
         if (index < tabContentFXMLUrls.length && index >= 0)
         {
             if (childController != null)
@@ -121,4 +134,8 @@ public class LazyLoadingTabPane extends TabPane
         }
     }
 
+    public void setSelectedTabIndex(int selectedTabIndex)
+    {
+        this.selectedTabIndex = selectedTabIndex;
+    }
 }

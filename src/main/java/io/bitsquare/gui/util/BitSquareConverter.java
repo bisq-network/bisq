@@ -15,21 +15,11 @@ public class BitSquareConverter
     {
         try
         {
-            return stringToDouble2(input);
+            input = input.replace(",", ".");
+            return Double.parseDouble(input);
         } catch (NumberFormatException | NullPointerException e)
         {
-            return Double.NEGATIVE_INFINITY;
+            return 0;
         }
     }
-
-    /**
-     * @param input String to be converted to a double. Both decimal points "." and "," are supported. Thousands separator is not supported.
-     * @return Returns a double value. Any invalid value throws an exception.
-     */
-    public static double stringToDouble2(String input)
-    {
-        input = input.replace(",", ".");
-        return Double.parseDouble(input);
-    }
-
 }

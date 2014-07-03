@@ -13,7 +13,7 @@ import io.bitsquare.gui.MainController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.market.createOffer.CreateOfferController;
-import io.bitsquare.gui.market.trade.TakerTradeController;
+import io.bitsquare.gui.market.trade.TakerOfferController;
 import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.gui.util.BitSquareConverter;
 import io.bitsquare.gui.util.BitSquareFormatter;
@@ -115,7 +115,7 @@ public class OrderBookController implements Initializable, ChildController
     {
         orderBook.init();
 
-        // setup table
+        // init table
         setCountryColumnCellFactory();
         setBankAccountTypeColumnCellFactory();
         setDirectionColumnCellFactory();
@@ -223,16 +223,16 @@ public class OrderBookController implements Initializable, ChildController
                         Action response = Popups.openErrorPopup("Registration fee not confirmed yet", "The registration fee transaction has not been confirmed yet in the blockchain. Please wait until it has at least 1 confirmation.");
                         if (response == Dialog.Actions.OK)
                         {
-                            MainController.INSTANCE().navigateToView(NavigationItem.FUNDS);
+                            MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
                         }
                     }
                 }
                 else
                 {
-                    Action response = Popups.openErrorPopup("Missing registration fee", "You have not funded the full registration fee of " + BtcFormatter.satoshiToString(FeePolicy.ACCOUNT_REGISTRATION_FEE_depr) + " BTC.");
+                    Action response = Popups.openErrorPopup("Missing registration fee", "You have not funded the full registration fee of " + BtcFormatter.formatSatoshis(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
                     if (response == Dialog.Actions.OK)
                     {
-                        MainController.INSTANCE().navigateToView(NavigationItem.FUNDS);
+                        MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
                     }
                 }
             }
@@ -255,11 +255,11 @@ public class OrderBookController implements Initializable, ChildController
             Action registrationMissingAction = Popups.openRegistrationMissingPopup("Not registered yet", "Please follow these steps:", "You need to register before you can place an offer.", commandLinks, selectedIndex);
             if (registrationMissingAction == settingsCommandLink)
             {
-                MainController.INSTANCE().navigateToView(NavigationItem.SETTINGS);
+                MainController.GET_INSTANCE().navigateToView(NavigationItem.SETTINGS);
             }
             else if (registrationMissingAction == depositFeeCommandLink)
             {
-                MainController.INSTANCE().navigateToView(NavigationItem.FUNDS);
+                MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
             }
             else if (registrationMissingAction == sendRegistrationCommandLink)
             {
@@ -315,7 +315,7 @@ public class OrderBookController implements Initializable, ChildController
                 Action response = Popups.openErrorPopup("No funds for a trade", "You have to add some funds before you create a new offer.");
                 if (response == Dialog.Actions.OK)
                 {
-                    MainController.INSTANCE().navigateToView(NavigationItem.FUNDS);
+                    MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
                 }
             }
         }
@@ -329,7 +329,7 @@ public class OrderBookController implements Initializable, ChildController
     {
         if (isRegistered())
         {
-            TakerTradeController takerTradeController = (TakerTradeController) navigationController.navigateToView(NavigationItem.TAKE_OFFER);
+            TakerOfferController takerOfferController = (TakerOfferController) navigationController.navigateToView(NavigationItem.TAKE_OFFER);
 
             BigInteger requestedAmount;
             if (!"".equals(amount.getText()))
@@ -337,8 +337,8 @@ public class OrderBookController implements Initializable, ChildController
             else
                 requestedAmount = offer.getAmount();
 
-            if (takerTradeController != null)
-                takerTradeController.initWithData(offer, requestedAmount);
+            if (takerOfferController != null)
+                takerOfferController.initWithData(offer, requestedAmount);
         }
         else
         {
@@ -541,7 +541,7 @@ public class OrderBookController implements Initializable, ChildController
             } catch (ParseException e)
             {
                 amount.setText(oldValue);
-                d = BitSquareConverter.stringToDouble2(oldValue);
+                d = BitSquareConverter.stringToDouble(oldValue);
             }
         }
         return d;

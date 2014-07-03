@@ -16,20 +16,38 @@ import org.slf4j.LoggerFactory;
 public class OrdersController implements Initializable, ChildController, NavigationController
 {
     private static final Logger log = LoggerFactory.getLogger(OrdersController.class);
+    private static int SELECTED_TAB_INDEX = -1;
+    private static OrdersController INSTANCE;
     private final Storage storage;
-
     @FXML
     private LazyLoadingTabPane tabPane;
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     private OrdersController(Storage storage)
     {
         this.storage = storage;
+        INSTANCE = this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static OrdersController GET_INSTANCE()
+    {
+        return INSTANCE;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setSelectedTabIndex(int index)
+    {
+        log.trace("setSelectedTabIndex " + index);
+        tabPane.setSelectedTabIndex(index);
+        storage.write(this.getClass().getName() + ".selectedTabIndex", index);
     }
 
 
@@ -40,6 +58,7 @@ public class OrdersController implements Initializable, ChildController, Navigat
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
+        log.trace("initialize ");
         tabPane.initialize(this, storage, NavigationItem.OFFER.getFxmlUrl(), NavigationItem.PENDING_TRADE.getFxmlUrl(), NavigationItem.CLOSED_TRADE.getFxmlUrl());
     }
 
@@ -58,6 +77,7 @@ public class OrdersController implements Initializable, ChildController, Navigat
     {
         tabPane.cleanup();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: NavigationController

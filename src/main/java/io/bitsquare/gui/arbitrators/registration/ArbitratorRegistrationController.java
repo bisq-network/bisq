@@ -29,7 +29,6 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.util.*;
 import javafx.collections.FXCollections;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -232,7 +231,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
-    public void onSelectIDType(ActionEvent actionEvent)
+    public void onSelectIDType()
     {
         idType = idTypeComboBox.getSelectionModel().getSelectedItem();
         if (idType != null)
@@ -259,7 +258,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     }
 
     @FXML
-    public void onAddLanguage(ActionEvent actionEvent)
+    public void onAddLanguage()
     {
         Locale item = languageComboBox.getSelectionModel().getSelectedItem();
         if (!languageList.contains(item) && item != null)
@@ -271,14 +270,14 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     }
 
     @FXML
-    public void onClearLanguages(ActionEvent actionEvent)
+    public void onClearLanguages()
     {
         languageList.clear();
         languagesTextField.setText("");
     }
 
     @FXML
-    public void onAddMethod(ActionEvent actionEvent)
+    public void onAddMethod()
     {
         Arbitrator.METHOD item = methodsComboBox.getSelectionModel().getSelectedItem();
         if (!methodList.contains(item) && item != null)
@@ -290,7 +289,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     }
 
     @FXML
-    public void onClearMethods(ActionEvent actionEvent)
+    public void onClearMethods()
     {
         methodList.clear();
         methodsTextField.setText("");
@@ -298,7 +297,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
 
 
     @FXML
-    public void onAddIDVerification(ActionEvent actionEvent)
+    public void onAddIDVerification()
     {
         Arbitrator.ID_VERIFICATION idVerification = idVerificationsComboBox.getSelectionModel().getSelectedItem();
         if (idVerification != null)
@@ -314,14 +313,14 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     }
 
     @FXML
-    public void onClearIDVerifications(ActionEvent actionEvent)
+    public void onClearIDVerifications()
     {
         idVerificationList.clear();
         idVerificationsTextField.setText("");
     }
 
     @FXML
-    public void onSaveProfile(ActionEvent actionEvent)
+    public void onSaveProfile()
     {
         arbitrator = getEditedArbitrator();
         if (arbitrator != null)
@@ -349,7 +348,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     }
 
     @FXML
-    public void onPaymentDone(ActionEvent actionEvent)
+    public void onPaymentDone()
     {
         //To change body of created methods use File | Settings | File Templates.
     }

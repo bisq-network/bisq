@@ -36,7 +36,7 @@ public class DSAKeyUtil
     public static PublicKey getPublicKeyFromHexString(String publicKeyAsHex) throws NoSuchAlgorithmException, InvalidKeySpecException
     {
         final byte[] bytes = Utils.parseAsHexOrBase58(publicKeyAsHex);
-        final KeyFactory keyFactory = KeyFactory.INSTANCE("DSA");
+        final KeyFactory keyFactory = KeyFactory.GET_INSTANCE("DSA");
         return keyFactory.generatePublic(new X509EncodedKeySpec(bytes));
     } */
 
@@ -60,7 +60,7 @@ public class DSAKeyUtil
         } catch (Throwable throwable)
         {
             if (throwable instanceof FileNotFoundException)
-                log.debug("Files not found. That is ok for the first run.");
+                log.debug("Files not found. That is ok for the first execute.");
             else
                 log.error("Could not read key files. " + throwable);
 

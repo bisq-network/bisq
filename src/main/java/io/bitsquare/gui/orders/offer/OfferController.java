@@ -68,7 +68,6 @@ public class OfferController implements Initializable, ChildController, Hibernat
     @Override
     public void setNavigationController(NavigationController navigationController)
     {
-        log.debug("setNavigationController" + this);
     }
 
     @Override

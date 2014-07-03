@@ -34,8 +34,6 @@ public class MarketController implements Initializable, NavigationController, Ch
     public void initialize(URL url, ResourceBundle rb)
     {
         navigateToView(NavigationItem.ORDER_BOOK);
-
-        navigateToView(NavigationItem.TAKE_OFFER);
     }
 
 

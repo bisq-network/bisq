@@ -17,13 +17,10 @@ import io.bitsquare.gui.util.BitSquareConverter;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.msg.TradeMessage;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.Trading;
-import io.bitsquare.trade.payment.taker.TakerPaymentProtocol;
-import io.bitsquare.trade.payment.taker.TakerPaymentProtocolListener;
 import io.bitsquare.util.Utilities;
 import java.math.BigInteger;
 import java.net.URL;
@@ -149,21 +146,21 @@ public class TakerTradeController implements Initializable, ChildController
         row = -1;
 
         FormBuilder.addHeaderLabel(gridPane, "Take offer:", ++row);
-        amountTextField = FormBuilder.addTextField(gridPane, "Amount (BTC):", BtcFormatter.satoshiToString(requestedAmount), ++row, true, true);
+        amountTextField = FormBuilder.addTextField(gridPane, "Amount (BTC):", BtcFormatter.formatSatoshis(requestedAmount), ++row, true, true);
         amountTextField.textProperty().addListener(e -> {
             applyVolume();
             applyCollateral();
             totalToPayLabel.setText(getTotalToPayAsString());
 
         });
-        Label amountRangeLabel = new Label("(" + BtcFormatter.satoshiToString(offer.getMinAmount()) + " - " + BtcFormatter.satoshiToString(offer.getAmount()) + ")");
+        Label amountRangeLabel = new Label("(" + BtcFormatter.formatSatoshis(offer.getMinAmount()) + " - " + BtcFormatter.formatSatoshis(offer.getAmount()) + ")");
         gridPane.add(amountRangeLabel, 2, row);
 
         FormBuilder.addTextField(gridPane, "Price (" + offer.getCurrency() + "/BTC):", BitSquareFormatter.formatPrice(offer.getPrice()), ++row);
         totalLabel = FormBuilder.addTextField(gridPane, "Total (" + offer.getCurrency() + "):", BitSquareFormatter.formatVolume(getVolume()), ++row);
         collateralTextField = FormBuilder.addTextField(gridPane, "Collateral (BTC):", "", ++row);
         applyCollateral();
-        FormBuilder.addTextField(gridPane, "Offer fee (BTC):", BtcFormatter.satoshiToString(FeePolicy.TAKE_OFFER_FEE_depr.add(FeePolicy.TX_FEE_depr)), ++row);
+        FormBuilder.addTextField(gridPane, "Offer fee (BTC):", BtcFormatter.formatSatoshis(FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)), ++row);
         totalToPayLabel = FormBuilder.addTextField(gridPane, "Total to pay (BTC):", getTotalToPayAsString(), ++row);
 
         isOnlineTextField = FormBuilder.addTextField(gridPane, "Online status:", "Checking offerers online status...", ++row);
@@ -228,48 +225,48 @@ public class TakerTradeController implements Initializable, ChildController
             return;
         }
 
-        if (trading.isOfferTradable(offer))
-        {
-            trade = trading.createTrade(offer);
-            trade.setTradeAmount(BtcFormatter.stringValueToSatoshis(amountTextField.getText()));
+        //if (trading.isOfferAlreadyInTrades(offer))
+        // {
+        trade = trading.createTrade(offer);
+        trade.setTradeAmount(BtcFormatter.stringValueToSatoshis(amountTextField.getText()));
 
-       /* if (!blockChainFacade.verifyAccountRegistration(offer.getAccountID()))
+       /* if (!blockChainFacade.verifyAccountRegistration(offer.getAccountId()))
         {
             Popups.openErrorPopup("Offerers account ID not valid", "Offerers registration tx is not found in blockchain or does not match the requirements.");
             return;
         }
 
-        if (blockChainFacade.isAccountIDBlacklisted(offer.getAccountID()))
+        if (blockChainFacade.isAccountIDBlacklisted(offer.getAccountId()))
         {
             Popups.openErrorPopup("Offerers account ID is blacklisted", "Offerers account ID is blacklisted.");
             return;
         }  */
 
-            amountTextField.setEditable(false);
+        amountTextField.setEditable(false);
 
-            gridPane.getChildren().clear();
+        gridPane.getChildren().clear();
 
-            row = -1;
-            FormBuilder.addHeaderLabel(gridPane, "Trade request inited", ++row, 0);
+        row = -1;
+        FormBuilder.addHeaderLabel(gridPane, "Trade request inited", ++row, 0);
 
-            Label statusTextField = FormBuilder.addLabel(gridPane, "Current activity:", "Request confirmation from offerer to take that offer.", ++row);
-            GridPane.setColumnSpan(statusTextField, 2);
-            FormBuilder.addLabel(gridPane, "Progress:", "", ++row);
-            progressBar = new ProgressBar();
-            progressBar.setProgress(0.0);
-            progressBar.setPrefWidth(300);
-            GridPane.setFillWidth(progressBar, true);
-            gridPane.add(progressBar, 1, row);
+        Label statusTextField = FormBuilder.addLabel(gridPane, "Current activity:", "Request confirmation from offerer to take that offer.", ++row);
+        GridPane.setColumnSpan(statusTextField, 2);
+        FormBuilder.addLabel(gridPane, "Progress:", "", ++row);
+        progressBar = new ProgressBar();
+        progressBar.setProgress(0.0);
+        progressBar.setPrefWidth(300);
+        GridPane.setFillWidth(progressBar, true);
+        gridPane.add(progressBar, 1, row);
 
-            FormBuilder.addLabel(gridPane, "Status:", "", ++row);
-            ConfidenceProgressIndicator progressIndicator = new ConfidenceProgressIndicator();
-            progressIndicator.setPrefSize(20, 20);
-            progressIndicator.setLayoutY(2);
-            Pane progressIndicatorHolder = new Pane();
-            progressIndicatorHolder.getChildren().addAll(progressIndicator);
-            gridPane.add(progressIndicatorHolder, 1, row);
+        FormBuilder.addLabel(gridPane, "Status:", "", ++row);
+        ConfidenceProgressIndicator progressIndicator = new ConfidenceProgressIndicator();
+        progressIndicator.setPrefSize(20, 20);
+        progressIndicator.setLayoutY(2);
+        Pane progressIndicatorHolder = new Pane();
+        progressIndicatorHolder.getChildren().addAll(progressIndicator);
+        gridPane.add(progressIndicatorHolder, 1, row);
 
-            TakerPaymentProtocol takerPaymentProtocol = trading.addTakerPaymentProtocol(trade, new TakerPaymentProtocolListener()
+            /*TakerPaymentProtocol takerPaymentProtocol = trading.addTakerPaymentProtocol(trade, new TakerPaymentProtocolListener()
             {
                 @Override
                 public void onProgress(double progress)
@@ -297,6 +294,7 @@ public class TakerTradeController implements Initializable, ChildController
                         statusTextField.setText("Offer fee payed. Send offerer payment transaction ID for confirmation.");
                         break;
                 }  */
+            /*
                 }
 
                 @Override
@@ -306,13 +304,13 @@ public class TakerTradeController implements Initializable, ChildController
                 }
 
                 @Override
-                public void onDepositTxPublished(String depositTxID)
+                public void onDepositTxPublishedMessage(String depositTxID)
                 {
                     buildDepositPublishedScreen(depositTxID);
                 }
 
                 @Override
-                public void onBankTransferInited(TradeMessage tradeMessage)
+                public void onBankTransferInitedMessage(TradeMessage tradeMessage)
                 {
                     buildBankTransferInitedScreen(tradeMessage);
                 }
@@ -324,9 +322,9 @@ public class TakerTradeController implements Initializable, ChildController
                 }
             });
 
-            takerPaymentProtocol.takeOffer();
-        }
+            takerPaymentProtocol.takeOffer();   */
     }
+    //}
 
     @SuppressWarnings("EmptyMethod")
     private void updateTx(Trade trade)
@@ -347,7 +345,7 @@ public class TakerTradeController implements Initializable, ChildController
         //   confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, transaction, progressIndicator);
     }
 
-    private void buildBankTransferInitedScreen(TradeMessage tradeMessage)
+    private void buildBankTransferInitedScreen()
     {
         processStepBar.next();
 
@@ -355,13 +353,13 @@ public class TakerTradeController implements Initializable, ChildController
         infoLabel.setText("Check your bank account and continue \nwhen you have received the money.");
         gridPane.add(nextButton, 1, ++row);
         nextButton.setText("I have received the money at my bank");
-        nextButton.setOnAction(e -> releaseBTC(tradeMessage));
+        nextButton.setOnAction(e -> releaseBTC());
     }
 
-    private void releaseBTC(TradeMessage tradeMessage)
+    private void releaseBTC()
     {
         processStepBar.next();
-        trading.releaseBTC(trade.getId(), tradeMessage);
+        trading.releaseBTC(trade.getId());
 
         nextButton.setText("Close");
         nextButton.setOnAction(e -> close());
@@ -372,19 +370,19 @@ public class TakerTradeController implements Initializable, ChildController
 
         String fiatReceived = BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount()));
 
-        FormBuilder.addTextField(gridPane, "You have sold (BTC):", BtcFormatter.satoshiToString(trade.getTradeAmount()), ++row);
+        FormBuilder.addTextField(gridPane, "You have sold (BTC):", BtcFormatter.formatSatoshis(trade.getTradeAmount()), ++row);
         if (takerIsSelling())
         {
             FormBuilder.addTextField(gridPane, "You have received (" + offer.getCurrency() + "):\"", fiatReceived, ++row);
-            FormBuilder.addTextField(gridPane, "Total fees (take offer fee + tx fee):", BtcFormatter.satoshiToString(FeePolicy.TAKE_OFFER_FEE_depr.add(FeePolicy.TX_FEE_depr)), ++row);
-            FormBuilder.addTextField(gridPane, "Refunded collateral:", BtcFormatter.satoshiToString(trade.getCollateralAmount()), ++row);
+            FormBuilder.addTextField(gridPane, "Total fees (take offer fee + tx fee):", BtcFormatter.formatSatoshis(FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)), ++row);
+            FormBuilder.addTextField(gridPane, "Refunded collateral:", BtcFormatter.formatSatoshis(trade.getCollateralAmount()), ++row);
         }
         else
         {
             //TODO
-            FormBuilder.addTextField(gridPane, "You got returned collateral (BTC):", BtcFormatter.satoshiToString(getCollateralInSatoshis()), ++row);
+            FormBuilder.addTextField(gridPane, "You got returned collateral (BTC):", BtcFormatter.formatSatoshis(getCollateralInSatoshis()), ++row);
             FormBuilder.addTextField(gridPane, "You have received (" + offer.getCurrency() + "):", BitSquareFormatter.formatVolume(getVolume()), ++row);
-            FormBuilder.addTextField(gridPane, "You have received (BTC):", BtcFormatter.satoshiToString(offer.getAmount()), ++row);
+            FormBuilder.addTextField(gridPane, "You have received (BTC):", BtcFormatter.formatSatoshis(offer.getAmount()), ++row);
         }
 
         gridPane.add(nextButton, 1, ++row);
@@ -440,18 +438,18 @@ public class TakerTradeController implements Initializable, ChildController
 
     private double getVolume()
     {
-        return offer.getPrice() * BitSquareConverter.stringToDouble2(amountTextField.getText());
+        return offer.getPrice() * BitSquareConverter.stringToDouble(amountTextField.getText());
     }
 
     private String getTotalToPayAsString()
     {
         if (takerIsSelling())
         {
-            return BtcFormatter.satoshiToString(getTotalToPay());
+            return BtcFormatter.formatSatoshis(getTotalToPay());
         }
         else
         {
-            return BtcFormatter.satoshiToString(getTotalToPay()) + "\n" +
+            return BtcFormatter.formatSatoshis(getTotalToPay()) + "\n" +
                     BitSquareFormatter.formatVolume(getVolume(), offer.getCurrency());
         }
     }
@@ -460,22 +458,22 @@ public class TakerTradeController implements Initializable, ChildController
     {
         if (takerIsSelling())
         {
-            return getAmountInSatoshis().add(FeePolicy.TAKE_OFFER_FEE_depr).add(Transaction.MIN_NONDUST_OUTPUT).add(FeePolicy.TX_FEE_depr).add(getCollateralInSatoshis());
+            return getAmountInSatoshis().add(FeePolicy.TAKE_OFFER_FEE).add(Transaction.MIN_NONDUST_OUTPUT).add(FeePolicy.TX_FEE).add(getCollateralInSatoshis());
         }
         else
         {
-            return FeePolicy.TAKE_OFFER_FEE_depr.add(Transaction.MIN_NONDUST_OUTPUT).add(FeePolicy.TX_FEE_depr).add(getCollateralInSatoshis());
+            return FeePolicy.TAKE_OFFER_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(FeePolicy.TX_FEE).add(getCollateralInSatoshis());
         }
     }
 
     private void applyCollateral()
     {
-        collateralTextField.setText(BtcFormatter.satoshiToString(getCollateralInSatoshis()));
+        collateralTextField.setText(BtcFormatter.formatSatoshis(getCollateralInSatoshis()));
     }
 
     private BigInteger getCollateralInSatoshis()
     {
-        double amount = BitSquareConverter.stringToDouble2(amountTextField.getText());
+        double amount = BitSquareConverter.stringToDouble(amountTextField.getText());
         double resultDouble = amount * (double) offer.getCollateral() / 100.0;
         return BtcFormatter.doubleValueToSatoshis(resultDouble);
     }

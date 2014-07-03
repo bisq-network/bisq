@@ -40,7 +40,7 @@ public class TransactionsListItem
         Address address = null;
         if (valueSentToMe.compareTo(BigInteger.ZERO) == 0)
         {
-            amount.set("-" + BtcFormatter.satoshiToString(valueSentFromMe));
+            amount.set("-" + BtcFormatter.formatSatoshis(valueSentFromMe));
 
             for (TransactionOutput transactionOutput : transaction.getOutputs())
             {
@@ -62,7 +62,7 @@ public class TransactionsListItem
         }
         else if (valueSentFromMe.compareTo(BigInteger.ZERO) == 0)
         {
-            amount.set(BtcFormatter.satoshiToString(valueSentToMe));
+            amount.set(BtcFormatter.formatSatoshis(valueSentToMe));
             type.set("Received with");
 
             for (TransactionOutput transactionOutput : transaction.getOutputs())
@@ -83,7 +83,7 @@ public class TransactionsListItem
         }
         else
         {
-            amount.set(BtcFormatter.satoshiToString(valueSentToMe.subtract(valueSentFromMe)));
+            amount.set(BtcFormatter.formatSatoshis(valueSentToMe.subtract(valueSentFromMe)));
 
             boolean outgoing = false;
             for (TransactionOutput transactionOutput : transaction.getOutputs())

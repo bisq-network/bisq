@@ -19,16 +19,16 @@ public class BtcValidatorTest
         amount = BigInteger.ZERO;
         assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
 
-        amount = FeePolicy.TX_FEE_depr;
+        amount = FeePolicy.TX_FEE;
         assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
 
         amount = Transaction.MIN_NONDUST_OUTPUT;
         assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
 
-        amount = FeePolicy.TX_FEE_depr.add(Transaction.MIN_NONDUST_OUTPUT);
+        amount = FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT);
         assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
 
-        amount = FeePolicy.TX_FEE_depr.add(Transaction.MIN_NONDUST_OUTPUT).add(BigInteger.ONE);
+        amount = FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(BigInteger.ONE);
         assertTrue("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
     }
 }

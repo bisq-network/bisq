@@ -1,32 +1,30 @@
 package io.bitsquare.gui.market.trade;
 
 import com.google.inject.Inject;
-import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.currency.Bitcoin;
-import io.bitsquare.currency.Fiat;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.components.ValidatedTextField;
+import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.gui.util.BitSquareConverter;
 import io.bitsquare.gui.util.BitSquareFormatter;
-import io.bitsquare.locale.CountryUtil;
-import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.Trading;
-import io.bitsquare.user.Arbitrator;
+import io.bitsquare.trade.payment.taker.TakerAsSellerProtocolListener;
 import java.math.BigInteger;
 import java.net.URL;
-import java.util.Currency;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Accordion;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TitledPane;
+import javafx.scene.control.*;
+import javafx.scene.layout.AnchorPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,18 +36,29 @@ public class TakerOfferController implements Initializable, ChildController
     private final Trading trading;
     private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
+
     private NavigationController navigationController;
     private Offer offer;
-    private Bitcoin requestedAmount;
+    private BigInteger requestedAmount;
+    private String tradeId;
+    private String depositTxId;
 
+    @FXML
+    private AnchorPane rootContainer;
     @FXML
     private Accordion accordion;
     @FXML
-    private TitledPane profileTitledPane;
+    private TitledPane takeOfferTitledPane, waitBankTxTitledPane, summaryTitledPane;
     @FXML
-    private TextField amountTextField, priceTextField, volumeTextField, collateralTextField, feeTextField, totalTextField, bankAccountTypeTextField, countryTextField,
-            arbitratorsTextField, supportedLanguagesTextField, supportedCountriesTextField;
-
+    private ValidatedTextField amountTextField;
+    @FXML
+    private TextField priceTextField, volumeTextField, collateralTextField, feeTextField, totalTextField, bankAccountTypeTextField, countryTextField,
+            arbitratorsTextField, supportedLanguagesTextField, supportedCountriesTextField, depositTxIdTextField, summaryPaidTextField, summaryReceivedTextField, summaryFeesTextField,
+            summaryCollateralTextField, summaryDepositTxIdTextField, summaryPayoutTxIdTextField;
+    @FXML
+    private Label infoLabel, headLineLabel;
+    @FXML
+    private Button takeOfferButton, receivedFiatButton;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -61,23 +70,6 @@ public class TakerOfferController implements Initializable, ChildController
         this.trading = trading;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
-
-
-        Offer offer = new Offer("m",
-                Direction.BUY,
-                111,
-                new BigInteger("100000000"),
-                new BigInteger("10000000"),
-                BankAccountType.OK_PAY,
-                Currency.getInstance("EUR"),
-                CountryUtil.getDefaultCountry(),
-                "baid",
-                new Arbitrator(),
-                10,
-                CountryUtil.getAllCountriesFor(CountryUtil.getAllRegions().get(0)),
-                LanguageUtil.getAllLanguageLocales());
-
-        initWithData(offer, new Bitcoin("50000000"));
     }
 
 
@@ -85,10 +77,13 @@ public class TakerOfferController implements Initializable, ChildController
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initWithData(Offer offer, Bitcoin requestedAmount)
+    public void initWithData(Offer offer, BigInteger requestedAmount)
     {
         this.offer = offer;
-        this.requestedAmount = requestedAmount.isZero() ? new Bitcoin(offer.getAmount()) : requestedAmount;
+        this.requestedAmount = requestedAmount.compareTo(BigInteger.ZERO) == 0 ? offer.getAmount() : requestedAmount;
+
+        if (amountTextField != null)
+            applyData();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -98,35 +93,35 @@ public class TakerOfferController implements Initializable, ChildController
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        accordion.setExpandedPane(profileTitledPane);
+        accordion.setExpandedPane(takeOfferTitledPane);
+    }
 
-        if (offer != null && requestedAmount != null)
-        {
-            amountTextField.setText(requestedAmount.getFormattedValue());
-            amountTextField.setPromptText(new Bitcoin(offer.getMinAmount()).getFormattedValue() + " - " + new Bitcoin(offer.getAmount()).getFormattedValue());
-            priceTextField.setText(new Fiat(offer.getPrice()).getFormattedValue());
+    public void applyData()
+    {
+        amountTextField.setText(BtcFormatter.formatSatoshis(requestedAmount));
+        amountTextField.setPromptText(BtcFormatter.formatSatoshis(offer.getMinAmount()) + " - " + BtcFormatter.formatSatoshis(offer.getAmount()));
+        priceTextField.setText(BitSquareFormatter.formatPrice(offer.getPrice()));
+        applyVolume();
+        applyCollateral();
+        applyTotal();
+        feeTextField.setText(BtcFormatter.formatSatoshis(getFee()));
+        totalTextField.setText(getFormattedTotal());
+
+        bankAccountTypeTextField.setText(offer.getBankAccountType().toString());
+        countryTextField.setText(offer.getBankAccountCountry().getName());
+
+        //todo list
+        // arbitratorsTextField.setText(offer.getArbitrator().getName());
+
+        supportedLanguagesTextField.setText(BitSquareFormatter.languageLocalesToString(offer.getAcceptedLanguageLocales()));
+        supportedCountriesTextField.setText(BitSquareFormatter.countryLocalesToString(offer.getAcceptedCountries()));
+
+        amountTextField.textProperty().addListener(e -> {
             applyVolume();
             applyCollateral();
             applyTotal();
-            feeTextField.setText(getFee().getFormattedValue());
-            totalTextField.setText(getFormattedTotal());
 
-            bankAccountTypeTextField.setText(offer.getBankAccountType().toString());
-            countryTextField.setText(offer.getBankAccountCountry().getName());
-
-            //todo list
-            // arbitratorsTextField.setText(offer.getArbitrator().getName());
-
-            supportedLanguagesTextField.setText(BitSquareFormatter.languageLocalesToString(offer.getAcceptedLanguageLocales()));
-            supportedCountriesTextField.setText(BitSquareFormatter.countryLocalesToString(offer.getAcceptedCountries()));
-
-            amountTextField.textProperty().addListener(e -> {
-                applyVolume();
-                applyCollateral();
-                applyTotal();
-
-            });
-        }
+        });
     }
 
 
@@ -145,18 +140,102 @@ public class TakerOfferController implements Initializable, ChildController
     {
 
     }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // GUI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @FXML
     public void onTakeOffer()
     {
+        AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(offer.getId());
+        BigInteger amount = BtcFormatter.stringValueToSatoshis(amountTextField.getText());
+        // TODO more validation (fee payment, blacklist,...)
+        if (amountTextField.isInvalid())
+        {
+            Popups.openErrorPopup("Invalid input", "The requested amount you entered is not a valid amount.");
+        }
+        else if (BitSquareValidator.tradeAmountOutOfRange(amount, offer))
+        {
+            Popups.openErrorPopup("Invalid input", "The requested amount you entered is outside of the range of the offered amount.");
+        }
+        else if (addressEntry == null || getTotal().compareTo(walletFacade.getBalanceForAddress(addressEntry.getAddress())) > 0)
+        {
+            Popups.openErrorPopup("Insufficient money", "You don't have enough funds for that trade.");
+        }
+        else if (trading.isOfferAlreadyInTrades(offer))
+        {
+            Popups.openErrorPopup("Offer previously accepted", "You have that offer already taken. Open the offer section to find that trade.");
+        }
+        else
+        {
+            takeOfferButton.setDisable(true);
+            amountTextField.setEditable(false);
+            trading.takeOffer(amount, offer, new TakerAsSellerProtocolListener()
+                    {
+
+
+                        @Override
+                        public void onDepositTxPublished(String depositTxId)
+                        {
+                            setDepositTxId(depositTxId);
+                            accordion.setExpandedPane(waitBankTxTitledPane);
+                            infoLabel.setText("Deposit transaction published by offerer.\n" +
+                                    "As soon as the offerer starts the \n" +
+                                    "Bank transfer, you will get informed.");
+                            depositTxIdTextField.setText(depositTxId);
+                        }
+
+                        @Override
+                        public void onBankTransferInited(String tradeId)
+                        {
+                            setTradeId(tradeId);
+                            headLineLabel.setText("Bank transfer inited");
+                            infoLabel.setText("Check your bank account and continue \n" +
+                                    "when you have received the money.");
+                            receivedFiatButton.setDisable(false);
+                        }
+
+                        @Override
+                        public void onTradeCompleted(Trade trade, String payoutTxId)
+                        {
+                            accordion.setExpandedPane(summaryTitledPane);
+                            summaryPaidTextField.setText(BtcFormatter.formatSatoshis(trade.getTradeAmount()));
+                            summaryReceivedTextField.setText(BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount())));
+                            summaryFeesTextField.setText(BtcFormatter.formatSatoshis(FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+                            summaryCollateralTextField.setText(BtcFormatter.formatSatoshis(trade.getCollateralAmount()));
+                            summaryDepositTxIdTextField.setText(depositTxId);
+                            summaryPayoutTxIdTextField.setText(payoutTxId);
+                        }
+                    }, (task) -> {
+                        //log.trace(task.toString());
+                    }, throwable -> {
+                        log.error(throwable.toString());
+                    }
+            );
+        }
     }
 
+
+    @FXML
+    public void onReceivedFiat()
+    {
+        trading.releaseBTC(tradeId);
+    }
+
+    @FXML
+    public void onClose()
+    {
+        TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
+        tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
+
+        navigationController.navigateToView(NavigationItem.ORDER_BOOK);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
+
 
     private void applyCollateral()
     {
@@ -181,18 +260,23 @@ public class TakerOfferController implements Initializable, ChildController
 
     private String getFormattedTotal()
     {
-        return BitSquareFormatter.formatVolume(getTotal());
+        return BitSquareFormatter.formatVolume(getTotal().doubleValue());
     }
 
     private String getFormattedCollateral()
     {
-        return BtcFormatter.satoshiToString(getCollateralInSatoshis());
+        return BtcFormatter.formatSatoshis(getCollateralInSatoshis());
     }
 
     //  values
     private double getAmountAsDouble()
     {
-        return BitSquareConverter.stringToDouble2(amountTextField.getText());
+        return BitSquareConverter.stringToDouble(amountTextField.getText());
+    }
+
+    private BigInteger getAmountInSatoshis()
+    {
+        return BtcFormatter.stringValueToSatoshis(amountTextField.getText());
     }
 
     private double getVolume()
@@ -200,22 +284,32 @@ public class TakerOfferController implements Initializable, ChildController
         return offer.getPrice() * getAmountAsDouble();
     }
 
-    private Bitcoin getFee()
+    private BigInteger getFee()
     {
-        return FeePolicy.TAKE_OFFER_FEE.addBitcoin(FeePolicy.TX_FEE);
+        return FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE);
     }
 
-    private double getTotal()
+    private BigInteger getTotal()
     {
-        return getFee().doubleValue() + getVolume();
+        return getFee().add(getAmountInSatoshis()).add(getCollateralInSatoshis());
     }
 
     private BigInteger getCollateralInSatoshis()
     {
-        double amount = BitSquareConverter.stringToDouble2(amountTextField.getText());
+        double amount = BitSquareConverter.stringToDouble(amountTextField.getText());
         double resultDouble = amount * (double) offer.getCollateral() / 100.0;
         return BtcFormatter.doubleValueToSatoshis(resultDouble);
     }
 
+
+    public void setTradeId(String tradeId)
+    {
+        this.tradeId = tradeId;
+    }
+
+    public void setDepositTxId(String depositTxId)
+    {
+        this.depositTxId = depositTxId;
+    }
 }
 

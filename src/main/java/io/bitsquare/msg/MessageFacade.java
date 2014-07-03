@@ -4,8 +4,14 @@ import com.google.inject.Inject;
 import io.bitsquare.BitSquare;
 import io.bitsquare.msg.listeners.*;
 import io.bitsquare.trade.Offer;
-import io.bitsquare.trade.payment.offerer.OffererPaymentProtocol;
-import io.bitsquare.trade.payment.taker.TakerPaymentProtocol;
+import io.bitsquare.trade.payment.offerer.OffererAsBuyerProtocol;
+import io.bitsquare.trade.payment.offerer.messages.*;
+import io.bitsquare.trade.payment.taker.TakerAsSellerProtocol;
+import io.bitsquare.trade.payment.taker.listeners.GetPeerAddressListener;
+import io.bitsquare.trade.payment.taker.messages.PayoutTxPublishedMessage;
+import io.bitsquare.trade.payment.taker.messages.RequestOffererPublishDepositTxMessage;
+import io.bitsquare.trade.payment.taker.messages.RequestTakeOfferMessage;
+import io.bitsquare.trade.payment.taker.messages.TakeOfferFeePayedMessage;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.util.DSAKeyUtil;
 import io.bitsquare.util.FileUtil;
@@ -46,9 +52,10 @@ public class MessageFacade
     private final List<OrderBookListener> orderBookListeners = new ArrayList<>();
     private final List<TakeOfferRequestListener> takeOfferRequestListeners = new ArrayList<>();
     private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
-    // //TODO change to map (key: offerID) instead of list (offererPaymentProtocols, takerPaymentProtocols)
-    private final List<TakerPaymentProtocol> takerPaymentProtocols = new ArrayList<>();
-    private final List<OffererPaymentProtocol> offererPaymentProtocols = new ArrayList<>();
+
+    private final Map<String, TakerAsSellerProtocol> takerPaymentProtocols = new HashMap<>();
+    private final Map<String, OffererAsBuyerProtocol> offererAsBuyerProtocols = new HashMap<>();
+
     private final List<PingPeerListener> pingPeerListeners = new ArrayList<>();
     private final BooleanProperty isDirty = new SimpleBooleanProperty(false);
     private Peer myPeer;
@@ -66,7 +73,7 @@ public class MessageFacade
     {
        /* try
         {
-            masterPeer = BootstrapMasterPeer.INSTANCE(MASTER_PEER_PORT);
+            masterPeer = BootstrapMasterPeer.GET_INSTANCE(MASTER_PEER_PORT);
         } catch (Exception e)
         {
             if (masterPeer != null)
@@ -97,7 +104,7 @@ public class MessageFacade
         } catch (IOException e)
         {
             shutDown();
-            log.error("Error at setup myPeerInstance" + e.getMessage());
+            log.error("Error at init myPeerInstance" + e.getMessage());
         }
     }
 
@@ -323,7 +330,7 @@ public class MessageFacade
 
     private void onGetDirtyFlag(long timeStamp)
     {
-        // TODO don't get updates at first run....
+        // TODO don't get updates at first execute....
         if (lastTimeStamp != timeStamp)
         {
             isDirty.setValue(!isDirty.get());
@@ -423,7 +430,8 @@ public class MessageFacade
     // Find peer address
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void getPeerAddress(final String pubKeyAsHex, AddressLookupListener listener)
+
+    public void getPeerAddress(String pubKeyAsHex, GetPeerAddressListener listener)
     {
         final Number160 location = Number160.createHash(pubKeyAsHex);
         final FutureDHT getPeerAddressFuture = myPeer.get(location).start();
@@ -435,32 +443,44 @@ public class MessageFacade
                 if (baseFuture.isSuccess() && getPeerAddressFuture.getData() != null)
                 {
                     final PeerAddress peerAddress = (PeerAddress) getPeerAddressFuture.getData().getObject();
-                    Platform.runLater(() -> onAddressFound(peerAddress, listener));
+                    Platform.runLater(() -> listener.onResult(peerAddress));
                 }
                 else
                 {
-                    Platform.runLater(() -> onGetPeerAddressFailed(listener));
+                    Platform.runLater(() -> listener.onFailed());
+
                 }
             }
         });
     }
 
-    private void onAddressFound(final PeerAddress peerAddress, AddressLookupListener listener)
-    {
-        listener.onResult(peerAddress);
-    }
-
-    private void onGetPeerAddressFailed(AddressLookupListener listener)
-    {
-        listener.onFailed();
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Trade process
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void sendTradeMessage(final PeerAddress peerAddress, final TradeMessage tradeMessage, TradeMessageListener listener)
+    public void sendTradingMessage(final PeerAddress peerAddress, TradeMessage tradeMessage, TradeMessageListener listener)
+    {
+        final PeerConnection peerConnection = myPeer.createPeerConnection(peerAddress, 10);
+        final FutureResponse sendFuture = myPeer.sendDirect(peerConnection).setObject(tradeMessage).start();
+        sendFuture.addListener(new BaseFutureAdapter<BaseFuture>()
+                               {
+                                   @Override
+                                   public void operationComplete(BaseFuture baseFuture) throws Exception
+                                   {
+                                       if (sendFuture.isSuccess())
+                                       {
+                                           Platform.runLater(() -> listener.onResult());
+                                       }
+                                       else
+                                       {
+                                           Platform.runLater(() -> listener.onFailed());
+                                       }
+                                   }
+                               }
+        );
+    }
+
+    public void sendTradeMessage(PeerAddress peerAddress, TradeMessage tradeMessage, TradeMessageListener listener)
     {
         final PeerConnection peerConnection = myPeer.createPeerConnection(peerAddress, 10);
         final FutureResponse sendFuture = myPeer.sendDirect(peerConnection).setObject(tradeMessage).start();
@@ -499,51 +519,47 @@ public class MessageFacade
 
     private void processTradingMessage(TradeMessage tradeMessage, PeerAddress sender)
     {
-        //TODO change to map (key: offerID) instead of list (offererPaymentProtocols, takerPaymentProtocols)
-        log.info("processTradingMessage " + tradeMessage.getType());
-        switch (tradeMessage.getType())
-        {
-            case REQUEST_TAKE_OFFER:
-                // That is used to initiate the OffererPaymentProtocol and to show incoming requests in the view
-                for (TakeOfferRequestListener takeOfferRequestListener : takeOfferRequestListeners)
-                    takeOfferRequestListener.onTakeOfferRequested(tradeMessage, sender);
-                break;
-            case ACCEPT_TAKE_OFFER_REQUEST:
-                for (TakerPaymentProtocol takeOfferTradeListener : takerPaymentProtocols)
-                    takeOfferTradeListener.onTakeOfferRequestAccepted();
-                break;
-            case REJECT_TAKE_OFFER_REQUEST:
-                for (TakerPaymentProtocol takeOfferTradeListener : takerPaymentProtocols)
-                    takeOfferTradeListener.onTakeOfferRequestRejected();
-                break;
-            case TAKE_OFFER_FEE_PAYED:
-                for (OffererPaymentProtocol offererPaymentProtocol : offererPaymentProtocols)
-                    offererPaymentProtocol.onTakeOfferFeePayed(tradeMessage);
-                break;
-            case REQUEST_TAKER_DEPOSIT_PAYMENT:
-                for (TakerPaymentProtocol takeOfferTradeListener : takerPaymentProtocols)
-                    takeOfferTradeListener.onTakerDepositPaymentRequested(tradeMessage);
-                break;
-            case REQUEST_OFFERER_DEPOSIT_PUBLICATION:
-                for (OffererPaymentProtocol offererPaymentProtocol : offererPaymentProtocols)
-                    offererPaymentProtocol.onDepositTxReadyForPublication(tradeMessage);
-                break;
-            case DEPOSIT_TX_PUBLISHED:
-                for (TakerPaymentProtocol takeOfferTradeListener : takerPaymentProtocols)
-                    takeOfferTradeListener.onDepositTxPublished(tradeMessage);
-                break;
-            case BANK_TX_INITED:
-                for (TakerPaymentProtocol takeOfferTradeListener : takerPaymentProtocols)
-                    takeOfferTradeListener.onBankTransferInited(tradeMessage);
-                break;
-            case PAYOUT_TX_PUBLISHED:
-                for (OffererPaymentProtocol offererPaymentProtocol : offererPaymentProtocols)
-                    offererPaymentProtocol.onPayoutTxPublished(tradeMessage);
-                break;
+        // log.trace("processTradingMessage TradeId " + tradeMessage.getTradeId());
+        log.trace("processTradingMessage instance " + tradeMessage.getClass().getSimpleName());
+        log.trace("processTradingMessage instance " + tradeMessage.getClass().getName());
+        log.trace("processTradingMessage instance " + tradeMessage.getClass().getCanonicalName());
+        log.trace("processTradingMessage instance " + tradeMessage.getClass().getTypeName());
 
-            default:
-                log.info("default");
-                break;
+        if (tradeMessage instanceof RequestTakeOfferMessage)
+        {
+            takeOfferRequestListeners.stream().forEach(e -> e.onTakeOfferRequested(tradeMessage.getTradeId(), sender));
+        }
+        else if (tradeMessage instanceof AcceptTakeOfferRequestMessage)
+        {
+            takerPaymentProtocols.get(tradeMessage.getTradeId()).onAcceptTakeOfferRequestMessage();
+        }
+        else if (tradeMessage instanceof RejectTakeOfferRequestMessage)
+        {
+            takerPaymentProtocols.get(tradeMessage.getTradeId()).onRejectTakeOfferRequestMessage();
+        }
+        else if (tradeMessage instanceof TakeOfferFeePayedMessage)
+        {
+            offererAsBuyerProtocols.get(tradeMessage.getTradeId()).onTakeOfferFeePayedMessage((TakeOfferFeePayedMessage) tradeMessage);
+        }
+        else if (tradeMessage instanceof RequestTakerDepositPaymentMessage)
+        {
+            takerPaymentProtocols.get(tradeMessage.getTradeId()).onRequestTakerDepositPaymentMessage((RequestTakerDepositPaymentMessage) tradeMessage);
+        }
+        else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage)
+        {
+            offererAsBuyerProtocols.get(tradeMessage.getTradeId()).onRequestOffererPublishDepositTxMessage((RequestOffererPublishDepositTxMessage) tradeMessage);
+        }
+        else if (tradeMessage instanceof DepositTxPublishedMessage)
+        {
+            takerPaymentProtocols.get(tradeMessage.getTradeId()).onDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
+        }
+        else if (tradeMessage instanceof BankTransferInitedMessage)
+        {
+            takerPaymentProtocols.get(tradeMessage.getTradeId()).onBankTransferInitedMessage((BankTransferInitedMessage) tradeMessage);
+        }
+        else if (tradeMessage instanceof PayoutTxPublishedMessage)
+        {
+            offererAsBuyerProtocols.get(tradeMessage.getTradeId()).onPayoutTxPublishedMessage((PayoutTxPublishedMessage) tradeMessage);
         }
     }
 
@@ -616,11 +632,11 @@ public class MessageFacade
     // Misc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     public PublicKey getPubKey()
     {
         return keyPair.getPublic();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Event Listeners
@@ -646,24 +662,24 @@ public class MessageFacade
         takeOfferRequestListeners.remove(listener);
     }
 
-    public void addTakerPaymentProtocol(TakerPaymentProtocol listener)
+    public void addTakerPaymentProtocol(TakerAsSellerProtocol protocol)
     {
-        takerPaymentProtocols.add(listener);
+        takerPaymentProtocols.put(protocol.getId(), protocol);
     }
 
-    public void removeTakerPaymentProtocol(TakerPaymentProtocol listener)
+    public void removeTakerPaymentProtocol(TakerAsSellerProtocol protocol)
     {
-        takerPaymentProtocols.remove(listener);
+        takerPaymentProtocols.remove(protocol);
     }
 
-    public void addOffererPaymentProtocol(OffererPaymentProtocol listener)
+    public void addOffererPaymentProtocol(OffererAsBuyerProtocol protocol)
     {
-        offererPaymentProtocols.add(listener);
+        offererAsBuyerProtocols.put(protocol.getId(), protocol);
     }
 
-    public void removeOffererPaymentProtocol(OffererPaymentProtocol listener)
+    public void removeOffererPaymentProtocol(OffererAsBuyerProtocol protocol)
     {
-        offererPaymentProtocols.remove(listener);
+        offererAsBuyerProtocols.remove(protocol);
     }
 
     public void addPingPeerListener(PingPeerListener listener)
@@ -780,6 +796,5 @@ public class MessageFacade
                 orderBookListener.onMessage(request);
         }  */
     }
-
 
 }

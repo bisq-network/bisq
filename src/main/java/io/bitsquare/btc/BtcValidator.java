@@ -19,7 +19,7 @@ public class BtcValidator
 
     public static boolean isMinSpendableAmount(BigInteger amount)
     {
-        return amount != null && amount.compareTo(FeePolicy.TX_FEE_depr.add(Transaction.MIN_NONDUST_OUTPUT)) > 0;
+        return amount != null && amount.compareTo(FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT)) > 0;
     }
 
     public boolean isAddressValid(String addressString)

@@ -7,16 +7,18 @@ import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
-import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.msg.TradeMessage;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.payment.offerer.OffererPaymentProtocol;
-import io.bitsquare.trade.payment.offerer.OffererPaymentProtocolListener;
-import io.bitsquare.trade.payment.taker.TakerPaymentProtocol;
-import io.bitsquare.trade.payment.taker.TakerPaymentProtocolListener;
+import io.bitsquare.trade.payment.offerer.OffererAsBuyerProtocol;
+import io.bitsquare.trade.payment.offerer.OffererAsBuyerProtocolListener;
+import io.bitsquare.trade.payment.taker.TakerAsSellerProtocol;
+import io.bitsquare.trade.payment.taker.TakerAsSellerProtocolListener;
 import io.bitsquare.user.User;
+import io.nucleo.scheduler.worker.Worker;
+import io.nucleo.scheduler.worker.WorkerFaultHandler;
+import io.nucleo.scheduler.worker.WorkerResultHandler;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import javafx.beans.property.SimpleStringProperty;
@@ -32,8 +34,8 @@ import org.slf4j.LoggerFactory;
 public class Trading
 {
     private static final Logger log = LoggerFactory.getLogger(Trading.class);
-    private final Map<String, TakerPaymentProtocol> takerPaymentProtocols = new HashMap<>();
-    private final Map<String, OffererPaymentProtocol> offererPaymentProtocols = new HashMap<>();
+    private final Map<String, TakerAsSellerProtocol> takerPaymentProtocols = new HashMap<>();
+    private final Map<String, OffererAsBuyerProtocol> offererPaymentProtocols = new HashMap<>();
     private final String storageKey;
     private final User user;
 
@@ -44,9 +46,10 @@ public class Trading
     private final CryptoFacade cryptoFacade;
     private final StringProperty newTradeProperty = new SimpleStringProperty();
 
-    private Map<String, Offer> myOffers = new HashMap<>();
+    private Map<String, Offer> offers = new HashMap<>();
 
     private Map<String, Trade> trades = new HashMap<>();
+    private Trade currentPendingTrade;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,14 +76,14 @@ public class Trading
 
         Object offersObject = storage.read(storageKey + ".offers");
         if (offersObject instanceof HashMap)
-            myOffers = (Map<String, Offer>) offersObject;
+            offers = (Map<String, Offer>) offersObject;
 
         Object tradesObject = storage.read(storageKey + ".trades");
         if (tradesObject instanceof HashMap)
             trades = (Map<String, Trade>) tradesObject;
 
+        messageFacade.addTakeOfferRequestListener((offerId, sender) -> createOffererAsBuyerProtocol(offerId, sender));
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -92,15 +95,15 @@ public class Trading
 
     private void saveOffers()
     {
-        storage.write(storageKey + ".offers", myOffers);
+        storage.write(storageKey + ".offers", offers);
     }
 
     public void addOffer(Offer offer) throws IOException
     {
-        if (myOffers.containsKey(offer.getId()))
+        if (offers.containsKey(offer.getId()))
             throw new IllegalStateException("offers contains already a offer with the ID " + offer.getId());
 
-        myOffers.put(offer.getId(), offer);
+        offers.put(offer.getId(), offer);
         saveOffers();
 
         messageFacade.addOffer(offer);
@@ -108,15 +111,10 @@ public class Trading
 
     public void removeOffer(Offer offer) throws IOException
     {
-        myOffers.remove(offer.getId());
+        offers.remove(offer.getId());
         saveOffers();
 
         messageFacade.removeOffer(offer);
-    }
-
-    public boolean isOfferTradable(Offer offer)
-    {
-        return !trades.containsKey(offer.getId());
     }
 
 
@@ -144,85 +142,88 @@ public class Trading
         return this.newTradeProperty;
     }
 
-
-    public TakerPaymentProtocol addTakerPaymentProtocol(Trade trade, TakerPaymentProtocolListener listener)
+    public Trade takeOffer(BigInteger amount, Offer offer, TakerAsSellerProtocolListener listener, WorkerResultHandler resultHandler, WorkerFaultHandler faultHandler)
     {
-        TakerPaymentProtocol takerPaymentProtocol = new TakerPaymentProtocol(trade, listener, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
+        Trade trade = createTrade(offer);
+        trade.setTradeAmount(amount);
+
+        TakerAsSellerProtocol takerPaymentProtocol = new TakerAsSellerProtocol(trade, listener, resultHandler, faultHandler, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
         takerPaymentProtocols.put(trade.getId(), takerPaymentProtocol);
-        return takerPaymentProtocol;
+
+        return trade;
     }
 
 
-    OffererPaymentProtocol addOffererPaymentProtocol(Trade trade, OffererPaymentProtocolListener listener)
+    public void createOffererAsBuyerProtocol(String offerId, PeerAddress sender)
     {
-        OffererPaymentProtocol offererPaymentProtocol = new OffererPaymentProtocol(trade, listener, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
-        offererPaymentProtocols.put(trade.getId(), offererPaymentProtocol);
-        return offererPaymentProtocol;
-    }
-
-    public void createOffererPaymentProtocol(TradeMessage tradeMessage, PeerAddress sender)
-    {
-        Offer offer = myOffers.get(tradeMessage.getOfferUID());
-        if (isOfferTradable(offer))
+        log.trace("createOffererAsBuyerProtocol offerId = " + offerId);
+        Offer offer = offers.get(offerId);
+        if (offer != null && offers.containsKey(offer.getId()))
         {
-            Trade trade = createTrade(offer);
-            OffererPaymentProtocol offererPaymentProtocol = addOffererPaymentProtocol(trade, new OffererPaymentProtocolListener()
+            offers.remove(offer);
+
+            currentPendingTrade = createTrade(offer);
+            OffererAsBuyerProtocolListener listener = new OffererAsBuyerProtocolListener()
             {
-                @Override
-                public void onProgress(double progress)
-                {
-                    //log.debug("onProgress " + progress);
-                }
-
-                @Override
-                public void onFailure(String failureMessage)
-                {
-                    log.warn(failureMessage);
-                }
-
                 @Override
                 public void onDepositTxPublished(String depositTxID)
                 {
-                    log.debug("trading onDepositTxPublished " + depositTxID);
+                    log.trace("trading onDepositTxPublishedMessage " + depositTxID);
                 }
 
                 @Override
                 public void onDepositTxConfirmedUpdate(TransactionConfidence confidence)
                 {
-                    log.debug("trading onDepositTxConfirmedUpdate");
+                    log.trace("trading onDepositTxConfirmedUpdate");
                 }
 
                 @Override
                 public void onPayoutTxPublished(String payoutTxAsHex)
                 {
                     Transaction payoutTx = new Transaction(walletFacade.getWallet().getParams(), Utils.parseAsHexOrBase58(payoutTxAsHex));
-                    trade.setPayoutTransaction(payoutTx);
-                    trade.setState(Trade.State.COMPLETED);
-                    log.debug("trading onPayoutTxPublished");
+                    currentPendingTrade.setPayoutTransaction(payoutTx);
+                    currentPendingTrade.setState(Trade.State.COMPLETED);
+                    log.debug("trading onPayoutTxPublishedMessage");
                 }
 
                 @Override
                 public void onDepositTxConfirmedInBlockchain()
                 {
-                    log.debug("trading onDepositTxConfirmedInBlockchain");
+                    log.trace("trading onDepositTxConfirmedInBlockchain");
                 }
 
-            });
+            };
 
-            // the handler was not called there because the object was not created when the event occurred (and therefor no listener)
-            // will probably created earlier, so let it for the moment like that....
-            offererPaymentProtocol.onTakeOfferRequested(sender);
+            WorkerResultHandler resultHandler = new WorkerResultHandler()
+            {
+                @Override
+                public void onResult(Worker worker)
+                {
+                    //log.trace("onResult " + worker.toString());
+                }
+            };
+            WorkerFaultHandler faultHandler = new WorkerFaultHandler()
+            {
+                @Override
+                public void onFault(Throwable throwable)
+                {
+                    log.error("onFault " + throwable);
+                }
+            };
+
+            OffererAsBuyerProtocol offererAsBuyerProtocol = new OffererAsBuyerProtocol(currentPendingTrade, sender, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user, resultHandler, faultHandler, listener);
+            offererPaymentProtocols.put(currentPendingTrade.getId(), offererAsBuyerProtocol);
         }
         else
         {
-            Popups.openWarningPopup("Offer already taken", "You have that offer already taken. Find that trade under Orders/Open or Pending.");
+            log.warn("Incoming offer take request does not match with any saved offer. We ignore that request.");
         }
     }
 
 
-    public void onBankTransferInited(String tradeUID)
+    public void onUIEventBankTransferInited(String tradeUID)
     {
-        offererPaymentProtocols.get(tradeUID).bankTransferInited();
+        offererPaymentProtocols.get(tradeUID).onUIEventBankTransferInited();
     }
 
 
@@ -232,9 +233,9 @@ public class Trading
 
 
     // 6
-    public void releaseBTC(String tradeUID, TradeMessage tradeMessage)
+    public void releaseBTC(String tradeUID)
     {
-        takerPaymentProtocols.get(tradeUID).releaseBTC(tradeMessage);
+        takerPaymentProtocols.get(tradeUID).onUIEventFiatReceived();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -250,11 +251,22 @@ public class Trading
 
     public Map<String, Offer> getOffers()
     {
-        return myOffers;
+        return offers;
     }
 
     public Offer getOffer(String offerId)
     {
-        return myOffers.get(offerId);
+        return offers.get(offerId);
+    }
+
+
+    public boolean isOfferAlreadyInTrades(Offer offer)
+    {
+        return trades.containsKey(offer.getId());
+    }
+
+    public Trade getCurrentPendingTrade()
+    {
+        return currentPendingTrade;
     }
 }

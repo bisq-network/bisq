@@ -17,7 +17,7 @@ public class BtcFormatter
     public static BigInteger mBTC = new BigInteger("100000");
 
 
-    public static String satoshiToString(BigInteger value)
+    public static String formatSatoshis(BigInteger value)
     {
         return Utils.bitcoinValueToFriendlyString(value);
     }
@@ -30,7 +30,14 @@ public class BtcFormatter
 
     public static BigInteger stringValueToSatoshis(String value)
     {
-        return Utils.toNanoCoins(String.valueOf(BitSquareConverter.stringToDouble2(value)));
+        try
+        {
+            return Utils.toNanoCoins(String.valueOf(BitSquareConverter.stringToDouble(value)));
+        } catch (ArithmeticException e)
+        {
+            log.warn("ArithmeticException " + e);
+        }
+        return BigInteger.ZERO;
     }
 
     public static BigInteger doubleValueToSatoshis(double value)
