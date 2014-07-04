@@ -166,6 +166,7 @@ public class MainController implements Initializable, NavigationController
         return childController;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -173,7 +174,8 @@ public class MainController implements Initializable, NavigationController
     private void init()
     {
         messageFacade.init();
-        messageFacade.addTakeOfferRequestListener(this::onTakeOfferRequested);
+
+        trading.addTakeOfferRequestListener(this::onTakeOfferRequested);
 
         walletFacade.addDownloadListener(new WalletFacade.DownloadListener()
         {

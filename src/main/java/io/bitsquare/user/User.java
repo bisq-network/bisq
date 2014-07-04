@@ -35,7 +35,7 @@ public class User implements Serializable
     {
         if (savedUser != null)
         {
-            accountID = savedUser.getAccountID();
+            accountID = savedUser.getAccountId();
             messagePubKeyAsHex = savedUser.getMessagePubKeyAsHex();
             isOnline = savedUser.getIsOnline();
             bankAccounts = savedUser.getBankAccounts();
@@ -92,7 +92,7 @@ public class User implements Serializable
     }
 
 
-    public String getAccountID()
+    public String getAccountId()
     {
         return accountID;
     }

@@ -152,20 +152,16 @@ public class PendingTradeController implements Initializable, ChildController, H
             }
         });
 
-        trading.getNewTradeProperty().addListener(new ChangeListener<String>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends String> observableValue, String oldTradeUid, String newTradeUid)
-            {
-                Trade newTrade = trading.getTrades().get(newTradeUid);
+        trading.getNewTradeProperty().addListener((observableValue, oldTradeId, newTradeId) -> {
+            Trade newTrade = trading.getTrade(newTradeId);
+            if (newTrade != null)
                 tradeItems.add(new PendingTradesListItem(newTrade));
-            }
         });
 
         initCopyIcons();
 
         // select
-        Optional<PendingTradesListItem> currentTradeItemOptional = tradeItems.stream().filter((e) -> e.getTrade().getId().equals(trading.getCurrentPendingTrade().getId())).findFirst();
+        Optional<PendingTradesListItem> currentTradeItemOptional = tradeItems.stream().filter((e) -> e.getTrade().getId().equals(trading.getPendingTrade().getId())).findFirst();
         if (currentTradeItemOptional.isPresent())
             openTradesTable.getSelectionModel().select(currentTradeItemOptional.get());
 
@@ -183,7 +179,7 @@ public class PendingTradeController implements Initializable, ChildController, H
 
     public void bankTransferInited()
     {
-        trading.onUIEventBankTransferInited(currentTrade.getId());
+        trading.bankTransferInited(currentTrade.getId());
         bankTransferInitedButton.setDisable(true);
     }
 

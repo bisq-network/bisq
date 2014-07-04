@@ -77,13 +77,7 @@ public class OrderBook implements OrderBookListener
 
     public void removeOffer(Offer offer)
     {
-        try
-        {
-            trading.removeOffer(offer);
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        }
+        trading.removeOffer(offer);
     }
 
     public void applyFilter(OrderBookFilter orderBookFilter)

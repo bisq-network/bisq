@@ -6,7 +6,6 @@ import java.math.BigInteger;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 
-@SuppressWarnings("SameParameterValue")
 public class Trade implements Serializable
 {
     private static final long serialVersionUID = -8275323072940974077L;
@@ -22,7 +21,6 @@ public class Trade implements Serializable
     private String takerSignature;
     private Transaction depositTransaction;
     private Transaction payoutTransaction;
-
     private State state = State.OPEN;
 
     public Trade(Offer offer)
@@ -30,14 +28,15 @@ public class Trade implements Serializable
         this.offer = offer;
     }
 
-    public void setContractTakerSignature(String takerSignature)
-    {
-        this.takerSignature = takerSignature;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setContractTakerSignature(String takerSignature)
+    {
+        this.takerSignature = takerSignature;
+    }
 
     public void setTakeOfferFeeTxID(String takeOfferFeeTxID)
     {

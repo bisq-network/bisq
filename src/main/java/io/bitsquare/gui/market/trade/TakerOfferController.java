@@ -17,7 +17,8 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.Trading;
-import io.bitsquare.trade.payment.taker.TakerAsSellerProtocolListener;
+import io.bitsquare.trade.protocol.taker.TakerAsSellerProtocol;
+import io.bitsquare.trade.protocol.taker.TakerAsSellerProtocolListener;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -173,8 +174,6 @@ public class TakerOfferController implements Initializable, ChildController
             amountTextField.setEditable(false);
             trading.takeOffer(amount, offer, new TakerAsSellerProtocolListener()
                     {
-
-
                         @Override
                         public void onDepositTxPublished(String depositTxId)
                         {
@@ -197,7 +196,7 @@ public class TakerOfferController implements Initializable, ChildController
                         }
 
                         @Override
-                        public void onTradeCompleted(Trade trade, String payoutTxId)
+                        public void onPayoutTxPublished(Trade trade, String payoutTxId)
                         {
                             accordion.setExpandedPane(summaryTitledPane);
                             summaryPaidTextField.setText(BtcFormatter.formatSatoshis(trade.getTradeAmount()));
@@ -207,10 +206,32 @@ public class TakerOfferController implements Initializable, ChildController
                             summaryDepositTxIdTextField.setText(depositTxId);
                             summaryPayoutTxIdTextField.setText(payoutTxId);
                         }
-                    }, (task) -> {
-                        //log.trace(task.toString());
-                    }, throwable -> {
-                        log.error(throwable.toString());
+
+                        @Override
+                        public void onFault(Throwable throwable, TakerAsSellerProtocol.State state)
+                        {
+                            log.error("Error while executing trade process at state: " + state + " / " + throwable);
+                            Popups.openErrorPopup("Error while executing trade process", "Error while executing trade process at state: " + state + " / " + throwable);
+                        }
+
+                        @Override
+                        public void onWaitingForPeerResponse(TakerAsSellerProtocol.State state)
+                        {
+                            log.debug("Waiting for peers response at state " + state);
+                        }
+
+                        @Override
+                        public void onCompleted(TakerAsSellerProtocol.State state)
+                        {
+                            log.debug("Trade protocol completed at state " + state);
+                        }
+
+                        @Override
+                        public void onTakeOfferRequestRejected(Trade trade)
+                        {
+                            log.error("Take offer request rejected");
+                            Popups.openErrorPopup("Take offer request rejected", "Your take offer request has been rejected. It might be that the offerer got another request shortly before your request arrived.");
+                        }
                     }
             );
         }
@@ -220,7 +241,7 @@ public class TakerOfferController implements Initializable, ChildController
     @FXML
     public void onReceivedFiat()
     {
-        trading.releaseBTC(tradeId);
+        trading.onFiatReceived(tradeId);
     }
 
     @FXML

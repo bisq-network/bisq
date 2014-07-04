@@ -172,7 +172,7 @@ public class TakerTradeController implements Initializable, ChildController
         gridPane.add(isOnlineCheckerHolder, 2, row);
 
         //TODO
-        messageFacade.pingPeer(offer.getMessagePubKeyAsHex());
+        // messageFacade.pingPeer(offer.getMessagePubKeyAsHex());
         checkOnlineStatusTimer = Utilities.setTimeout(1000, (AnimationTimer animationTimer) -> {
             setIsOnlineStatus(true);
             //noinspection ReturnOfNull
@@ -316,7 +316,7 @@ public class TakerTradeController implements Initializable, ChildController
                 }
 
                 @Override
-                public void onTradeCompleted(String hashAsString)
+                public void onPayoutTxPublished(String hashAsString)
                 {
                     showSummary(hashAsString);
                 }
@@ -359,7 +359,7 @@ public class TakerTradeController implements Initializable, ChildController
     private void releaseBTC()
     {
         processStepBar.next();
-        trading.releaseBTC(trade.getId());
+        trading.onFiatReceived(trade.getId());
 
         nextButton.setText("Close");
         nextButton.setOnAction(e -> close());

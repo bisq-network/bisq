@@ -167,7 +167,7 @@ public class Offer implements Serializable
         return collateral;
     }
 
-    public String getBankAccountUID()
+    public String getBankAccountId()
     {
         return bankAccountUID;
     }

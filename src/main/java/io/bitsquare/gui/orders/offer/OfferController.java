@@ -7,7 +7,6 @@ import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trading;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -110,13 +109,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
 
     private void removeOffer(OfferListItem offerListItem)
     {
-        try
-        {
-            trading.removeOffer(offerListItem.getOffer());
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        }
+        trading.removeOffer(offerListItem.getOffer());
         offerListItems.remove(offerListItem);
     }
 

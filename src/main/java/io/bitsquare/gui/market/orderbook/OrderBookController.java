@@ -194,7 +194,7 @@ public class OrderBookController implements Initializable, ChildController
 
     private boolean isRegistered()
     {
-        return user.getAccountID() != null;
+        return user.getAccountId() != null;
     }
 
     private boolean areSettingsValid()

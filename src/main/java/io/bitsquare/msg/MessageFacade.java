@@ -4,14 +4,6 @@ import com.google.inject.Inject;
 import io.bitsquare.BitSquare;
 import io.bitsquare.msg.listeners.*;
 import io.bitsquare.trade.Offer;
-import io.bitsquare.trade.payment.offerer.OffererAsBuyerProtocol;
-import io.bitsquare.trade.payment.offerer.messages.*;
-import io.bitsquare.trade.payment.taker.TakerAsSellerProtocol;
-import io.bitsquare.trade.payment.taker.listeners.GetPeerAddressListener;
-import io.bitsquare.trade.payment.taker.messages.PayoutTxPublishedMessage;
-import io.bitsquare.trade.payment.taker.messages.RequestOffererPublishDepositTxMessage;
-import io.bitsquare.trade.payment.taker.messages.RequestTakeOfferMessage;
-import io.bitsquare.trade.payment.taker.messages.TakeOfferFeePayedMessage;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.util.DSAKeyUtil;
 import io.bitsquare.util.FileUtil;
@@ -29,7 +21,6 @@ import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerMaker;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
-import net.tomp2p.rpc.ObjectDataReply;
 import net.tomp2p.storage.Data;
 import net.tomp2p.storage.StorageDisk;
 import net.tomp2p.utils.Utils;
@@ -44,19 +35,18 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings({"EmptyMethod", "ConstantConditions"})
 public class MessageFacade
 {
-    private static final String PING = "ping";
-    private static final String PONG = "pong";
     private static final Logger log = LoggerFactory.getLogger(MessageFacade.class);
+    // private static final String PING = "ping";
+    // private static final String PONG = "pong";
     private static final int MASTER_PEER_PORT = 5000;
 
     private final List<OrderBookListener> orderBookListeners = new ArrayList<>();
-    private final List<TakeOfferRequestListener> takeOfferRequestListeners = new ArrayList<>();
     private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
 
-    private final Map<String, TakerAsSellerProtocol> takerPaymentProtocols = new HashMap<>();
-    private final Map<String, OffererAsBuyerProtocol> offererAsBuyerProtocols = new HashMap<>();
+    private final List<IncomingTradeMessageListener> incomingTradeMessageListeners = new ArrayList<>();
 
-    private final List<PingPeerListener> pingPeerListeners = new ArrayList<>();
+
+    // private final List<PingPeerListener> pingPeerListeners = new ArrayList<>();
     private final BooleanProperty isDirty = new SimpleBooleanProperty(false);
     private Peer myPeer;
 
@@ -71,16 +61,8 @@ public class MessageFacade
     @Inject
     public MessageFacade()
     {
-       /* try
-        {
-            masterPeer = BootstrapMasterPeer.GET_INSTANCE(MASTER_PEER_PORT);
-        } catch (Exception e)
-        {
-            if (masterPeer != null)
-                masterPeer.shutdown();
-            System.err.println("masterPeer already instantiated by another app. " + e.getMessage());
-        }  */
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -115,6 +97,146 @@ public class MessageFacade
     }
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Find peer address
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void getPeerAddress(String pubKeyAsHex, GetPeerAddressListener listener)
+    {
+        final Number160 location = Number160.createHash(pubKeyAsHex);
+        final FutureDHT getPeerAddressFuture = myPeer.get(location).start();
+        getPeerAddressFuture.addListener(new BaseFutureAdapter<BaseFuture>()
+        {
+            @Override
+            public void operationComplete(BaseFuture baseFuture) throws Exception
+            {
+                if (baseFuture.isSuccess() && getPeerAddressFuture.getData() != null)
+                {
+                    final PeerAddress peerAddress = (PeerAddress) getPeerAddressFuture.getData().getObject();
+                    Platform.runLater(() -> listener.onResult(peerAddress));
+                }
+                else
+                {
+                    Platform.runLater(() -> listener.onFailed());
+                }
+            }
+        });
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Publish offer
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addOffer(Offer offer) throws IOException
+    {
+        log.trace("addOffer");
+        Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
+        final Number160 contentKey = Number160.createHash(offer.getId());
+        final Data offerData = new Data(offer);
+        //offerData.setTTLSeconds(5);
+        final FutureDHT addFuture = myPeer.put(locationKey).setData(contentKey, offerData).start();
+        //final FutureDHT addFuture = myPeer.add(locationKey).setData(offerData).start();
+        addFuture.addListener(new BaseFutureAdapter<BaseFuture>()
+        {
+            @Override
+            public void operationComplete(BaseFuture future) throws Exception
+            {
+                Platform.runLater(() -> onOfferAdded(offerData, future.isSuccess(), locationKey));
+            }
+        });
+    }
+
+    private void onOfferAdded(Data offerData, boolean success, Number160 locationKey)
+    {
+        log.trace("onOfferAdded");
+        setDirty(locationKey);
+        orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOfferAdded(offerData, success));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Get offers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void getOffers(String currency)
+    {
+        log.trace("getOffers");
+        final Number160 locationKey = Number160.createHash(currency);
+        final FutureDHT getOffersFuture = myPeer.get(locationKey).setAll().start();
+        getOffersFuture.addListener(new BaseFutureAdapter<BaseFuture>()
+        {
+            @Override
+            public void operationComplete(BaseFuture future) throws Exception
+            {
+                final Map<Number160, Data> dataMap = getOffersFuture.getDataMap();
+                Platform.runLater(() -> onOffersReceived(dataMap, future.isSuccess()));
+            }
+        });
+    }
+
+    private void onOffersReceived(Map<Number160, Data> dataMap, boolean success)
+    {
+        log.trace("onOffersReceived");
+        orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOffersReceived(dataMap, success));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Remove offer
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void removeOffer(Offer offer)
+    {
+        log.trace("removeOffer");
+        Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
+        Number160 contentKey = Number160.createHash(offer.getId());
+        log.debug("removeOffer");
+        FutureDHT removeFuture = myPeer.remove(locationKey).setReturnResults().setContentKey(contentKey).start();
+        removeFuture.addListener(new BaseFutureAdapter<BaseFuture>()
+        {
+            @Override
+            public void operationComplete(BaseFuture future) throws Exception
+            {
+                Platform.runLater(() -> onOfferRemoved(removeFuture.getData(), future.isSuccess(), locationKey));
+            }
+        });
+    }
+
+    private void onOfferRemoved(Data data, boolean success, Number160 locationKey)
+    {
+        log.trace("onOfferRemoved");
+        setDirty(locationKey);
+        orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOfferRemoved(data, success));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Trade process
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void sendTradeMessage(PeerAddress peerAddress, TradeMessage tradeMessage, OutgoingTradeMessageListener listener)
+    {
+        final PeerConnection peerConnection = myPeer.createPeerConnection(peerAddress, 10);
+        final FutureResponse sendFuture = myPeer.sendDirect(peerConnection).setObject(tradeMessage).start();
+        sendFuture.addListener(new BaseFutureAdapter<BaseFuture>()
+                               {
+                                   @Override
+                                   public void operationComplete(BaseFuture baseFuture) throws Exception
+                                   {
+                                       if (sendFuture.isSuccess())
+                                           Platform.runLater(() -> listener.onResult());
+                                       else
+                                           Platform.runLater(() -> listener.onFailed());
+                                   }
+                               }
+        );
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Reputation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void setupReputationRoot() throws IOException
     {
         String pubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(getPubKey());  // out message ID
@@ -148,6 +270,7 @@ public class MessageFacade
         final Data reputationData = new Data("TODO: tx, btc_pubKey, sig(tx), content signed and sig attached").setProtectedEntry().setPublicKey(getPubKey());
         myPeer.put(locationKey).setData(contentKey, reputationData).start();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Arbitrators
@@ -199,100 +322,11 @@ public class MessageFacade
             arbitratorListener.onArbitratorsReceived(dataMap, success);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Publish offer
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    //TODO use Offer and do proper serialisation here
-    public void addOffer(Offer offer) throws IOException
-    {
-        Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
-        final Number160 contentKey = Number160.createHash(offer.getId());
-        final Data offerData = new Data(offer);
-        //offerData.setTTLSeconds(5);
-        final FutureDHT addFuture = myPeer.put(locationKey).setData(contentKey, offerData).start();
-        //final FutureDHT addFuture = myPeer.add(locationKey).setData(offerData).start();
-        addFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-        {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception
-            {
-                Platform.runLater(() -> onOfferAdded(offerData, future.isSuccess(), locationKey));
-            }
-        });
-    }
-
-    private void onOfferAdded(Data offerData, boolean success, Number160 locationKey)
-    {
-        setDirty(locationKey);
-
-        for (OrderBookListener orderBookListener : orderBookListeners)
-            orderBookListener.onOfferAdded(offerData, success);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Get offers
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void getOffers(String currency)
-    {
-        final Number160 locationKey = Number160.createHash(currency);
-        final FutureDHT getOffersFuture = myPeer.get(locationKey).setAll().start();
-        getOffersFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-        {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception
-            {
-                final Map<Number160, Data> dataMap = getOffersFuture.getDataMap();
-                Platform.runLater(() -> onOffersReceived(dataMap, future.isSuccess()));
-            }
-        });
-    }
-
-    private void onOffersReceived(Map<Number160, Data> dataMap, boolean success)
-    {
-        for (OrderBookListener orderBookListener : orderBookListeners)
-            orderBookListener.onOffersReceived(dataMap, success);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Remove offer
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void removeOffer(Offer offer)
-    {
-        Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
-        Number160 contentKey = Number160.createHash(offer.getId());
-        log.debug("removeOffer");
-        FutureDHT removeFuture = myPeer.remove(locationKey).setReturnResults().setContentKey(contentKey).start();
-        removeFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-        {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception
-            {
-                Data data = removeFuture.getData();
-                Platform.runLater(() -> onOfferRemoved(data, future.isSuccess(), locationKey));
-            }
-        });
-    }
-
-    private void onOfferRemoved(Data data, boolean success, Number160 locationKey)
-    {
-        log.debug("onOfferRemoved");
-        setDirty(locationKey);
-
-        for (OrderBookListener orderBookListener : orderBookListeners)
-            orderBookListener.onOfferRemoved(data, success);
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Check dirty flag for a location key
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
+    // TODO just temp...
     public BooleanProperty getIsDirtyProperty()
     {
         return isDirty;
@@ -312,11 +346,7 @@ public class MessageFacade
                 {
                     Object object = data.getObject();
                     if (object instanceof Long)
-                    {
-                        final long lastTimeStamp = (Long) object;
-                        //System.out.println("getDirtyFlag " + lastTimeStamp);
-                        Platform.runLater(() -> onGetDirtyFlag(lastTimeStamp));
-                    }
+                        Platform.runLater(() -> onGetDirtyFlag((Long) object));
                 }
             }
 
@@ -426,149 +456,12 @@ public class MessageFacade
     }
       */
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Find peer address
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public void getPeerAddress(String pubKeyAsHex, GetPeerAddressListener listener)
-    {
-        final Number160 location = Number160.createHash(pubKeyAsHex);
-        final FutureDHT getPeerAddressFuture = myPeer.get(location).start();
-        getPeerAddressFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-        {
-            @Override
-            public void operationComplete(BaseFuture baseFuture) throws Exception
-            {
-                if (baseFuture.isSuccess() && getPeerAddressFuture.getData() != null)
-                {
-                    final PeerAddress peerAddress = (PeerAddress) getPeerAddressFuture.getData().getObject();
-                    Platform.runLater(() -> listener.onResult(peerAddress));
-                }
-                else
-                {
-                    Platform.runLater(() -> listener.onFailed());
-
-                }
-            }
-        });
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Trade process
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void sendTradingMessage(final PeerAddress peerAddress, TradeMessage tradeMessage, TradeMessageListener listener)
-    {
-        final PeerConnection peerConnection = myPeer.createPeerConnection(peerAddress, 10);
-        final FutureResponse sendFuture = myPeer.sendDirect(peerConnection).setObject(tradeMessage).start();
-        sendFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-                               {
-                                   @Override
-                                   public void operationComplete(BaseFuture baseFuture) throws Exception
-                                   {
-                                       if (sendFuture.isSuccess())
-                                       {
-                                           Platform.runLater(() -> listener.onResult());
-                                       }
-                                       else
-                                       {
-                                           Platform.runLater(() -> listener.onFailed());
-                                       }
-                                   }
-                               }
-        );
-    }
-
-    public void sendTradeMessage(PeerAddress peerAddress, TradeMessage tradeMessage, TradeMessageListener listener)
-    {
-        final PeerConnection peerConnection = myPeer.createPeerConnection(peerAddress, 10);
-        final FutureResponse sendFuture = myPeer.sendDirect(peerConnection).setObject(tradeMessage).start();
-        sendFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-                               {
-                                   @Override
-                                   public void operationComplete(BaseFuture baseFuture) throws Exception
-                                   {
-                                       if (sendFuture.isSuccess())
-                                       {
-                                           Platform.runLater(() -> onSendTradingMessageResult(listener));
-                                       }
-                                       else
-                                       {
-                                           Platform.runLater(() -> onSendTradingMessageFailed(listener));
-                                       }
-                                   }
-                               }
-        );
-    }
-
-    private void onSendTradingMessageResult(TradeMessageListener listener)
-    {
-        listener.onResult();
-    }
-
-    private void onSendTradingMessageFailed(TradeMessageListener listener)
-    {
-        listener.onFailed();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Process incoming tradingMessage
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void processTradingMessage(TradeMessage tradeMessage, PeerAddress sender)
-    {
-        // log.trace("processTradingMessage TradeId " + tradeMessage.getTradeId());
-        log.trace("processTradingMessage instance " + tradeMessage.getClass().getSimpleName());
-        log.trace("processTradingMessage instance " + tradeMessage.getClass().getName());
-        log.trace("processTradingMessage instance " + tradeMessage.getClass().getCanonicalName());
-        log.trace("processTradingMessage instance " + tradeMessage.getClass().getTypeName());
-
-        if (tradeMessage instanceof RequestTakeOfferMessage)
-        {
-            takeOfferRequestListeners.stream().forEach(e -> e.onTakeOfferRequested(tradeMessage.getTradeId(), sender));
-        }
-        else if (tradeMessage instanceof AcceptTakeOfferRequestMessage)
-        {
-            takerPaymentProtocols.get(tradeMessage.getTradeId()).onAcceptTakeOfferRequestMessage();
-        }
-        else if (tradeMessage instanceof RejectTakeOfferRequestMessage)
-        {
-            takerPaymentProtocols.get(tradeMessage.getTradeId()).onRejectTakeOfferRequestMessage();
-        }
-        else if (tradeMessage instanceof TakeOfferFeePayedMessage)
-        {
-            offererAsBuyerProtocols.get(tradeMessage.getTradeId()).onTakeOfferFeePayedMessage((TakeOfferFeePayedMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof RequestTakerDepositPaymentMessage)
-        {
-            takerPaymentProtocols.get(tradeMessage.getTradeId()).onRequestTakerDepositPaymentMessage((RequestTakerDepositPaymentMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage)
-        {
-            offererAsBuyerProtocols.get(tradeMessage.getTradeId()).onRequestOffererPublishDepositTxMessage((RequestOffererPublishDepositTxMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof DepositTxPublishedMessage)
-        {
-            takerPaymentProtocols.get(tradeMessage.getTradeId()).onDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof BankTransferInitedMessage)
-        {
-            takerPaymentProtocols.get(tradeMessage.getTradeId()).onBankTransferInitedMessage((BankTransferInitedMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof PayoutTxPublishedMessage)
-        {
-            offererAsBuyerProtocols.get(tradeMessage.getTradeId()).onPayoutTxPublishedMessage((PayoutTxPublishedMessage) tradeMessage);
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Ping peer
     ///////////////////////////////////////////////////////////////////////////////////////////
     //TODO not working anymore...
-    public void pingPeer(String publicKeyAsHex)
+   /* public void pingPeer(String publicKeyAsHex)
     {
         Number160 location = Number160.createHash(publicKeyAsHex);
         final FutureDHT getPeerAddressFuture = myPeer.get(location).start();
@@ -587,8 +480,7 @@ public class MessageFacade
         });
     }
 
-
-    private void onAddressFoundPingPeer(PeerAddress peerAddress)
+   private void onAddressFoundPingPeer(PeerAddress peerAddress)
     {
         try
         {
@@ -626,16 +518,7 @@ public class MessageFacade
         for (PingPeerListener pingPeerListener : pingPeerListeners)
             pingPeerListener.onPingPeerResult(success);
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Misc
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public PublicKey getPubKey()
-    {
-        return keyPair.getPublic();
-    }
+      */
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -652,37 +535,7 @@ public class MessageFacade
         orderBookListeners.remove(listener);
     }
 
-    public void addTakeOfferRequestListener(TakeOfferRequestListener listener)
-    {
-        takeOfferRequestListeners.add(listener);
-    }
-
-    public void removeTakeOfferRequestListener(TakeOfferRequestListener listener)
-    {
-        takeOfferRequestListeners.remove(listener);
-    }
-
-    public void addTakerPaymentProtocol(TakerAsSellerProtocol protocol)
-    {
-        takerPaymentProtocols.put(protocol.getId(), protocol);
-    }
-
-    public void removeTakerPaymentProtocol(TakerAsSellerProtocol protocol)
-    {
-        takerPaymentProtocols.remove(protocol);
-    }
-
-    public void addOffererPaymentProtocol(OffererAsBuyerProtocol protocol)
-    {
-        offererAsBuyerProtocols.put(protocol.getId(), protocol);
-    }
-
-    public void removeOffererPaymentProtocol(OffererAsBuyerProtocol protocol)
-    {
-        offererAsBuyerProtocols.remove(protocol);
-    }
-
-    public void addPingPeerListener(PingPeerListener listener)
+   /* public void addPingPeerListener(PingPeerListener listener)
     {
         pingPeerListeners.add(listener);
     }
@@ -690,7 +543,7 @@ public class MessageFacade
     public void removePingPeerListener(PingPeerListener listener)
     {
         pingPeerListeners.remove(listener);
-    }
+    }    */
 
     public void addArbitratorListener(ArbitratorListener listener)
     {
@@ -700,6 +553,44 @@ public class MessageFacade
     public void removeArbitratorListener(ArbitratorListener listener)
     {
         arbitratorListeners.remove(listener);
+    }
+
+    public void addIncomingTradeMessageListener(IncomingTradeMessageListener listener)
+    {
+        incomingTradeMessageListeners.add(listener);
+    }
+
+    public void removeIncomingTradeMessageListener(IncomingTradeMessageListener listener)
+    {
+        incomingTradeMessageListeners.remove(listener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public PublicKey getPubKey()
+    {
+        return keyPair.getPublic();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Incoming message handler
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onMessage(Object request, PeerAddress sender)
+    {
+        if (request instanceof TradeMessage)
+        {
+            incomingTradeMessageListeners.stream().forEach(e -> e.onMessage((TradeMessage) request, sender));
+        }
+       /* else
+        {
+            for (OrderBookListener orderBookListener : orderBookListeners)
+                orderBookListener.onMessage(request);
+        }  */
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -739,6 +630,18 @@ public class MessageFacade
         });
     }
 
+    private void setupReplyHandler()
+    {
+        myPeer.setObjectDataReply((sender, request) -> {
+            if (!sender.equals(myPeer.getPeerAddress()))
+                Platform.runLater(() -> onMessage(request, sender));
+            else
+                log.error("Received msg from myself. That should never happen.");
+            //noinspection ReturnOfNull
+            return null;
+        });
+    }
+
     private void setupStorage()
     {
         myPeer.getPeerBean().setStorage(new StorageDisk(FileUtil.getDirectory(BitSquare.ID + "_tomP2P").getAbsolutePath()));
@@ -751,50 +654,5 @@ public class MessageFacade
         myPeer.put(location).setData(new Data(myPeer.getPeerAddress())).start();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Incoming message handler
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void setupReplyHandler()
-    {
-       /* myPeer.setObjectDataReply((sender, request) -> {
-            if (!sender.equals(myPeer.getPeerAddress()))
-            {
-                Platform.runLater(() -> onMessage(request, sender));
-            }
-            //noinspection ReturnOfNull
-            return null;
-        });  */
-
-        //noinspection Convert2Lambda
-        myPeer.setObjectDataReply(new ObjectDataReply()
-        {
-
-            @Override
-            public Object reply(PeerAddress sender, Object request) throws Exception
-            {
-                if (!sender.equals(myPeer.getPeerAddress()))
-                {
-                    Platform.runLater(() -> onMessage(request, sender));
-                }
-                //noinspection ReturnOfNull
-                return null;
-            }
-        });
-    }
-
-    private void onMessage(Object request, PeerAddress sender)
-    {
-        if (request instanceof TradeMessage)
-        {
-            processTradingMessage((TradeMessage) request, sender);
-        }
-       /* else
-        {
-            for (OrderBookListener orderBookListener : orderBookListeners)
-                orderBookListener.onMessage(request);
-        }  */
-    }
 
 }
