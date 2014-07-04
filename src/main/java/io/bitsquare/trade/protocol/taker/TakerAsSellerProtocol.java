@@ -20,8 +20,15 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static io.bitsquare.util.Validator.*;
+import static io.bitsquare.util.Validator.nonEmptyStringOf;
+import static io.bitsquare.util.Validator.nonNegativeLongOf;
 
+/**
+ * Responsible for the correct execution of the sequence of tasks, message passing to the peer and message processing from the peer.
+ * That class handles the role of the taker as the Bitcoin seller.
+ * It uses sub tasks to not pollute the main class too much with all the async result/fault handling.
+ * Any data from incoming messages as well data used to send to the peer need to be validated before further processing.
+ */
 public class TakerAsSellerProtocol
 {
     private static final Logger log = LoggerFactory.getLogger(TakerAsSellerProtocol.class);
@@ -92,7 +99,7 @@ public class TakerAsSellerProtocol
 
     public void start()
     {
-        String messagePubKeyAsHex = validString(offer.getMessagePubKeyAsHex());
+        String messagePubKeyAsHex = nonEmptyStringOf(offer.getMessagePubKeyAsHex());
 
         GetPeerAddress.run(this::onResultGetPeerAddress, this::onFault, messageFacade, messagePubKeyAsHex);
         state = State.GetPeerAddress;
@@ -105,7 +112,7 @@ public class TakerAsSellerProtocol
 
     public void onResultGetPeerAddress(PeerAddress peerAddress)
     {
-        this.peerAddress = validPeerAddress(peerAddress);
+        this.peerAddress = checkNotNull(peerAddress);
 
         RequestTakeOffer.run(this::onResultRequestTakeOffer, this::onFault, this.peerAddress, messageFacade, tradeId);
         state = State.RequestTakeOffer;
@@ -143,7 +150,7 @@ public class TakerAsSellerProtocol
     public void onResultPayTakeOfferFee(Transaction transaction)
     {
         checkNotNull(transaction);
-        String transactionId = validString(transaction.getHashAsString());
+        String transactionId = nonEmptyStringOf(transaction.getHashAsString());
 
         trade.setTakeOfferFeeTxID(transactionId);
 
@@ -178,11 +185,11 @@ public class TakerAsSellerProtocol
 
         checkState(state == State.SendTakeOfferFeePayedTxId);
 
-        peersAccountId = validString(message.getAccountID());
+        peersAccountId = nonEmptyStringOf(message.getAccountID());
         peersBankAccount = checkNotNull(message.getBankAccount());
-        offererPubKey = validString(message.getOffererPubKey());
-        preparedOffererDepositTxAsHex = validString(message.getPreparedOffererDepositTxAsHex());
-        offererTxOutIndex = validNonNegativeLong(message.getOffererTxOutIndex());
+        offererPubKey = nonEmptyStringOf(message.getOffererPubKey());
+        preparedOffererDepositTxAsHex = nonEmptyStringOf(message.getPreparedOffererDepositTxAsHex());
+        offererTxOutIndex = nonNegativeLongOf(message.getOffererTxOutIndex());
 
         VerifyOffererAccount.run(this::onResultVerifyOffererAccount,
                 this::onFault,

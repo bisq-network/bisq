@@ -1,11 +1,9 @@
 package io.bitsquare.trade.protocol.tasks.offerer;
 
 import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Transaction;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
-import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.messages.offerer.BankTransferInitedMessage;
 import io.bitsquare.trade.protocol.tasks.FaultHandler;
 import io.bitsquare.trade.protocol.tasks.ResultHandler;
@@ -24,47 +22,36 @@ public class SendSignedPayoutTx
                            PeerAddress peerAddress,
                            MessageFacade messageFacade,
                            WalletFacade walletFacade,
-                           Trade trade,
-                           String takerPayoutAddress)
+                           String tradeId,
+                           String takerPayoutAddress,
+                           String offererPayoutAddress,
+                           String depositTransactionId,
+                           BigInteger collateral,
+                           BigInteger tradeAmount)
     {
         try
         {
-            Transaction depositTransaction = trade.getDepositTransaction();
-            BigInteger collateral = trade.getCollateralAmount();
-            BigInteger offererPaybackAmount = trade.getTradeAmount().add(collateral);
+            BigInteger offererPaybackAmount = tradeAmount.add(collateral);
             BigInteger takerPaybackAmount = collateral;
 
-            log.trace("offererPaybackAmount " + offererPaybackAmount);
-            log.trace("takerPaybackAmount " + takerPaybackAmount);
-            log.trace("depositTransaction.getHashAsString() " + depositTransaction.getHashAsString());
-            log.trace("takerPayoutAddress " + takerPayoutAddress);
-
-            Pair<ECKey.ECDSASignature, String> result = walletFacade.offererCreatesAndSignsPayoutTx(depositTransaction.getHashAsString(),
+            Pair<ECKey.ECDSASignature, String> result = walletFacade.offererCreatesAndSignsPayoutTx(depositTransactionId,
                     offererPaybackAmount,
                     takerPaybackAmount,
                     takerPayoutAddress,
-                    trade.getId());
+                    tradeId);
 
             ECKey.ECDSASignature offererSignature = result.getKey();
             String offererSignatureR = offererSignature.r.toString();
             String offererSignatureS = offererSignature.s.toString();
             String depositTxAsHex = result.getValue();
-            String offererPayoutAddress = walletFacade.getAddressInfoByTradeID(trade.getId()).getAddressString();
 
-            BankTransferInitedMessage tradeMessage = new BankTransferInitedMessage(trade.getId(),
+            BankTransferInitedMessage tradeMessage = new BankTransferInitedMessage(tradeId,
                     depositTxAsHex,
                     offererSignatureR,
                     offererSignatureS,
                     offererPaybackAmount,
                     takerPaybackAmount,
                     offererPayoutAddress);
-
-            log.trace("depositTxAsHex " + depositTxAsHex);
-            log.trace("offererSignatureR " + offererSignatureR);
-            log.trace("offererSignatureS " + offererSignatureS);
-            log.trace("offererPaybackAmount " + offererPaybackAmount);
-            log.trace("takerPaybackAmount " + takerPaybackAmount);
-            log.trace("offererPayoutAddress " + offererPayoutAddress);
 
             messageFacade.sendTradeMessage(peerAddress, tradeMessage, new OutgoingTradeMessageListener()
             {

@@ -1,9 +1,9 @@
 package io.bitsquare.trade.protocol.tasks.offerer;
 
+import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.Utils;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
-import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.messages.offerer.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.tasks.FaultHandler;
 import io.bitsquare.trade.protocol.tasks.ResultHandler;
@@ -15,9 +15,9 @@ public class SendDepositTxIdToTaker
 {
     private static final Logger log = LoggerFactory.getLogger(SendDepositTxIdToTaker.class);
 
-    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, PeerAddress peerAddress, MessageFacade messageFacade, Trade trade)
+    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, PeerAddress peerAddress, MessageFacade messageFacade, String tradeId, Transaction depositTransaction)
     {
-        DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(trade.getId(), Utils.bytesToHexString(trade.getDepositTransaction().bitcoinSerialize()));
+        DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(tradeId, Utils.bytesToHexString(depositTransaction.bitcoinSerialize()));
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, new OutgoingTradeMessageListener()
         {
             @Override

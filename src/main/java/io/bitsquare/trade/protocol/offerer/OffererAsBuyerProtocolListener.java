@@ -14,4 +14,12 @@ public interface OffererAsBuyerProtocolListener
     void onDepositTxConfirmedUpdate(TransactionConfidence confidence);
 
     void onPayoutTxPublished(String payoutTxID);
+
+    void onFault(Throwable throwable, OffererAsBuyerProtocol.State state);
+
+    void onWaitingForPeerResponse(OffererAsBuyerProtocol.State state);
+
+    void onCompleted(OffererAsBuyerProtocol.State state);
+
+    void onWaitingForUserInteraction(OffererAsBuyerProtocol.State state);
 }

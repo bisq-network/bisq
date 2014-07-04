@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
+import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.TradeMessage;
 import io.bitsquare.msg.listeners.TakeOfferRequestListener;
@@ -232,6 +233,32 @@ public class Trading
                     trade.setState(Trade.State.COMPLETED);
                     log.debug("trading onPayoutTxPublishedMessage");
                 }
+
+                @Override
+                public void onFault(Throwable throwable, OffererAsBuyerProtocol.State state)
+                {
+                    log.error("Error while executing trade process at state: " + state + " / " + throwable);
+                    Popups.openErrorPopup("Error while executing trade process", "Error while executing trade process at state: " + state + " / " + throwable);
+                }
+
+                @Override
+                public void onWaitingForPeerResponse(OffererAsBuyerProtocol.State state)
+                {
+                    log.debug("Waiting for peers response at state " + state);
+                }
+
+                @Override
+                public void onCompleted(OffererAsBuyerProtocol.State state)
+                {
+                    log.debug("Trade protocol completed at state " + state);
+                }
+
+                @Override
+                public void onWaitingForUserInteraction(OffererAsBuyerProtocol.State state)
+                {
+                    log.debug("Waiting for UI activity at state " + state);
+                }
+
 
                 @Override
                 public void onDepositTxConfirmedInBlockchain()
