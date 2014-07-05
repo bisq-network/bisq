@@ -29,6 +29,7 @@ public class CreateAndSignContract
                            BankAccount peersBankAccount,
                            ECKey registrationKey)
     {
+        log.trace("Run task");
         try
         {
             Contract contract = new Contract(offer, tradeAmount, takeOfferFeeTxId, peersAccountId, accountId, peersBankAccount, bankAccount, peersMessagePubKeyAsHex, messagePubKeyAsHex);

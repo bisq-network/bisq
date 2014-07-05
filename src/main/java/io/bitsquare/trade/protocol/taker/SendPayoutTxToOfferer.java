@@ -14,6 +14,7 @@ public class SendPayoutTxToOfferer
 
     public static void run(ResultHandler resultHandler, FaultHandler faultHandler, PeerAddress peerAddress, MessageFacade messageFacade, String tradeId, String payoutTxAsHex)
     {
+        log.trace("Run task");
         PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(tradeId, payoutTxAsHex);
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, new OutgoingTradeMessageListener()
         {

@@ -48,9 +48,7 @@ public class ProtocolForTakerAsSeller
         CreateAndSignContract,
         PayDeposit,
         SendSignedTakerDepositTxAsHex,
-        onDepositTxPublishedMessage,
         onBankTransferInitedMessage,
-        onUIEventFiatReceived,
         SignAndPublishPayoutTx,
         SendPayoutTxToOfferer
     }
@@ -64,7 +62,6 @@ public class ProtocolForTakerAsSeller
     private final CryptoFacade cryptoFacade;
 
     // derived
-    private final String id;
     private final Offer offer;
     private final String tradeId;
     private final BankAccount bankAccount;
@@ -97,6 +94,7 @@ public class ProtocolForTakerAsSeller
 
     // state
     private State state;
+    private int position = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -124,39 +122,37 @@ public class ProtocolForTakerAsSeller
         collateral = trade.getCollateralAmount();
         arbitratorPubKey = trade.getOffer().getArbitrator().getPubKeyAsHex();
 
-        pubKeyForThatTrade = walletFacade.getAddressInfoByTradeID(tradeId).getPubKeyAsHexString();
+        peersMessagePubKey = offer.getMessagePubKeyAsHex();
 
         bankAccount = user.getBankAccount(offer.getBankAccountId());
         accountId = user.getAccountId();
         messagePubKey = user.getMessagePubKeyAsHex();
 
-        peersMessagePubKey = offer.getMessagePubKeyAsHex();
+        pubKeyForThatTrade = walletFacade.getAddressInfoByTradeID(tradeId).getPubKeyAsHexString();
         accountKey = walletFacade.getRegistrationAddressInfo().getKey();
-
-        id = trade.getId();
 
         state = State.Init;
     }
 
     public void start()
     {
-        log.debug("start called");
-        GetPeerAddress.run(this::onResultGetPeerAddress, this::onFault, messageFacade, peersMessagePubKey);
+        log.debug("start called " + position++);
         state = State.GetPeerAddress;
+        GetPeerAddress.run(this::onResultGetPeerAddress, this::onFault, messageFacade, peersMessagePubKey);
     }
 
     public void onResultGetPeerAddress(PeerAddress peerAddress)
     {
-        log.debug(" called");
+        log.debug("onResultGetPeerAddress called " + position++);
         this.peerAddress = peerAddress;
 
-        RequestTakeOffer.run(this::onResultRequestTakeOffer, this::onFault, peerAddress, messageFacade, tradeId);
         state = State.RequestTakeOffer;
+        RequestTakeOffer.run(this::onResultRequestTakeOffer, this::onFault, peerAddress, messageFacade, tradeId);
     }
 
     public void onResultRequestTakeOffer()
     {
-        log.debug(" called");
+        log.debug("onResultRequestTakeOffer called " + position++);
         listener.onWaitingForPeerResponse(state);
     }
 
@@ -167,14 +163,15 @@ public class ProtocolForTakerAsSeller
 
     public void onRespondToTakeOfferRequestMessage(RespondToTakeOfferRequestMessage message)
     {
-        log.debug("onRespondToTakeOfferRequestMessage called");
+        log.debug("onRespondToTakeOfferRequestMessage called " + position++);
+        log.debug("state " + state);
         checkState(state == State.RequestTakeOffer);
         checkArgument(tradeId.equals(message.getTradeId()));
 
         if (message.isTakeOfferRequestAccepted())
         {
-            PayTakeOfferFee.run(this::onResultPayTakeOfferFee, this::onFault, walletFacade, tradeId);
             state = State.PayTakeOfferFee;
+            PayTakeOfferFee.run(this::onResultPayTakeOfferFee, this::onFault, walletFacade, tradeId);
         }
         else
         {
@@ -184,16 +181,16 @@ public class ProtocolForTakerAsSeller
 
     public void onResultPayTakeOfferFee(String takeOfferFeeTxId)
     {
-        log.debug("onResultPayTakeOfferFee called");
+        log.debug("onResultPayTakeOfferFee called " + position++);
         trade.setTakeOfferFeeTxID(takeOfferFeeTxId);
 
-        SendTakeOfferFeePayedTxId.run(this::onResultSendTakeOfferFeePayedTxId, this::onFault, peerAddress, messageFacade, tradeId, takeOfferFeeTxId, tradeAmount, pubKeyForThatTrade);
         state = State.SendTakeOfferFeePayedTxId;
+        SendTakeOfferFeePayedTxId.run(this::onResultSendTakeOfferFeePayedTxId, this::onFault, peerAddress, messageFacade, tradeId, takeOfferFeeTxId, tradeAmount, pubKeyForThatTrade);
     }
 
     public void onResultSendTakeOfferFeePayedTxId()
     {
-        log.debug("onResultSendTakeOfferFeePayedTxId called");
+        log.debug("onResultSendTakeOfferFeePayedTxId called " + position++);
         listener.onWaitingForPeerResponse(state);
     }
 
@@ -204,7 +201,8 @@ public class ProtocolForTakerAsSeller
 
     public void onRequestTakerDepositPaymentMessage(RequestTakerDepositPaymentMessage message)
     {
-        log.debug("onRequestTakerDepositPaymentMessage called");
+        log.debug("onRequestTakerDepositPaymentMessage called " + position++);
+        log.debug("state " + state);
 
         // validation
         checkState(state == State.SendTakeOfferFeePayedTxId);
@@ -224,14 +222,15 @@ public class ProtocolForTakerAsSeller
         this.peersTxOutIndex = offererTxOutIndex;
 
         // next task
-        VerifyOffererAccount.run(this::onResultVerifyOffererAccount, this::onFault, blockChainFacade, peersAccountId, peersBankAccount);
         state = State.VerifyOffererAccount;
+        VerifyOffererAccount.run(this::onResultVerifyOffererAccount, this::onFault, blockChainFacade, peersAccountId, peersBankAccount);
     }
 
     public void onResultVerifyOffererAccount()
     {
-        log.debug("onResultVerifyOffererAccount called");
+        log.debug("onResultVerifyOffererAccount called " + position++);
         String takeOfferFeeTxId = trade.getTakeOfferFeeTxId();
+        state = State.CreateAndSignContract;
         CreateAndSignContract.run(this::onResultCreateAndSignContract,
                                   this::onFault,
                                   cryptoFacade,
@@ -245,27 +244,27 @@ public class ProtocolForTakerAsSeller
                                   peersAccountId,
                                   peersBankAccount,
                                   accountKey);
-        state = State.CreateAndSignContract;
     }
 
     public void onResultCreateAndSignContract(Contract contract, String contractAsJson, String signature)
     {
-        log.debug("onResultCreateAndSignContract called");
+        log.debug("onResultCreateAndSignContract called " + position++);
 
         trade.setContract(contract);
         trade.setContractAsJson(contractAsJson);
         trade.setContractTakerSignature(signature);
 
-        PayDeposit.run(this::onResultPayDeposit, this::onFault, walletFacade, collateral, tradeAmount, tradeId, pubKeyForThatTrade, arbitratorPubKey, peersPubKey, preparedPeersDepositTxAsHex);
         state = State.PayDeposit;
+        PayDeposit.run(this::onResultPayDeposit, this::onFault, walletFacade, collateral, tradeAmount, tradeId, pubKeyForThatTrade, arbitratorPubKey, peersPubKey, preparedPeersDepositTxAsHex);
     }
 
     public void onResultPayDeposit(Transaction signedTakerDepositTx)
     {
-        log.debug("onResultPayDeposit called");
+        log.debug("onResultPayDeposit called " + position++);
         String contractAsJson = trade.getContractAsJson();
         String takerSignature = trade.getTakerSignature();
 
+        state = State.SendSignedTakerDepositTxAsHex;
         SendSignedTakerDepositTxAsHex.run(this::onResultSendSignedTakerDepositTxAsHex,
                                           this::onFault,
                                           peerAddress,
@@ -279,12 +278,11 @@ public class ProtocolForTakerAsSeller
                                           takerSignature,
                                           signedTakerDepositTx,
                                           peersTxOutIndex);
-        state = State.SendSignedTakerDepositTxAsHex;
     }
 
     public void onResultSendSignedTakerDepositTxAsHex()
     {
-        log.debug(" called");
+        log.debug("onResultSendSignedTakerDepositTxAsHex called " + position++);
         listener.onWaitingForPeerResponse(state);
     }
 
@@ -296,10 +294,10 @@ public class ProtocolForTakerAsSeller
     // informational, does only trigger UI feedback/update
     public void onDepositTxPublishedMessage(DepositTxPublishedMessage message)
     {
-        log.debug("onDepositTxPublishedMessage called");
-        checkState(state.ordinal() > State.SendSignedTakerDepositTxAsHex.ordinal() && state.ordinal() < State.SignAndPublishPayoutTx.ordinal());
+        log.debug("onDepositTxPublishedMessage called " + position++);
+        log.debug("state " + state);
+        checkState(state.ordinal() >= State.SendSignedTakerDepositTxAsHex.ordinal());
         checkArgument(tradeId.equals(message.getTradeId()));
-        state = State.onDepositTxPublishedMessage;
         listener.onDepositTxPublished(walletFacade.takerCommitDepositTx(message.getDepositTxAsHex()));
     }
 
@@ -311,10 +309,10 @@ public class ProtocolForTakerAsSeller
     // informational, store data for later, does only trigger UI feedback/update
     public void onBankTransferInitedMessage(BankTransferInitedMessage message)
     {
-        log.debug("onBankTransferInitedMessage called");
-
+        log.debug("onBankTransferInitedMessage called " + position++);
+        log.debug("state " + state);
         // validate
-        checkState(state.ordinal() > State.SendSignedTakerDepositTxAsHex.ordinal() && state.ordinal() < State.SignAndPublishPayoutTx.ordinal());
+        checkState(state.ordinal() >= State.SendSignedTakerDepositTxAsHex.ordinal() && state.ordinal() < State.SignAndPublishPayoutTx.ordinal());
         checkArgument(tradeId.equals(message.getTradeId()));
         String depositTxAsHex = nonEmptyStringOf(message.getDepositTxAsHex());
         String offererSignatureR = nonEmptyStringOf(message.getOffererSignatureR());
@@ -343,11 +341,11 @@ public class ProtocolForTakerAsSeller
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void onUIEventFiatReceived()
     {
-        log.debug("onUIEventFiatReceived called");
+        log.debug("onUIEventFiatReceived called " + position++);
+        log.debug("state " + state);
+        checkState(state == State.onBankTransferInitedMessage);
 
-        checkState(state.ordinal() > State.SendSignedTakerDepositTxAsHex.ordinal() && state.ordinal() < State.SignAndPublishPayoutTx.ordinal());
-        state = State.onUIEventFiatReceived;
-
+        state = State.SignAndPublishPayoutTx;
         SignAndPublishPayoutTx.run(this::onResultSignAndPublishPayoutTx,
                                    this::onFault,
                                    walletFacade,
@@ -358,21 +356,20 @@ public class ProtocolForTakerAsSeller
                                    offererPaybackAmount,
                                    takerPaybackAmount,
                                    offererPayoutAddress);
-        state = State.SignAndPublishPayoutTx;
     }
 
     public void onResultSignAndPublishPayoutTx(String transactionId, String payoutTxAsHex)
     {
-        log.debug("onResultSignAndPublishPayoutTx called");
+        log.debug("onResultSignAndPublishPayoutTx called " + position++);
         listener.onPayoutTxPublished(trade, transactionId);
 
-        SendPayoutTxToOfferer.run(this::onResultSendPayoutTxToOfferer, this::onFault, peerAddress, messageFacade, tradeId, payoutTxAsHex);
         state = State.SendPayoutTxToOfferer;
+        SendPayoutTxToOfferer.run(this::onResultSendPayoutTxToOfferer, this::onFault, peerAddress, messageFacade, tradeId, payoutTxAsHex);
     }
 
     public void onResultSendPayoutTxToOfferer()
     {
-        log.debug("onResultSendPayoutTxToOfferer called");
+        log.debug("onResultSendPayoutTxToOfferer called " + position++);
         listener.onCompleted(state);
     }
 
@@ -383,7 +380,7 @@ public class ProtocolForTakerAsSeller
 
     public String getId()
     {
-        return id;
+        return tradeId;
     }
 
 

@@ -23,6 +23,7 @@ public class PayDeposit
                            String offererPubKey,
                            String preparedOffererDepositTxAsHex)
     {
+        log.trace("Run task");
         try
         {
             BigInteger amountToPay = tradeAmount.add(collateral);

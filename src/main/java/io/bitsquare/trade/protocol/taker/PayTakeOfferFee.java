@@ -14,7 +14,7 @@ public class PayTakeOfferFee
 
     public static void run(ResultHandler resultHandler, FaultHandler faultHandler, WalletFacade walletFacade, String tradeId)
     {
-        log.trace("execute");
+        log.trace("Run task");
         try
         {
             walletFacade.payTakeOfferFee(tradeId, new FutureCallback<Transaction>()

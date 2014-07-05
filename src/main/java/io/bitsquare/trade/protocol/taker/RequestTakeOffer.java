@@ -14,6 +14,7 @@ public class RequestTakeOffer
 
     public static void run(ResultHandler resultHandler, FaultHandler faultHandler, PeerAddress peerAddress, MessageFacade messageFacade, String tradeId)
     {
+        log.trace("Run task");
         messageFacade.sendTradeMessage(peerAddress, new RequestTakeOfferMessage(tradeId), new OutgoingTradeMessageListener()
         {
             @Override

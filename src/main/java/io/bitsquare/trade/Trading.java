@@ -320,9 +320,6 @@ public class Trading
     {
         // log.trace("processTradingMessage TradeId " + tradeMessage.getTradeId());
         log.trace("processTradingMessage instance " + tradeMessage.getClass().getSimpleName());
-        log.trace("processTradingMessage instance " + tradeMessage.getClass().getName());
-        log.trace("processTradingMessage instance " + tradeMessage.getClass().getCanonicalName());
-        log.trace("processTradingMessage instance " + tradeMessage.getClass().getTypeName());
 
         String tradeId = tradeMessage.getTradeId();
 

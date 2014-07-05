@@ -22,6 +22,7 @@ public class SendTakeOfferFeePayedTxId
                            BigInteger tradeAmount,
                            String pubKeyForThatTradeAsHex)
     {
+        log.trace("Run task");
         TakeOfferFeePayedMessage msg = new TakeOfferFeePayedMessage(tradeId, takeOfferFeeTxId, tradeAmount, pubKeyForThatTradeAsHex);
 
         messageFacade.sendTradeMessage(peerAddress, msg, new OutgoingTradeMessageListener()

@@ -13,6 +13,7 @@ public class GetPeerAddress
 
     public static void run(ResultHandler resultHandler, FaultHandler faultHandler, MessageFacade messageFacade, String messagePubKeyAsHex)
     {
+        log.trace("Run task");
         messageFacade.getPeerAddress(messagePubKeyAsHex, new GetPeerAddressListener()
         {
             @Override

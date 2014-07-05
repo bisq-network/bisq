@@ -10,39 +10,17 @@ import javafx.fxml.FXMLLoader;
  */
 public class GuiceFXMLLoader extends FXMLLoader
 {
-
-
     private static Injector injector = null;
 
-    // not used yet
-   /* public GuiceFXMLLoader()
+    public static void setInjector(Injector injector)
     {
-        super();
-        setupControllerFactory();
+        GuiceFXMLLoader.injector = injector;
     }
-
-    public GuiceFXMLLoader(URL url)
-    {
-        super(url);
-        setupControllerFactory();
-    }
-
-    public GuiceFXMLLoader(URL url, ResourceBundle resourceBundle, BuilderFactory builderFactory)
-    {
-        super(url, resourceBundle, builderFactory);
-        setupControllerFactory();
-    }  */
 
     public GuiceFXMLLoader(URL url, ResourceBundle resourceBundle)
     {
         super(url, resourceBundle);
         setupControllerFactory();
-    }
-
-
-    public static void setInjector(Injector injector)
-    {
-        GuiceFXMLLoader.injector = injector;
     }
 
     private void setupControllerFactory()

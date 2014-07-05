@@ -14,6 +14,7 @@ public class VerifyTakerAccount
 
     public static void run(ResultHandler resultHandler, FaultHandler faultHandler, BlockChainFacade blockChainFacade, String peersAccountId, BankAccount peersBankAccount)
     {
+        log.trace("Run task");
         VerifyPeerAccount.run(resultHandler, faultHandler, blockChainFacade, peersAccountId, peersBankAccount);
     }
 

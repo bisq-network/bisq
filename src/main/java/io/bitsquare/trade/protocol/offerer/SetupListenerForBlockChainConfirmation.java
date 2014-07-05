@@ -12,7 +12,9 @@ public class SetupListenerForBlockChainConfirmation
     private static final Logger log = LoggerFactory.getLogger(SetupListenerForBlockChainConfirmation.class);
 
     public static void run(ResultHandler resultHandler, FaultHandler faultHandler, Transaction depositTransaction, ProtocolForOffererAsBuyerListener listener)
-    {      //TODO
+    {
+        log.trace("Run task");
+        //TODO
         // sharedModel.offererPaymentProtocolListener.onDepositTxConfirmedInBlockchain();
 
         depositTransaction.getConfidence().addEventListener(new TransactionConfidence.Listener()

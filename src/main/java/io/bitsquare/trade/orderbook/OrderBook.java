@@ -222,7 +222,7 @@ public class OrderBook implements OrderBookListener
     @Override
     public void onOfferRemoved(Data offerData, boolean success)
     {
-        if (success)
+        if (success && offerData != null)
         {
             try
             {

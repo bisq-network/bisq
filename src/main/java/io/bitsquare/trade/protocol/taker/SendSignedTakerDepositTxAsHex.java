@@ -30,6 +30,7 @@ public class SendSignedTakerDepositTxAsHex
                            Transaction signedTakerDepositTx,
                            long offererTxOutIndex)
     {
+        log.trace("Run task");
         long takerTxOutIndex = signedTakerDepositTx.getInput(1).getOutpoint().getIndex();
 
         RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(tradeId,

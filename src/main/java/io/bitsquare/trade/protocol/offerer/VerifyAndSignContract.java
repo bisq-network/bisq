@@ -30,6 +30,7 @@ public class VerifyAndSignContract
                            String peersContractAsJson,
                            ECKey registrationKey)
     {
+        log.trace("Run task");
         Contract contract = new Contract(offer, tradeAmount, takeOfferFeeTxId, accountId, peersAccountId, bankAccount, peersBankAccount, messagePubKeyAsHex, takerMessagePubKey);
 
         String contractAsJson = Utilities.objectToJson(contract);

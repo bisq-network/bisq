@@ -21,6 +21,7 @@ public class CreateDepositTx
                            String takerMultiSigPubKey,
                            String arbitratorPubKeyAsHex)
     {
+        log.trace("Run task");
         try
         {
             String offererPubKey = walletFacade.getAddressInfoByTradeID(tradeId).getPubKeyAsHexString();

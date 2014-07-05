@@ -24,6 +24,7 @@ public class SignAndPublishPayoutTx
                            BigInteger takerPaybackAmount,
                            String offererPayoutAddress)
     {
+        log.trace("Run task");
         try
         {
 

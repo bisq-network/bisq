@@ -163,7 +163,9 @@ public class PendingTradeController implements Initializable, ChildController, H
         initCopyIcons();
 
         // select
-        Optional<PendingTradesListItem> currentTradeItemOptional = tradeItems.stream().filter((e) -> e.getTrade().getId().equals(trading.getPendingTrade().getId())).findFirst();
+        Optional<PendingTradesListItem> currentTradeItemOptional = tradeItems.stream()
+                                                                             .filter((e) -> trading.getPendingTrade() != null && e.getTrade().getId().equals(trading.getPendingTrade().getId()))
+                                                                             .findFirst();
         if (currentTradeItemOptional.isPresent())
         {
             openTradesTable.getSelectionModel().select(currentTradeItemOptional.get());

@@ -35,14 +35,6 @@ public class ProtocolForOffererAsBuyer
 {
 
     private static final Logger log = LoggerFactory.getLogger(ProtocolForOffererAsBuyer.class);
-    private final String arbitratorPubKey;
-    private final BigInteger collateral;
-    private final BankAccount bankAccount;
-    private final String accountId;
-    private final BigInteger tradeAmount;
-    private final String messagePubKey;
-    private final ECKey accountKey;
-    private final String payoutAddress;
 
     public enum State
     {
@@ -68,6 +60,7 @@ public class ProtocolForOffererAsBuyer
         onPayoutTxPublishedMessage
     }
 
+    // provided
     private final Trade trade;
     private final PeerAddress peerAddress;
     private final MessageFacade messageFacade;
@@ -76,11 +69,15 @@ public class ProtocolForOffererAsBuyer
     private final CryptoFacade cryptoFacade;
     private final ProtocolForOffererAsBuyerListener listener;
 
-    private final String id;
+    // derived
     private final String tradeId;
     private final Offer offer;
-
-    private State state;
+    private final String arbitratorPubKey;
+    private final BankAccount bankAccount;
+    private final String accountId;
+    private final String messagePubKey;
+    private final ECKey accountKey;
+    private final String payoutAddress;
 
     // data written/read by tasks
     private String preparedOffererDepositTxAsHex;
@@ -98,6 +95,10 @@ public class ProtocolForOffererAsBuyer
     private String txConnOutAsHex;
     private String txScriptSigAsHex;
     private long takerTxOutIndex;
+
+    // state
+    private State state;
+    private int position = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -121,18 +122,18 @@ public class ProtocolForOffererAsBuyer
         this.blockChainFacade = blockChainFacade;
         this.cryptoFacade = cryptoFacade;
 
-        id = trade.getId();
-
         tradeId = trade.getId();
         offer = trade.getOffer();
+
         arbitratorPubKey = offer.getArbitrator().getPubKeyAsHex();
-        collateral = trade.getCollateralAmount();
+
         bankAccount = user.getBankAccount(trade.getOffer().getBankAccountId());
         accountId = user.getAccountId();
-        tradeAmount = trade.getTradeAmount();
         messagePubKey = user.getMessagePubKeyAsHex();
+
         accountKey = walletFacade.getRegistrationAddressInfo().getKey();
         payoutAddress = walletFacade.getAddressInfoByTradeID(tradeId).getAddressString();
+
         state = State.Init;
     }
 
@@ -140,8 +141,8 @@ public class ProtocolForOffererAsBuyer
     public void start()
     {
         log.debug("start called ");
-        HandleTakeOfferRequest.run(this::onResultHandleTakeOfferRequest, this::onFault, peerAddress, messageFacade, trade.getState(), tradeId);
         state = State.HandleTakeOfferRequest;
+        HandleTakeOfferRequest.run(this::onResultHandleTakeOfferRequest, this::onFault, peerAddress, messageFacade, trade.getState(), tradeId);
     }
 
     public void onResultHandleTakeOfferRequest(boolean takeOfferRequestAccepted)
@@ -168,6 +169,7 @@ public class ProtocolForOffererAsBuyer
     public void onTakeOfferFeePayedMessage(@NotNull TakeOfferFeePayedMessage message)
     {
         log.debug("onTakeOfferFeePayedMessage called ");
+        log.debug("state " + state);
 
         // validation
         checkState(state == State.HandleTakeOfferRequest);
@@ -184,17 +186,18 @@ public class ProtocolForOffererAsBuyer
         trade.setTradeAmount(tradeAmount);
 
         // next task
-        VerifyTakeOfferFeePayment.run(this::onResultVerifyTakeOfferFeePayment, this::onFault, walletFacade, this.takeOfferFeeTxId);
         state = State.VerifyTakeOfferFeePayment;
+        VerifyTakeOfferFeePayment.run(this::onResultVerifyTakeOfferFeePayment, this::onFault, walletFacade, this.takeOfferFeeTxId);
     }
 
     public void onResultVerifyTakeOfferFeePayment()
     {
         log.debug("onResultVerifyTakeOfferFeePayment called ");
 
+        BigInteger collateral = trade.getCollateralAmount();
+        state = State.CreateDepositTx;
         CreateDepositTx.run(this::onResultCreateDepositTx, this::onFault, walletFacade, tradeId, collateral, takerPubKey, arbitratorPubKey);
 
-        state = State.CreateDepositTx;
     }
 
     public void onResultCreateDepositTx(String offererPubKey, String preparedOffererDepositTxAsHex, long offererTxOutIndex)
@@ -203,7 +206,7 @@ public class ProtocolForOffererAsBuyer
         this.preparedOffererDepositTxAsHex = preparedOffererDepositTxAsHex;
         this.offererTxOutIndex = offererTxOutIndex;
 
-
+        state = State.RequestTakerDepositPayment;
         RequestTakerDepositPayment.run(this::onResultRequestTakerDepositPayment,
                                        this::onFault,
                                        peerAddress,
@@ -214,8 +217,6 @@ public class ProtocolForOffererAsBuyer
                                        offererPubKey,
                                        preparedOffererDepositTxAsHex,
                                        offererTxOutIndex);
-
-        state = State.RequestTakerDepositPayment;
     }
 
     public void onResultRequestTakerDepositPayment()
@@ -232,6 +233,7 @@ public class ProtocolForOffererAsBuyer
     public void onRequestOffererPublishDepositTxMessage(RequestOffererPublishDepositTxMessage message)
     {
         log.debug("onRequestOffererPublishDepositTxMessage called ");
+        log.debug("state " + state);
 
         // validation
         checkState(state == State.RequestTakerDepositPayment);
@@ -259,14 +261,16 @@ public class ProtocolForOffererAsBuyer
         this.takerTxOutIndex = takerTxOutIndex;
 
         // next task
-        VerifyTakerAccount.run(this::onResultVerifyTakerAccount, this::onFault, blockChainFacade, this.peersAccountId, this.peersBankAccount);
         state = State.VerifyTakerAccount;
+        VerifyTakerAccount.run(this::onResultVerifyTakerAccount, this::onFault, blockChainFacade, this.peersAccountId, this.peersBankAccount);
     }
 
     public void onResultVerifyTakerAccount()
     {
         log.debug("onResultVerifyTakerAccount called ");
 
+        BigInteger tradeAmount = trade.getTradeAmount();
+        state = State.VerifyAndSignContract;
         VerifyAndSignContract.run(this::onResultVerifyAndSignContract,
                                   this::onFault,
                                   cryptoFacade,
@@ -281,8 +285,6 @@ public class ProtocolForOffererAsBuyer
                                   peersMessagePubKey,
                                   peersContractAsJson,
                                   accountKey);
-
-        state = State.VerifyAndSignContract;
     }
 
     public void onResultVerifyAndSignContract(Contract contract, String contractAsJson, String signature)
@@ -292,7 +294,7 @@ public class ProtocolForOffererAsBuyer
         trade.setContract(contract);
         trade.setContractAsJson(contractAsJson);
         trade.setContractTakerSignature(signature);
-
+        state = State.SignAndPublishDepositTx;
         SignAndPublishDepositTx.run(this::onResultSignAndPublishDepositTx,
                                     this::onFault,
                                     walletFacade,
@@ -302,7 +304,6 @@ public class ProtocolForOffererAsBuyer
                                     txScriptSigAsHex,
                                     offererTxOutIndex,
                                     takerTxOutIndex);
-        state = State.SignAndPublishDepositTx;
     }
 
     public void onResultSignAndPublishDepositTx(Transaction depositTransaction)
@@ -312,16 +313,16 @@ public class ProtocolForOffererAsBuyer
         trade.setDepositTransaction(depositTransaction);
         listener.onDepositTxPublished(depositTransaction.getHashAsString());
 
-        SendDepositTxIdToTaker.run(this::onResultSendDepositTxIdToTaker, this::onFault, peerAddress, messageFacade, tradeId, depositTransaction);
         state = State.SendDepositTxIdToTaker;
+        SendDepositTxIdToTaker.run(this::onResultSendDepositTxIdToTaker, this::onFault, peerAddress, messageFacade, tradeId, depositTransaction);
     }
 
     public void onResultSendDepositTxIdToTaker()
     {
         log.debug("onResultSendDepositTxIdToTaker called ");
 
-        SetupListenerForBlockChainConfirmation.run(this::onResultSetupListenerForBlockChainConfirmation, this::onFault, trade.getDepositTransaction(), listener);
         state = State.SetupListenerForBlockChainConfirmation;
+        SetupListenerForBlockChainConfirmation.run(this::onResultSetupListenerForBlockChainConfirmation, this::onFault, trade.getDepositTransaction(), listener);
     }
 
     public void onResultSetupListenerForBlockChainConfirmation()
@@ -341,16 +342,18 @@ public class ProtocolForOffererAsBuyer
     public void onUIEventBankTransferInited()
     {
         log.debug("onUIEventBankTransferInited called ");
+        log.debug("state " + state);
 
         // validation
-        checkState(state == State.onResultSetupListenerForBlockChainConfirmation);
-
+        checkState(state.ordinal() >= State.SignAndPublishDepositTx.ordinal() && state.ordinal() <= State.onResultSetupListenerForBlockChainConfirmation.ordinal());
 
         state = State.onUIEventBankTransferInited;
 
         // next task
         String depositTransactionId = trade.getDepositTransaction().getHashAsString();
-
+        BigInteger tradeAmount = trade.getTradeAmount();
+        BigInteger collateral = trade.getCollateralAmount();
+        state = State.SendSignedPayoutTx;
         SendSignedPayoutTx.run(this::onResultSendSignedPayoutTx,
                                this::onFault,
                                peerAddress,
@@ -362,7 +365,6 @@ public class ProtocolForOffererAsBuyer
                                depositTransactionId,
                                collateral,
                                tradeAmount);
-        state = State.SendSignedPayoutTx;
     }
 
     public void onResultSendSignedPayoutTx()
@@ -380,6 +382,7 @@ public class ProtocolForOffererAsBuyer
     public void onPayoutTxPublishedMessage(PayoutTxPublishedMessage message)
     {
         log.debug("onPayoutTxPublishedMessage called ");
+        log.debug("state " + state);
 
         // validation
         checkState(state == State.SendSignedPayoutTx);
@@ -400,7 +403,7 @@ public class ProtocolForOffererAsBuyer
 
     public String getId()
     {
-        return id;
+        return tradeId;
     }
 
 

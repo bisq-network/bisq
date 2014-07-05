@@ -28,6 +28,7 @@ public class SendSignedPayoutTx
                            BigInteger collateral,
                            BigInteger tradeAmount)
     {
+        log.trace("Run task");
         try
         {
             BigInteger offererPaybackAmount = tradeAmount.add(collateral);

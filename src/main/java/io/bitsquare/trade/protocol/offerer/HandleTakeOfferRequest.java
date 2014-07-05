@@ -14,6 +14,7 @@ public class HandleTakeOfferRequest
 
     public static void run(ResultHandler resultHandler, FaultHandler faultHandler, PeerAddress peerAddress, MessageFacade messageFacade, Trade.State tradeState, String tradeId)
     {
+        log.trace("Run task");
         boolean takeOfferRequestAccepted = tradeState == Trade.State.OPEN;
         if (!takeOfferRequestAccepted)
         {

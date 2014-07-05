@@ -21,6 +21,7 @@ public class SignAndPublishDepositTx
                            long offererTxOutIndex,
                            long takerTxOutIndex)
     {
+        log.trace("Run task");
         try
         {
             walletFacade.offererSignAndPublishTx(preparedOffererDepositTxAsHex,
