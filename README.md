@@ -3,14 +3,10 @@
 Bitsquare is a P2P Fiat-BTC Exchange, extensible to a generic P2P trading platform (include commodities and
 cryptocurrencies)
 
-This is just a proof of concept prototype for demonstrating the basic workflow of the trader process.
-It is not at all production code style (no tests, verifications missing, very limited use cases,...).
-
 The project use Java 8 and Maven.
 We use the bitcoinj library and TomP2P for DHT and messaging.
 
-Test net is currently not working with bitcoinj as the DNS seed servers are not setup correctly (See: http://sourceforge.net/p/bitcoin/mailman/message/32349208/).
-To use the RegTest mode you need to set regtest=1 in the bitcoin.config file inside the bitcoin data directory (https://en.bitcoin.it/wiki/Running_Bitcoin).
+If you want to use the RegTest mode you need to set regtest=1 in the bitcoin.config file inside the bitcoin data directory (https://en.bitcoin.it/wiki/Running_Bitcoin).
 Then you can generate coins on demand with the Bitcoin qt client with that command in the console: setgenerate true 101  (101 only for the first start because the coin maturity of 100 blocks).
 See: https://bitcoinj.github.io/testing
 You can change the network mode in the guice module: BitSquareModule.java

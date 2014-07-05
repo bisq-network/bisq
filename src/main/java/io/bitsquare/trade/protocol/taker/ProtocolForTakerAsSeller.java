@@ -94,7 +94,7 @@ public class ProtocolForTakerAsSeller
 
     // state
     private State state;
-    private int position = 0;
+    private int step = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -136,14 +136,14 @@ public class ProtocolForTakerAsSeller
 
     public void start()
     {
-        log.debug("start called " + position++);
+        log.debug("start called " + step++);
         state = State.GetPeerAddress;
         GetPeerAddress.run(this::onResultGetPeerAddress, this::onFault, messageFacade, peersMessagePubKey);
     }
 
     public void onResultGetPeerAddress(PeerAddress peerAddress)
     {
-        log.debug("onResultGetPeerAddress called " + position++);
+        log.debug("onResultGetPeerAddress called " + step++);
         this.peerAddress = peerAddress;
 
         state = State.RequestTakeOffer;
@@ -152,7 +152,7 @@ public class ProtocolForTakerAsSeller
 
     public void onResultRequestTakeOffer()
     {
-        log.debug("onResultRequestTakeOffer called " + position++);
+        log.debug("onResultRequestTakeOffer called " + step++);
         listener.onWaitingForPeerResponse(state);
     }
 
@@ -163,7 +163,7 @@ public class ProtocolForTakerAsSeller
 
     public void onRespondToTakeOfferRequestMessage(RespondToTakeOfferRequestMessage message)
     {
-        log.debug("onRespondToTakeOfferRequestMessage called " + position++);
+        log.debug("onRespondToTakeOfferRequestMessage called " + step++);
         log.debug("state " + state);
         checkState(state == State.RequestTakeOffer);
         checkArgument(tradeId.equals(message.getTradeId()));
@@ -181,7 +181,7 @@ public class ProtocolForTakerAsSeller
 
     public void onResultPayTakeOfferFee(String takeOfferFeeTxId)
     {
-        log.debug("onResultPayTakeOfferFee called " + position++);
+        log.debug("onResultPayTakeOfferFee called " + step++);
         trade.setTakeOfferFeeTxID(takeOfferFeeTxId);
 
         state = State.SendTakeOfferFeePayedTxId;
@@ -190,7 +190,7 @@ public class ProtocolForTakerAsSeller
 
     public void onResultSendTakeOfferFeePayedTxId()
     {
-        log.debug("onResultSendTakeOfferFeePayedTxId called " + position++);
+        log.debug("onResultSendTakeOfferFeePayedTxId called " + step++);
         listener.onWaitingForPeerResponse(state);
     }
 
@@ -201,7 +201,7 @@ public class ProtocolForTakerAsSeller
 
     public void onRequestTakerDepositPaymentMessage(RequestTakerDepositPaymentMessage message)
     {
-        log.debug("onRequestTakerDepositPaymentMessage called " + position++);
+        log.debug("onRequestTakerDepositPaymentMessage called " + step++);
         log.debug("state " + state);
 
         // validation
@@ -228,7 +228,7 @@ public class ProtocolForTakerAsSeller
 
     public void onResultVerifyOffererAccount()
     {
-        log.debug("onResultVerifyOffererAccount called " + position++);
+        log.debug("onResultVerifyOffererAccount called " + step++);
         String takeOfferFeeTxId = trade.getTakeOfferFeeTxId();
         state = State.CreateAndSignContract;
         CreateAndSignContract.run(this::onResultCreateAndSignContract,
@@ -248,7 +248,7 @@ public class ProtocolForTakerAsSeller
 
     public void onResultCreateAndSignContract(Contract contract, String contractAsJson, String signature)
     {
-        log.debug("onResultCreateAndSignContract called " + position++);
+        log.debug("onResultCreateAndSignContract called " + step++);
 
         trade.setContract(contract);
         trade.setContractAsJson(contractAsJson);
@@ -260,7 +260,7 @@ public class ProtocolForTakerAsSeller
 
     public void onResultPayDeposit(Transaction signedTakerDepositTx)
     {
-        log.debug("onResultPayDeposit called " + position++);
+        log.debug("onResultPayDeposit called " + step++);
         String contractAsJson = trade.getContractAsJson();
         String takerSignature = trade.getTakerSignature();
 
@@ -282,7 +282,7 @@ public class ProtocolForTakerAsSeller
 
     public void onResultSendSignedTakerDepositTxAsHex()
     {
-        log.debug("onResultSendSignedTakerDepositTxAsHex called " + position++);
+        log.debug("onResultSendSignedTakerDepositTxAsHex called " + step++);
         listener.onWaitingForPeerResponse(state);
     }
 
@@ -294,7 +294,7 @@ public class ProtocolForTakerAsSeller
     // informational, does only trigger UI feedback/update
     public void onDepositTxPublishedMessage(DepositTxPublishedMessage message)
     {
-        log.debug("onDepositTxPublishedMessage called " + position++);
+        log.debug("onDepositTxPublishedMessage called " + step++);
         log.debug("state " + state);
         checkState(state.ordinal() >= State.SendSignedTakerDepositTxAsHex.ordinal());
         checkArgument(tradeId.equals(message.getTradeId()));
@@ -309,7 +309,7 @@ public class ProtocolForTakerAsSeller
     // informational, store data for later, does only trigger UI feedback/update
     public void onBankTransferInitedMessage(BankTransferInitedMessage message)
     {
-        log.debug("onBankTransferInitedMessage called " + position++);
+        log.debug("onBankTransferInitedMessage called " + step++);
         log.debug("state " + state);
         // validate
         checkState(state.ordinal() >= State.SendSignedTakerDepositTxAsHex.ordinal() && state.ordinal() < State.SignAndPublishPayoutTx.ordinal());
@@ -341,7 +341,7 @@ public class ProtocolForTakerAsSeller
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     public void onUIEventFiatReceived()
     {
-        log.debug("onUIEventFiatReceived called " + position++);
+        log.debug("onUIEventFiatReceived called " + step++);
         log.debug("state " + state);
         checkState(state == State.onBankTransferInitedMessage);
 
@@ -360,7 +360,7 @@ public class ProtocolForTakerAsSeller
 
     public void onResultSignAndPublishPayoutTx(String transactionId, String payoutTxAsHex)
     {
-        log.debug("onResultSignAndPublishPayoutTx called " + position++);
+        log.debug("onResultSignAndPublishPayoutTx called " + step++);
         listener.onPayoutTxPublished(trade, transactionId);
 
         state = State.SendPayoutTxToOfferer;
@@ -369,7 +369,7 @@ public class ProtocolForTakerAsSeller
 
     public void onResultSendPayoutTxToOfferer()
     {
-        log.debug("onResultSendPayoutTxToOfferer called " + position++);
+        log.debug("onResultSendPayoutTxToOfferer called " + step++);
         listener.onCompleted(state);
     }
 

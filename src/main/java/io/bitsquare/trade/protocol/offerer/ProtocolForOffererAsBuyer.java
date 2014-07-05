@@ -98,7 +98,7 @@ public class ProtocolForOffererAsBuyer
 
     // state
     private State state;
-    private int position = 0;
+    private int step = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -140,14 +140,14 @@ public class ProtocolForOffererAsBuyer
 
     public void start()
     {
-        log.debug("start called ");
+        log.debug("start called " + step++);
         state = State.HandleTakeOfferRequest;
         HandleTakeOfferRequest.run(this::onResultHandleTakeOfferRequest, this::onFault, peerAddress, messageFacade, trade.getState(), tradeId);
     }
 
     public void onResultHandleTakeOfferRequest(boolean takeOfferRequestAccepted)
     {
-        log.debug("onResultHandleTakeOfferRequest called ");
+        log.debug("onResultHandleTakeOfferRequest called " + step++);
         if (takeOfferRequestAccepted)
         {
             trade.setState(Trade.State.ACCEPTED);
@@ -168,7 +168,7 @@ public class ProtocolForOffererAsBuyer
 
     public void onTakeOfferFeePayedMessage(@NotNull TakeOfferFeePayedMessage message)
     {
-        log.debug("onTakeOfferFeePayedMessage called ");
+        log.debug("onTakeOfferFeePayedMessage called " + step++);
         log.debug("state " + state);
 
         // validation
@@ -192,7 +192,7 @@ public class ProtocolForOffererAsBuyer
 
     public void onResultVerifyTakeOfferFeePayment()
     {
-        log.debug("onResultVerifyTakeOfferFeePayment called ");
+        log.debug("onResultVerifyTakeOfferFeePayment called " + step++);
 
         BigInteger collateral = trade.getCollateralAmount();
         state = State.CreateDepositTx;
@@ -202,7 +202,7 @@ public class ProtocolForOffererAsBuyer
 
     public void onResultCreateDepositTx(String offererPubKey, String preparedOffererDepositTxAsHex, long offererTxOutIndex)
     {
-        log.debug("onResultCreateDepositTx called ");
+        log.debug("onResultCreateDepositTx called " + step++);
         this.preparedOffererDepositTxAsHex = preparedOffererDepositTxAsHex;
         this.offererTxOutIndex = offererTxOutIndex;
 
@@ -221,7 +221,7 @@ public class ProtocolForOffererAsBuyer
 
     public void onResultRequestTakerDepositPayment()
     {
-        log.debug("onResultRequestTakerDepositPayment called ");
+        log.debug("onResultRequestTakerDepositPayment called " + step++);
         listener.onWaitingForPeerResponse(state);
     }
 
@@ -232,7 +232,7 @@ public class ProtocolForOffererAsBuyer
 
     public void onRequestOffererPublishDepositTxMessage(RequestOffererPublishDepositTxMessage message)
     {
-        log.debug("onRequestOffererPublishDepositTxMessage called ");
+        log.debug("onRequestOffererPublishDepositTxMessage called " + step++);
         log.debug("state " + state);
 
         // validation
@@ -267,7 +267,7 @@ public class ProtocolForOffererAsBuyer
 
     public void onResultVerifyTakerAccount()
     {
-        log.debug("onResultVerifyTakerAccount called ");
+        log.debug("onResultVerifyTakerAccount called " + step++);
 
         BigInteger tradeAmount = trade.getTradeAmount();
         state = State.VerifyAndSignContract;
@@ -289,7 +289,7 @@ public class ProtocolForOffererAsBuyer
 
     public void onResultVerifyAndSignContract(Contract contract, String contractAsJson, String signature)
     {
-        log.debug("onResultVerifyAndSignContract called ");
+        log.debug("onResultVerifyAndSignContract called " + step++);
 
         trade.setContract(contract);
         trade.setContractAsJson(contractAsJson);
@@ -308,7 +308,7 @@ public class ProtocolForOffererAsBuyer
 
     public void onResultSignAndPublishDepositTx(Transaction depositTransaction)
     {
-        log.debug("onResultSignAndPublishDepositTx called ");
+        log.debug("onResultSignAndPublishDepositTx called " + step++);
 
         trade.setDepositTransaction(depositTransaction);
         listener.onDepositTxPublished(depositTransaction.getHashAsString());
@@ -319,7 +319,7 @@ public class ProtocolForOffererAsBuyer
 
     public void onResultSendDepositTxIdToTaker()
     {
-        log.debug("onResultSendDepositTxIdToTaker called ");
+        log.debug("onResultSendDepositTxIdToTaker called " + step++);
 
         state = State.SetupListenerForBlockChainConfirmation;
         SetupListenerForBlockChainConfirmation.run(this::onResultSetupListenerForBlockChainConfirmation, this::onFault, trade.getDepositTransaction(), listener);
@@ -327,7 +327,7 @@ public class ProtocolForOffererAsBuyer
 
     public void onResultSetupListenerForBlockChainConfirmation()
     {
-        log.debug("onResultSetupListenerForBlockChainConfirmation called ");
+        log.debug("onResultSetupListenerForBlockChainConfirmation called " + step++);
 
         state = State.onResultSetupListenerForBlockChainConfirmation;
         listener.onWaitingForUserInteraction(state);
@@ -341,7 +341,7 @@ public class ProtocolForOffererAsBuyer
     // Triggered from UI event: Button click "Bank transfer inited"
     public void onUIEventBankTransferInited()
     {
-        log.debug("onUIEventBankTransferInited called ");
+        log.debug("onUIEventBankTransferInited called " + step++);
         log.debug("state " + state);
 
         // validation
@@ -369,7 +369,7 @@ public class ProtocolForOffererAsBuyer
 
     public void onResultSendSignedPayoutTx()
     {
-        log.debug("onResultSendSignedPayoutTx called ");
+        log.debug("onResultSendSignedPayoutTx called " + step++);
 
         listener.onWaitingForPeerResponse(state);
     }
@@ -381,7 +381,7 @@ public class ProtocolForOffererAsBuyer
 
     public void onPayoutTxPublishedMessage(PayoutTxPublishedMessage message)
     {
-        log.debug("onPayoutTxPublishedMessage called ");
+        log.debug("onPayoutTxPublishedMessage called " + step++);
         log.debug("state " + state);
 
         // validation
