@@ -79,8 +79,8 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     @FXML
     private ComboBox<Arbitrator.ID_VERIFICATION> idVerificationsComboBox;
     @FXML
-    private TextField nameTextField, idTypeTextField, languagesTextField, maxTradeVolumeTextField, passiveServiceFeeTextField, minPassiveServiceFeeTextField,
-            arbitrationFeeTextField, minArbitrationFeeTextField, methodsTextField, idVerificationsTextField, webPageTextField, collateralAddressTextField, balanceTextField;
+    private TextField nameTextField, idTypeTextField, languagesTextField, maxTradeVolumeTextField, passiveServiceFeeTextField, minPassiveServiceFeeTextField, arbitrationFeeTextField,
+            minArbitrationFeeTextField, methodsTextField, idVerificationsTextField, webPageTextField, collateralAddressTextField, balanceTextField;
     @FXML
     private TextArea descriptionTextArea;
     @FXML
@@ -361,11 +361,11 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     private void setupPayCollateralScreen()
     {
         infoLabel.setText("You need to pay 10 x the max. trading volume as collateral.\n\n" +
-                "That payment will be locked into a MultiSig fund and be refunded when you leave the arbitration pool.\n" +
-                "In case of fraud (collusion, not fulfilling the min. dispute quality requirements) you will lose your collateral.\n" +
-                "If you have a negative feedback from your clients you will lose a part of the collateral,\n" +
-                "depending on the overall relation of negative to positive ratings you received after a dispute resolution.\n\n" +
-                "Please pay in " + arbitrator.getMaxTradeVolume() * 10 + " BTC");
+                                  "That payment will be locked into a MultiSig fund and be refunded when you leave the arbitration pool.\n" +
+                                  "In case of fraud (collusion, not fulfilling the min. dispute quality requirements) you will lose your collateral.\n" +
+                                  "If you have a negative feedback from your clients you will lose a part of the collateral,\n" +
+                                  "depending on the overall relation of negative to positive ratings you received after a dispute resolution.\n\n" +
+                                  "Please pay in " + arbitrator.getMaxTradeVolume() * 10 + " BTC");
 
 
         String collateralAddress = walletFacade.getRegistrationAddressInfo() != null ? walletFacade.getRegistrationAddressInfo().toString() : "";
@@ -467,7 +467,11 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
         try
         {
             BitSquareValidator.textFieldsNotEmptyWithReset(nameTextField, idTypeTextField, languagesTextField, methodsTextField, idVerificationsTextField);
-            BitSquareValidator.textFieldsHasDoubleValueWithReset(maxTradeVolumeTextField, passiveServiceFeeTextField, minPassiveServiceFeeTextField, arbitrationFeeTextField, minArbitrationFeeTextField);
+            BitSquareValidator.textFieldsHasDoubleValueWithReset(maxTradeVolumeTextField,
+                                                                 passiveServiceFeeTextField,
+                                                                 minPassiveServiceFeeTextField,
+                                                                 arbitrationFeeTextField,
+                                                                 minArbitrationFeeTextField);
 
             String pubKeyAsHex = walletFacade.getArbitratorDepositAddressInfo().getPubKeyAsHexString();
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey());
@@ -483,20 +487,20 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
             String description = descriptionTextArea.getText();
 
             return new Arbitrator(pubKeyAsHex,
-                    messagePubKeyAsHex,
-                    name,
-                    idType,
-                    languageList,
-                    new Reputation(),
-                    maxTradeVolume,
-                    passiveServiceFee,
-                    minPassiveServiceFee,
-                    arbitrationFee,
-                    minArbitrationFee,
-                    methodList,
-                    idVerificationList,
-                    webUrl,
-                    description);
+                                  messagePubKeyAsHex,
+                                  name,
+                                  idType,
+                                  languageList,
+                                  new Reputation(),
+                                  maxTradeVolume,
+                                  passiveServiceFee,
+                                  minPassiveServiceFee,
+                                  arbitrationFee,
+                                  minArbitrationFee,
+                                  methodList,
+                                  idVerificationList,
+                                  webUrl,
+                                  description);
         } catch (BitSquareValidator.ValidationException e)
         {
             return null;

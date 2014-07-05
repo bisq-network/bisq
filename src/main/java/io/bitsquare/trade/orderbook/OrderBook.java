@@ -70,9 +70,13 @@ public class OrderBook implements OrderBookListener
     public void loadOffers()
     {
         if (user.getCurrentBankAccount() != null)
+        {
             messageFacade.getOffers(user.getCurrentBankAccount().getCurrency().getCurrencyCode());
+        }
         else
+        {
             messageFacade.getOffers(CurrencyUtil.getDefaultCurrency().getCurrencyCode());
+        }
     }
 
     public void removeOffer(Offer offer)
@@ -86,10 +90,10 @@ public class OrderBook implements OrderBookListener
             Offer offer = orderBookListItem.getOffer();
             BankAccount currentBankAccount = user.getCurrentBankAccount();
 
-            if (orderBookFilter == null
-                    || currentBankAccount == null
-                    || orderBookFilter.getDirection() == null)
+            if (orderBookFilter == null || currentBankAccount == null || orderBookFilter.getDirection() == null)
+            {
                 return false;
+            }
 
             // The users current bank account currency must match the offer currency (1 to 1)
             boolean currencyResult = currentBankAccount.getCurrency().equals(offer.getCurrency());
@@ -104,7 +108,9 @@ public class OrderBook implements OrderBookListener
             // The requested amount must be lower or equal then the offer amount
             boolean amountResult = true;
             if (orderBookFilter.getAmount() > 0)
+            {
                 amountResult = orderBookFilter.getAmount() <= offer.getAmount().doubleValue();
+            }
 
             // The requested trade direction must be opposite of the offerList trade direction
             boolean directionResult = !orderBookFilter.getDirection().equals(offer.getDirection());
@@ -114,9 +120,13 @@ public class OrderBook implements OrderBookListener
             if (orderBookFilter.getPrice() > 0)
             {
                 if (offer.getDirection() == Direction.SELL)
+                {
                     priceResult = orderBookFilter.getPrice() >= offer.getPrice();
+                }
                 else
+                {
                     priceResult = orderBookFilter.getPrice() <= offer.getPrice();
+                }
             }
 
             // The arbitrator defined in the offer must match one of the accepted arbitrators defined in the settings (1 to n)
@@ -124,13 +134,7 @@ public class OrderBook implements OrderBookListener
 
 
             //noinspection UnnecessaryLocalVariable
-            boolean result = currencyResult
-                    && countryResult
-                    && languageResult
-                    && amountResult
-                    && directionResult
-                    && priceResult
-                    && arbitratorResult;
+            boolean result = currencyResult && countryResult && languageResult && amountResult && directionResult && priceResult && arbitratorResult;
 
                   /*
             log.debug("result = " + result +
@@ -260,7 +264,9 @@ public class OrderBook implements OrderBookListener
         for (Country country : list)
         {
             if (country.getCode().equals(countryToMatch.getCode()))
+            {
                 return true;
+            }
         }
         return false;
     }
@@ -272,7 +278,9 @@ public class OrderBook implements OrderBookListener
             for (Locale locale2 : list1)
             {
                 if (locale1.getLanguage().equals(locale2.getLanguage()))
+                {
                     return true;
+                }
             }
         }
         return false;
@@ -287,7 +295,9 @@ public class OrderBook implements OrderBookListener
                 try
                 {
                     if (arbitrator.getId().equals(arbitratorToMatch.getId()))
+                    {
                         return true;
+                    }
                 } catch (Exception e)
                 {
                     log.error(e.toString());

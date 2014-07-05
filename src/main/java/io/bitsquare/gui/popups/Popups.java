@@ -22,12 +22,7 @@ public class Popups
 
     public static void openInformationPopup(String title, String message, String masthead)
     {
-        Dialogs.create()
-                .owner(BitSquare.getStage())
-                .title(title)
-                .message(message)
-                .masthead(masthead)
-                .showInformation();
+        Dialogs.create().owner(BitSquare.getStage()).title(title).message(message).masthead(masthead).showInformation();
     }
 
     // Confirm
@@ -41,13 +36,7 @@ public class Popups
         List<Action> actions = new ArrayList<>();
         actions.add(Dialog.Actions.OK);
         actions.add(Dialog.Actions.CANCEL);
-        return Dialogs.create()
-                .owner(BitSquare.getStage())
-                .title(title)
-                .message(message)
-                .masthead(masthead)
-                .actions(actions)
-                .showConfirm();
+        return Dialogs.create().owner(BitSquare.getStage()).title(title).message(message).masthead(masthead).actions(actions).showConfirm();
     }
 
     // Warning
@@ -63,12 +52,7 @@ public class Popups
 
     public static void openWarningPopup(String title, String message, String masthead)
     {
-        Dialogs.create()
-                .owner(BitSquare.getStage())
-                .title(title)
-                .message(message)
-                .masthead(masthead)
-                .showWarning();
+        Dialogs.create().owner(BitSquare.getStage()).title(title).message(message).masthead(masthead).showWarning();
     }
 
     // Error
@@ -84,12 +68,7 @@ public class Popups
 
     public static Action openErrorPopup(String title, String message, String masthead)
     {
-        return Dialogs.create()
-                .owner(BitSquare.getStage())
-                .title(title)
-                .message(message)
-                .masthead(masthead)
-                .showError();
+        return Dialogs.create().owner(BitSquare.getStage()).title(title).message(message).masthead(masthead).showError();
     }
 
     // Exception
@@ -105,12 +84,7 @@ public class Popups
 
     public static Action openExceptionPopup(Throwable throwable, String title, String message, String masthead)
     {
-        return Dialogs.create()
-                .owner(BitSquare.getStage())
-                .title(title)
-                .message(message)
-                .masthead(masthead)
-                .showException(throwable);
+        return Dialogs.create().owner(BitSquare.getStage()).title(title).message(message).masthead(masthead).showException(throwable);
     }
 
     // Support handling of uncaught exception from any thread (also non gui thread)
@@ -120,26 +94,36 @@ public class Popups
         // while dev
         throwable.printStackTrace();
 
-        Runnable runnable = () ->
-        {
+        Runnable runnable = () -> {
             if (Throwables.getRootCause(throwable) instanceof BlockStoreException)
             {
                 Action response = Popups.openErrorPopup("Application already running", "This application is already running and cannot be started twice.", "");
                 if (response == Dialog.Actions.OK)
+                {
                     Platform.exit();
+                }
             }
             else
             {
-                Action response = Popups.openExceptionPopup(throwable, "Exception", "", "A critical error has occurred.\nPlease copy the exception details and send a bug report to bugs@bitsquare.io.");
+                Action response = Popups.openExceptionPopup(throwable,
+                                                            "Exception",
+                                                            "",
+                                                            "A critical error has occurred.\nPlease copy the exception details and send a bug report to bugs@bitsquare.io.");
                 if (response == Dialog.Actions.OK)
+                {
                     Platform.exit();
+                }
             }
         };
 
         if (Platform.isFxApplicationThread())
+        {
             runnable.run();
+        }
         else
+        {
             Platform.runLater(runnable);
+        }
 
 
     }
@@ -152,11 +136,6 @@ public class Popups
 
     public static Action openRegistrationMissingPopup(String title, String message, String masthead, List<Dialogs.CommandLink> commandLinks, int selectedIndex)
     {
-        return Dialogs.create()
-                .owner(BitSquare.getStage())
-                .title(title)
-                .message(message)
-                .masthead(masthead)
-                .showCommandLinks(commandLinks.get(selectedIndex), commandLinks);
+        return Dialogs.create().owner(BitSquare.getStage()).title(title).message(message).masthead(masthead).showCommandLinks(commandLinks.get(selectedIndex), commandLinks);
     }
 }

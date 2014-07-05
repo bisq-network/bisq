@@ -94,18 +94,26 @@ public class Arbitrator implements Serializable
     public int hashCode()
     {
         if (id != null)
+        {
             return Objects.hashCode(id);
+        }
         else
+        {
             return 0;
+        }
     }
 
     @SuppressWarnings("NonFinalFieldReferenceInEquals")
     public boolean equals(Object obj)
     {
         if (!(obj instanceof Arbitrator))
+        {
             return false;
+        }
         if (obj == this)
+        {
             return true;
+        }
 
         Arbitrator other = (Arbitrator) obj;
         return id != null && id.equals(other.getId());

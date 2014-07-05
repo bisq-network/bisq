@@ -196,7 +196,9 @@ public class TakerTradeController implements Initializable, ChildController
             try
             {
                 if (offer.getArbitrator() != null && offer.getArbitrator().getWebUrl() != null)
+                {
                     Utilities.openURL(offer.getArbitrator().getWebUrl());
+                }
             } catch (Exception e1)
             {
                 log.warn(e1.toString());
@@ -230,13 +232,13 @@ public class TakerTradeController implements Initializable, ChildController
         trade = trading.createTrade(offer);
         trade.setTradeAmount(BtcFormatter.stringValueToSatoshis(amountTextField.getText()));
 
-       /* if (!blockChainFacade.verifyAccountRegistration(offer.getAccountId()))
+       /* if (!blockChainFacade.verifyAccountRegistration(offer.getTakerAccountId()))
         {
             Popups.openErrorPopup("Offerers account ID not valid", "Offerers registration tx is not found in blockchain or does not match the requirements.");
             return;
         }
 
-        if (blockChainFacade.isAccountIDBlacklisted(offer.getAccountId()))
+        if (blockChainFacade.isAccountIDBlacklisted(offer.getTakerAccountId()))
         {
             Popups.openErrorPopup("Offerers account ID is blacklisted", "Offerers account ID is blacklisted.");
             return;

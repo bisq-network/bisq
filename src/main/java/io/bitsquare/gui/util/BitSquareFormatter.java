@@ -50,9 +50,13 @@ public class BitSquareFormatter
     public static String formatAmountWithMinAmount(double amount, double minAmount, boolean useBTC)
     {
         if (useBTC)
+        {
             return formatDouble(amount) + " BTC (" + formatDouble(minAmount) + " BTC)";
+        }
         else
+        {
             return formatDouble(amount) + " (" + formatDouble(minAmount) + ")";
+        }
     }
 
 
@@ -95,7 +99,9 @@ public class BitSquareFormatter
     {
         String result = (direction == Direction.BUY) ? "Buy" : "Sell";
         if (allUpperCase)
+        {
             result = result.toUpperCase();
+        }
         return result;
     }
 
@@ -143,7 +149,9 @@ public class BitSquareFormatter
             result += country.getName();
             i++;
             if (i < countries.size())
+            {
                 result += ", ";
+            }
         }
         return result;
     }
@@ -157,7 +165,9 @@ public class BitSquareFormatter
             result += locale.getDisplayLanguage();
             i++;
             if (i < languageLocales.size())
+            {
                 result += ", ";
+            }
         }
         return result;
     }
@@ -172,7 +182,9 @@ public class BitSquareFormatter
             result += Localisation.get(item.toString());
             i++;
             if (i < items.size())
+            {
                 result += ", ";
+            }
         }
         return result;
     }
@@ -187,7 +199,9 @@ public class BitSquareFormatter
             result += Localisation.get(item.toString());
             i++;
             if (i < items.size())
+            {
                 result += ", ";
+            }
         }
         return result;
     }

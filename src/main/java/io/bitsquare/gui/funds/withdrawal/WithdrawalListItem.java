@@ -126,9 +126,13 @@ public class WithdrawalListItem
                 return "Registration fee";
             case TRADE:
                 if (addressEntry.getTradeId() != null)
+                {
                     return "Trade ID: " + addressEntry.getTradeId();
+                }
                 else
+                {
                     return "Trade (not used yet)";
+                }
             case ARBITRATOR_DEPOSIT:
                 return "Arbitration deposit";
         }

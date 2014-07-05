@@ -52,7 +52,9 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
                 getChildren().add(labelWithBorder);
                 labelWithBorders.add(labelWithBorder);
                 if (i == 0)
+                {
                     currentLabelWithBorder = prevLabelWithBorder = labelWithBorder;
+                }
 
                 i++;
             }
@@ -88,7 +90,9 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
             double newHeight = snapSize(node.prefHeight(-1) + 10);
 
             if (i > 0)
+            {
                 x = snapPosition(x - ((LabelWithBorder) node).getArrowWidth());
+            }
 
             x = snapPosition(x);
             y = snapPosition(y);
@@ -124,15 +128,13 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
 
             this.setShape(createButtonShape());
 
-            BorderStroke borderStroke = new BorderStroke(Color.LIGHTGRAY, BorderStrokeStyle.SOLID, null,
-                    new BorderWidths(borderWidth, borderWidth, borderWidth, borderWidth), Insets.EMPTY);
+            BorderStroke borderStroke = new BorderStroke(Color.LIGHTGRAY, BorderStrokeStyle.SOLID, null, new BorderWidths(borderWidth, borderWidth, borderWidth, borderWidth), Insets.EMPTY);
             this.setBorder(new Border(borderStroke));
         }
 
         public void select()
         {
-            BorderStroke borderStroke = new BorderStroke(processStepItem.getColor(), BorderStrokeStyle.SOLID, null,
-                    new BorderWidths(borderWidth, borderWidth, borderWidth, borderWidth), Insets.EMPTY);
+            BorderStroke borderStroke = new BorderStroke(processStepItem.getColor(), BorderStrokeStyle.SOLID, null, new BorderWidths(borderWidth, borderWidth, borderWidth, borderWidth), Insets.EMPTY);
             this.setBorder(new Border(borderStroke));
             setTextFill(processStepItem.getColor());
         }

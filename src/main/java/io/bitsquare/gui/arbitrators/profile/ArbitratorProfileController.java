@@ -28,8 +28,8 @@ public class ArbitratorProfileController implements Initializable, ChildControll
     @FXML
     private Label nameLabel;
     @FXML
-    private TextField nameTextField, languagesTextField, reputationTextField, maxTradeVolumeTextField, passiveServiceFeeTextField,
-            arbitrationFeeTextField, methodsTextField, idVerificationsTextField, webPageTextField;
+    private TextField nameTextField, languagesTextField, reputationTextField, maxTradeVolumeTextField, passiveServiceFeeTextField, arbitrationFeeTextField, methodsTextField,
+            idVerificationsTextField, webPageTextField;
     @FXML
     private TextArea descriptionTextArea;
 

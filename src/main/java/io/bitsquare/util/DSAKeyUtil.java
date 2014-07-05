@@ -60,9 +60,13 @@ public class DSAKeyUtil
         } catch (Throwable throwable)
         {
             if (throwable instanceof FileNotFoundException)
+            {
                 log.debug("Files not found. That is ok for the first execute.");
+            }
             else
+            {
                 log.error("Could not read key files. " + throwable);
+            }
 
             try
             {
@@ -114,15 +118,23 @@ public class DSAKeyUtil
                 // Work around an issue on Windows whereby you can't rename over existing files.
                 final File pubKeyCanonicalFile = pubKeyFile.getCanonicalFile();
                 if (pubKeyCanonicalFile.exists() && !pubKeyCanonicalFile.delete())
+                {
                     throw new IOException("Failed to delete pubKeyCanonicalFile for replacement with save");
+                }
                 if (!pubKeyTempFile.renameTo(pubKeyCanonicalFile))
+                {
                     throw new IOException("Failed to rename " + pubKeyTempFile + " to " + pubKeyCanonicalFile);
+                }
 
                 final File privKeyCanonicalFile = privKeyFile.getCanonicalFile();
                 if (privKeyCanonicalFile.exists() && !privKeyCanonicalFile.delete())
+                {
                     throw new IOException("Failed to delete privKeyCanonicalFile for replacement with save");
+                }
                 if (!privKeyTempFile.renameTo(privKeyCanonicalFile))
+                {
                     throw new IOException("Failed to rename " + privKeyTempFile + " to " + privKeyCanonicalFile);
+                }
             }
             else
             {
@@ -141,13 +153,17 @@ public class DSAKeyUtil
             {
                 log.warn("PubKeyTempFile still exists after failed save.");
                 if (!pubKeyTempFile.delete())
+                {
                     log.warn("Cannot delete pubKeyTempFile.");
+                }
             }
             if (privKeyTempFile.exists())
             {
                 log.warn("PrivKeyTempFile still exists after failed save.");
                 if (!privKeyTempFile.delete())
+                {
                     log.warn("Cannot delete privKeyTempFile.");
+                }
             }
 
             lock.unlock();

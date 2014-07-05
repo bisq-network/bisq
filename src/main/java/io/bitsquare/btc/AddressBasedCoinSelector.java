@@ -51,18 +51,28 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
             TransactionConfidence conf1 = a.getParentTransaction().getConfidence();
             TransactionConfidence conf2 = b.getParentTransaction().getConfidence();
             if (conf1.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
+            {
                 depth1 = conf1.getDepthInBlocks();
+            }
             if (conf2.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
+            {
                 depth2 = conf2.getDepthInBlocks();
+            }
             BigInteger aValue = a.getValue();
             BigInteger bValue = b.getValue();
             BigInteger aCoinDepth = aValue.multiply(BigInteger.valueOf(depth1));
             BigInteger bCoinDepth = bValue.multiply(BigInteger.valueOf(depth2));
             int c1 = bCoinDepth.compareTo(aCoinDepth);
-            if (c1 != 0) return c1;
+            if (c1 != 0)
+            {
+                return c1;
+            }
             // The "coin*days" destroyed are equal, sort by value alone to get the lowest transaction size.
             int c2 = bValue.compareTo(aValue);
-            if (c2 != 0) return c2;
+            if (c2 != 0)
+            {
+                return c2;
+            }
             // They are entirely equivalent (possibly pending) so sort by hash to ensure a total ordering.
             BigInteger aHash = a.getParentTransaction().getHash().toBigInteger();
             BigInteger bHash = b.getParentTransaction().getHash().toBigInteger();
@@ -75,11 +85,10 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
         // Pick chain-included transactions and transactions that are pending.
         TransactionConfidence confidence = tx.getConfidence();
         TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
-        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
-                type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
-                        // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
-                        // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
-                        (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
+        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) || type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
+                // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
+                // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
+                (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
     }
 
     private static boolean isInBlockChain(Transaction tx)
@@ -96,9 +105,13 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
     protected boolean shouldSelect(Transaction tx)
     {
         if (includePending)
+        {
             return isInBlockChainOrPending(tx);
+        }
         else
+        {
             return isInBlockChain(tx);
+        }
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -134,11 +147,16 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
         long total = 0;
         for (TransactionOutput output : sortedOutputs)
         {
-            if (total >= target) break;
+            if (total >= target)
+            {
+                break;
+            }
             // Only pick chain-included transactions, or transactions that are ours and pending.
             // Only select outputs from our defined address(es)
             if (!shouldSelect(output.getParentTransaction()) || !matchesRequiredAddress(output))
+            {
                 continue;
+            }
 
             selected.add(output);
             total += output.getValue().longValue();

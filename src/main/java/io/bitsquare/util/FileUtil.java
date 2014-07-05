@@ -33,7 +33,9 @@ public class FileUtil
         if (!dir.exists())
         {
             if (!dir.mkdir())
+            {
                 log.error("Could not create directory. " + dir.getAbsolutePath());
+            }
         }
 
         return dir;

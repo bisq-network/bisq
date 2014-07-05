@@ -17,8 +17,8 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.Trading;
-import io.bitsquare.trade.protocol.taker.TakerAsSellerProtocol;
-import io.bitsquare.trade.protocol.taker.TakerAsSellerProtocolListener;
+import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSeller;
+import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSellerListener;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -53,9 +53,9 @@ public class TakerOfferController implements Initializable, ChildController
     @FXML
     private ValidatedTextField amountTextField;
     @FXML
-    private TextField priceTextField, volumeTextField, collateralTextField, feeTextField, totalTextField, bankAccountTypeTextField, countryTextField,
-            arbitratorsTextField, supportedLanguagesTextField, supportedCountriesTextField, depositTxIdTextField, summaryPaidTextField, summaryReceivedTextField, summaryFeesTextField,
-            summaryCollateralTextField, summaryDepositTxIdTextField, summaryPayoutTxIdTextField;
+    private TextField priceTextField, volumeTextField, collateralTextField, feeTextField, totalTextField, bankAccountTypeTextField, countryTextField, arbitratorsTextField,
+            supportedLanguagesTextField, supportedCountriesTextField, depositTxIdTextField, summaryPaidTextField, summaryReceivedTextField, summaryFeesTextField, summaryCollateralTextField,
+            summaryDepositTxIdTextField, summaryPayoutTxIdTextField;
     @FXML
     private Label infoLabel, headLineLabel;
     @FXML
@@ -84,7 +84,9 @@ public class TakerOfferController implements Initializable, ChildController
         this.requestedAmount = requestedAmount.compareTo(BigInteger.ZERO) == 0 ? offer.getAmount() : requestedAmount;
 
         if (amountTextField != null)
+        {
             applyData();
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -172,68 +174,67 @@ public class TakerOfferController implements Initializable, ChildController
         {
             takeOfferButton.setDisable(true);
             amountTextField.setEditable(false);
-            trading.takeOffer(amount, offer, new TakerAsSellerProtocolListener()
-                    {
-                        @Override
-                        public void onDepositTxPublished(String depositTxId)
-                        {
-                            setDepositTxId(depositTxId);
-                            accordion.setExpandedPane(waitBankTxTitledPane);
-                            infoLabel.setText("Deposit transaction published by offerer.\n" +
-                                    "As soon as the offerer starts the \n" +
-                                    "Bank transfer, you will get informed.");
-                            depositTxIdTextField.setText(depositTxId);
-                        }
+            trading.takeOffer(amount, offer, new ProtocolForTakerAsSellerListener()
+            {
+                @Override
+                public void onDepositTxPublished(String depositTxId)
+                {
+                    setDepositTxId(depositTxId);
+                    accordion.setExpandedPane(waitBankTxTitledPane);
+                    infoLabel.setText("Deposit transaction published by offerer.\n" +
+                                              "As soon as the offerer starts the \n" +
+                                              "Bank transfer, you will get informed.");
+                    depositTxIdTextField.setText(depositTxId);
+                }
 
-                        @Override
-                        public void onBankTransferInited(String tradeId)
-                        {
-                            setTradeId(tradeId);
-                            headLineLabel.setText("Bank transfer inited");
-                            infoLabel.setText("Check your bank account and continue \n" +
-                                    "when you have received the money.");
-                            receivedFiatButton.setDisable(false);
-                        }
+                @Override
+                public void onBankTransferInited(String tradeId)
+                {
+                    setTradeId(tradeId);
+                    headLineLabel.setText("Bank transfer inited");
+                    infoLabel.setText("Check your bank account and continue \n" + "when you have received the money.");
+                    receivedFiatButton.setDisable(false);
+                }
 
-                        @Override
-                        public void onPayoutTxPublished(Trade trade, String payoutTxId)
-                        {
-                            accordion.setExpandedPane(summaryTitledPane);
-                            summaryPaidTextField.setText(BtcFormatter.formatSatoshis(trade.getTradeAmount()));
-                            summaryReceivedTextField.setText(BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount())));
-                            summaryFeesTextField.setText(BtcFormatter.formatSatoshis(FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)));
-                            summaryCollateralTextField.setText(BtcFormatter.formatSatoshis(trade.getCollateralAmount()));
-                            summaryDepositTxIdTextField.setText(depositTxId);
-                            summaryPayoutTxIdTextField.setText(payoutTxId);
-                        }
+                @Override
+                public void onPayoutTxPublished(Trade trade, String payoutTxId)
+                {
+                    accordion.setExpandedPane(summaryTitledPane);
+                    summaryPaidTextField.setText(BtcFormatter.formatSatoshis(trade.getTradeAmount()));
+                    summaryReceivedTextField.setText(BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount())));
+                    summaryFeesTextField.setText(BtcFormatter.formatSatoshis(FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+                    summaryCollateralTextField.setText(BtcFormatter.formatSatoshis(trade.getCollateralAmount()));
+                    summaryDepositTxIdTextField.setText(depositTxId);
+                    summaryPayoutTxIdTextField.setText(payoutTxId);
+                }
 
-                        @Override
-                        public void onFault(Throwable throwable, TakerAsSellerProtocol.State state)
-                        {
-                            log.error("Error while executing trade process at state: " + state + " / " + throwable);
-                            Popups.openErrorPopup("Error while executing trade process", "Error while executing trade process at state: " + state + " / " + throwable);
-                        }
+                @Override
+                public void onFault(Throwable throwable, ProtocolForTakerAsSeller.State state)
+                {
+                    log.error("Error while executing trade process at state: " + state + " / " + throwable);
+                    Popups.openErrorPopup("Error while executing trade process", "Error while executing trade process at state: " + state + " / " + throwable);
+                }
 
-                        @Override
-                        public void onWaitingForPeerResponse(TakerAsSellerProtocol.State state)
-                        {
-                            log.debug("Waiting for peers response at state " + state);
-                        }
+                @Override
+                public void onWaitingForPeerResponse(ProtocolForTakerAsSeller.State state)
+                {
+                    log.debug("Waiting for peers response at state " + state);
+                }
 
-                        @Override
-                        public void onCompleted(TakerAsSellerProtocol.State state)
-                        {
-                            log.debug("Trade protocol completed at state " + state);
-                        }
+                @Override
+                public void onCompleted(ProtocolForTakerAsSeller.State state)
+                {
+                    log.debug("Trade protocol completed at state " + state);
+                }
 
-                        @Override
-                        public void onTakeOfferRequestRejected(Trade trade)
-                        {
-                            log.error("Take offer request rejected");
-                            Popups.openErrorPopup("Take offer request rejected", "Your take offer request has been rejected. It might be that the offerer got another request shortly before your request arrived.");
-                        }
-                    }
-            );
+                @Override
+                public void onTakeOfferRequestRejected(Trade trade)
+                {
+                    log.error("Take offer request rejected");
+                    Popups.openErrorPopup("Take offer request rejected",
+                                          "Your take offer request has been rejected. It might be that the offerer got another request shortly before your request arrived.");
+                }
+            });
         }
     }
 

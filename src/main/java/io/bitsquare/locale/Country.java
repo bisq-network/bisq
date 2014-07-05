@@ -29,9 +29,13 @@ public class Country implements Serializable
     public boolean equals(Object obj)
     {
         if (!(obj instanceof Country))
+        {
             return false;
+        }
         if (obj == this)
+        {
             return true;
+        }
 
         final Country other = (Country) obj;
         return code.equals(other.getCode());

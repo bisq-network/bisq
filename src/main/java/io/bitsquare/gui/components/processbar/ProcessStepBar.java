@@ -37,7 +37,9 @@ public class ProcessStepBar<T> extends Control
     {
         this.processStepItems = processStepItems;
         if (getSkin() != null)
+        {
             ((ProcessStepBarSkin) getSkin()).dataChanged();
+        }
     }
 
     public void next()

@@ -160,7 +160,10 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                     public void onSuccess(@javax.annotation.Nullable Transaction transaction)
                     {
                         BitSquareValidator.resetTextFields(withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField);
-                        if (transaction != null) log.info("onWithdraw onSuccess txid:" + transaction.getHashAsString());
+                        if (transaction != null)
+                        {
+                            log.info("onWithdraw onSuccess txid:" + transaction.getHashAsString());
+                        }
                     }
 
                     @Override

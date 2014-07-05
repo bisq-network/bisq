@@ -46,17 +46,28 @@ public class User implements Serializable
     public void addBankAccount(BankAccount bankAccount)
     {
         if (!bankAccounts.contains(bankAccount))
+        {
             bankAccounts.add(bankAccount);
+        }
 
         currentBankAccount = bankAccount;
     }
 
     public void removeCurrentBankAccount()
     {
-        if (currentBankAccount != null) bankAccounts.remove(currentBankAccount);
+        if (currentBankAccount != null)
+        {
+            bankAccounts.remove(currentBankAccount);
+        }
 
-        if (bankAccounts.isEmpty()) currentBankAccount = null;
-        else currentBankAccount = bankAccounts.get(0);
+        if (bankAccounts.isEmpty())
+        {
+            currentBankAccount = null;
+        }
+        else
+        {
+            currentBankAccount = bankAccounts.get(0);
+        }
     }
 
 
@@ -74,7 +85,9 @@ public class User implements Serializable
             bankAccountUIDs += bankAccount.toString();
 
             if (i < bankAccounts.size() - 1)
+            {
                 bankAccountUIDs += ", ";
+            }
 
         }
         return bankAccountUIDs;
@@ -136,7 +149,9 @@ public class User implements Serializable
         for (final BankAccount bankAccount : bankAccounts)
         {
             if (bankAccount.getUid().equals(bankAccountId))
+            {
                 return bankAccount;
+            }
         }
         return null;
     }

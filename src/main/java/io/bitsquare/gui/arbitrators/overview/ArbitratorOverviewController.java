@@ -104,7 +104,9 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     public ChildController navigateToView(NavigationItem navigationItem)
     {
         if (arbitratorProfileController != null)
+        {
             arbitratorProfileController.cleanup();
+        }
 
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try

@@ -51,7 +51,9 @@ public class Settings implements Serializable
     public void addAcceptedLanguageLocale(Locale locale)
     {
         if (!acceptedLanguageLocales.contains(locale))
+        {
             acceptedLanguageLocales.add(locale);
+        }
     }
 
     public void removeAcceptedLanguageLocale(Locale item)
@@ -62,7 +64,9 @@ public class Settings implements Serializable
     public void addAcceptedCountry(Country locale)
     {
         if (!acceptedCountryLocales.contains(locale))
+        {
             acceptedCountryLocales.add(locale);
+        }
     }
 
     public void removeAcceptedCountry(Country item)
@@ -73,7 +77,9 @@ public class Settings implements Serializable
     public void addAcceptedArbitrator(Arbitrator arbitrator)
     {
         if (!acceptedArbitrators.contains(arbitrator))
+        {
             acceptedArbitrators.add(arbitrator);
+        }
     }
 
     public void removeAcceptedArbitrator(Arbitrator item)

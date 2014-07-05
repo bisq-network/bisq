@@ -237,9 +237,13 @@ public class Storage
                     // Work around an issue on Windows whereby you can't rename over existing files.
                     final File canonical = storageFile.getCanonicalFile();
                     if (canonical.exists() && !canonical.delete())
+                    {
                         throw new IOException("Failed to delete canonical file for replacement with save");
+                    }
                     if (!tempFile.renameTo(canonical))
+                    {
                         throw new IOException("Failed to rename " + tempFile + " to " + canonical);
+                    }
                 }
                 else if (!tempFile.renameTo(storageFile))
                 {
@@ -255,7 +259,9 @@ public class Storage
                 {
                     log.warn("Temp file still exists after failed save.");
                     if (!tempFile.delete())
+                    {
                         log.warn("Cannot delete temp file.");
+                    }
                 }
             }
         } catch (IOException e)

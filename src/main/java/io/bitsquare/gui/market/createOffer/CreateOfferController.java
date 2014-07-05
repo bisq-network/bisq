@@ -63,8 +63,8 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     @FXML
     private Button placeOfferButton, closeButton;
     @FXML
-    private TextField collateralTextField, minAmountTextField, bankAccountTypeTextField, bankAccountCurrencyTextField, bankAccountCountyTextField,
-            acceptedCountriesTextField, acceptedLanguagesTextField, feeLabel, txTextField;
+    private TextField collateralTextField, minAmountTextField, bankAccountTypeTextField, bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField,
+            acceptedLanguagesTextField, feeLabel, txTextField;
     @FXML
     private ConfidenceProgressIndicator progressIndicator;
 
@@ -188,18 +188,18 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         if (user.getCurrentBankAccount() != null)
         {
             offer = new Offer(user.getMessagePubKeyAsHex(),
-                    direction,
-                    BitSquareConverter.stringToDouble(priceTextField.getText()),
-                    BtcFormatter.stringValueToSatoshis(amountTextField.getText()),
-                    BtcFormatter.stringValueToSatoshis(minAmountTextField.getText()),
-                    user.getCurrentBankAccount().getBankAccountType(),
-                    user.getCurrentBankAccount().getCurrency(),
-                    user.getCurrentBankAccount().getCountry(),
-                    user.getCurrentBankAccount().getUid(),
-                    arbitrator,
-                    collateral,
-                    settings.getAcceptedCountries(),
-                    settings.getAcceptedLanguageLocales());
+                              direction,
+                              BitSquareConverter.stringToDouble(priceTextField.getText()),
+                              BtcFormatter.stringValueToSatoshis(amountTextField.getText()),
+                              BtcFormatter.stringValueToSatoshis(minAmountTextField.getText()),
+                              user.getCurrentBankAccount().getBankAccountType(),
+                              user.getCurrentBankAccount().getCurrency(),
+                              user.getCurrentBankAccount().getCountry(),
+                              user.getCurrentBankAccount().getUid(),
+                              arbitrator,
+                              collateral,
+                              settings.getAcceptedCountries(),
+                              settings.getAcceptedLanguageLocales());
 
 
             try

@@ -48,7 +48,9 @@ public class GuiceFXMLLoader extends FXMLLoader
     private void setupControllerFactory()
     {
         if (GuiceFXMLLoader.injector != null)
+        {
             setControllerFactory(new GuiceControllerFactory(GuiceFXMLLoader.injector));
+        }
     }
 
 }

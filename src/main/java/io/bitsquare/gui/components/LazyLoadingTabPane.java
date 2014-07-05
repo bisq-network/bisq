@@ -42,7 +42,9 @@ public class LazyLoadingTabPane extends TabPane
     public void initialize(NavigationController navigationController, Storage storage, String... tabContentFXMLUrls)
     {
         if (tabContentFXMLUrls.length == 0)
+        {
             throw new IllegalArgumentException("No tabContentFXMLUrls defined");
+        }
 
         this.tabContentFXMLUrls = tabContentFXMLUrls;
         this.navigationController = navigationController;
@@ -59,7 +61,9 @@ public class LazyLoadingTabPane extends TabPane
             Object indexObject = storage.read(storageId);
             log.trace("saved index" + indexObject);
             if (indexObject != null)
+            {
                 selectionModel.select((int) indexObject);
+            }
         }
         else
         {
@@ -72,7 +76,9 @@ public class LazyLoadingTabPane extends TabPane
     public void cleanup()
     {
         if (childController != null)
+        {
             childController.cleanup();
+        }
     }
 
 
@@ -97,7 +103,9 @@ public class LazyLoadingTabPane extends TabPane
         if (index < tabContentFXMLUrls.length && index >= 0)
         {
             if (childController != null)
+            {
                 ((Hibernate) childController).sleep();
+            }
 
             Node view = null;
             if (index < views.size())

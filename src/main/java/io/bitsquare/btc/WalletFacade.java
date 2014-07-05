@@ -124,7 +124,9 @@ public class WalletFacade
         //walletAppKit.peerGroup().setMaxConnections(11);
 
         if (params == RegTestParams.get())
+        {
             walletAppKit.peerGroup().setMinBroadcastConnections(1);
+        }
        /* else
             walletAppKit.peerGroup().setMinBroadcastConnections(2);  */
 
@@ -262,7 +264,9 @@ public class WalletFacade
     {
         AddressEntry arbitratorDepositAddressEntry = getAddressInfoByAddressContext(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT);
         if (arbitratorDepositAddressEntry == null)
+        {
             arbitratorDepositAddressEntry = getNewArbitratorDepositAddressEntry();
+        }
 
         return arbitratorDepositAddressEntry;
     }
@@ -270,23 +274,37 @@ public class WalletFacade
 
     AddressEntry getUnusedTradeAddressInfo()
     {
-        List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(ImmutableList.copyOf(addressEntryList), addressInfo -> (addressInfo != null && addressInfo.getAddressContext().equals(AddressEntry.AddressContext.TRADE) && addressInfo.getTradeId() == null)));
+        List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(ImmutableList.copyOf(addressEntryList),
+                                                                                 addressInfo -> (addressInfo != null && addressInfo.getAddressContext()
+                                                                                                                                   .equals(AddressEntry.AddressContext.TRADE) && addressInfo
+                                                                                         .getTradeId() == null)));
 
         if (filteredList != null && !filteredList.isEmpty())
+        {
             return filteredList.get(0);
+        }
         else
+        {
             return getNewTradeAddressEntry();
+        }
     }
 
 
     private AddressEntry getAddressInfoByAddressContext(AddressEntry.AddressContext addressContext)
     {
-        List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(ImmutableList.copyOf(addressEntryList), addressInfo -> (addressInfo != null && addressInfo.getAddressContext() != null && addressInfo.getAddressContext().equals(addressContext))));
+        List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(ImmutableList.copyOf(addressEntryList),
+                                                                                 addressInfo -> (addressInfo != null && addressInfo.getAddressContext() != null && addressInfo.getAddressContext()
+                                                                                                                                                                              .equals(addressContext)
+                                                                                 )));
 
         if (filteredList != null && !filteredList.isEmpty())
+        {
             return filteredList.get(0);
+        }
         else
+        {
             return null;
+        }
     }
 
 
@@ -295,7 +313,9 @@ public class WalletFacade
         for (AddressEntry addressEntry : ImmutableList.copyOf(addressEntryList))
         {
             if (addressEntry.getTradeId() != null && addressEntry.getTradeId().equals(tradeId))
+            {
                 return addressEntry;
+            }
         }
 
         AddressEntry addressEntry = getUnusedTradeAddressInfo();
@@ -343,7 +363,9 @@ public class WalletFacade
         for (AddressEntry addressEntry : addressEntryList)
         {
             if (addressEntry.getAddressString().equals(address))
+            {
                 return addressEntry;
+            }
         }
         return null;
     }
@@ -424,7 +446,9 @@ public class WalletFacade
         {
             TransactionOutput transactionOutput = transactionInput.getConnectedOutput();
             if (transactionOutput != null)
+            {
                 connectedOutputs.add(transactionOutput);
+            }
         }
 
         List<TransactionOutput> mergedOutputs = new ArrayList<>();
@@ -460,7 +484,9 @@ public class WalletFacade
     {
         TransactionConfidence transactionConfidence = null;
         if (getRegistrationAddressInfo() != null)
+        {
             transactionConfidence = getConfidenceForAddress(getRegistrationAddressInfo().getAddress());
+        }
         return transactionConfidence != null && transactionConfidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING);
     }
 
@@ -497,9 +523,13 @@ public class WalletFacade
         {
             BigInteger balance;
             if (balanceListener.getAddress() != null)
+            {
                 balance = getBalanceForAddress(balanceListener.getAddress());
+            }
             else
+            {
                 balance = getWalletBalance();
+            }
 
             balanceListener.onBalanceChanged(balance);
         }
@@ -667,7 +697,11 @@ public class WalletFacade
     // 1. step: deposit tx
     // Offerer creates the 2of3 multiSig deposit tx with his unsigned input and change output
 
-    public Transaction offererCreatesMSTxAndAddPayment(BigInteger offererInputAmount, String offererPubKey, String takerPubKey, String arbitratorPubKey, String tradeId) throws InsufficientMoneyException
+    public Transaction offererCreatesMSTxAndAddPayment(BigInteger offererInputAmount,
+                                                       String offererPubKey,
+                                                       String takerPubKey,
+                                                       String arbitratorPubKey,
+                                                       String tradeId) throws InsufficientMoneyException
     {
         log.debug("offererCreatesMSTxAndAddPayment");
         log.trace("inputs: ");
@@ -724,8 +758,7 @@ public class WalletFacade
                                                 String takerPubKey,
                                                 String arbitratorPubKey,
                                                 String offerersPartialDepositTxAsHex,
-                                                String tradeId
-    ) throws InsufficientMoneyException
+                                                String tradeId) throws InsufficientMoneyException
     {
         log.debug("takerAddPaymentAndSignTx");
         log.trace("inputs: ");
@@ -782,7 +815,9 @@ public class WalletFacade
         // Now we add the inputs and outputs from our temp tx and change the multiSig amount to the correct value
         tx.addInput(tempTx.getInput(0));
         if (tempTx.getOutputs().size() == 2)
+        {
             tx.addOutput(tempTx.getOutput(1));
+        }
 
         // We add the btc tx fee to the msOutputAmount and apply the change to the multiSig output
         msOutputAmount = msOutputAmount.add(FeePolicy.TX_FEE);
@@ -791,7 +826,9 @@ public class WalletFacade
         // Now we sign our input
         TransactionInput input = tx.getInput(1);
         if (input == null || input.getConnectedOutput() == null)
+        {
             log.error("input or input.getConnectedOutput() is null: " + input);
+        }
 
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
@@ -799,11 +836,17 @@ public class WalletFacade
         ECKey.ECDSASignature ecSig = sigKey.sign(hash);
         TransactionSignature txSig = new TransactionSignature(ecSig, Transaction.SigHash.ALL, false);
         if (scriptPubKey.isSentToRawPubKey())
+        {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig));
+        }
         else if (scriptPubKey.isSentToAddress())
+        {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
+        }
         else
+        {
             throw new ScriptException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
+        }
 
         log.trace("check if it can be correctly spent for input 1");
         input.getScriptSig().correctlySpends(tx, 1, scriptPubKey, false);
@@ -862,7 +905,8 @@ public class WalletFacade
         // add input
         Transaction offerersFirstTxConnOut = wallet.getTransaction(offerersFirstTx.getInput(0).getOutpoint().getHash());    // pass that around!
         TransactionOutPoint offerersFirstTxOutPoint = new TransactionOutPoint(params, offererTxOutIndex, offerersFirstTxConnOut);
-        //TransactionInput offerersFirstTxInput = new TransactionInput(params, tx, offerersFirstTx.getInput(0).getScriptBytes(), offerersFirstTxOutPoint);   // pass that around!  getScriptBytes = empty bytes array
+        //TransactionInput offerersFirstTxInput = new TransactionInput(params, tx, offerersFirstTx.getInput(0).getScriptBytes(), offerersFirstTxOutPoint);   // pass that around!  getScriptBytes =
+        // empty bytes array
         TransactionInput offerersFirstTxInput = new TransactionInput(params, tx, new byte[]{}, offerersFirstTxOutPoint);   // pass that around!  getScriptBytes = empty bytes array
         offerersFirstTxInput.setParent(tx);
         tx.addInput(offerersFirstTxInput);
@@ -884,9 +928,13 @@ public class WalletFacade
         // add outputs from takers tx, they are already correct
         tx.addOutput(takersSignedTx.getOutput(0));
         if (takersSignedTx.getOutputs().size() > 1)
+        {
             tx.addOutput(takersSignedTx.getOutput(1));
+        }
         if (takersSignedTx.getOutputs().size() == 3)
+        {
             tx.addOutput(takersSignedTx.getOutput(2));
+        }
 
         printInputs("tx", tx);
         log.trace("tx = " + tx);
@@ -895,7 +943,9 @@ public class WalletFacade
         // sign the input
         TransactionInput input = tx.getInput(0);
         if (input == null || input.getConnectedOutput() == null)
+        {
             log.error("input or input.getConnectedOutput() is null: " + input);
+        }
 
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
@@ -903,11 +953,17 @@ public class WalletFacade
         ECKey.ECDSASignature ecSig = sigKey.sign(hash);
         TransactionSignature txSig = new TransactionSignature(ecSig, Transaction.SigHash.ALL, false);
         if (scriptPubKey.isSentToRawPubKey())
+        {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig));
+        }
         else if (scriptPubKey.isSentToAddress())
+        {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
+        }
         else
+        {
             throw new ScriptException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
+        }
 
         input.getScriptSig().correctlySpends(tx, 0, scriptPubKey, false);
         log.trace("check if it can be correctly spent for input 0 OK");
@@ -1089,11 +1145,7 @@ public class WalletFacade
     }
 
 
-    private Transaction createPayoutTx(String depositTxAsHex,
-                                       BigInteger offererPaybackAmount,
-                                       BigInteger takerPaybackAmount,
-                                       String offererAddress,
-                                       String takerAddress) throws AddressFormatException
+    private Transaction createPayoutTx(String depositTxAsHex, BigInteger offererPaybackAmount, BigInteger takerPaybackAmount, String offererAddress, String takerAddress) throws AddressFormatException
     {
         log.trace("createPayoutTx");
         log.trace("inputs: ");
@@ -1116,10 +1168,16 @@ public class WalletFacade
     private void printInputs(String tracePrefix, Transaction tx)
     {
         for (TransactionInput input : tx.getInputs())
+        {
             if (input.getConnectedOutput() != null)
+            {
                 log.trace(tracePrefix + " input value : " + BtcFormatter.formatSatoshis(input.getConnectedOutput().getValue()));
+            }
             else
+            {
                 log.trace(tracePrefix + ": " + "Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
+            }
+        }
     }
 
 
@@ -1153,13 +1211,17 @@ public class WalletFacade
         private void onProgressInUserThread(double percent, int blocksSoFar, final Date date)
         {
             for (DownloadListener downloadListener : downloadListeners)
+            {
                 downloadListener.progress(percent);
+            }
         }
 
         private void onDoneDownloadInUserThread()
         {
             for (DownloadListener downloadListener : downloadListeners)
+            {
                 downloadListener.doneDownload();
+            }
         }
     }
 

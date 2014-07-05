@@ -155,7 +155,9 @@ public class PendingTradeController implements Initializable, ChildController, H
         trading.getNewTradeProperty().addListener((observableValue, oldTradeId, newTradeId) -> {
             Trade newTrade = trading.getTrade(newTradeId);
             if (newTrade != null)
+            {
                 tradeItems.add(new PendingTradesListItem(newTrade));
+            }
         });
 
         initCopyIcons();
@@ -163,7 +165,9 @@ public class PendingTradeController implements Initializable, ChildController, H
         // select
         Optional<PendingTradesListItem> currentTradeItemOptional = tradeItems.stream().filter((e) -> e.getTrade().getId().equals(trading.getPendingTrade().getId())).findFirst();
         if (currentTradeItemOptional.isPresent())
+        {
             openTradesTable.getSelectionModel().select(currentTradeItemOptional.get());
+        }
 
         tradeItems.addListener((ListChangeListener<PendingTradesListItem>) change -> {
             if (openTradesTable.getSelectionModel().getSelectedItem() == null && tradeItems.size() > 0)

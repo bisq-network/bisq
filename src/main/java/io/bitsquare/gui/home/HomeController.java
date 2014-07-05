@@ -50,7 +50,9 @@ public class HomeController implements Initializable, ChildController, Navigatio
     public ChildController navigateToView(NavigationItem navigationItem)
     {
         if (arbitratorRegistrationController != null)
+        {
             arbitratorRegistrationController.cleanup();
+        }
 
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try

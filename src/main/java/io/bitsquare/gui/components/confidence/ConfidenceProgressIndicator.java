@@ -91,8 +91,7 @@ public class ConfidenceProgressIndicator extends Control
      * Pseudoclass indicating this is a determinate (i.e., progress can be
      * determined) progress indicator.
      */
-    private static final PseudoClass PSEUDO_CLASS_DETERMINATE =
-            PseudoClass.getPseudoClass("determinate");
+    private static final PseudoClass PSEUDO_CLASS_DETERMINATE = PseudoClass.getPseudoClass("determinate");
     /***************************************************************************
      *                                                                         *
      * Properties                                                              *
@@ -102,8 +101,7 @@ public class ConfidenceProgressIndicator extends Control
      * Pseudoclass indicating this is an indeterminate (i.e., progress cannot
      * be determined) progress indicator.
      */
-    private static final PseudoClass PSEUDO_CLASS_INDETERMINATE =
-            PseudoClass.getPseudoClass("indeterminate");
+    private static final PseudoClass PSEUDO_CLASS_INDETERMINATE = PseudoClass.getPseudoClass("indeterminate");
     /**
      * A flag indicating whether it is possible to determine the progress
      * of the ProgressIndicator. Typically indeterminate progress bars are

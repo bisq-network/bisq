@@ -63,7 +63,9 @@ public class BitSquareWalletAppKit extends WalletAppKit
             vPeerGroup.setBloomFilterFalsePositiveRate(0.001);  // 0,1% instead of default 0,05%
 
             if (this.userAgent != null)
+            {
                 vPeerGroup.setUserAgent(userAgent, version);
+            }
             if (vWalletFile.exists())
             {
                 walletStream = new FileInputStream(vWalletFile);
@@ -71,7 +73,9 @@ public class BitSquareWalletAppKit extends WalletAppKit
                 addWalletExtensions(); // All extensions must be present before we deserialize
                 new WalletProtobufSerializer().readWallet(WalletProtobufSerializer.parseToProto(walletStream), vWallet);
                 if (shouldReplayWallet)
+                {
                     vWallet.clearTransactions(0);
+                }
             }
             else
             {
@@ -79,12 +83,18 @@ public class BitSquareWalletAppKit extends WalletAppKit
                 vWallet.addKey(new ECKey());
                 addWalletExtensions();
             }
-            if (useAutoSave) vWallet.autosaveToFile(vWalletFile, 1, TimeUnit.SECONDS, null);
+            if (useAutoSave)
+            {
+                vWallet.autosaveToFile(vWalletFile, 1, TimeUnit.SECONDS, null);
+            }
             // Set up peer addresses or discovery first, so if wallet extensions try to broadcast a transaction
             // before we're actually connected the broadcast waits for an appropriate number of connections.
             if (peerAddresses != null)
             {
-                for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
+                for (PeerAddress addr : peerAddresses)
+                {
+                    vPeerGroup.addAddress(addr);
+                }
                 peerAddresses = null;
             }
             else
@@ -130,27 +140,33 @@ public class BitSquareWalletAppKit extends WalletAppKit
             throw new IOException(e);
         } finally
         {
-            if (walletStream != null) walletStream.close();
+            if (walletStream != null)
+            {
+                walletStream.close();
+            }
         }
     }
 
     private void installShutdownHook()
     {
-        if (autoStop) Runtime.getRuntime().addShutdownHook(new Thread()
+        if (autoStop)
         {
-            @Override
-            public void run()
+            Runtime.getRuntime().addShutdownHook(new Thread()
             {
-                try
+                @Override
+                public void run()
                 {
-                    BitSquareWalletAppKit.this.stopAsync();
-                    BitSquareWalletAppKit.this.awaitTerminated();
+                    try
+                    {
+                        BitSquareWalletAppKit.this.stopAsync();
+                        BitSquareWalletAppKit.this.awaitTerminated();
 
-                } catch (Exception e)
-                {
-                    throw new RuntimeException(e);
+                    } catch (Exception e)
+                    {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 }

@@ -16,9 +16,13 @@ class RelayNode
     public static void main(String[] args) throws Exception
     {
         if (args != null && args.length == 1)
+        {
             INSTANCE(new Integer(args[0]));
+        }
         else
+        {
             INSTANCE(5000);
+        }
     }
 
     private static void INSTANCE(int port) throws Exception

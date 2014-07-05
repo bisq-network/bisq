@@ -36,7 +36,9 @@ public class BitSquare extends Application
     {
         log.debug("Startup: main");
         if (args != null && args.length > 0)
+        {
             ID = args[0];
+        }
 
         launch(args);
     }
@@ -73,9 +75,13 @@ public class BitSquare extends Application
         settings.updateFromStorage((Settings) storage.read(settings.getClass().getName()));
 
         if (ID.isEmpty())
+        {
             stage.setTitle("BitSquare");
+        }
         else
+        {
             stage.setTitle("BitSquare (" + ID + ")");
+        }
 
         GuiceFXMLLoader.setInjector(injector);
 
@@ -101,7 +107,9 @@ public class BitSquare extends Application
             stage.show();
             Action response = Popups.openExceptionPopup(e);
             if (response == Dialog.Actions.OK)
+            {
                 Platform.exit();
+            }
         }
     }
 

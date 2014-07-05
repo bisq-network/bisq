@@ -82,7 +82,9 @@ public class Utilities
     private static void printElapsedTime(String msg)
     {
         if (!msg.isEmpty())
+        {
             msg += " / ";
+        }
         long timeStamp = System.currentTimeMillis();
         log.debug(msg + "Elapsed: " + String.valueOf(timeStamp - lastTimeStamp));
         lastTimeStamp = timeStamp;

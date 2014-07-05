@@ -60,7 +60,9 @@ public class MarketController implements Initializable, NavigationController, Ch
             childController.setNavigationController(this);
 
             if (childController instanceof OrderBookController)
+            {
                 orderBookController = (OrderBookController) childController;
+            }
 
             String tabLabel;
             switch (navigationItem)
@@ -125,7 +127,9 @@ public class MarketController implements Initializable, NavigationController, Ch
     {
         tabPane.getSelectionModel().select(0);
         if (orderBookController != null)
+        {
             orderBookController.setDirection(direction);
+        }
     }
 
 }

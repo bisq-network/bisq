@@ -72,9 +72,13 @@ public class MessageFacade
     {
         int port = Bindings.MAX_PORT - Math.abs(new Random().nextInt()) % (Bindings.MAX_PORT - Bindings.MIN_DYN_PORT);
         if (BitSquare.ID.contains("taker"))
+        {
             port = 4501;
+        }
         else if (BitSquare.ID.contains("offerer"))
+        {
             port = 4500;
+        }
 
         try
         {
@@ -93,7 +97,9 @@ public class MessageFacade
     public void shutDown()
     {
         if (myPeer != null)
+        {
             myPeer.shutdown();
+        }
     }
 
 
@@ -219,17 +225,20 @@ public class MessageFacade
         final PeerConnection peerConnection = myPeer.createPeerConnection(peerAddress, 10);
         final FutureResponse sendFuture = myPeer.sendDirect(peerConnection).setObject(tradeMessage).start();
         sendFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-                               {
-                                   @Override
-                                   public void operationComplete(BaseFuture baseFuture) throws Exception
-                                   {
-                                       if (sendFuture.isSuccess())
-                                           Platform.runLater(() -> listener.onResult());
-                                       else
-                                           Platform.runLater(() -> listener.onFailed());
-                                   }
-                               }
-        );
+        {
+            @Override
+            public void operationComplete(BaseFuture baseFuture) throws Exception
+            {
+                if (sendFuture.isSuccess())
+                {
+                    Platform.runLater(() -> listener.onResult());
+                }
+                else
+                {
+                    Platform.runLater(() -> listener.onFailed());
+                }
+            }
+        });
     }
 
 
@@ -319,7 +328,9 @@ public class MessageFacade
     private void onArbitratorsReceived(Map<Number160, Data> dataMap, boolean success)
     {
         for (ArbitratorListener arbitratorListener : arbitratorListeners)
+        {
             arbitratorListener.onArbitratorsReceived(dataMap, success);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -346,7 +357,9 @@ public class MessageFacade
                 {
                     Object object = data.getObject();
                     if (object instanceof Long)
+                    {
                         Platform.runLater(() -> onGetDirtyFlag((Long) object));
+                    }
                 }
             }
 
@@ -366,9 +379,13 @@ public class MessageFacade
             isDirty.setValue(!isDirty.get());
         }
         if (lastTimeStamp > 0)
+        {
             lastTimeStamp = timeStamp;
+        }
         else
+        {
             lastTimeStamp++;
+        }
     }
 
     private Number160 getDirtyLocationKey(Number160 locationKey)
@@ -634,9 +651,13 @@ public class MessageFacade
     {
         myPeer.setObjectDataReply((sender, request) -> {
             if (!sender.equals(myPeer.getPeerAddress()))
+            {
                 Platform.runLater(() -> onMessage(request, sender));
+            }
             else
+            {
                 log.error("Received msg from myself. That should never happen.");
+            }
             //noinspection ReturnOfNull
             return null;
         });

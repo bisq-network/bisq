@@ -107,7 +107,9 @@ public class ConfidenceDisplay
             public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
             {
                 if (tx.getHashAsString().equals(transaction.getHashAsString()))
+                {
                     updateBalance(newBalance);
+                }
                 // log.debug("onCoinsReceived " + newBalance);
             }
 
@@ -115,7 +117,9 @@ public class ConfidenceDisplay
             public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
             {
                 if (tx.getHashAsString().equals(transaction.getHashAsString()))
+                {
                     updateConfidence(transaction);
+                }
                 // log.debug("onTransactionConfidenceChanged newTransaction " + newTransaction.getHashAsString());
             }
 
@@ -123,7 +127,9 @@ public class ConfidenceDisplay
             public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
             {
                 if (tx.getHashAsString().equals(transaction.getHashAsString()))
+                {
                     updateBalance(newBalance);
+                }
             }
 
             @Override
@@ -155,7 +161,9 @@ public class ConfidenceDisplay
         progressIndicator.setProgress(0);
         confirmationLabel.setText("");
         if (balanceTextField != null)
+        {
             balanceTextField.setText("");
+        }
     }
 
     private void updateBalance(BigInteger balance)
@@ -183,11 +191,15 @@ public class ConfidenceDisplay
                 }
             }
             if (latestTransaction != null && (transaction == null || latestTransaction.getHashAsString().equals(transaction.getHashAsString())))
+            {
                 updateConfidence(latestTransaction);
+            }
         }
 
         if (balanceTextField != null)
+        {
             balanceTextField.setText(BtcFormatter.formatSatoshis(balance));
+        }
     }
 
     private void updateConfidence(Transaction tx)

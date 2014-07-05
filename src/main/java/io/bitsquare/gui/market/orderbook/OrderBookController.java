@@ -220,7 +220,8 @@ public class OrderBookController implements Initializable, ChildController
                     }
                     else
                     {
-                        Action response = Popups.openErrorPopup("Registration fee not confirmed yet", "The registration fee transaction has not been confirmed yet in the blockchain. Please wait until it has at least 1 confirmation.");
+                        Action response = Popups.openErrorPopup("Registration fee not confirmed yet",
+                                                                "The registration fee transaction has not been confirmed yet in the blockchain. Please wait until it has at least 1 confirmation.");
                         if (response == Dialog.Actions.OK)
                         {
                             MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
@@ -229,7 +230,8 @@ public class OrderBookController implements Initializable, ChildController
                 }
                 else
                 {
-                    Action response = Popups.openErrorPopup("Missing registration fee", "You have not funded the full registration fee of " + BtcFormatter.formatSatoshis(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
+                    Action response = Popups.openErrorPopup("Missing registration fee",
+                                                            "You have not funded the full registration fee of " + BtcFormatter.formatSatoshis(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
                     if (response == Dialog.Actions.OK)
                     {
                         MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
@@ -249,10 +251,17 @@ public class OrderBookController implements Initializable, ChildController
         if (selectedIndex >= 0)
         {
             Dialogs.CommandLink settingsCommandLink = new Dialogs.CommandLink("Open settings", "You need to configure your settings before you can actively trade.");
-            Dialogs.CommandLink depositFeeCommandLink = new Dialogs.CommandLink("Deposit funds", "You need to pay the registration fee before you can actively trade. That is needed as prevention against fraud.");
-            Dialogs.CommandLink sendRegistrationCommandLink = new Dialogs.CommandLink("Publish registration", "When settings are configured and the fee deposit is done your registration transaction will be published to the Bitcoin \nnetwork.");
+            Dialogs.CommandLink depositFeeCommandLink = new Dialogs.CommandLink("Deposit funds",
+                                                                                "You need to pay the registration fee before you can actively trade. That is needed as prevention against fraud.");
+            Dialogs.CommandLink sendRegistrationCommandLink = new Dialogs.CommandLink("Publish registration",
+                                                                                      "When settings are configured and the fee deposit is done your registration transaction will be published to "
+                                                                                              + "the Bitcoin \nnetwork.");
             List<Dialogs.CommandLink> commandLinks = Arrays.asList(settingsCommandLink, depositFeeCommandLink, sendRegistrationCommandLink);
-            Action registrationMissingAction = Popups.openRegistrationMissingPopup("Not registered yet", "Please follow these steps:", "You need to register before you can place an offer.", commandLinks, selectedIndex);
+            Action registrationMissingAction = Popups.openRegistrationMissingPopup("Not registered yet",
+                                                                                   "Please follow these steps:",
+                                                                                   "You need to register before you can place an offer.",
+                                                                                   commandLinks,
+                                                                                   selectedIndex);
             if (registrationMissingAction == settingsCommandLink)
             {
                 MainController.GET_INSTANCE().navigateToView(NavigationItem.SETTINGS);
@@ -276,7 +285,10 @@ public class OrderBookController implements Initializable, ChildController
             public void onSuccess(@javax.annotation.Nullable Transaction transaction)
             {
                 log.debug("payRegistrationFee onSuccess");
-                if (transaction != null) log.info("payRegistrationFee onSuccess tx id:" + transaction.getHashAsString());
+                if (transaction != null)
+                {
+                    log.info("payRegistrationFee onSuccess tx id:" + transaction.getHashAsString());
+                }
             }
 
             @Override
@@ -289,8 +301,13 @@ public class OrderBookController implements Initializable, ChildController
         {
             walletFacade.payRegistrationFee(user.getStringifiedBankAccounts(), callback);
             if (walletFacade.getRegistrationAddressInfo() != null)
+            {
                 user.setAccountID(walletFacade.getRegistrationAddressInfo().toString());
-            if (messageFacade != null && messageFacade.getPubKey() != null) user.setMessagePubKeyAsHex(DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey()));
+            }
+            if (messageFacade != null && messageFacade.getPubKey() != null)
+            {
+                user.setMessagePubKeyAsHex(DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey()));
+            }
 
             storage.write(user.getClass().getName(), user);
         } catch (InsufficientMoneyException e1)
@@ -308,7 +325,9 @@ public class OrderBookController implements Initializable, ChildController
             {
                 ChildController nextController = navigationController.navigateToView(NavigationItem.CREATE_OFFER);
                 if (nextController != null)
+                {
                     ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
+                }
             }
             else
             {
@@ -333,12 +352,18 @@ public class OrderBookController implements Initializable, ChildController
 
             BigInteger requestedAmount;
             if (!"".equals(amount.getText()))
+            {
                 requestedAmount = BtcFormatter.stringValueToSatoshis(amount.getText());
+            }
             else
+            {
                 requestedAmount = offer.getAmount();
+            }
 
             if (takerOfferController != null)
+            {
                 takerOfferController.initWithData(offer, requestedAmount);
+            }
         }
         else
         {
@@ -359,16 +384,22 @@ public class OrderBookController implements Initializable, ChildController
         orderBookTable.sort();
 
         if (orderBookTable.getItems() != null)
+        {
             createOfferButton.setDefaultButton(orderBookTable.getItems().isEmpty());
+        }
     }
 
     private void setupPolling()
     {
         pollingTimer = Utilities.setInterval(1000, (animationTimer) -> {
             if (user.getCurrentBankAccount() != null)
+            {
                 messageFacade.getDirtyFlag(user.getCurrentBankAccount().getCurrency());
+            }
             else
+            {
                 messageFacade.getDirtyFlag(CurrencyUtil.getDefaultCurrency());
+            }
             return null;
         });
 

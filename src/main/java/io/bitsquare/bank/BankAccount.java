@@ -26,13 +26,7 @@ public class BankAccount implements Serializable
 
     private final String accountTitle;
 
-    public BankAccount(BankAccountType bankAccountType,
-                       Currency currency,
-                       Country country,
-                       String accountTitle,
-                       String accountHolderName,
-                       String accountPrimaryID,
-                       String accountSecondaryID)
+    public BankAccount(BankAccountType bankAccountType, Currency currency, Country country, String accountTitle, String accountHolderName, String accountPrimaryID, String accountSecondaryID)
     {
         this.bankAccountType = bankAccountType;
         this.currency = currency;
@@ -53,9 +47,13 @@ public class BankAccount implements Serializable
     public boolean equals(Object obj)
     {
         if (!(obj instanceof BankAccount))
+        {
             return false;
+        }
         if (obj == this)
+        {
             return true;
+        }
 
         final BankAccount other = (BankAccount) obj;
         return uid.equals(other.getUid());

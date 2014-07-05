@@ -149,7 +149,9 @@ public class MainController implements Initializable, NavigationController
     private ChildController loadView(NavigationItem navigationItem)
     {
         if (childController != null)
+        {
             childController.cleanup();
+        }
 
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
@@ -205,7 +207,9 @@ public class MainController implements Initializable, NavigationController
 
         NavigationItem selectedNavigationItem = (NavigationItem) storage.read(this, "selectedNavigationItem");
         if (selectedNavigationItem == null)
+        {
             selectedNavigationItem = NavigationItem.HOME;
+        }
 
         navigateToView(selectedNavigationItem);
     }
@@ -268,7 +272,9 @@ public class MainController implements Initializable, NavigationController
             childController = loadView(navigationItem);
 
             if (childController instanceof MarketController)
+            {
                 ((MarketController) childController).setDirection(navigationItem == NavigationItem.BUY ? Direction.BUY : Direction.SELL);
+            }
 
             storage.write(this, "selectedNavigationItem", navigationItem);
 

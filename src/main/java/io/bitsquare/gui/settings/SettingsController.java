@@ -149,21 +149,20 @@ public class SettingsController implements Initializable, ChildController, Navig
             idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
 
             Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
-                    messagePubKeyAsHex,
-                    "Manfred Karrer",
-                    Arbitrator.ID_TYPE.REAL_LIFE_ID,
-                    languages,
-                    new Reputation(),
-                    1,
-                    0.01,
-                    0.001,
-                    10,
-                    0.1,
-                    arbitrationMethods,
-                    idVerifications,
-                    "http://bitsquare.io/",
-                    "Bla bla..."
-            );
+                                                   messagePubKeyAsHex,
+                                                   "Manfred Karrer",
+                                                   Arbitrator.ID_TYPE.REAL_LIFE_ID,
+                                                   languages,
+                                                   new Reputation(),
+                                                   1,
+                                                   0.01,
+                                                   0.001,
+                                                   10,
+                                                   0.1,
+                                                   arbitrationMethods,
+                                                   idVerifications,
+                                                   "http://bitsquare.io/",
+                                                   "Bla bla...");
 
             arbitratorList.add(arbitrator);
             settings.addAcceptedArbitrator(arbitrator);
@@ -207,7 +206,9 @@ public class SettingsController implements Initializable, ChildController, Navig
     {
 
         if (childController != null)
+        {
             childController.cleanup();
+        }
 
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
         try
@@ -231,7 +232,9 @@ public class SettingsController implements Initializable, ChildController, Navig
             stage.setScene(scene);
             stage.setOnHidden(windowEvent -> {
                 if (navigationItem == NavigationItem.ARBITRATOR_OVERVIEW)
+                {
                     updateArbitrators();
+                }
             });
             stage.show();
 
@@ -351,52 +354,51 @@ public class SettingsController implements Initializable, ChildController, Navig
     private void initLanguage()
     {
         languagesListView.setCellFactory(new Callback<ListView<Locale>, ListCell<Locale>>()
-                                         {
+        {
 
-                                             @Override
-                                             public ListCell<Locale> call(ListView<Locale> list)
-                                             {
-                                                 return new ListCell<Locale>()
-                                                 {
-                                                     final HBox hBox = new HBox();
-                                                     final Label label = new Label();
-                                                     final Button removeButton = new Button();
-                                                     final ImageView icon = Icons.getIconImageView(Icons.REMOVE);
+            @Override
+            public ListCell<Locale> call(ListView<Locale> list)
+            {
+                return new ListCell<Locale>()
+                {
+                    final HBox hBox = new HBox();
+                    final Label label = new Label();
+                    final Button removeButton = new Button();
+                    final ImageView icon = Icons.getIconImageView(Icons.REMOVE);
 
-                                                     {
-                                                         label.setPrefWidth(565);
+                    {
+                        label.setPrefWidth(565);
 
-                                                         icon.setMouseTransparent(true);
+                        icon.setMouseTransparent(true);
 
-                                                         removeButton.setGraphic(icon);
-                                                         removeButton.setId("icon-button");
+                        removeButton.setGraphic(icon);
+                        removeButton.setId("icon-button");
 
-                                                         hBox.setSpacing(3);
-                                                         hBox.setAlignment(Pos.CENTER_LEFT);
-                                                         hBox.getChildren().addAll(label, removeButton);
-                                                     }
+                        hBox.setSpacing(3);
+                        hBox.setAlignment(Pos.CENTER_LEFT);
+                        hBox.getChildren().addAll(label, removeButton);
+                    }
 
-                                                     @Override
-                                                     public void updateItem(final Locale item, boolean empty)
-                                                     {
-                                                         super.updateItem(item, empty);
-                                                         if (item != null && !empty)
-                                                         {
-                                                             label.setText(item.getDisplayName());
+                    @Override
+                    public void updateItem(final Locale item, boolean empty)
+                    {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty)
+                        {
+                            label.setText(item.getDisplayName());
 
-                                                             removeButton.setOnAction(actionEvent -> removeLanguage(item));
+                            removeButton.setOnAction(actionEvent -> removeLanguage(item));
 
-                                                             setGraphic(hBox);
-                                                         }
-                                                         else
-                                                         {
-                                                             setGraphic(null);
-                                                         }
-                                                     }
-                                                 };
-                                             }
-                                         }
-        );
+                            setGraphic(hBox);
+                        }
+                        else
+                        {
+                            setGraphic(null);
+                        }
+                    }
+                };
+            }
+        });
         languagesListView.setItems(languageList);
 
         languageComboBox.setItems(FXCollections.observableArrayList(LanguageUtil.getAllLanguageLocales()));
@@ -437,53 +439,52 @@ public class SettingsController implements Initializable, ChildController, Navig
         });
 
         countriesListView.setCellFactory(new Callback<ListView<Country>, ListCell<Country>>()
-                                         {
+        {
 
-                                             @Override
-                                             public ListCell<Country> call(ListView<Country> list)
-                                             {
-                                                 return new ListCell<Country>()
-                                                 {
-                                                     final HBox hBox = new HBox();
-                                                     final Label label = new Label();
-                                                     final Button removeButton = new Button();
-                                                     final ImageView icon = Icons.getIconImageView(Icons.REMOVE);
+            @Override
+            public ListCell<Country> call(ListView<Country> list)
+            {
+                return new ListCell<Country>()
+                {
+                    final HBox hBox = new HBox();
+                    final Label label = new Label();
+                    final Button removeButton = new Button();
+                    final ImageView icon = Icons.getIconImageView(Icons.REMOVE);
 
-                                                     {
-                                                         label.setPrefWidth(565);
+                    {
+                        label.setPrefWidth(565);
 
-                                                         icon.setMouseTransparent(true);
+                        icon.setMouseTransparent(true);
 
-                                                         removeButton.setGraphic(icon);
-                                                         removeButton.setId("icon-button");
+                        removeButton.setGraphic(icon);
+                        removeButton.setId("icon-button");
 
-                                                         hBox.setSpacing(3);
-                                                         hBox.setAlignment(Pos.CENTER_LEFT);
-                                                         hBox.getChildren().addAll(label, removeButton);
-                                                     }
+                        hBox.setSpacing(3);
+                        hBox.setAlignment(Pos.CENTER_LEFT);
+                        hBox.getChildren().addAll(label, removeButton);
+                    }
 
 
-                                                     @Override
-                                                     public void updateItem(final Country item, boolean empty)
-                                                     {
-                                                         super.updateItem(item, empty);
-                                                         if (item != null && !empty)
-                                                         {
-                                                             label.setText(item.getName());
+                    @Override
+                    public void updateItem(final Country item, boolean empty)
+                    {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty)
+                        {
+                            label.setText(item.getName());
 
-                                                             removeButton.setOnAction(actionEvent -> removeCountry(item));
+                            removeButton.setOnAction(actionEvent -> removeCountry(item));
 
-                                                             setGraphic(hBox);
-                                                         }
-                                                         else
-                                                         {
-                                                             setGraphic(null);
-                                                         }
-                                                     }
-                                                 };
-                                             }
-                                         }
-        );
+                            setGraphic(hBox);
+                        }
+                        else
+                        {
+                            setGraphic(null);
+                        }
+                    }
+                };
+            }
+        });
         countriesListView.setItems(countryList);
 
         countryComboBox.setConverter(new StringConverter<Country>()
@@ -508,53 +509,52 @@ public class SettingsController implements Initializable, ChildController, Navig
     private void initArbitrators()
     {
         arbitratorsListView.setCellFactory(new Callback<ListView<Arbitrator>, ListCell<Arbitrator>>()
-                                           {
+        {
 
-                                               @Override
-                                               public ListCell<Arbitrator> call(ListView<Arbitrator> list)
-                                               {
-                                                   return new ListCell<Arbitrator>()
-                                                   {
-                                                       final HBox hBox = new HBox();
-                                                       final Label label = new Label();
-                                                       final Button removeButton = new Button();
-                                                       final ImageView icon = Icons.getIconImageView(Icons.REMOVE);
+            @Override
+            public ListCell<Arbitrator> call(ListView<Arbitrator> list)
+            {
+                return new ListCell<Arbitrator>()
+                {
+                    final HBox hBox = new HBox();
+                    final Label label = new Label();
+                    final Button removeButton = new Button();
+                    final ImageView icon = Icons.getIconImageView(Icons.REMOVE);
 
-                                                       {
-                                                           label.setPrefWidth(565);
+                    {
+                        label.setPrefWidth(565);
 
-                                                           icon.setMouseTransparent(true);
+                        icon.setMouseTransparent(true);
 
-                                                           removeButton.setGraphic(icon);
-                                                           removeButton.setId("icon-button");
+                        removeButton.setGraphic(icon);
+                        removeButton.setId("icon-button");
 
-                                                           hBox.setSpacing(3);
-                                                           hBox.setAlignment(Pos.CENTER_LEFT);
-                                                           hBox.getChildren().addAll(label, removeButton);
-                                                       }
+                        hBox.setSpacing(3);
+                        hBox.setAlignment(Pos.CENTER_LEFT);
+                        hBox.getChildren().addAll(label, removeButton);
+                    }
 
 
-                                                       @Override
-                                                       public void updateItem(final Arbitrator item, boolean empty)
-                                                       {
-                                                           super.updateItem(item, empty);
-                                                           if (item != null && !empty)
-                                                           {
-                                                               label.setText(item.getName());
+                    @Override
+                    public void updateItem(final Arbitrator item, boolean empty)
+                    {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty)
+                        {
+                            label.setText(item.getName());
 
-                                                               removeButton.setOnAction(actionEvent -> removeArbitrator(item));
+                            removeButton.setOnAction(actionEvent -> removeArbitrator(item));
 
-                                                               setGraphic(hBox);
-                                                           }
-                                                           else
-                                                           {
-                                                               setGraphic(null);
-                                                           }
-                                                       }
-                                                   };
-                                               }
-                                           }
-        );
+                            setGraphic(hBox);
+                        }
+                        else
+                        {
+                            setGraphic(null);
+                        }
+                    }
+                };
+            }
+        });
         arbitratorsListView.setItems(arbitratorList);
     }
 
@@ -645,7 +645,9 @@ public class SettingsController implements Initializable, ChildController, Navig
         bankAccountPrimaryIDTextField.setText("dummy");
         bankAccountSecondaryIDTextField.setText("dummy");
         if (user.getCurrentBankAccount() == null)
+        {
             onSaveBankAccount();
+        }
     }
 
     private void resetBankAccountInput()
@@ -809,14 +811,13 @@ public class SettingsController implements Initializable, ChildController, Navig
     {
         if (verifyBankAccountData())
         {
-            BankAccount bankAccount = new BankAccount(
-                    bankAccountTypesComboBox.getSelectionModel().getSelectedItem(),
-                    bankAccountCurrencyComboBox.getSelectionModel().getSelectedItem(),
-                    bankAccountCountryComboBox.getSelectionModel().getSelectedItem(),
-                    bankAccountTitleTextField.getText(),
-                    bankAccountHolderNameTextField.getText(),
-                    bankAccountPrimaryIDTextField.getText(),
-                    bankAccountSecondaryIDTextField.getText());
+            BankAccount bankAccount = new BankAccount(bankAccountTypesComboBox.getSelectionModel().getSelectedItem(),
+                                                      bankAccountCurrencyComboBox.getSelectionModel().getSelectedItem(),
+                                                      bankAccountCountryComboBox.getSelectionModel().getSelectedItem(),
+                                                      bankAccountTitleTextField.getText(),
+                                                      bankAccountHolderNameTextField.getText(),
+                                                      bankAccountPrimaryIDTextField.getText(),
+                                                      bankAccountSecondaryIDTextField.getText());
             user.addBankAccount(bankAccount);
 
             saveUser();
@@ -844,9 +845,10 @@ public class SettingsController implements Initializable, ChildController, Navig
             BitSquareValidator.textFieldBankAccountPrimaryIDIsValid(bankAccountPrimaryIDTextField, bankAccountTypeInfo);
             BitSquareValidator.textFieldBankAccountSecondaryIDIsValid(bankAccountSecondaryIDTextField, bankAccountTypeInfo);
 
-            return bankAccountTypesComboBox.getSelectionModel().getSelectedItem() != null
-                    && bankAccountCountryComboBox.getSelectionModel().getSelectedItem() != null
-                    && bankAccountCurrencyComboBox.getSelectionModel().getSelectedItem() != null;
+            return bankAccountTypesComboBox.getSelectionModel().getSelectedItem() != null && bankAccountCountryComboBox.getSelectionModel()
+                                                                                                                       .getSelectedItem() != null && bankAccountCurrencyComboBox.getSelectionModel()
+                                                                                                                                                                                .getSelectedItem() !=
+                    null;
         } catch (BitSquareValidator.ValidationException e)
         {
             return false;
