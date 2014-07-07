@@ -5,6 +5,9 @@ import javafx.scene.image.ImageView;
 
 public class Icons
 {
+    public static final String SYS_TRAY = "/images/systemTrayIcon.png";
+    public static final String SYS_TRAY_ALERT = "/images/systemTrayAlertIcon.png";
+
     public static final String HOME = "/images/nav/home.png";
     public static final String HOME_ACTIVE = "/images/nav/home_active.png";
     public static final String NAV_BUY = "/images/nav/nav_buy.png";

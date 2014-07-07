@@ -16,6 +16,7 @@ import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Trading;
 import io.bitsquare.user.User;
+import io.bitsquare.util.AWTSystemTray;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
@@ -226,6 +227,8 @@ public class MainController implements Initializable, NavigationController
         });
         Tooltip.install(alertButton, new Tooltip("Someone accepted your offer"));
         ordersButtonButtonHolder.getChildren().add(alertButton);
+
+        AWTSystemTray.setAlert();
     }
 
     private void addNavigation()

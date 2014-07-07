@@ -38,8 +38,8 @@ public class RequestTakerDepositPayment
             @Override
             public void onFailed()
             {
-                log.error("RequestTakerDepositPaymentMessage faultHandler.onFault to arrive at peer");
-                faultHandler.onFault(new Exception("RequestTakerDepositPaymentMessage faultHandler.onFault to arrive at peer"));
+                log.error("RequestTakerDepositPaymentMessage  did not arrive at peer");
+                faultHandler.onFault(new Exception("RequestTakerDepositPaymentMessage did not arrive at peer"));
             }
         });
     }

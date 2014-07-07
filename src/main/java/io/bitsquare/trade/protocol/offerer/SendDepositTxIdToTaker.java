@@ -30,8 +30,8 @@ public class SendDepositTxIdToTaker
             @Override
             public void onFailed()
             {
-                log.error("DepositTxPublishedMessage faultHandler.onFault to arrive at peer");
-                faultHandler.onFault(new Exception("DepositTxPublishedMessage faultHandler.onFault to arrive at peer"));
+                log.error("DepositTxPublishedMessage  did not arrive at peer");
+                faultHandler.onFault(new Exception("DepositTxPublishedMessage did not arrive at peer"));
             }
         });
     }

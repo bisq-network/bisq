@@ -61,8 +61,8 @@ public class SendSignedPayoutTx
                 @Override
                 public void onFailed()
                 {
-                    log.error("BankTransferInitedMessage faultHandler.onFault to arrive at peer");
-                    faultHandler.onFault(new Exception("BankTransferInitedMessage faultHandler.onFault to arrive at peer"));
+                    log.error("BankTransferInitedMessage did not arrive at peer");
+                    faultHandler.onFault(new Exception("BankTransferInitedMessage did not arrive at peer"));
 
                 }
             });

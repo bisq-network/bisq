@@ -27,8 +27,8 @@ public class RequestTakeOffer
             @Override
             public void onFailed()
             {
-                log.error("RequestTakeOfferMessage faultHandler.onFault to arrive at peer");
-                faultHandler.onFault(new Exception("RequestTakeOfferMessage faultHandler.onFault to arrive at peer"));
+                log.error("RequestTakeOfferMessage  did not arrive at peer");
+                faultHandler.onFault(new Exception("RequestTakeOfferMessage did not arrive at peer"));
             }
         });
     }

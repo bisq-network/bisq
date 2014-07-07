@@ -2,6 +2,7 @@ package io.bitsquare.util;
 
 
 import io.bitsquare.BitSquare;
+import io.bitsquare.gui.util.Icons;
 import java.awt.*;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -16,6 +17,7 @@ public class AWTSystemTray
     private static boolean isStageVisible = true;
     private static MenuItem showGuiItem;
     private static Stage stage;
+    private static TrayIcon trayIcon;
 
     public static void createSystemTray(Stage stage)
     {
@@ -26,7 +28,7 @@ public class AWTSystemTray
             Platform.setImplicitExit(false);
 
             SystemTray systemTray = SystemTray.getSystemTray();
-            TrayIcon trayIcon = new TrayIcon(getImage());
+            trayIcon = new TrayIcon(getImage(Icons.SYS_TRAY));
             trayIcon.setToolTip("BitSquare P2P Fiat-Bitcoin exchange");
 
             PopupMenu popupMenu = new PopupMenu();
@@ -59,7 +61,7 @@ public class AWTSystemTray
             });
             exitItem.addActionListener(e -> {
                 systemTray.remove(trayIcon);
-                Platform.exit();
+                System.exit(0);
             });
 
 
@@ -77,6 +79,15 @@ public class AWTSystemTray
         }
     }
 
+    public static void setAlert()
+    {
+        trayIcon.setImage(getImage(Icons.SYS_TRAY_ALERT));
+    }
+
+    public static void unSetAlert()
+    {
+        trayIcon.setImage(getImage(Icons.SYS_TRAY));
+    }
     public static void setStageHidden()
     {
         stage.hide();
@@ -84,8 +95,8 @@ public class AWTSystemTray
         showGuiItem.setLabel("Open exchange window");
     }
 
-    private static Image getImage()
+    private static Image getImage(String path)
     {
-        return new ImageIcon(AWTSystemTray.class.getResource("/images/systemTrayIcon.png"), "system tray icon").getImage();
+        return new ImageIcon(AWTSystemTray.class.getResource(path), "system tray icon").getImage();
     }
 }

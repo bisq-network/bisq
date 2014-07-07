@@ -42,7 +42,7 @@ public class Relay extends Application
         {
             masterPeer = new PeerMaker(ID).setPorts(port).makeAndListen();
             // masterPeer = new PeerMaker(ID).setPorts(port).setBagSize(100).makeAndListen();     // setBagSize cause sync problems...
-            masterPeer.getBroadcastRPC().getConnectionBean().getConnectionReservation().reserve(100).awaitUninterruptibly();
+            masterPeer.getBroadcastRPC().getConnectionBean().getConnectionReservation().reserve(1).awaitUninterruptibly();
             masterPeer.getConnectionHandler().getPeerBean().getPeerMap().addPeerMapChangeListener(new PeerMapChangeListener()
             {
                 @Override

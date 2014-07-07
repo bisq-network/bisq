@@ -25,6 +25,7 @@ import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.Trading;
+import io.bitsquare.util.AWTSystemTray;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.*;
@@ -311,6 +312,8 @@ public class PendingTradeController implements Initializable, ChildController, H
             secondaryBankAccountIDCopyIcon.setVisible(false);
 
             bankTransferInitedButton.setVisible(false);
+
+            AWTSystemTray.unSetAlert();
         }
     }
 

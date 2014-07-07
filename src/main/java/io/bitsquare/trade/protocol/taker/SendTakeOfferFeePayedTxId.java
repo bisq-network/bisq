@@ -37,8 +37,8 @@ public class SendTakeOfferFeePayedTxId
             @Override
             public void onFailed()
             {
-                log.error("TakeOfferFeePayedMessage faultHandler.onFault to arrive at peer");
-                faultHandler.onFault(new Exception("TakeOfferFeePayedMessage faultHandler.onFault to arrive at peer"));
+                log.error("TakeOfferFeePayedMessage  did not arrive at peer");
+                faultHandler.onFault(new Exception("TakeOfferFeePayedMessage did not arrive at peer"));
             }
         });
     }

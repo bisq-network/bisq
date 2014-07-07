@@ -157,6 +157,7 @@ public class BitSquare extends Application
         return menuBar;
     }
 
+
     @Override
     public void stop() throws Exception
     {

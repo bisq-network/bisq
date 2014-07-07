@@ -32,8 +32,8 @@ public class HandleTakeOfferRequest
             @Override
             public void onFailed()
             {
-                log.error("AcceptTakeOfferRequestMessage faultHandler.onFault to arrive at peer");
-                faultHandler.onFault(new Exception("AcceptTakeOfferRequestMessage faultHandler.onFault to arrive at peer"));
+                log.error("AcceptTakeOfferRequestMessage  did not arrive at peer");
+                faultHandler.onFault(new Exception("AcceptTakeOfferRequestMessage did not arrive at peer"));
             }
         });
     }

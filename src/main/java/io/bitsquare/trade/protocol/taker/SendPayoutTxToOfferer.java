@@ -28,8 +28,8 @@ public class SendPayoutTxToOfferer
             @Override
             public void onFailed()
             {
-                log.error("PayoutTxPublishedMessage faultHandler.onFault to arrive at peer");
-                faultHandler.onFault(new Exception("PayoutTxPublishedMessage faultHandler.onFault to arrive at peer"));
+                log.error("PayoutTxPublishedMessage  did not arrive at peer");
+                faultHandler.onFault(new Exception("PayoutTxPublishedMessage did not arrive at peer"));
             }
         });
 
