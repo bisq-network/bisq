@@ -146,10 +146,6 @@
         <pathelement location="${path.variable.maven_repository}/com/lambdaworks/scrypt/1.3.3/scrypt-1.3.3.jar"/>
     </path>
 
-    <path id="library.maven:_com.madgag.spongycastle:core:1.50.0.0.classpath">
-        <pathelement location="${path.variable.maven_repository}/com/madgag/spongycastle/core/1.50.0.0/core-1.50.0.0.jar"/>
-    </path>
-
     <path id="library.maven:_com.madgag:sc-light-jdk15on:1.47.0.2.classpath">
         <pathelement location="${path.variable.maven_repository}/com/madgag/sc-light-jdk15on/1.47.0.2/sc-light-jdk15on-1.47.0.2.jar"/>
     </path>
@@ -259,7 +255,6 @@
         <path refid="library.maven:_net.glxn:qrgen:1.3.classpath"/>
         <path refid="library.maven:_com.google.zxing:javase:2.0.classpath"/>
         <path refid="library.maven:_com.google.zxing:core:2.0.classpath"/>
-        <path refid="library.maven:_com.madgag.spongycastle:core:1.50.0.0.classpath"/>
         <path refid="library.maven:_org.jetbrains:annotations:13.0.classpath"/>
     </path>
 
@@ -287,7 +282,6 @@
         <path refid="library.maven:_net.glxn:qrgen:1.3.classpath"/>
         <path refid="library.maven:_com.google.zxing:javase:2.0.classpath"/>
         <path refid="library.maven:_com.google.zxing:core:2.0.classpath"/>
-        <path refid="library.maven:_com.madgag.spongycastle:core:1.50.0.0.classpath"/>
         <path refid="library.maven:_org.jetbrains:annotations:13.0.classpath"/>
     </path>
 
@@ -318,7 +312,6 @@
         <path refid="library.maven:_net.glxn:qrgen:1.3.classpath"/>
         <path refid="library.maven:_com.google.zxing:javase:2.0.classpath"/>
         <path refid="library.maven:_com.google.zxing:core:2.0.classpath"/>
-        <path refid="library.maven:_com.madgag.spongycastle:core:1.50.0.0.classpath"/>
         <path refid="library.maven:_org.jetbrains:annotations:13.0.classpath"/>
     </path>
 
@@ -349,7 +342,6 @@
         <path refid="library.maven:_net.glxn:qrgen:1.3.classpath"/>
         <path refid="library.maven:_com.google.zxing:javase:2.0.classpath"/>
         <path refid="library.maven:_com.google.zxing:core:2.0.classpath"/>
-        <path refid="library.maven:_com.madgag.spongycastle:core:1.50.0.0.classpath"/>
         <path refid="library.maven:_org.jetbrains:annotations:13.0.classpath"/>
     </path>
 

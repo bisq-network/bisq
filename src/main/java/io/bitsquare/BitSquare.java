@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 public class BitSquare extends Application
 {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
+
     public static String ID = "bitsquare";
     private static Stage primaryStage;
     private WalletFacade walletFacade;
@@ -59,11 +60,12 @@ public class BitSquare extends Application
         log.trace("Startup: start");
         BitSquare.primaryStage = primaryStage;
 
+        Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
+
         // use a local data dir as default storage dir (can be overwritten in the settings)
         // TODO save root preferences always in app dir top get preferred storage location
         StorageDirectory.setStorageDirectory(new File(StorageDirectory.getApplicationDirectory().getAbsolutePath() + "/data"));
 
-        Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
 
         // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
         AWTSystemTray.createSystemTray(primaryStage);

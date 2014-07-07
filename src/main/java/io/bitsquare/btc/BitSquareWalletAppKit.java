@@ -29,7 +29,7 @@ public class BitSquareWalletAppKit extends WalletAppKit
         {
             if (!directory.mkdir())
             {
-                throw new IOException("Could not create named directory.");
+                throw new IOException("Could not create named directory " + directory.getAbsolutePath());
             }
         }
         FileInputStream walletStream = null;

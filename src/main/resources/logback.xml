@@ -9,14 +9,23 @@
         </encoder>
     </appender>
 
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>bitsquare_out.log</file>
+        <append>false</append>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg %xEx%n</pattern>
+        </encoder>
+    </appender>
+
     <root level="DEBUG">
         <appender-ref ref="CONSOLE_APPENDER"/>
+        <appender-ref ref="FILE"/>
     </root>
 
     <logger name="io.bitsquare" level="TRACE"/>
 
     <logger name="com.google.bitcoin" level="INFO"/>
-    <logger name="net.tomp2p" level="WARN"/>
+    <logger name="net.tomp2p" level="INFO"/>
 
     <!--
        -->
