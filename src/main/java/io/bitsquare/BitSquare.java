@@ -14,9 +14,11 @@ import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;
+import io.bitsquare.util.FileUtil;
 import io.bitsquare.util.StorageDirectory;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -36,15 +38,15 @@ public class BitSquare extends Application
 {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
 
-    public static String ID = "bitsquare";
+    private static String APP_NAME = "bitsquare";
     private static Stage primaryStage;
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
 
     public static void main(String[] args)
     {
-        log.debug("Startup: main");
-        if (args != null && args.length > 0) ID = args[0];
+        log.debug("Startup: main " + Arrays.asList(args).toString());
+        if (args != null && args.length > 0) APP_NAME = args[0];
 
         launch(args);
     }
@@ -52,6 +54,16 @@ public class BitSquare extends Application
     public static Stage getPrimaryStage()
     {
         return primaryStage;
+    }
+
+    public static String getAppName()
+    {
+        return APP_NAME;
+    }
+
+    public static String getUID()
+    {
+        return FileUtil.getApplicationFileName();
     }
 
     @Override
@@ -84,8 +96,7 @@ public class BitSquare extends Application
         user.updateFromStorage((User) storage.read(user.getClass().getName()));
         settings.updateFromStorage((Settings) storage.read(settings.getClass().getName()));
 
-        if (ID.isEmpty()) primaryStage.setTitle("BitSquare");
-        else primaryStage.setTitle("BitSquare (" + ID + ")");
+        primaryStage.setTitle("BitSquare (" + getUID() + ")");
 
         GuiceFXMLLoader.setInjector(injector);
 
@@ -119,7 +130,6 @@ public class BitSquare extends Application
         scene.setOnKeyReleased(keyEvent -> {
             if (keyCodeCombination.match(keyEvent)) AWTSystemTray.setStageHidden();
         });
-
     }
 
     private MenuBar getMenuBar()

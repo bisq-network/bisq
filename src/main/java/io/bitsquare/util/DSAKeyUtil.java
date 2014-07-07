@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 public class DSAKeyUtil
 {
     private static final Logger log = LoggerFactory.getLogger(DSAKeyUtil.class);
-    private static final String prefix = BitSquare.ID + "_";
+    private static final String prefix = BitSquare.getAppName() + "_";
     private static final ReentrantLock lock = Threading.lock("DSAKeyUtil");
 
 

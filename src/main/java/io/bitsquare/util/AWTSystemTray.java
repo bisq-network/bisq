@@ -1,6 +1,7 @@
 package io.bitsquare.util;
 
 
+import io.bitsquare.BitSquare;
 import java.awt.*;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -29,6 +30,9 @@ public class AWTSystemTray
             trayIcon.setToolTip("BitSquare P2P Fiat-Bitcoin exchange");
 
             PopupMenu popupMenu = new PopupMenu();
+            MenuItem aboutItem = new MenuItem("Info about " + BitSquare.getUID());
+            popupMenu.add(aboutItem);
+            popupMenu.addSeparator();
             showGuiItem = new MenuItem("Close exchange window");
             popupMenu.add(showGuiItem);
             popupMenu.addSeparator();

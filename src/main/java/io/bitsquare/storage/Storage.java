@@ -22,7 +22,7 @@ public class Storage
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
     private static final ReentrantLock lock = Threading.lock("Storage");
 
-    private final String prefix = BitSquare.ID + "_pref";
+    private final String prefix = BitSquare.getAppName() + "_pref";
     private final File storageFile = FileUtil.getFile(prefix, "ser");
 
     @GuardedBy("lock")

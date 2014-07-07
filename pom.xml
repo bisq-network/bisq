@@ -11,6 +11,9 @@
     <description>A P2P Fiat-Bitcoin Exchange</description>
     <url>https://www.bitsquare.io</url>
 
+    <organization>
+        <name>bitsquare.io</name>
+    </organization>
     <!--
     <parent>
         <groupId>com.google</groupId>
@@ -88,6 +91,7 @@
             </resource>
         </resources>
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -97,7 +101,18 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>com.zenjava</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>2.0</version>
+                <configuration>
+                    <mainClass>io.bitsquare.BitSquare</mainClass>
+                </configuration>
+            </plugin>
+
         </plugins>
+
     </build>
 
 

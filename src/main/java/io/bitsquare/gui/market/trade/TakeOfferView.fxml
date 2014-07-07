@@ -121,7 +121,6 @@
                     </padding>
 
                     <Label text="Trade completed" id="form-header-text"/>
-                    <Label text="Summary:" GridPane.rowIndex="1"/>
 
                     <Label text="You have sold (BTC):" GridPane.rowIndex="2"/>
                     <ValidatedTextField fx:id="summaryPaidTextField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
@@ -129,8 +128,7 @@
                     <Label text="You have received (EUR):" GridPane.rowIndex="3"/>
                     <TextField fx:id="summaryReceivedTextField" editable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
-
-                    <Label text="Details:" GridPane.rowIndex="4"/>
+                    <Label text="Details" GridPane.rowIndex="4" id="form-header-text"/>
 
                     <Label text="Total fees (take offer fee + tx fee):" GridPane.rowIndex="5"/>
                     <TextField fx:id="summaryFeesTextField" editable="false" GridPane.rowIndex="5" GridPane.columnIndex="1"/>

@@ -2,7 +2,10 @@
 /log
 /target
 /bin
+/out
 .idea
 bitsquare.iml
 *.spvchain
+*.wallet
+*.ser
 *.wallet

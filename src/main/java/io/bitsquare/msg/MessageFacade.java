@@ -71,11 +71,11 @@ public class MessageFacade
     public void init()
     {
         int port = Bindings.MAX_PORT - Math.abs(new Random().nextInt()) % (Bindings.MAX_PORT - Bindings.MIN_DYN_PORT);
-        if (BitSquare.ID.contains("taker"))
+        if (BitSquare.getAppName().contains("taker"))
         {
             port = 4501;
         }
-        else if (BitSquare.ID.contains("offerer"))
+        else if (BitSquare.getAppName().contains("offerer"))
         {
             port = 4500;
         }
@@ -665,7 +665,7 @@ public class MessageFacade
 
     private void setupStorage()
     {
-        myPeer.getPeerBean().setStorage(new StorageDisk(StorageDirectory.getStorageDirectory().getAbsolutePath() + "/" + BitSquare.ID + "_tomP2P"));
+        myPeer.getPeerBean().setStorage(new StorageDisk(StorageDirectory.getStorageDirectory().getAbsolutePath() + "/" + BitSquare.getAppName() + "_tomP2P"));
     }
 
     private void saveMyAddressToDHT() throws IOException

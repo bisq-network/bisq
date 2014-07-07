@@ -41,7 +41,7 @@ public class WalletFacade
     public static final String TEST_NET = "TEST_NET";
     public static final String REG_TEST_NET = "REG_TEST_NET";
 
-    public static final String WALLET_PREFIX = BitSquare.ID;
+    public static final String WALLET_PREFIX = BitSquare.getAppName();
 
     private static final Logger log = LoggerFactory.getLogger(WalletFacade.class);
 

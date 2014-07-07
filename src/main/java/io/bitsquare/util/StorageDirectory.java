@@ -44,7 +44,7 @@ public class StorageDirectory
         File executionRoot = new File(StorageDirectory.class.getProtectionDomain().getCodeSource().getLocation().getFile());
         log.trace("executionRoot " + executionRoot.getAbsolutePath());
         // check if it is packed into a mac app  (e.g.: "/Users/mk/Desktop/bitsquare.app/Contents/Java/bitsquare.jar")
-        if (executionRoot.getAbsolutePath().endsWith("/bitsquare.app/Contents/Java/bitsquare.jar") && System.getProperty("os.name").startsWith("Mac"))
+        if (executionRoot.getAbsolutePath().endsWith(".app/Contents/Java/bitsquare.jar") && System.getProperty("os.name").startsWith("Mac"))
             return executionRoot.getParentFile().getParentFile().getParentFile().getParentFile();
         else if (executionRoot.getAbsolutePath().endsWith("/target/classes"))
             return executionRoot.getParentFile();   // dev e.g.: /Users/mk/Documents/_intellij/bitsquare/target/classes -> use target as root
@@ -53,6 +53,7 @@ public class StorageDirectory
         else
             return executionRoot;
     }
+
 
     public static File getSystemApplicationDataDirectory()
     {
