@@ -1,7 +1,6 @@
 package io.bitsquare.gui.funds.transactions;
 
 import com.google.bitcoin.core.Transaction;
-import com.google.inject.Inject;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.Hibernate;
@@ -17,6 +16,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.util.Callback;
+import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

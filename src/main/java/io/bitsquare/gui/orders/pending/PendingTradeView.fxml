@@ -52,7 +52,7 @@
     <GridPane hgap="5.0" vgap="5.0">
 
         <!-- row 0 -->
-        <Label fx:id="txHeaderLabel" id="headline-label" text="Deposit transaction" GridPane.columnSpan="2" GridPane.halignment="LEFT"/>
+        <Label fx:id="txHeaderLabel" id="form-header-text" text="Deposit transaction" GridPane.columnSpan="2" GridPane.halignment="LEFT"/>
 
         <!-- row 1 -->
         <Label fx:id="txTitleLabel" text="Deposit transaction ID:" GridPane.rowIndex="1"/>
@@ -74,7 +74,7 @@
         <Label fx:id="confirmationLabel" visible="false" GridPane.columnIndex="4" GridPane.rowIndex="1"/>
 
         <!-- row 2 -->
-        <Label fx:id="bankAccountDetailsHeaderLabel" id="headline-label" text="Bank details" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.halignment="LEFT"
+        <Label fx:id="bankAccountDetailsHeaderLabel" id="form-header-text" text="Bank details" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.halignment="LEFT"
                GridPane.rowIndex="2"/>
 
         <!-- row 3 -->

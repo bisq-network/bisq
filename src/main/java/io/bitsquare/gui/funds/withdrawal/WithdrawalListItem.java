@@ -43,8 +43,7 @@ public class WithdrawalListItem
         progressIndicator.setId("funds-confidence");
         tooltip = new Tooltip("Not used yet");
         progressIndicator.setProgress(0);
-        progressIndicator.setPrefHeight(30);
-        progressIndicator.setPrefWidth(30);
+        progressIndicator.setPrefSize(24, 24);
         Tooltip.install(progressIndicator, tooltip);
 
         confidenceListener = walletFacade.addConfidenceListener(new ConfidenceListener(getAddress())
@@ -112,8 +111,6 @@ public class WithdrawalListItem
                     progressIndicator.setProgress(0);
                     break;
             }
-
-            progressIndicator.setPrefSize(24, 24);
         }
     }
 

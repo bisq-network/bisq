@@ -2,7 +2,6 @@ package io.bitsquare.gui.settings;
 
 import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Utils;
-import com.google.inject.Inject;
 import io.bitsquare.BitSquare;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
@@ -38,6 +37,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import javax.inject.Inject;
 
 // TODO separate in 2 view/controllers
 public class SettingsController implements Initializable, ChildController, NavigationController
@@ -217,7 +217,7 @@ public class SettingsController implements Initializable, ChildController, Navig
             childController = loader.getController();
             childController.setNavigationController(this);
 
-            final Stage rootStage = BitSquare.getStage();
+            final Stage rootStage = BitSquare.getPrimaryStage();
             final Stage stage = new Stage();
             stage.setTitle("Arbitrator selection");
             stage.setMinWidth(800);

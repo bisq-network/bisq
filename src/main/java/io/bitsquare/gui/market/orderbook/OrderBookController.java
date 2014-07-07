@@ -3,7 +3,6 @@ package io.bitsquare.gui.market.orderbook;
 import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 import com.google.common.util.concurrent.FutureCallback;
-import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.FeePolicy;
@@ -51,6 +50,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
+import javax.inject.Inject;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 import org.controlsfx.dialog.Dialogs;
@@ -321,22 +321,18 @@ public class OrderBookController implements Initializable, ChildController
     {
         if (isRegistered())
         {
-            if (walletFacade.isUnusedTradeAddressBalanceAboveCreationFee())
-            {
-                ChildController nextController = navigationController.navigateToView(NavigationItem.CREATE_OFFER);
-                if (nextController != null)
-                {
-                    ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
-                }
-            }
+           /* if (walletFacade.isUnusedTradeAddressBalanceAboveCreationFee())
+            { */
+            ChildController nextController = navigationController.navigateToView(NavigationItem.CREATE_OFFER);
+            if (nextController != null)
+                ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
+           /* }
             else
             {
                 Action response = Popups.openErrorPopup("No funds for a trade", "You have to add some funds before you create a new offer.");
                 if (response == Dialog.Actions.OK)
-                {
                     MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
-                }
-            }
+            }  */
         }
         else
         {

@@ -1,9 +1,9 @@
 package io.bitsquare.trade.protocol.old;
 
-import com.google.inject.Inject;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
+import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

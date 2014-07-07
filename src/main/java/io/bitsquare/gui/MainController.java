@@ -1,6 +1,5 @@
 package io.bitsquare.gui;
 
-import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.WalletFacade;
@@ -35,6 +34,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
+import javax.inject.Inject;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -175,6 +175,7 @@ public class MainController implements Initializable, NavigationController
 
     private void init()
     {
+
         messageFacade.init();
 
         trading.addTakeOfferRequestListener(this::onTakeOfferRequested);
@@ -196,7 +197,7 @@ public class MainController implements Initializable, NavigationController
 
         walletFacade.initWallet();
 
-        buildNavigation();
+        addNavigation();
 
         Transitions.fadeOutAndRemove(loadingLabel);
         Transitions.fadeOutAndRemove(loadingBar);
@@ -214,7 +215,6 @@ public class MainController implements Initializable, NavigationController
         navigateToView(selectedNavigationItem);
     }
 
-
     private void onTakeOfferRequested(String offerId, PeerAddress sender)
     {
         final Button alertButton = new Button("", Icons.getIconImageView(Icons.MSG_ALERT));
@@ -228,7 +228,7 @@ public class MainController implements Initializable, NavigationController
         ordersButtonButtonHolder.getChildren().add(alertButton);
     }
 
-    private void buildNavigation()
+    private void addNavigation()
     {
         homeButton = addNavButton(leftNavPane, "Overview", NavigationItem.HOME);
 

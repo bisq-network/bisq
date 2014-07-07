@@ -1,12 +1,11 @@
 package io.bitsquare.msg;
 
-import com.google.inject.Inject;
 import io.bitsquare.BitSquare;
 import io.bitsquare.msg.listeners.*;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.util.DSAKeyUtil;
-import io.bitsquare.util.FileUtil;
+import io.bitsquare.util.StorageDirectory;
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -14,6 +13,7 @@ import java.util.*;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javax.inject.Inject;
 import net.tomp2p.connection.Bindings;
 import net.tomp2p.connection.PeerConnection;
 import net.tomp2p.futures.*;
@@ -665,7 +665,7 @@ public class MessageFacade
 
     private void setupStorage()
     {
-        myPeer.getPeerBean().setStorage(new StorageDisk(FileUtil.getDirectory(BitSquare.ID + "_tomP2P").getAbsolutePath()));
+        myPeer.getPeerBean().setStorage(new StorageDisk(StorageDirectory.getStorageDirectory().getAbsolutePath() + "/" + BitSquare.ID + "_tomP2P"));
     }
 
     private void saveMyAddressToDHT() throws IOException

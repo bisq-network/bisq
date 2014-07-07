@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.inject.Inject;
 import io.bitsquare.BitSquare;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.ConfidenceListener;
@@ -27,6 +26,7 @@ import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.util.Pair;
 import javax.annotation.concurrent.GuardedBy;
+import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -196,7 +196,6 @@ public class WalletFacade
         wallet.removeEventListener(walletEventListener);
 
         walletAppKit.stopAsync();
-        walletAppKit.awaitTerminated();
     }
 
     public Wallet getWallet()
@@ -272,12 +271,10 @@ public class WalletFacade
     }
 
 
-    AddressEntry getUnusedTradeAddressInfo()
+    public AddressEntry getUnusedTradeAddressInfo()
     {
         List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(ImmutableList.copyOf(addressEntryList),
-                                                                                 addressInfo -> (addressInfo != null && addressInfo.getAddressContext()
-                                                                                                                                   .equals(AddressEntry.AddressContext.TRADE) && addressInfo
-                                                                                         .getTradeId() == null)));
+                                                                                 e -> (e != null && e.getAddressContext().equals(AddressEntry.AddressContext.TRADE) && e.getTradeId() == null)));
 
         if (filteredList != null && !filteredList.isEmpty())
         {
@@ -293,9 +290,7 @@ public class WalletFacade
     private AddressEntry getAddressInfoByAddressContext(AddressEntry.AddressContext addressContext)
     {
         List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(ImmutableList.copyOf(addressEntryList),
-                                                                                 addressInfo -> (addressInfo != null && addressInfo.getAddressContext() != null && addressInfo.getAddressContext()
-                                                                                                                                                                              .equals(addressContext)
-                                                                                 )));
+                                                                                 e -> (e != null && e.getAddressContext() != null && e.getAddressContext().equals(addressContext))));
 
         if (filteredList != null && !filteredList.isEmpty())
         {
@@ -363,17 +358,15 @@ public class WalletFacade
         for (AddressEntry addressEntry : addressEntryList)
         {
             if (addressEntry.getAddressString().equals(address))
-            {
                 return addressEntry;
-            }
         }
         return null;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TransactionConfidence
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     public TransactionConfidence getConfidenceForAddress(Address address)
     {

@@ -7,7 +7,7 @@
             xmlns="http://javafx.com/javafx/8">
     <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 
-        <Label id="headline-label" text="Closed"/>
+        <Label id="form-header-text" text="Closed"/>
 
     </VBox>
 </AnchorPane>

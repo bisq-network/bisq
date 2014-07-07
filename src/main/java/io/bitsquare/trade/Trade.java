@@ -9,10 +9,7 @@ import javafx.beans.property.SimpleStringProperty;
 public class Trade implements Serializable
 {
     private static final long serialVersionUID = -8275323072940974077L;
-    transient private final SimpleBooleanProperty depositTxChangedProperty = new SimpleBooleanProperty();
-    transient private final SimpleBooleanProperty payoutTxChangedProperty = new SimpleBooleanProperty();
-    transient private final SimpleBooleanProperty contractChangedProperty = new SimpleBooleanProperty();
-    transient private final SimpleStringProperty stateChangedProperty = new SimpleStringProperty();
+
     private final Offer offer;
     private String takeOfferFeeTxID;
     private BigInteger tradeAmount;
@@ -23,9 +20,22 @@ public class Trade implements Serializable
     private Transaction payoutTransaction;
     private State state = State.OPEN;
 
+    // The Property fields are not serialized and therefore not initialized when read from disc.
+    // We need to access then with the getter to be sure it is not null.
+    // Don't access them directly, use the getter method
+    transient private SimpleBooleanProperty _depositTxChangedProperty;
+    transient private SimpleBooleanProperty _payoutTxChangedProperty;
+    transient private SimpleBooleanProperty _contractChangedProperty;
+    transient private SimpleStringProperty _stateChangedProperty;
+
     public Trade(Offer offer)
     {
         this.offer = offer;
+
+        _depositTxChangedProperty = new SimpleBooleanProperty();
+        _payoutTxChangedProperty = new SimpleBooleanProperty();
+        _contractChangedProperty = new SimpleBooleanProperty();
+        _stateChangedProperty = new SimpleStringProperty();
     }
 
 
@@ -61,7 +71,7 @@ public class Trade implements Serializable
     public void setContract(Contract contract)
     {
         this.contract = contract;
-        contractChangedProperty.set(!contractChangedProperty.get());
+        _contractChangedProperty.set(!_contractChangedProperty.get());
     }
 
     public String getId()
@@ -107,7 +117,7 @@ public class Trade implements Serializable
     public void setDepositTransaction(Transaction depositTransaction)
     {
         this.depositTransaction = depositTransaction;
-        depositTxChangedProperty.set(!depositTxChangedProperty.get());
+        depositTxChangedProperty().set(!depositTxChangedProperty().get());
     }
 
     public Transaction getPayoutTransaction()
@@ -118,7 +128,7 @@ public class Trade implements Serializable
     public void setPayoutTransaction(Transaction payoutTransaction)
     {
         this.payoutTransaction = payoutTransaction;
-        payoutTxChangedProperty.set(!payoutTxChangedProperty.get());
+        payoutTxChangedProperty().set(!payoutTxChangedProperty().get());
     }
 
     public State getState()
@@ -129,30 +139,37 @@ public class Trade implements Serializable
     public void setState(State state)
     {
         this.state = state;
-        stateChangedProperty.set(state.toString());
+        stateChangedProperty().set(state.toString());
     }
 
-    public SimpleBooleanProperty getDepositTxChangedProperty()
+    // The Property fields are not serialized and therefore not initialized when read from disc.
+    // We need to access then with the getter to be sure it is not null.
+    public SimpleBooleanProperty depositTxChangedProperty()
     {
-        return depositTxChangedProperty;
-    }
+        if (_depositTxChangedProperty == null) _depositTxChangedProperty = new SimpleBooleanProperty();
 
-
-    public SimpleBooleanProperty getContractChangedProperty()
-    {
-        return contractChangedProperty;
-    }
-
-
-    public SimpleBooleanProperty getPayoutTxChangedProperty()
-    {
-        return payoutTxChangedProperty;
+        return _depositTxChangedProperty;
     }
 
 
-    public SimpleStringProperty getStateChangedProperty()
+    public SimpleBooleanProperty contractChangedProperty()
     {
-        return stateChangedProperty;
+        if (_contractChangedProperty == null) _contractChangedProperty = new SimpleBooleanProperty();
+        return _contractChangedProperty;
+    }
+
+
+    public SimpleBooleanProperty payoutTxChangedProperty()
+    {
+        if (_payoutTxChangedProperty == null) _payoutTxChangedProperty = new SimpleBooleanProperty();
+        return _payoutTxChangedProperty;
+    }
+
+
+    public SimpleStringProperty stateChangedProperty()
+    {
+        if (_stateChangedProperty == null) _stateChangedProperty = new SimpleStringProperty();
+        return _stateChangedProperty;
     }
 
     public BigInteger getCollateralAmount()

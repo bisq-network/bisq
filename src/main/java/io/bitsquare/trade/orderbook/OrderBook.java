@@ -1,6 +1,5 @@
 package io.bitsquare.trade.orderbook;
 
-import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.market.orderbook.OrderBookListItem;
 import io.bitsquare.locale.Country;
@@ -21,6 +20,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javax.inject.Inject;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.storage.Data;
 import org.slf4j.Logger;

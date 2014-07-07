@@ -16,7 +16,7 @@
                             <Insets left="10" right="10" top="10" bottom="10"/>
                         </padding>
 
-                        <Label text="Take offer:" id="headline-label"/>
+                        <Label text="Take offer:" id="form-header-text"/>
 
                         <Label text="Amount (BTC):" GridPane.rowIndex="1"/>
                         <ValidatedTextField fx:id="amountTextField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
@@ -38,7 +38,7 @@
 
                         <Button fx:id="takeOfferButton" text="Take offer and pay" onAction="#onTakeOffer" defaultButton="true" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
 
-                        <Label text="Offer details:" id="headline-label" GridPane.rowIndex="8"/>
+                        <Label text="Offer details:" id="form-header-text" GridPane.rowIndex="8"/>
 
                         <Label text="Bank account type:" GridPane.rowIndex="9"/>
                         <TextField fx:id="bankAccountTypeTextField" editable="false" GridPane.rowIndex="9" GridPane.columnIndex="1"/>
@@ -88,7 +88,7 @@
                         <Insets left="10" right="10" top="10" bottom="10"/>
                     </padding>
 
-                    <Label fx:id="headLineLabel" text="Deposit transaction published" id="headline-label"/>
+                    <Label fx:id="headLineLabel" text="Deposit transaction published" id="form-header-text"/>
 
                     <Label text="Status information:" GridPane.rowIndex="1" GridPane.valignment="TOP"/>
                     <Label fx:id="infoLabel" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.valignment="TOP"/>
@@ -120,7 +120,7 @@
                         <Insets left="10" right="10" top="10" bottom="10"/>
                     </padding>
 
-                    <Label text="Trade completed" id="headline-label"/>
+                    <Label text="Trade completed" id="form-header-text"/>
                     <Label text="Summary:" GridPane.rowIndex="1"/>
 
                     <Label text="You have sold (BTC):" GridPane.rowIndex="2"/>

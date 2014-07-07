@@ -2,7 +2,6 @@ package io.bitsquare.storage;
 
 import com.google.bitcoin.core.Utils;
 import com.google.bitcoin.utils.Threading;
-import com.google.inject.Inject;
 import io.bitsquare.BitSquare;
 import io.bitsquare.util.FileUtil;
 import java.io.*;
@@ -11,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.concurrent.GuardedBy;
+import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

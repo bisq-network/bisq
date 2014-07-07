@@ -61,7 +61,7 @@ public class HomeController implements Initializable, ChildController, Navigatio
             arbitratorRegistrationController = loader.getController();
             arbitratorRegistrationController.setNavigationController(this);
 
-            final Stage rootStage = BitSquare.getStage();
+            final Stage rootStage = BitSquare.getPrimaryStage();
             final Stage stage = new Stage();
             stage.setTitle("Arbitrator");
             stage.setMinWidth(800);

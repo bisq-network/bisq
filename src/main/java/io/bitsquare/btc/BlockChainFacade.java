@@ -1,7 +1,7 @@
 package io.bitsquare.btc;
 
-import com.google.inject.Inject;
 import io.bitsquare.bank.BankAccount;
+import javax.inject.Inject;
 
 /**
  * That facade delivers blockchain functionality from the bitcoinJ library

@@ -3,8 +3,8 @@ package io.bitsquare.crypto;
 import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Utils;
 import com.google.common.base.Charsets;
-import com.google.inject.Inject;
 import java.security.SignatureException;
+import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

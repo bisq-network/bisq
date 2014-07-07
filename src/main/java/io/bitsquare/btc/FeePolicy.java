@@ -1,8 +1,8 @@
 package io.bitsquare.btc;
 
 import com.google.bitcoin.core.*;
-import com.google.inject.Inject;
 import java.math.BigInteger;
+import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

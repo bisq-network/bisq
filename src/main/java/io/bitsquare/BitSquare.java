@@ -13,13 +13,21 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.User;
+import io.bitsquare.util.AWTSystemTray;
+import io.bitsquare.util.StorageDirectory;
+import java.io.File;
+import java.io.IOException;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import org.controlsfx.control.action.Action;
-import org.controlsfx.dialog.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,43 +36,43 @@ public class BitSquare extends Application
 {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
     public static String ID = "bitsquare";
-    private static Stage stage;
+    private static Stage primaryStage;
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
 
     public static void main(String[] args)
     {
         log.debug("Startup: main");
-        if (args != null && args.length > 0)
-        {
-            ID = args[0];
-        }
+        if (args != null && args.length > 0) ID = args[0];
 
         launch(args);
     }
 
-    public static Stage getStage()
+    public static Stage getPrimaryStage()
     {
-        return stage;
+        return primaryStage;
     }
 
     @Override
-    public void start(Stage stage)
+    public void start(Stage primaryStage) throws IOException
     {
+        log.trace("Startup: start");
+        BitSquare.primaryStage = primaryStage;
+
+        // use a local data dir as default storage dir (can be overwritten in the settings)
+        // TODO save root preferences always in app dir top get preferred storage location
+        StorageDirectory.setStorageDirectory(new File(StorageDirectory.getApplicationDirectory().getAbsolutePath() + "/data"));
+
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
-        init(stage);
-    }
 
-    private void init(Stage stage)
-    {
-        BitSquare.stage = stage;
+        // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
+        AWTSystemTray.createSystemTray(primaryStage);
 
-        log.debug("Startup: start");
         final Injector injector = Guice.createInjector(new BitSquareModule());
 
         walletFacade = injector.getInstance(WalletFacade.class);
         messageFacade = injector.getInstance(MessageFacade.class);
-        log.debug("Startup: messageFacade, walletFacade inited");
+        log.trace("Startup: messageFacade, walletFacade inited");
 
         // apply stored data
         final User user = injector.getInstance(User.class);
@@ -74,43 +82,67 @@ public class BitSquare extends Application
         user.updateFromStorage((User) storage.read(user.getClass().getName()));
         settings.updateFromStorage((Settings) storage.read(settings.getClass().getName()));
 
-        if (ID.isEmpty())
-        {
-            stage.setTitle("BitSquare");
-        }
-        else
-        {
-            stage.setTitle("BitSquare (" + ID + ")");
-        }
+        if (ID.isEmpty()) primaryStage.setTitle("BitSquare");
+        else primaryStage.setTitle("BitSquare (" + ID + ")");
 
         GuiceFXMLLoader.setInjector(injector);
 
-        stage.setMinWidth(800);
-        stage.setMinHeight(400);
-        stage.setWidth(800);
-        stage.setHeight(600);
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), Localisation.getResourceBundle());
+        final Parent mainView = loader.load();
+        BorderPane rootPane = new BorderPane();
+        rootPane.setTop(getMenuBar());
+        rootPane.setCenter(mainView);
 
-        try
-        {
-            final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), Localisation.getResourceBundle());
-            final Parent mainView = loader.load();
-            final Scene scene = new Scene(mainView, 800, 600);
-            stage.setScene(scene);
+        final Scene scene = new Scene(rootPane, 800, 600);
+        scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm());
 
-            final String bitsquare = getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm();
-            scene.getStylesheets().setAll(bitsquare);
+        setupCloseHandlers(primaryStage, scene);
 
-            stage.show();
-            log.debug("Startup: stage displayed");
-        } catch (Exception e)
-        {
-            stage.show();
-            Action response = Popups.openExceptionPopup(e);
-            if (response == Dialog.Actions.OK)
-            {
-                Platform.exit();
-            }
-        }
+        primaryStage.setScene(scene);
+        primaryStage.setMinWidth(800);
+        primaryStage.setMinHeight(400);
+        primaryStage.setWidth(800);
+        primaryStage.setHeight(600);
+
+        primaryStage.show();
+
+        log.debug("Startup: stage displayed");
+    }
+
+    private void setupCloseHandlers(Stage primaryStage, Scene scene)
+    {
+        primaryStage.setOnCloseRequest(e -> AWTSystemTray.setStageHidden());
+
+        KeyCodeCombination keyCodeCombination = new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN);
+        scene.setOnKeyReleased(keyEvent -> {
+            if (keyCodeCombination.match(keyEvent)) AWTSystemTray.setStageHidden();
+        });
+
+    }
+
+    private MenuBar getMenuBar()
+    {
+        MenuBar menuBar = new MenuBar();
+        menuBar.setUseSystemMenuBar(true);
+
+        Menu fileMenu = new Menu("_File");
+        fileMenu.setMnemonicParsing(true);
+        MenuItem backupMenuItem = new MenuItem("Backup wallet");
+        fileMenu.getItems().addAll(backupMenuItem);
+
+        Menu settingsMenu = new Menu("_Settings");
+        settingsMenu.setMnemonicParsing(true);
+        MenuItem changePwMenuItem = new MenuItem("Change password");
+        settingsMenu.getItems().addAll(changePwMenuItem);
+
+        Menu helpMenu = new Menu("_Help");
+        helpMenu.setMnemonicParsing(true);
+        MenuItem faqMenuItem = new MenuItem("FAQ");
+        MenuItem forumMenuItem = new MenuItem("Forum");
+        helpMenu.getItems().addAll(faqMenuItem, forumMenuItem);
+
+        menuBar.getMenus().setAll(fileMenu, settingsMenu, helpMenu);
+        return menuBar;
     }
 
     @Override
@@ -120,5 +152,6 @@ public class BitSquare extends Application
         messageFacade.shutDown();
 
         super.stop();
+        System.exit(0);
     }
 }

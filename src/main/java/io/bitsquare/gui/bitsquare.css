@@ -71,6 +71,16 @@
     -fx-background-color: transparent;
 }
 
+#copy-icon {
+     -fx-fill: black;
+     -fx-cursor: hand;
+ }
+
+#copy-icon .hover{
+      -fx-fill: #0096c9;
+      -fx-cursor: hand;
+}
+
 .copy-icon {
     -fx-fill: #0096c9;
     -fx-cursor: hand;

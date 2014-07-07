@@ -1,6 +1,5 @@
 package io.bitsquare.settings;
 
-import com.google.inject.Inject;
 import io.bitsquare.locale.Country;
 import io.bitsquare.user.Arbitrator;
 import java.io.Serializable;
@@ -8,6 +7,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import javax.inject.Inject;
 
 public class Settings implements Serializable
 {

@@ -5,7 +5,6 @@ import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.Wallet;
 import com.google.bitcoin.core.WalletEventListener;
 import com.google.bitcoin.script.Script;
-import com.google.inject.Inject;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.bank.BankAccount;
@@ -30,8 +29,6 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.util.*;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -46,6 +43,7 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
+import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -260,14 +258,7 @@ public class PendingTradeController implements Initializable, ChildController, H
         Transaction transaction = trade.getDepositTransaction();
         if (transaction == null)
         {
-            trade.getDepositTxChangedProperty().addListener(new ChangeListener<Boolean>()
-            {
-                @Override
-                public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean aBoolean2)
-                {
-                    updateTx(trade.getDepositTransaction());
-                }
-            });
+            trade.depositTxChangedProperty().addListener((observableValue, aBoolean, aBoolean2) -> updateTx(trade.getDepositTransaction()));
         }
         else
         {
@@ -281,25 +272,11 @@ public class PendingTradeController implements Initializable, ChildController, H
         }
         else
         {
-            trade.getContractChangedProperty().addListener(new ChangeListener<Boolean>()
-            {
-                @Override
-                public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean aBoolean2)
-                {
-                    setBankData(trade);
-                }
-            });
+            trade.contractChangedProperty().addListener((observableValue, aBoolean, aBoolean2) -> setBankData(trade));
         }
 
         // state
-        trade.getStateChangedProperty().addListener(new ChangeListener<String>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends String> observableValue, String aString, String aString2)
-            {
-                setState(trade);
-            }
-        });
+        trade.stateChangedProperty().addListener((observableValue, aString, aString2) -> setState(trade));
     }
 
     private void setState(Trade trade)

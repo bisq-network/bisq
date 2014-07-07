@@ -1,6 +1,5 @@
 package io.bitsquare.gui.market.trade;
 
-import com.google.inject.Inject;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.FeePolicy;
@@ -26,6 +25,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
+import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

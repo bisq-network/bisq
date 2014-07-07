@@ -159,7 +159,6 @@ public class BitSquareWalletAppKit extends WalletAppKit
                     try
                     {
                         BitSquareWalletAppKit.this.stopAsync();
-                        BitSquareWalletAppKit.this.awaitTerminated();
 
                     } catch (Exception e)
                     {

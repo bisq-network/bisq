@@ -1,6 +1,5 @@
 package io.bitsquare.gui.arbitrators.overview;
 
-import com.google.inject.Inject;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
@@ -26,6 +25,7 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
+import javax.inject.Inject;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.storage.Data;
 

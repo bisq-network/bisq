@@ -1,6 +1,5 @@
 package io.bitsquare.gui.arbitrators.profile;
 
-import com.google.inject.Inject;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.util.BitSquareFormatter;
@@ -14,6 +13,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javax.inject.Inject;
 
 @SuppressWarnings("ALL")
 public class ArbitratorProfileController implements Initializable, ChildController
