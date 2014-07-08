@@ -88,6 +88,7 @@ public class AWTSystemTray
     {
         trayIcon.setImage(getImage(Icons.SYS_TRAY));
     }
+
     public static void setStageHidden()
     {
         stage.hide();

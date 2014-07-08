@@ -1,7 +1,6 @@
 # bitsquare.io
 
-Bitsquare is a P2P Fiat-BTC Exchange, extensible to a generic P2P trading platform (include commodities and
-cryptocurrencies)
+Bitsquare is a P2P Fiat-BTC Exchange, extensible to a generic P2P trading platform (include commodities and cryptocurrencies)
 
 The project use Java 8 and Maven.
 We use the bitcoinj library and TomP2P for DHT and messaging.
