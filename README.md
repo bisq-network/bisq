@@ -10,6 +10,7 @@ Then you can generate coins on demand with the Bitcoin qt client with that comma
 See: https://bitcoinj.github.io/testing
 You can change the network mode in the guice module: BitSquareModule.java
 
+If you want to
 
 ### Resources:
 * Web: http://bitsquare.io
