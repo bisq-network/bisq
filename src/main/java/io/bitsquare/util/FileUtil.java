@@ -4,7 +4,6 @@ import com.google.bitcoin.core.Utils;
 import io.bitsquare.BitSquare;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,14 +19,7 @@ public class FileUtil
 
     public static File getTempFile(String prefix) throws IOException
     {
-        if (Utils.isWindows())
-        {
-            return getFile("temp_" + prefix, ".tmp");
-        }
-        else
-        {
-            return File.createTempFile("temp_" + prefix, null, StorageDirectory.getStorageDirectory());
-        }
+        return File.createTempFile("temp_" + prefix, null, StorageDirectory.getStorageDirectory());
     }
 
     public static String getApplicationFileName()
@@ -67,23 +59,21 @@ public class FileUtil
     {
         if (Utils.isWindows())
         {
-            // renameTo fails on win 8
-            String canonicalPath = file.getCanonicalPath();
-            file.delete();
-            final File canonicalFile = new File(canonicalPath);
-            Files.copy(tempFile.toPath(), canonicalFile.toPath());
-
-            if (tempFile.exists() && !tempFile.delete())
+            // Work around an issue on Windows whereby you can't rename over existing files.
+            final File canonical = file.getCanonicalFile();
+            if (canonical.exists() && !canonical.delete())
             {
-                log.error("Cannot delete temp file.");
+                throw new IOException("Failed to delete canonical file for replacement with save");
+            }
+            if (!tempFile.renameTo(canonical))
+            {
+                throw new IOException("Failed to rename " + tempFile + " to " + canonical);
             }
         }
-        else
+        else if (!tempFile.renameTo(file))
         {
-            if (!tempFile.renameTo(file))
-            {
-                throw new IOException("Failed to rename " + tempFile + " to " + file);
-            }
+            throw new IOException("Failed to rename " + tempFile + " to " + file);
         }
+
     }
 }

@@ -221,9 +221,11 @@ public class Storage
         try
         {
             final File tempFile = FileUtil.getTempFile("temp_" + prefix);
-            try (final FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
-                 final ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
+            try (final FileOutputStream fileOutputStream = new FileOutputStream(tempFile))
             {
+                // don't use closeable resource in try for the ObjectOutputStream as it produces problems on Windows 8
+                // -> rename of temp file fails
+                final ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
                 objectOutputStream.writeObject(serializable);
 
                 // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
