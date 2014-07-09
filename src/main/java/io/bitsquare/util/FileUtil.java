@@ -20,7 +20,14 @@ public class FileUtil
 
     public static File getTempFile(String prefix) throws IOException
     {
-        return File.createTempFile("temp_" + prefix, null, StorageDirectory.getStorageDirectory());
+        if (Utils.isWindows())
+        {
+            return getFile("temp_" + prefix, ".tmp");
+        }
+        else
+        {
+            return File.createTempFile("temp_" + prefix, null, StorageDirectory.getStorageDirectory());
+        }
     }
 
     public static String getApplicationFileName()
@@ -55,6 +62,7 @@ public class FileUtil
         return BitSquare.getAppName();
     }
 
+
     public static void writeTempFileToFile(File tempFile, File file) throws IOException
     {
         if (Utils.isWindows())
@@ -64,6 +72,11 @@ public class FileUtil
             file.delete();
             final File canonicalFile = new File(canonicalPath);
             Files.copy(tempFile.toPath(), canonicalFile.toPath());
+
+            if (tempFile.exists() && !tempFile.delete())
+            {
+                log.error("Cannot delete temp file.");
+            }
         }
         else
         {
