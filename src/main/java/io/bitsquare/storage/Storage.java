@@ -232,6 +232,7 @@ public class Storage
                 // to not write through to physical media for at least a few seconds, but this is the best we can do.
                 fileOutputStream.flush();
                 fileOutputStream.getFD().sync();
+                fileOutputStream.close();
 
                 FileUtil.writeTempFileToFile(tempFile, storageFile);
             } catch (IOException e)
