@@ -218,41 +218,51 @@ public class Storage
 
     private void saveObjectToFile(Serializable serializable)
     {
+        File tempFile = null;
+        FileOutputStream fileOutputStream = null;
+        ObjectOutputStream objectOutputStream = null;
         try
         {
-            final File tempFile = FileUtil.getTempFile("temp_" + prefix);
-            try (final FileOutputStream fileOutputStream = new FileOutputStream(tempFile))
-            {
-                // don't use closeable resource in try for the ObjectOutputStream as it produces problems on Windows 8
-                // -> rename of temp file fails
-                final ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-                objectOutputStream.writeObject(serializable);
+            tempFile = FileUtil.getTempFile(prefix);
 
-                // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
-                // to not write through to physical media for at least a few seconds, but this is the best we can do.
-                fileOutputStream.flush();
-                fileOutputStream.getFD().sync();
-                fileOutputStream.close();
+            // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile) and we need to close it
+            // manually before replacing file with temp file
+            fileOutputStream = new FileOutputStream(tempFile);
+            objectOutputStream = new ObjectOutputStream(fileOutputStream);
 
-                FileUtil.writeTempFileToFile(tempFile, storageFile);
-            } catch (IOException e)
-            {
-                e.printStackTrace();
-                log.error("saveObjectToFile failed." + e);
+            objectOutputStream.writeObject(serializable);
 
-                if (tempFile.exists())
-                {
-                    log.warn("Temp file still exists after failed save.");
-                    if (!tempFile.delete())
-                    {
-                        log.warn("Cannot delete temp file.");
-                    }
-                }
-            }
+            // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
+            // to not write through to physical media for at least a few seconds, but this is the best we can do.
+            fileOutputStream.flush();
+            fileOutputStream.getFD().sync();
+
+            // Close resources before replacing file with temp file because otherwise it causes problems on windows when rename temp file
+            fileOutputStream.close();
+            objectOutputStream.close();
+
+            FileUtil.writeTempFileToFile(tempFile, storageFile);
         } catch (IOException e)
         {
             e.printStackTrace();
-            log.error("getTempFile failed." + e);
+            log.error("save object to file failed." + e);
+        } finally
+        {
+            if (tempFile != null && tempFile.exists())
+            {
+                log.warn("Temp file still exists after failed save.");
+                if (!tempFile.delete()) log.error("Cannot delete temp file.");
+            }
+
+            try
+            {
+                if (objectOutputStream != null) objectOutputStream.close();
+                if (fileOutputStream != null) fileOutputStream.close();
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+                log.error("Cannot close resources.");
+            }
         }
     }
 

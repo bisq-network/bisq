@@ -97,9 +97,12 @@ public class DSAKeyUtil
         lock.lock();
         final File pubKeyTempFile = FileUtil.getTempFile("pubKey_temp_" + prefix);
         final File privKeyTempFile = FileUtil.getTempFile("privKey_temp_" + prefix);
-        try (final FileOutputStream pubKeyFileOutputStream = new FileOutputStream(pubKeyTempFile);
-             final FileOutputStream privKeyFileOutputStream = new FileOutputStream(privKeyTempFile))
+        final FileOutputStream pubKeyFileOutputStream = new FileOutputStream(pubKeyTempFile);
+        final FileOutputStream privKeyFileOutputStream = new FileOutputStream(privKeyTempFile);
+        try
         {
+            // Don't use auto closeable resources in try() as we need to close it
+            // manually before replacing file with temp file anyway
 
             final PublicKey publicKey = keyPair.getPublic();
             final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
@@ -113,9 +116,17 @@ public class DSAKeyUtil
             privKeyFileOutputStream.flush();
             privKeyFileOutputStream.getFD().sync();
 
+            // Close resources before replacing file with temp file because otherwise it causes problems on windows when rename temp file
+            pubKeyFileOutputStream.close();
+            privKeyFileOutputStream.close();
 
             FileUtil.writeTempFileToFile(pubKeyTempFile, pubKeyFile);
             FileUtil.writeTempFileToFile(privKeyTempFile, privKeyFile);
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+            log.error("saveKeyPairToFiles failed." + e);
+
         } finally
         {
             if (pubKeyTempFile.exists())
@@ -133,6 +144,16 @@ public class DSAKeyUtil
                 {
                     log.warn("Cannot delete privKeyTempFile.");
                 }
+            }
+
+            try
+            {
+                pubKeyFileOutputStream.close();
+                privKeyFileOutputStream.close();
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+                log.error("Cannot close resources.");
             }
 
             lock.unlock();
