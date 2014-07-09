@@ -50,9 +50,9 @@ public class StorageDirectory
             // check if it is packed into a mac app  (e.g.: "/Users/mk/Desktop/bitsquare.app/Contents/Java/bitsquare.jar")
             if (executionRoot.getCanonicalPath().endsWith(".app/Contents/Java/bitsquare.jar") && System.getProperty("os.name").startsWith("Mac"))
                 return executionRoot.getParentFile().getParentFile().getParentFile().getParentFile();
-            else if (executionRoot.getCanonicalPath().endsWith("/target/classes"))
+            else if (executionRoot.getCanonicalPath().endsWith(File.separator + "target" + File.separator + "classes"))
                 return executionRoot.getParentFile();   // dev e.g.: /Users/mk/Documents/_intellij/bitsquare/target/classes -> use target as root
-            else if (executionRoot.getCanonicalPath().endsWith("/bitsquare.jar"))
+            else if (executionRoot.getCanonicalPath().endsWith(File.separator + "bitsquare.jar"))
                 return executionRoot.getParentFile();    // dev with jar e.g.: Users/mk/Documents/_intellij/bitsquare/out/artifacts/bitsquare2/bitsquare.jar  -> use target as root
             else
                 return executionRoot;

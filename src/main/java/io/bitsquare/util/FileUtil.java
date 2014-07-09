@@ -11,7 +11,6 @@ public class FileUtil
 {
     private static final Logger log = LoggerFactory.getLogger(FileUtil.class);
 
-
     public static File getFile(String name, String suffix)
     {
         return new File(StorageDirectory.getStorageDirectory(), name + "." + suffix);
