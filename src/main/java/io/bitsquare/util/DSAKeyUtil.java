@@ -114,8 +114,8 @@ public class DSAKeyUtil
             privKeyFileOutputStream.getFD().sync();
 
 
-            FileUtil.saveTempFileToFile(pubKeyTempFile, pubKeyFile);
-            FileUtil.saveTempFileToFile(privKeyTempFile, privKeyFile);
+            FileUtil.writeTempFileToFile(pubKeyTempFile, pubKeyFile);
+            FileUtil.writeTempFileToFile(privKeyTempFile, privKeyFile);
         } finally
         {
             if (pubKeyTempFile.exists())

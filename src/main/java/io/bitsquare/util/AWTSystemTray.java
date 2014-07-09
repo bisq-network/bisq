@@ -7,7 +7,6 @@ import java.awt.*;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +41,6 @@ public class AWTSystemTray
             popupMenu.add(exitItem);
 
             trayIcon.setPopupMenu(popupMenu);
-
-            trayIcon.addActionListener(e -> JOptionPane.showMessageDialog(null, "This dialog box is run from System Tray"));
 
             showGuiItem.addActionListener(e -> {
                 if (isStageVisible)

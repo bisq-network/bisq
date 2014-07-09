@@ -53,7 +53,7 @@ public class Storage
                 lock.lock();
                 try
                 {
-                    FileUtil.saveFile(prefix, storageFile, (Serializable) rootMap);
+                    saveObjectToFile((Serializable) rootMap);
                 } finally
                 {
                     lock.unlock();
@@ -119,7 +119,7 @@ public class Storage
         {
             lock.lock();
             rootMap.put(key, value);
-            FileUtil.saveFile(prefix, storageFile, (Serializable) rootMap);
+            saveObjectToFile((Serializable) rootMap);
         } finally
         {
             lock.unlock();
@@ -216,6 +216,42 @@ public class Storage
         }
     }
 
+    private void saveObjectToFile(Serializable serializable)
+    {
+        try
+        {
+            final File tempFile = FileUtil.getTempFile("temp_" + prefix);
+            try (final FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
+                 final ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
+            {
+                objectOutputStream.writeObject(serializable);
+
+                // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
+                // to not write through to physical media for at least a few seconds, but this is the best we can do.
+                fileOutputStream.flush();
+                fileOutputStream.getFD().sync();
+
+                FileUtil.writeTempFileToFile(tempFile, storageFile);
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+                log.error("saveObjectToFile failed." + e);
+
+                if (tempFile.exists())
+                {
+                    log.warn("Temp file still exists after failed save.");
+                    if (!tempFile.delete())
+                    {
+                        log.warn("Cannot delete temp file.");
+                    }
+                }
+            }
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+            log.error("getTempFile failed." + e);
+        }
+    }
 
     private Object readObjectFromFile(File file) throws IOException, ClassNotFoundException
     {
