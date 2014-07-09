@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 public class StorageDirectory
 {
     private static final Logger log = LoggerFactory.getLogger(StorageDirectory.class);
-    private static final String USER_PROPERTIES_FILE_NAME = "bitsquare.properties";
     private static File storageDirectory;
 
     static
@@ -72,7 +71,7 @@ public class StorageDirectory
         else if (osName != null && osName.startsWith("Mac"))
             return new File(System.getProperty("user.home") + "/Library/Application Support/BitSquare");
         else
-            return new File(System.getProperty("user.home") + "/BitSquare");
+            return new File(System.getProperty("user.home") + File.separator + "BitSquare");
     }
 
     private static void createDirIfNotExists()
