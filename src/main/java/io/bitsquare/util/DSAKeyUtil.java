@@ -113,40 +113,9 @@ public class DSAKeyUtil
             privKeyFileOutputStream.flush();
             privKeyFileOutputStream.getFD().sync();
 
-            if (Utils.isWindows())
-            {
-                // Work around an issue on Windows whereby you can't rename over existing files.
-                final File pubKeyCanonicalFile = pubKeyFile.getCanonicalFile();
-                if (pubKeyCanonicalFile.exists() && !pubKeyCanonicalFile.delete())
-                {
-                    throw new IOException("Failed to delete pubKeyCanonicalFile for replacement with save");
-                }
-                if (!pubKeyTempFile.renameTo(pubKeyCanonicalFile))
-                {
-                    throw new IOException("Failed to rename " + pubKeyTempFile + " to " + pubKeyCanonicalFile);
-                }
 
-                final File privKeyCanonicalFile = privKeyFile.getCanonicalFile();
-                if (privKeyCanonicalFile.exists() && !privKeyCanonicalFile.delete())
-                {
-                    throw new IOException("Failed to delete privKeyCanonicalFile for replacement with save");
-                }
-                if (!privKeyTempFile.renameTo(privKeyCanonicalFile))
-                {
-                    throw new IOException("Failed to rename " + privKeyTempFile + " to " + privKeyCanonicalFile);
-                }
-            }
-            else
-            {
-                if (!pubKeyTempFile.renameTo(pubKeyFile))
-                {
-                    throw new IOException("Failed to rename " + pubKeyTempFile + " to " + pubKeyFile);
-                }
-                if (!privKeyTempFile.renameTo(privKeyFile))
-                {
-                    throw new IOException("Failed to rename " + privKeyTempFile + " to " + privKeyFile);
-                }
-            }
+            FileUtil.saveTempFileToFile(pubKeyTempFile, pubKeyFile);
+            FileUtil.saveTempFileToFile(privKeyTempFile, privKeyFile);
         } finally
         {
             if (pubKeyTempFile.exists())
@@ -169,7 +138,6 @@ public class DSAKeyUtil
             lock.unlock();
         }
     }
-
 
     private static KeyPair readKeyPairFromFiles(File pubKeyFile, File privKeyFile) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException
     {

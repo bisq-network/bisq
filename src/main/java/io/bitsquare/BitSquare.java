@@ -76,7 +76,7 @@ public class BitSquare extends Application
 
         // use a local data dir as default storage dir (can be overwritten in the settings)
         // TODO save root preferences always in app dir top get preferred storage location
-        StorageDirectory.setStorageDirectory(new File(StorageDirectory.getApplicationDirectory().getAbsolutePath() + "/data"));
+        StorageDirectory.setStorageDirectory(new File(StorageDirectory.getApplicationDirectory().getCanonicalPath() + "/data"));
 
 
         // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT

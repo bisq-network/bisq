@@ -665,7 +665,13 @@ public class MessageFacade
 
     private void setupStorage()
     {
-        myPeer.getPeerBean().setStorage(new StorageDisk(StorageDirectory.getStorageDirectory().getAbsolutePath() + "/" + BitSquare.getAppName() + "_tomP2P"));
+        try
+        {
+            myPeer.getPeerBean().setStorage(new StorageDisk(StorageDirectory.getStorageDirectory().getCanonicalPath() + "/" + BitSquare.getAppName() + "_tomP2P"));
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     private void saveMyAddressToDHT() throws IOException

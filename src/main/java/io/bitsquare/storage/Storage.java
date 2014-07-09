@@ -1,6 +1,5 @@
 package io.bitsquare.storage;
 
-import com.google.bitcoin.core.Utils;
 import com.google.bitcoin.utils.Threading;
 import io.bitsquare.BitSquare;
 import io.bitsquare.util.FileUtil;
@@ -54,7 +53,7 @@ public class Storage
                 lock.lock();
                 try
                 {
-                    saveObjectToFile((Serializable) rootMap);
+                    FileUtil.saveFile(prefix, storageFile, (Serializable) rootMap);
                 } finally
                 {
                     lock.unlock();
@@ -120,7 +119,7 @@ public class Storage
         {
             lock.lock();
             rootMap.put(key, value);
-            saveObjectToFile((Serializable) rootMap);
+            FileUtil.saveFile(prefix, storageFile, (Serializable) rootMap);
         } finally
         {
             lock.unlock();
@@ -214,63 +213,6 @@ public class Storage
             e2.printStackTrace();
             log.error("Could not read rootMap. " + e2);
             return null;
-        }
-    }
-
-    private void saveObjectToFile(Serializable serializable)
-    {
-        try
-        {
-            final File tempFile = FileUtil.getTempFile("temp_" + prefix);
-            try (final FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
-                 final ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
-            {
-                objectOutputStream.writeObject(serializable);
-
-                // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
-                // to not write through to physical media for at least a few seconds, but this is the best we can do.
-                fileOutputStream.flush();
-                fileOutputStream.getFD().sync();
-
-                if (Utils.isWindows())
-                {
-                    final File canonical = storageFile.getCanonicalFile();
-                    if (!canonical.exists())
-                    {
-                        if (!canonical.createNewFile())
-                        {
-                            throw new IOException("Failed to create new file " + canonical);
-                        }
-                    }
-
-                    if (!tempFile.renameTo(canonical))
-                    {
-                        throw new IOException("Failed to rename " + tempFile + " to " + canonical);
-                    }
-                }
-                else if (!tempFile.renameTo(storageFile))
-                {
-                    throw new IOException("Failed to rename " + tempFile + " to " + storageFile);
-                }
-
-            } catch (IOException e)
-            {
-                e.printStackTrace();
-                log.error("saveObjectToFile failed." + e);
-
-                if (tempFile.exists())
-                {
-                    log.warn("Temp file still exists after failed save.");
-                    if (!tempFile.delete())
-                    {
-                        log.warn("Cannot delete temp file.");
-                    }
-                }
-            }
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-            log.error("getTempFile failed." + e);
         }
     }
 

@@ -1,6 +1,7 @@
 package io.bitsquare.util;
 
 import java.io.File;
+import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,16 +43,24 @@ public class StorageDirectory
     public static File getApplicationDirectory()
     {
         File executionRoot = new File(StorageDirectory.class.getProtectionDomain().getCodeSource().getLocation().getFile());
-        log.trace("executionRoot " + executionRoot.getAbsolutePath());
-        // check if it is packed into a mac app  (e.g.: "/Users/mk/Desktop/bitsquare.app/Contents/Java/bitsquare.jar")
-        if (executionRoot.getAbsolutePath().endsWith(".app/Contents/Java/bitsquare.jar") && System.getProperty("os.name").startsWith("Mac"))
-            return executionRoot.getParentFile().getParentFile().getParentFile().getParentFile();
-        else if (executionRoot.getAbsolutePath().endsWith("/target/classes"))
-            return executionRoot.getParentFile();   // dev e.g.: /Users/mk/Documents/_intellij/bitsquare/target/classes -> use target as root
-        else if (executionRoot.getAbsolutePath().endsWith("/bitsquare.jar"))
-            return executionRoot.getParentFile();    // dev with jar e.g.: Users/mk/Documents/_intellij/bitsquare/out/artifacts/bitsquare2/bitsquare.jar  -> use target as root
-        else
-            return executionRoot;
+        try
+        {
+            log.trace("executionRoot " + executionRoot.getCanonicalPath());
+
+            // check if it is packed into a mac app  (e.g.: "/Users/mk/Desktop/bitsquare.app/Contents/Java/bitsquare.jar")
+            if (executionRoot.getCanonicalPath().endsWith(".app/Contents/Java/bitsquare.jar") && System.getProperty("os.name").startsWith("Mac"))
+                return executionRoot.getParentFile().getParentFile().getParentFile().getParentFile();
+            else if (executionRoot.getCanonicalPath().endsWith("/target/classes"))
+                return executionRoot.getParentFile();   // dev e.g.: /Users/mk/Documents/_intellij/bitsquare/target/classes -> use target as root
+            else if (executionRoot.getCanonicalPath().endsWith("/bitsquare.jar"))
+                return executionRoot.getParentFile();    // dev with jar e.g.: Users/mk/Documents/_intellij/bitsquare/out/artifacts/bitsquare2/bitsquare.jar  -> use target as root
+            else
+                return executionRoot;
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 
