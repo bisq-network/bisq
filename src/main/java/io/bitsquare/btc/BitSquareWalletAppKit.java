@@ -118,7 +118,7 @@ public class BitSquareWalletAppKit extends WalletAppKit
             }
             else
             {
-                //TODO
+                //TODO deprecated
                 Futures.addCallback(vPeerGroup.start(), new FutureCallback<State>()
                 {
                     @Override

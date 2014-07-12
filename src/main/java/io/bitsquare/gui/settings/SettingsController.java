@@ -636,17 +636,20 @@ public class SettingsController implements Initializable, ChildController, Navig
         }
 
         //TODO
-        bankAccountTypesComboBox.getSelectionModel().selectFirst();
-        bankAccountCurrencyComboBox.getSelectionModel().selectFirst();
-        bankAccountRegionComboBox.getSelectionModel().select(3);
-        bankAccountCountryComboBox.getSelectionModel().select(5);
-        bankAccountTitleTextField.setText("dummy");
-        bankAccountHolderNameTextField.setText("dummy");
-        bankAccountPrimaryIDTextField.setText("dummy");
-        bankAccountSecondaryIDTextField.setText("dummy");
-        if (user.getCurrentBankAccount() == null)
+        if (BitSquare.fillFormsWithDummyData)
         {
-            onSaveBankAccount();
+            bankAccountTypesComboBox.getSelectionModel().selectFirst();
+            bankAccountCurrencyComboBox.getSelectionModel().selectFirst();
+            bankAccountRegionComboBox.getSelectionModel().select(3);
+            bankAccountCountryComboBox.getSelectionModel().select(5);
+            bankAccountTitleTextField.setText("dummy");
+            bankAccountHolderNameTextField.setText("dummy");
+            bankAccountPrimaryIDTextField.setText("dummy");
+            bankAccountSecondaryIDTextField.setText("dummy");
+            if (user.getCurrentBankAccount() == null)
+            {
+                onSaveBankAccount();
+            }
         }
     }
 

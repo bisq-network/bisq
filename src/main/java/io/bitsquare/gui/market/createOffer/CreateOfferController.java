@@ -3,6 +3,7 @@ package io.bitsquare.gui.market.createOffer;
 import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 import com.google.common.util.concurrent.FutureCallback;
+import io.bitsquare.BitSquare;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BtcFormatter;
@@ -103,11 +104,15 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         updateTotals();
 
         //TODO
-        //amountTextField.setText("" + (int) (new Random().nextDouble() * 100 / 10 + 1));
-        amountTextField.setText("1");
-        priceTextField.setText("" + (int) (499 - new Random().nextDouble() * 1000 / 100));
-        minAmountTextField.setText("0,1");
-        collateralTextField.setText("10");
+        if (BitSquare.fillFormsWithDummyData)
+        {
+            //amountTextField.setText("" + (int) (new Random().nextDouble() * 100 / 10 + 1));
+            amountTextField.setText("1");
+            priceTextField.setText("" + (int) (499 - new Random().nextDouble() * 1000 / 100));
+            minAmountTextField.setText("0,1");
+            collateralTextField.setText("10");
+        }
+
         updateVolume();
         updateTotals();
 
@@ -115,6 +120,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
             updateVolume();
             updateTotals();
         });
+
         priceTextField.textProperty().addListener((observable, oldValue, newValue) -> updateVolume());
     }
 

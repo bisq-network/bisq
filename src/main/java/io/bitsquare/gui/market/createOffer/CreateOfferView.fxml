@@ -28,7 +28,7 @@
         <TextField fx:id="minAmountTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
         <Label text="Collateral (%):" GridPane.rowIndex="3"/>
-        <TextField fx:id="collateralTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+        <TextField fx:id="collateralTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
         <Label text="Offer fee:" GridPane.rowIndex="4"/>
         <TextField fx:id="feeLabel" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="4"/>

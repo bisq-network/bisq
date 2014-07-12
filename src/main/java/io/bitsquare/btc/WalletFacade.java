@@ -567,13 +567,7 @@ public class WalletFacade
         return unUsedAddressInfoBalance.compareTo(FeePolicy.TAKE_OFFER_FEE) > 0;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // TODO
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
     //TODO
-    @SuppressWarnings({"SameReturnValue", "UnusedParameters"})
     public int getNumOfPeersSeenTx(String txID)
     {
         // TODO check from blockchain
