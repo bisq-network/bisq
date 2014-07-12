@@ -4,6 +4,7 @@ import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Transaction;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BlockChainFacade;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.msg.MessageFacade;
@@ -194,9 +195,9 @@ public class ProtocolForOffererAsBuyer
         log.debug("onResultVerifyTakeOfferFeePayment called " + step++);
 
         BigInteger collateral = trade.getCollateralAmount();
+        BigInteger offererInputAmount = collateral.add(FeePolicy.TX_FEE);
         state = State.CreateDepositTx;
-        CreateDepositTx.run(this::onResultCreateDepositTx, this::onFault, walletFacade, tradeId, collateral, takerPubKey, arbitratorPubKey);
-
+        CreateDepositTx.run(this::onResultCreateDepositTx, this::onFault, walletFacade, tradeId, offererInputAmount, takerPubKey, arbitratorPubKey);
     }
 
     public void onResultCreateDepositTx(String offererPubKey, String preparedOffererDepositTxAsHex, long offererTxOutIndex)

@@ -282,7 +282,7 @@ public class TakerOfferController implements Initializable, ChildController
 
     private String getFormattedTotal()
     {
-        return BitSquareFormatter.formatVolume(getTotal().doubleValue());
+        return BitSquareFormatter.formatDouble(BtcFormatter.satoshiToBTC(getTotal()), 4);
     }
 
     private String getFormattedCollateral()

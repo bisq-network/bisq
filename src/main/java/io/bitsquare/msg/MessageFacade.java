@@ -38,7 +38,7 @@ public class MessageFacade
     private static final Logger log = LoggerFactory.getLogger(MessageFacade.class);
     // private static final String PING = "ping";
     // private static final String PONG = "pong";
-    private static final int MASTER_PEER_PORT = 5000;
+    private static final int MASTER_PEER_PORT = 5001;
 
     private final List<OrderBookListener> orderBookListeners = new ArrayList<>();
     private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();

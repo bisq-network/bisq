@@ -28,7 +28,7 @@ public class Relay extends Application
         }
         else
         {
-            port = 5000;
+            port = 5001;
         }
 
         launch(args);

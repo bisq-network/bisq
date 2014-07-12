@@ -17,7 +17,7 @@ public class CreateDepositTx
                            FaultHandler faultHandler,
                            WalletFacade walletFacade,
                            String tradeId,
-                           BigInteger collateralAmount,
+                           BigInteger offererInputAmount,
                            String takerMultiSigPubKey,
                            String arbitratorPubKeyAsHex)
     {
@@ -25,7 +25,7 @@ public class CreateDepositTx
         try
         {
             String offererPubKey = walletFacade.getAddressInfoByTradeID(tradeId).getPubKeyAsHexString();
-            Transaction transaction = walletFacade.offererCreatesMSTxAndAddPayment(collateralAmount, offererPubKey, takerMultiSigPubKey, arbitratorPubKeyAsHex, tradeId);
+            Transaction transaction = walletFacade.offererCreatesMSTxAndAddPayment(offererInputAmount, offererPubKey, takerMultiSigPubKey, arbitratorPubKeyAsHex, tradeId);
 
             String preparedOffererDepositTxAsHex = Utils.bytesToHexString(transaction.bitcoinSerialize());
             long offererTxOutIndex = transaction.getInput(0).getOutpoint().getIndex();

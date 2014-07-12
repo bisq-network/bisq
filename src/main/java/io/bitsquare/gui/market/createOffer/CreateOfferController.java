@@ -110,8 +110,10 @@ public class CreateOfferController implements Initializable, ChildController, Hi
             amountTextField.setText("1");
             priceTextField.setText("" + (int) (499 - new Random().nextDouble() * 1000 / 100));
             minAmountTextField.setText("0,1");
-            collateralTextField.setText("10");
         }
+
+        //TODO derive form arbitrators
+        collateralTextField.setText("10");
 
         updateVolume();
         updateTotals();
@@ -296,7 +298,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         double collateralPercentAsDouble = BitSquareConverter.stringToDouble(collateralTextField.getText());
         double collateralAmountAsDouble = collateralPercentAsDouble * amountAsDouble / 100;
         BigInteger collateral = BtcFormatter.doubleValueToSatoshis(collateralAmountAsDouble);
-        BigInteger totals = FeePolicy.CREATE_OFFER_FEE.add(collateral);
+        BigInteger totals = FeePolicy.CREATE_OFFER_FEE.add(collateral).add(FeePolicy.TX_FEE);
         totalTextField.setText(BtcFormatter.formatSatoshis(totals));
     }
 

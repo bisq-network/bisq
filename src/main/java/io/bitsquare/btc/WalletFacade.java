@@ -696,6 +696,11 @@ public class WalletFacade
         log.trace("offererPubKey=" + offererPubKey);
         log.trace("takerPubKey=" + takerPubKey);
         log.trace("arbitratorPubKey=" + arbitratorPubKey);
+        log.trace("offererInputAmount=" + BtcFormatter.formatSatoshis(offererInputAmount));
+
+        // we need to subtract the fee as it will go to the miners
+        BigInteger amountToPay = offererInputAmount.subtract(FeePolicy.TX_FEE);
+        log.trace("amountToPay=" + BtcFormatter.formatSatoshis(amountToPay));
 
         // We pay the offererInputAmount to a temporary MS output which will be changed later to the correct value.
         // With the usage of completeTx() we get all the work done with fee calculation, validation and coin selection.
@@ -705,7 +710,7 @@ public class WalletFacade
         // The btc tx fee will be included by the completeTx() call, so we don't need to add it manually.
         Transaction tx = new Transaction(params);
         Script multiSigOutputScript = getMultiSigScript(offererPubKey, takerPubKey, arbitratorPubKey);
-        tx.addOutput(offererInputAmount, multiSigOutputScript);
+        tx.addOutput(amountToPay, multiSigOutputScript);
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         AddressEntry addressEntry = getAddressInfoByTradeID(tradeId);

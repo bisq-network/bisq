@@ -216,14 +216,15 @@ public class MainController implements Initializable, NavigationController
         navigateToView(selectedNavigationItem);
     }
 
+    //TODO make ordersButton also reacting to jump to pending tab
     private void onTakeOfferRequested(String offerId, PeerAddress sender)
     {
         final Button alertButton = new Button("", Icons.getIconImageView(Icons.MSG_ALERT));
         alertButton.setId("nav-alert-button");
         alertButton.relocate(36, 19);
         alertButton.setOnAction((e) -> {
-            OrdersController.GET_INSTANCE().setSelectedTabIndex(1);
             ordersButton.fire();
+            OrdersController.GET_INSTANCE().setSelectedTabIndex(1);
         });
         Tooltip.install(alertButton, new Tooltip("Someone accepted your offer"));
         ordersButtonButtonHolder.getChildren().add(alertButton);
