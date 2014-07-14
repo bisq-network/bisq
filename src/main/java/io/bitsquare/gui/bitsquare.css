@@ -74,7 +74,7 @@
 #copy-icon {
      -fx-fill: black;
      -fx-cursor: hand;
- }
+}
 
 #copy-icon .hover{
       -fx-fill: #0096c9;
