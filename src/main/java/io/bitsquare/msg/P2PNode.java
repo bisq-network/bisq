@@ -110,7 +110,7 @@ public class P2PNode
         useDiscStorage(useDiskStorage);
         setupTimerForIPCheck();
 
-        FutureCallback<PeerDHT> localCallback = new FutureCallback<PeerDHT>()
+       /* FutureCallback<PeerDHT> localCallback = new FutureCallback<PeerDHT>()
         {
             @Override
             public void onSuccess(@Nullable PeerDHT result)
@@ -126,13 +126,18 @@ public class P2PNode
                 log.error(t.toString());
                 callback.onFailure(t);
             }
-        };
+        };   */
 
-        bootstrapToLocalhostThread = runBootstrapThread(localCallback, new SeedNodeAddress(defaultStaticSeedNodeAddresses));
-        bootstrapToServerThread = runBootstrapThread(localCallback, new SeedNodeAddress(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN));
+        ListenableFuture<PeerDHT> bootstrapComplete = bootstrap(new SeedNodeAddress(defaultStaticSeedNodeAddresses));
+        Futures.addCallback(bootstrapComplete, callback);
+
+        // bootstrapToLocalhostThread = runBootstrapThread(localCallback, new SeedNodeAddress(defaultStaticSeedNodeAddresses));
+        // bootstrapToServerThread = runBootstrapThread(localCallback, new SeedNodeAddress(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN));
     }
 
-    public void bootstrapThreadCompleted()
+    // TODO: start multiple threads for bootstrapping, so we can get it done faster.
+
+  /*  public void bootstrapThreadCompleted()
     {
         if (bootstrapToLocalhostThread != null)
             bootstrapToLocalhostThread.interrupt();
@@ -155,7 +160,7 @@ public class P2PNode
         });
         bootstrapThread.start();
         return bootstrapThread;
-    }
+    }   */
 
     public void shutDown()
     {

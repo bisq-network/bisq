@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.util.Random;
+import net.tomp2p.connection.Ports;
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
 import net.tomp2p.dht.FutureRemove;
@@ -29,7 +30,7 @@ public class P2PNodeTest
     @Test
     public void testSendData() throws Exception
     {
-        PeerDHT[] peers = UtilsDHT2.createNodes(3, rnd, 41001);
+        PeerDHT[] peers = UtilsDHT2.createNodes(3, rnd, new Ports().tcpPort());
         PeerDHT master = peers[0];
         PeerDHT client = peers[1];
         PeerDHT otherPeer = peers[2];
@@ -66,12 +67,14 @@ public class P2PNodeTest
         assertTrue(futureDirect.isSuccess());
         // we return true from objectDataReply
         assertTrue((Boolean) futureDirect.object());
+
+        master.shutdown();
     }
 
     @Test
     public void testProtectedPutGet() throws Exception
     {
-        PeerDHT[] peers = UtilsDHT2.createNodes(3, rnd, 41001);
+        PeerDHT[] peers = UtilsDHT2.createNodes(3, rnd, new Ports().tcpPort());
         PeerDHT master = peers[0];
         PeerDHT client = peers[1];
         PeerDHT otherPeer = peers[2];
@@ -157,7 +160,7 @@ public class P2PNodeTest
     @Test
     public void testAddToListGetList() throws Exception
     {
-        PeerDHT[] peers = UtilsDHT2.createNodes(3, rnd, 41001);
+        PeerDHT[] peers = UtilsDHT2.createNodes(3, rnd, new Ports().tcpPort());
         PeerDHT master = peers[0];
         PeerDHT client = peers[1];
         PeerDHT otherPeer = peers[2];
@@ -366,7 +369,6 @@ public class P2PNodeTest
         assertTrue(foundData2);
         assertTrue(foundData3);
         assertEquals(2, futureGet.dataMap().values().size());
-
 
         master.shutdown();
     }

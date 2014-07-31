@@ -17,13 +17,13 @@ public class BitSquareConverterTest
         assertEquals(1, BitSquareConverter.stringToDouble("1.0"), 0);
         assertEquals(1, BitSquareConverter.stringToDouble("1,0"), 0);
 
-        assertEquals(Double.NEGATIVE_INFINITY, BitSquareConverter.stringToDouble("1,000.2"), 0);
-        assertEquals(Double.NEGATIVE_INFINITY, BitSquareConverter.stringToDouble("1,000.2"), 0);
-        assertEquals(Double.NEGATIVE_INFINITY, BitSquareConverter.stringToDouble(null), 0);
-        assertEquals(Double.NEGATIVE_INFINITY, BitSquareConverter.stringToDouble(""), 0);
-        assertEquals(Double.NEGATIVE_INFINITY, BitSquareConverter.stringToDouble(""), 0);
-        assertEquals(Double.NEGATIVE_INFINITY, BitSquareConverter.stringToDouble("."), 0);
-        assertEquals(Double.NEGATIVE_INFINITY, BitSquareConverter.stringToDouble(","), 0);
-        assertEquals(Double.NEGATIVE_INFINITY, BitSquareConverter.stringToDouble("a"), 0);
+        assertEquals(0, BitSquareConverter.stringToDouble("1,000.2"), 0);
+        assertEquals(0, BitSquareConverter.stringToDouble("1,000.2"), 0);
+        assertEquals(0, BitSquareConverter.stringToDouble(null), 0);
+        assertEquals(0, BitSquareConverter.stringToDouble(""), 0);
+        assertEquals(0, BitSquareConverter.stringToDouble(""), 0);
+        assertEquals(0, BitSquareConverter.stringToDouble("."), 0);
+        assertEquals(0, BitSquareConverter.stringToDouble(","), 0);
+        assertEquals(0, BitSquareConverter.stringToDouble("a"), 0);
     }
 }

@@ -1,26 +1,26 @@
 # bitsquare.io
 
-Bitsquare is a P2P Fiat-BTC Exchange, extensible to a generic P2P trading platform (include commodities and cryptocurrencies)
+Bitsquare is a P2P Fiat-BTC Exchange.
 
 The project use Java 8 and Maven.
-We use the bitcoinj library and TomP2P for DHT and messaging.
+We use the bitcoinj library and TomP2P for DHT and direct messaging.
 
+For local testing it is best to use the regtest mode from Bitcoin qt clients.
 If you want to use the RegTest mode you need to set regtest=1 in the bitcoin.config file inside the bitcoin data directory (https://en.bitcoin.it/wiki/Running_Bitcoin).
 Then you can generate coins on demand with the Bitcoin qt client with that command in the console: setgenerate true 101  (101 only for the first start because the coin maturity of 100 blocks).
-See: https://bitcoinj.github.io/testing
+More information about how to use regtest mode can be found here: https://bitcoinj.github.io/testing
+Take care if you have real bitcoin in your Bitcoin qt wallet (backup and copy first your data directory).
 You can change the network mode in the guice module: BitSquareModule.java
+Testnet should also work, but was not tested a while now as for developing regtest is much more convenient.
+Please don't use main net with real money, as the software is under heavy development and you can easily lose your funds.
 
-We use a fork of the actual TomP2P master branch: https://github.com/ManfredKarrer/TomP2P
+We use a fork of the actual TomP2P master branch: https://github.com/bitsquare/TomP2P
 You need to check that out as well and deploy it to the local maven repository:
 mvn clean install -DskipTests
 
 
 ### Resources:
 * Web: http://bitsquare.io
-* Whitepaper: https://docs.google.com/document/d/1d3EiWZdaM89-P6MVhS53unXv2-pDpSFsN3W4kCGXKgY/edit?pli=1
-* Overview: http://bitsquare.io/images/overview.png
-* Discussion: https://bitcointalk.org/index.php?topic=647457
-* Video of POC prototype: https://www.youtube.com/watch?v=ByfnzJzi0bo
 
 
 ### Screenshots of basic the use cases:
