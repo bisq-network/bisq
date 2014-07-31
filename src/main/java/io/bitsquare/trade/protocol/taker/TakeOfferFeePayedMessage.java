@@ -1,6 +1,6 @@
 package io.bitsquare.trade.protocol.taker;
 
-import io.bitsquare.msg.TradeMessage;
+import io.bitsquare.trade.protocol.TradeMessage;
 import java.io.Serializable;
 import java.math.BigInteger;
 

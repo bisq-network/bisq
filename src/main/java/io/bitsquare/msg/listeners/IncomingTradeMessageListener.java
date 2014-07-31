@@ -1,6 +1,6 @@
 package io.bitsquare.msg.listeners;
 
-import io.bitsquare.msg.TradeMessage;
+import io.bitsquare.trade.protocol.TradeMessage;
 import net.tomp2p.peers.PeerAddress;
 
 public interface IncomingTradeMessageListener

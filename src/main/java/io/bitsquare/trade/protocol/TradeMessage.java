@@ -1,4 +1,4 @@
-package io.bitsquare.msg;
+package io.bitsquare.trade.protocol;
 
 public interface TradeMessage
 {

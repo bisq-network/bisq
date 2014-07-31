@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.name.Named;
 import io.bitsquare.msg.listeners.*;
 import io.bitsquare.trade.Offer;
+import io.bitsquare.trade.protocol.TradeMessage;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.User;
 import java.io.IOException;
