@@ -139,7 +139,7 @@ public class SettingsController implements Initializable, ChildController, Navig
         if (settings.getAcceptedArbitrators().isEmpty())
         {
             String pubKeyAsHex = Utils.bytesToHexString(new ECKey().getPubKey());
-            String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey());
+            String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
             List<Locale> languages = new ArrayList<>();
             languages.add(LanguageUtil.getDefaultLanguageLocale());
             List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
@@ -168,13 +168,7 @@ public class SettingsController implements Initializable, ChildController, Navig
             settings.addAcceptedArbitrator(arbitrator);
             storage.write(settings.getClass().getName(), settings);
 
-            try
-            {
-                messageFacade.addArbitrator(arbitrator);
-            } catch (IOException e)
-            {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
+            messageFacade.addArbitrator(arbitrator);
         }
     }
 

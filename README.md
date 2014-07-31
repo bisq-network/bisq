@@ -10,6 +10,10 @@ Then you can generate coins on demand with the Bitcoin qt client with that comma
 See: https://bitcoinj.github.io/testing
 You can change the network mode in the guice module: BitSquareModule.java
 
+We use a fork of the actual TomP2P master branch: https://github.com/ManfredKarrer/TomP2P
+You need to check that out as well and deploy it to the local maven repository:
+mvn clean install -DskipTests
+
 
 ### Resources:
 * Web: http://bitsquare.io

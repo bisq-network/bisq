@@ -3,6 +3,7 @@ package io.bitsquare.trade.protocol.taker;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.msg.TradeMessage;
 import java.io.Serializable;
+import java.security.PublicKey;
 
 public class RequestOffererPublishDepositTxMessage implements Serializable, TradeMessage
 {
@@ -10,7 +11,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
     private final String tradeId;
     private BankAccount bankAccount;
     private String accountID;
-    private String takerMessagePubKey;
+    private PublicKey takerMessagePublicKey;
     private String signedTakerDepositTxAsHex;
     private String txScriptSigAsHex;
     private String txConnOutAsHex;
@@ -25,7 +26,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
     public RequestOffererPublishDepositTxMessage(String tradeId,
                                                  BankAccount bankAccount,
                                                  String accountID,
-                                                 String takerMessagePubKey,
+                                                 PublicKey takerMessagePublicKey,
                                                  String signedTakerDepositTxAsHex,
                                                  String txScriptSigAsHex,
                                                  String txConnOutAsHex,
@@ -39,7 +40,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
         this.tradeId = tradeId;
         this.bankAccount = bankAccount;
         this.accountID = accountID;
-        this.takerMessagePubKey = takerMessagePubKey;
+        this.takerMessagePublicKey = takerMessagePublicKey;
         this.signedTakerDepositTxAsHex = signedTakerDepositTxAsHex;
         this.txScriptSigAsHex = txScriptSigAsHex;
         this.txConnOutAsHex = txConnOutAsHex;
@@ -72,9 +73,9 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
         return accountID;
     }
 
-    public String getTakerMessagePubKey()
+    public PublicKey getTakerMessagePublicKey()
     {
-        return takerMessagePubKey;
+        return takerMessagePublicKey;
     }
 
     public String getSignedTakerDepositTxAsHex()

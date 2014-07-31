@@ -205,11 +205,9 @@ public class CreateOfferController implements Initializable, ChildController, Hi
             return;
         }
 
-        log.debug("create offer pubkey " + user.getMessagePubKeyAsHex());
-
         if (user.getCurrentBankAccount() != null)
         {
-            offer = new Offer(user.getMessagePubKeyAsHex(),
+            offer = new Offer(user.getMessagePublicKey(),
                               direction,
                               BitSquareConverter.stringToDouble(priceTextField.getText()),
                               BtcFormatter.stringValueToSatoshis(amountTextField.getText()),

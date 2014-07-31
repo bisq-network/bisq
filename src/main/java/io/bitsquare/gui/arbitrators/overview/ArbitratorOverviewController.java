@@ -26,9 +26,14 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javax.inject.Inject;
-import net.tomp2p.peers.Number160;
+import net.tomp2p.peers.Number640;
 import net.tomp2p.storage.Data;
 
+/**
+ * TODO remove tomp2p dependencies
+ * import net.tomp2p.peers.Number160;
+ * import net.tomp2p.storage.Data;
+ */
 @SuppressWarnings({"ALL", "UnusedParameters"})
 public class ArbitratorOverviewController implements Initializable, ChildController, NavigationController, ArbitratorListener
 {
@@ -135,7 +140,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     }
 
     @Override
-    public void onArbitratorsReceived(Map<Number160, Data> dataMap, boolean success)
+    public void onArbitratorsReceived(Map<Number640, Data> dataMap, boolean success)
     {
         if (success && dataMap != null)
         {
@@ -145,7 +150,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
             {
                 try
                 {
-                    Object arbitratorDataObject = arbitratorData.getObject();
+                    Object arbitratorDataObject = arbitratorData.object();
                     if (arbitratorDataObject instanceof Arbitrator)
                     {
                         Arbitrator arbitrator = (Arbitrator) arbitratorDataObject;

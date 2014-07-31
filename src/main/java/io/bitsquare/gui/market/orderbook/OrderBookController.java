@@ -28,7 +28,6 @@ import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
-import io.bitsquare.util.DSAKeyUtil;
 import io.bitsquare.util.Utilities;
 import java.math.BigInteger;
 import java.net.URL;
@@ -304,10 +303,6 @@ public class OrderBookController implements Initializable, ChildController
             {
                 user.setAccountID(walletFacade.getRegistrationAddressInfo().toString());
             }
-            if (messageFacade != null && messageFacade.getPubKey() != null)
-            {
-                user.setMessagePubKeyAsHex(DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey()));
-            }
 
             storage.write(user.getClass().getName(), user);
         } catch (InsufficientMoneyException e1)
@@ -437,7 +432,7 @@ public class OrderBookController implements Initializable, ChildController
                             Image icon;
                             Offer offer = orderBookListItem.getOffer();
 
-                            if (offer.getMessagePubKeyAsHex().equals(user.getMessagePubKeyAsHex()))
+                            if (offer.getMessagePublicKey().equals(user.getMessagePublicKey()))
                             {
                                 icon = Icons.getIconImage(Icons.REMOVE);
                                 title = "Remove";

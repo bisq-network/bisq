@@ -11,6 +11,7 @@ import io.bitsquare.gui.orders.OrdersController;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.locale.Localisation;
+import io.bitsquare.msg.BootstrapListener;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.Direction;
@@ -176,8 +177,24 @@ public class MainController implements Initializable, NavigationController
 
     private void init()
     {
+        messageFacade.init(new BootstrapListener()
+        {
+            @Override
+            public void onCompleted()
+            {
+                messageFacadeInited();
+            }
 
-        messageFacade.init();
+            @Override
+            public void onFailed(Throwable throwable)
+            {
+
+            }
+        });
+    }
+
+    private void messageFacadeInited()
+    {
 
         trading.addTakeOfferRequestListener(this::onTakeOfferRequested);
 

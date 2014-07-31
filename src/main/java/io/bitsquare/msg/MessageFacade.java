@@ -1,57 +1,55 @@
 package io.bitsquare.msg;
 
-import io.bitsquare.BitSquare;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.inject.name.Named;
 import io.bitsquare.msg.listeners.*;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.user.Arbitrator;
-import io.bitsquare.util.DSAKeyUtil;
-import io.bitsquare.util.StorageDirectory;
+import io.bitsquare.user.User;
 import java.io.IOException;
-import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.List;
+import java.util.Locale;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javax.annotation.Nullable;
 import javax.inject.Inject;
-import net.tomp2p.connection.Bindings;
-import net.tomp2p.connection.PeerConnection;
-import net.tomp2p.futures.*;
-import net.tomp2p.p2p.Peer;
-import net.tomp2p.p2p.PeerMaker;
+import net.tomp2p.dht.FutureGet;
+import net.tomp2p.dht.FuturePut;
+import net.tomp2p.dht.FutureRemove;
+import net.tomp2p.dht.PeerDHT;
+import net.tomp2p.futures.BaseFuture;
+import net.tomp2p.futures.BaseFutureAdapter;
+import net.tomp2p.futures.BaseFutureListener;
+import net.tomp2p.futures.FutureDirect;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.storage.Data;
-import net.tomp2p.storage.StorageDisk;
 import net.tomp2p.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * That facade delivers messaging functionality from the TomP2P library
+ * That facade delivers direct messaging and DHT functionality from the TomP2P library
+ * It is the translating domain specific functionality to the messaging layer.
  * The TomP2P library codebase shall not be used outside that facade.
- * That way a change of the library will only affect that class.
+ * That way we limit the dependency of the TomP2P library only to that class (and it's sub components).
+ * <p>
+ * TODO: improve callbacks that Platform.runLater is not necessary. We call usually that methods form teh UI thread.
  */
-@SuppressWarnings({"EmptyMethod", "ConstantConditions"})
-public class MessageFacade
+public class MessageFacade implements MessageBroker
 {
     private static final Logger log = LoggerFactory.getLogger(MessageFacade.class);
-    // private static final String PING = "ping";
-    // private static final String PONG = "pong";
-    private static final int MASTER_PEER_PORT = 5001;
+    private static final String ARBITRATORS_ROOT = "ArbitratorsRoot";
+
+    private final P2PNode p2pNode;
 
     private final List<OrderBookListener> orderBookListeners = new ArrayList<>();
     private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
-
     private final List<IncomingTradeMessageListener> incomingTradeMessageListeners = new ArrayList<>();
-
-
-    // private final List<PingPeerListener> pingPeerListeners = new ArrayList<>();
-    private final BooleanProperty isDirty = new SimpleBooleanProperty(false);
-    private Peer myPeer;
-
-    private KeyPair keyPair;
-    private Long lastTimeStamp = -3L;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -59,8 +57,9 @@ public class MessageFacade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MessageFacade()
+    public MessageFacade(User user, @Named("useDiskStorage") Boolean useDiskStorage, @Named("defaultSeedNode") SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses)
     {
+        this.p2pNode = new P2PNode(user.getMessageKeyPair(), useDiskStorage, defaultStaticSeedNodeAddresses, this);
     }
 
 
@@ -68,151 +67,174 @@ public class MessageFacade
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void init()
+    public void init(BootstrapListener bootstrapListener)
     {
-        int port = Bindings.MAX_PORT - Math.abs(new Random().nextInt()) % (Bindings.MAX_PORT - Bindings.MIN_DYN_PORT);
-        if (BitSquare.getAppName().contains("taker"))
+        p2pNode.start(new FutureCallback<PeerDHT>()
         {
-            port = 4501;
-        }
-        else if (BitSquare.getAppName().contains("offerer"))
-        {
-            port = 4500;
-        }
+            @Override
+            public void onSuccess(@Nullable PeerDHT result)
+            {
+                log.debug("p2pNode.start success result = " + result);
+                Platform.runLater(() -> bootstrapListener.onCompleted());
+            }
 
-        try
-        {
-            createMyPeerInstance(port);
-            // setupStorage();
-            //TODO save periodically or get informed if network address changes
-            saveMyAddressToDHT();
-            setupReplyHandler();
-        } catch (IOException e)
-        {
-            shutDown();
-            log.error("Error at init myPeerInstance" + e.getMessage());
-        }
+            @Override
+            public void onFailure(Throwable t)
+            {
+                log.error(t.toString());
+                Platform.runLater(() -> bootstrapListener.onFailed(t));
+            }
+        });
     }
 
     public void shutDown()
     {
-        if (myPeer != null)
+        if (p2pNode != null)
+            p2pNode.shutDown();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Find peer address by publicKey
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public void getPeerAddress(PublicKey publicKey, GetPeerAddressListener listener)
+    {
+        final Number160 locationKey = Utils.makeSHAHash(publicKey.getEncoded());
+        try
         {
-            myPeer.shutdown();
+            FutureGet futureGet = p2pNode.getDomainProtectedData(locationKey, publicKey);
+
+            futureGet.addListener(new BaseFutureAdapter<BaseFuture>()
+            {
+                @Override
+                public void operationComplete(BaseFuture baseFuture) throws Exception
+                {
+                    if (baseFuture.isSuccess() && futureGet.data() != null)
+                    {
+                        final PeerAddress peerAddress = (PeerAddress) futureGet.data().object();
+                        Platform.runLater(() -> listener.onResult(peerAddress));
+                    }
+                    else
+                    {
+                        Platform.runLater(() -> listener.onFailed());
+                    }
+                }
+            });
+        } catch (IOException | ClassNotFoundException e)
+        {
+            e.printStackTrace();
+            log.error(e.toString());
         }
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Find peer address
+    // Offer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void getPeerAddress(String pubKeyAsHex, GetPeerAddressListener listener)
+    public void addOffer(Offer offer)
     {
-        final Number160 location = Number160.createHash(pubKeyAsHex);
-        final FutureDHT getPeerAddressFuture = myPeer.get(location).start();
-        getPeerAddressFuture.addListener(new BaseFutureAdapter<BaseFuture>()
+        Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
+        try
+        {
+            final Data data = new Data(offer);
+            // the offer is default 30 days valid
+            int defaultOfferTTL = 30 * 24 * 60 * 60 * 1000;
+            data.ttlSeconds(defaultOfferTTL);
+
+            FuturePut futurePut = p2pNode.addProtectedData(locationKey, data);
+            futurePut.addListener(new BaseFutureListener<BaseFuture>()
+            {
+                @Override
+                public void operationComplete(BaseFuture future) throws Exception
+                {
+                    Platform.runLater(() -> {
+                        orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOfferAdded(data, future.isSuccess()));
+                        setDirty(locationKey);
+                    });
+                    if (future.isSuccess())
+                    {
+                        log.trace("Add offer to DHT was successful. Stored data: [key: " + locationKey + ", value: " + data + "]");
+                    }
+                    else
+                    {
+                        log.error("Add offer to DHT failed. Reason: " + future.failedReason());
+                    }
+                }
+
+                @Override
+                public void exceptionCaught(Throwable t) throws Exception
+                {
+                    log.error(t.toString());
+                }
+            });
+        } catch (IOException | ClassNotFoundException e)
+        {
+            e.printStackTrace();
+            log.error(e.toString());
+        }
+    }
+
+    public void removeOffer(Offer offer)
+    {
+        Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
+        try
+        {
+            final Data data = new Data(offer);
+            FutureRemove futureRemove = p2pNode.removeFromDataMap(locationKey, data);
+            futureRemove.addListener(new BaseFutureListener<BaseFuture>()
+            {
+                @Override
+                public void operationComplete(BaseFuture future) throws Exception
+                {
+                    Platform.runLater(() -> {
+                        orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOfferRemoved(data, future.isSuccess()));
+                        setDirty(locationKey);
+                    });
+                    if (future.isSuccess())
+                    {
+                        log.trace("Remove offer from DHT was successful. Stored data: [key: " + locationKey + ", value: " + data + "]");
+                    }
+                    else
+                    {
+                        log.error("Remove offer from DHT failed. Reason: " + future.failedReason());
+                    }
+                }
+
+                @Override
+                public void exceptionCaught(Throwable t) throws Exception
+                {
+                    log.error(t.toString());
+                }
+            });
+        } catch (IOException | ClassNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void getOffers(String currencyCode)
+    {
+        Number160 locationKey = Number160.createHash(currencyCode);
+        FutureGet futureGet = p2pNode.getDataMap(locationKey);
+        futureGet.addListener(new BaseFutureAdapter<BaseFuture>()
         {
             @Override
             public void operationComplete(BaseFuture baseFuture) throws Exception
             {
-                if (baseFuture.isSuccess() && getPeerAddressFuture.getData() != null)
+                Platform.runLater(() -> orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOffersReceived(futureGet.dataMap(), baseFuture.isSuccess())));
+                if (baseFuture.isSuccess())
                 {
-                    final PeerAddress peerAddress = (PeerAddress) getPeerAddressFuture.getData().getObject();
-                    Platform.runLater(() -> listener.onResult(peerAddress));
+                    log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey + ", values: " + futureGet.dataMap() + "]");
                 }
                 else
                 {
-                    Platform.runLater(() -> listener.onFailed());
+                    log.error("Get offers from DHT failed with reason:" + baseFuture.failedReason());
                 }
             }
         });
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Publish offer
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void addOffer(Offer offer) throws IOException
-    {
-        log.trace("addOffer");
-        Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
-        final Number160 contentKey = Number160.createHash(offer.getId());
-        final Data offerData = new Data(offer);
-        //offerData.setTTLSeconds(5);
-        final FutureDHT addFuture = myPeer.put(locationKey).setData(contentKey, offerData).start();
-        //final FutureDHT addFuture = myPeer.add(locationKey).setData(offerData).start();
-        addFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-        {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception
-            {
-                Platform.runLater(() -> onOfferAdded(offerData, future.isSuccess(), locationKey));
-            }
-        });
-    }
-
-    private void onOfferAdded(Data offerData, boolean success, Number160 locationKey)
-    {
-        log.trace("onOfferAdded");
-        setDirty(locationKey);
-        orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOfferAdded(offerData, success));
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Get offers
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void getOffers(String currency)
-    {
-        log.trace("getOffers");
-        final Number160 locationKey = Number160.createHash(currency);
-        final FutureDHT getOffersFuture = myPeer.get(locationKey).setAll().start();
-        getOffersFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-        {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception
-            {
-                final Map<Number160, Data> dataMap = getOffersFuture.getDataMap();
-                Platform.runLater(() -> onOffersReceived(dataMap, future.isSuccess()));
-            }
-        });
-    }
-
-    private void onOffersReceived(Map<Number160, Data> dataMap, boolean success)
-    {
-        log.trace("onOffersReceived");
-        orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOffersReceived(dataMap, success));
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Remove offer
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void removeOffer(Offer offer)
-    {
-        log.trace("removeOffer");
-        Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
-        Number160 contentKey = Number160.createHash(offer.getId());
-        log.debug("removeOffer");
-        FutureDHT removeFuture = myPeer.remove(locationKey).setReturnResults().setContentKey(contentKey).start();
-        removeFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-        {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception
-            {
-                Platform.runLater(() -> onOfferRemoved(removeFuture.getData(), future.isSuccess(), locationKey));
-            }
-        });
-    }
-
-    private void onOfferRemoved(Data data, boolean success, Number160 locationKey)
-    {
-        log.trace("onOfferRemoved");
-        setDirty(locationKey);
-        orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOfferRemoved(data, success));
     }
 
 
@@ -222,14 +244,13 @@ public class MessageFacade
 
     public void sendTradeMessage(PeerAddress peerAddress, TradeMessage tradeMessage, OutgoingTradeMessageListener listener)
     {
-        final PeerConnection peerConnection = myPeer.createPeerConnection(peerAddress, 10);
-        final FutureResponse sendFuture = myPeer.sendDirect(peerConnection).setObject(tradeMessage).start();
-        sendFuture.addListener(new BaseFutureAdapter<BaseFuture>()
+        FutureDirect futureDirect = p2pNode.sendData(peerAddress, tradeMessage);
+        futureDirect.addListener(new BaseFutureListener<BaseFuture>()
         {
             @Override
-            public void operationComplete(BaseFuture baseFuture) throws Exception
+            public void operationComplete(BaseFuture future) throws Exception
             {
-                if (sendFuture.isSuccess())
+                if (futureDirect.isSuccess())
                 {
                     Platform.runLater(() -> listener.onResult());
                 }
@@ -238,46 +259,13 @@ public class MessageFacade
                     Platform.runLater(() -> listener.onFailed());
                 }
             }
+
+            @Override
+            public void exceptionCaught(Throwable t) throws Exception
+            {
+                Platform.runLater(() -> listener.onFailed());
+            }
         });
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Reputation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setupReputationRoot() throws IOException
-    {
-        String pubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(getPubKey());  // out message ID
-        final Number160 locationKey = Number160.createHash("REPUTATION_" + pubKeyAsHex); // out reputation root storage location
-        final Number160 contentKey = Utils.makeSHAHash(getPubKey().getEncoded());  // my pubKey -> i may only put in 1 reputation
-        final Data reputationData = new Data(Number160.ZERO).setProtectedEntry().setPublicKey(getPubKey()); // at registration time we add a null value as data
-        // we use a pubkey where we provable cannot own the private key.
-        // the domain key must be verifiable by peers to be sure the reputation root was net deleted by the owner.
-        // so we use the locationKey as it already meets our requirements (verifiable and impossible to create a private key out of it)
-        myPeer.put(locationKey).setData(contentKey, reputationData).setDomainKey(locationKey).setProtectDomain().start();
-    }
-
-    public void addReputation(String pubKeyAsHex) throws IOException
-    {
-        final Number160 locationKey = Number160.createHash("REPUTATION_" + pubKeyAsHex);  // reputation root storage location ot the peer
-        final Number160 contentKey = Utils.makeSHAHash(getPubKey().getEncoded());  // my pubKey -> i may only put in 1 reputation, I may update it later. eg. counter for 5 trades...
-        final Data reputationData = new Data("TODO: some reputation data..., content signed and sig attached").setProtectedEntry().setPublicKey(getPubKey());
-        myPeer.put(locationKey).setData(contentKey, reputationData).start();
-    }
-
-    // At any offer or take offer fee payment the trader add the tx id and the pubKey and the signature of that tx to that entry.
-    // That way he can prove with the signature that he is the payer of the offer fee.
-    // It does not assure that the trade was really executed, but we can protect the traders privacy that way.
-    // If we use the trade, we would link all trades together and would reveal the whole trading history.
-    @SuppressWarnings("UnusedParameters")
-    public void addOfferFeePaymentToReputation(String txId, String pubKeyOfFeePayment) throws IOException
-    {
-        String pubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(getPubKey());  // out message ID
-        final Number160 locationKey = Number160.createHash("REPUTATION_" + pubKeyAsHex);  // reputation root storage location ot the peer
-        final Number160 contentKey = Utils.makeSHAHash(getPubKey().getEncoded());  // my pubKey -> i may only put in 1 reputation, I may update it later. eg. counter for 5 trades...
-        final Data reputationData = new Data("TODO: tx, btc_pubKey, sig(tx), content signed and sig attached").setProtectedEntry().setPublicKey(getPubKey());
-        myPeer.put(locationKey).setData(contentKey, reputationData).start();
     }
 
 
@@ -285,269 +273,95 @@ public class MessageFacade
     // Arbitrators
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addArbitrator(Arbitrator arbitrator) throws IOException
+    public void addArbitrator(Arbitrator arbitrator)
     {
-        Number160 locationKey = Number160.createHash("Arbitrators");
-        final Number160 contentKey = Number160.createHash(arbitrator.getId());
-        final Data arbitratorData = new Data(arbitrator);
-        //offerData.setTTLSeconds(5);
-        final FutureDHT addFuture = myPeer.put(locationKey).setData(contentKey, arbitratorData).start();
-        //final FutureDHT addFuture = myPeer.add(locationKey).setData(offerData).start();
-        addFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-        {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception
-            {
-                Platform.runLater(() -> onArbitratorAdded(arbitratorData, future.isSuccess(), locationKey));
-            }
-        });
-    }
-
-    @SuppressWarnings("UnusedParameters")
-    private void onArbitratorAdded(Data arbitratorData, boolean success, Number160 locationKey)
-    {
-    }
-
-
-    @SuppressWarnings("UnusedParameters")
-    public void getArbitrators(Locale languageLocale)
-    {
-        final Number160 locationKey = Number160.createHash("Arbitrators");
-        final FutureDHT getArbitratorsFuture = myPeer.get(locationKey).setAll().start();
-        getArbitratorsFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-        {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception
-            {
-                final Map<Number160, Data> dataMap = getArbitratorsFuture.getDataMap();
-                Platform.runLater(() -> onArbitratorsReceived(dataMap, future.isSuccess()));
-            }
-        });
-    }
-
-    private void onArbitratorsReceived(Map<Number160, Data> dataMap, boolean success)
-    {
-        for (ArbitratorListener arbitratorListener : arbitratorListeners)
-        {
-            arbitratorListener.onArbitratorsReceived(dataMap, success);
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Check dirty flag for a location key
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // TODO just temp...
-    public BooleanProperty getIsDirtyProperty()
-    {
-        return isDirty;
-    }
-
-    public void getDirtyFlag(Currency currency)
-    {
-        Number160 locationKey = Number160.createHash(currency.getCurrencyCode());
-        FutureDHT getFuture = myPeer.get(getDirtyLocationKey(locationKey)).start();
-        getFuture.addListener(new BaseFutureListener<BaseFuture>()
-        {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception
-            {
-                Data data = getFuture.getData();
-                if (data != null)
-                {
-                    Object object = data.getObject();
-                    if (object instanceof Long)
-                    {
-                        Platform.runLater(() -> onGetDirtyFlag((Long) object));
-                    }
-                }
-            }
-
-            @Override
-            public void exceptionCaught(Throwable t) throws Exception
-            {
-                System.out.println("getFuture exceptionCaught " + System.currentTimeMillis());
-            }
-        });
-    }
-
-    private void onGetDirtyFlag(long timeStamp)
-    {
-        // TODO don't get updates at first execute....
-        if (lastTimeStamp != timeStamp)
-        {
-            isDirty.setValue(!isDirty.get());
-        }
-        if (lastTimeStamp > 0)
-        {
-            lastTimeStamp = timeStamp;
-        }
-        else
-        {
-            lastTimeStamp++;
-        }
-    }
-
-    private Number160 getDirtyLocationKey(Number160 locationKey)
-    {
-        return Number160.createHash(locationKey + "Dirty");
-    }
-
-    private void setDirty(Number160 locationKey)
-    {
-        // we don't want to get an update from dirty for own changes, so update the lastTimeStamp to omit a change trigger
-        lastTimeStamp = System.currentTimeMillis();
+        Number160 locationKey = Number160.createHash(ARBITRATORS_ROOT);
         try
         {
-            FutureDHT putFuture = myPeer.put(getDirtyLocationKey(locationKey)).setData(new Data(lastTimeStamp)).start();
-            putFuture.addListener(new BaseFutureListener<BaseFuture>()
+            final Data arbitratorData = new Data(arbitrator);
+
+            FuturePut addFuture = p2pNode.addProtectedData(locationKey, arbitratorData);
+            addFuture.addListener(new BaseFutureAdapter<BaseFuture>()
             {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception
                 {
-                    //System.out.println("operationComplete");
-                }
-
-                @Override
-                public void exceptionCaught(Throwable t) throws Exception
-                {
-                    System.err.println("exceptionCaught");
+                    Platform.runLater(() -> arbitratorListeners.stream().forEach(listener -> listener.onArbitratorAdded(arbitratorData, addFuture.isSuccess())));
+                    if (addFuture.isSuccess())
+                    {
+                        log.trace("Add arbitrator to DHT was successful. Stored data: [key: " + locationKey + ", values: " + arbitratorData + "]");
+                    }
+                    else
+                    {
+                        log.error("Add arbitrator to DHT failed with reason:" + addFuture.failedReason());
+                    }
                 }
             });
         } catch (IOException e)
         {
-            log.warn("Error at writing dirty flag (timeStamp) " + e.getMessage());
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Send message
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-   /* public boolean sendMessage(Object message)
-    {
-        boolean result = false;
-        if (otherPeerAddress != null)
+            e.printStackTrace();
+        } catch (ClassNotFoundException e)
         {
-            if (peerConnection != null)
-                peerConnection.close();
-
-            peerConnection = myPeer.createPeerConnection(otherPeerAddress, 20);
-            if (!peerConnection.isClosed())
-            {
-                FutureResponse sendFuture = myPeer.sendDirect(peerConnection).setObject(message).start();
-                sendFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-                {
-                    @Override
-                    public void operationComplete(BaseFuture baseFuture) throws Exception
-                    {
-                        if (sendFuture.isSuccess())
-                        {
-                            final Object object = sendFuture.getObject();
-                            Platform.runLater(() -> onResponseFromSend(object));
-                        }
-                        else
-                        {
-                            Platform.runLater(() -> onSendFailed());
-                        }
-                    }
-                }
-                );
-                result = true;
-            }
+            e.printStackTrace();
         }
-        return result;
-    } */
-      /*
-    private void onResponseFromSend(Object response)
-    {
-        for (MessageListener messageListener : messageListeners)
-            messageListener.onResponseFromSend(response);
     }
 
-    private void onSendFailed()
+    public void removeArbitrator(Arbitrator arbitrator) throws IOException, ClassNotFoundException
     {
-        for (MessageListener messageListener : messageListeners)
-            messageListener.onSendFailed();
-    }
-      */
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Ping peer
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //TODO not working anymore...
-   /* public void pingPeer(String publicKeyAsHex)
-    {
-        Number160 location = Number160.createHash(publicKeyAsHex);
-        final FutureDHT getPeerAddressFuture = myPeer.get(location).start();
-        getPeerAddressFuture.addListener(new BaseFutureAdapter<BaseFuture>()
+        Number160 locationKey = Number160.createHash(ARBITRATORS_ROOT);
+        final Data arbitratorData = new Data(arbitrator);
+        FutureRemove removeFuture = p2pNode.removeFromDataMap(locationKey, arbitratorData);
+        removeFuture.addListener(new BaseFutureAdapter<BaseFuture>()
         {
             @Override
-            public void operationComplete(BaseFuture baseFuture) throws Exception
+            public void operationComplete(BaseFuture future) throws Exception
             {
-                final Data data = getPeerAddressFuture.getData();
-                if (data != null && data.getObject() instanceof PeerAddress)
+                Platform.runLater(() -> arbitratorListeners.stream().forEach(listener -> listener.onArbitratorRemoved(arbitratorData, removeFuture.isSuccess())));
+                if (removeFuture.isSuccess())
                 {
-                    final PeerAddress peerAddress = (PeerAddress) data.getObject();
-                    Platform.runLater(() -> onAddressFoundPingPeer(peerAddress));
+                    log.trace("Remove arbitrator from DHT was successful. Stored data: [key: " + locationKey + ", values: " + arbitratorData + "]");
+                }
+                else
+                {
+                    log.error("Remove arbitrators from DHT failed with reason:" + removeFuture.failedReason());
                 }
             }
         });
     }
 
-   private void onAddressFoundPingPeer(PeerAddress peerAddress)
+    public void getArbitrators(Locale languageLocale)
     {
-        try
+        Number160 locationKey = Number160.createHash(ARBITRATORS_ROOT);
+        FutureGet futureGet = p2pNode.getDataMap(locationKey);
+        futureGet.addListener(new BaseFutureAdapter<BaseFuture>()
         {
-            final PeerConnection peerConnection = myPeer.createPeerConnection(peerAddress, 10);
-            if (!peerConnection.isClosed())
+            @Override
+            public void operationComplete(BaseFuture baseFuture) throws Exception
             {
-                FutureResponse sendFuture = myPeer.sendDirect(peerConnection).setObject(PING).start();
-                sendFuture.addListener(new BaseFutureAdapter<BaseFuture>()
-                                       {
-                                           @Override
-                                           public void operationComplete(BaseFuture baseFuture) throws Exception
-                                           {
-                                               if (sendFuture.isSuccess())
-                                               {
-                                                   final String pong = (String) sendFuture.getObject();
-                                                   Platform.runLater(() -> onResponseFromPing(PONG.equals(pong)));
-                                               }
-                                               else
-                                               {
-                                                   peerConnection.close();
-                                                   Platform.runLater(() -> onResponseFromPing(false));
-                                               }
-                                           }
-                                       }
-                );
+                Platform.runLater(() -> arbitratorListeners.stream().forEach(listener -> listener.onArbitratorsReceived(futureGet.dataMap(), baseFuture.isSuccess())));
+                if (baseFuture.isSuccess())
+                {
+                    log.trace("Get arbitrators from DHT was successful. Stored data: [key: " + locationKey + ", values: " + futureGet.dataMap() + "]");
+                }
+                else
+                {
+                    log.error("Get arbitrators from DHT failed with reason:" + baseFuture.failedReason());
+                }
             }
-        } catch (Exception e)
-        {
-            //  ClosedChannelException can happen, check out if there is a better way to ping a myPeerInstance for online status
-        }
+        });
     }
-
-    private void onResponseFromPing(boolean success)
-    {
-        for (PingPeerListener pingPeerListener : pingPeerListeners)
-            pingPeerListener.onPingPeerResult(success);
-    }
-      */
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Event Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addMessageListener(OrderBookListener listener)
+    public void addOrderBookListener(OrderBookListener listener)
     {
         orderBookListeners.add(listener);
     }
 
-    public void removeMessageListener(OrderBookListener listener)
+    public void removeOrderBookListener(OrderBookListener listener)
     {
         orderBookListeners.remove(listener);
     }
@@ -584,12 +398,99 @@ public class MessageFacade
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
+    // Check dirty flag for a location key
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PublicKey getPubKey()
+    // TODO just temp...
+    public BooleanProperty getIsDirtyProperty()
     {
-        return keyPair.getPublic();
+        return isDirty;
+    }
+
+    public void getDirtyFlag(Currency currency)
+    {
+        Number160 locationKey = Number160.createHash(currency.getCurrencyCode());
+        try
+        {
+            FutureGet getFuture = p2pNode.getData(getDirtyLocationKey(locationKey));
+            getFuture.addListener(new BaseFutureListener<BaseFuture>()
+            {
+                @Override
+                public void operationComplete(BaseFuture future) throws Exception
+                {
+                    Data data = getFuture.data();
+                    if (data != null)
+                    {
+                        Object object = data.object();
+                        if (object instanceof Long)
+                        {
+                            Platform.runLater(() -> onGetDirtyFlag((Long) object));
+                        }
+                    }
+                }
+
+                @Override
+                public void exceptionCaught(Throwable t) throws Exception
+                {
+                    log.error("getFuture exceptionCaught " + t.toString());
+                }
+            });
+        } catch (IOException | ClassNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private Long lastTimeStamp = -3L;
+    private final BooleanProperty isDirty = new SimpleBooleanProperty(false);
+
+    private void onGetDirtyFlag(long timeStamp)
+    {
+        // TODO don't get updates at first execute....
+        if (lastTimeStamp != timeStamp)
+        {
+            isDirty.setValue(!isDirty.get());
+        }
+        if (lastTimeStamp > 0)
+        {
+            lastTimeStamp = timeStamp;
+        }
+        else
+        {
+            lastTimeStamp++;
+        }
+    }
+
+    private void setDirty(Number160 locationKey)
+    {
+        // we don't want to get an update from dirty for own changes, so update the lastTimeStamp to omit a change trigger
+        lastTimeStamp = System.currentTimeMillis();
+        try
+        {
+            FuturePut putFuture = p2pNode.putData(getDirtyLocationKey(locationKey), new Data(lastTimeStamp));
+            putFuture.addListener(new BaseFutureListener<BaseFuture>()
+            {
+                @Override
+                public void operationComplete(BaseFuture future) throws Exception
+                {
+                    // log.trace("operationComplete");
+                }
+
+                @Override
+                public void exceptionCaught(Throwable t) throws Exception
+                {
+                    log.warn("Error at writing dirty flag (timeStamp) " + t.toString());
+                }
+            });
+        } catch (IOException | ClassNotFoundException e)
+        {
+            log.warn("Error at writing dirty flag (timeStamp) " + e.getMessage());
+        }
+    }
+
+    private Number160 getDirtyLocationKey(Number160 locationKey)
+    {
+        return Number160.createHash(locationKey + "Dirty");
     }
 
 
@@ -597,89 +498,13 @@ public class MessageFacade
     // Incoming message handler
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onMessage(Object request, PeerAddress sender)
+    @Override
+    public void handleMessage(Object message, PeerAddress peerAddress)
     {
-        if (request instanceof TradeMessage)
+        if (message instanceof TradeMessage)
         {
-            incomingTradeMessageListeners.stream().forEach(e -> e.onMessage((TradeMessage) request, sender));
-        }
-       /* else
-        {
-            for (OrderBookListener orderBookListener : orderBookListeners)
-                orderBookListener.onMessage(request);
-        }  */
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void createMyPeerInstance(int port) throws IOException
-    {
-        keyPair = DSAKeyUtil.getKeyPair();
-        myPeer = new PeerMaker(keyPair).setPorts(port).makeAndListen();
-        final FutureBootstrap futureBootstrap = myPeer.bootstrap().setBroadcast().setPorts(MASTER_PEER_PORT).start();
-        futureBootstrap.addListener(new BaseFutureAdapter<BaseFuture>()
-        {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception
-            {
-                if (futureBootstrap.getBootstrapTo() != null)
-                {
-                    PeerAddress masterPeerAddress = futureBootstrap.getBootstrapTo().iterator().next();
-                    final FutureDiscover futureDiscover = myPeer.discover().setPeerAddress(masterPeerAddress).start();
-                    futureDiscover.addListener(new BaseFutureListener<BaseFuture>()
-                    {
-                        @Override
-                        public void operationComplete(BaseFuture future) throws Exception
-                        {
-                            //System.out.println("operationComplete");
-                        }
-
-                        @Override
-                        public void exceptionCaught(Throwable t) throws Exception
-                        {
-                            System.err.println("exceptionCaught");
-                        }
-                    });
-                }
-            }
-        });
-    }
-
-    private void setupReplyHandler()
-    {
-        myPeer.setObjectDataReply((sender, request) -> {
-            if (!sender.equals(myPeer.getPeerAddress()))
-            {
-                Platform.runLater(() -> onMessage(request, sender));
-            }
-            else
-            {
-                log.error("Received msg from myself. That should never happen.");
-            }
-            //noinspection ReturnOfNull
-            return null;
-        });
-    }
-
-    private void setupStorage()
-    {
-        try
-        {
-            myPeer.getPeerBean().setStorage(new StorageDisk(StorageDirectory.getStorageDirectory().getCanonicalPath() + "/" + BitSquare.getAppName() + "_tomP2P"));
-        } catch (IOException e)
-        {
-            e.printStackTrace();
+            log.error("####################");
+            Platform.runLater(() -> incomingTradeMessageListeners.stream().forEach(e -> e.onMessage((TradeMessage) message, peerAddress)));
         }
     }
-
-    private void saveMyAddressToDHT() throws IOException
-    {
-        Number160 location = Number160.createHash(DSAKeyUtil.getHexStringFromPublicKey(getPubKey()));
-        //log.debug("saveMyAddressToDHT location "+location.toString());
-        myPeer.put(location).setData(new Data(myPeer.getPeerAddress())).start();
-    }
-
-
 }

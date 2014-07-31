@@ -16,6 +16,7 @@ import io.bitsquare.trade.protocol.taker.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.taker.TakeOfferFeePayedMessage;
 import io.bitsquare.user.User;
 import java.math.BigInteger;
+import java.security.PublicKey;
 import net.tomp2p.peers.PeerAddress;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -76,7 +77,7 @@ public class ProtocolForOffererAsBuyer
     private final String arbitratorPubKey;
     private final BankAccount bankAccount;
     private final String accountId;
-    private final String messagePubKey;
+    private final PublicKey messagePublicKey;
     private final ECKey accountKey;
     private final String payoutAddress;
 
@@ -90,7 +91,7 @@ public class ProtocolForOffererAsBuyer
     private String peersPayoutAddress;
     private String peersAccountId;
     private BankAccount peersBankAccount;
-    private String peersMessagePubKey;
+    private PublicKey peersMessagePublicKey;
     private String peersContractAsJson;
     private String signedTakerDepositTxAsHex;
     private String txConnOutAsHex;
@@ -129,7 +130,7 @@ public class ProtocolForOffererAsBuyer
 
         bankAccount = user.getBankAccount(trade.getOffer().getBankAccountId());
         accountId = user.getAccountId();
-        messagePubKey = user.getMessagePubKeyAsHex();
+        messagePublicKey = user.getMessagePublicKey();
 
         accountKey = walletFacade.getRegistrationAddressInfo().getKey();
         payoutAddress = walletFacade.getAddressInfoByTradeID(tradeId).getAddressString();
@@ -241,7 +242,7 @@ public class ProtocolForOffererAsBuyer
         String peersPayoutAddress = nonEmptyStringOf(message.getTakerPayoutAddress());
         String peersAccountId = nonEmptyStringOf(message.getTakerAccountId());
         BankAccount peersBankAccount = checkNotNull(message.getTakerBankAccount());
-        String peersMessagePubKey = nonEmptyStringOf(message.getTakerMessagePubKey());
+        PublicKey peersMessagePublicKey = checkNotNull(message.getTakerMessagePublicKey());
         String peersContractAsJson = nonEmptyStringOf(message.getTakerContractAsJson());
         String signedTakerDepositTxAsHex = nonEmptyStringOf(message.getSignedTakerDepositTxAsHex());
         String txConnOutAsHex = nonEmptyStringOf(message.getTxConnOutAsHex());
@@ -253,7 +254,7 @@ public class ProtocolForOffererAsBuyer
         this.peersPayoutAddress = peersPayoutAddress;
         this.peersAccountId = peersAccountId;
         this.peersBankAccount = peersBankAccount;
-        this.peersMessagePubKey = peersMessagePubKey;
+        this.peersMessagePublicKey = peersMessagePublicKey;
         this.peersContractAsJson = peersContractAsJson;
         this.signedTakerDepositTxAsHex = signedTakerDepositTxAsHex;
         this.txConnOutAsHex = txConnOutAsHex;
@@ -277,12 +278,12 @@ public class ProtocolForOffererAsBuyer
                                   accountId,
                                   tradeAmount,
                                   takeOfferFeeTxId,
-                                  messagePubKey,
+                                  messagePublicKey,
                                   offer,
                                   peersAccountId,
                                   bankAccount,
                                   peersBankAccount,
-                                  peersMessagePubKey,
+                                  peersMessagePublicKey,
                                   peersContractAsJson,
                                   accountKey);
     }

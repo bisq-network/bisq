@@ -124,11 +124,13 @@
             <version>0.11.3</version>
         </dependency>
 
+        <!--
         <dependency>
             <groupId>net.tomp2p</groupId>
-            <artifactId>TomP2P</artifactId>
-            <version>4.4</version>
+            <artifactId>tomp2p-all</artifactId>
+            <version>5.0-Alpha24-SNAPSHOT</version>
         </dependency>
+        -->
 
         <dependency>
             <groupId>junit</groupId>

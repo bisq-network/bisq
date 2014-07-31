@@ -136,11 +136,11 @@ public class Trading
     }
 
     public void removeOffer(Offer offer)
-    {
-        if (!offers.containsKey(offer.getId()))
+    {     //TODO
+       /* if (!offers.containsKey(offer.getId()))
         {
             throw new IllegalStateException("offers does not contain the offer with the ID " + offer.getId());
-        }
+        }*/
 
         offers.remove(offer.getId());
         saveOffers();

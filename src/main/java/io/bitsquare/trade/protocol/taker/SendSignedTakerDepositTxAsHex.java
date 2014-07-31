@@ -8,6 +8,7 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
 import io.bitsquare.trade.protocol.FaultHandler;
 import io.bitsquare.trade.protocol.ResultHandler;
+import java.security.PublicKey;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,7 @@ public class SendSignedTakerDepositTxAsHex
                            WalletFacade walletFacade,
                            BankAccount bankAccount,
                            String accountId,
-                           String messagePubKeyAsHex,
+                           PublicKey messagePublicKey,
                            String tradeId,
                            String contractAsJson,
                            String takerSignature,
@@ -36,7 +37,7 @@ public class SendSignedTakerDepositTxAsHex
         RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(tradeId,
                                                                                                        bankAccount,
                                                                                                        accountId,
-                                                                                                       messagePubKeyAsHex,
+                                                                                                       messagePublicKey,
                                                                                                        Utils.bytesToHexString(signedTakerDepositTx.bitcoinSerialize()),
                                                                                                        Utils.bytesToHexString(signedTakerDepositTx.getInput(1).getScriptBytes()),
                                                                                                        Utils.bytesToHexString(signedTakerDepositTx.getInput(1)

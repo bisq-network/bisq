@@ -22,8 +22,8 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.Reputation;
+import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.*;
@@ -48,6 +48,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     private final Storage storage;
     private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
+    private User user;
     private Arbitrator arbitrator = new Arbitrator();
     private ArbitratorProfileController arbitratorProfileController;
     private boolean isEditMode;
@@ -92,11 +93,12 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ArbitratorRegistrationController(Storage storage, WalletFacade walletFacade, MessageFacade messageFacade)
+    private ArbitratorRegistrationController(Storage storage, WalletFacade walletFacade, MessageFacade messageFacade, User user)
     {
         this.storage = storage;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
+        this.user = user;
     }
 
 
@@ -338,13 +340,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
             }
         }
 
-        try
-        {
-            messageFacade.addArbitrator(arbitrator);
-        } catch (IOException e)
-        {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
+        messageFacade.addArbitrator(arbitrator);
     }
 
     @FXML
@@ -474,7 +470,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
                                                                  minArbitrationFeeTextField);
 
             String pubKeyAsHex = walletFacade.getArbitratorDepositAddressInfo().getPubKeyAsHexString();
-            String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey());
+            String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
             String name = nameTextField.getText();
 
             double maxTradeVolume = BitSquareConverter.stringToDouble(maxTradeVolumeTextField.getText());

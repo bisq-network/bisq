@@ -1,7 +1,10 @@
 package io.bitsquare.user;
 
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.util.DSAKeyUtil;
 import java.io.Serializable;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -11,19 +14,17 @@ public class User implements Serializable
     private static final long serialVersionUID = 7409078808248518638L;
 
     transient private final SimpleBooleanProperty bankAccountChangedProperty = new SimpleBooleanProperty();
+    transient private KeyPair messageKeyPair = DSAKeyUtil.getKeyPair();
 
-
+    private PublicKey messagePublicKey;
     private String accountID;
-
-    private String messagePubKeyAsHex;
     private boolean isOnline;
-
     private List<BankAccount> bankAccounts = new ArrayList<>();
-
     private BankAccount currentBankAccount = null;
 
     public User()
     {
+        messagePublicKey = messageKeyPair.getPublic();
     }
 
 
@@ -36,11 +37,14 @@ public class User implements Serializable
         if (savedUser != null)
         {
             accountID = savedUser.getAccountId();
-            messagePubKeyAsHex = savedUser.getMessagePubKeyAsHex();
+            // TODO handled by DSAKeyUtil -> change that storage check is only done here
+            // messagePublicKey = savedUser.getMessagePublicKey();
             isOnline = savedUser.getIsOnline();
             bankAccounts = savedUser.getBankAccounts();
             currentBankAccount = savedUser.getCurrentBankAccount();
         }
+
+        messagePublicKey = messageKeyPair.getPublic();
     }
 
     public void addBankAccount(BankAccount bankAccount)
@@ -91,17 +95,6 @@ public class User implements Serializable
 
         }
         return bankAccountUIDs;
-    }
-
-
-    public String getMessagePubKeyAsHex()
-    {
-        return messagePubKeyAsHex;
-    }
-
-    public void setMessagePubKeyAsHex(String messageID)
-    {
-        this.messagePubKeyAsHex = messageID;
     }
 
 
@@ -172,17 +165,27 @@ public class User implements Serializable
         return bankAccountChangedProperty;
     }
 
-
     @Override
     public String toString()
     {
         return "User{" +
                 "bankAccountChangedProperty=" + bankAccountChangedProperty +
+                ", messageKeyPair=" + messageKeyPair +
+                ", messagePublicKey=" + messagePublicKey +
                 ", accountID='" + accountID + '\'' +
-                ", messagePubKeyAsHex='" + messagePubKeyAsHex + '\'' +
                 ", isOnline=" + isOnline +
                 ", bankAccounts=" + bankAccounts +
                 ", currentBankAccount=" + currentBankAccount +
                 '}';
+    }
+
+    public KeyPair getMessageKeyPair()
+    {
+        return messageKeyPair;
+    }
+
+    public PublicKey getMessagePublicKey()
+    {
+        return messagePublicKey;
     }
 }

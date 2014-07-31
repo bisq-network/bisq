@@ -8,6 +8,7 @@ import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.protocol.FaultHandler;
 import io.bitsquare.util.Utilities;
 import java.math.BigInteger;
+import java.security.PublicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,8 +24,8 @@ public class CreateAndSignContract
                            String takeOfferFeeTxId,
                            String accountId,
                            BankAccount bankAccount,
-                           String peersMessagePubKeyAsHex,
-                           String messagePubKeyAsHex,
+                           PublicKey peersMessagePublicKey,
+                           PublicKey messagePublicKey,
                            String peersAccountId,
                            BankAccount peersBankAccount,
                            ECKey registrationKey)
@@ -32,7 +33,7 @@ public class CreateAndSignContract
         log.trace("Run task");
         try
         {
-            Contract contract = new Contract(offer, tradeAmount, takeOfferFeeTxId, peersAccountId, accountId, peersBankAccount, bankAccount, peersMessagePubKeyAsHex, messagePubKeyAsHex);
+            Contract contract = new Contract(offer, tradeAmount, takeOfferFeeTxId, peersAccountId, accountId, peersBankAccount, bankAccount, peersMessagePublicKey, messagePublicKey);
 
             String contractAsJson = Utilities.objectToJson(contract);
             String signature = cryptoFacade.signContract(registrationKey, contractAsJson);

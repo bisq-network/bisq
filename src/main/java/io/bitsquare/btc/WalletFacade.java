@@ -190,11 +190,9 @@ public class WalletFacade
         }
     }
 
-
     public void shutDown()
     {
         wallet.removeEventListener(walletEventListener);
-
         walletAppKit.stopAsync();
     }
 
@@ -596,6 +594,7 @@ public class WalletFacade
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         // we don't allow spending of unconfirmed tx as with fake registrations we would open up doors for spam and market manipulation with fake offers
+        // so set includePending to false
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, getRegistrationAddressInfo(), false);
         sendRequest.changeAddress = getRegistrationAddressInfo().getAddress();
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
@@ -676,6 +675,8 @@ public class WalletFacade
         return tx.getHashAsString();
     }
 
+
+    // TODO: Trade process - use P2SH instead and optimize data exchange
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Trade process
