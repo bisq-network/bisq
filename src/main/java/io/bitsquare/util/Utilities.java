@@ -3,7 +3,6 @@ package io.bitsquare.util;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import java.awt.Desktop;
 import java.io.*;
 import java.net.URI;
@@ -35,8 +34,8 @@ public class Utilities
         Object result = null;
         try
         {
-            ByteInputStream byteInputStream = new ByteInputStream();
-            byteInputStream.setBuf(com.google.bitcoin.core.Utils.parseAsHexOrBase58(serializedHexString));
+            ByteArrayInputStream byteInputStream =
+                    new ByteArrayInputStream(com.google.bitcoin.core.Utils.parseAsHexOrBase58(serializedHexString));
 
             try (ObjectInputStream objectInputStream = new ObjectInputStream(byteInputStream))
             {
