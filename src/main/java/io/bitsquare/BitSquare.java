@@ -115,10 +115,10 @@ public class BitSquare extends Application
         setupCloseHandlers(primaryStage, scene);
 
         primaryStage.setScene(scene);
-        primaryStage.setMinWidth(800);
-        primaryStage.setMinHeight(400);
-        primaryStage.setWidth(800);
-        primaryStage.setHeight(600);
+        primaryStage.setMinWidth(750);
+        primaryStage.setMinHeight(500);
+        primaryStage.setWidth(1000);
+        primaryStage.setHeight(750);
 
         primaryStage.show();
 
