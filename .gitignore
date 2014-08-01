@@ -9,3 +9,5 @@ bitsquare.iml
 *.wallet
 *.ser
 *.wallet
+
+*.log
