@@ -22,7 +22,7 @@
         <appender-ref ref="FILE"/>
     </root>
 
-    <logger name="io.bitsquare" level="DEBUG"/>
+    <logger name="io.bitsquare" level="TRACE"/>
     <logger name="com.google.bitcoin" level="WARN"/>
 
 

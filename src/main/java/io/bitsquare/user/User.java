@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The User is stored locally it is never transmitted over the wire.
+ * The User is persisted locally it is never transmitted over the wire (messageKeyPair contains private key!).
  */
 public class User implements Serializable
 {
@@ -48,8 +48,9 @@ public class User implements Serializable
         {
             // First time
             bankAccounts = new ArrayList<>();
-            messageKeyPair = DSAKeyUtil.getKeyPair();  // DSAKeyUtil.getKeyPair() runs in same thread now
+            messageKeyPair = DSAKeyUtil.generateKeyPair();  // DSAKeyUtil.getKeyPair() runs in same thread now
         }
+        DSAKeyUtil.generateKeyPair();
     }
 
     public void addBankAccount(BankAccount bankAccount)
