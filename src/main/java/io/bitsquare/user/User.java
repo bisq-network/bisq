@@ -23,6 +23,7 @@ public class User implements Serializable
 
     private KeyPair messageKeyPair;
     private String accountID;
+    // TODO make it thread safe
     private List<BankAccount> bankAccounts;
     private BankAccount currentBankAccount;
 
@@ -39,10 +40,11 @@ public class User implements Serializable
     {
         if (persistedUser != null)
         {
-            accountID = persistedUser.getAccountId();
             bankAccounts = persistedUser.getBankAccounts();
-            setCurrentBankAccount(persistedUser.getCurrentBankAccount());
             messageKeyPair = persistedUser.getMessageKeyPair();
+
+            accountID = persistedUser.getAccountId();
+            setCurrentBankAccount(persistedUser.getCurrentBankAccount());
         }
         else
         {
@@ -86,10 +88,12 @@ public class User implements Serializable
         bankAccountChangedProperty.set(!bankAccountChangedProperty.get());
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // TODO just a first attempt, refine when working on the embedded data for the reg. tx
     public String getStringifiedBankAccounts()
     {
         String bankAccountUIDs = "";
@@ -102,7 +106,6 @@ public class User implements Serializable
             {
                 bankAccountUIDs += ", ";
             }
-
         }
         return bankAccountUIDs;
     }
@@ -149,15 +152,8 @@ public class User implements Serializable
         return messageKeyPair.getPublic();
     }
 
-    @Override
-    public String toString()
+    public String getMessagePublicKeyAsString()
     {
-        return "User{" +
-                "bankAccountChangedProperty=" + bankAccountChangedProperty +
-                ", messageKeyPair=" + messageKeyPair +
-                ", accountID='" + accountID + '\'' +
-                ", bankAccounts=" + bankAccounts +
-                ", currentBankAccount=" + currentBankAccount +
-                '}';
+        return DSAKeyUtil.getHexStringFromPublicKey(getMessagePublicKey());
     }
 }

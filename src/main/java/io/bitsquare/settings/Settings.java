@@ -7,7 +7,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import javax.inject.Inject;
 
 public class Settings implements Serializable
 {
@@ -15,18 +14,16 @@ public class Settings implements Serializable
 
 
     private List<Locale> acceptedLanguageLocales = new ArrayList<>();
-
     private List<Country> acceptedCountryLocales = new ArrayList<>();
-
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
     private int maxCollateral;
     private int minCollateral;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
     public Settings()
     {
     }
