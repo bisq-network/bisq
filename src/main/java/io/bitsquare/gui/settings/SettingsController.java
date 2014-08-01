@@ -14,7 +14,7 @@ import io.bitsquare.gui.util.Icons;
 import io.bitsquare.locale.*;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.storage.Storage;
+import io.bitsquare.storage.Persistence;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.Reputation;
 import io.bitsquare.user.User;
@@ -46,7 +46,7 @@ public class SettingsController implements Initializable, ChildController, Navig
 
     private final Settings settings;
 
-    private final Storage storage;
+    private final Persistence persistence;
     private final MessageFacade messageFacade;
     private final ObservableList<Locale> languageList;
     private final ObservableList<Country> countryList;
@@ -83,17 +83,17 @@ public class SettingsController implements Initializable, ChildController, Navig
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SettingsController(User user, Settings settings, Storage storage, MessageFacade messageFacade)
+    public SettingsController(User user, Settings settings, Persistence persistence, MessageFacade messageFacade)
     {
         this.user = user;
         this.settings = settings;
-        this.storage = storage;
+        this.persistence = persistence;
         this.messageFacade = messageFacade;
 
-        Settings savedSettings = (Settings) storage.read(settings.getClass().getName());
-        if (savedSettings != null)
+        Settings persistedSettings = (Settings) persistence.read(settings);
+        if (persistedSettings != null)
         {
-            settings.updateFromStorage(savedSettings);
+            settings.applyPersistedSettings(persistedSettings);
             languageList = FXCollections.observableArrayList(settings.getAcceptedLanguageLocales());
             countryList = FXCollections.observableArrayList(settings.getAcceptedCountries());
             arbitratorList = FXCollections.observableArrayList(settings.getAcceptedArbitrators());
@@ -166,7 +166,7 @@ public class SettingsController implements Initializable, ChildController, Navig
 
             arbitratorList.add(arbitrator);
             settings.addAcceptedArbitrator(arbitrator);
-            storage.write(settings.getClass().getName(), settings);
+            persistence.write(settings);
 
             messageFacade.addArbitrator(arbitrator);
         }
@@ -284,7 +284,7 @@ public class SettingsController implements Initializable, ChildController, Navig
         if (bankAccount != null && bankAccount != user.getCurrentBankAccount())
         {
             user.setCurrentBankAccount(bankAccount);
-            storage.write(user.getClass().getName(), user);
+            persistence.write(user);
             initBankAccountScreen();
         }
     }
@@ -595,12 +595,12 @@ public class SettingsController implements Initializable, ChildController, Navig
 
     private void saveSettings()
     {
-        storage.write(settings.getClass().getName(), settings);
+        persistence.write(settings);
     }
 
     private void saveUser()
     {
-        storage.write(user.getClass().getName(), user);
+        persistence.write(user);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

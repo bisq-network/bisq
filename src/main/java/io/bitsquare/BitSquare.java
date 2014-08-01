@@ -11,7 +11,7 @@ import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.storage.Storage;
+import io.bitsquare.storage.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;
 import io.bitsquare.util.FileUtil;
@@ -90,10 +90,14 @@ public class BitSquare extends Application
         // apply stored data
         final User user = injector.getInstance(User.class);
         final Settings settings = injector.getInstance(Settings.class);
-        final Storage storage = injector.getInstance(Storage.class);
-        storage.init();
-        user.updateFromStorage((User) storage.read(user.getClass().getName()));
-        settings.updateFromStorage((Settings) storage.read(settings.getClass().getName()));
+        final Persistence persistence = injector.getInstance(Persistence.class);
+        persistence.init();
+
+        User persistedUser = (User) persistence.read(user);
+        user.applyPersistedUser(persistedUser);
+        persistence.write(user);
+
+        settings.applyPersistedSettings((Settings) persistence.read(settings.getClass().getName()));
 
         primaryStage.setTitle("BitSquare (" + getUID() + ")");
 

@@ -36,15 +36,15 @@ public class Settings implements Serializable
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void updateFromStorage(Settings savedSettings)
+    public void applyPersistedSettings(Settings persistedSettings)
     {
-        if (savedSettings != null)
+        if (persistedSettings != null)
         {
-            acceptedLanguageLocales = savedSettings.getAcceptedLanguageLocales();
-            acceptedCountryLocales = savedSettings.getAcceptedCountries();
-            acceptedArbitrators = savedSettings.getAcceptedArbitrators();
-            maxCollateral = savedSettings.getMaxCollateral();
-            minCollateral = savedSettings.getMinCollateral();
+            acceptedLanguageLocales = persistedSettings.getAcceptedLanguageLocales();
+            acceptedCountryLocales = persistedSettings.getAcceptedCountries();
+            acceptedArbitrators = persistedSettings.getAcceptedArbitrators();
+            maxCollateral = persistedSettings.getMaxCollateral();
+            minCollateral = persistedSettings.getMinCollateral();
         }
     }
 

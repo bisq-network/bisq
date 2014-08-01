@@ -4,7 +4,7 @@ import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.storage.Storage;
+import io.bitsquare.storage.Persistence;
 import io.bitsquare.user.Arbitrator;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -21,7 +21,7 @@ public class ArbitratorProfileController implements Initializable, ChildControll
 
     private final Settings settings;
 
-    private final Storage storage;
+    private final Persistence persistence;
     private Arbitrator arbitrator;
     private NavigationController navigationController;
 
@@ -39,13 +39,13 @@ public class ArbitratorProfileController implements Initializable, ChildControll
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorProfileController(Settings settings, Storage storage)
+    public ArbitratorProfileController(Settings settings, Persistence persistence)
     {
         this.settings = settings;
-        this.storage = storage;
+        this.persistence = persistence;
 
-        //  Settings savedSettings = (Settings) storage.read(settings.getClass().getName());
-        // settings.updateFromStorage(savedSettings);
+        //  Settings persistedSettings = (Settings) storage.read(settings.getClass().getName());
+        // settings.applyPersistedSettings(persistedSettings);
     }
 
 

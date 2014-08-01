@@ -13,9 +13,7 @@ public enum BankAccountType
     PERFECT_MONEY("primary ID", "secondary ID"),
     OTHER("primary ID", "secondary ID");
 
-
     private final String primaryId;
-
     private final String secondaryId;
 
     BankAccountType(String primaryId, String secondaryId)
@@ -24,18 +22,15 @@ public enum BankAccountType
         this.secondaryId = secondaryId;
     }
 
-
     public static ArrayList<BankAccountType> getAllBankAccountTypes()
     {
         return new ArrayList<>(Arrays.asList(BankAccountType.values()));
     }
 
-
     public String getPrimaryId()
     {
         return primaryId;
     }
-
 
     public String getSecondaryId()
     {

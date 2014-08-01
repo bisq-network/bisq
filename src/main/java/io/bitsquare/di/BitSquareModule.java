@@ -17,7 +17,7 @@ import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.SeedNodeAddress;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.storage.Storage;
+import io.bitsquare.storage.Persistence;
 import io.bitsquare.trade.Trading;
 import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
@@ -33,7 +33,7 @@ public class BitSquareModule extends AbstractModule
     {
         bind(User.class).asEagerSingleton();
         bind(OrderBook.class).asEagerSingleton();
-        bind(Storage.class).asEagerSingleton();
+        bind(Persistence.class).asEagerSingleton();
         bind(Settings.class).asEagerSingleton();
         bind(OrderBookFilter.class).asEagerSingleton();
 

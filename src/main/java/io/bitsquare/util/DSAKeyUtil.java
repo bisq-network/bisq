@@ -12,6 +12,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Runs in JavaFX Application Thread now but might be sent to a background thread.
+ * We need to handle threading issues in the client classes if we change.
+ */
 public class DSAKeyUtil
 {
     private static final Logger log = LoggerFactory.getLogger(DSAKeyUtil.class);
@@ -177,7 +181,6 @@ public class DSAKeyUtil
             //noinspection ResultOfMethodCallIgnored
             privKeyFileInputStream.read(encodedPrivKey);
             final PrivateKey privKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(encodedPrivKey));
-
             return new KeyPair(pubKey, privKey);
         } finally
         {

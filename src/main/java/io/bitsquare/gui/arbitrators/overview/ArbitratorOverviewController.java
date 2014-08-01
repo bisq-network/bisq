@@ -10,7 +10,7 @@ import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.storage.Storage;
+import io.bitsquare.storage.Persistence;
 import io.bitsquare.user.Arbitrator;
 import java.io.IOException;
 import java.net.URL;
@@ -38,7 +38,7 @@ import net.tomp2p.storage.Data;
 public class ArbitratorOverviewController implements Initializable, ChildController, NavigationController, ArbitratorListener
 {
     private final Settings settings;
-    private final Storage storage;
+    private final Persistence persistence;
 
     private final MessageFacade messageFacade;
     private final List<Arbitrator> allArbitrators = new ArrayList<>();
@@ -59,11 +59,11 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorOverviewController(Settings settings, Storage storage, MessageFacade messageFacade)
+    public ArbitratorOverviewController(Settings settings, Persistence persistence, MessageFacade messageFacade)
     {
 
         this.settings = settings;
-        this.storage = storage;
+        this.persistence = persistence;
         this.messageFacade = messageFacade;
 
         messageFacade.addArbitratorListener(this);
@@ -214,7 +214,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     public void onSelect()
     {
         settings.addAcceptedArbitrator(currentArbitrator);
-        storage.write(settings.getClass().getName(), settings);
+        persistence.write(settings);
     }
 
     @FXML

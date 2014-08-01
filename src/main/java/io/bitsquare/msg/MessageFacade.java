@@ -46,11 +46,14 @@ public class MessageFacade implements MessageBroker
     private static final Logger log = LoggerFactory.getLogger(MessageFacade.class);
     private static final String ARBITRATORS_ROOT = "ArbitratorsRoot";
 
-    private final P2PNode p2pNode;
+    private P2PNode p2pNode;
 
     private final List<OrderBookListener> orderBookListeners = new ArrayList<>();
     private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
     private final List<IncomingTradeMessageListener> incomingTradeMessageListeners = new ArrayList<>();
+    private User user;
+    private Boolean useDiskStorage;
+    private SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +63,9 @@ public class MessageFacade implements MessageBroker
     @Inject
     public MessageFacade(User user, @Named("useDiskStorage") Boolean useDiskStorage, @Named("defaultSeedNode") SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses)
     {
-        this.p2pNode = new P2PNode(user.getMessageKeyPair(), useDiskStorage, defaultStaticSeedNodeAddresses, this);
+        this.user = user;
+        this.useDiskStorage = useDiskStorage;
+        this.defaultStaticSeedNodeAddresses = defaultStaticSeedNodeAddresses;
     }
 
 
@@ -70,6 +75,7 @@ public class MessageFacade implements MessageBroker
 
     public void init(BootstrapListener bootstrapListener)
     {
+        p2pNode = new P2PNode(user.getMessageKeyPair(), useDiskStorage, defaultStaticSeedNodeAddresses, this);
         p2pNode.start(new FutureCallback<PeerDHT>()
         {
             @Override

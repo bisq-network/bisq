@@ -8,23 +8,26 @@ import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.beans.property.SimpleBooleanProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * The User is stored locally it is never transmitted over the wire.
+ */
 public class User implements Serializable
 {
+    private static final Logger log = LoggerFactory.getLogger(User.class);
     private static final long serialVersionUID = 7409078808248518638L;
 
     transient private final SimpleBooleanProperty bankAccountChangedProperty = new SimpleBooleanProperty();
-    transient private KeyPair messageKeyPair = DSAKeyUtil.getKeyPair();
 
-    private PublicKey messagePublicKey;
+    private KeyPair messageKeyPair;
     private String accountID;
-    private boolean isOnline;
-    private List<BankAccount> bankAccounts = new ArrayList<>();
-    private BankAccount currentBankAccount = null;
+    private List<BankAccount> bankAccounts;
+    private BankAccount currentBankAccount;
 
     public User()
     {
-        messagePublicKey = messageKeyPair.getPublic();
     }
 
 
@@ -32,46 +35,36 @@ public class User implements Serializable
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void updateFromStorage(User savedUser)
+    public void applyPersistedUser(User persistedUser)
     {
-        if (savedUser != null)
+        if (persistedUser != null)
         {
-            accountID = savedUser.getAccountId();
-            // TODO handled by DSAKeyUtil -> change that storage check is only done here
-            // messagePublicKey = savedUser.getMessagePublicKey();
-            isOnline = savedUser.getIsOnline();
-            bankAccounts = savedUser.getBankAccounts();
-            currentBankAccount = savedUser.getCurrentBankAccount();
+            accountID = persistedUser.getAccountId();
+            bankAccounts = persistedUser.getBankAccounts();
+            setCurrentBankAccount(persistedUser.getCurrentBankAccount());
+            messageKeyPair = persistedUser.getMessageKeyPair();
         }
-
-        messagePublicKey = messageKeyPair.getPublic();
+        else
+        {
+            // First time
+            bankAccounts = new ArrayList<>();
+            messageKeyPair = DSAKeyUtil.getKeyPair();  // DSAKeyUtil.getKeyPair() runs in same thread now
+        }
     }
 
     public void addBankAccount(BankAccount bankAccount)
     {
-        if (!bankAccounts.contains(bankAccount))
-        {
-            bankAccounts.add(bankAccount);
-        }
+        if (!bankAccounts.contains(bankAccount)) bankAccounts.add(bankAccount);
 
-        currentBankAccount = bankAccount;
+        setCurrentBankAccount(bankAccount);
     }
 
     public void removeCurrentBankAccount()
     {
-        if (currentBankAccount != null)
-        {
-            bankAccounts.remove(currentBankAccount);
-        }
+        if (currentBankAccount != null) bankAccounts.remove(currentBankAccount);
 
-        if (bankAccounts.isEmpty())
-        {
-            currentBankAccount = null;
-        }
-        else
-        {
-            currentBankAccount = bankAccounts.get(0);
-        }
+        if (bankAccounts.isEmpty()) currentBankAccount = null;
+        else setCurrentBankAccount(bankAccounts.get(0));
     }
 
 
@@ -79,6 +72,22 @@ public class User implements Serializable
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // Will be written after registration.
+    // Public key from the input for the registration payment tx (or address) will be used
+    public void setAccountID(String accountID)
+    {
+        this.accountID = accountID;
+    }
+
+    public void setCurrentBankAccount(BankAccount bankAccount)
+    {
+        this.currentBankAccount = bankAccount;
+        bankAccountChangedProperty.set(!bankAccountChangedProperty.get());
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getStringifiedBankAccounts()
     {
@@ -97,45 +106,20 @@ public class User implements Serializable
         return bankAccountUIDs;
     }
 
-
     public String getAccountId()
     {
         return accountID;
     }
-
-    public void setAccountID(String accountID)
-    {
-        this.accountID = accountID;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     public List<BankAccount> getBankAccounts()
     {
         return bankAccounts;
     }
 
-    public void setBankAccounts(List<BankAccount> bankAccounts)
-    {
-        this.bankAccounts = bankAccounts;
-    }
-
-
     public BankAccount getCurrentBankAccount()
     {
         return currentBankAccount;
     }
-
-    public void setCurrentBankAccount(BankAccount bankAccount)
-    {
-        this.currentBankAccount = bankAccount;
-        bankAccountChangedProperty.set(!bankAccountChangedProperty.get());
-    }
-
 
     public BankAccount getBankAccount(String bankAccountId)
     {
@@ -149,34 +133,9 @@ public class User implements Serializable
         return null;
     }
 
-    boolean getIsOnline()
-    {
-        return isOnline;
-    }
-
-    public void setIsOnline(boolean isOnline)
-    {
-        this.isOnline = isOnline;
-    }
-
-
     public SimpleBooleanProperty getBankAccountChangedProperty()
     {
         return bankAccountChangedProperty;
-    }
-
-    @Override
-    public String toString()
-    {
-        return "User{" +
-                "bankAccountChangedProperty=" + bankAccountChangedProperty +
-                ", messageKeyPair=" + messageKeyPair +
-                ", messagePublicKey=" + messagePublicKey +
-                ", accountID='" + accountID + '\'' +
-                ", isOnline=" + isOnline +
-                ", bankAccounts=" + bankAccounts +
-                ", currentBankAccount=" + currentBankAccount +
-                '}';
     }
 
     public KeyPair getMessageKeyPair()
@@ -186,6 +145,18 @@ public class User implements Serializable
 
     public PublicKey getMessagePublicKey()
     {
-        return messagePublicKey;
+        return messageKeyPair.getPublic();
+    }
+
+    @Override
+    public String toString()
+    {
+        return "User{" +
+                "bankAccountChangedProperty=" + bankAccountChangedProperty +
+                ", messageKeyPair=" + messageKeyPair +
+                ", accountID='" + accountID + '\'' +
+                ", bankAccounts=" + bankAccounts +
+                ", currentBankAccount=" + currentBankAccount +
+                '}';
     }
 }

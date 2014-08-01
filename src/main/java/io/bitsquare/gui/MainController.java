@@ -13,7 +13,7 @@ import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.BootstrapListener;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.storage.Storage;
+import io.bitsquare.storage.Persistence;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Trading;
 import io.bitsquare.user.User;
@@ -50,7 +50,7 @@ public class MainController implements Initializable, NavigationController
     private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
     private final Trading trading;
-    private final Storage storage;
+    private final Persistence persistence;
     private final ToggleGroup toggleGroup = new ToggleGroup();
 
 
@@ -79,13 +79,13 @@ public class MainController implements Initializable, NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MainController(User user, WalletFacade walletFacade, MessageFacade messageFacade, Trading trading, Storage storage)
+    private MainController(User user, WalletFacade walletFacade, MessageFacade messageFacade, Trading trading, Persistence persistence)
     {
         this.user = user;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
         this.trading = trading;
-        this.storage = storage;
+        this.persistence = persistence;
 
         MainController.INSTANCE = this;
     }
@@ -224,7 +224,7 @@ public class MainController implements Initializable, NavigationController
         Transitions.fadeIn(rightNavPane);
         Transitions.fadeIn(contentPane);
 
-        NavigationItem selectedNavigationItem = (NavigationItem) storage.read(this, "selectedNavigationItem");
+        NavigationItem selectedNavigationItem = (NavigationItem) persistence.read(this, "selectedNavigationItem");
         if (selectedNavigationItem == null)
         {
             selectedNavigationItem = NavigationItem.HOME;
@@ -297,7 +297,7 @@ public class MainController implements Initializable, NavigationController
                 ((MarketController) childController).setDirection(navigationItem == NavigationItem.BUY ? Direction.BUY : Direction.SELL);
             }
 
-            storage.write(this, "selectedNavigationItem", navigationItem);
+            persistence.write(this, "selectedNavigationItem", navigationItem);
 
             prevToggleButton = toggleButton;
         });

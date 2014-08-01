@@ -16,9 +16,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Simple storage solution for serialized data
  */
-public class Storage
+public class Persistence
 {
-    private static final Logger log = LoggerFactory.getLogger(Storage.class);
+    private static final Logger log = LoggerFactory.getLogger(Persistence.class);
     private static final ReentrantLock lock = Threading.lock("Storage");
 
     private final String prefix = BitSquare.getAppName() + "_pref";
@@ -33,7 +33,7 @@ public class Storage
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Storage()
+    public Persistence()
     {
     }
 
@@ -110,6 +110,11 @@ public class Storage
     public void write(Object classInstance, Serializable value)
     {
         write(classInstance.getClass().getName(), value);
+    }
+
+    public void write(Serializable classInstance)
+    {
+        write(classInstance.getClass().getName(), classInstance);
     }
 
     public void write(String key, Serializable value)
