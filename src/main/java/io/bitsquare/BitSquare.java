@@ -1,5 +1,6 @@
 package io.bitsquare;
 
+import akka.actor.ActorSystem;
 import com.google.common.base.Throwables;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -33,7 +34,6 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class BitSquare extends Application
 {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
@@ -44,6 +44,7 @@ public class BitSquare extends Application
     private static Stage primaryStage;
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
+    private final ActorSystem system = ActorSystem.create(APP_NAME);
 
     public static void main(String[] args)
     {
@@ -73,6 +74,9 @@ public class BitSquare extends Application
     {
         log.trace("Startup: start");
         BitSquare.primaryStage = primaryStage;
+
+        //log.trace("Startup: setupAkka");
+        //setupAkka();
 
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
 
@@ -135,6 +139,12 @@ public class BitSquare extends Application
         });
     }
 
+    private void setupAkka()
+    {
+        log.trace("SetupAkka: create actors");
+
+    }
+
     private MenuBar getMenuBar()
     {
         MenuBar menuBar = new MenuBar();
@@ -159,7 +169,6 @@ public class BitSquare extends Application
         menuBar.getMenus().setAll(fileMenu, settingsMenu, helpMenu);
         return menuBar;
     }
-
 
     @Override
     public void stop() throws Exception
