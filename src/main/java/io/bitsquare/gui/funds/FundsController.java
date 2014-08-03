@@ -4,7 +4,7 @@ import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.LazyLoadingTabPane;
-import io.bitsquare.storage.Storage;
+import io.bitsquare.storage.Persistence;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 public class FundsController implements Initializable, ChildController, NavigationController
 {
     private static final Logger log = LoggerFactory.getLogger(FundsController.class);
-    private final Storage storage;
+    private final Persistence persistence;
 
     @FXML
     private LazyLoadingTabPane tabPane;
@@ -27,9 +27,9 @@ public class FundsController implements Initializable, ChildController, Navigati
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private FundsController(Storage storage)
+    private FundsController(Persistence persistence)
     {
-        this.storage = storage;
+        this.persistence = persistence;
     }
 
 
@@ -40,7 +40,7 @@ public class FundsController implements Initializable, ChildController, Navigati
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        tabPane.initialize(this, storage, NavigationItem.DEPOSIT.getFxmlUrl(), NavigationItem.WITHDRAWAL.getFxmlUrl(), NavigationItem.TRANSACTIONS.getFxmlUrl());
+        tabPane.initialize(this, persistence, NavigationItem.DEPOSIT.getFxmlUrl(), NavigationItem.WITHDRAWAL.getFxmlUrl(), NavigationItem.TRANSACTIONS.getFxmlUrl());
     }
 
 

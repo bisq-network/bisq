@@ -1,8 +1,10 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.util.DSAKeyUtil;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.security.PublicKey;
 
 public class Contract implements Serializable
 {
@@ -15,8 +17,8 @@ public class Contract implements Serializable
     private final String takerAccountID;
     private final BankAccount offererBankAccount;
     private final BankAccount takerBankAccount;
-    private final String offererMessagePubKeyAsHex;
-    private final String takerMessagePubKeyAsHex;
+    private final String offererMessagePublicKeyAsString;
+    private final String takerMessagePublicKeyAsString;
 
     public Contract(Offer offer,
                     BigInteger tradeAmount,
@@ -25,8 +27,8 @@ public class Contract implements Serializable
                     String takerAccountID,
                     BankAccount offererBankAccount,
                     BankAccount takerBankAccount,
-                    String offererMessagePubKeyAsHex,
-                    String takerMessagePubKeyAsHex)
+                    PublicKey offererMessagePublicKey,
+                    PublicKey takerMessagePublicKey)
     {
         this.offer = offer;
         this.tradeAmount = tradeAmount;
@@ -35,8 +37,8 @@ public class Contract implements Serializable
         this.takerAccountID = takerAccountID;
         this.offererBankAccount = offererBankAccount;
         this.takerBankAccount = takerBankAccount;
-        this.offererMessagePubKeyAsHex = offererMessagePubKeyAsHex;
-        this.takerMessagePubKeyAsHex = takerMessagePubKeyAsHex;
+        this.offererMessagePublicKeyAsString = DSAKeyUtil.getHexStringFromPublicKey(offererMessagePublicKey);
+        this.takerMessagePublicKeyAsString = DSAKeyUtil.getHexStringFromPublicKey(takerMessagePublicKey);
     }
 
 
@@ -79,16 +81,15 @@ public class Contract implements Serializable
         return takerBankAccount;
     }
 
-    public String getTakerMessagePubKeyAsHex()
+    public String getTakerMessagePublicKey()
     {
-        return takerMessagePubKeyAsHex;
+        return takerMessagePublicKeyAsString;
     }
 
-    public String getOffererMessagePubKeyAsHex()
+    public String getOffererMessagePublicKey()
     {
-        return offererMessagePubKeyAsHex;
+        return offererMessagePublicKeyAsString;
     }
-
 
     @Override
     public String toString()
@@ -101,10 +102,8 @@ public class Contract implements Serializable
                 ", takerAccountID='" + takerAccountID + '\'' +
                 ", offererBankAccount=" + offererBankAccount +
                 ", takerBankAccount=" + takerBankAccount +
-                ", offererMessagePubKeyAsHex='" + offererMessagePubKeyAsHex + '\'' +
-                ", takerMessagePubKeyAsHex='" + takerMessagePubKeyAsHex + '\'' +
+                ", takerMessagePublicKeyAsString=" + takerMessagePublicKeyAsString +
+                ", offererMessagePublicKeyAsString=" + offererMessagePublicKeyAsString +
                 '}';
     }
-
-
 }

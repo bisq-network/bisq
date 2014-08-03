@@ -191,7 +191,7 @@ public class TakerOfferController implements Initializable, ChildController
                 public void onBankTransferInited(String tradeId)
                 {
                     setTradeId(tradeId);
-                    headLineLabel.setText("Bank transfer inited");
+                    headLineLabel.setText("Bank transfer initialised");
                     infoLabel.setText("Check your bank account and continue \n" + "when you have received the money.");
                     receivedFiatButton.setDisable(false);
                 }

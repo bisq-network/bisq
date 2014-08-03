@@ -118,7 +118,7 @@
         </Label>
 
         <!-- row 7 -->
-        <Button fx:id="bankTransferInitedButton" defaultButton="true" onAction="#bankTransferInited" disable="true" text="Bank transfer inited"
+        <Button fx:id="bankTransferInitedButton" defaultButton="true" onAction="#bankTransferInited" disable="true" text="Bank transfer initialised "
                 GridPane.columnIndex="1"
                 GridPane.rowIndex="7"/>
 

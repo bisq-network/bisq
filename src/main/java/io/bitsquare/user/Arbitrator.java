@@ -68,23 +68,23 @@ public class Arbitrator implements Serializable
         id = name;
     }
 
-    public void updateFromStorage(Arbitrator savedArbitrator)
+    public void applyPersistedArbitrator(Arbitrator persistedArbitrator)
     {
-        this.pubKeyAsHex = savedArbitrator.getPubKeyAsHex();
-        this.messagePubKeyAsHex = savedArbitrator.getPubKeyAsHex();
-        this.name = savedArbitrator.getName();
-        this.idType = savedArbitrator.getIdType();
-        this.languages = savedArbitrator.getLanguages();
-        this.reputation = savedArbitrator.getReputation();
-        this.maxTradeVolume = savedArbitrator.getMaxTradeVolume();
-        this.passiveServiceFee = savedArbitrator.getPassiveServiceFee();
-        this.minPassiveServiceFee = savedArbitrator.getMinPassiveServiceFee();
-        this.arbitrationFee = savedArbitrator.getArbitrationFee();
-        this.minArbitrationFee = savedArbitrator.getMinArbitrationFee();
-        this.arbitrationMethods = savedArbitrator.getArbitrationMethods();
-        this.idVerifications = savedArbitrator.getIdVerifications();
-        this.webUrl = savedArbitrator.getWebUrl();
-        this.description = savedArbitrator.getDescription();
+        this.pubKeyAsHex = persistedArbitrator.getPubKeyAsHex();
+        this.messagePubKeyAsHex = persistedArbitrator.getPubKeyAsHex();
+        this.name = persistedArbitrator.getName();
+        this.idType = persistedArbitrator.getIdType();
+        this.languages = persistedArbitrator.getLanguages();
+        this.reputation = persistedArbitrator.getReputation();
+        this.maxTradeVolume = persistedArbitrator.getMaxTradeVolume();
+        this.passiveServiceFee = persistedArbitrator.getPassiveServiceFee();
+        this.minPassiveServiceFee = persistedArbitrator.getMinPassiveServiceFee();
+        this.arbitrationFee = persistedArbitrator.getArbitrationFee();
+        this.minArbitrationFee = persistedArbitrator.getMinArbitrationFee();
+        this.arbitrationMethods = persistedArbitrator.getArbitrationMethods();
+        this.idVerifications = persistedArbitrator.getIdVerifications();
+        this.webUrl = persistedArbitrator.getWebUrl();
+        this.description = persistedArbitrator.getDescription();
 
         //TODO for mock arbitrator
         id = name;

@@ -17,7 +17,7 @@ import io.bitsquare.BitSquare;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.crypto.CryptoFacade;
-import io.bitsquare.storage.Storage;
+import io.bitsquare.storage.Persistence;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.*;
@@ -48,12 +48,11 @@ public class WalletFacade
     private final ReentrantLock lock = Threading.lock("lock");
 
 
-    private final String saveAddressEntryListId;
     private final NetworkParameters params;
     private final BitSquareWalletAppKit walletAppKit;
     private final FeePolicy feePolicy;
     private final CryptoFacade cryptoFacade;
-    private final Storage storage;
+    private final Persistence persistence;
     private final List<DownloadListener> downloadListeners = new ArrayList<>();
     private final List<ConfidenceListener> confidenceListeners = new ArrayList<>();
     private final List<BalanceListener> balanceListeners = new ArrayList<>();
@@ -68,15 +67,13 @@ public class WalletFacade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletFacade(NetworkParameters params, BitSquareWalletAppKit walletAppKit, FeePolicy feePolicy, CryptoFacade cryptoFacade, Storage storage)
+    public WalletFacade(NetworkParameters params, BitSquareWalletAppKit walletAppKit, FeePolicy feePolicy, CryptoFacade cryptoFacade, Persistence persistence)
     {
         this.params = params;
         this.walletAppKit = walletAppKit;
         this.feePolicy = feePolicy;
         this.cryptoFacade = cryptoFacade;
-        this.storage = storage;
-
-        saveAddressEntryListId = this.getClass().getName() + ".addressEntryList";
+        this.persistence = persistence;
     }
 
 
@@ -173,11 +170,11 @@ public class WalletFacade
         };
         wallet.addEventListener(walletEventListener);
 
-        Serializable serializable = storage.read(saveAddressEntryListId);
-        List<AddressEntry> savedAddressEntryList = (List<AddressEntry>) serializable;
+        Serializable serializable = persistence.read(this, "addressEntryList");
+        List<AddressEntry> persistedAddressEntryList = (List<AddressEntry>) serializable;
         if (serializable instanceof List)
         {
-            addressEntryList = savedAddressEntryList;
+            addressEntryList = persistedAddressEntryList;
         }
         else
         {
@@ -190,11 +187,9 @@ public class WalletFacade
         }
     }
 
-
     public void shutDown()
     {
         wallet.removeEventListener(walletEventListener);
-
         walletAppKit.stopAsync();
     }
 
@@ -596,6 +591,7 @@ public class WalletFacade
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         // we don't allow spending of unconfirmed tx as with fake registrations we would open up doors for spam and market manipulation with fake offers
+        // so set includePending to false
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, getRegistrationAddressInfo(), false);
         sendRequest.changeAddress = getRegistrationAddressInfo().getAddress();
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
@@ -676,6 +672,8 @@ public class WalletFacade
         return tx.getHashAsString();
     }
 
+
+    // TODO: Trade process - use P2SH instead and optimize data exchange
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Trade process
@@ -1119,7 +1117,7 @@ public class WalletFacade
         lock.lock();
         try
         {
-            storage.write(saveAddressEntryListId, addressEntryList);
+            persistence.write(this, "addressEntryList", addressEntryList);
         } finally
         {
             lock.unlock();

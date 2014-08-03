@@ -22,13 +22,12 @@ import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.storage.Storage;
+import io.bitsquare.storage.Persistence;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
-import io.bitsquare.util.DSAKeyUtil;
 import io.bitsquare.util.Utilities;
 import java.math.BigInteger;
 import java.net.URL;
@@ -66,7 +65,7 @@ public class OrderBookController implements Initializable, ChildController
     private final MessageFacade messageFacade;
     private final WalletFacade walletFacade;
     private final Settings settings;
-    private final Storage storage;
+    private final Persistence persistence;
     private final Image buyIcon = Icons.getIconImage(Icons.BUY);
     private final Image sellIcon = Icons.getIconImage(Icons.SELL);
     @FXML
@@ -94,7 +93,7 @@ public class OrderBookController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private OrderBookController(OrderBook orderBook, OrderBookFilter orderBookFilter, User user, MessageFacade messageFacade, WalletFacade walletFacade, Settings settings, Storage storage)
+    private OrderBookController(OrderBook orderBook, OrderBookFilter orderBookFilter, User user, MessageFacade messageFacade, WalletFacade walletFacade, Settings settings, Persistence persistence)
     {
         this.orderBook = orderBook;
         this.orderBookFilter = orderBookFilter;
@@ -102,7 +101,7 @@ public class OrderBookController implements Initializable, ChildController
         this.messageFacade = messageFacade;
         this.walletFacade = walletFacade;
         this.settings = settings;
-        this.storage = storage;
+        this.persistence = persistence;
     }
 
 
@@ -304,12 +303,8 @@ public class OrderBookController implements Initializable, ChildController
             {
                 user.setAccountID(walletFacade.getRegistrationAddressInfo().toString());
             }
-            if (messageFacade != null && messageFacade.getPubKey() != null)
-            {
-                user.setMessagePubKeyAsHex(DSAKeyUtil.getHexStringFromPublicKey(messageFacade.getPubKey()));
-            }
 
-            storage.write(user.getClass().getName(), user);
+            persistence.write(user.getClass().getName(), user);
         } catch (InsufficientMoneyException e1)
         {
             Popups.openInsufficientMoneyPopup();
@@ -437,7 +432,7 @@ public class OrderBookController implements Initializable, ChildController
                             Image icon;
                             Offer offer = orderBookListItem.getOffer();
 
-                            if (offer.getMessagePubKeyAsHex().equals(user.getMessagePubKeyAsHex()))
+                            if (offer.getMessagePublicKey().equals(user.getMessagePublicKey()))
                             {
                                 icon = Icons.getIconImage(Icons.REMOVE);
                                 title = "Remove";

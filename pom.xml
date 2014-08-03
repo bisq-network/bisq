@@ -6,23 +6,14 @@
 
     <groupId>io.bitsquare</groupId>
     <artifactId>bitsquare</artifactId>
-    <version>0.01-SNAPSHOT</version>
+    <version>0.1-SNAPSHOT</version>
     <name>BitSquare</name>
-    <description>A P2P Fiat-Bitcoin Exchange</description>
-    <url>https://www.bitsquare.io</url>
+    <description>The P2P Fiat-Bitcoin Exchange</description>
+    <url>http://www.bitsquare.io</url>
 
     <organization>
         <name>bitsquare.io</name>
     </organization>
-    <!--
-    <parent>
-        <groupId>com.google</groupId>
-        <artifactId>bitcoinj-parent</artifactId>
-        <version>0.12-SNAPSHOT</version>
-        <relativePath>libs/bitcoinj/pom.xml</relativePath>
-    </parent>
-
-    -->
 
     <licenses>
         <license>
@@ -53,13 +44,11 @@
             <snapshots/>
             <url>https://oss.sonatype.org/content/groups/public</url>
         </repository>
-        <!-- bitcoin-j repo -->
         <repository>
             <id>bitcoinj-release</id>
             <releases/>
             <url>http://distribution.bitcoinj.googlecode.com/git/releases</url>
         </repository>
-        <!-- zxing repo -->
         <repository>
             <id>mvn-adamgent</id>
             <url>http://mvn-adamgent.googlecode.com/svn/maven/release</url>
@@ -73,7 +62,6 @@
 
     </repositories>
 
-    <!-- TODO Maven build not working yet... -->
     <build>
         <finalName>bitsquare</finalName>
         <resources>
@@ -109,10 +97,15 @@
                 <configuration>
                     <mainClass>io.bitsquare.BitSquare</mainClass>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.twdata.maven</groupId>
+                        <artifactId>mojo-executor</artifactId>
+                        <version>2.1.0</version>
+                    </dependency>
+                </dependencies>
             </plugin>
-
         </plugins>
-
     </build>
 
 
@@ -126,8 +119,8 @@
 
         <dependency>
             <groupId>net.tomp2p</groupId>
-            <artifactId>TomP2P</artifactId>
-            <version>4.4</version>
+            <artifactId>tomp2p-all</artifactId>
+            <version>5.0-Alpha24-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -142,13 +135,7 @@
             <artifactId>slf4j-api</artifactId>
             <version>1.7.7</version>
         </dependency>
-        <!--
-<dependency>
-<groupId>org.slf4j</groupId>
-<artifactId>slf4j-simple</artifactId>
-<version>1.7.7</version>
-</dependency>
-              -->
+
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
@@ -160,7 +147,6 @@
             <version>1.1.2</version>
             <scope>compile</scope>
         </dependency>
-
 
         <dependency>
             <groupId>com.google.inject</groupId>
@@ -210,14 +196,6 @@
             <artifactId>jcip-annotations</artifactId>
             <version>1.0</version>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>net.sf.proguard</groupId>
-            <artifactId>proguard</artifactId>
-            <version>4.4</version>
-            <scope>runtime</scope>
-        </dependency>
-             -->
 
         <dependency>
             <groupId>org.jetbrains</groupId>
@@ -225,17 +203,6 @@
             <version>13.0</version>
         </dependency>
     </dependencies>
-
-    <reporting>
-        <plugins>
-            <!-- Generate cross-referenced HTML source code listing -->
-            <!-- <plugin>
-                 <groupId>org.apache.maven.plugins</groupId>
-                 <artifactId>maven-jxr-plugin</artifactId>
-                 <version>2.1</version>
-             </plugin>  -->
-        </plugins>
-    </reporting>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

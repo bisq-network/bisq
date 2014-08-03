@@ -1,6 +1,6 @@
 package io.bitsquare.trade.protocol.offerer;
 
-import io.bitsquare.msg.TradeMessage;
+import io.bitsquare.trade.protocol.TradeMessage;
 import java.io.Serializable;
 
 public class RespondToTakeOfferRequestMessage implements Serializable, TradeMessage

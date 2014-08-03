@@ -16,6 +16,7 @@ import io.bitsquare.trade.protocol.offerer.RequestTakerDepositPaymentMessage;
 import io.bitsquare.trade.protocol.offerer.RespondToTakeOfferRequestMessage;
 import io.bitsquare.user.User;
 import java.math.BigInteger;
+import java.security.PublicKey;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,11 +67,11 @@ public class ProtocolForTakerAsSeller
     private final String tradeId;
     private final BankAccount bankAccount;
     private final String accountId;
-    private final String messagePubKey;
+    private final PublicKey messagePublicKey;
     private final BigInteger tradeAmount;
     private final String pubKeyForThatTrade;
     private final ECKey accountKey;
-    private final String peersMessagePubKey;
+    private final PublicKey peersMessagePublicKey;
     private final BigInteger collateral;
     private final String arbitratorPubKey;
 
@@ -122,11 +123,11 @@ public class ProtocolForTakerAsSeller
         collateral = trade.getCollateralAmount();
         arbitratorPubKey = trade.getOffer().getArbitrator().getPubKeyAsHex();
 
-        peersMessagePubKey = offer.getMessagePubKeyAsHex();
+        peersMessagePublicKey = offer.getMessagePublicKey();
 
         bankAccount = user.getBankAccount(offer.getBankAccountId());
         accountId = user.getAccountId();
-        messagePubKey = user.getMessagePubKeyAsHex();
+        messagePublicKey = user.getMessagePublicKey();
 
         pubKeyForThatTrade = walletFacade.getAddressInfoByTradeID(tradeId).getPubKeyAsHexString();
         accountKey = walletFacade.getRegistrationAddressInfo().getKey();
@@ -138,7 +139,7 @@ public class ProtocolForTakerAsSeller
     {
         log.debug("start called " + step++);
         state = State.GetPeerAddress;
-        GetPeerAddress.run(this::onResultGetPeerAddress, this::onFault, messageFacade, peersMessagePubKey);
+        GetPeerAddress.run(this::onResultGetPeerAddress, this::onFault, messageFacade, peersMessagePublicKey);
     }
 
     public void onResultGetPeerAddress(PeerAddress peerAddress)
@@ -176,6 +177,7 @@ public class ProtocolForTakerAsSeller
         else
         {
             listener.onTakeOfferRequestRejected(trade);
+            // exit case
         }
     }
 
@@ -239,8 +241,8 @@ public class ProtocolForTakerAsSeller
                                   takeOfferFeeTxId,
                                   accountId,
                                   bankAccount,
-                                  peersMessagePubKey,
-                                  messagePubKey,
+                                  peersMessagePublicKey,
+                                  messagePublicKey,
                                   peersAccountId,
                                   peersBankAccount,
                                   accountKey);
@@ -272,7 +274,7 @@ public class ProtocolForTakerAsSeller
                                           walletFacade,
                                           bankAccount,
                                           accountId,
-                                          messagePubKey,
+                                          messagePublicKey,
                                           tradeId,
                                           contractAsJson,
                                           takerSignature,

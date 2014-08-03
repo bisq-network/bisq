@@ -21,11 +21,17 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javax.inject.Inject;
-import net.tomp2p.peers.Number160;
+import net.tomp2p.peers.Number640;
 import net.tomp2p.storage.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/*
+TODO
+remove dependencies to tomp2p
+import net.tomp2p.peers.Number160;
+import net.tomp2p.storage.Data;
+ */
 public class OrderBook implements OrderBookListener
 {
     private static final Logger log = LoggerFactory.getLogger(OrderBook.class);
@@ -59,12 +65,12 @@ public class OrderBook implements OrderBookListener
 
     public void init()
     {
-        messageFacade.addMessageListener(this);
+        messageFacade.addOrderBookListener(this);
     }
 
     public void cleanup()
     {
-        messageFacade.removeMessageListener(this);
+        messageFacade.removeOrderBookListener(this);
     }
 
     public void loadOffers()
@@ -177,7 +183,7 @@ public class OrderBook implements OrderBookListener
     {
         try
         {
-            Object offerDataObject = offerData.getObject();
+            Object offerDataObject = offerData.object();
             if (offerDataObject instanceof Offer)
             {
                 Offer offer = (Offer) offerDataObject;
@@ -190,7 +196,7 @@ public class OrderBook implements OrderBookListener
     }
 
     @Override
-    public void onOffersReceived(Map<Number160, Data> dataMap, boolean success)
+    public void onOffersReceived(Map<Number640, Data> dataMap, boolean success)
     {
         if (success && dataMap != null)
         {
@@ -200,7 +206,7 @@ public class OrderBook implements OrderBookListener
             {
                 try
                 {
-                    Object offerDataObject = offerData.getObject();
+                    Object offerDataObject = offerData.object();
                     if (offerDataObject instanceof Offer)
                     {
                         Offer offer = (Offer) offerDataObject;
@@ -226,7 +232,7 @@ public class OrderBook implements OrderBookListener
         {
             try
             {
-                Object offerDataObject = offerData.getObject();
+                Object offerDataObject = offerData.object();
                 if (offerDataObject instanceof Offer)
                 {
                     Offer offer = (Offer) offerDataObject;

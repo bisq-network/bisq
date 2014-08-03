@@ -7,7 +7,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import javax.inject.Inject;
 
 public class Settings implements Serializable
 {
@@ -15,18 +14,16 @@ public class Settings implements Serializable
 
 
     private List<Locale> acceptedLanguageLocales = new ArrayList<>();
-
     private List<Country> acceptedCountryLocales = new ArrayList<>();
-
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
     private int maxCollateral;
     private int minCollateral;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
     public Settings()
     {
     }
@@ -36,15 +33,15 @@ public class Settings implements Serializable
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void updateFromStorage(Settings savedSettings)
+    public void applyPersistedSettings(Settings persistedSettings)
     {
-        if (savedSettings != null)
+        if (persistedSettings != null)
         {
-            acceptedLanguageLocales = savedSettings.getAcceptedLanguageLocales();
-            acceptedCountryLocales = savedSettings.getAcceptedCountries();
-            acceptedArbitrators = savedSettings.getAcceptedArbitrators();
-            maxCollateral = savedSettings.getMaxCollateral();
-            minCollateral = savedSettings.getMinCollateral();
+            acceptedLanguageLocales = persistedSettings.getAcceptedLanguageLocales();
+            acceptedCountryLocales = persistedSettings.getAcceptedCountries();
+            acceptedArbitrators = persistedSettings.getAcceptedArbitrators();
+            maxCollateral = persistedSettings.getMaxCollateral();
+            minCollateral = persistedSettings.getMinCollateral();
         }
     }
 

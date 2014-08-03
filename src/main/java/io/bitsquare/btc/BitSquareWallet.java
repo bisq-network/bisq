@@ -22,5 +22,4 @@ class BitSquareWallet extends Wallet implements Serializable
         super(params, keyCrypter);
     }
 
-
 }

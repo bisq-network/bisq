@@ -6,6 +6,7 @@ import io.bitsquare.locale.Country;
 import io.bitsquare.user.Arbitrator;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.security.PublicKey;
 import java.util.*;
 
 public class Offer implements Serializable
@@ -23,7 +24,7 @@ public class Offer implements Serializable
     private final double price;
     private final BigInteger amount;
     private final BigInteger minAmount;
-    private final String messagePubKeyAsHex;
+    private final PublicKey messagePublicKey;
     private final BankAccountType bankAccountType;
     private final Country bankAccountCountry;
 
@@ -39,7 +40,7 @@ public class Offer implements Serializable
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Offer(String messagePubKeyAsHex,
+    public Offer(PublicKey messagePublicKey,
                  Direction direction,
                  double price,
                  BigInteger amount,
@@ -53,7 +54,7 @@ public class Offer implements Serializable
                  List<Country> acceptedCountries,
                  List<Locale> acceptedLanguageLocales)
     {
-        this.messagePubKeyAsHex = messagePubKeyAsHex;
+        this.messagePublicKey = messagePublicKey;
         this.direction = direction;
         this.price = price;
         this.amount = amount;
@@ -77,9 +78,9 @@ public class Offer implements Serializable
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getMessagePubKeyAsHex()
+    public PublicKey getMessagePublicKey()
     {
-        return messagePubKeyAsHex;
+        return messagePublicKey;
     }
 
 
@@ -183,7 +184,7 @@ public class Offer implements Serializable
                 ", price=" + price +
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +
-                ", messagePubKey=" + messagePubKeyAsHex.hashCode() +
+                ", messagePubKey=" + messagePublicKey.hashCode() +
                 ", bankAccountTypeEnum=" + bankAccountType +
                 ", bankAccountCountryLocale=" + bankAccountCountry +
                 ", collateral=" + collateral +

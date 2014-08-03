@@ -1,7 +1,7 @@
 package io.bitsquare.trade.protocol.offerer;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.msg.TradeMessage;
+import io.bitsquare.trade.protocol.TradeMessage;
 import java.io.Serializable;
 
 public class RequestTakerDepositPaymentMessage implements Serializable, TradeMessage

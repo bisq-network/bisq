@@ -42,12 +42,13 @@
         <Label text="Balance:" GridPane.rowIndex="7"/>
         <BalanceTextField fx:id="balanceTextField" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
 
-
-        <Label id="form-header-text" text="Offer details" GridPane.rowIndex="8">
-            <GridPane.margin>
-                <Insets top="10.0"/>
-            </GridPane.margin>
-        </Label>
+        <!--
+       <Label id="form-header-text" text="Offer details" GridPane.rowIndex="8">
+           <GridPane.margin>
+               <Insets top="10.0"/>
+           </GridPane.margin>
+       </Label>
+       -->
 
         <Label text="Bank account type:" GridPane.rowIndex="9"/>
         <TextField fx:id="bankAccountTypeTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
@@ -67,17 +68,17 @@
 
         <Button fx:id="placeOfferButton" defaultButton="true" onAction="#onPlaceOffer" text="Place offer" GridPane.columnIndex="1" GridPane.rowIndex="14"/>
 
-        <Label fx:id="txTitleLabel" text="Transaction ID:" visible="false" GridPane.rowIndex="15"/>
-        <TextField fx:id="txTextField" visible="false" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="15"/>
+        <Label fx:id="txTitleLabel" text="Transaction ID:" visible="false" GridPane.rowIndex="14"/>
+        <TextField fx:id="txTextField" visible="false" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="14"/>
         <ConfidenceProgressIndicator fx:id="progressIndicator" visible="false" progress="0" GridPane.columnIndex="2" GridPane.halignment="LEFT"
-                                     GridPane.rowIndex="15" GridPane.rowSpan="2" GridPane.valignment="TOP">
+                                     GridPane.rowIndex="14" GridPane.rowSpan="2" GridPane.valignment="TOP">
             <GridPane.margin>
                 <Insets top="2.0"/>
             </GridPane.margin>
         </ConfidenceProgressIndicator>
-        <Label fx:id="confirmationLabel" text="Checking confirmations..." visible="false" GridPane.columnIndex="3" GridPane.rowIndex="15"/>
+        <Label fx:id="confirmationLabel" text="Checking confirmations..." visible="false" GridPane.columnIndex="3" GridPane.rowIndex="14"/>
 
-        <Button fx:id="closeButton" visible="false" defaultButton="true" onAction="#onClose" text="Close" GridPane.columnIndex="1" GridPane.rowIndex="16"/>
+        <Button fx:id="closeButton" visible="false" defaultButton="true" onAction="#onClose" text="Close" GridPane.columnIndex="1" GridPane.rowIndex="15"/>
 
         <columnConstraints>
             <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>

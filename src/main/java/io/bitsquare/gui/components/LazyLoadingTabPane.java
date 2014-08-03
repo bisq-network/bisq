@@ -5,7 +5,7 @@ import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.locale.Localisation;
-import io.bitsquare.storage.Storage;
+import io.bitsquare.storage.Persistence;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,10 +22,9 @@ public class LazyLoadingTabPane extends TabPane
     private final Map<Integer, Node> views = new HashMap<>();
     private final Map<Integer, ChildController> controllers = new HashMap<>();
     private SingleSelectionModel<Tab> selectionModel;
-    private String storageId;
     private NavigationController navigationController;
     private String[] tabContentFXMLUrls;
-    private Storage storage;
+    private Persistence persistence;
     private ChildController childController;
     private int selectedTabIndex = -1;
 
@@ -39,7 +38,7 @@ public class LazyLoadingTabPane extends TabPane
         super();
     }
 
-    public void initialize(NavigationController navigationController, Storage storage, String... tabContentFXMLUrls)
+    public void initialize(NavigationController navigationController, Persistence persistence, String... tabContentFXMLUrls)
     {
         if (tabContentFXMLUrls.length == 0)
         {
@@ -49,16 +48,14 @@ public class LazyLoadingTabPane extends TabPane
         this.tabContentFXMLUrls = tabContentFXMLUrls;
         this.navigationController = navigationController;
         this.tabContentFXMLUrls = tabContentFXMLUrls;
-        this.storage = storage;
-
-        storageId = navigationController.getClass().getName() + ".selectedTabIndex";
+        this.persistence = persistence;
 
         selectionModel = getSelectionModel();
         selectionModel.selectedItemProperty().addListener((observableValue, oldTab, newTab) -> onTabSelectedIndexChanged());
 
         if (selectedTabIndex == -1)
         {
-            Object indexObject = storage.read(storageId);
+            Object indexObject = persistence.read(this, "selectedTabIndex");
             log.trace("saved index" + indexObject);
             if (indexObject != null)
             {
@@ -138,7 +135,7 @@ public class LazyLoadingTabPane extends TabPane
                 childController.setNavigationController(navigationController);
                 ((Hibernate) childController).awake();
             }
-            storage.write(storageId, index);
+            persistence.write(this, "selectedTabIndex", index);
         }
     }
 

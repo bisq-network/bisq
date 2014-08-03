@@ -4,7 +4,7 @@ import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.LazyLoadingTabPane;
-import io.bitsquare.storage.Storage;
+import io.bitsquare.storage.Persistence;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
@@ -18,14 +18,14 @@ public class OrdersController implements Initializable, ChildController, Navigat
     private static final Logger log = LoggerFactory.getLogger(OrdersController.class);
     private static int SELECTED_TAB_INDEX = -1;
     private static OrdersController INSTANCE;
-    private final Storage storage;
+    private final Persistence persistence;
     @FXML
     private LazyLoadingTabPane tabPane;
 
     @Inject
-    private OrdersController(Storage storage)
+    private OrdersController(Persistence persistence)
     {
-        this.storage = storage;
+        this.persistence = persistence;
         INSTANCE = this;
     }
 
@@ -47,7 +47,7 @@ public class OrdersController implements Initializable, ChildController, Navigat
     {
         log.trace("setSelectedTabIndex " + index);
         tabPane.setSelectedTabIndex(index);
-        storage.write(this.getClass().getName() + ".selectedTabIndex", index);
+        persistence.write(this, "selectedTabIndex", index);
     }
 
 
@@ -59,7 +59,7 @@ public class OrdersController implements Initializable, ChildController, Navigat
     public void initialize(URL url, ResourceBundle rb)
     {
         log.trace("initialize ");
-        tabPane.initialize(this, storage, NavigationItem.OFFER.getFxmlUrl(), NavigationItem.PENDING_TRADE.getFxmlUrl(), NavigationItem.CLOSED_TRADE.getFxmlUrl());
+        tabPane.initialize(this, persistence, NavigationItem.OFFER.getFxmlUrl(), NavigationItem.PENDING_TRADE.getFxmlUrl(), NavigationItem.CLOSED_TRADE.getFxmlUrl());
     }
 
 

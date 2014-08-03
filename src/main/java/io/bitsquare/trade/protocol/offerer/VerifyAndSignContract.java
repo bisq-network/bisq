@@ -8,6 +8,7 @@ import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.protocol.FaultHandler;
 import io.bitsquare.util.Utilities;
 import java.math.BigInteger;
+import java.security.PublicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,17 +22,17 @@ public class VerifyAndSignContract
                            String accountId,
                            BigInteger tradeAmount,
                            String takeOfferFeeTxId,
-                           String messagePubKeyAsHex,
+                           PublicKey messagePublicKey,
                            Offer offer,
                            String peersAccountId,
                            BankAccount bankAccount,
                            BankAccount peersBankAccount,
-                           String takerMessagePubKey,
+                           PublicKey takerMessagePublicKey,
                            String peersContractAsJson,
                            ECKey registrationKey)
     {
         log.trace("Run task");
-        Contract contract = new Contract(offer, tradeAmount, takeOfferFeeTxId, accountId, peersAccountId, bankAccount, peersBankAccount, messagePubKeyAsHex, takerMessagePubKey);
+        Contract contract = new Contract(offer, tradeAmount, takeOfferFeeTxId, accountId, peersAccountId, bankAccount, peersBankAccount, messagePublicKey, takerMessagePublicKey);
 
         String contractAsJson = Utilities.objectToJson(contract);
         // log.trace("Offerer contract created: " + contract);

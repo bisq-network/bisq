@@ -8,9 +8,9 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.msg.TradeMessage;
 import io.bitsquare.msg.listeners.TakeOfferRequestListener;
-import io.bitsquare.storage.Storage;
+import io.bitsquare.storage.Persistence;
+import io.bitsquare.trade.protocol.TradeMessage;
 import io.bitsquare.trade.protocol.offerer.*;
 import io.bitsquare.trade.protocol.taker.*;
 import io.bitsquare.user.User;
@@ -32,10 +32,8 @@ public class Trading
 {
     private static final Logger log = LoggerFactory.getLogger(Trading.class);
 
-    private final String storageKey = this.getClass().getName();
-
     private final User user;
-    private final Storage storage;
+    private final Persistence persistence;
     private final MessageFacade messageFacade;
     private final BlockChainFacade blockChainFacade;
     private final WalletFacade walletFacade;
@@ -60,16 +58,16 @@ public class Trading
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Trading(User user, Storage storage, MessageFacade messageFacade, BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade)
+    public Trading(User user, Persistence persistence, MessageFacade messageFacade, BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade)
     {
         this.user = user;
-        this.storage = storage;
+        this.persistence = persistence;
         this.messageFacade = messageFacade;
         this.blockChainFacade = blockChainFacade;
         this.walletFacade = walletFacade;
         this.cryptoFacade = cryptoFacade;
 
-        Object offersObject = storage.read(storageKey + ".offers");
+        Object offersObject = persistence.read(this, "offers");
         if (offersObject instanceof HashMap)
         {
             offers = (Map<String, Offer>) offersObject;
@@ -79,7 +77,7 @@ public class Trading
             offers = new HashMap<>();
         }
 
-        Object tradesObject = storage.read(storageKey + ".trades");
+        Object tradesObject = persistence.read(this, "trades");
         if (tradesObject instanceof HashMap)
         {
             trades = (Map<String, Trade>) tradesObject;
@@ -136,11 +134,11 @@ public class Trading
     }
 
     public void removeOffer(Offer offer)
-    {
-        if (!offers.containsKey(offer.getId()))
+    {     //TODO
+       /* if (!offers.containsKey(offer.getId()))
         {
             throw new IllegalStateException("offers does not contain the offer with the ID " + offer.getId());
-        }
+        }*/
 
         offers.remove(offer.getId());
         saveOffers();
@@ -405,12 +403,12 @@ public class Trading
 
     private void saveOffers()
     {
-        storage.write(storageKey + ".offers", offers);
+        persistence.write(this, "offers", offers);
     }
 
     private void saveTrades()
     {
-        storage.write(storageKey + ".trades", trades);
+        persistence.write(this, "trades", trades);
     }
 
     @Nullable
