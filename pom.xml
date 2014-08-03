@@ -14,6 +14,15 @@
     <organization>
         <name>bitsquare.io</name>
     </organization>
+    <!--
+    <parent>
+        <groupId>com.google</groupId>
+        <artifactId>bitcoinj-parent</artifactId>
+        <version>0.12-SNAPSHOT</version>
+        <relativePath>libs/bitcoinj/pom.xml</relativePath>
+    </parent>
+
+    -->
 
     <licenses>
         <license>
