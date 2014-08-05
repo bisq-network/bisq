@@ -57,13 +57,11 @@ Please don't use main net with real money, as the software is under heavy develo
 ## Resources:
 * [Web](http://bitsquare.io)
 * [Development mailing list](https://groups.google.com/forum/#!forum/bitsquare)
-* [Video](https://www.youtube.com/watch?v=ByfnzJzi0bo)
-* [White paper](https://www.youtube.com/watch?v=ByfnzJzi0bo)
+* [Video (first prototype)](https://www.youtube.com/watch?v=ByfnzJzi0bo)
+* [White paper](https://docs.google.com/document/d/1d3EiWZdaM89-P6MVhS53unXv2-pDpSFsN3W4kCGXKgY/edit)
 
 
-### Screenshots of basic the use cases:
-* [Registration screen 1](https://github.com/bitsquare/bitsquare/tree/master/screenshots/registration_3.png)
-* [Registration screen 2](https://github.com/bitsquare/bitsquare/tree/master/screenshots/registration_bank_account.png)
+### Screenshots of the basic use cases (first prototype):
 * [Orderbook screen 1](https://github.com/bitsquare/bitsquare/tree/master/screenshots/orderbook1.png)
 * [Orderbook screen 2](https://github.com/bitsquare/bitsquare/tree/master/screenshots/orderbook2.png)
 * [Create Offer screen](https://github.com/bitsquare/bitsquare/tree/master/screenshots/create_offer_2.png)
@@ -71,10 +69,9 @@ Please don't use main net with real money, as the software is under heavy develo
 * [Deposit tx screen](https://github.com/bitsquare/bitsquare/tree/master/screenshots/deposit_conf.png)
 * [Check bank tx screen](https://github.com/bitsquare/bitsquare/tree/master/screenshots/bank_tx_inited.png)
 * [Trade completed screen](https://github.com/bitsquare/bitsquare/tree/master/screenshots/trade_complete.png)
-* [More screenshots](https://github.com/bitsquare/bitsquare/tree/master/screenshots)
 
 
-### Transactions of a test trade on main net:
+### Transactions of a trade on main net:
 * [Offerer registration tx](https://blockchain.info/de/tx/06ea3c2a5fb79f622d3e3def7c6a20274274fcbf9ec69b95bdfe9b347bbbdf76)
 * [Taker registration tx](https://blockchain.info/tx/8352ab9fe78593f48ef70d414d494ebd614d99fab147d0342910525e9284ba8f)
 * [Create offer fee tx](https://blockchain.info/tx/24f4d229edace44d9123628363a16cd7041f5d34ba6bef812807b9be03a64692)
