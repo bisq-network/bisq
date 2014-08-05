@@ -1,11 +1,11 @@
 package io.bitsquare.trade.protocol.taker;
 
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.Utils;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.trade.protocol.FaultHandler;
-import java.math.BigInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,8 +20,8 @@ public class SignAndPublishPayoutTx
                            String depositTxAsHex,
                            String offererSignatureR,
                            String offererSignatureS,
-                           BigInteger offererPaybackAmount,
-                           BigInteger takerPaybackAmount,
+                           Coin offererPaybackAmount,
+                           Coin takerPaybackAmount,
                            String offererPayoutAddress)
     {
         log.trace("Run task");
@@ -41,7 +41,7 @@ public class SignAndPublishPayoutTx
                                                   public void onSuccess(Transaction transaction)
                                                   {
                                                       log.debug("takerSignsAndSendsTx " + transaction);
-                                                      String payoutTxAsHex = Utils.bytesToHexString(transaction.bitcoinSerialize());
+                                                      String payoutTxAsHex = Utils.HEX.encode(transaction.bitcoinSerialize());
                                                       resultHandler.onResult(transaction.getHashAsString(), payoutTxAsHex);
                                                   }
 

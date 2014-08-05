@@ -1,5 +1,6 @@
 package io.bitsquare.trade.protocol.offerer;
 
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.ECKey;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.crypto.CryptoFacade;
@@ -7,7 +8,6 @@ import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.protocol.FaultHandler;
 import io.bitsquare.util.Utilities;
-import java.math.BigInteger;
 import java.security.PublicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +20,7 @@ public class VerifyAndSignContract
                            FaultHandler faultHandler,
                            CryptoFacade cryptoFacade,
                            String accountId,
-                           BigInteger tradeAmount,
+                           Coin tradeAmount,
                            String takeOfferFeeTxId,
                            PublicKey messagePublicKey,
                            Offer offer,

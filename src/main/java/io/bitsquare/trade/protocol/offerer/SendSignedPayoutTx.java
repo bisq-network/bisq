@@ -1,12 +1,12 @@
 package io.bitsquare.trade.protocol.offerer;
 
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.ECKey;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
 import io.bitsquare.trade.protocol.FaultHandler;
 import io.bitsquare.trade.protocol.ResultHandler;
-import java.math.BigInteger;
 import javafx.util.Pair;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
@@ -25,14 +25,14 @@ public class SendSignedPayoutTx
                            String takerPayoutAddress,
                            String offererPayoutAddress,
                            String depositTransactionId,
-                           BigInteger collateral,
-                           BigInteger tradeAmount)
+                           Coin collateral,
+                           Coin tradeAmount)
     {
         log.trace("Run task");
         try
         {
-            BigInteger offererPaybackAmount = tradeAmount.add(collateral);
-            BigInteger takerPaybackAmount = collateral;
+            Coin offererPaybackAmount = tradeAmount.add(collateral);
+            Coin takerPaybackAmount = collateral;
 
             Pair<ECKey.ECDSASignature, String> result = walletFacade.offererCreatesAndSignsPayoutTx(depositTransactionId, offererPaybackAmount, takerPaybackAmount, takerPayoutAddress, tradeId);
 

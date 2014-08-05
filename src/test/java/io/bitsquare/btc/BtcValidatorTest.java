@@ -1,7 +1,7 @@
 package io.bitsquare.btc;
 
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.Transaction;
-import java.math.BigInteger;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -12,11 +12,11 @@ public class BtcValidatorTest
     @Test
     public void testIsMinSpendableAmount()
     {
-        BigInteger amount = null;
+        Coin amount = null;
         //noinspection ConstantConditions
         assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
 
-        amount = BigInteger.ZERO;
+        amount = Coin.ZERO;
         assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
 
         amount = FeePolicy.TX_FEE;
@@ -28,7 +28,7 @@ public class BtcValidatorTest
         amount = FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT);
         assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
 
-        amount = FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(BigInteger.ONE);
+        amount = FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(Coin.valueOf(1));
         assertTrue("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
     }
 }

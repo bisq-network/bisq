@@ -1,9 +1,6 @@
 package io.bitsquare.gui.arbitrators.registration;
 
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.Wallet;
-import com.google.bitcoin.core.WalletEventListener;
+import com.google.bitcoin.core.*;
 import com.google.bitcoin.script.Script;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -24,7 +21,6 @@ import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.Reputation;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
-import java.math.BigInteger;
 import java.net.URL;
 import java.util.*;
 import javafx.collections.FXCollections;
@@ -376,44 +372,50 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
         });
 
         confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, balanceTextField, progressIndicator);
-        paymentDoneButton.setDisable(walletFacade.getArbitratorDepositBalance().compareTo(BigInteger.ZERO) == 0);
+        paymentDoneButton.setDisable(walletFacade.getArbitratorDepositBalance().isZero());
         log.debug("getArbitratorDepositBalance " + walletFacade.getArbitratorDepositBalance());
         walletFacade.getWallet().addEventListener(new WalletEventListener()
         {
             @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance)
             {
-                paymentDoneButton.setDisable(newBalance.compareTo(BigInteger.ZERO) == 0);
+                paymentDoneButton.setDisable(newBalance.isZero());
             }
 
             @Override
-            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance)
             {
-            }
 
-            @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
-            {
             }
 
             @Override
             public void onReorganize(Wallet wallet)
             {
+
+            }
+
+            @Override
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
+            {
+
             }
 
             @Override
             public void onWalletChanged(Wallet wallet)
             {
-            }
 
-            @Override
-            public void onKeysAdded(Wallet wallet, List<ECKey> keys)
-            {
             }
 
             @Override
             public void onScriptsAdded(Wallet wallet, List<Script> scripts)
             {
+
+            }
+
+            @Override
+            public void onKeysAdded(List<ECKey> keys)
+            {
+
             }
         });
     }

@@ -66,7 +66,7 @@ public class Utilities
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
             objectOutputStream.writeObject(serializable);
 
-            result = com.google.bitcoin.core.Utils.bytesToHexString(byteArrayOutputStream.toByteArray());
+            result = com.google.bitcoin.core.Utils.HEX.encode(byteArrayOutputStream.toByteArray());
             byteArrayOutputStream.close();
             objectOutputStream.close();
 

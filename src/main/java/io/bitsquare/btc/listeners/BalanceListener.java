@@ -1,7 +1,7 @@
 package io.bitsquare.btc.listeners;
 
 import com.google.bitcoin.core.Address;
-import java.math.BigInteger;
+import com.google.bitcoin.core.Coin;
 
 public class BalanceListener
 {
@@ -21,7 +21,7 @@ public class BalanceListener
         return address;
     }
 
-    public void onBalanceChanged(BigInteger balance)
+    public void onBalanceChanged(Coin balance)
     {
     }
 }

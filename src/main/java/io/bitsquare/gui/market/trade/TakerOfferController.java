@@ -1,7 +1,7 @@
 package io.bitsquare.gui.market.trade;
 
+import com.google.bitcoin.core.Coin;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
@@ -18,7 +18,6 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.Trading;
 import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSeller;
 import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSellerListener;
-import java.math.BigInteger;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
@@ -38,9 +37,10 @@ public class TakerOfferController implements Initializable, ChildController
     private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
 
+
     private NavigationController navigationController;
     private Offer offer;
-    private BigInteger requestedAmount;
+    private Coin requestedAmount;
     private String tradeId;
     private String depositTxId;
 
@@ -57,7 +57,7 @@ public class TakerOfferController implements Initializable, ChildController
             supportedLanguagesTextField, supportedCountriesTextField, depositTxIdTextField, summaryPaidTextField, summaryReceivedTextField, summaryFeesTextField, summaryCollateralTextField,
             summaryDepositTxIdTextField, summaryPayoutTxIdTextField;
     @FXML
-    private Label infoLabel, headLineLabel;
+    private Label infoLabel, headLineLabel, collateralLabel;
     @FXML
     private Button takeOfferButton, receivedFiatButton;
 
@@ -78,10 +78,10 @@ public class TakerOfferController implements Initializable, ChildController
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initWithData(Offer offer, BigInteger requestedAmount)
+    public void initWithData(Offer offer, Coin requestedAmount)
     {
         this.offer = offer;
-        this.requestedAmount = requestedAmount.compareTo(BigInteger.ZERO) == 0 ? offer.getAmount() : requestedAmount;
+        this.requestedAmount = requestedAmount.compareTo(Coin.ZERO) == 0 ? offer.getAmount() : requestedAmount;
 
         if (amountTextField != null)
         {
@@ -101,13 +101,14 @@ public class TakerOfferController implements Initializable, ChildController
 
     public void applyData()
     {
-        amountTextField.setText(BtcFormatter.formatSatoshis(requestedAmount));
-        amountTextField.setPromptText(BtcFormatter.formatSatoshis(offer.getMinAmount()) + " - " + BtcFormatter.formatSatoshis(offer.getAmount()));
+        amountTextField.setText(requestedAmount.toPlainString());
+        amountTextField.setPromptText(BitSquareFormatter.formatCoinToBtcWithCode(offer.getMinAmount()) + " - " + BitSquareFormatter.formatCoinToBtcWithCode(offer.getAmount()));
         priceTextField.setText(BitSquareFormatter.formatPrice(offer.getPrice()));
         applyVolume();
+        collateralLabel.setText("Collateral (" + getCollateralAsPercent() + "):");
         applyCollateral();
         applyTotal();
-        feeTextField.setText(BtcFormatter.formatSatoshis(getFee()));
+        feeTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(getFee()));
         totalTextField.setText(getFormattedTotal());
 
         bankAccountTypeTextField.setText(offer.getBankAccountType().toString());
@@ -123,7 +124,6 @@ public class TakerOfferController implements Initializable, ChildController
             applyVolume();
             applyCollateral();
             applyTotal();
-
         });
     }
 
@@ -152,7 +152,7 @@ public class TakerOfferController implements Initializable, ChildController
     public void onTakeOffer()
     {
         AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(offer.getId());
-        BigInteger amount = BtcFormatter.stringValueToSatoshis(amountTextField.getText());
+        Coin amount = BitSquareFormatter.parseBtcToCoin(getAmountString());
         // TODO more validation (fee payment, blacklist,...)
         if (amountTextField.isInvalid())
         {
@@ -200,10 +200,10 @@ public class TakerOfferController implements Initializable, ChildController
                 public void onPayoutTxPublished(Trade trade, String payoutTxId)
                 {
                     accordion.setExpandedPane(summaryTitledPane);
-                    summaryPaidTextField.setText(BtcFormatter.formatSatoshis(trade.getTradeAmount()));
-                    summaryReceivedTextField.setText(BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount())));
-                    summaryFeesTextField.setText(BtcFormatter.formatSatoshis(FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)));
-                    summaryCollateralTextField.setText(BtcFormatter.formatSatoshis(trade.getCollateralAmount()));
+                    summaryPaidTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(trade.getTradeAmount()));
+                    summaryReceivedTextField.setText(BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * trade.getTradeAmount().value));
+                    summaryFeesTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+                    summaryCollateralTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(trade.getCollateralAmount()));
                     summaryDepositTxIdTextField.setText(depositTxId);
                     summaryPayoutTxIdTextField.setText(payoutTxId);
                 }
@@ -261,7 +261,7 @@ public class TakerOfferController implements Initializable, ChildController
 
     private void applyCollateral()
     {
-        collateralTextField.setText(getFormattedCollateral());
+        collateralTextField.setText(getFormattedCollateralAsBtc());
     }
 
     private void applyVolume()
@@ -282,23 +282,31 @@ public class TakerOfferController implements Initializable, ChildController
 
     private String getFormattedTotal()
     {
-        return BitSquareFormatter.formatDouble(BtcFormatter.satoshiToBTC(getTotal()), 4);
+        return BitSquareFormatter.formatCoinToBtcWithCode(getTotal());
     }
 
-    private String getFormattedCollateral()
-    {
-        return BtcFormatter.formatSatoshis(getCollateralInSatoshis());
-    }
 
     //  values
     private double getAmountAsDouble()
     {
-        return BitSquareConverter.stringToDouble(amountTextField.getText());
+        return BitSquareConverter.stringToDouble(getAmountString());
     }
 
-    private BigInteger getAmountInSatoshis()
+    private Coin getAmountInSatoshis()
     {
-        return BtcFormatter.stringValueToSatoshis(amountTextField.getText());
+        return BitSquareFormatter.parseBtcToCoin(getAmountString());
+    }
+
+    private String getAmountString()
+    {
+        try
+        {
+            BitSquareValidator.textFieldsHasPositiveDoubleValueWithReset(amountTextField);
+            return amountTextField.getText();
+        } catch (BitSquareValidator.ValidationException e)
+        {
+            return "0";
+        }
     }
 
     private double getVolume()
@@ -306,23 +314,39 @@ public class TakerOfferController implements Initializable, ChildController
         return offer.getPrice() * getAmountAsDouble();
     }
 
-    private BigInteger getFee()
+    private Coin getFee()
     {
         return FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE);
     }
 
-    private BigInteger getTotal()
+    private Coin getTotal()
     {
-        return getFee().add(getAmountInSatoshis()).add(getCollateralInSatoshis());
+        return getFee().add(getAmountInSatoshis()).add(getCollateralAsCoin());
     }
 
-    private BigInteger getCollateralInSatoshis()
+    private Coin getCollateralAsCoin()
     {
-        double amount = BitSquareConverter.stringToDouble(amountTextField.getText());
-        double resultDouble = amount * (double) offer.getCollateral() / 100.0;
-        return BtcFormatter.doubleValueToSatoshis(resultDouble);
+        Coin amountAsCoin = BitSquareFormatter.parseBtcToCoin(getAmountString());
+        return amountAsCoin.divide((long) (1d / offer.getCollateral()));
     }
 
+    private String getFormattedCollateralAsBtc()
+    {
+        Coin amountAsCoin = BitSquareFormatter.parseBtcToCoin(getAmountString());
+        Coin collateralAsCoin = amountAsCoin.divide((long) (1d / getCollateral()));
+        return BitSquareFormatter.formatCoinToBtc(collateralAsCoin);
+    }
+
+    private String getCollateralAsPercent()
+    {
+        return BitSquareFormatter.formatCollateralPercent(getCollateral());
+    }
+
+    private double getCollateral()
+    {
+        // TODO
+        return offer.getCollateral();
+    }
 
     public void setTradeId(String tradeId)
     {

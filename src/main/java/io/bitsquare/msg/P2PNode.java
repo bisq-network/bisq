@@ -44,7 +44,7 @@ public class P2PNode
     // just for lightweight client test
     public static void main(String[] args)
     {
-        P2PNode p2pNode = new P2PNode(DSAKeyUtil.generateKeyPair(), false, SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST,
+        P2PNode p2pNode = new P2PNode(DSAKeyUtil.generateKeyPair(), false, SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN,
                                       (message, peerAddress) -> log.debug("handleMessage: message= " + message + "/ peerAddress=" + peerAddress));
         p2pNode.start(new FutureCallback<PeerDHT>()
         {

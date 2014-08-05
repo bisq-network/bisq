@@ -1,8 +1,8 @@
 package io.bitsquare.gui.util;
 
+import com.google.bitcoin.core.Coin;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.trade.Offer;
-import java.math.BigInteger;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
@@ -15,14 +15,14 @@ public class BitSquareValidator
     private static final Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
     private static final String invalidStyle = "-fx-border-color: red";
 
-    public static boolean tradeAmountOutOfRange(BigInteger tradeAmount, Offer offer)
+    public static boolean tradeAmountOutOfRange(Coin tradeAmount, Offer offer)
     {
         return tradeAmount.compareTo(offer.getAmount()) > 0 || tradeAmount.compareTo(offer.getMinAmount()) < 0;
     }
 
-    public static boolean greaterThanZero(BigInteger value)
+    public static boolean greaterThanZero(Coin value)
     {
-        return value.compareTo(BigInteger.ZERO) > 0;
+        return value.compareTo(Coin.ZERO) > 0;
     }
 
     public static void textFieldsNotEmptyWithReset(TextField... textFields) throws ValidationException
@@ -74,11 +74,47 @@ public class BitSquareValidator
 
     public static void textFieldHasDoubleValue(TextField textField) throws ValidationException
     {
-        if (!validateStringAsDouble(textField.getText()))
+        if (!validateStringAsDouble(textField.getText().replace(",", ".")))
         {
             textField.setEffect(invalidEffect);
             textField.setStyle(invalidStyle);
             throw new ValidationException();
+        }
+    }
+
+
+    public static void textFieldsHasPositiveDoubleValueWithReset(TextField... textFields) throws ValidationException
+    {
+        resetTextFields(textFields);
+        textFieldsHasPositiveDoubleValue(textFields);
+    }
+
+    public static void textFieldsHasPositiveDoubleValue(TextField... textFields) throws ValidationException
+    {
+        for (TextField textField : textFields)
+        {
+            textFieldHasPositiveDoubleValue(textField);
+        }
+    }
+
+    public static void textFieldHasPositiveDoubleValue(TextField textField) throws ValidationException
+    {
+        String input = textField.getText().replace(",", ".");
+        if (!validateStringAsDouble(input))
+        {
+            textField.setEffect(invalidEffect);
+            textField.setStyle(invalidStyle);
+            throw new ValidationException();
+        }
+        else
+        {
+            double val = Double.parseDouble(input);
+            if (val <= 0)
+            {
+                textField.setEffect(invalidEffect);
+                textField.setStyle(invalidStyle);
+                throw new ValidationException();
+            }
         }
     }
 

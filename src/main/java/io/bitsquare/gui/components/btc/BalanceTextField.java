@@ -1,13 +1,12 @@
 package io.bitsquare.gui.components.btc;
 
 import com.google.bitcoin.core.Address;
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.TransactionConfidence;
-import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
-import java.math.BigInteger;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
@@ -80,7 +79,7 @@ public class BalanceTextField extends AnchorPane
         balanceListener = walletFacade.addBalanceListener(new BalanceListener(address)
         {
             @Override
-            public void onBalanceChanged(BigInteger balance)
+            public void onBalanceChanged(Coin balance)
             {
                 updateBalance(balance);
             }
@@ -133,11 +132,12 @@ public class BalanceTextField extends AnchorPane
         }
     }
 
-    private void updateBalance(BigInteger balance)
+    private void updateBalance(Coin balance)
     {
         if (balance != null)
         {
-            balanceTextField.setText(BtcFormatter.formatSatoshis(balance));
+            //TODO use BitSquareFormatter
+            balanceTextField.setText(balance.toFriendlyString());
         }
     }
 }

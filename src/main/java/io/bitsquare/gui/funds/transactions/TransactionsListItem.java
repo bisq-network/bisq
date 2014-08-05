@@ -1,15 +1,10 @@
 package io.bitsquare.gui.funds.transactions;
 
-import com.google.bitcoin.core.Address;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.TransactionConfidence;
-import com.google.bitcoin.core.TransactionOutput;
-import io.bitsquare.btc.BtcFormatter;
+import com.google.bitcoin.core.*;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BitSquareFormatter;
-import java.math.BigInteger;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Tooltip;
@@ -35,12 +30,13 @@ public class TransactionsListItem
     {
         this.walletFacade = walletFacade;
 
-        BigInteger valueSentToMe = transaction.getValueSentToMe(walletFacade.getWallet());
-        BigInteger valueSentFromMe = transaction.getValueSentFromMe(walletFacade.getWallet());
+        Coin valueSentToMe = transaction.getValueSentToMe(walletFacade.getWallet());
+        Coin valueSentFromMe = transaction.getValueSentFromMe(walletFacade.getWallet());
         Address address = null;
-        if (valueSentToMe.compareTo(BigInteger.ZERO) == 0)
+        if (valueSentToMe.isZero())
         {
-            amount.set("-" + BtcFormatter.formatSatoshis(valueSentFromMe));
+            //TODO use BitSquareFormatter
+            amount.set("-" + valueSentFromMe.toFriendlyString());
 
             for (TransactionOutput transactionOutput : transaction.getOutputs())
             {
@@ -48,7 +44,7 @@ public class TransactionsListItem
                 {
                     type.set("Sent to");
 
-                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
+                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash())
                     {
                         address = transactionOutput.getScriptPubKey().getToAddress(walletFacade.getWallet().getParams());
                         addressString = address.toString();
@@ -60,16 +56,17 @@ public class TransactionsListItem
                 }
             }
         }
-        else if (valueSentFromMe.compareTo(BigInteger.ZERO) == 0)
+        else if (valueSentFromMe.isZero())
         {
-            amount.set(BtcFormatter.formatSatoshis(valueSentToMe));
+            //TODO use BitSquareFormatter
+            amount.set(valueSentToMe.toFriendlyString());
             type.set("Received with");
 
             for (TransactionOutput transactionOutput : transaction.getOutputs())
             {
                 if (transactionOutput.isMine(walletFacade.getWallet()))
                 {
-                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
+                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash())
                     {
                         address = transactionOutput.getScriptPubKey().getToAddress(walletFacade.getWallet().getParams());
                         addressString = address.toString();
@@ -83,7 +80,8 @@ public class TransactionsListItem
         }
         else
         {
-            amount.set(BtcFormatter.formatSatoshis(valueSentToMe.subtract(valueSentFromMe)));
+            //TODO use BitSquareFormatter
+            amount.set(valueSentToMe.subtract(valueSentFromMe).toFriendlyString());
 
             boolean outgoing = false;
             for (TransactionOutput transactionOutput : transaction.getOutputs())
@@ -91,7 +89,7 @@ public class TransactionsListItem
                 if (!transactionOutput.isMine(walletFacade.getWallet()))
                 {
                     outgoing = true;
-                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
+                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash())
                     {
                         address = transactionOutput.getScriptPubKey().getToAddress(walletFacade.getWallet().getParams());
                         addressString = address.toString();

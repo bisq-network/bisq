@@ -6,10 +6,7 @@ import com.google.bitcoin.wallet.CoinSelection;
 import com.google.bitcoin.wallet.DefaultCoinSelector;
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,38 +42,33 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
     @VisibleForTesting
     static void sortOutputs(ArrayList<TransactionOutput> outputs)
     {
-        Collections.sort(outputs, (a, b) -> {
-            int depth1 = 0;
-            int depth2 = 0;
-            TransactionConfidence conf1 = a.getParentTransaction().getConfidence();
-            TransactionConfidence conf2 = b.getParentTransaction().getConfidence();
-            if (conf1.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
+        Collections.sort(outputs, new Comparator<TransactionOutput>()
+        {
+            @Override
+            public int compare(TransactionOutput a, TransactionOutput b)
             {
-                depth1 = conf1.getDepthInBlocks();
+                int depth1 = 0;
+                int depth2 = 0;
+                TransactionConfidence conf1 = a.getParentTransaction().getConfidence();
+                TransactionConfidence conf2 = b.getParentTransaction().getConfidence();
+                if (conf1.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
+                    depth1 = conf1.getDepthInBlocks();
+                if (conf2.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
+                    depth2 = conf2.getDepthInBlocks();
+                Coin aValue = a.getValue();
+                Coin bValue = b.getValue();
+                BigInteger aCoinDepth = BigInteger.valueOf(aValue.value).multiply(BigInteger.valueOf(depth1));
+                BigInteger bCoinDepth = BigInteger.valueOf(bValue.value).multiply(BigInteger.valueOf(depth2));
+                int c1 = bCoinDepth.compareTo(aCoinDepth);
+                if (c1 != 0) return c1;
+                // The "coin*days" destroyed are equal, sort by value alone to get the lowest transaction size.
+                int c2 = bValue.compareTo(aValue);
+                if (c2 != 0) return c2;
+                // They are entirely equivalent (possibly pending) so sort by hash to ensure a total ordering.
+                BigInteger aHash = a.getParentTransaction().getHash().toBigInteger();
+                BigInteger bHash = b.getParentTransaction().getHash().toBigInteger();
+                return aHash.compareTo(bHash);
             }
-            if (conf2.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
-            {
-                depth2 = conf2.getDepthInBlocks();
-            }
-            BigInteger aValue = a.getValue();
-            BigInteger bValue = b.getValue();
-            BigInteger aCoinDepth = aValue.multiply(BigInteger.valueOf(depth1));
-            BigInteger bCoinDepth = bValue.multiply(BigInteger.valueOf(depth2));
-            int c1 = bCoinDepth.compareTo(aCoinDepth);
-            if (c1 != 0)
-            {
-                return c1;
-            }
-            // The "coin*days" destroyed are equal, sort by value alone to get the lowest transaction size.
-            int c2 = bValue.compareTo(aValue);
-            if (c2 != 0)
-            {
-                return c2;
-            }
-            // They are entirely equivalent (possibly pending) so sort by hash to ensure a total ordering.
-            BigInteger aHash = a.getParentTransaction().getHash().toBigInteger();
-            BigInteger bHash = b.getParentTransaction().getHash().toBigInteger();
-            return aHash.compareTo(bHash);
         });
     }
 
@@ -129,7 +121,7 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
     }
 
 
-    public CoinSelection select(BigInteger biTarget, LinkedList<TransactionOutput> candidates)
+    public CoinSelection select(Coin biTarget, LinkedList<TransactionOutput> candidates)
     {
         long target = biTarget.longValue();
         HashSet<TransactionOutput> selected = new HashSet<>();
@@ -163,7 +155,7 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
         }
         // Total may be lower than target here, if the given candidates were insufficient to create to requested
         // transaction.
-        return new CoinSelection(BigInteger.valueOf(total), selected);
+        return new CoinSelection(Coin.valueOf(total), selected);
     }
 
     /*

@@ -1,5 +1,6 @@
 package io.bitsquare.trade.protocol.offerer;
 
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Transaction;
 import io.bitsquare.bank.BankAccount;
@@ -15,7 +16,6 @@ import io.bitsquare.trade.protocol.taker.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.taker.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.taker.TakeOfferFeePayedMessage;
 import io.bitsquare.user.User;
-import java.math.BigInteger;
 import java.security.PublicKey;
 import net.tomp2p.peers.PeerAddress;
 import org.jetbrains.annotations.NotNull;
@@ -176,7 +176,7 @@ public class ProtocolForOffererAsBuyer
         checkState(state == State.HandleTakeOfferRequest);
         checkArgument(tradeId.equals(message.getTradeId()));
         String takeOfferFeeTxId = nonEmptyStringOf(message.getTakeOfferFeeTxId());
-        BigInteger tradeAmount = nonNegativeBigIntegerOf(nonZeroBigIntegerOf(message.getTradeAmount()));
+        Coin tradeAmount = positiveCoinOf(nonZeroCoinOf(message.getTradeAmount()));
         String takerPubKey = nonEmptyStringOf(message.getTakerPubKey());
 
         // apply new state
@@ -195,8 +195,8 @@ public class ProtocolForOffererAsBuyer
     {
         log.debug("onResultVerifyTakeOfferFeePayment called " + step++);
 
-        BigInteger collateral = trade.getCollateralAmount();
-        BigInteger offererInputAmount = collateral.add(FeePolicy.TX_FEE);
+        Coin collateral = trade.getCollateralAmount();
+        Coin offererInputAmount = collateral.add(FeePolicy.TX_FEE);
         state = State.CreateDepositTx;
         CreateDepositTx.run(this::onResultCreateDepositTx, this::onFault, walletFacade, tradeId, offererInputAmount, takerPubKey, arbitratorPubKey);
     }
@@ -270,7 +270,7 @@ public class ProtocolForOffererAsBuyer
     {
         log.debug("onResultVerifyTakerAccount called " + step++);
 
-        BigInteger tradeAmount = trade.getTradeAmount();
+        Coin tradeAmount = trade.getTradeAmount();
         state = State.VerifyAndSignContract;
         VerifyAndSignContract.run(this::onResultVerifyAndSignContract,
                                   this::onFault,
@@ -352,8 +352,8 @@ public class ProtocolForOffererAsBuyer
 
         // next task
         String depositTransactionId = trade.getDepositTransaction().getHashAsString();
-        BigInteger tradeAmount = trade.getTradeAmount();
-        BigInteger collateral = trade.getCollateralAmount();
+        Coin tradeAmount = trade.getTradeAmount();
+        Coin collateral = trade.getCollateralAmount();
         state = State.SendSignedPayoutTx;
         SendSignedPayoutTx.run(this::onResultSendSignedPayoutTx,
                                this::onFault,

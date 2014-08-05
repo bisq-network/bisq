@@ -1,7 +1,7 @@
 package io.bitsquare.gui;
 
+import com.google.bitcoin.core.Coin;
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.di.GuiceFXMLLoader;
@@ -19,7 +19,6 @@ import io.bitsquare.trade.Trading;
 import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
@@ -59,6 +58,8 @@ public class MainController implements Initializable, NavigationController
     private Image prevToggleButtonIcon;
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton;
     private Pane ordersButtonButtonHolder;
+    private boolean messageFacadeInited;
+    private boolean walletFacadeInited;
 
     @FXML
     private Pane contentPane;
@@ -182,21 +183,15 @@ public class MainController implements Initializable, NavigationController
             @Override
             public void onCompleted()
             {
-                messageFacadeInited();
+                messageFacadeInited = true;
+                if (walletFacadeInited) initialisationDone();
             }
 
             @Override
             public void onFailed(Throwable throwable)
             {
-
             }
         });
-    }
-
-    private void messageFacadeInited()
-    {
-
-        trading.addTakeOfferRequestListener(this::onTakeOfferRequested);
 
         walletFacade.addDownloadListener(new WalletFacade.DownloadListener()
         {
@@ -212,9 +207,16 @@ public class MainController implements Initializable, NavigationController
                 networkSyncPane.doneDownload();
             }
         });
+        walletFacade.initialize(() -> {
+            walletFacadeInited = true;
+            if (messageFacadeInited) initialisationDone();
+        });
 
-        walletFacade.initWallet();
+        trading.addTakeOfferRequestListener(this::onTakeOfferRequested);
+    }
 
+    private void initialisationDone()
+    {
         addNavigation();
 
         Transitions.fadeOutAndRemove(loadingLabel);
@@ -320,13 +322,13 @@ public class MainController implements Initializable, NavigationController
         balanceTextField.setEditable(false);
         balanceTextField.setPrefWidth(90);
         balanceTextField.setId("nav-balance-label");
-        balanceTextField.setText(BtcFormatter.formatSatoshis(walletFacade.getWalletBalance()));
+        balanceTextField.setText(walletFacade.getWalletBalance().toFriendlyString());
         walletFacade.addBalanceListener(new BalanceListener()
         {
             @Override
-            public void onBalanceChanged(BigInteger balance)
+            public void onBalanceChanged(Coin balance)
             {
-                balanceTextField.setText(BtcFormatter.formatSatoshis(balance));
+                balanceTextField.setText(balance.toFriendlyString());
             }
         });
 

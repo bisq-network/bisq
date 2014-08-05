@@ -1,10 +1,10 @@
 package io.bitsquare.gui.market.orderbook;
 
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
@@ -29,7 +29,6 @@ import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
-import java.math.BigInteger;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -66,6 +65,7 @@ public class OrderBookController implements Initializable, ChildController
     private final WalletFacade walletFacade;
     private final Settings settings;
     private final Persistence persistence;
+
     private final Image buyIcon = Icons.getIconImage(Icons.BUY);
     private final Image sellIcon = Icons.getIconImage(Icons.SELL);
     @FXML
@@ -230,7 +230,7 @@ public class OrderBookController implements Initializable, ChildController
                 else
                 {
                     Action response = Popups.openErrorPopup("Missing registration fee",
-                                                            "You have not funded the full registration fee of " + BtcFormatter.formatSatoshis(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
+                                                            "You have not funded the full registration fee of " + BitSquareFormatter.formatCoinToBtcWithCode(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
                     if (response == Dialog.Actions.OK)
                     {
                         MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
@@ -341,10 +341,10 @@ public class OrderBookController implements Initializable, ChildController
         {
             TakerOfferController takerOfferController = (TakerOfferController) navigationController.navigateToView(NavigationItem.TAKE_OFFER);
 
-            BigInteger requestedAmount;
+            Coin requestedAmount;
             if (!"".equals(amount.getText()))
             {
-                requestedAmount = BtcFormatter.stringValueToSatoshis(amount.getText());
+                requestedAmount = BitSquareFormatter.parseBtcToCoin(amount.getText());
             }
             else
             {

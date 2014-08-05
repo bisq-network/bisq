@@ -27,13 +27,13 @@
                         <Label text="Volume (EUR):" GridPane.rowIndex="3"/>
                         <TextField fx:id="volumeTextField" editable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
-                        <Label text="Collateral (BTC):" GridPane.rowIndex="4"/>
+                        <Label fx:id="collateralLabel" text="Collateral:" GridPane.rowIndex="4"/>
                         <TextField fx:id="collateralTextField" editable="false" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
-                        <Label text="Fee (BTC):" GridPane.rowIndex="5"/>
+                        <Label text="Total Fees (Offer + tx):" GridPane.rowIndex="5"/>
                         <TextField fx:id="feeTextField" editable="false" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
 
-                        <Label text="Total (BTC):" GridPane.rowIndex="6"/>
+                        <Label text="Total:" GridPane.rowIndex="6"/>
                         <TextField fx:id="totalTextField" editable="false" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
 
                         <Button fx:id="takeOfferButton" text="Take offer and pay" onAction="#onTakeOffer" defaultButton="true" GridPane.rowIndex="7" GridPane.columnIndex="1"/>

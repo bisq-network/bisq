@@ -22,7 +22,7 @@ public class DSAKeyUtil
     public static String getHexStringFromPublicKey(PublicKey publicKey)
     {
         final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
-        return Utils.bytesToHexString(x509EncodedKeySpec.getEncoded());
+        return Utils.HEX.encode(x509EncodedKeySpec.getEncoded());
     }
 
     public static KeyPair generateKeyPair()

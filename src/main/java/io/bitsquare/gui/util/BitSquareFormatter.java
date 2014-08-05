@@ -1,68 +1,70 @@
 package io.bitsquare.gui.util;
 
+import com.google.bitcoin.core.Coin;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.user.Arbitrator;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
-import java.util.Currency;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("WeakerAccess")
+//TODO cleanup...
 public class BitSquareFormatter
 {
+    private static final Logger log = LoggerFactory.getLogger(BitSquareFormatter.class);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BTC
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static String formatCoinToBtc(Coin coin)
+    {
+        return coin.toFriendlyString();
+    }
+
+   /* public static String formatCoinToBtcWithSymbol(Coin coin)
+    {
+        return "฿ " + coin.toPlainString();
+    } */
+
+    public static String formatCoinToBtcWithCode(Coin coin)
+    {
+        return coin.toFriendlyString();
+    }
+
+    /**
+     * @param input String input in decimal or integer format. Both decimal marks (",", ".") are supported.
+     *              If input has an incorrect format it returns a zero value coin.
+     * @return
+     */
+    public static Coin parseBtcToCoin(String input)
+    {
+        try
+        {
+            input = input.replace(",", ".");
+            Double.parseDouble(input);
+
+        } catch (NumberFormatException | NullPointerException e)
+        {
+            log.warn("Exception at parseBtcToCoin: " + e.toString());
+            input = "0";
+        }
+        return Coin.parseCoin(input);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // FIAT
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public static String formatPrice(double price)
     {
         return formatDouble(price);
-    }
-
-
-    public static String formatPriceWithCurrencyPair(double price, Currency currency)
-    {
-        return formatDouble(price) + " " + currency + "/BTC";
-    }
-
-    @SuppressWarnings("SameParameterValue")
-
-    public static String formatAmount(double amount, boolean useBTC, boolean exact)
-    {
-        return formatDouble(amount, (exact ? 4 : 2)) + (useBTC ? " BTC" : "");
-    }
-
-    @SuppressWarnings("SameParameterValue")
-
-    public static String formatAmount(double amount, boolean useBTC)
-    {
-        return formatAmount(amount, useBTC, false);
-    }
-
-
-    public static String formatAmount(double amount)
-    {
-        return formatAmount(amount, false);
-    }
-
-    @SuppressWarnings("SameParameterValue")
-
-    public static String formatAmountWithMinAmount(double amount, double minAmount, boolean useBTC)
-    {
-        if (useBTC)
-        {
-            return formatDouble(amount) + " BTC (" + formatDouble(minAmount) + " BTC)";
-        }
-        else
-        {
-            return formatDouble(amount) + " (" + formatDouble(minAmount) + ")";
-        }
-    }
-
-
-    public static String formatAmountWithMinAmount(double amount, double minAmount)
-    {
-        return formatAmountWithMinAmount(amount, minAmount, false);
     }
 
     public static String formatVolume(double volume)
@@ -70,30 +72,15 @@ public class BitSquareFormatter
         return formatDouble(volume);
     }
 
-
-    public static String formatVolume(double volume, Currency currency)
-    {
-        return formatDouble(volume) + " " + currency;
-    }
-
-
-    public static String formatVolumeWithMinVolume(double volume, double minVolume, Currency currency)
-    {
-        return formatDouble(volume) + " " + currency + " (" + formatDouble(minVolume) + " " + currency + ")";
-    }
-
-
     public static String formatVolumeWithMinVolume(double volume, double minVolume)
     {
         return formatDouble(volume) + " (" + formatDouble(minVolume) + ")";
     }
 
 
-    public static String formatCollateral(double collateral, double amount)
-    {
-        return formatPercent(collateral) + " (" + formatDouble(collateral * amount, 4) + " BTC)";
-    }
-
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Other
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static String formatDirection(Direction direction, boolean allUpperCase)
     {
@@ -103,13 +90,6 @@ public class BitSquareFormatter
             result = result.toUpperCase();
         }
         return result;
-    }
-
-
-    public static String formatList(List<String> list)
-    {
-        String s = list.toString();
-        return s.substring(1, s.length() - 1);
     }
 
     public static String formatDouble(double value)
@@ -123,7 +103,6 @@ public class BitSquareFormatter
         return decimalFormat.format(value);
     }
 
-
     public static DecimalFormat getDecimalFormat(int fractionDigits)
     {
         DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.getDefault());
@@ -132,13 +111,6 @@ public class BitSquareFormatter
         decimalFormat.setGroupingUsed(false);
         return decimalFormat;
     }
-
-
-    private static String formatPercent(double value)
-    {
-        return value * 100 + "%";
-    }
-
 
     public static String countryLocalesToString(List<Country> countries)
     {
@@ -206,7 +178,6 @@ public class BitSquareFormatter
         return result;
     }
 
-
     public static String formatDateTime(Date date)
     {
         DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.getDefault());
@@ -214,5 +185,8 @@ public class BitSquareFormatter
         return dateFormatter.format(date) + " " + timeFormatter.format(date);
     }
 
-
+    public static String formatCollateralPercent(double collateral)
+    {
+        return getDecimalFormat(2).format(collateral * 100) + " %";
+    }
 }

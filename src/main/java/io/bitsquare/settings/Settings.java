@@ -1,9 +1,9 @@
 package io.bitsquare.settings;
 
+import com.google.bitcoin.core.Coin;
 import io.bitsquare.locale.Country;
 import io.bitsquare.user.Arbitrator;
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -16,8 +16,7 @@ public class Settings implements Serializable
     private List<Locale> acceptedLanguageLocales = new ArrayList<>();
     private List<Country> acceptedCountryLocales = new ArrayList<>();
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
-    private int maxCollateral;
-    private int minCollateral;
+    private double collateral = 0.01;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -40,8 +39,7 @@ public class Settings implements Serializable
             acceptedLanguageLocales = persistedSettings.getAcceptedLanguageLocales();
             acceptedCountryLocales = persistedSettings.getAcceptedCountries();
             acceptedArbitrators = persistedSettings.getAcceptedArbitrators();
-            maxCollateral = persistedSettings.getMaxCollateral();
-            minCollateral = persistedSettings.getMinCollateral();
+            collateral = persistedSettings.getCollateral();
         }
     }
 
@@ -110,7 +108,7 @@ public class Settings implements Serializable
     //TODO
     @SuppressWarnings("UnusedParameters")
 
-    public Arbitrator getRandomArbitrator(@SuppressWarnings("UnusedParameters") Integer collateral, @SuppressWarnings("UnusedParameters") BigInteger amount)
+    public Arbitrator getRandomArbitrator(@SuppressWarnings("UnusedParameters") double collateral, @SuppressWarnings("UnusedParameters") Coin amount)
     {
         List<Arbitrator> candidates = new ArrayList<>();
         //noinspection Convert2streamapi
@@ -125,24 +123,10 @@ public class Settings implements Serializable
         return !candidates.isEmpty() ? candidates.get((int) (Math.random() * candidates.size())) : null;
     }
 
-    int getMaxCollateral()
-    {
-        return maxCollateral;
-    }
 
-    public void setMaxCollateral(int maxCollateral)
+    public double getCollateral()
     {
-        this.maxCollateral = maxCollateral;
-    }
-
-    public int getMinCollateral()
-    {
-        return minCollateral;
-    }
-
-    public void setMinCollateral(int minCollateral)
-    {
-        this.minCollateral = minCollateral;
+        return collateral;
     }
 
 }

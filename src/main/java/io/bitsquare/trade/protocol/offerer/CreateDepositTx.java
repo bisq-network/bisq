@@ -1,11 +1,11 @@
 package io.bitsquare.trade.protocol.offerer;
 
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.Utils;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.trade.protocol.FaultHandler;
-import java.math.BigInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +17,7 @@ public class CreateDepositTx
                            FaultHandler faultHandler,
                            WalletFacade walletFacade,
                            String tradeId,
-                           BigInteger offererInputAmount,
+                           Coin offererInputAmount,
                            String takerMultiSigPubKey,
                            String arbitratorPubKeyAsHex)
     {
@@ -27,7 +27,7 @@ public class CreateDepositTx
             String offererPubKey = walletFacade.getAddressInfoByTradeID(tradeId).getPubKeyAsHexString();
             Transaction transaction = walletFacade.offererCreatesMSTxAndAddPayment(offererInputAmount, offererPubKey, takerMultiSigPubKey, arbitratorPubKeyAsHex, tradeId);
 
-            String preparedOffererDepositTxAsHex = Utils.bytesToHexString(transaction.bitcoinSerialize());
+            String preparedOffererDepositTxAsHex = Utils.HEX.encode(transaction.bitcoinSerialize());
             long offererTxOutIndex = transaction.getInput(0).getOutpoint().getIndex();
 
             resultHandler.onResult(offererPubKey, preparedOffererDepositTxAsHex, offererTxOutIndex);

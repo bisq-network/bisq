@@ -1,10 +1,10 @@
 package io.bitsquare.trade.protocol.taker;
 
+import com.google.bitcoin.core.Coin;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
 import io.bitsquare.trade.protocol.FaultHandler;
 import io.bitsquare.trade.protocol.ResultHandler;
-import java.math.BigInteger;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +19,7 @@ public class SendTakeOfferFeePayedTxId
                            MessageFacade messageFacade,
                            String tradeId,
                            String takeOfferFeeTxId,
-                           BigInteger tradeAmount,
+                           Coin tradeAmount,
                            String pubKeyForThatTradeAsHex)
     {
         log.trace("Run task");

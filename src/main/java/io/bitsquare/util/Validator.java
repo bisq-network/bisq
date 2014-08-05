@@ -1,6 +1,6 @@
 package io.bitsquare.util;
 
-import java.math.BigInteger;
+import com.google.bitcoin.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,17 +24,17 @@ public class Validator
         return value;
     }
 
-    public static BigInteger nonZeroBigIntegerOf(BigInteger value)
+    public static Coin nonZeroCoinOf(Coin value)
     {
         checkNotNull(value);
-        checkArgument(value.compareTo(BigInteger.ZERO) != 0);
+        checkArgument(!value.isZero());
         return value;
     }
 
-    public static BigInteger nonNegativeBigIntegerOf(BigInteger value)
+    public static Coin positiveCoinOf(Coin value)
     {
         checkNotNull(value);
-        checkArgument(value.compareTo(BigInteger.ZERO) >= 0);
+        checkArgument(value.isPositive());
         return value;
     }
 

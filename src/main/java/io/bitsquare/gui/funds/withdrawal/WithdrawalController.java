@@ -1,18 +1,22 @@
 package io.bitsquare.gui.funds.withdrawal;
 
 import com.google.bitcoin.core.AddressFormatException;
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 import com.google.common.util.concurrent.FutureCallback;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.btc.*;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.BtcValidator;
+import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.popups.Popups;
+import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.BitSquareValidator;
-import java.math.BigInteger;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -81,9 +85,9 @@ public class WithdrawalController implements Initializable, ChildController, Hib
             {
                 BitSquareValidator.resetTextFields(withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField);
 
-                if (BigInteger.ZERO.compareTo(newValue.getBalance()) <= 0)
+                if (Coin.ZERO.compareTo(newValue.getBalance()) <= 0)
                 {
-                    amountTextField.setText(BtcFormatter.formatSatoshis(newValue.getBalance()));
+                    amountTextField.setText(newValue.getBalance().toPlainString());
                     withdrawFromTextField.setText(newValue.getAddressEntry().getAddressString());
                     changeAddressTextField.setText(newValue.getAddressEntry().getAddressString());
                 }
@@ -151,7 +155,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
             BitSquareValidator.textFieldsNotEmpty(amountTextField, withdrawFromTextField, withdrawToTextField, changeAddressTextField);
             BitSquareValidator.textFieldsHasDoubleValueWithReset(amountTextField);
 
-            BigInteger amount = BtcFormatter.stringValueToSatoshis(amountTextField.getText());
+            Coin amount = BitSquareFormatter.parseBtcToCoin(amountTextField.getText());
             if (BtcValidator.isMinSpendableAmount(amount))
             {
                 FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
@@ -177,8 +181,8 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                         "Amount: " + amountTextField.getText() + " BTC\n" +
                         "Sending address: " + withdrawFromTextField.getText() + "\n" +
                         "Receiving address: " + withdrawToTextField.getText() + "\n" +
-                        "Transaction fee: " + BtcFormatter.formatSatoshis(FeePolicy.TX_FEE) + "\n" +
-                        "You receive in total: " + BtcFormatter.formatSatoshis(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
+                        "Transaction fee: " + BitSquareFormatter.formatCoinToBtcWithCode(FeePolicy.TX_FEE) + "\n" +
+                        "You receive in total: " + BitSquareFormatter.formatCoinToBtcWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
                         "Are you sure you withdraw that amount?");
                 if (response == Dialog.Actions.OK)
                 {

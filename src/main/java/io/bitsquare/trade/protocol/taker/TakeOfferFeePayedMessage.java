@@ -1,19 +1,19 @@
 package io.bitsquare.trade.protocol.taker;
 
+import com.google.bitcoin.core.Coin;
 import io.bitsquare.trade.protocol.TradeMessage;
 import java.io.Serializable;
-import java.math.BigInteger;
 
 public class TakeOfferFeePayedMessage implements Serializable, TradeMessage
 {
     private static final long serialVersionUID = -5057935061275354312L;
     private final String tradeId;
 
-    private BigInteger tradeAmount;
+    private Coin tradeAmount;
     private String takeOfferFeeTxID;
     private String takerPubKey;
 
-    public TakeOfferFeePayedMessage(String tradeId, String takeOfferFeeTxID, BigInteger tradeAmount, String takerPubKey)
+    public TakeOfferFeePayedMessage(String tradeId, String takeOfferFeeTxID, Coin tradeAmount, String takerPubKey)
     {
         this.tradeId = tradeId;
         this.takeOfferFeeTxID = takeOfferFeeTxID;
@@ -27,7 +27,7 @@ public class TakeOfferFeePayedMessage implements Serializable, TradeMessage
         return tradeId;
     }
 
-    public BigInteger getTradeAmount()
+    public Coin getTradeAmount()
     {
         return tradeAmount;
     }

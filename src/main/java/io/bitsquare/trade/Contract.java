@@ -1,9 +1,9 @@
 package io.bitsquare.trade;
 
+import com.google.bitcoin.core.Coin;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.util.DSAKeyUtil;
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.security.PublicKey;
 
 public class Contract implements Serializable
@@ -12,7 +12,7 @@ public class Contract implements Serializable
 
     private final Offer offer;
     private final String takeOfferFeeTxID;
-    private final BigInteger tradeAmount;
+    private final Coin tradeAmount;
     private final String offererAccountID;
     private final String takerAccountID;
     private final BankAccount offererBankAccount;
@@ -21,7 +21,7 @@ public class Contract implements Serializable
     private final String takerMessagePublicKeyAsString;
 
     public Contract(Offer offer,
-                    BigInteger tradeAmount,
+                    Coin tradeAmount,
                     String takeOfferFeeTxID,
                     String offererAccountID,
                     String takerAccountID,
@@ -56,7 +56,7 @@ public class Contract implements Serializable
         return takeOfferFeeTxID;
     }
 
-    public BigInteger getTradeAmount()
+    public Coin getTradeAmount()
     {
         return tradeAmount;
     }

@@ -1,12 +1,12 @@
 package io.bitsquare.gui.market.createOffer;
 
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.BitSquare;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
@@ -19,6 +19,7 @@ import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.gui.util.BitSquareConverter;
 import io.bitsquare.gui.util.BitSquareFormatter;
+import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
@@ -28,7 +29,6 @@ import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.User;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.URL;
 import java.util.Random;
 import java.util.ResourceBundle;
@@ -53,6 +53,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     private final Settings settings;
     private final User user;
 
+
     private NavigationController navigationController;
     private Direction direction;
     private Offer offer;
@@ -61,7 +62,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     @FXML
     private AnchorPane rootContainer;
     @FXML
-    private Label buyLabel, placeOfferTitle, confirmationLabel, txTitleLabel;
+    private Label buyLabel, placeOfferTitle, confirmationLabel, txTitleLabel, collateralLabel;
     @FXML
     private TextField volumeTextField, amountTextField, priceTextField, totalTextField;
     @FXML
@@ -85,6 +86,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         this.walletFacade = walletFacade;
         this.settings = settings;
         this.user = user;
+
     }
 
 
@@ -95,11 +97,15 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     public void setOrderBookFilter(OrderBookFilter orderBookFilter)
     {
         direction = orderBookFilter.getDirection();
+        //TODO
         amountTextField.setText(BitSquareFormatter.formatPrice(orderBookFilter.getAmount()));
+        //TODO
         minAmountTextField.setText(BitSquareFormatter.formatPrice(orderBookFilter.getAmount()));
+
         priceTextField.setText(BitSquareFormatter.formatPrice(orderBookFilter.getPrice()));
         buyLabel.setText(BitSquareFormatter.formatDirection(direction, false) + ":");
-        collateralTextField.setText(BitSquareFormatter.formatVolume(settings.getMinCollateral()));
+        collateralLabel.setText("Collateral (" + getCollateralAsPercent() + "):");
+
         updateVolume();
         updateTotals();
 
@@ -109,18 +115,17 @@ public class CreateOfferController implements Initializable, ChildController, Hi
             //amountTextField.setText("" + (int) (new Random().nextDouble() * 100 / 10 + 1));
             amountTextField.setText("1");
             priceTextField.setText("" + (int) (499 - new Random().nextDouble() * 1000 / 100));
-            minAmountTextField.setText("0,1");
+            minAmountTextField.setText("0.1");
         }
-
-        //TODO derive form arbitrators
-        collateralTextField.setText("10");
 
         updateVolume();
         updateTotals();
+        applyCollateral();
 
         amountTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             updateVolume();
             updateTotals();
+            applyCollateral();
         });
 
         priceTextField.textProperty().addListener((observable, oldValue, newValue) -> updateVolume());
@@ -143,7 +148,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         }
         acceptedCountriesTextField.setText(BitSquareFormatter.countryLocalesToString(settings.getAcceptedCountries()));
         acceptedLanguagesTextField.setText(BitSquareFormatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
-        feeLabel.setText(BtcFormatter.formatSatoshis(FeePolicy.CREATE_OFFER_FEE));
+        feeLabel.setText(BitSquareFormatter.formatCoinToBtcWithCode(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
 
         addressEntry = walletFacade.getUnusedTradeAddressInfo();
         addressTextField.setAddress(addressEntry.getAddress().toString());
@@ -197,8 +202,9 @@ public class CreateOfferController implements Initializable, ChildController, Hi
             return;
         }
 
-        int collateral = (int) (BitSquareConverter.stringToDouble(collateralTextField.getText()));
-        Arbitrator arbitrator = settings.getRandomArbitrator(collateral, getAmountAsBI());
+        //TODO will be derived form arbitrators
+        double collateral = getCollateral();
+        Arbitrator arbitrator = settings.getRandomArbitrator(collateral, getAmountAsCoin());
         if (arbitrator == null)
         {
             Popups.openWarningPopup("No arbitrator available", "No arbitrator from your arbitrator list does match the collateral and amount value.");
@@ -207,11 +213,14 @@ public class CreateOfferController implements Initializable, ChildController, Hi
 
         if (user.getCurrentBankAccount() != null)
         {
+            Coin amountAsCoin = BitSquareFormatter.parseBtcToCoin(getAmountString());
+            Coin minAmountAsCoin = BitSquareFormatter.parseBtcToCoin(getAmountString());
+
             offer = new Offer(user.getMessagePublicKey(),
                               direction,
                               BitSquareConverter.stringToDouble(priceTextField.getText()),
-                              BtcFormatter.stringValueToSatoshis(amountTextField.getText()),
-                              BtcFormatter.stringValueToSatoshis(minAmountTextField.getText()),
+                              amountAsCoin,
+                              minAmountAsCoin,
                               user.getCurrentBankAccount().getBankAccountType(),
                               user.getCurrentBankAccount().getCurrency(),
                               user.getCurrentBankAccount().getCountry(),
@@ -292,12 +301,10 @@ public class CreateOfferController implements Initializable, ChildController, Hi
 
     private void updateTotals()
     {
-        double amountAsDouble = BitSquareConverter.stringToDouble(amountTextField.getText());
-        double collateralPercentAsDouble = BitSquareConverter.stringToDouble(collateralTextField.getText());
-        double collateralAmountAsDouble = collateralPercentAsDouble * amountAsDouble / 100;
-        BigInteger collateral = BtcFormatter.doubleValueToSatoshis(collateralAmountAsDouble);
-        BigInteger totals = FeePolicy.CREATE_OFFER_FEE.add(collateral).add(FeePolicy.TX_FEE);
-        totalTextField.setText(BtcFormatter.formatSatoshis(totals));
+        Coin amountAsCoin = BitSquareFormatter.parseBtcToCoin(getAmountString());
+        Coin collateral = amountAsCoin.divide((long) (1d / getCollateral()));
+        Coin totals = FeePolicy.CREATE_OFFER_FEE.add(collateral).add(FeePolicy.TX_FEE);
+        totalTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(totals));
     }
 
     private void updateVolume()
@@ -307,23 +314,57 @@ public class CreateOfferController implements Initializable, ChildController, Hi
 
     private double getVolume()
     {
-        double amountAsDouble = BitSquareConverter.stringToDouble(amountTextField.getText());
+        double amountAsDouble = BitSquareConverter.stringToDouble(getAmountString());
         double priceAsDouble = BitSquareConverter.stringToDouble(priceTextField.getText());
         return amountAsDouble * priceAsDouble;
     }
 
-    private BigInteger getAmountAsBI()
+    private void applyCollateral()
     {
-        return BtcFormatter.stringValueToSatoshis(amountTextField.getText());
+        collateralTextField.setText(getFormattedCollateralAsBtc());
     }
 
-    //TODO
-    @SuppressWarnings("UnusedAssignment")
+    private String getFormattedCollateralAsBtc()
+    {
+        Coin amountAsCoin = BitSquareFormatter.parseBtcToCoin(getAmountString());
+        Coin collateralAsCoin = amountAsCoin.divide((long) (1d / getCollateral()));
+        return BitSquareFormatter.formatCoinToBtc(collateralAsCoin);
+    }
+
+    private String getCollateralAsPercent()
+    {
+        return BitSquareFormatter.formatCollateralPercent(getCollateral());
+    }
+
+
+    private Coin getAmountAsCoin()
+    {
+        return BitSquareFormatter.parseBtcToCoin(getAmountString());
+    }
+
+    private String getAmountString()
+    {
+        try
+        {
+            BitSquareValidator.textFieldsHasPositiveDoubleValueWithReset(amountTextField);
+            return amountTextField.getText();
+        } catch (BitSquareValidator.ValidationException e)
+        {
+            return "0";
+        }
+    }
+
+    private double getCollateral()
+    {
+        // TODO
+        return settings.getCollateral();
+    }
+
     private boolean inputValid()
     {
         double priceAsDouble = BitSquareConverter.stringToDouble(priceTextField.getText());
         double minAmountAsDouble = BitSquareConverter.stringToDouble(minAmountTextField.getText());
-        double amountAsDouble = BitSquareConverter.stringToDouble(amountTextField.getText());
+        double amountAsDouble = BitSquareConverter.stringToDouble(getAmountString());
         double collateralAsDouble = BitSquareConverter.stringToDouble(collateralTextField.getText());
 
         return priceAsDouble > 0 &&

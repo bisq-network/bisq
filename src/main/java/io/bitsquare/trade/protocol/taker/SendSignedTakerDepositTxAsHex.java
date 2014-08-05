@@ -38,12 +38,12 @@ public class SendSignedTakerDepositTxAsHex
                                                                                                        bankAccount,
                                                                                                        accountId,
                                                                                                        messagePublicKey,
-                                                                                                       Utils.bytesToHexString(signedTakerDepositTx.bitcoinSerialize()),
-                                                                                                       Utils.bytesToHexString(signedTakerDepositTx.getInput(1).getScriptBytes()),
-                                                                                                       Utils.bytesToHexString(signedTakerDepositTx.getInput(1)
-                                                                                                                                                  .getConnectedOutput()
-                                                                                                                                                  .getParentTransaction()
-                                                                                                                                                  .bitcoinSerialize()),
+                                                                                                       Utils.HEX.encode(signedTakerDepositTx.bitcoinSerialize()),
+                                                                                                       Utils.HEX.encode(signedTakerDepositTx.getInput(1).getScriptBytes()),
+                                                                                                       Utils.HEX.encode(signedTakerDepositTx.getInput(1)
+                                                                                                                                            .getConnectedOutput()
+                                                                                                                                            .getParentTransaction()
+                                                                                                                                            .bitcoinSerialize()),
                                                                                                        contractAsJson,
                                                                                                        takerSignature,
                                                                                                        walletFacade.getAddressInfoByTradeID(tradeId).getAddressString(),

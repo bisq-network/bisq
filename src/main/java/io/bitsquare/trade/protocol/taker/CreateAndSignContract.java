@@ -1,5 +1,6 @@
 package io.bitsquare.trade.protocol.taker;
 
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.ECKey;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.crypto.CryptoFacade;
@@ -7,7 +8,6 @@ import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.protocol.FaultHandler;
 import io.bitsquare.util.Utilities;
-import java.math.BigInteger;
 import java.security.PublicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +20,7 @@ public class CreateAndSignContract
                            FaultHandler faultHandler,
                            CryptoFacade cryptoFacade,
                            Offer offer,
-                           BigInteger tradeAmount,
+                           Coin tradeAmount,
                            String takeOfferFeeTxId,
                            String accountId,
                            BankAccount bankAccount,
@@ -36,7 +36,9 @@ public class CreateAndSignContract
             Contract contract = new Contract(offer, tradeAmount, takeOfferFeeTxId, peersAccountId, accountId, peersBankAccount, bankAccount, peersMessagePublicKey, messagePublicKey);
 
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = cryptoFacade.signContract(registrationKey, contractAsJson);
+            //TODO priv key is null, use other signing key or find out why it is null at that moment
+            // String signature = cryptoFacade.signContract(registrationKey, contractAsJson);
+            String signature = "TODO priv key is null, use other signing key or find out why it is null at that moment";
             resultHandler.onResult(contract, contractAsJson, signature);
         } catch (Throwable t)
         {

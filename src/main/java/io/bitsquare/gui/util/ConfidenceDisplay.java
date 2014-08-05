@@ -2,9 +2,7 @@ package io.bitsquare.gui.util;
 
 import com.google.bitcoin.core.*;
 import com.google.bitcoin.script.Script;
-import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
 import javafx.scene.control.Label;
@@ -45,10 +43,22 @@ public class ConfidenceDisplay
         walletEventListener = new WalletEventListener()
         {
             @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance)
             {
                 updateBalance(newBalance);
                 // log.debug("onCoinsReceived  " + newBalance);
+            }
+
+            @Override
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance)
+            {
+                updateBalance(newBalance);
+            }
+
+            @Override
+            public void onReorganize(Wallet wallet)
+            {
+
             }
 
             @Override
@@ -59,29 +69,21 @@ public class ConfidenceDisplay
             }
 
             @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
-            {
-                updateBalance(newBalance);
-            }
-
-            @Override
-            public void onReorganize(Wallet wallet)
-            {
-            }
-
-            @Override
             public void onWalletChanged(Wallet wallet)
             {
-            }
 
-            @Override
-            public void onKeysAdded(Wallet wallet, List<ECKey> keys)
-            {
             }
 
             @Override
             public void onScriptsAdded(Wallet wallet, List<Script> scripts)
             {
+
+            }
+
+            @Override
+            public void onKeysAdded(List<ECKey> keys)
+            {
+
             }
         };
         wallet.addEventListener(walletEventListener);
@@ -104,13 +106,28 @@ public class ConfidenceDisplay
         walletEventListener = new WalletEventListener()
         {
             @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance)
             {
                 if (tx.getHashAsString().equals(transaction.getHashAsString()))
                 {
                     updateBalance(newBalance);
                 }
                 // log.debug("onCoinsReceived " + newBalance);
+            }
+
+            @Override
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance)
+            {
+                if (tx.getHashAsString().equals(transaction.getHashAsString()))
+                {
+                    updateBalance(newBalance);
+                }
+            }
+
+            @Override
+            public void onReorganize(Wallet wallet)
+            {
+
             }
 
             @Override
@@ -124,32 +141,21 @@ public class ConfidenceDisplay
             }
 
             @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
-            {
-                if (tx.getHashAsString().equals(transaction.getHashAsString()))
-                {
-                    updateBalance(newBalance);
-                }
-            }
-
-            @Override
-            public void onReorganize(Wallet wallet)
-            {
-            }
-
-            @Override
             public void onWalletChanged(Wallet wallet)
             {
-            }
 
-            @Override
-            public void onKeysAdded(Wallet wallet, List<ECKey> keys)
-            {
             }
 
             @Override
             public void onScriptsAdded(Wallet wallet, List<Script> scripts)
             {
+
+            }
+
+            @Override
+            public void onKeysAdded(List<ECKey> keys)
+            {
+
             }
         };
         wallet.addEventListener(walletEventListener);
@@ -166,9 +172,9 @@ public class ConfidenceDisplay
         }
     }
 
-    private void updateBalance(BigInteger balance)
+    private void updateBalance(Coin balance)
     {
-        if (balance.compareTo(BigInteger.ZERO) > 0)
+        if (balance.compareTo(Coin.ZERO) > 0)
         {
             confirmationLabel.setVisible(true);
             progressIndicator.setVisible(true);
@@ -198,7 +204,8 @@ public class ConfidenceDisplay
 
         if (balanceTextField != null)
         {
-            balanceTextField.setText(BtcFormatter.formatSatoshis(balance));
+            //TODO
+            balanceTextField.setText(balance.toFriendlyString());
         }
     }
 

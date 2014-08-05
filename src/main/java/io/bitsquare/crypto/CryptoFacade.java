@@ -49,7 +49,7 @@ public class CryptoFacade
 
     public boolean verifyHash(String hashAsHexStringToVerify, String msg, String sig)
     {
-        String hashAsHexString = Utils.bytesToHexString(createHash(msg, sig));
+        String hashAsHexString = Utils.HEX.encode(createHash(msg, sig));
         return hashAsHexString.equals(hashAsHexStringToVerify);
     }
 

@@ -1,15 +1,11 @@
 package io.bitsquare.gui.orders.pending;
 
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.Wallet;
-import com.google.bitcoin.core.WalletEventListener;
+import com.google.bitcoin.core.*;
 import com.google.bitcoin.script.Script;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ChildController;
@@ -26,7 +22,6 @@ import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.Trading;
 import io.bitsquare.util.AWTSystemTray;
-import java.math.BigInteger;
 import java.net.URL;
 import java.util.*;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -54,6 +49,7 @@ public class PendingTradeController implements Initializable, ChildController, H
 
     private Trading trading;
     private WalletFacade walletFacade;
+
     private Trade currentTrade;
     private NavigationController navigationController;
     private Image buyIcon = Icons.getIconImage(Icons.BUY);
@@ -221,12 +217,12 @@ public class PendingTradeController implements Initializable, ChildController, H
             }
 
             @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance)
             {
             }
 
             @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance)
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance)
             {
             }
 
@@ -242,13 +238,14 @@ public class PendingTradeController implements Initializable, ChildController, H
             }
 
             @Override
-            public void onKeysAdded(Wallet wallet, List<ECKey> keys)
+            public void onScriptsAdded(Wallet wallet, List<Script> scripts)
             {
             }
 
             @Override
-            public void onScriptsAdded(Wallet wallet, List<Script> scripts)
+            public void onKeysAdded(List<ECKey> keys)
             {
+
             }
         });
     }
@@ -300,12 +297,13 @@ public class PendingTradeController implements Initializable, ChildController, H
             primaryBankAccountIDTitleLabel.setText("Total fees (offer fee + tx fee):");
             secondaryBankAccountIDTitleLabel.setText("Refunded collateral:");
 
-            String fiatPayed = BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * BtcFormatter.satoshiToBTC(trade.getTradeAmount()));
+            //TODO
+            String fiatPayed = BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * trade.getTradeAmount().value);
 
-            bankAccountTypeTextField.setText(BtcFormatter.formatSatoshis(trade.getTradeAmount()));
+            bankAccountTypeTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(trade.getTradeAmount()));
             holderNameTextField.setText(fiatPayed);
-            primaryBankAccountIDTextField.setText(BtcFormatter.formatSatoshis(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
-            secondaryBankAccountIDTextField.setText(BtcFormatter.formatSatoshis(trade.getCollateralAmount()));
+            primaryBankAccountIDTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+            secondaryBankAccountIDTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(trade.getCollateralAmount()));
 
             holderNameCopyIcon.setVisible(false);
             primaryBankAccountIDCopyIcon.setVisible(false);

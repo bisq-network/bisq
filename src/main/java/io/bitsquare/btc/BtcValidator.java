@@ -1,10 +1,8 @@
 package io.bitsquare.btc;
 
-import com.google.bitcoin.core.Address;
-import com.google.bitcoin.core.AddressFormatException;
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.NetworkParameters;
 import com.google.bitcoin.core.Transaction;
-import java.math.BigInteger;
 import javax.inject.Inject;
 
 public class BtcValidator
@@ -17,12 +15,12 @@ public class BtcValidator
         BtcValidator.params = params;
     }
 
-    public static boolean isMinSpendableAmount(BigInteger amount)
+    public static boolean isMinSpendableAmount(Coin amount)
     {
         return amount != null && amount.compareTo(FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT)) > 0;
     }
 
-    public boolean isAddressValid(String addressString)
+   /* public boolean isAddressValid(String addressString)
     {
         try
         {
@@ -32,6 +30,6 @@ public class BtcValidator
         {
             return false;
         }
-    }
+    } */
 
 }

@@ -1,5 +1,6 @@
 package io.bitsquare.trade;
 
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.TransactionConfidence;
 import com.google.bitcoin.core.Utils;
@@ -15,7 +16,6 @@ import io.bitsquare.trade.protocol.offerer.*;
 import io.bitsquare.trade.protocol.taker.*;
 import io.bitsquare.user.User;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -146,7 +146,7 @@ public class Trading
         messageFacade.removeOffer(offer);
     }
 
-    public Trade takeOffer(BigInteger amount, Offer offer, ProtocolForTakerAsSellerListener listener)
+    public Trade takeOffer(Coin amount, Offer offer, ProtocolForTakerAsSellerListener listener)
     {
         Trade trade = createTrade(offer);
         trade.setTradeAmount(amount);

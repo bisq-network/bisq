@@ -1,8 +1,8 @@
 package io.bitsquare.trade.protocol.offerer;
 
+import com.google.bitcoin.core.Coin;
 import io.bitsquare.trade.protocol.TradeMessage;
 import java.io.Serializable;
-import java.math.BigInteger;
 
 public class BankTransferInitedMessage implements Serializable, TradeMessage
 {
@@ -12,16 +12,16 @@ public class BankTransferInitedMessage implements Serializable, TradeMessage
     private String depositTxAsHex;
     private String offererSignatureR;
     private String offererSignatureS;
-    private BigInteger offererPaybackAmount;
-    private BigInteger takerPaybackAmount;
+    private Coin offererPaybackAmount;
+    private Coin takerPaybackAmount;
     private String offererPayoutAddress;
 
     public BankTransferInitedMessage(String tradeId,
                                      String depositTxAsHex,
                                      String offererSignatureR,
                                      String offererSignatureS,
-                                     BigInteger offererPaybackAmount,
-                                     BigInteger takerPaybackAmount,
+                                     Coin offererPaybackAmount,
+                                     Coin takerPaybackAmount,
                                      String offererPayoutAddress)
     {
         this.tradeId = tradeId;
@@ -54,12 +54,12 @@ public class BankTransferInitedMessage implements Serializable, TradeMessage
         return offererSignatureS;
     }
 
-    public BigInteger getOffererPaybackAmount()
+    public Coin getOffererPaybackAmount()
     {
         return offererPaybackAmount;
     }
 
-    public BigInteger getTakerPaybackAmount()
+    public Coin getTakerPaybackAmount()
     {
         return takerPaybackAmount;
     }

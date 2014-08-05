@@ -138,7 +138,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     {
         if (settings.getAcceptedArbitrators().isEmpty())
         {
-            String pubKeyAsHex = Utils.bytesToHexString(new ECKey().getPubKey());
+            String pubKeyAsHex = Utils.HEX.encode(new ECKey().getPubKey());
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
             List<Locale> languages = new ArrayList<>();
             languages.add(LanguageUtil.getDefaultLanguageLocale());
@@ -602,6 +602,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     {
         persistence.write(user);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Bank Account Settings

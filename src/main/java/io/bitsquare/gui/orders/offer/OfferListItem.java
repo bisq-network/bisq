@@ -1,6 +1,5 @@
 package io.bitsquare.gui.orders.offer;
 
-import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.trade.Offer;
 import javafx.beans.property.SimpleStringProperty;
@@ -23,10 +22,7 @@ public class OfferListItem
         this.date.set(BitSquareFormatter.formatDateTime(offer.getCreationDate()));
         this.price.set(BitSquareFormatter.formatPrice(offer.getPrice()));
 
-        double amountAsBtcDouble = BtcFormatter.satoshiToBTC(offer.getAmount());
-        double minAmountAsBtcDouble = BtcFormatter.satoshiToBTC(offer.getMinAmount());
-        this.amount.set(BitSquareFormatter.formatAmountWithMinAmount(amountAsBtcDouble, minAmountAsBtcDouble));
-
+        this.amount.set(BitSquareFormatter.formatCoinToBtc(offer.getAmount()) + " (" + BitSquareFormatter.formatCoinToBtc(offer.getMinAmount()) + ")");
         this.volume.set(BitSquareFormatter.formatVolumeWithMinVolume(offer.getVolume(), offer.getMinVolume()));
         this.offerId = offer.getId();
     }

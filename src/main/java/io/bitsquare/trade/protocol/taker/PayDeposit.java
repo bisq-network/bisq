@@ -1,10 +1,10 @@
 package io.bitsquare.trade.protocol.taker;
 
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.trade.protocol.FaultHandler;
-import java.math.BigInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,8 +15,8 @@ public class PayDeposit
     public static void run(ResultHandler resultHandler,
                            FaultHandler faultHandler,
                            WalletFacade walletFacade,
-                           BigInteger collateral,
-                           BigInteger tradeAmount,
+                           Coin collateral,
+                           Coin tradeAmount,
                            String tradeId,
                            String pubKeyForThatTrade,
                            String arbitratorPubKey,
@@ -26,8 +26,8 @@ public class PayDeposit
         log.trace("Run task");
         try
         {
-            BigInteger amountToPay = tradeAmount.add(collateral);
-            BigInteger msOutputAmount = amountToPay.add(collateral);
+            Coin amountToPay = tradeAmount.add(collateral);
+            Coin msOutputAmount = amountToPay.add(collateral);
 
             Transaction signedTakerDepositTx = walletFacade.takerAddPaymentAndSignTx(amountToPay,
                                                                                      msOutputAmount,

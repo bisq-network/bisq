@@ -138,7 +138,9 @@ public class BitSquare extends Application
     private MenuBar getMenuBar()
     {
         MenuBar menuBar = new MenuBar();
-        menuBar.setUseSystemMenuBar(true);
+        // on mac we could placemenu bar in the systems menu
+        // menuBar.setUseSystemMenuBar(true);
+        menuBar.setUseSystemMenuBar(false);
 
         Menu fileMenu = new Menu("_File");
         fileMenu.setMnemonicParsing(true);

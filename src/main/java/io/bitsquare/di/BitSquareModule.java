@@ -9,11 +9,11 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import io.bitsquare.btc.BitSquareWalletAppKit;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
+import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.SeedNodeAddress;
 import io.bitsquare.settings.Settings;
@@ -22,7 +22,6 @@ import io.bitsquare.trade.Trading;
 import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
-import io.bitsquare.util.StorageDirectory;
 import javax.inject.Inject;
 
 public class BitSquareModule extends AbstractModule
@@ -45,6 +44,8 @@ public class BitSquareModule extends AbstractModule
         bind(MessageFacade.class).asEagerSingleton();
 
         bind(Trading.class).asEagerSingleton();
+        bind(BitSquareFormatter.class).asEagerSingleton();
+
 
         //bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.MAIN_NET);
         // how to use reg test see description in the readme file
@@ -52,29 +53,11 @@ public class BitSquareModule extends AbstractModule
         //test net not working yet: http://sourceforge.net/p/bitcoin/mailman/message/32349208/
         //bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.TEST_NET);
         bind(NetworkParameters.class).toProvider(NetworkParametersProvider.class).asEagerSingleton();
-        bind(BitSquareWalletAppKit.class).toProvider(BitSquareWalletAppKitProvider.class).asEagerSingleton();
 
         // bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(new Boolean(true));
         bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(new Boolean(false));
         bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(Names.named("defaultSeedNode")).toInstance(SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST);
         // bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(Names.named("defaultSeedNode")).toInstance(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN);
-    }
-}
-
-class BitSquareWalletAppKitProvider implements Provider<BitSquareWalletAppKit>
-{
-    private final NetworkParameters networkParameters;
-
-    @Inject
-    public BitSquareWalletAppKitProvider(NetworkParameters networkParameters)
-    {
-        this.networkParameters = networkParameters;
-    }
-
-
-    public BitSquareWalletAppKit get()
-    {
-        return new BitSquareWalletAppKit(networkParameters, StorageDirectory.getStorageDirectory());
     }
 }
 

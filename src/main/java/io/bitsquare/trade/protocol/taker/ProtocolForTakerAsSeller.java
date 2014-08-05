@@ -1,5 +1,6 @@
 package io.bitsquare.trade.protocol.taker;
 
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Transaction;
 import io.bitsquare.bank.BankAccount;
@@ -15,7 +16,6 @@ import io.bitsquare.trade.protocol.offerer.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.offerer.RequestTakerDepositPaymentMessage;
 import io.bitsquare.trade.protocol.offerer.RespondToTakeOfferRequestMessage;
 import io.bitsquare.user.User;
-import java.math.BigInteger;
 import java.security.PublicKey;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
@@ -68,11 +68,11 @@ public class ProtocolForTakerAsSeller
     private final BankAccount bankAccount;
     private final String accountId;
     private final PublicKey messagePublicKey;
-    private final BigInteger tradeAmount;
+    private final Coin tradeAmount;
     private final String pubKeyForThatTrade;
     private final ECKey accountKey;
     private final PublicKey peersMessagePublicKey;
-    private final BigInteger collateral;
+    private final Coin collateral;
     private final String arbitratorPubKey;
 
     // written/read by task
@@ -88,8 +88,8 @@ public class ProtocolForTakerAsSeller
     private String depositTxAsHex;
     private String offererSignatureR;
     private String offererSignatureS;
-    private BigInteger offererPaybackAmount;
-    private BigInteger takerPaybackAmount;
+    private Coin offererPaybackAmount;
+    private Coin takerPaybackAmount;
     private String offererPayoutAddress;
 
 
@@ -319,8 +319,8 @@ public class ProtocolForTakerAsSeller
         String depositTxAsHex = nonEmptyStringOf(message.getDepositTxAsHex());
         String offererSignatureR = nonEmptyStringOf(message.getOffererSignatureR());
         String offererSignatureS = nonEmptyStringOf(message.getOffererSignatureS());
-        BigInteger offererPaybackAmount = nonNegativeBigIntegerOf(nonZeroBigIntegerOf(message.getOffererPaybackAmount()));
-        BigInteger takerPaybackAmount = nonNegativeBigIntegerOf(nonZeroBigIntegerOf(message.getTakerPaybackAmount()));
+        Coin offererPaybackAmount = positiveCoinOf(nonZeroCoinOf(message.getOffererPaybackAmount()));
+        Coin takerPaybackAmount = positiveCoinOf(nonZeroCoinOf(message.getTakerPaybackAmount()));
         String offererPayoutAddress = nonEmptyStringOf(message.getOffererPayoutAddress());
 
         // apply state

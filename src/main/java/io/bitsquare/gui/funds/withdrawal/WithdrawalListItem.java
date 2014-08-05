@@ -1,14 +1,13 @@
 package io.bitsquare.gui.funds.withdrawal;
 
 import com.google.bitcoin.core.Address;
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.TransactionConfidence;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcFormatter;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
-import java.math.BigInteger;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
@@ -30,7 +29,7 @@ public class WithdrawalListItem
 
     private final Tooltip tooltip;
 
-    private BigInteger balance;
+    private Coin balance;
 
     public WithdrawalListItem(AddressEntry addressEntry, WalletFacade walletFacade)
     {
@@ -63,7 +62,7 @@ public class WithdrawalListItem
         balanceListener = walletFacade.addBalanceListener(new BalanceListener(getAddress())
         {
             @Override
-            public void onBalanceChanged(BigInteger balance)
+            public void onBalanceChanged(Coin balance)
             {
                 updateBalance(balance);
             }
@@ -78,12 +77,13 @@ public class WithdrawalListItem
         walletFacade.removeBalanceListener(balanceListener);
     }
 
-    private void updateBalance(BigInteger balance)
+    private void updateBalance(Coin balance)
     {
         this.balance = balance;
         if (balance != null)
         {
-            balanceLabel.setText(BtcFormatter.formatSatoshis(balance));
+            //TODO use BitSquareFormatter
+            balanceLabel.setText(balance.toFriendlyString());
         }
     }
 
@@ -166,7 +166,7 @@ public class WithdrawalListItem
     }
 
 
-    public BigInteger getBalance()
+    public Coin getBalance()
     {
         return balance;
     }
