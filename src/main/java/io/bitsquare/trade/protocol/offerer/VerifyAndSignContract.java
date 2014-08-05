@@ -39,16 +39,13 @@ public class VerifyAndSignContract
         // log.trace("Offerers contractAsJson: " + contractAsJson);
         // log.trace("Takers contractAsJson: " + sharedModel.peersContractAsJson);
 
-        //TODO not matching yet due refactoring...
-       /* if (contractAsJson.equals(peersContractAsJson))
-        { */
-        log.trace("The 2 contracts as json does match");
-        //String signature = cryptoFacade.signContract(registrationKey, contractAsJson);
-        String signature = "TODO";
-        //log.trace("signature: " + signature);
-
-        resultHandler.onResult(contract, contractAsJson, signature);
-       /* }
+        if (contractAsJson.equals(peersContractAsJson))
+        {
+            log.trace("The 2 contracts as json does match");
+            String signature = cryptoFacade.signContract(registrationKey, contractAsJson);
+            //log.trace("signature: " + signature);
+            resultHandler.onResult(contract, contractAsJson, signature);
+        }
         else
         {
             // TODO use diff output as feedback ?
@@ -57,7 +54,7 @@ public class VerifyAndSignContract
             log.error("Takers contractAsJson: " + peersContractAsJson);
 
             faultHandler.onFault(new Exception("Contracts are not matching"));
-        }  */
+        }
     }
 
     public interface ResultHandler

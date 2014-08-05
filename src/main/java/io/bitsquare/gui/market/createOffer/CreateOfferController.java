@@ -214,7 +214,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         if (user.getCurrentBankAccount() != null)
         {
             Coin amountAsCoin = BitSquareFormatter.parseBtcToCoin(getAmountString());
-            Coin minAmountAsCoin = BitSquareFormatter.parseBtcToCoin(getAmountString());
+            Coin minAmountAsCoin = BitSquareFormatter.parseBtcToCoin(getMinAmountString());
 
             offer = new Offer(user.getMessagePublicKey(),
                               direction,
@@ -348,6 +348,18 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         {
             BitSquareValidator.textFieldsHasPositiveDoubleValueWithReset(amountTextField);
             return amountTextField.getText();
+        } catch (BitSquareValidator.ValidationException e)
+        {
+            return "0";
+        }
+    }
+
+    private String getMinAmountString()
+    {
+        try
+        {
+            BitSquareValidator.textFieldsHasPositiveDoubleValueWithReset(minAmountTextField);
+            return minAmountTextField.getText();
         } catch (BitSquareValidator.ValidationException e)
         {
             return "0";

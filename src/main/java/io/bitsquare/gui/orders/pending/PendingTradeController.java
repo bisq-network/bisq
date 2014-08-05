@@ -292,16 +292,13 @@ public class PendingTradeController implements Initializable, ChildController, H
             txTitleLabel.setText("Payout transaction ID:");
 
             bankAccountDetailsHeaderLabel.setText("Summary");
-            bankAccountTypeTitleLabel.setText("You have bought (BTC):");
+            bankAccountTypeTitleLabel.setText("You have bought:");
             holderNameTitleLabel.setText("You have payed (" + trade.getOffer().getCurrency() + "):");
             primaryBankAccountIDTitleLabel.setText("Total fees (offer fee + tx fee):");
             secondaryBankAccountIDTitleLabel.setText("Refunded collateral:");
 
-            //TODO
-            String fiatPayed = BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * trade.getTradeAmount().value);
-
             bankAccountTypeTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(trade.getTradeAmount()));
-            holderNameTextField.setText(fiatPayed);
+            holderNameTextField.setText(BitSquareFormatter.formatVolume(trade.getTradeVolume()));
             primaryBankAccountIDTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
             secondaryBankAccountIDTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(trade.getCollateralAmount()));
 

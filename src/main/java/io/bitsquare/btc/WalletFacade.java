@@ -33,6 +33,8 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
+
 /**
  * TODO: use walletextension (with protobuffer) instead of saving addressEntryList via storage
  * TODO: use HD wallet features instead of addressEntryList
@@ -605,9 +607,8 @@ public class WalletFacade
 
         Transaction tx = new Transaction(params);
 
-        //TODO priv key is null, use other signing key or find out why it is null at that moment
-        //byte[] data = cryptoFacade.getEmbeddedAccountRegistrationData(getRegistrationAddressInfo().getKey(), stringifiedBankAccounts);
-        //tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
+        byte[] data = cryptoFacade.getEmbeddedAccountRegistrationData(getRegistrationAddressInfo().getKey(), stringifiedBankAccounts);
+        tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 
         Coin fee = FeePolicy.ACCOUNT_REGISTRATION_FEE.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(FeePolicy.TX_FEE);
         log.trace("fee: " + fee.toFriendlyString());

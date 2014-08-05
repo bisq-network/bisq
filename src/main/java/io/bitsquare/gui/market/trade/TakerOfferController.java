@@ -200,8 +200,9 @@ public class TakerOfferController implements Initializable, ChildController
                 public void onPayoutTxPublished(Trade trade, String payoutTxId)
                 {
                     accordion.setExpandedPane(summaryTitledPane);
+
                     summaryPaidTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(trade.getTradeAmount()));
-                    summaryReceivedTextField.setText(BitSquareFormatter.formatVolume(trade.getOffer().getPrice() * trade.getTradeAmount().value));
+                    summaryReceivedTextField.setText(BitSquareFormatter.formatVolume(trade.getTradeVolume()));
                     summaryFeesTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)));
                     summaryCollateralTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(trade.getCollateralAmount()));
                     summaryDepositTxIdTextField.setText(depositTxId);

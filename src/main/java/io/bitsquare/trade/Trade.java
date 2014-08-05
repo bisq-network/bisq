@@ -38,6 +38,10 @@ public class Trade implements Serializable
         _stateChangedProperty = new SimpleStringProperty();
     }
 
+    public double getTradeVolume()
+    {
+        return offer.getVolumeForCoin(tradeAmount);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters

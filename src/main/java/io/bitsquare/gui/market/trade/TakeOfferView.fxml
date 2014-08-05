@@ -18,7 +18,7 @@
 
                         <Label text="Take offer:" id="form-header-text"/>
 
-                        <Label text="Amount (BTC):" GridPane.rowIndex="1"/>
+                        <Label text="Amount:" GridPane.rowIndex="1"/>
                         <ValidatedTextField fx:id="amountTextField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
                         <Label text="Price (EUR/BTC):" GridPane.rowIndex="2"/>
@@ -122,7 +122,7 @@
 
                     <Label text="Trade completed" id="form-header-text"/>
 
-                    <Label text="You have sold (BTC):" GridPane.rowIndex="2"/>
+                    <Label text="You have sold:" GridPane.rowIndex="2"/>
                     <ValidatedTextField fx:id="summaryPaidTextField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
                     <Label text="You have received (EUR):" GridPane.rowIndex="3"/>
@@ -133,7 +133,7 @@
                     <Label text="Total fees (take offer fee + tx fee):" GridPane.rowIndex="5"/>
                     <TextField fx:id="summaryFeesTextField" editable="false" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
 
-                    <Label text="Refunded collateral (BTC):" GridPane.rowIndex="6"/>
+                    <Label text="Refunded collateral:" GridPane.rowIndex="6"/>
                     <TextField fx:id="summaryCollateralTextField" editable="false" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
 
                     <Label text="Deposit transaction ID:" GridPane.rowIndex="7"/>

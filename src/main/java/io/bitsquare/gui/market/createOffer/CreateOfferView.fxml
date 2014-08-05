@@ -24,7 +24,7 @@
             <Label text="EUR in total"/>
         </HBox>
 
-        <Label text="Min. Amount:" GridPane.rowIndex="2"/>
+        <Label text="Min. Amount (BTC):" GridPane.rowIndex="2"/>
         <TextField fx:id="minAmountTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
         <Label fx:id="collateralLabel" text="Collateral:" GridPane.rowIndex="3"/>

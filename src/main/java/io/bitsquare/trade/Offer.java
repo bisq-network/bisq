@@ -5,6 +5,7 @@ import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.locale.Country;
 import io.bitsquare.user.Arbitrator;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.security.PublicKey;
 import java.util.*;
 
@@ -23,6 +24,7 @@ public class Offer implements Serializable
     private final double price;
     private final Coin amount;
     private final Coin minAmount;
+    //TODO use hex string
     private final PublicKey messagePublicKey;
     private final BankAccountType bankAccountType;
     private final Country bankAccountCountry;
@@ -137,14 +139,21 @@ public class Offer implements Serializable
         return acceptedLanguageLocales;
     }
 
-    public double getVolume()
+    public double getVolumeForCoin(Coin coin)
     {
-        return price * amount.value;
+        BigDecimal amountBD = BigDecimal.valueOf(coin.longValue());
+        BigDecimal volumeBD = amountBD.multiply(BigDecimal.valueOf(price));
+        return volumeBD.divide(BigDecimal.valueOf(Coin.COIN.value)).doubleValue();
     }
 
-    public double getMinVolume()
+    public double getOfferVolume()
     {
-        return price * minAmount.value;
+        return getVolumeForCoin(amount);
+    }
+
+    public double getMinOfferVolume()
+    {
+        return getVolumeForCoin(minAmount);
     }
 
     public String getOfferFeePaymentTxID()

@@ -36,9 +36,7 @@ public class CreateAndSignContract
             Contract contract = new Contract(offer, tradeAmount, takeOfferFeeTxId, peersAccountId, accountId, peersBankAccount, bankAccount, peersMessagePublicKey, messagePublicKey);
 
             String contractAsJson = Utilities.objectToJson(contract);
-            //TODO priv key is null, use other signing key or find out why it is null at that moment
-            // String signature = cryptoFacade.signContract(registrationKey, contractAsJson);
-            String signature = "TODO priv key is null, use other signing key or find out why it is null at that moment";
+            String signature = cryptoFacade.signContract(registrationKey, contractAsJson);
             resultHandler.onResult(contract, contractAsJson, signature);
         } catch (Throwable t)
         {

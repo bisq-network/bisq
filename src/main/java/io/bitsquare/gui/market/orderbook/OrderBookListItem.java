@@ -20,7 +20,7 @@ public class OrderBookListItem
         this.offer = offer;
         this.price.set(BitSquareFormatter.formatPrice(offer.getPrice()));
         this.amount.set(BitSquareFormatter.formatCoinToBtc(offer.getAmount()) + " (" + BitSquareFormatter.formatCoinToBtc(offer.getMinAmount()) + ")");
-        this.volume.set(BitSquareFormatter.formatVolumeWithMinVolume(offer.getVolume(), offer.getMinVolume()));
+        this.volume.set(BitSquareFormatter.formatVolumeWithMinVolume(offer.getOfferVolume(), offer.getMinOfferVolume()));
     }
 
 

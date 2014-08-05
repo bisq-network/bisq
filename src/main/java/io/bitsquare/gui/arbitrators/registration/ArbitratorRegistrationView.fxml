@@ -26,19 +26,19 @@
                     <Button onAction="#onClearLanguages" text="Clear" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
                     <ComboBox fx:id="languageComboBox" onAction="#onAddLanguage" prefWidth="150.0" promptText="Add language" GridPane.columnIndex="3" GridPane.rowIndex="2"/>
 
-                    <Label text="Max. trade volume (BTC):" GridPane.rowIndex="3"/>
+                    <Label text="Max. trade volume:" GridPane.rowIndex="3"/>
                     <TextField fx:id="maxTradeVolumeTextField" promptText="Recommended: 0.1 - 2 BTC" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.columnSpan="3"/>
 
                     <Label text="Passive service fee (%):" GridPane.rowIndex="4"/>
                     <TextField fx:id="passiveServiceFeeTextField" promptText="Recommended: 0.1 - 1%" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.columnSpan="3"/>
 
-                    <Label text="Min. passive service fee (BTC)" GridPane.rowIndex="5"/>
+                    <Label text="Min. passive service fee" GridPane.rowIndex="5"/>
                     <TextField fx:id="minPassiveServiceFeeTextField" promptText="Recommended: 0.0001 - 0.005 BTC" GridPane.columnIndex="1" GridPane.rowIndex="5" GridPane.columnSpan="3"/>
 
                     <Label text="Arbitration fee (%):" GridPane.rowIndex="6"/>
                     <TextField fx:id="arbitrationFeeTextField" promptText="Recommended: 5 - 20 %" GridPane.columnIndex="1" GridPane.rowIndex="6" GridPane.columnSpan="3"/>
 
-                    <Label text="Min. arbitration fee (BTC):" GridPane.rowIndex="7"/>
+                    <Label text="Min. arbitration fee:" GridPane.rowIndex="7"/>
                     <TextField fx:id="minArbitrationFeeTextField" promptText="Recommended: 0.1 - 0.2 BTC" GridPane.columnIndex="1" GridPane.rowIndex="7" GridPane.columnSpan="3"/>
 
                     <Label text="Method(s) used for arbitration:" GridPane.rowIndex="8"/>
