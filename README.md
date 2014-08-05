@@ -1,8 +1,11 @@
 ![Bitsquare Logo](http://bitsquare.io/images/logo.png)
 # Bitsquare
-**The P2P Fiat-BTC Exchange.**
 
-Bitsquare is a P2P Fiat-BTC Exchange. It allows to trade fiat money (USD, EURO, ...) for bitcoins without relying on a centralized exchange like MtGox. Instead, all partecipants form a peer to peer market.
+## About Bitsquare
+Bitsquare is a **P2P Fiat-BTC Exchange.**. 
+It allows to trade fiat money (USD, EURO, ...) for Bitcoins without relying on a centralized exchange like MtGox.  
+Instead, all participants form a peer to peer market.
+
 ## Dependencies
 The project use **Java 8** and **Maven**.  
 We use the **BitcoinJ** library and **TomP2P** for DHT and direct messaging.
