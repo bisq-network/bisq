@@ -614,6 +614,7 @@ public class WalletFacade
         tx.addOutput(fee, feePolicy.getAddressForRegistrationFee());
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+        sendRequest.shuffleOutputs = false;
         // we don't allow spending of unconfirmed tx as with fake registrations we would open up doors for spam and market manipulation with fake offers
         // so set includePending to false
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, getRegistrationAddressInfo(), false);
@@ -647,6 +648,7 @@ public class WalletFacade
         tx.addOutput(fee, feePolicy.getAddressForCreateOfferFee());
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+        sendRequest.shuffleOutputs = false;
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, getAddressInfoByTradeID(offerId), true);
         sendRequest.changeAddress = getAddressInfoByTradeID(offerId).getAddress();
@@ -668,6 +670,7 @@ public class WalletFacade
         tx.addOutput(fee, feePolicy.getAddressForTakeOfferFee());
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+        sendRequest.shuffleOutputs = false;
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, getAddressInfoByTradeID(offerId), true);
         sendRequest.changeAddress = getAddressInfoByTradeID(offerId).getAddress();
@@ -696,6 +699,7 @@ public class WalletFacade
         tx.addOutput(amount.subtract(FeePolicy.TX_FEE), new Address(params, withdrawToAddress));
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+        sendRequest.shuffleOutputs = false;
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
 
 
@@ -749,6 +753,7 @@ public class WalletFacade
         tx.addOutput(amountToPay, multiSigOutputScript);
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+        sendRequest.shuffleOutputs = false;
         AddressEntry addressEntry = getAddressInfoByTradeID(tradeId);
         addressEntry.setTradeId(tradeId);
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
@@ -808,6 +813,7 @@ public class WalletFacade
         tempTx.addOutput(takerInputAmount, multiSigOutputScript);
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tempTx);
+        sendRequest.shuffleOutputs = false;
         AddressEntry addressEntry = getAddressInfoByTradeID(tradeId);
         addressEntry.setTradeId(tradeId);
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
@@ -1165,7 +1171,7 @@ public class WalletFacade
     //TODO
     private Script getMultiSigScript(String offererPubKey, String takerPubKey, String arbitratorPubKey)
     {
-        ECKey offererKey = wallet.findKeyFromPubKey(Utils.parseAsHexOrBase58(offererPubKey));
+        ECKey offererKey = ECKey.fromPublicOnly(Utils.parseAsHexOrBase58(offererPubKey));
         ECKey takerKey = ECKey.fromPublicOnly(Utils.parseAsHexOrBase58(takerPubKey));
         ECKey arbitratorKey = ECKey.fromPublicOnly(Utils.parseAsHexOrBase58(arbitratorPubKey));
 

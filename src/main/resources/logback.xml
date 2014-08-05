@@ -26,7 +26,7 @@
     <logger name="com.google.bitcoin" level="WARN"/>
 
 
-    <logger name="net.tomp2p" level="DEBUG"/>
+    <logger name="net.tomp2p" level="WARN"/>
 
     <logger name="io.netty.util" level="WARN"/>
     <logger name="io.netty.channel" level="WARN"/>

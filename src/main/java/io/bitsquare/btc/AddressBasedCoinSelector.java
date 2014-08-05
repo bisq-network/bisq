@@ -120,17 +120,17 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
         return false;
     }
 
-
-    public CoinSelection select(Coin biTarget, LinkedList<TransactionOutput> candidates)
+    @Override
+    public CoinSelection select(Coin target, List<TransactionOutput> candidates)
     {
-        long target = biTarget.longValue();
+        long targetAsLong = target.longValue();
         HashSet<TransactionOutput> selected = new HashSet<>();
         // Sort the inputs by age*value so we get the highest "coindays" spent.
         // TODO: Consider changing the wallets internal format to track just outputs and keep them ordered.
         ArrayList<TransactionOutput> sortedOutputs = new ArrayList<>(candidates);
         // When calculating the wallet balance, we may be asked to select all possible coins, if so, avoid sorting
         // them in order to improve performance.
-        if (!biTarget.equals(NetworkParameters.MAX_MONEY))
+        if (!target.equals(NetworkParameters.MAX_MONEY))
         {
             sortOutputs(sortedOutputs);
         }
@@ -139,7 +139,7 @@ class AddressBasedCoinSelector extends DefaultCoinSelector
         long total = 0;
         for (TransactionOutput output : sortedOutputs)
         {
-            if (total >= target)
+            if (total >= targetAsLong)
             {
                 break;
             }
