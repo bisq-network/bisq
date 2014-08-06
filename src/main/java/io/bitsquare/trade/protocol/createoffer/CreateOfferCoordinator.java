@@ -51,31 +51,12 @@ public class CreateOfferCoordinator
         this.faultHandler = faultHandler;
 
         state = State.INIT;
-        ValidateOffer.run(this::onOfferValidated, this::onFailed, walletFacade, offer);
-        PayOfferFee.run(this::onOfferFeePaid, this::onFailed, walletFacade, offer);
+        ValidateOffer.run(this::onOfferValidated, this::onFailed, offer);
     }
+
     private void onOfferValidated()
     {
-        
-    }
-    public void recover(State lastState, String transactionId, PublishTransactionResultHandler resultHandler, FaultHandler faultHandler)
-    {
-        this.transactionId = transactionId;
-        this.resultHandler = resultHandler;
-        this.faultHandler = faultHandler;
-        switch (lastState)
-        {
-            case INIT:
-                PayOfferFee.run(this::onOfferFeePaid, this::onFailed, walletFacade, offer);
-                break;
-            case OFFER_FEE_PAID:
-                PublishOfferToDHT.run(this::onOfferPublishedToDHT, this::onFailed, messageFacade, offer);
-                break;
-            case OFFER_PUBLISHED_TO_DHT:
-                // should be impossible
-                resultHandler.onResult(transactionId);
-                break;
-        }
+        PayOfferFee.run(this::onOfferFeePaid, this::onFailed, walletFacade, offer);
     }
 
     private void onOfferFeePaid(String transactionId)
@@ -98,6 +79,31 @@ public class CreateOfferCoordinator
         //TODO recover policy, timer
 
         faultHandler.onFault(message, throwable);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Recovery 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void recover(State lastState, String transactionId, PublishTransactionResultHandler resultHandler, FaultHandler faultHandler)
+    {
+        this.transactionId = transactionId;
+        this.resultHandler = resultHandler;
+        this.faultHandler = faultHandler;
+        switch (lastState)
+        {
+            case INIT:
+                PayOfferFee.run(this::onOfferFeePaid, this::onFailed, walletFacade, offer);
+                break;
+            case OFFER_FEE_PAID:
+                PublishOfferToDHT.run(this::onOfferPublishedToDHT, this::onFailed, messageFacade, offer);
+                break;
+            case OFFER_PUBLISHED_TO_DHT:
+                // should be impossible
+                resultHandler.onResult(transactionId);
+                break;
+        }
     }
 
 
