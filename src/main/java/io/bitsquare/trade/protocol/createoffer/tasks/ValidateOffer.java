@@ -14,7 +14,7 @@ public class ValidateOffer
     {
         boolean isValid = offer.getAmount().isGreaterThan(offer.getAmount());
 
-        if (offer.getAmount().compareTo(offer.getMinAmount()) >= 0)
+        if (offer.getAmount().compareTo(offer.getMinAmount()) < 0)
         {
             faultHandler.onFault("Offer validation failed: Min. amount is larger than amount.", new Exception("Offer validation failed: Min. amount is larger than amount."));
 

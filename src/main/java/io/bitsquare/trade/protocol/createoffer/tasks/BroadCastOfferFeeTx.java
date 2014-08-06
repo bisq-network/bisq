@@ -4,22 +4,21 @@ import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.handlers.FaultHandler;
-import io.bitsquare.trade.handlers.PublishTransactionResultHandler;
+import io.bitsquare.trade.handlers.ResultHandler;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PayOfferFee
+public class BroadCastOfferFeeTx
 {
-    private static final Logger log = LoggerFactory.getLogger(PayOfferFee.class);
+    private static final Logger log = LoggerFactory.getLogger(BroadCastOfferFeeTx.class);
 
-    public static void run(PublishTransactionResultHandler publishTransactionResultHandler, FaultHandler faultHandler, WalletFacade walletFacade, Offer offer)
+    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, WalletFacade walletFacade, Transaction tx)
     {
         try
         {
-            walletFacade.payCreateOfferFee(offer.getId(), new FutureCallback<Transaction>()
+            walletFacade.broadcastCreateOfferFeeTx(tx, new FutureCallback<Transaction>()
             {
                 @Override
                 public void onSuccess(@javax.annotation.Nullable Transaction transaction)
@@ -27,10 +26,9 @@ public class PayOfferFee
                     log.info("sendResult onSuccess:" + transaction);
                     if (transaction != null)
                     {
-                        offer.setOfferFeePaymentTxID(transaction.getHashAsString());
                         try
                         {
-                            publishTransactionResultHandler.onResult(transaction.getHashAsString());
+                            resultHandler.onResult();
                         } catch (Exception e)
                         {
                             faultHandler.onFault("Offer fee payment failed.", e);

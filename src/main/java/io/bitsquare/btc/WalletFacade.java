@@ -641,8 +641,9 @@ public class WalletFacade
         printInputs("payRegistrationFee", tx);
     }
 
-    public String payCreateOfferFee(String offerId, FutureCallback<Transaction> callback) throws InsufficientMoneyException
+    public Transaction createOfferFeeTx(String offerId) throws InsufficientMoneyException
     {
+        log.trace("createOfferFeeTx");
         Transaction tx = new Transaction(params);
         Coin fee = FeePolicy.CREATE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
         log.trace("fee: " + fee.toFriendlyString());
@@ -653,15 +654,17 @@ public class WalletFacade
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, getAddressInfoByTradeID(offerId), true);
         sendRequest.changeAddress = getAddressInfoByTradeID(offerId).getAddress();
-        Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        Futures.addCallback(sendResult.broadcastComplete, callback);
-
+        wallet.completeTx(sendRequest);
         printInputs("payCreateOfferFee", tx);
-        log.debug("tx=" + tx);
-
-        return tx.getHashAsString();
+        return tx;
     }
 
+    public void broadcastCreateOfferFeeTx(Transaction tx, FutureCallback<Transaction> callback) throws InsufficientMoneyException
+    {
+        log.trace("broadcast tx");
+        ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(tx);
+        Futures.addCallback(future, callback);
+    }
 
     public String payTakeOfferFee(String offerId, FutureCallback<Transaction> callback) throws InsufficientMoneyException
     {

@@ -232,7 +232,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         if (inputsValid())
         {
             placeOfferButton.setDisable(true);
-            
+
             double price = BitSquareConverter.stringToDouble(priceTextField.getText());
             Coin amount = BitSquareFormatter.parseBtcToCoin(getAmountString());
             Coin minAmount = BitSquareFormatter.parseBtcToCoin(getMinAmountString());
@@ -241,7 +241,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
                                            price,
                                            amount,
                                            minAmount,
-                                           (transactionId) -> setupSuccessScreen(transactionId),
+                                           (transaction) -> setupSuccessScreen(transaction.getHashAsString()),
                                            errorMessage -> {
                                                Popups.openErrorPopup("An error occurred", errorMessage);
                                                placeOfferButton.setDisable(false);

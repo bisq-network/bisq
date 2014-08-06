@@ -13,7 +13,7 @@ import io.bitsquare.msg.listeners.TakeOfferRequestListener;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Persistence;
 import io.bitsquare.trade.handlers.ErrorMessageHandler;
-import io.bitsquare.trade.handlers.PublishTransactionResultHandler;
+import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.TradeMessage;
 import io.bitsquare.trade.protocol.createoffer.CreateOfferCoordinator;
 import io.bitsquare.trade.protocol.offerer.*;
@@ -131,7 +131,7 @@ public class TradeManager
                                   double price,
                                   Coin amount,
                                   Coin minAmount,
-                                  PublishTransactionResultHandler resultHandler,
+                                  TransactionResultHandler resultHandler,
                                   ErrorMessageHandler errorMessageHandler)
     {
 
@@ -155,30 +155,31 @@ public class TradeManager
         }
         else
         {
+            CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(persistence,
+                                                                                       offer,
+                                                                                       walletFacade,
+                                                                                       messageFacade,
+                                                                                       (transactionId) -> {
+                                                                                           try
+                                                                                           {
+                                                                                               addOffer(offer);
+                                                                                               offer.setOfferFeePaymentTxID(transactionId.getHashAsString());
+                                                                                               createOfferCoordinatorMap.remove(offer.getId());
 
-
-            CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(offer, walletFacade, messageFacade);
+                                                                                               resultHandler.onResult(transactionId);
+                                                                                           } catch (Exception e)
+                                                                                           {
+                                                                                               //TODO retry policy
+                                                                                               errorMessageHandler.onFault("Could not save offer. Reason: " + e.getMessage());
+                                                                                               createOfferCoordinatorMap.remove(offer.getId());
+                                                                                           }
+                                                                                       },
+                                                                                       (message, throwable) -> {
+                                                                                           errorMessageHandler.onFault(message);
+                                                                                           createOfferCoordinatorMap.remove(offer.getId());
+                                                                                       });
             createOfferCoordinatorMap.put(offer.getId(), createOfferCoordinator);
-            createOfferCoordinator.start(
-                    (transactionId) -> {
-                        try
-                        {
-                            addOffer(offer);
-                            offer.setOfferFeePaymentTxID(transactionId);
-                            createOfferCoordinatorMap.remove(offer.getId());
-
-                            resultHandler.onResult(transactionId);
-                        } catch (Exception e)
-                        {
-                            //TODO retry policy
-                            errorMessageHandler.onFault("Could not save offer. Reason: " + e.getMessage());
-                            createOfferCoordinatorMap.remove(offer.getId());
-                        }
-                    },
-                    (message, throwable) -> {
-                        errorMessageHandler.onFault(message);
-                        createOfferCoordinatorMap.remove(offer.getId());
-                    });
+            createOfferCoordinator.start();
         }
     }
 

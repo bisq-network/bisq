@@ -1,28 +1,61 @@
 package io.bitsquare.trade.protocol.createoffer;
 
+import com.google.bitcoin.core.Transaction;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.storage.Persistence;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.handlers.FaultHandler;
-import io.bitsquare.trade.handlers.PublishTransactionResultHandler;
-import io.bitsquare.trade.protocol.createoffer.tasks.PayOfferFee;
+import io.bitsquare.trade.handlers.TransactionResultHandler;
+import io.bitsquare.trade.protocol.createoffer.tasks.BroadCastOfferFeeTx;
+import io.bitsquare.trade.protocol.createoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.createoffer.tasks.PublishOfferToDHT;
 import io.bitsquare.trade.protocol.createoffer.tasks.ValidateOffer;
+import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Responsible for coordinating tasks involved in the create offer process.
- * It holds the state of the current process and support recovery if possible.
+ * It holds the model.state of the current process and support recovery if possible.
  */
 //TODO recover policy, timer
 public class CreateOfferCoordinator
 {
     public enum State
     {
-        INIT,
-        OFFER_FEE_PAID,
+        INITED,
+        STARTED,
+        VALIDATED,
+        OFFER_FEE_TX_CREATED,
+        OFFER_FEE_BROAD_CASTED,
         OFFER_PUBLISHED_TO_DHT
+    }
+
+    static class Model implements Serializable
+    {
+        private static final long serialVersionUID = 3027720554200858916L;
+
+        private Persistence persistence;
+        private State state;
+        //TODO use tx id and make Transaction transient
+        Transaction transaction;
+
+        Model(Persistence persistence)
+        {
+            this.persistence = persistence;
+        }
+
+        public State getState()
+        {
+            return state;
+        }
+
+        public void setState(State state)
+        {
+            this.state = state;
+            persistence.write(this);
+        }
     }
 
     private static final Logger log = LoggerFactory.getLogger(CreateOfferCoordinator.class);
@@ -30,54 +63,64 @@ public class CreateOfferCoordinator
     private final Offer offer;
     private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
-    private PublishTransactionResultHandler resultHandler;
-    private FaultHandler faultHandler;
+    private final TransactionResultHandler resultHandler;
+    private final FaultHandler faultHandler;
+    private final Model model;
 
-    private State state;
+    public CreateOfferCoordinator(Persistence persistence, Offer offer, WalletFacade walletFacade, MessageFacade messageFacade, TransactionResultHandler resultHandler, FaultHandler faultHandler)
+    {
+        this(offer, walletFacade, messageFacade, resultHandler, faultHandler, new Model(persistence));
+    }
 
-    // result
-    private String transactionId;
-
-    public CreateOfferCoordinator(Offer offer, WalletFacade walletFacade, MessageFacade messageFacade)
+    // for recovery from model
+    public CreateOfferCoordinator(Offer offer, WalletFacade walletFacade, MessageFacade messageFacade, TransactionResultHandler resultHandler, FaultHandler faultHandler, Model model)
     {
         this.offer = offer;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
-    }
-
-    public void start(PublishTransactionResultHandler resultHandler, FaultHandler faultHandler)
-    {
         this.resultHandler = resultHandler;
         this.faultHandler = faultHandler;
+        this.model = model;
 
-        state = State.INIT;
+        model.setState(State.INITED);
+    }
+
+    public void start()
+    {
+        model.setState(State.STARTED);
         ValidateOffer.run(this::onOfferValidated, this::onFailed, offer);
     }
 
     private void onOfferValidated()
     {
-        PayOfferFee.run(this::onOfferFeePaid, this::onFailed, walletFacade, offer);
+        model.setState(State.VALIDATED);
+        CreateOfferFeeTx.run(this::onOfferFeeTxCreated, this::onFailed, walletFacade, offer);
     }
 
-    private void onOfferFeePaid(String transactionId)
+    private void onOfferFeeTxCreated(Transaction transaction)
     {
-        state = State.OFFER_FEE_PAID;
+        model.transaction = transaction;
+        model.setState(State.OFFER_FEE_TX_CREATED);
+        BroadCastOfferFeeTx.run(this::onOfferFeeTxBroadCasted, this::onFailed, walletFacade, transaction);
+    }
 
-        this.transactionId = transactionId;
+    private void onOfferFeeTxBroadCasted()
+    {
+        model.setState(State.OFFER_FEE_BROAD_CASTED);
+
         PublishOfferToDHT.run(this::onOfferPublishedToDHT, this::onFailed, messageFacade, offer);
     }
 
     private void onOfferPublishedToDHT()
     {
-        state = State.OFFER_PUBLISHED_TO_DHT;
+        model.setState(State.OFFER_PUBLISHED_TO_DHT);
 
-        resultHandler.onResult(transactionId);
+        resultHandler.onResult(model.transaction);
     }
 
     private void onFailed(String message, Throwable throwable)
     {
         //TODO recover policy, timer
-
         faultHandler.onFault(message, throwable);
     }
 
@@ -86,38 +129,31 @@ public class CreateOfferCoordinator
     // Recovery 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void recover(State lastState, String transactionId, PublishTransactionResultHandler resultHandler, FaultHandler faultHandler)
+    public void recover()
     {
-        this.transactionId = transactionId;
-        this.resultHandler = resultHandler;
-        this.faultHandler = faultHandler;
-        switch (lastState)
+        switch (model.getState())
         {
-            case INIT:
-                PayOfferFee.run(this::onOfferFeePaid, this::onFailed, walletFacade, offer);
+            case INITED:
+            case STARTED:
+                // no need for recover, just call start
                 break;
-            case OFFER_FEE_PAID:
-                PublishOfferToDHT.run(this::onOfferPublishedToDHT, this::onFailed, messageFacade, offer);
+            case VALIDATED:
+                onOfferValidated();
+                break;
+            case OFFER_FEE_TX_CREATED:
+                onOfferFeeTxCreated(model.transaction);
+                break;
+            case OFFER_FEE_BROAD_CASTED:
+                onOfferFeeTxBroadCasted();
                 break;
             case OFFER_PUBLISHED_TO_DHT:
                 // should be impossible
-                resultHandler.onResult(transactionId);
+                onOfferPublishedToDHT();
+                break;
+            default:
+                log.error("Must not happen");
                 break;
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters for persisting state 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getTransactionId()
-    {
-        return transactionId;
-    }
-
-    public State getState()
-    {
-        return state;
-    }
 }
