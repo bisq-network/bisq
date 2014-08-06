@@ -249,7 +249,6 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         }
     }
 
-
     public void onClose()
     {
         TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
