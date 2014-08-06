@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
  * possible. This means that the transaction is the most likely to get confirmed. Note that this means we may end up
  * "spending" more priority than would be required to get the transaction we are creating confirmed.
  */
-class AddressBasedCoinSelector extends DefaultCoinSelector
+public class AddressBasedCoinSelector extends DefaultCoinSelector
 {
     private static final Logger log = LoggerFactory.getLogger(AddressBasedCoinSelector.class);
     private final NetworkParameters params;

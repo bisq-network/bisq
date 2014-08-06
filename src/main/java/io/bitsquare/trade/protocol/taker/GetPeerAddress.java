@@ -2,7 +2,7 @@ package io.bitsquare.trade.protocol.taker;
 
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.GetPeerAddressListener;
-import io.bitsquare.trade.protocol.FaultHandler;
+import io.bitsquare.trade.handlers.ExceptionHandler;
 import java.security.PublicKey;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
@@ -12,7 +12,7 @@ public class GetPeerAddress
 {
     private static final Logger log = LoggerFactory.getLogger(GetPeerAddress.class);
 
-    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, MessageFacade messageFacade, PublicKey messagePublicKey)
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, MessageFacade messageFacade, PublicKey messagePublicKey)
     {
         log.trace("Run task");
         messageFacade.getPeerAddress(messagePublicKey, new GetPeerAddressListener()
@@ -28,7 +28,7 @@ public class GetPeerAddress
             public void onFailed()
             {
                 log.error("Lookup for peer address faultHandler.onFault.");
-                faultHandler.onFault(new Exception("Lookup for peer address faultHandler.onFault."));
+                exceptionHandler.onError(new Exception("Lookup for peer address faultHandler.onFault."));
             }
         });
     }

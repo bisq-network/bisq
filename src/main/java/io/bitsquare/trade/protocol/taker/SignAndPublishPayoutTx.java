@@ -5,7 +5,7 @@ import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.Utils;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.trade.protocol.FaultHandler;
+import io.bitsquare.trade.handlers.ExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +14,7 @@ public class SignAndPublishPayoutTx
     private static final Logger log = LoggerFactory.getLogger(SignAndPublishPayoutTx.class);
 
     public static void run(ResultHandler resultHandler,
-                           FaultHandler faultHandler,
+                           ExceptionHandler exceptionHandler,
                            WalletFacade walletFacade,
                            String tradeId,
                            String depositTxAsHex,
@@ -49,13 +49,13 @@ public class SignAndPublishPayoutTx
                                                   public void onFailure(Throwable t)
                                                   {
                                                       log.error("Exception at takerSignsAndSendsTx " + t);
-                                                      faultHandler.onFault(t);
+                                                      exceptionHandler.onError(t);
                                                   }
                                               });
         } catch (Exception e)
         {
             log.error("Exception at takerSignsAndSendsTx " + e);
-            faultHandler.onFault(e);
+            exceptionHandler.onError(e);
         }
     }
 

@@ -20,7 +20,7 @@ import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.Trading;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.util.AWTSystemTray;
 import java.net.URL;
 import java.util.*;
@@ -47,7 +47,7 @@ public class PendingTradeController implements Initializable, ChildController, H
 {
     private static final Logger log = LoggerFactory.getLogger(PendingTradeController.class);
 
-    private Trading trading;
+    private TradeManager tradeManager;
     private WalletFacade walletFacade;
 
     private Trade currentTrade;
@@ -78,9 +78,9 @@ public class PendingTradeController implements Initializable, ChildController, H
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradeController(Trading trading, WalletFacade walletFacade)
+    public PendingTradeController(TradeManager tradeManager, WalletFacade walletFacade)
     {
-        this.trading = trading;
+        this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
     }
 
@@ -123,7 +123,7 @@ public class PendingTradeController implements Initializable, ChildController, H
     @Override
     public void awake()
     {
-        Map<String, Trade> trades = trading.getTrades();
+        Map<String, Trade> trades = tradeManager.getTrades();
         List<Trade> tradeList = new ArrayList<>(trades.values());
         ObservableList<PendingTradesListItem> tradeItems = FXCollections.observableArrayList();
         for (Iterator<Trade> iterator = tradeList.iterator(); iterator.hasNext(); )
@@ -147,8 +147,8 @@ public class PendingTradeController implements Initializable, ChildController, H
             }
         });
 
-        trading.getNewTradeProperty().addListener((observableValue, oldTradeId, newTradeId) -> {
-            Trade newTrade = trading.getTrade(newTradeId);
+        tradeManager.getNewTradeProperty().addListener((observableValue, oldTradeId, newTradeId) -> {
+            Trade newTrade = tradeManager.getTrade(newTradeId);
             if (newTrade != null)
             {
                 tradeItems.add(new PendingTradesListItem(newTrade));
@@ -159,7 +159,7 @@ public class PendingTradeController implements Initializable, ChildController, H
 
         // select
         Optional<PendingTradesListItem> currentTradeItemOptional = tradeItems.stream()
-                                                                             .filter((e) -> trading.getPendingTrade() != null && e.getTrade().getId().equals(trading.getPendingTrade().getId()))
+                                                                             .filter((e) -> tradeManager.getPendingTrade() != null && e.getTrade().getId().equals(tradeManager.getPendingTrade().getId()))
                                                                              .findFirst();
         if (currentTradeItemOptional.isPresent())
         {
@@ -180,7 +180,7 @@ public class PendingTradeController implements Initializable, ChildController, H
 
     public void bankTransferInited()
     {
-        trading.bankTransferInited(currentTrade.getId());
+        tradeManager.bankTransferInited(currentTrade.getId());
         bankTransferInitedButton.setDisable(true);
     }
 

@@ -4,7 +4,7 @@ import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.trade.protocol.FaultHandler;
+import io.bitsquare.trade.handlers.ExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +12,7 @@ public class PayTakeOfferFee
 {
     private static final Logger log = LoggerFactory.getLogger(PayTakeOfferFee.class);
 
-    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, WalletFacade walletFacade, String tradeId)
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, WalletFacade walletFacade, String tradeId)
     {
         log.trace("Run task");
         try
@@ -30,13 +30,13 @@ public class PayTakeOfferFee
                 public void onFailure(Throwable t)
                 {
                     log.error("Take offer fee paid faultHandler.onFault with exception: " + t);
-                    faultHandler.onFault(new Exception("Take offer fee paid faultHandler.onFault with exception: " + t));
+                    exceptionHandler.onError(new Exception("Take offer fee paid faultHandler.onFault with exception: " + t));
                 }
             });
         } catch (InsufficientMoneyException e)
         {
             log.error("Take offer fee paid faultHandler.onFault due InsufficientMoneyException " + e);
-            faultHandler.onFault(new Exception("Take offer fee paid faultHandler.onFault due InsufficientMoneyException " + e));
+            exceptionHandler.onError(new Exception("Take offer fee paid faultHandler.onFault due InsufficientMoneyException " + e));
         }
     }
 

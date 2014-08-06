@@ -1,9 +1,6 @@
 package io.bitsquare.gui.market.createOffer;
 
 import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.InsufficientMoneyException;
-import com.google.bitcoin.core.Transaction;
-import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.BitSquare;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.AddressEntry;
@@ -24,11 +21,10 @@ import io.bitsquare.locale.Localisation;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
-import io.bitsquare.trade.Trading;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.User;
-import java.io.IOException;
 import java.net.URL;
 import java.util.Random;
 import java.util.ResourceBundle;
@@ -40,7 +36,6 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javax.inject.Inject;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +43,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
 {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferController.class);
 
-    private final Trading trading;
+    private final TradeManager tradeManager;
     private final WalletFacade walletFacade;
     private final Settings settings;
     private final User user;
@@ -62,7 +57,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     @FXML
     private AnchorPane rootContainer;
     @FXML
-    private Label buyLabel, placeOfferTitle, confirmationLabel, txTitleLabel, collateralLabel;
+    private Label buyLabel, confirmationLabel, txTitleLabel, collateralLabel;
     @FXML
     private TextField volumeTextField, amountTextField, priceTextField, totalTextField;
     @FXML
@@ -80,9 +75,9 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferController(Trading trading, WalletFacade walletFacade, Settings settings, User user)
+    private CreateOfferController(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user)
     {
-        this.trading = trading;
+        this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
         this.settings = settings;
         this.user = user;
@@ -194,25 +189,52 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onPlaceOffer()
+    public boolean inputsValid()
     {
-        if (!inputValid())
+        boolean inputFieldsValid;
+        double priceAsDouble = BitSquareConverter.stringToDouble(priceTextField.getText());
+        double minAmountAsDouble = BitSquareConverter.stringToDouble(minAmountTextField.getText());
+        double amountAsDouble = BitSquareConverter.stringToDouble(getAmountString());
+        double collateralAsDouble = BitSquareConverter.stringToDouble(collateralTextField.getText());
+
+        inputFieldsValid = priceAsDouble > 0 &&
+                amountAsDouble > 0 &&
+                minAmountAsDouble > 0 &&
+                minAmountAsDouble <= amountAsDouble/* &&
+                collateralAsDouble >= settings.getMinCollateral() &&
+                collateralAsDouble <= settings.getMaxCollateral()*/;
+
+        if (!inputFieldsValid)
         {
             Popups.openWarningPopup("Invalid input", "Your input is invalid");
-            return;
+            return false;
         }
 
-        //TODO will be derived form arbitrators
-        double collateral = getCollateral();
-        Arbitrator arbitrator = settings.getRandomArbitrator(collateral, getAmountAsCoin());
+        Arbitrator arbitrator = settings.getRandomArbitrator(getCollateral(), getAmountAsCoin());
         if (arbitrator == null)
         {
             Popups.openWarningPopup("No arbitrator available", "No arbitrator from your arbitrator list does match the collateral and amount value.");
-            return;
+            return false;
         }
 
-        if (user.getCurrentBankAccount() != null)
+        if (user.getCurrentBankAccount() == null)
         {
+            log.error("Must never happen!");
+            Popups.openWarningPopup("No bank account selected", "No bank account selected.");
+            return false;
+        }
+
+        return true;
+    }
+
+    public void onPlaceOffer()
+    {
+        if (inputsValid())
+        {
+            placeOfferButton.setDisable(true);
+
+            double collateral = getCollateral();
+            Arbitrator arbitrator = settings.getRandomArbitrator(collateral, getAmountAsCoin());
             Coin amountAsCoin = BitSquareFormatter.parseBtcToCoin(getAmountString());
             Coin minAmountAsCoin = BitSquareFormatter.parseBtcToCoin(getMinAmountString());
 
@@ -230,45 +252,12 @@ public class CreateOfferController implements Initializable, ChildController, Hi
                               settings.getAcceptedCountries(),
                               settings.getAcceptedLanguageLocales());
 
-            addressEntry.setTradeId(offer.getId());
-
-            try
-            {
-                walletFacade.payCreateOfferFee(offer.getId(), new FutureCallback<Transaction>()
-                {
-                    @Override
-                    public void onSuccess(@javax.annotation.Nullable Transaction transaction)
-                    {
-                        log.info("sendResult onSuccess:" + transaction);
-                        if (transaction != null)
-                        {
-                            offer.setOfferFeePaymentTxID(transaction.getHashAsString());
-                            setupSuccessScreen(transaction);
-
-                            //  placeOfferTitle.setText("Transaction sent:");
-                            try
-                            {
-                                trading.addOffer(offer);
-                            } catch (IOException e)
-                            {
-                                Popups.openErrorPopup("Error on adding offer", "Could not add offer to orderbook. " + e.getMessage());
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(@NotNull Throwable t)
-                    {
-                        log.warn("sendResult onFailure:" + t);
-                        Popups.openErrorPopup("Fee payment failed", "Fee payment failed. " + t);
-                        placeOfferButton.setDisable(false);
-                    }
-                });
-                placeOfferButton.setDisable(true);
-            } catch (InsufficientMoneyException e1)
-            {
-                Popups.openInsufficientMoneyPopup();
-            }
+            tradeManager.requestPlaceOffer(offer,
+                                           (transactionId) -> setupSuccessScreen(transactionId),
+                                           errorMessage -> {
+                                               Popups.openErrorPopup("An error occurred", errorMessage);
+                                               placeOfferButton.setDisable(false);
+                                           });
         }
     }
 
@@ -286,7 +275,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupSuccessScreen(Transaction newTransaction)
+    private void setupSuccessScreen(String transactionId)
     {
         placeOfferButton.setVisible(false);
 
@@ -296,7 +285,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         txTextField.setVisible(true);
         closeButton.setVisible(true);
 
-        txTextField.setText(newTransaction.getHashAsString());
+        txTextField.setText(transactionId);
     }
 
     private void updateTotals()
@@ -370,21 +359,6 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     {
         // TODO
         return settings.getCollateral();
-    }
-
-    private boolean inputValid()
-    {
-        double priceAsDouble = BitSquareConverter.stringToDouble(priceTextField.getText());
-        double minAmountAsDouble = BitSquareConverter.stringToDouble(minAmountTextField.getText());
-        double amountAsDouble = BitSquareConverter.stringToDouble(getAmountString());
-        double collateralAsDouble = BitSquareConverter.stringToDouble(collateralTextField.getText());
-
-        return priceAsDouble > 0 &&
-                amountAsDouble > 0 &&
-                minAmountAsDouble > 0 &&
-                minAmountAsDouble <= amountAsDouble/* &&
-                collateralAsDouble >= settings.getMinCollateral() &&
-                collateralAsDouble <= settings.getMaxCollateral()*/;
     }
 
 }

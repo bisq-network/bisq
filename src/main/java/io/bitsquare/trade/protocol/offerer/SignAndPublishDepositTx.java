@@ -3,7 +3,7 @@ package io.bitsquare.trade.protocol.offerer;
 import com.google.bitcoin.core.Transaction;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.trade.protocol.FaultHandler;
+import io.bitsquare.trade.handlers.ExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +12,7 @@ public class SignAndPublishDepositTx
     private static final Logger log = LoggerFactory.getLogger(SignAndPublishDepositTx.class);
 
     public static void run(ResultHandler resultHandler,
-                           FaultHandler faultHandler,
+                           ExceptionHandler exceptionHandler,
                            WalletFacade walletFacade,
                            String preparedOffererDepositTxAsHex,
                            String signedTakerDepositTxAsHex,
@@ -43,13 +43,13 @@ public class SignAndPublishDepositTx
                                                      public void onFailure(Throwable t)
                                                      {
                                                          log.error("offererSignAndPublishTx faultHandler.onFault:" + t);
-                                                         faultHandler.onFault(t);
+                                                         exceptionHandler.onError(t);
                                                      }
                                                  });
         } catch (Exception e)
         {
             log.error("offererSignAndPublishTx faultHandler.onFault:" + e);
-            faultHandler.onFault(e);
+            exceptionHandler.onError(e);
         }
     }
 

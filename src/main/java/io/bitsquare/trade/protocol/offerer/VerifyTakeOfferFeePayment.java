@@ -1,8 +1,8 @@
 package io.bitsquare.trade.protocol.offerer;
 
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.trade.protocol.FaultHandler;
-import io.bitsquare.trade.protocol.ResultHandler;
+import io.bitsquare.trade.handlers.ExceptionHandler;
+import io.bitsquare.trade.handlers.ResultHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +10,7 @@ public class VerifyTakeOfferFeePayment
 {
     private static final Logger log = LoggerFactory.getLogger(VerifyTakeOfferFeePayment.class);
 
-    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, WalletFacade walletFacade, String takeOfferFeeTxId)
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, WalletFacade walletFacade, String takeOfferFeeTxId)
     {
         log.trace("Run task");
         //TODO mocked yet, need a confidence listeners

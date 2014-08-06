@@ -9,7 +9,7 @@ import io.bitsquare.msg.listeners.OrderBookListener;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
-import io.bitsquare.trade.Trading;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.User;
 import java.io.IOException;
@@ -42,7 +42,7 @@ public class OrderBook implements OrderBookListener
     private final Settings settings;
     private final User user;
     private final MessageFacade messageFacade;
-    private final Trading trading;
+    private final TradeManager tradeManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -50,12 +50,12 @@ public class OrderBook implements OrderBookListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OrderBook(Settings settings, User user, MessageFacade messageFacade, Trading trading)
+    public OrderBook(Settings settings, User user, MessageFacade messageFacade, TradeManager tradeManager)
     {
         this.settings = settings;
         this.user = user;
         this.messageFacade = messageFacade;
-        this.trading = trading;
+        this.tradeManager = tradeManager;
     }
 
 
@@ -87,7 +87,7 @@ public class OrderBook implements OrderBookListener
 
     public void removeOffer(Offer offer)
     {
-        trading.removeOffer(offer);
+        tradeManager.removeOffer(offer);
     }
 
     public void applyFilter(OrderBookFilter orderBookFilter)

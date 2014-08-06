@@ -5,7 +5,7 @@ import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.Utils;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.trade.protocol.FaultHandler;
+import io.bitsquare.trade.handlers.ExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +14,7 @@ public class CreateDepositTx
     private static final Logger log = LoggerFactory.getLogger(CreateDepositTx.class);
 
     public static void run(ResultHandler resultHandler,
-                           FaultHandler faultHandler,
+                           ExceptionHandler exceptionHandler,
                            WalletFacade walletFacade,
                            String tradeId,
                            Coin offererInputAmount,
@@ -34,7 +34,7 @@ public class CreateDepositTx
         } catch (InsufficientMoneyException e)
         {
             log.error("Create deposit tx faultHandler.onFault due InsufficientMoneyException " + e);
-            faultHandler.onFault(new Exception("Create deposit tx faultHandler.onFault due InsufficientMoneyException " + e));
+            exceptionHandler.onError(new Exception("Create deposit tx faultHandler.onFault due InsufficientMoneyException " + e));
         }
     }
 

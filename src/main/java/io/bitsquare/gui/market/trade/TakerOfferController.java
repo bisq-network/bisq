@@ -15,7 +15,7 @@ import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.Trading;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSeller;
 import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSellerListener;
 import java.net.URL;
@@ -33,7 +33,7 @@ public class TakerOfferController implements Initializable, ChildController
 {
     private static final Logger log = LoggerFactory.getLogger(TakerOfferController.class);
 
-    private final Trading trading;
+    private final TradeManager tradeManager;
     private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
 
@@ -66,9 +66,9 @@ public class TakerOfferController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TakerOfferController(Trading trading, WalletFacade walletFacade, MessageFacade messageFacade)
+    private TakerOfferController(TradeManager tradeManager, WalletFacade walletFacade, MessageFacade messageFacade)
     {
-        this.trading = trading;
+        this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
     }
@@ -166,7 +166,7 @@ public class TakerOfferController implements Initializable, ChildController
         {
             Popups.openErrorPopup("Insufficient money", "You don't have enough funds for that trade.");
         }
-        else if (trading.isOfferAlreadyInTrades(offer))
+        else if (tradeManager.isOfferAlreadyInTrades(offer))
         {
             Popups.openErrorPopup("Offer previously accepted", "You have that offer already taken. Open the offer section to find that trade.");
         }
@@ -174,7 +174,7 @@ public class TakerOfferController implements Initializable, ChildController
         {
             takeOfferButton.setDisable(true);
             amountTextField.setEditable(false);
-            trading.takeOffer(amount, offer, new ProtocolForTakerAsSellerListener()
+            tradeManager.takeOffer(amount, offer, new ProtocolForTakerAsSellerListener()
             {
                 @Override
                 public void onDepositTxPublished(String depositTxId)
@@ -243,7 +243,7 @@ public class TakerOfferController implements Initializable, ChildController
     @FXML
     public void onReceivedFiat()
     {
-        trading.onFiatReceived(tradeId);
+        tradeManager.onFiatReceived(tradeId);
     }
 
     @FXML

@@ -1201,7 +1201,7 @@ public class WalletFacade
         return tx;
     }
 
-    private void printInputs(String tracePrefix, Transaction tx)
+    public static void printInputs(String tracePrefix, Transaction tx)
     {
         for (TransactionInput input : tx.getInputs())
         {

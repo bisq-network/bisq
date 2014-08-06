@@ -5,7 +5,7 @@ import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.trade.Offer;
-import io.bitsquare.trade.Trading;
+import io.bitsquare.trade.TradeManager;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 public class OfferController implements Initializable, ChildController, Hibernate
 {
     private static final Logger log = LoggerFactory.getLogger(OfferController.class);
-    private final Trading trading;
+    private final TradeManager tradeManager;
     private ObservableList<OfferListItem> offerListItems;
     @FXML
     private TableColumn<String, OfferListItem> offerIdColumn, dateColumn, amountColumn, priceColumn, volumeColumn, removeColumn;
@@ -41,9 +41,9 @@ public class OfferController implements Initializable, ChildController, Hibernat
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private OfferController(Trading trading)
+    private OfferController(TradeManager tradeManager)
     {
-        this.trading = trading;
+        this.tradeManager = tradeManager;
     }
 
 
@@ -90,7 +90,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
     public void awake()
     {
         offerListItems = FXCollections.observableArrayList();
-        Map<String, Offer> offerMap = trading.getOffers();
+        Map<String, Offer> offerMap = tradeManager.getOffers();
         List<Offer> offerList = new ArrayList<>(offerMap.values());
         offerListItems.addAll(offerList.stream().map(OfferListItem::new).collect(Collectors.toList()));
         offerTable.setItems(offerListItems);
@@ -109,7 +109,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
 
     private void removeOffer(OfferListItem offerListItem)
     {
-        trading.removeOffer(offerListItem.getOffer());
+        tradeManager.removeOffer(offerListItem.getOffer());
         offerListItems.remove(offerListItem);
     }
 

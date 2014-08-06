@@ -11,7 +11,10 @@ import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.TakeOfferRequestListener;
 import io.bitsquare.storage.Persistence;
+import io.bitsquare.trade.handlers.ErrorMessageHandler;
+import io.bitsquare.trade.handlers.PublishTransactionResultHandler;
 import io.bitsquare.trade.protocol.TradeMessage;
+import io.bitsquare.trade.protocol.createoffer.CreateOfferCoordinator;
 import io.bitsquare.trade.protocol.offerer.*;
 import io.bitsquare.trade.protocol.taker.*;
 import io.bitsquare.user.User;
@@ -28,9 +31,9 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Trading
+public class TradeManager
 {
-    private static final Logger log = LoggerFactory.getLogger(Trading.class);
+    private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
     private final User user;
     private final Persistence persistence;
@@ -44,6 +47,7 @@ public class Trading
     //TODO store TakerAsSellerProtocol in trade
     private final Map<String, ProtocolForTakerAsSeller> takerAsSellerProtocolMap = new HashMap<>();
     private final Map<String, ProtocolForOffererAsBuyer> offererAsBuyerProtocolMap = new HashMap<>();
+    private final Map<String, CreateOfferCoordinator> createOfferCoordinatorMap = new HashMap<>();
 
     private final StringProperty newTradeProperty = new SimpleStringProperty();
 
@@ -58,7 +62,7 @@ public class Trading
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Trading(User user, Persistence persistence, MessageFacade messageFacade, BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade)
+    public TradeManager(User user, Persistence persistence, MessageFacade messageFacade, BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade)
     {
         this.user = user;
         this.persistence = persistence;
@@ -120,17 +124,46 @@ public class Trading
     // Manage offers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addOffer(Offer offer) throws IOException
+    public void requestPlaceOffer(Offer offer, PublishTransactionResultHandler resultHandler, ErrorMessageHandler errorMessageHandler)
+    {
+        if (createOfferCoordinatorMap.containsKey(offer.getId()))
+        {
+            errorMessageHandler.onFault("A createOfferCoordinator for the offer with the id " + offer.getId() + " already exists.");
+        }
+        else
+        {
+            CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(offer, walletFacade, messageFacade);
+            createOfferCoordinatorMap.put(offer.getId(), createOfferCoordinator);
+            createOfferCoordinator.start(
+                    (transactionId) -> {
+                        try
+                        {
+                            addOffer(offer);
+                            offer.setOfferFeePaymentTxID(transactionId);
+                            createOfferCoordinatorMap.remove(offer.getId());
+
+                            resultHandler.onResult(transactionId);
+                        } catch (Exception e)
+                        {
+                            //TODO retry policy
+                            errorMessageHandler.onFault("Could not save offer. Reason: " + e.getMessage());
+                            createOfferCoordinatorMap.remove(offer.getId());
+                        }
+                    },
+                    (message, throwable) -> {
+                        errorMessageHandler.onFault(message);
+                        createOfferCoordinatorMap.remove(offer.getId());
+                    });
+        }
+    }
+
+    private void addOffer(Offer offer) throws IOException
     {
         if (offers.containsKey(offer.getId()))
-        {
-            throw new IllegalStateException("offers contains already an offer with the ID " + offer.getId());
-        }
+            throw new IllegalStateException("An offer with the id " + offer.getId() + " already exists. ");
 
         offers.put(offer.getId(), offer);
-        saveOffers();
-
-        messageFacade.addOffer(offer);
+        persistOffers();
     }
 
     public void removeOffer(Offer offer)
@@ -141,7 +174,7 @@ public class Trading
         }*/
 
         offers.remove(offer.getId());
-        saveOffers();
+        persistOffers();
 
         messageFacade.removeOffer(offer);
     }
@@ -401,7 +434,7 @@ public class Trading
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void saveOffers()
+    private void persistOffers()
     {
         persistence.write(this, "offers", offers);
     }
@@ -423,4 +456,6 @@ public class Trading
             return null;
         }
     }
+
+
 }

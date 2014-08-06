@@ -43,6 +43,14 @@ import org.slf4j.LoggerFactory;
  */
 public class MessageFacade implements MessageBroker
 {
+
+    public static interface AddOfferListener
+    {
+        void onComplete(String offerId);
+
+        void onFailed(String reason, Throwable throwable);
+    }
+
     private static final Logger log = LoggerFactory.getLogger(MessageFacade.class);
     private static final String ARBITRATORS_ROOT = "ArbitratorsRoot";
 
@@ -141,7 +149,7 @@ public class MessageFacade implements MessageBroker
     // Offer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addOffer(Offer offer)
+    public void addOffer(Offer offer, AddOfferListener addOfferListener)
     {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         try
@@ -158,29 +166,40 @@ public class MessageFacade implements MessageBroker
                 public void operationComplete(BaseFuture future) throws Exception
                 {
                     Platform.runLater(() -> {
-                        orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOfferAdded(data, future.isSuccess()));
+                        addOfferListener.onComplete(offer.getId());
+                        orderBookListeners.stream().forEach(listener -> listener.onOfferAdded(data, future.isSuccess()));
+
+                        // TODO will be removed when we don't use polling anymore
                         setDirty(locationKey);
                     });
                     if (future.isSuccess())
                     {
-                        log.trace("Add offer to DHT was successful. Stored data: [key: " + locationKey + ", value: " + data + "]");
+                        Platform.runLater(() -> log.trace("Add offer to DHT was successful. Stored data: [key: " + locationKey + ", value: " + data + "]"));
                     }
                     else
                     {
-                        log.error("Add offer to DHT failed. Reason: " + future.failedReason());
+                        Platform.runLater(() -> {
+                            addOfferListener.onFailed("Add offer to DHT failed.", new Exception("Add offer to DHT failed. Reason: " + future.failedReason()));
+                            log.error("Add offer to DHT failed. Reason: " + future.failedReason());
+                        });
                     }
                 }
 
                 @Override
                 public void exceptionCaught(Throwable t) throws Exception
                 {
-                    log.error(t.toString());
+                    Platform.runLater(() -> {
+                        addOfferListener.onFailed("Add offer to DHT failed with an exception.", t);
+                        log.error("Add offer to DHT failed with an exception: " + t.getMessage());
+                    });
                 }
             });
         } catch (IOException | ClassNotFoundException e)
         {
-            e.printStackTrace();
-            log.error(e.toString());
+            Platform.runLater(() -> {
+                addOfferListener.onFailed("Add offer to DHT failed with an exception.", e);
+                log.error("Add offer to DHT failed with an exception: " + e.getMessage());
+            });
         }
     }
 

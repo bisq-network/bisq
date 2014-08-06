@@ -1,4 +1,4 @@
-package io.bitsquare.trade.protocol;
+package io.bitsquare.trade.handlers;
 
 public interface ResultHandler
 {

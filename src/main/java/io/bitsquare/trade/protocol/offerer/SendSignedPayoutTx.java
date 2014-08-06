@@ -5,8 +5,8 @@ import com.google.bitcoin.core.ECKey;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
-import io.bitsquare.trade.protocol.FaultHandler;
-import io.bitsquare.trade.protocol.ResultHandler;
+import io.bitsquare.trade.handlers.ExceptionHandler;
+import io.bitsquare.trade.handlers.ResultHandler;
 import javafx.util.Pair;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
@@ -17,7 +17,7 @@ public class SendSignedPayoutTx
     private static final Logger log = LoggerFactory.getLogger(SendSignedPayoutTx.class);
 
     public static void run(ResultHandler resultHandler,
-                           FaultHandler faultHandler,
+                           ExceptionHandler exceptionHandler,
                            PeerAddress peerAddress,
                            MessageFacade messageFacade,
                            WalletFacade walletFacade,
@@ -62,14 +62,14 @@ public class SendSignedPayoutTx
                 public void onFailed()
                 {
                     log.error("BankTransferInitedMessage did not arrive at peer");
-                    faultHandler.onFault(new Exception("BankTransferInitedMessage did not arrive at peer"));
+                    exceptionHandler.onError(new Exception("BankTransferInitedMessage did not arrive at peer"));
 
                 }
             });
         } catch (Exception e)
         {
             log.error("Exception at OffererCreatesAndSignsPayoutTx " + e);
-            faultHandler.onFault(e);
+            exceptionHandler.onError(e);
         }
     }
 }

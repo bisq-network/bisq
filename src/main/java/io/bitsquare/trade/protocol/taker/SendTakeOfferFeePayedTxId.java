@@ -3,8 +3,8 @@ package io.bitsquare.trade.protocol.taker;
 import com.google.bitcoin.core.Coin;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
-import io.bitsquare.trade.protocol.FaultHandler;
-import io.bitsquare.trade.protocol.ResultHandler;
+import io.bitsquare.trade.handlers.ExceptionHandler;
+import io.bitsquare.trade.handlers.ResultHandler;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,7 @@ public class SendTakeOfferFeePayedTxId
     private static final Logger log = LoggerFactory.getLogger(SendTakeOfferFeePayedTxId.class);
 
     public static void run(ResultHandler resultHandler,
-                           FaultHandler faultHandler,
+                           ExceptionHandler exceptionHandler,
                            PeerAddress peerAddress,
                            MessageFacade messageFacade,
                            String tradeId,
@@ -38,7 +38,7 @@ public class SendTakeOfferFeePayedTxId
             public void onFailed()
             {
                 log.error("TakeOfferFeePayedMessage  did not arrive at peer");
-                faultHandler.onFault(new Exception("TakeOfferFeePayedMessage did not arrive at peer"));
+                exceptionHandler.onError(new Exception("TakeOfferFeePayedMessage did not arrive at peer"));
             }
         });
     }

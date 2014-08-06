@@ -18,7 +18,7 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.SeedNodeAddress;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Persistence;
-import io.bitsquare.trade.Trading;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
@@ -43,7 +43,7 @@ public class BitSquareModule extends AbstractModule
         bind(BlockChainFacade.class).asEagerSingleton();
         bind(MessageFacade.class).asEagerSingleton();
 
-        bind(Trading.class).asEagerSingleton();
+        bind(TradeManager.class).asEagerSingleton();
         bind(BitSquareFormatter.class).asEagerSingleton();
 
 
