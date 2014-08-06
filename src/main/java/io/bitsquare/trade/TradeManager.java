@@ -10,6 +10,7 @@ import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.TakeOfferRequestListener;
+import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Persistence;
 import io.bitsquare.trade.handlers.ErrorMessageHandler;
 import io.bitsquare.trade.handlers.PublishTransactionResultHandler;
@@ -36,6 +37,7 @@ public class TradeManager
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
     private final User user;
+    private Settings settings;
     private final Persistence persistence;
     private final MessageFacade messageFacade;
     private final BlockChainFacade blockChainFacade;
@@ -62,9 +64,10 @@ public class TradeManager
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeManager(User user, Persistence persistence, MessageFacade messageFacade, BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade)
+    public TradeManager(User user, Settings settings, Persistence persistence, MessageFacade messageFacade, BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade)
     {
         this.user = user;
+        this.settings = settings;
         this.persistence = persistence;
         this.messageFacade = messageFacade;
         this.blockChainFacade = blockChainFacade;
@@ -124,14 +127,36 @@ public class TradeManager
     // Manage offers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestPlaceOffer(Offer offer, PublishTransactionResultHandler resultHandler, ErrorMessageHandler errorMessageHandler)
+    public void requestPlaceOffer(Direction direction,
+                                  double price,
+                                  Coin amount,
+                                  Coin minAmount,
+                                  PublishTransactionResultHandler resultHandler,
+                                  ErrorMessageHandler errorMessageHandler)
     {
+
+        Offer offer = new Offer(user.getMessagePublicKey(),
+                                direction,
+                                price,
+                                amount,
+                                minAmount,
+                                user.getCurrentBankAccount().getBankAccountType(),
+                                user.getCurrentBankAccount().getCurrency(),
+                                user.getCurrentBankAccount().getCountry(),
+                                user.getCurrentBankAccount().getUid(),
+                                settings.getRandomArbitrator(amount),
+                                settings.getCollateral(),
+                                settings.getAcceptedCountries(),
+                                settings.getAcceptedLanguageLocales());
+
         if (createOfferCoordinatorMap.containsKey(offer.getId()))
         {
             errorMessageHandler.onFault("A createOfferCoordinator for the offer with the id " + offer.getId() + " already exists.");
         }
         else
         {
+
+
             CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(offer, walletFacade, messageFacade);
             createOfferCoordinatorMap.put(offer.getId(), createOfferCoordinator);
             createOfferCoordinator.start(

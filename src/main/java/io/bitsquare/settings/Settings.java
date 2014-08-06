@@ -106,9 +106,7 @@ public class Settings implements Serializable
     }
 
     //TODO
-    @SuppressWarnings("UnusedParameters")
-
-    public Arbitrator getRandomArbitrator(@SuppressWarnings("UnusedParameters") double collateral, @SuppressWarnings("UnusedParameters") Coin amount)
+    public Arbitrator getRandomArbitrator(Coin amount)
     {
         List<Arbitrator> candidates = new ArrayList<>();
         //noinspection Convert2streamapi

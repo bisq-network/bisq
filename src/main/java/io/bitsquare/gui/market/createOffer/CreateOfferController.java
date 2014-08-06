@@ -20,7 +20,6 @@ import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
-import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.Arbitrator;
@@ -51,7 +50,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
 
     private NavigationController navigationController;
     private Direction direction;
-    private Offer offer;
+    // private Offer offer;
     private AddressEntry addressEntry;
 
     @FXML
@@ -210,7 +209,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
             return false;
         }
 
-        Arbitrator arbitrator = settings.getRandomArbitrator(getCollateral(), getAmountAsCoin());
+        Arbitrator arbitrator = settings.getRandomArbitrator(getAmountAsCoin());
         if (arbitrator == null)
         {
             Popups.openWarningPopup("No arbitrator available", "No arbitrator from your arbitrator list does match the collateral and amount value.");
@@ -227,32 +226,21 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         return true;
     }
 
+    @FXML
     public void onPlaceOffer()
     {
         if (inputsValid())
         {
             placeOfferButton.setDisable(true);
+            
+            double price = BitSquareConverter.stringToDouble(priceTextField.getText());
+            Coin amount = BitSquareFormatter.parseBtcToCoin(getAmountString());
+            Coin minAmount = BitSquareFormatter.parseBtcToCoin(getMinAmountString());
 
-            double collateral = getCollateral();
-            Arbitrator arbitrator = settings.getRandomArbitrator(collateral, getAmountAsCoin());
-            Coin amountAsCoin = BitSquareFormatter.parseBtcToCoin(getAmountString());
-            Coin minAmountAsCoin = BitSquareFormatter.parseBtcToCoin(getMinAmountString());
-
-            offer = new Offer(user.getMessagePublicKey(),
-                              direction,
-                              BitSquareConverter.stringToDouble(priceTextField.getText()),
-                              amountAsCoin,
-                              minAmountAsCoin,
-                              user.getCurrentBankAccount().getBankAccountType(),
-                              user.getCurrentBankAccount().getCurrency(),
-                              user.getCurrentBankAccount().getCountry(),
-                              user.getCurrentBankAccount().getUid(),
-                              arbitrator,
-                              collateral,
-                              settings.getAcceptedCountries(),
-                              settings.getAcceptedLanguageLocales());
-
-            tradeManager.requestPlaceOffer(offer,
+            tradeManager.requestPlaceOffer(direction,
+                                           price,
+                                           amount,
+                                           minAmount,
                                            (transactionId) -> setupSuccessScreen(transactionId),
                                            errorMessage -> {
                                                Popups.openErrorPopup("An error occurred", errorMessage);

@@ -7,6 +7,7 @@ import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.PublishTransactionResultHandler;
 import io.bitsquare.trade.protocol.createoffer.tasks.PayOfferFee;
 import io.bitsquare.trade.protocol.createoffer.tasks.PublishOfferToDHT;
+import io.bitsquare.trade.protocol.createoffer.tasks.ValidateOffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +18,7 @@ import org.slf4j.LoggerFactory;
 //TODO recover policy, timer
 public class CreateOfferCoordinator
 {
-    private enum State
+    public enum State
     {
         INIT,
         OFFER_FEE_PAID,
@@ -26,15 +27,16 @@ public class CreateOfferCoordinator
 
     private static final Logger log = LoggerFactory.getLogger(CreateOfferCoordinator.class);
 
-    public final Offer offer;
+    private final Offer offer;
     private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
     private PublishTransactionResultHandler resultHandler;
     private FaultHandler faultHandler;
 
-
-    private String transactionId;
     private State state;
+
+    // result
+    private String transactionId;
 
     public CreateOfferCoordinator(Offer offer, WalletFacade walletFacade, MessageFacade messageFacade)
     {
@@ -49,10 +51,13 @@ public class CreateOfferCoordinator
         this.faultHandler = faultHandler;
 
         state = State.INIT;
-
+        ValidateOffer.run(this::onOfferValidated, this::onFailed, walletFacade, offer);
         PayOfferFee.run(this::onOfferFeePaid, this::onFailed, walletFacade, offer);
     }
-
+    private void onOfferValidated()
+    {
+        
+    }
     public void recover(State lastState, String transactionId, PublishTransactionResultHandler resultHandler, FaultHandler faultHandler)
     {
         this.transactionId = transactionId;
@@ -91,7 +96,7 @@ public class CreateOfferCoordinator
     private void onFailed(String message, Throwable throwable)
     {
         //TODO recover policy, timer
-        
+
         faultHandler.onFault(message, throwable);
     }
 
