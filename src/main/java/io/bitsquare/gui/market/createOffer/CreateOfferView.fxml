@@ -69,7 +69,7 @@
         <Button fx:id="placeOfferButton" defaultButton="true" onAction="#onPlaceOffer" text="Place offer" GridPane.columnIndex="1" GridPane.rowIndex="14"/>
 
         <Label fx:id="txTitleLabel" text="Transaction ID:" visible="false" GridPane.rowIndex="14"/>
-        <TextField fx:id="txTextField" visible="false" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="14"/>
+        <TextField fx:id="transactionIdTextField" visible="false" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="14"/>
         <ConfidenceProgressIndicator fx:id="progressIndicator" visible="false" progress="0" GridPane.columnIndex="2" GridPane.halignment="LEFT"
                                      GridPane.rowIndex="14" GridPane.rowSpan="2" GridPane.valignment="TOP">
             <GridPane.margin>

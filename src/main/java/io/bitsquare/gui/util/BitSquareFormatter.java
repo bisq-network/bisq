@@ -58,6 +58,7 @@ public class BitSquareFormatter
         return Coin.parseCoin(input);
     }
 
+  
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // FIAT
@@ -84,6 +85,21 @@ public class BitSquareFormatter
     // Other
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public static String formatCollateralAsBtc(String amount, double collateral)
+    {
+        Coin amountAsCoin = BitSquareFormatter.parseToCoin(amount);
+        Coin collateralAsCoin = amountAsCoin.divide((long) (1d / collateral));
+        return formatCoinWithCode(collateralAsCoin);
+    }
+    
+    public static String formatTotalsAsBtc(String amount, double collateral, Coin fees)
+    {
+        Coin amountAsCoin = BitSquareFormatter.parseToCoin(amount);
+        Coin collateralAsCoin = amountAsCoin.divide((long) (1d / collateral));
+        Coin totals = collateralAsCoin.add(fees);
+        return formatCoinWithCode(totals);
+    }
+    
     public static String formatDirection(Direction direction, boolean allUpperCase)
     {
         String result = (direction == Direction.BUY) ? "Buy" : "Sell";
