@@ -34,7 +34,7 @@
         <TextField fx:id="feeLabel" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
 
         <Label text="Total funds needed:" GridPane.rowIndex="5"/>
-        <TextField fx:id="totalTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+        <TextField fx:id="totalsTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
 
         <Label text="BTC address for deposit:" GridPane.rowIndex="6"/>
         <AddressTextField fx:id="addressTextField" GridPane.columnIndex="1" GridPane.rowIndex="6"/>

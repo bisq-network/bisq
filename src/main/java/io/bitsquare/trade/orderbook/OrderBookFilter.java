@@ -1,5 +1,6 @@
 package io.bitsquare.trade.orderbook;
 
+import com.google.bitcoin.core.Coin;
 import io.bitsquare.trade.Direction;
 import javafx.beans.property.SimpleBooleanProperty;
 
@@ -8,7 +9,7 @@ public class OrderBookFilter
     private final SimpleBooleanProperty directionChangedProperty = new SimpleBooleanProperty();
 
     private double price;
-    private double amount;
+    private Coin amount;
     private Direction direction;
 
 
@@ -16,12 +17,12 @@ public class OrderBookFilter
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public double getAmount()
+    public Coin getAmount()
     {
         return amount;
     }
 
-    public void setAmount(double amount)
+    public void setAmount(Coin amount)
     {
         this.amount = amount;
     }

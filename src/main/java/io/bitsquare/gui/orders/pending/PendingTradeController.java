@@ -297,10 +297,10 @@ public class PendingTradeController implements Initializable, ChildController, H
             primaryBankAccountIDTitleLabel.setText("Total fees (offer fee + tx fee):");
             secondaryBankAccountIDTitleLabel.setText("Refunded collateral:");
 
-            bankAccountTypeTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(trade.getTradeAmount()));
+            bankAccountTypeTextField.setText(BitSquareFormatter.formatCoinWithCode(trade.getTradeAmount()));
             holderNameTextField.setText(BitSquareFormatter.formatVolume(trade.getTradeVolume()));
-            primaryBankAccountIDTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
-            secondaryBankAccountIDTextField.setText(BitSquareFormatter.formatCoinToBtcWithCode(trade.getCollateralAmount()));
+            primaryBankAccountIDTextField.setText(BitSquareFormatter.formatCoinWithCode(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+            secondaryBankAccountIDTextField.setText(BitSquareFormatter.formatCoinWithCode(trade.getCollateralAmount()));
 
             holderNameCopyIcon.setVisible(false);
             primaryBankAccountIDCopyIcon.setVisible(false);

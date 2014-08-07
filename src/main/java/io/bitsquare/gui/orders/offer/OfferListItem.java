@@ -22,7 +22,7 @@ public class OfferListItem
         this.date.set(BitSquareFormatter.formatDateTime(offer.getCreationDate()));
         this.price.set(BitSquareFormatter.formatPrice(offer.getPrice()));
 
-        this.amount.set(BitSquareFormatter.formatCoinToBtc(offer.getAmount()) + " (" + BitSquareFormatter.formatCoinToBtc(offer.getMinAmount()) + ")");
+        this.amount.set(BitSquareFormatter.formatCoin(offer.getAmount()) + " (" + BitSquareFormatter.formatCoin(offer.getMinAmount()) + ")");
         this.volume.set(BitSquareFormatter.formatVolumeWithMinVolume(offer.getOfferVolume(), offer.getMinOfferVolume()));
         this.offerId = offer.getId();
     }

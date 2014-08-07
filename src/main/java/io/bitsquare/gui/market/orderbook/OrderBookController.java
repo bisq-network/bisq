@@ -128,7 +128,7 @@ public class OrderBookController implements Initializable, ChildController
 
         // handlers
         amount.textProperty().addListener((observable, oldValue, newValue) -> {
-            orderBookFilter.setAmount(textInputToNumber(oldValue, newValue));
+            orderBookFilter.setAmount(BitSquareFormatter.parseToCoin(newValue));
             updateVolume();
         });
 
@@ -230,7 +230,7 @@ public class OrderBookController implements Initializable, ChildController
                 else
                 {
                     Action response = Popups.openErrorPopup("Missing registration fee",
-                                                            "You have not funded the full registration fee of " + BitSquareFormatter.formatCoinToBtcWithCode(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
+                                                            "You have not funded the full registration fee of " + BitSquareFormatter.formatCoinWithCode(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
                     if (response == Dialog.Actions.OK)
                     {
                         MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
@@ -344,7 +344,7 @@ public class OrderBookController implements Initializable, ChildController
             Coin requestedAmount;
             if (!"".equals(amount.getText()))
             {
-                requestedAmount = BitSquareFormatter.parseBtcToCoin(amount.getText());
+                requestedAmount = BitSquareFormatter.parseToCoin(amount.getText());
             }
             else
             {
@@ -549,6 +549,7 @@ public class OrderBookController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
+
 
     private double textInputToNumber(String oldValue, String newValue)
     {

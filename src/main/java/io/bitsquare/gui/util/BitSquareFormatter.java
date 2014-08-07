@@ -22,19 +22,20 @@ public class BitSquareFormatter
     // BTC
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static String formatCoinToBtc(Coin coin)
+    public static String formatCoin(Coin coin)
     {
-        return coin.toFriendlyString();
+        return coin != null ? coin.toPlainString() : "";
     }
 
-   /* public static String formatCoinToBtcWithSymbol(Coin coin)
+
+   /* public static String formatCoinToWithSymbol(Coin coin)
     {
         return "฿ " + coin.toPlainString();
     } */
 
-    public static String formatCoinToBtcWithCode(Coin coin)
+    public static String formatCoinWithCode(Coin coin)
     {
-        return coin.toFriendlyString();
+        return coin != null ? coin.toFriendlyString() : "";
     }
 
     /**
@@ -42,7 +43,7 @@ public class BitSquareFormatter
      *              If input has an incorrect format it returns a zero value coin.
      * @return
      */
-    public static Coin parseBtcToCoin(String input)
+    public static Coin parseToCoin(String input)
     {
         try
         {
@@ -61,6 +62,7 @@ public class BitSquareFormatter
     ///////////////////////////////////////////////////////////////////////////////////////////
     // FIAT
     ///////////////////////////////////////////////////////////////////////////////////////////
+
 
     public static String formatPrice(double price)
     {

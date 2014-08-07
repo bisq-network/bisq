@@ -113,11 +113,8 @@ public class OrderBook implements OrderBookListener
             // Apply applyFilter only if there is a valid value set
             // The requested amount must be lower or equal then the offer amount
             boolean amountResult = true;
-            if (orderBookFilter.getAmount() > 0)
-            {
-                //TODO
-                amountResult = orderBookFilter.getAmount() <= offer.getAmount().value;
-            }
+            if (orderBookFilter.getAmount() != null)
+                amountResult = orderBookFilter.getAmount().compareTo(offer.getAmount()) <= 0;
 
             // The requested trade direction must be opposite of the offerList trade direction
             boolean directionResult = !orderBookFilter.getDirection().equals(offer.getDirection());

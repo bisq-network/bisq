@@ -155,7 +155,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
             BitSquareValidator.textFieldsNotEmpty(amountTextField, withdrawFromTextField, withdrawToTextField, changeAddressTextField);
             BitSquareValidator.textFieldsHasDoubleValueWithReset(amountTextField);
 
-            Coin amount = BitSquareFormatter.parseBtcToCoin(amountTextField.getText());
+            Coin amount = BitSquareFormatter.parseToCoin(amountTextField.getText());
             if (BtcValidator.isMinSpendableAmount(amount))
             {
                 FutureCallback<Transaction> callback = new FutureCallback<Transaction>()
@@ -181,8 +181,8 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                         "Amount: " + amountTextField.getText() + " BTC\n" +
                         "Sending address: " + withdrawFromTextField.getText() + "\n" +
                         "Receiving address: " + withdrawToTextField.getText() + "\n" +
-                        "Transaction fee: " + BitSquareFormatter.formatCoinToBtcWithCode(FeePolicy.TX_FEE) + "\n" +
-                        "You receive in total: " + BitSquareFormatter.formatCoinToBtcWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
+                        "Transaction fee: " + BitSquareFormatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
+                        "You receive in total: " + BitSquareFormatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
                         "Are you sure you withdraw that amount?");
                 if (response == Dialog.Actions.OK)
                 {
