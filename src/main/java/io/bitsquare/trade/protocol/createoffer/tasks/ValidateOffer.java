@@ -33,7 +33,6 @@ public class ValidateOffer
             checkNotNull(offer.getId());
             checkNotNull(offer.getMessagePublicKey());
             checkNotNull(offer.getMinAmount());
-            checkNotNull(offer.getOfferFeePaymentTxID());
             checkNotNull(offer.getPrice());
 
             checkArgument(offer.getAcceptedCountries().size() > 0);

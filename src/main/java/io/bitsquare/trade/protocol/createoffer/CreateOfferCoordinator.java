@@ -2,14 +2,14 @@ package io.bitsquare.trade.protocol.createoffer;
 
 import com.google.bitcoin.core.Transaction;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.trade.protocol.createoffer.tasks.BroadCastOfferFeeTx;
-import io.bitsquare.trade.protocol.createoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.trade.protocol.createoffer.tasks.PublishOfferToDHT;
 import io.bitsquare.storage.Persistence;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
+import io.bitsquare.trade.protocol.createoffer.tasks.BroadCastOfferFeeTx;
+import io.bitsquare.trade.protocol.createoffer.tasks.CreateOfferFeeTx;
+import io.bitsquare.trade.protocol.createoffer.tasks.PublishOfferToDHT;
 import io.bitsquare.trade.protocol.createoffer.tasks.ValidateOffer;
 import java.io.Serializable;
 import javax.annotation.concurrent.Immutable;
@@ -44,7 +44,7 @@ public class CreateOfferCoordinator
 
         private final Persistence persistence;
         private State state;
-        //TODO use tx id and make Transaction transient
+        //TODO use tx id 
         Transaction transaction;
 
         Model(Persistence persistence)
@@ -62,7 +62,7 @@ public class CreateOfferCoordinator
             this.state = state;
 
             //TODO will have performance issues, but could be handled inside the persistence solution (queue up save requests and exec. them on dedicated thread)
-            persistence.write(this);
+            persistence.write(this, "state", state);
         }
     }
 
@@ -115,17 +115,12 @@ public class CreateOfferCoordinator
     private void onOfferFeeTxBroadCasted()
     {
         model.setState(State.OFFER_FEE_BROAD_CASTED);
-
         PublishOfferToDHT.run(this::onOfferPublishedToDHT, this::onFailed, messageFacade, offer);
     }
 
     private void onOfferPublishedToDHT()
     {
         model.setState(State.OFFER_PUBLISHED_TO_DHT);
-        // TODO
-        //orderBookListeners.stream().forEach(listener -> listener.onOfferAdded(data, future.isSuccess()));
-
-
         resultHandler.onResult(model.transaction);
     }
 
@@ -146,23 +141,22 @@ public class CreateOfferCoordinator
         {
             case INITED:
             case STARTED:
-                // no need for recover, just call start
-                break;
             case VALIDATED:
-                onOfferValidated();
-                break;
             case OFFER_FEE_TX_CREATED:
-                onOfferFeeTxCreated(model.transaction);
+                // we start over again, no critical and expensive work done yet
+                start();
                 break;
             case OFFER_FEE_BROAD_CASTED:
-                onOfferFeeTxBroadCasted();
+                // actually the only replay case here, tx publish was successful but storage to dht failed. 
+                // Republish the offer to DHT
+                PublishOfferToDHT.run(this::onOfferPublishedToDHT, this::onFailed, messageFacade, offer);
                 break;
             case OFFER_PUBLISHED_TO_DHT:
                 // should be impossible
-                onOfferPublishedToDHT();
+                log.warn("That case must not happen.");
                 break;
             default:
-                log.error("Must not happen");
+                log.error("Illegal state passes. That must not happen");
                 break;
         }
     }
