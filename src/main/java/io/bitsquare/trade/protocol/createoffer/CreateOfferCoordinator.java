@@ -2,16 +2,17 @@ package io.bitsquare.trade.protocol.createoffer;
 
 import com.google.bitcoin.core.Transaction;
 import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.trade.protocol.createoffer.tasks.BroadCastOfferFeeTx;
+import io.bitsquare.trade.protocol.createoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.trade.protocol.createoffer.tasks.PublishOfferToDHT;
 import io.bitsquare.storage.Persistence;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.trade.protocol.createoffer.tasks.BroadCastOfferFeeTx;
-import io.bitsquare.trade.protocol.createoffer.tasks.CreateOfferFeeTx;
-import io.bitsquare.trade.protocol.createoffer.tasks.PublishOfferToDHT;
 import io.bitsquare.trade.protocol.createoffer.tasks.ValidateOffer;
 import java.io.Serializable;
+import javax.annotation.concurrent.Immutable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,8 @@ import org.slf4j.LoggerFactory;
  * It holds the model.state of the current process and support recovery if possible.
  */
 //TODO recover policy, timer
+
+@Immutable
 public class CreateOfferCoordinator
 {
     public enum State
@@ -32,11 +35,14 @@ public class CreateOfferCoordinator
         OFFER_PUBLISHED_TO_DHT
     }
 
+    /**
+     * The model is not immutable but only exposed to the CreateOfferCoordinator
+     */
     static class Model implements Serializable
     {
         private static final long serialVersionUID = 3027720554200858916L;
 
-        private Persistence persistence;
+        private final Persistence persistence;
         private State state;
         //TODO use tx id and make Transaction transient
         Transaction transaction;
@@ -54,6 +60,8 @@ public class CreateOfferCoordinator
         public void setState(State state)
         {
             this.state = state;
+
+            //TODO will have performance issues, but could be handled inside the persistence solution (queue up save requests and exec. them on dedicated thread)
             persistence.write(this);
         }
     }
@@ -94,7 +102,7 @@ public class CreateOfferCoordinator
     private void onOfferValidated()
     {
         model.setState(State.VALIDATED);
-        CreateOfferFeeTx.run(this::onOfferFeeTxCreated, this::onFailed, walletFacade, offer);
+        CreateOfferFeeTx.run(this::onOfferFeeTxCreated, this::onFailed, walletFacade, offer.getId());
     }
 
     private void onOfferFeeTxCreated(Transaction transaction)
@@ -114,6 +122,9 @@ public class CreateOfferCoordinator
     private void onOfferPublishedToDHT()
     {
         model.setState(State.OFFER_PUBLISHED_TO_DHT);
+        // TODO
+        //orderBookListeners.stream().forEach(listener -> listener.onOfferAdded(data, future.isSuccess()));
+
 
         resultHandler.onResult(model.transaction);
     }

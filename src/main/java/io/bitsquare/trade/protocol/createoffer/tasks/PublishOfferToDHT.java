@@ -16,7 +16,7 @@ public class PublishOfferToDHT
         messageFacade.addOffer(offer, new MessageFacade.AddOfferListener()
         {
             @Override
-            public void onComplete(String offerId)
+            public void onComplete()
             {
                 resultHandler.onResult();
             }

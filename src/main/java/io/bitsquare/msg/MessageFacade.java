@@ -46,13 +46,18 @@ public class MessageFacade implements MessageBroker
 
     public static interface AddOfferListener
     {
-        void onComplete(String offerId);
+        void onComplete();
 
         void onFailed(String reason, Throwable throwable);
     }
 
     private static final Logger log = LoggerFactory.getLogger(MessageFacade.class);
     private static final String ARBITRATORS_ROOT = "ArbitratorsRoot";
+
+    public P2PNode getP2pNode()
+    {
+        return p2pNode;
+    }
 
     private P2PNode p2pNode;
 
@@ -165,16 +170,16 @@ public class MessageFacade implements MessageBroker
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception
                 {
-                    Platform.runLater(() -> {
-                        addOfferListener.onComplete(offer.getId());
-                        orderBookListeners.stream().forEach(listener -> listener.onOfferAdded(data, future.isSuccess()));
-
-                        // TODO will be removed when we don't use polling anymore
-                        setDirty(locationKey);
-                    });
                     if (future.isSuccess())
                     {
-                        Platform.runLater(() -> log.trace("Add offer to DHT was successful. Stored data: [key: " + locationKey + ", value: " + data + "]"));
+                        Platform.runLater(() -> {
+                            addOfferListener.onComplete();
+                            orderBookListeners.stream().forEach(listener -> listener.onOfferAdded(data, future.isSuccess()));
+
+                            // TODO will be removed when we don't use polling anymore
+                            setDirty(locationKey);
+                            log.trace("Add offer to DHT was successful. Stored data: [key: " + locationKey + ", value: " + data + "]");
+                        });
                     }
                     else
                     {
@@ -487,7 +492,7 @@ public class MessageFacade implements MessageBroker
         }
     }
 
-    private void setDirty(Number160 locationKey)
+    public void setDirty(Number160 locationKey)
     {
         // we don't want to get an update from dirty for own changes, so update the lastTimeStamp to omit a change trigger
         lastTimeStamp = System.currentTimeMillis();
