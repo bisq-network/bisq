@@ -3,7 +3,7 @@ package io.bitsquare.gui.orders;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.components.LazyLoadingTabPane;
+import io.bitsquare.gui.components.CachingTabPane;
 import io.bitsquare.storage.Persistence;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -20,7 +20,7 @@ public class OrdersController implements Initializable, ChildController, Navigat
     private static OrdersController INSTANCE;
     private final Persistence persistence;
     @FXML
-    private LazyLoadingTabPane tabPane;
+    private CachingTabPane tabPane;
 
     @Inject
     private OrdersController(Persistence persistence)

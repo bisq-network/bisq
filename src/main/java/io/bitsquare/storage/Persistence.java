@@ -137,7 +137,6 @@ public class Persistence
         return read(classInstance.getClass().getName());
     }
 
-
     public Serializable read(Object classInstance, String propertyKey)
     {
         return read(classInstance.getClass().getName() + "." + propertyKey);
