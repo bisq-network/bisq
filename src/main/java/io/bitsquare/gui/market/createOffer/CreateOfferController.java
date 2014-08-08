@@ -57,14 +57,12 @@ class ViewModel
     final StringProperty directionLabel = new SimpleStringProperty();
     final StringProperty collateralLabel = new SimpleStringProperty();
     final StringProperty feeLabel = new SimpleStringProperty();
-
     final StringProperty bankAccountType = new SimpleStringProperty();
     final StringProperty bankAccountCurrency = new SimpleStringProperty();
     final StringProperty bankAccountCounty = new SimpleStringProperty();
     final StringProperty acceptedCountries = new SimpleStringProperty();
     final StringProperty acceptedLanguages = new SimpleStringProperty();
     final StringProperty transactionId = new SimpleStringProperty();
-
     final BooleanProperty isOfferPlacedScreen = new SimpleBooleanProperty();
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty();
 }
@@ -149,7 +147,6 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     // Interface implementation: Initializable
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
@@ -232,6 +229,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
+    
     @FXML
     public void onPlaceOffer()
     {

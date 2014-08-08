@@ -45,7 +45,6 @@ public class LazyLoadingTabPane extends TabPane
             throw new IllegalArgumentException("No tabContentFXMLUrls defined");
         }
 
-        this.tabContentFXMLUrls = tabContentFXMLUrls;
         this.navigationController = navigationController;
         this.tabContentFXMLUrls = tabContentFXMLUrls;
         this.persistence = persistence;
@@ -117,6 +116,7 @@ public class LazyLoadingTabPane extends TabPane
                 try
                 {
                     view = loader.load();
+                    log.debug("######## " + view.toString());
                     views.put(index, view);
 
                     childController = loader.getController();
