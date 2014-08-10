@@ -8,13 +8,12 @@ import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.popups.Popups;
-import io.bitsquare.locale.Localisation;
+import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;
-import io.bitsquare.util.FileUtil;
 import io.bitsquare.util.StorageDirectory;
 import java.io.File;
 import java.io.IOException;
@@ -47,6 +46,8 @@ public class BitSquare extends Application
 
     public static void main(String[] args)
     {
+        Profiler.init();
+        Profiler.printMsgWithTime("main called");
         log.debug("Startup: main " + Arrays.asList(args).toString());
         if (args != null && args.length > 0) APP_NAME = args[0];
 
@@ -63,15 +64,10 @@ public class BitSquare extends Application
         return APP_NAME;
     }
 
-    public static String getUID()
-    {
-        return FileUtil.getApplicationFileName();
-    }
-
     @Override
     public void start(Stage primaryStage) throws IOException
     {
-        log.trace("Startup: start");
+        Profiler.printMsgWithTime("start called");
         BitSquare.primaryStage = primaryStage;
 
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
@@ -85,7 +81,7 @@ public class BitSquare extends Application
 
         walletFacade = injector.getInstance(WalletFacade.class);
         messageFacade = injector.getInstance(MessageFacade.class);
-        log.trace("Startup: messageFacade, walletFacade inited");
+        Profiler.printMsgWithTime("Startup: messageFacade, walletFacade inited");
 
         // apply stored data
         final User user = injector.getInstance(User.class);
@@ -99,30 +95,29 @@ public class BitSquare extends Application
 
         settings.applyPersistedSettings((Settings) persistence.read(settings.getClass().getName()));
 
-        primaryStage.setTitle("BitSquare (" + getUID() + ")");
+        primaryStage.setTitle("BitSquare (" + APP_NAME + ")");
 
         GuiceFXMLLoader.setInjector(injector);
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), Localisation.getResourceBundle());
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()));
         final Parent mainView = loader.load();
         BorderPane rootPane = new BorderPane();
         rootPane.setTop(getMenuBar());
         rootPane.setCenter(mainView);
 
-        final Scene scene = new Scene(rootPane, 800, 600);
-        scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm());
+        final Scene scene = new Scene(rootPane, 1000, 750);
+        scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm(),
+                                      getClass().getResource("/io/bitsquare/gui/validation.css").toExternalForm());
 
         setupCloseHandlers(primaryStage, scene);
 
         primaryStage.setScene(scene);
         primaryStage.setMinWidth(750);
         primaryStage.setMinHeight(500);
-        primaryStage.setWidth(1000);
-        primaryStage.setHeight(750);
 
         primaryStage.show();
 
-        log.debug("Startup: stage displayed");
+        Profiler.printMsgWithTime("Startup: primaryStage.show");
     }
 
     private void setupCloseHandlers(Stage primaryStage, Scene scene)

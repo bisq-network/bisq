@@ -132,7 +132,7 @@ public class ValidatedTextField extends TextField
             @Override
             public void changed(ObservableValue<? extends String> ov, String t, String t1)
             {
-                if (textProperty().get().length() > maxLength.get())
+                if (textProperty().get() != null && textProperty().get().length() > maxLength.get())
                 {
                     setText(t);
                 }
@@ -173,7 +173,7 @@ public class ValidatedTextField extends TextField
             @Override
             protected boolean computeValue()
             {
-                return !textProperty().get().matches(mask.get());
+                return (textProperty().get() != null) ? !textProperty().get().matches(mask.get()) : false;
             }
         };
     }
@@ -189,7 +189,7 @@ public class ValidatedTextField extends TextField
             @Override
             protected boolean computeValue()
             {
-                return textProperty().get().length() < minLength.get();
+                return (textProperty().get() != null) ? textProperty().get().length() < minLength.get() : false;
             }
         };
     }

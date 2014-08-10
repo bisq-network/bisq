@@ -14,7 +14,6 @@ import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.market.createOffer.CreateOfferController;
 import io.bitsquare.gui.market.trade.TakerOfferController;
 import io.bitsquare.gui.popups.Popups;
-import io.bitsquare.gui.util.BitSquareConverter;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.locale.Country;
@@ -564,7 +563,7 @@ public class OrderBookController implements Initializable, ChildController
             } catch (ParseException e)
             {
                 amount.setText(oldValue);
-                d = BitSquareConverter.stringToDouble(oldValue);
+                d = BitSquareFormatter.parseToDouble(oldValue);
             }
         }
         return d;

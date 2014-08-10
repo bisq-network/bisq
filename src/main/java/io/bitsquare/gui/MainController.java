@@ -10,7 +10,6 @@ import io.bitsquare.gui.market.MarketController;
 import io.bitsquare.gui.orders.OrdersController;
 import io.bitsquare.gui.util.Icons;
 import io.bitsquare.gui.util.Transitions;
-import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.BootstrapListener;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.storage.Persistence;
@@ -21,7 +20,6 @@ import io.bitsquare.util.AWTSystemTray;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -53,7 +51,7 @@ public class MainController implements Initializable, NavigationController
     private final ToggleGroup toggleGroup = new ToggleGroup();
 
 
-    private ChildController childController;
+    private ChildController controller;
     private ToggleButton prevToggleButton;
     private Image prevToggleButtonIcon;
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton;
@@ -109,75 +107,6 @@ public class MainController implements Initializable, NavigationController
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        Platform.runLater(this::init);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: NavigationController
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    @Override
-    public ChildController navigateToView(NavigationItem navigationItem)
-    {
-        switch (navigationItem)
-        {
-            case HOME:
-                homeButton.fire();
-                break;
-            case FUNDS:
-                fundsButton.fire();
-                break;
-            case MSG:
-                msgButton.fire();
-                break;
-            case ORDERS:
-                ordersButton.fire();
-                break;
-            case SETTINGS:
-                settingsButton.fire();
-                break;
-            case SELL:
-                sellButton.fire();
-                break;
-            case BUY:
-                buyButton.fire();
-                break;
-        }
-        return childController;
-    }
-
-
-    private ChildController loadView(NavigationItem navigationItem)
-    {
-        if (childController != null)
-        {
-            childController.cleanup();
-        }
-
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
-        try
-        {
-            final Node view = loader.load();
-            contentPane.getChildren().setAll(view);
-            childController = loader.getController();
-            childController.setNavigationController(this);
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-            log.error("Loading view failed. " + navigationItem.getFxmlUrl());
-        }
-        return childController;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void init()
-    {
         messageFacade.init(new BootstrapListener()
         {
             @Override
@@ -214,6 +143,70 @@ public class MainController implements Initializable, NavigationController
 
         tradeManager.addTakeOfferRequestListener(this::onTakeOfferRequested);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface implementation: NavigationController
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    @Override
+    public ChildController navigateToView(NavigationItem navigationItem)
+    {
+        switch (navigationItem)
+        {
+            case HOME:
+                homeButton.fire();
+                break;
+            case FUNDS:
+                fundsButton.fire();
+                break;
+            case MSG:
+                msgButton.fire();
+                break;
+            case ORDERS:
+                ordersButton.fire();
+                break;
+            case SETTINGS:
+                settingsButton.fire();
+                break;
+            case SELL:
+                sellButton.fire();
+                break;
+            case BUY:
+                buyButton.fire();
+                break;
+        }
+        return controller;
+    }
+
+
+    private ChildController loadView(NavigationItem navigationItem)
+    {
+        if (controller != null)
+        {
+            controller.cleanup();
+        }
+
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        try
+        {
+            final Node view = loader.load();
+            contentPane.getChildren().setAll(view);
+            controller = loader.getController();
+            controller.setNavigationController(this);
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+            log.error("Loading view failed. " + navigationItem.getFxmlUrl());
+        }
+        return controller;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initialisationDone()
     {
@@ -292,11 +285,11 @@ public class MainController implements Initializable, NavigationController
             prevToggleButtonIcon = ((ImageView) (toggleButton.getGraphic())).getImage();
             ((ImageView) (toggleButton.getGraphic())).setImage(Icons.getIconImage(navigationItem.getActiveIcon()));
 
-            childController = loadView(navigationItem);
+            controller = loadView(navigationItem);
 
-            if (childController instanceof MarketController)
+            if (controller instanceof MarketController)
             {
-                ((MarketController) childController).setDirection(navigationItem == NavigationItem.BUY ? Direction.BUY : Direction.SELL);
+                ((MarketController) controller).setDirection(navigationItem == NavigationItem.BUY ? Direction.BUY : Direction.SELL);
             }
 
             persistence.write(this, "selectedNavigationItem", navigationItem);

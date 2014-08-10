@@ -3,6 +3,7 @@
 <?import io.bitsquare.gui.components.btc.AddressTextField?>
 <?import io.bitsquare.gui.components.btc.BalanceTextField?>
 <?import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator?>
+<?import io.bitsquare.gui.components.ValidatingTextField?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -16,16 +17,16 @@
         <Label fx:id="buyLabel" GridPane.rowIndex="1"/>
 
         <HBox spacing="5" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="NEVER" alignment="CENTER_LEFT">
-            <TextField fx:id="amountTextField" prefWidth="70.0" alignment="CENTER_RIGHT"/>
+            <ValidatingTextField fx:id="amountTextField" prefWidth="70.0" alignment="CENTER_RIGHT"/>
             <Label text="BTC for:"/>
-            <TextField fx:id="priceTextField" prefWidth="70.0" alignment="CENTER_RIGHT"/>
+            <ValidatingTextField fx:id="priceTextField" prefWidth="70.0" alignment="CENTER_RIGHT"/>
             <Label text="EUR ="/>
-            <TextField fx:id="volumeTextField" prefWidth="70.0" alignment="CENTER_RIGHT" editable="false"/>
+            <ValidatingTextField fx:id="volumeTextField" prefWidth="70.0" alignment="CENTER_RIGHT" editable="false"/>
             <Label text="EUR in total"/>
         </HBox>
 
         <Label text="Min. Amount (BTC):" GridPane.rowIndex="2"/>
-        <TextField fx:id="minAmountTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+        <ValidatingTextField fx:id="minAmountTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
         <Label fx:id="collateralLabel" text="Collateral:" GridPane.rowIndex="3"/>
         <TextField fx:id="collateralTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3"/>

@@ -54,6 +54,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     private List<String> regionList;
     private ObservableList<Arbitrator> arbitratorList;
 
+    @FXML private TabPane root;
     @FXML
     private ListView<Locale> languagesListView;
     @FXML
@@ -133,7 +134,6 @@ public class SettingsController implements Initializable, ChildController, Navig
         addMockArbitrator();
     }
 
-    @SuppressWarnings("ConstantConditions")
     private void addMockArbitrator()
     {
         if (settings.getAcceptedArbitrators().isEmpty())
@@ -204,7 +204,7 @@ public class SettingsController implements Initializable, ChildController, Navig
             childController.cleanup();
         }
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try
         {
             final Node view = loader.load();

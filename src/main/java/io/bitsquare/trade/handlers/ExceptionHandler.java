@@ -1,4 +1,5 @@
 package io.bitsquare.trade.handlers;
+
 /**
  * For reporting throwables only
  */

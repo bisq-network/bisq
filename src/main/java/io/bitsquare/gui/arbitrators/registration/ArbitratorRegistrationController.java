@@ -9,7 +9,6 @@ import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.arbitrators.profile.ArbitratorProfileController;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
-import io.bitsquare.gui.util.BitSquareConverter;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.gui.util.ConfidenceDisplay;
@@ -475,11 +474,11 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
             String name = nameTextField.getText();
 
-            double maxTradeVolume = BitSquareConverter.stringToDouble(maxTradeVolumeTextField.getText());
-            double passiveServiceFee = BitSquareConverter.stringToDouble(passiveServiceFeeTextField.getText());
-            double minPassiveServiceFee = BitSquareConverter.stringToDouble(minPassiveServiceFeeTextField.getText());
-            double arbitrationFee = BitSquareConverter.stringToDouble(arbitrationFeeTextField.getText());
-            double minArbitrationFee = BitSquareConverter.stringToDouble(minArbitrationFeeTextField.getText());
+            double maxTradeVolume = BitSquareFormatter.parseToDouble(maxTradeVolumeTextField.getText());
+            double passiveServiceFee = BitSquareFormatter.parseToDouble(passiveServiceFeeTextField.getText());
+            double minPassiveServiceFee = BitSquareFormatter.parseToDouble(minPassiveServiceFeeTextField.getText());
+            double arbitrationFee = BitSquareFormatter.parseToDouble(arbitrationFeeTextField.getText());
+            double minArbitrationFee = BitSquareFormatter.parseToDouble(minArbitrationFeeTextField.getText());
 
             String webUrl = webPageTextField.getText();
             String description = descriptionTextArea.getText();

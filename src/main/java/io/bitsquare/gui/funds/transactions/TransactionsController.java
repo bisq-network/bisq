@@ -15,6 +15,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javax.inject.Inject;
 import org.slf4j.Logger;
@@ -27,12 +28,10 @@ public class TransactionsController implements Initializable, ChildController, H
     private final WalletFacade walletFacade;
     private ObservableList<TransactionsListItem> transactionsListItems;
 
-    @FXML
-    private TableView<TransactionsListItem> tableView;
-    @FXML
-    private TableColumn<String, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn, confidenceColumn;
-    @FXML
-    private Button addNewAddressButton;
+    @FXML private VBox root;
+    @FXML private TableView<TransactionsListItem> tableView;
+    @FXML private TableColumn<String, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn, confidenceColumn;
+    @FXML private Button addNewAddressButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

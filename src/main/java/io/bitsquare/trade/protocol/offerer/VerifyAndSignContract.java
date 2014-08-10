@@ -42,10 +42,10 @@ public class VerifyAndSignContract
         //TODO PublicKey cause problems, need to be changed to hex
         /*if (contractAsJson.equals(peersContractAsJson))
         {*/
-            log.trace("The 2 contracts as json does match");
-            String signature = cryptoFacade.signContract(registrationKey, contractAsJson);
-            //log.trace("signature: " + signature);
-            resultHandler.onResult(contract, contractAsJson, signature);
+        log.trace("The 2 contracts as json does match");
+        String signature = cryptoFacade.signContract(registrationKey, contractAsJson);
+        //log.trace("signature: " + signature);
+        resultHandler.onResult(contract, contractAsJson, signature);
        /* }
         else
         {

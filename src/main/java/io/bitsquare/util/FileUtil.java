@@ -1,7 +1,6 @@
 package io.bitsquare.util;
 
 import com.google.bitcoin.core.Utils;
-import io.bitsquare.BitSquare;
 import java.io.File;
 import java.io.IOException;
 import org.slf4j.Logger;
@@ -21,6 +20,7 @@ public class FileUtil
         return File.createTempFile("temp_" + prefix, null, StorageDirectory.getStorageDirectory());
     }
 
+    /*
     public static String getApplicationFileName()
     {
         File executionRoot = new File(StorageDirectory.class.getProtectionDomain().getCodeSource().getLocation().getFile());
@@ -50,9 +50,11 @@ public class FileUtil
         {
             e.printStackTrace();
         }
+        
+        // fallback use AppName
         return BitSquare.getAppName();
     }
-
+*/
 
     public static void writeTempFileToFile(File tempFile, File file) throws IOException
     {

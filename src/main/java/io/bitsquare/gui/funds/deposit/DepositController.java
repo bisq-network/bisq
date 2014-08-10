@@ -19,6 +19,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javax.inject.Inject;
 import org.slf4j.Logger;
@@ -31,12 +32,10 @@ public class DepositController implements Initializable, ChildController, Hibern
     private final WalletFacade walletFacade;
     private ObservableList<DepositListItem> addressList;
 
-    @FXML
-    private TableView<DepositListItem> tableView;
-    @FXML
-    private TableColumn<String, DepositListItem> labelColumn, addressColumn, balanceColumn, copyColumn, confidenceColumn;
-    @FXML
-    private Button addNewAddressButton;
+    @FXML private VBox root;
+    @FXML private TableView<DepositListItem> tableView;
+    @FXML private TableColumn<String, DepositListItem> labelColumn, addressColumn, balanceColumn, copyColumn, confidenceColumn;
+    @FXML private Button addNewAddressButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

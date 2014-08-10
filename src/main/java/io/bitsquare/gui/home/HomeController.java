@@ -6,23 +6,18 @@ import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.arbitrators.registration.ArbitratorRegistrationController;
-import io.bitsquare.locale.Localisation;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class HomeController implements Initializable, ChildController, NavigationController
 {
-    @FXML
-    public Pane rootContainer;
     private ArbitratorRegistrationController arbitratorRegistrationController;
 
     @Override
@@ -54,10 +49,11 @@ public class HomeController implements Initializable, ChildController, Navigatio
             arbitratorRegistrationController.cleanup();
         }
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
+        // dont use caching here, cause exc. -> need to investigate and is rarely called so no caching is better
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
         try
         {
-            final Node view = loader.load();
+            final Parent view = loader.load();
             arbitratorRegistrationController = loader.getController();
             arbitratorRegistrationController.setNavigationController(this);
 
@@ -72,7 +68,7 @@ public class HomeController implements Initializable, ChildController, Navigatio
             stage.setY(rootStage.getY() + 50);
             stage.initModality(Modality.WINDOW_MODAL);
             stage.initOwner(rootStage);
-            Scene scene = new Scene((Parent) view, 800, 600);
+            Scene scene = new Scene(view, 800, 600);
             stage.setScene(scene);
             stage.show();
 

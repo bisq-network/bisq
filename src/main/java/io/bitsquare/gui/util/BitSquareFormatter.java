@@ -13,6 +13,9 @@ import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 //TODO cleanup...
 public class BitSquareFormatter
 {
@@ -45,25 +48,24 @@ public class BitSquareFormatter
      */
     public static Coin parseToCoin(String input)
     {
+        Coin result;
         try
         {
             input = input.replace(",", ".");
             Double.parseDouble(input);
-
-        } catch (NumberFormatException | NullPointerException e)
+            result = Coin.parseCoin(input);
+        } catch (Exception e)
         {
-            log.warn("Exception at parseBtcToCoin: " + e.toString());
-            input = "0";
+            //log.warn("Exception at parseBtcToCoin: " + e.toString());
+            result = Coin.ZERO;
         }
-        return Coin.parseCoin(input);
+        return result;
     }
 
-  
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // FIAT
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     public static String formatPrice(double price)
     {
@@ -85,13 +87,31 @@ public class BitSquareFormatter
     // Other
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @param input String to be converted to a double. Both decimal points "." and "," are supported. Thousands separator is not supported.
+     * @return Returns a double value. Any invalid value returns Double.NEGATIVE_INFINITY.
+     */
+    public static double parseToDouble(String input)
+    {
+        try
+        {
+            checkNotNull(input);
+            checkArgument(input.length() > 0);
+            input = input.replace(",", ".").trim();
+            return Double.parseDouble(input);
+        } catch (Exception e)
+        {
+            return 0;
+        }
+    }
+
     public static String formatCollateralAsBtc(String amount, double collateral)
     {
         Coin amountAsCoin = BitSquareFormatter.parseToCoin(amount);
         Coin collateralAsCoin = amountAsCoin.divide((long) (1d / collateral));
         return formatCoinWithCode(collateralAsCoin);
     }
-    
+
     public static String formatTotalsAsBtc(String amount, double collateral, Coin fees)
     {
         Coin amountAsCoin = BitSquareFormatter.parseToCoin(amount);
@@ -99,7 +119,7 @@ public class BitSquareFormatter
         Coin totals = collateralAsCoin.add(fees);
         return formatCoinWithCode(totals);
     }
-    
+
     public static String formatDirection(Direction direction, boolean allUpperCase)
     {
         String result = (direction == Direction.BUY) ? "Buy" : "Sell";

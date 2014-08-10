@@ -9,7 +9,6 @@ import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.ValidatedTextField;
 import io.bitsquare.gui.popups.Popups;
-import io.bitsquare.gui.util.BitSquareConverter;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.msg.MessageFacade;
@@ -290,7 +289,7 @@ public class TakerOfferController implements Initializable, ChildController
     //  values
     private double getAmountAsDouble()
     {
-        return BitSquareConverter.stringToDouble(getAmountString());
+        return BitSquareFormatter.parseToDouble(getAmountString());
     }
 
     private Coin getAmountInSatoshis()

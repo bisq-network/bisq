@@ -31,7 +31,7 @@ public class AWTSystemTray
             trayIcon.setToolTip("BitSquare P2P Fiat-Bitcoin exchange");
 
             PopupMenu popupMenu = new PopupMenu();
-            MenuItem aboutItem = new MenuItem("Info about " + BitSquare.getUID());
+            MenuItem aboutItem = new MenuItem("Info about " + BitSquare.getAppName());
             popupMenu.add(aboutItem);
             popupMenu.addSeparator();
             showGuiItem = new MenuItem("Close exchange window");

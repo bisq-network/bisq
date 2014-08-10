@@ -4,7 +4,6 @@ import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
-import io.bitsquare.locale.Localisation;
 import io.bitsquare.storage.Persistence;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -92,7 +91,7 @@ public class CachingTabPane extends TabPane
         {
             // load for the first time
             String fxmlView = tabInfoList.get(selectedTabIndex).url;
-            final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView), Localisation.getResourceBundle());
+            final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(fxmlView));
             try
             {
                 tabInfoList.get(selectedTabIndex).view = loader.load();

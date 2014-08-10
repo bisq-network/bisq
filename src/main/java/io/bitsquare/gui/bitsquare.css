@@ -111,7 +111,7 @@
     -fx-fill: black;
 }
 
-.table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection  .text {
+.table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection .text {
     -fx-fill: white;
 }
 
@@ -203,4 +203,10 @@
 
 .scroll-pane .corner {
     -fx-background-insets: 0;
+}
+
+
+/* validation */
+#validation-error {
+   -fx-text-fill: red;
 }

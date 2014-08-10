@@ -9,12 +9,15 @@ import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.components.ValidatingTextField;
 import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.popups.Popups;
-import io.bitsquare.gui.util.BitSquareConverter;
 import io.bitsquare.gui.util.BitSquareFormatter;
+import io.bitsquare.gui.util.BtcValidator;
+import io.bitsquare.gui.util.FiatValidator;
+import io.bitsquare.gui.util.ValidationHelper;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
@@ -36,6 +39,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Region;
 import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +68,7 @@ class ViewModel
     final StringProperty acceptedLanguages = new SimpleStringProperty();
     final StringProperty transactionId = new SimpleStringProperty();
     final BooleanProperty isOfferPlacedScreen = new SimpleBooleanProperty();
-    final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty();
+    final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(false);
 }
 
 public class CreateOfferController implements Initializable, ChildController, Hibernate
@@ -74,33 +78,34 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     private NavigationController navigationController;
     private final TradeManager tradeManager;
     private final WalletFacade walletFacade;
-    private final ViewModel viewModel = new ViewModel();
+    final ViewModel viewModel = new ViewModel();
     private final double collateral;
     private Direction direction;
 
     @FXML private AnchorPane rootContainer;
     @FXML private Label buyLabel, confirmationLabel, txTitleLabel, collateralLabel;
-    @FXML private TextField volumeTextField, amountTextField, priceTextField, totalsTextField;
+
+    @FXML private ValidatingTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
     @FXML private Button placeOfferButton, closeButton;
-    @FXML private TextField collateralTextField, minAmountTextField, bankAccountTypeTextField, bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField, acceptedLanguagesTextField, 
+    @FXML private TextField totalsTextField, collateralTextField, bankAccountTypeTextField, bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField, acceptedLanguagesTextField,
             feeLabel, transactionIdTextField;
     @FXML private ConfidenceProgressIndicator progressIndicator;
     @FXML private AddressTextField addressTextField;
     @FXML private BalanceTextField balanceTextField;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferController(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user)
+    CreateOfferController(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user)
     {
         this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
 
         this.collateral = settings.getCollateral();
 
+        viewModel.collateralLabel.set("Collateral (" + BitSquareFormatter.formatCollateralPercent(collateral) + "):");
         BankAccount bankAccount = user.getCurrentBankAccount();
         if (bankAccount != null)
         {
@@ -126,20 +131,6 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         viewModel.amount.set(BitSquareFormatter.formatCoin(orderBookFilter.getAmount()));
         viewModel.minAmount.set(BitSquareFormatter.formatCoin(orderBookFilter.getAmount()));
         viewModel.price.set(BitSquareFormatter.formatPrice(orderBookFilter.getPrice()));
-        viewModel.collateralLabel.set("Collateral (" + BitSquareFormatter.formatCollateralPercent(collateral) + "):");
-
-        //TODO just for dev testing
-        if (BitSquare.fillFormsWithDummyData)
-        {
-            if (orderBookFilter.getAmount() == null)
-            {
-                amountTextField.setText("1");
-                minAmountTextField.setText("0.1");
-            }
-
-            if (orderBookFilter.getPrice() == 0)
-                priceTextField.setText("" + (int) (499 - new Random().nextDouble() * 1000 / 100));
-        }
     }
 
 
@@ -150,15 +141,34 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        AddressEntry addressEntry = walletFacade.getUnusedTradeAddressInfo();
-        addressTextField.setAddress(addressEntry.getAddress().toString());
+        setupBindings();
+        setupValidation();
 
-        balanceTextField.setAddress(addressEntry.getAddress());
-        balanceTextField.setWalletFacade(walletFacade);
+        //TODO
+        if (walletFacade.getWallet() != null)
+        {
+            AddressEntry addressEntry = walletFacade.getUnusedTradeAddressInfo();
+            addressTextField.setAddress(addressEntry.getAddress().toString());
 
+            balanceTextField.setAddress(addressEntry.getAddress());
+            balanceTextField.setWalletFacade(walletFacade);
+        }
+
+
+        //TODO just for dev testing
+        if (BitSquare.fillFormsWithDummyData)
+        {
+            amountTextField.setText("1");
+            minAmountTextField.setText("0.1");
+            priceTextField.setText("" + (int) (499 - new Random().nextDouble() * 1000 / 100));
+        }
+    }
+
+    private void setupBindings()
+    {
         // setup bindings
-        DoubleBinding amountBinding = createDoubleBinding(() -> BitSquareConverter.stringToDouble(viewModel.amount.get()), viewModel.amount);
-        DoubleBinding priceBinding = createDoubleBinding(() -> BitSquareConverter.stringToDouble(viewModel.price.get()), viewModel.price);
+        DoubleBinding amountBinding = createDoubleBinding(() -> BitSquareFormatter.parseToDouble(viewModel.amount.get()), viewModel.amount);
+        DoubleBinding priceBinding = createDoubleBinding(() -> BitSquareFormatter.parseToDouble(viewModel.price.get()), viewModel.price);
 
         viewModel.volume.bind(createStringBinding(() -> BitSquareFormatter.formatVolume(amountBinding.get() * priceBinding.get()), amountBinding, priceBinding));
         viewModel.collateral.bind(createStringBinding(() -> BitSquareFormatter.formatCollateralAsBtc(viewModel.amount.get(), collateral), amountBinding));
@@ -185,12 +195,30 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         transactionIdTextField.textProperty().bind(viewModel.transactionId);
 
         placeOfferButton.visibleProperty().bind(viewModel.isOfferPlacedScreen.not());
-        placeOfferButton.disableProperty().bind(viewModel.isPlaceOfferButtonDisabled);
         progressIndicator.visibleProperty().bind(viewModel.isOfferPlacedScreen);
         confirmationLabel.visibleProperty().bind(viewModel.isOfferPlacedScreen);
         txTitleLabel.visibleProperty().bind(viewModel.isOfferPlacedScreen);
         transactionIdTextField.visibleProperty().bind(viewModel.isOfferPlacedScreen);
         closeButton.visibleProperty().bind(viewModel.isOfferPlacedScreen);
+    }
+
+    private void setupValidation()
+    {
+        BtcValidator amountValidator = new BtcValidator();
+        amountTextField.setNumberValidator(amountValidator);
+        amountTextField.setErrorPopupLayoutReference((Region) amountTextField.getParent());
+        priceTextField.setNumberValidator(new FiatValidator());
+        priceTextField.setErrorPopupLayoutReference((Region) amountTextField.getParent());
+        BtcValidator minAmountValidator = new BtcValidator();
+        minAmountTextField.setNumberValidator(minAmountValidator);
+
+        ValidationHelper.setupMinAmountInRangeOfAmountValidation(amountTextField,
+                                                                 minAmountTextField,
+                                                                 viewModel.amount,
+                                                                 viewModel.minAmount,
+                                                                 amountValidator,
+                                                                 minAmountValidator);
+
     }
 
 
@@ -229,27 +257,24 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
-    
+
     @FXML
     public void onPlaceOffer()
     {
-        if (inputsValid())
-        {
-            viewModel.isPlaceOfferButtonDisabled.set(true);
+        viewModel.isPlaceOfferButtonDisabled.set(true);
 
-            tradeManager.requestPlaceOffer(direction,
-                                           BitSquareConverter.stringToDouble(viewModel.price.get()),
-                                           BitSquareFormatter.parseToCoin(viewModel.amount.get()),
-                                           BitSquareFormatter.parseToCoin(viewModel.minAmount.get()),
-                                           (transaction) -> {
-                                               viewModel.isOfferPlacedScreen.set(true);
-                                               viewModel.transactionId.set(transaction.getHashAsString());
-                                           },
-                                           errorMessage -> {
-                                               Popups.openErrorPopup("An error occurred", errorMessage);
-                                               viewModel.isPlaceOfferButtonDisabled.set(false);
-                                           });
-        }
+        tradeManager.requestPlaceOffer(direction,
+                                       BitSquareFormatter.parseToDouble(viewModel.price.get()),
+                                       BitSquareFormatter.parseToCoin(viewModel.amount.get()),
+                                       BitSquareFormatter.parseToCoin(viewModel.minAmount.get()),
+                                       (transaction) -> {
+                                           viewModel.isOfferPlacedScreen.set(true);
+                                           viewModel.transactionId.set(transaction.getHashAsString());
+                                       },
+                                       errorMessage -> {
+                                           Popups.openErrorPopup("An error occurred", errorMessage);
+                                           viewModel.isPlaceOfferButtonDisabled.set(false);
+                                       });
     }
 
     @FXML
@@ -259,49 +284,6 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
 
         navigationController.navigateToView(NavigationItem.ORDER_BOOK);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private boolean inputsValid()
-    {
-        //TODO
-       /* boolean inputFieldsValid;
-        double amount = BitSquareConverter.stringToDouble(viewModel.amount.get());
-        double minAmount = BitSquareConverter.stringToDouble(viewModel.minAmount.get());
-        double price = BitSquareConverter.stringToDouble(viewModel.price.get());
-
-        inputFieldsValid = price > 0 &&
-                amount > 0 &&
-                minAmount > 0 &&
-                minAmount <= amount/* &&
-                viewModel.collateral >= settings.getMinCollateral() &&
-                viewModel.collateral <= settings.getMaxCollateral()*/ /*;
-
-        if (!inputFieldsValid)
-        {
-            Popups.openWarningPopup("Invalid input", "Your input is invalid");
-            return false;
-        }
-*/
-       /* Arbitrator arbitrator = settings.getRandomArbitrator(getAmountAsCoin());
-        if (arbitrator == null)
-        {
-            Popups.openWarningPopup("No arbitrator available", "No arbitrator from your arbitrator list does match the collateral and amount value.");
-            return false;
-        }*/
-/*
-        if (user.getCurrentBankAccount() == null)
-        {
-            log.error("Must never happen!");
-            Popups.openWarningPopup("No bank account selected", "No bank account selected.");
-            return false;
-        }*/
-
-        return true;
     }
 }
 

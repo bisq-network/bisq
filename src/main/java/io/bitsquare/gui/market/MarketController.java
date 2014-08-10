@@ -5,16 +5,15 @@ import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.market.orderbook.OrderBookController;
-import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.layout.Pane;
 
 public class MarketController implements Initializable, NavigationController, ChildController
 {
@@ -52,10 +51,10 @@ public class MarketController implements Initializable, NavigationController, Ch
             return null;
         }
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try
         {
-            final Pane view = loader.load();
+            final Parent view = loader.load();
             ChildController childController = loader.getController();
             childController.setNavigationController(this);
 

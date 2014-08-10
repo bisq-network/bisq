@@ -9,7 +9,8 @@ import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Effect;
 import javafx.scene.paint.Color;
 
-@SuppressWarnings("WeakerAccess")
+//TODO to be removed
+@Deprecated
 public class BitSquareValidator
 {
     private static final Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);

@@ -19,7 +19,7 @@ public class FundsController implements Initializable, ChildController, Navigati
     private final Persistence persistence;
 
     @FXML
-    private CachingTabPane tabPane;
+    private CachingTabPane root;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +40,7 @@ public class FundsController implements Initializable, ChildController, Navigati
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        tabPane.initialize(this, persistence, NavigationItem.DEPOSIT.getFxmlUrl(), NavigationItem.WITHDRAWAL.getFxmlUrl(), NavigationItem.TRANSACTIONS.getFxmlUrl());
+        root.initialize(this, persistence, NavigationItem.DEPOSIT.getFxmlUrl(), NavigationItem.WITHDRAWAL.getFxmlUrl(), NavigationItem.TRANSACTIONS.getFxmlUrl());
     }
 
 
@@ -56,7 +56,7 @@ public class FundsController implements Initializable, ChildController, Navigati
     @Override
     public void cleanup()
     {
-        tabPane.cleanup();
+        root.cleanup();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +66,7 @@ public class FundsController implements Initializable, ChildController, Navigati
     @Override
     public ChildController navigateToView(NavigationItem navigationItem)
     {
-        return tabPane.navigateToView(navigationItem.getFxmlUrl());
+        return root.navigateToView(navigationItem.getFxmlUrl());
     }
 }
 

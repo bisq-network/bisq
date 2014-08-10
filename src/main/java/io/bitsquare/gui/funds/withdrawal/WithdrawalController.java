@@ -29,6 +29,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javax.inject.Inject;
 import org.controlsfx.control.action.Action;
@@ -44,14 +45,11 @@ public class WithdrawalController implements Initializable, ChildController, Hib
     private final WalletFacade walletFacade;
     private ObservableList<WithdrawalListItem> addressList;
 
-    @FXML
-    private TableView<WithdrawalListItem> tableView;
-    @FXML
-    private TableColumn<String, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn, confidenceColumn;
-    @FXML
-    private Button addNewAddressButton;
-    @FXML
-    private TextField withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField;
+    @FXML private VBox root;
+    @FXML private TableView<WithdrawalListItem> tableView;
+    @FXML private TableColumn<String, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn, confidenceColumn;
+    @FXML private Button addNewAddressButton;
+    @FXML private TextField withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

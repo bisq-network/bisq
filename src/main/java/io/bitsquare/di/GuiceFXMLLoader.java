@@ -1,36 +1,90 @@
 package io.bitsquare.di;
 
 import com.google.inject.Injector;
+import io.bitsquare.locale.Localisation;
 import java.net.URL;
-import java.util.ResourceBundle;
+import java.util.HashMap;
+import java.util.Map;
 import javafx.fxml.FXMLLoader;
 import javafx.util.Callback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Guice support for fxml controllers
+ * Support caching. Speed up switches between UI screens.
  */
-public class GuiceFXMLLoader extends FXMLLoader
+public class GuiceFXMLLoader
 {
+    private static final Logger log = LoggerFactory.getLogger(GuiceFXMLLoader.class);
     private static Injector injector = null;
+    private FXMLLoader loader;
+    private final boolean isCached;
+    private final URL url;
+    private Item item;
 
     public static void setInjector(Injector injector)
     {
         GuiceFXMLLoader.injector = injector;
     }
-   // private static ClassLoader cachingClassLoader = new CachingClassLoader(FXMLLoader.getDefaultClassLoader());
-    public GuiceFXMLLoader(URL url, ResourceBundle resourceBundle)
+
+    // TODO maybe add more sophisticated caching strategy with removal of rarely accessed items
+    private static final Map<URL, Item> cachedGUIItems = new HashMap<>();
+
+    public GuiceFXMLLoader(URL url)
     {
-        super(url, resourceBundle);
-        // might be helpful for performance, but need further profiling. has memory drawbacks
-        //setClassLoader(cachingClassLoader);
-        setupControllerFactory();
+        this(url, true);
     }
 
-    private void setupControllerFactory()
+    public GuiceFXMLLoader(URL url, boolean useCaching)
     {
-        if (GuiceFXMLLoader.injector != null)
+        this.url = url;
+
+        isCached = useCaching && cachedGUIItems.containsKey(url);
+
+        if (!isCached)
         {
-            setControllerFactory(new GuiceControllerFactory(GuiceFXMLLoader.injector));
+            loader = new FXMLLoader(url, Localisation.getResourceBundle());
+            if (GuiceFXMLLoader.injector != null)
+                loader.setControllerFactory(new GuiceControllerFactory(GuiceFXMLLoader.injector));
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T load() throws java.io.IOException
+    {
+        if (isCached)
+        {
+            item = cachedGUIItems.get(url);
+            log.debug("loaded from cache " + url);
+            return (T) cachedGUIItems.get(url).view;
+        }
+        else
+        {
+            log.debug("load from disc " + url);
+            T result = loader.load();
+            item = new Item(result, loader.getController());
+            cachedGUIItems.put(url, item);
+            return result;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getController()
+    {
+        return (T) item.controller;
+    }
+
+
+    class Item<T>
+    {
+        final T view;
+        final T controller;
+
+        Item(T view, T controller)
+        {
+            this.view = view;
+            this.controller = controller;
         }
     }
 }

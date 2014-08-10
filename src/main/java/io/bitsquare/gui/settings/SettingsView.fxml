@@ -3,7 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<TabPane xmlns:fx="http://javafx.com/fxml/1" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
+<TabPane fx:id="root" xmlns:fx="http://javafx.com/fxml/1" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
          xmlns="http://javafx.com/javafx/8" fx:controller="io.bitsquare.gui.settings.SettingsController">
 
     <Tab text="General" closable="false">

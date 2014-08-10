@@ -6,7 +6,6 @@ import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.arbitrators.profile.ArbitratorProfileController;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.settings.Settings;
@@ -113,7 +112,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
             arbitratorProfileController.cleanup();
         }
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), Localisation.getResourceBundle());
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try
         {
             final Node view = loader.load();
