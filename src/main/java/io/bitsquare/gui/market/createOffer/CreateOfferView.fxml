@@ -3,20 +3,30 @@
 <?import io.bitsquare.gui.components.btc.AddressTextField?>
 <?import io.bitsquare.gui.components.btc.BalanceTextField?>
 <?import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator?>
-<?import io.bitsquare.gui.components.ValidatingTextField?>
-<?import javafx.geometry.Insets?>
+<?import io.bitsquare.gui.components.*?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:id="rootContainer" prefHeight="500" prefWidth="800" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0"
             AnchorPane.topAnchor="10.0" xmlns="http://javafx.com/javafx/8" fx:controller="io.bitsquare.gui.market.createOffer.CreateOfferController">
 
-    <GridPane hgap="5.0" vgap="5.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+    <GridPane hgap="5.0" vgap="5.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
 
-        <Label id="form-header-text" text="Create new offer" GridPane.rowIndex="0"/>
+        <!-- group -->
+        <VSpacer GridPane.rowIndex="0" prefHeight="20"/>
+        <Pane GridPane.rowIndex="1" GridPane.columnSpan="2" GridPane.rowSpan="2" style="-fx-border-color:#96D3E9; -fx-border-radius: 4;">
+            <GridPane.margin>
+                <Insets top="-10" right="-10" bottom="-10" left="-10"/>
+            </GridPane.margin>
+            <Label layoutX="8" layoutY="-8" text="Create your offer:" id="form-group-label">
+                <padding>
+                    <Insets left="5" right="7"/>
+                </padding>
+            </Label>
+        </Pane>
 
-        <Label fx:id="buyLabel" GridPane.rowIndex="1"/>
-
-        <HBox spacing="5" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="NEVER" alignment="CENTER_LEFT">
+        <Label GridPane.rowIndex="1" fx:id="buyLabel" />
+        <HBox GridPane.rowIndex="1" GridPane.columnIndex="1" spacing="5" GridPane.hgrow="NEVER" alignment="CENTER_LEFT">
             <ValidatingTextField fx:id="amountTextField" prefWidth="70.0" alignment="CENTER_RIGHT"/>
             <Label text="BTC for:"/>
             <ValidatingTextField fx:id="priceTextField" prefWidth="70.0" alignment="CENTER_RIGHT"/>
@@ -25,50 +35,88 @@
             <Label text="EUR in total"/>
         </HBox>
 
-        <Label text="Min. Amount (BTC):" GridPane.rowIndex="2"/>
-        <ValidatingTextField fx:id="minAmountTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-
-        <Label fx:id="collateralLabel" text="Collateral:" GridPane.rowIndex="3"/>
-        <TextField fx:id="collateralTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-
-        <Label text="Total Fees (Offer + tx)" GridPane.rowIndex="4"/>
-        <TextField fx:id="feeLabel" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
-
-        <Label text="Total funds needed:" GridPane.rowIndex="5"/>
-        <TextField fx:id="totalsTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
-
-        <Label text="BTC address for deposit:" GridPane.rowIndex="6"/>
-        <AddressTextField fx:id="addressTextField" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
-
-        <Label text="Actual balance:" GridPane.rowIndex="7"/>
-        <BalanceTextField fx:id="balanceTextField" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
-
-        <!--
-       <Label id="form-header-text" text="Offer details" GridPane.rowIndex="8">
-           <GridPane.margin>
-               <Insets top="10.0"/>
-           </GridPane.margin>
-       </Label>
-       -->
-
-        <Label text="Bank account type:" GridPane.rowIndex="9"/>
-        <TextField fx:id="bankAccountTypeTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
-
-        <Label text="Bank account currency:" GridPane.rowIndex="10"/>
-        <TextField fx:id="bankAccountCurrencyTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="10"/>
-
-        <Label text="Bank account county:" GridPane.rowIndex="11"/>
-        <TextField fx:id="bankAccountCountyTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="11"/>
-
-        <Label text="Accepted countries:" GridPane.rowIndex="12"/>
-        <TextField fx:id="acceptedCountriesTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="12"/>
-
-        <Label text="Accepted languages:" GridPane.rowIndex="13"/>
-        <TextField fx:id="acceptedLanguagesTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="13"/>
+        <Label GridPane.rowIndex="2" text="Min. Amount (BTC):"/>
+        <ValidatingTextField GridPane.rowIndex="2" GridPane.columnIndex="1" fx:id="minAmountTextField"/>
 
 
-        <Button fx:id="placeOfferButton" defaultButton="true" onAction="#onPlaceOffer" text="Place offer" GridPane.columnIndex="1" GridPane.rowIndex="14"/>
+        <!-- group -->
+        <VSpacer GridPane.rowIndex="3" prefHeight="40"/>
+        <Pane GridPane.rowIndex="4" GridPane.columnSpan="2" GridPane.rowSpan="3" id="form-group-border">
+            <GridPane.margin>
+                <Insets top="-10" right="-10" bottom="-10" left="-10"/>
+            </GridPane.margin>
+            <Label layoutX="8" layoutY="-8" text="Fill your trade pocket:" id="form-group-label">
+                <padding>
+                    <Insets left="5" right="7"/>
+                </padding>
+            </Label>
+        </Pane>
 
+        <Label GridPane.rowIndex="4" text="Funds needed for that trade:"/>
+        <TextField GridPane.rowIndex="4" GridPane.columnIndex="1" fx:id="totalsTextField" editable="false" focusTraversable="false"/>
+
+        <Label GridPane.rowIndex="5" text="BTC address for funding:"/>
+        <AddressTextField GridPane.rowIndex="5" GridPane.columnIndex="1" fx:id="addressTextField" focusTraversable="false"/>
+
+        <Label GridPane.rowIndex="6" text="Current balance:"/>
+        <BalanceTextField GridPane.rowIndex="6" GridPane.columnIndex="1" fx:id="balanceTextField" focusTraversable="false"/>
+
+        <!-- button -->
+        <VSpacer GridPane.rowIndex="7" prefHeight="10"/>
+        <Button GridPane.rowIndex="8" GridPane.columnIndex="1" fx:id="placeOfferButton" onAction="#onPlaceOffer" defaultButton="true" text="Place offer"/>
+
+
+        <!-- group -->
+        <VSpacer GridPane.rowIndex="9" prefHeight="30"/>
+        <Pane GridPane.rowIndex="10" GridPane.columnSpan="2" GridPane.rowSpan="2" id="form-group-border">
+            <GridPane.margin>
+                <Insets top="-10" right="-10" bottom="-10" left="-10"/>
+            </GridPane.margin>
+            <Label layoutX="8" layoutY="-8" text="Collateral and fees:" id="form-group-label">
+                <padding>
+                    <Insets left="5" right="7"/>
+                </padding>
+            </Label>
+        </Pane>
+
+        <Label GridPane.rowIndex="10" fx:id="collateralLabel" text="Collateral:"/>
+        <TextField GridPane.rowIndex="10" GridPane.columnIndex="1" fx:id="collateralTextField" editable="false" focusTraversable="false"/>
+
+        <Label GridPane.rowIndex="11" text="Offer Fee + transaction fee:"/>
+        <TextField GridPane.rowIndex="11" fx:id="feeLabel" editable="false" focusTraversable="false" GridPane.columnIndex="1"/>
+
+
+        <!-- group -->
+        <VSpacer GridPane.rowIndex="12" prefHeight="40"/>
+        <Pane GridPane.rowIndex="13" GridPane.columnSpan="2" GridPane.rowSpan="5" id="form-group-border">
+            <GridPane.margin>
+                <Insets top="-10" right="-10" bottom="-10" left="-10"/>
+            </GridPane.margin>
+            <Label layoutX="8" layoutY="-8" text="Your trade details:" id="form-group-label">
+                <padding>
+                    <Insets left="5" right="7"/>
+                </padding>
+            </Label>
+        </Pane>
+
+        <Label text="Bank account type:" GridPane.rowIndex="13"/>
+        <TextField fx:id="bankAccountTypeTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="13"/>
+
+        <Label text="Bank account currency:" GridPane.rowIndex="14"/>
+        <TextField fx:id="bankAccountCurrencyTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="14"/>
+
+        <Label text="Bank account county:" GridPane.rowIndex="15"/>
+        <TextField fx:id="bankAccountCountyTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="15"/>
+
+        <Label text="Accepted countries:" GridPane.rowIndex="16"/>
+        <TextField fx:id="acceptedCountriesTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="16"/>
+
+        <Label text="Accepted languages:" GridPane.rowIndex="17"/>
+        <TextField fx:id="acceptedLanguagesTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="17"/>
+
+
+
+        <!-- on placed offer screen -->
         <Label fx:id="txTitleLabel" text="Transaction ID:" visible="false" GridPane.rowIndex="14"/>
         <TextField fx:id="transactionIdTextField" visible="false" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="14"/>
         <ConfidenceProgressIndicator fx:id="progressIndicator" visible="false" focusTraversable="false" progress="0" GridPane.columnIndex="2" GridPane.halignment="LEFT"
@@ -79,7 +127,7 @@
         </ConfidenceProgressIndicator>
         <Label fx:id="confirmationLabel" text="Checking confirmations..." visible="false" GridPane.columnIndex="3" GridPane.rowIndex="14"/>
 
-        <Button fx:id="closeButton" visible="false" defaultButton="true" focusTraversable="false" onAction="#onClose" text="Close" GridPane.columnIndex="1" GridPane.rowIndex="15"/>
+        <Button fx:id="closeButton" onAction="#onClose"  visible="false" defaultButton="true" focusTraversable="false" text="Close" GridPane.columnIndex="1" GridPane.rowIndex="15"/>
 
         <columnConstraints>
             <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>

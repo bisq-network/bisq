@@ -137,6 +137,10 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
+
+        //  Node wrappedButton = Borders.wrap(button).etchedBorder().buildAll()
+
+
         setupBindings();
         setupValidation();
 
@@ -242,18 +246,18 @@ public class CreateOfferController implements Initializable, ChildController, Hi
 
         amountTextField.focusedProperty().addListener((ov, oldValue, newValue) -> {
             // only on focus out and ignore focus loss from window
-            if (!newValue && amountTextField.getScene().getWindow().isFocused())
+            if (!newValue && amountTextField.getScene() != null && amountTextField.getScene().getWindow().isFocused())
                 volumeTextField.reValidate();
         });
         volumeTextField.focusedProperty().addListener((ov, oldValue, newValue) -> {
             // only on focus out and ignore focus loss from window
-            if (!newValue && volumeTextField.getScene().getWindow().isFocused())
+            if (!newValue && volumeTextField.getScene() != null && volumeTextField.getScene().getWindow().isFocused())
                 amountTextField.reValidate();
         });
         priceTextField.focusedProperty().addListener((ov, oldValue, newValue) -> {
             // only on focus out and ignore focus loss from window
-            if (!newValue && priceTextField.getScene().getWindow().isFocused())
-                volumeTextField.reValidate();
+            if (!newValue && priceTextField.getScene() != null && priceTextField.getScene().getWindow().isFocused())
+            volumeTextField.reValidate();
         });
     }
 

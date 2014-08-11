@@ -166,16 +166,22 @@
     -fx-font-size: 14;
 }
 
-#form-title {
+#form-group-label {
     -fx-font-weight: bold;
+    -fx-font-size: 14;
+    -fx-text-fill:#0096c9;
+    -fx-background-color:#f4f4f4;
+}
+
+#form-group-border {
+    -fx-border-color: #96D3E9;
+    -fx-border-radius: 4;
 }
 
 #form-title {
     -fx-font-weight: bold;
 }
 
-#form-entry-value {
-}
 
 /* tab pane */
 .tab-pane .tab-label {

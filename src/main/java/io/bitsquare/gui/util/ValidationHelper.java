@@ -28,7 +28,7 @@ public class ValidationHelper
 
         amountTextField.focusedProperty().addListener((ov, oldValue, newValue) -> {
             // only on focus out and ignore focus loss from window
-            if (!newValue && amountTextField.getScene().getWindow().isFocused())
+            if (!newValue && amountTextField.getScene() != null && amountTextField.getScene().getWindow().isFocused())
                 validateMinAmount(amountTextField,
                                   minAmountTextField,
                                   amount,
@@ -40,7 +40,7 @@ public class ValidationHelper
 
         minAmountTextField.focusedProperty().addListener((ov, oldValue, newValue) -> {
             // only on focus out and ignore focus loss from window
-            if (!newValue && minAmountTextField.getScene().getWindow().isFocused())
+            if (!newValue && minAmountTextField.getScene() != null && minAmountTextField.getScene().getWindow().isFocused())
                 validateMinAmount(amountTextField,
                                   minAmountTextField,
                                   amount,
