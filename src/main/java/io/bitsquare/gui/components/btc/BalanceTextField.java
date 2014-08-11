@@ -33,9 +33,11 @@ public class BalanceTextField extends AnchorPane
     public BalanceTextField()
     {
         balanceTextField = new TextField();
+        balanceTextField.setFocusTraversable(false);
         balanceTextField.setEditable(false);
 
         progressIndicator = new ConfidenceProgressIndicator();
+        progressIndicator.setFocusTraversable(false);
         progressIndicator.setPrefSize(24, 24);
         progressIndicator.setId("funds-confidence");
         progressIndicator.setLayoutY(1);

@@ -7,37 +7,37 @@
           xmlns="http://javafx.com/javafx/8" fx:controller="io.bitsquare.gui.arbitrators.profile.ArbitratorProfileController">
 
     <Label fx:id="nameLabel" text="Name:"/>
-    <TextField fx:id="nameTextField" editable="false" GridPane.columnIndex="1"/>
+    <TextField fx:id="nameTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"/>
     <Label text="Languages:" GridPane.rowIndex="1"/>
-    <TextField fx:id="languagesTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+    <TextField fx:id="languagesTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
     <Label text="Reputation:" GridPane.rowIndex="2"/>
-    <TextField fx:id="reputationTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+    <TextField fx:id="reputationTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
     <Label text="Max. trade volume:" GridPane.rowIndex="3"/>
-    <TextField fx:id="maxTradeVolumeTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+    <TextField fx:id="maxTradeVolumeTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
     <Label text="Passive service fee:" GridPane.rowIndex="4"/>
-    <TextField fx:id="passiveServiceFeeTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+    <TextField fx:id="passiveServiceFeeTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
 
     <Label text="Arbitration fee:" GridPane.rowIndex="5"/>
-    <TextField fx:id="arbitrationFeeTextField" editable="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="5"/>
+    <TextField fx:id="arbitrationFeeTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="5"/>
 
     <Label text="Methods of arbitration:" GridPane.rowIndex="6"/>
-    <TextField fx:id="methodsTextField" editable="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="6"/>
+    <TextField fx:id="methodsTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="6"/>
 
     <Label text="ID verifications:" GridPane.rowIndex="7"/>
-    <TextField fx:id="idVerificationsTextField" editable="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="7"/>
+    <TextField fx:id="idVerificationsTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="7"/>
 
     <Label text="Web page:" GridPane.rowIndex="9"/>
-    <TextField fx:id="webPageTextField" editable="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="9"/>
+    <TextField fx:id="webPageTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="9"/>
 
     <Label text="Description:" GridPane.rowIndex="10" GridPane.valignment="TOP">
         <GridPane.margin>
             <Insets top="10.0"/>
         </GridPane.margin>
     </Label>
-    <TextArea fx:id="descriptionTextArea" editable="false" prefHeight="150.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="10"/>
+    <TextArea fx:id="descriptionTextArea" editable="false" focusTraversable="false" prefHeight="150.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="10"/>
 
     <columnConstraints>
         <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="10.0"/>

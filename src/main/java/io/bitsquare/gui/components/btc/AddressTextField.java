@@ -22,6 +22,7 @@ public class AddressTextField extends AnchorPane
     public AddressTextField()
     {
         addressTextField = new TextField();
+        addressTextField.setFocusTraversable(false);
         addressTextField.setEditable(false);
 
         copyIcon = new Label();

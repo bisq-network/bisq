@@ -22,38 +22,38 @@
                         <ValidatedTextField fx:id="amountTextField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
                         <Label text="Price (EUR/BTC):" GridPane.rowIndex="2"/>
-                        <TextField fx:id="priceTextField" editable="false" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                        <TextField fx:id="priceTextField" editable="false" focusTraversable="false" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
                         <Label text="Volume (EUR):" GridPane.rowIndex="3"/>
-                        <TextField fx:id="volumeTextField" editable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                        <TextField fx:id="volumeTextField" editable="false" focusTraversable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
                         <Label fx:id="collateralLabel" text="Collateral:" GridPane.rowIndex="4"/>
-                        <TextField fx:id="collateralTextField" editable="false" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                        <TextField fx:id="collateralTextField" editable="false" focusTraversable="false" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
                         <Label text="Total Fees (Offer + tx):" GridPane.rowIndex="5"/>
-                        <TextField fx:id="feeTextField" editable="false" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                        <TextField fx:id="feeTextField" editable="false" focusTraversable="false" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
 
                         <Label text="Total:" GridPane.rowIndex="6"/>
-                        <TextField fx:id="totalTextField" editable="false" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+                        <TextField fx:id="totalTextField" editable="false" focusTraversable="false" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
 
                         <Button fx:id="takeOfferButton" text="Take offer and pay" onAction="#onTakeOffer" defaultButton="true" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
 
                         <Label text="Offer details:" id="form-header-text" GridPane.rowIndex="8"/>
 
                         <Label text="Bank account type:" GridPane.rowIndex="9"/>
-                        <TextField fx:id="bankAccountTypeTextField" editable="false" GridPane.rowIndex="9" GridPane.columnIndex="1"/>
+                        <TextField fx:id="bankAccountTypeTextField" editable="false" focusTraversable="false" GridPane.rowIndex="9" GridPane.columnIndex="1"/>
 
                         <Label text="Country:" GridPane.rowIndex="10"/>
-                        <TextField fx:id="countryTextField" editable="false" GridPane.rowIndex="10" GridPane.columnIndex="1"/>
+                        <TextField fx:id="countryTextField" editable="false" focusTraversable="false" GridPane.rowIndex="10" GridPane.columnIndex="1"/>
 
                         <Label text="Arbitrators:" GridPane.rowIndex="11"/>
-                        <TextField fx:id="arbitratorsTextField" editable="false" GridPane.rowIndex="11" GridPane.columnIndex="1"/>
+                        <TextField fx:id="arbitratorsTextField" editable="false" focusTraversable="false" GridPane.rowIndex="11" GridPane.columnIndex="1"/>
 
                         <Label text="Supported languages:" GridPane.rowIndex="12"/>
-                        <TextField fx:id="supportedLanguagesTextField" editable="false" GridPane.rowIndex="12" GridPane.columnIndex="1"/>
+                        <TextField fx:id="supportedLanguagesTextField" editable="false" focusTraversable="false" GridPane.rowIndex="12" GridPane.columnIndex="1"/>
 
                         <Label text="Supported countries:" GridPane.rowIndex="13"/>
-                        <TextField fx:id="supportedCountriesTextField" editable="false" GridPane.rowIndex="13" GridPane.columnIndex="1"/>
+                        <TextField fx:id="supportedCountriesTextField" editable="false" focusTraversable="false" GridPane.rowIndex="13" GridPane.columnIndex="1"/>
 
 
                         <columnConstraints>
@@ -94,7 +94,7 @@
                     <Label fx:id="infoLabel" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.valignment="TOP"/>
 
                     <Label text="Deposit transaction ID:" GridPane.rowIndex="2"/>
-                    <TextField fx:id="depositTxIdTextField" editable="false" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                    <TextField fx:id="depositTxIdTextField" editable="false" focusTraversable="false" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
                     <Button fx:id="receivedFiatButton" text="I have received the money at my bank account" onAction="#onReceivedFiat" defaultButton="true" disable="true" GridPane.rowIndex="3"
                             GridPane.columnIndex="1"/>
@@ -126,21 +126,21 @@
                     <ValidatedTextField fx:id="summaryPaidTextField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
                     <Label text="You have received (EUR):" GridPane.rowIndex="3"/>
-                    <TextField fx:id="summaryReceivedTextField" editable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                    <TextField fx:id="summaryReceivedTextField" editable="false" focusTraversable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
                     <Label text="Details" GridPane.rowIndex="4" id="form-header-text"/>
 
                     <Label text="Total fees (take offer fee + tx fee):" GridPane.rowIndex="5"/>
-                    <TextField fx:id="summaryFeesTextField" editable="false" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                    <TextField fx:id="summaryFeesTextField" editable="false" focusTraversable="false" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
 
                     <Label text="Refunded collateral:" GridPane.rowIndex="6"/>
-                    <TextField fx:id="summaryCollateralTextField" editable="false" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+                    <TextField fx:id="summaryCollateralTextField" editable="false" focusTraversable="false" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
 
                     <Label text="Deposit transaction ID:" GridPane.rowIndex="7"/>
-                    <TextField fx:id="summaryDepositTxIdTextField" editable="false" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+                    <TextField fx:id="summaryDepositTxIdTextField" editable="false" focusTraversable="false" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
 
                     <Label text="Payout transaction ID:" GridPane.rowIndex="8"/>
-                    <TextField fx:id="summaryPayoutTxIdTextField" editable="false" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+                    <TextField fx:id="summaryPayoutTxIdTextField" editable="false" focusTraversable="false" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
 
 
                     <Button text="Close" onAction="#onClose" defaultButton="true" GridPane.rowIndex="9" GridPane.columnIndex="1"/>

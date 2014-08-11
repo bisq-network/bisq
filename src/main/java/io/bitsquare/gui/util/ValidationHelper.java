@@ -60,16 +60,19 @@ public class ValidationHelper
                                           TextField currentTextField)
     {
         amountValidator.overrideResult(null);
-        if (!amountValidator.validate(amount.get()).isValid)
+        String amountCleaned = amount.get() != null ? amount.get().replace(",", ".").trim() : "0";
+        String minAmountCleaned = minAmount.get() != null ? minAmount.get().replace(",", ".").trim() : "0";
+
+        if (!amountValidator.validate(amountCleaned).isValid)
             return;
 
         minAmountValidator.overrideResult(null);
-        if (!minAmountValidator.validate(minAmount.get()).isValid)
+        if (!minAmountValidator.validate(minAmountCleaned).isValid)
             return;
 
         if (currentTextField == amountTextField)
         {
-            if (Double.parseDouble(amount.get()) < Double.parseDouble(minAmount.get()))
+            if (Double.parseDouble(amountCleaned) < Double.parseDouble(minAmountCleaned))
             {
                 amountValidator.overrideResult(new NumberValidator.ValidationResult(false, "Amount cannot be smaller than minimum amount.", NumberValidator.ErrorType.AMOUNT_LESS_THAN_MIN_AMOUNT));
                 amountTextField.reValidate();
@@ -82,7 +85,7 @@ public class ValidationHelper
         }
         else if (currentTextField == minAmountTextField)
         {
-            if (Double.parseDouble(minAmount.get()) > Double.parseDouble(amount.get()))
+            if (Double.parseDouble(minAmountCleaned) > Double.parseDouble(amountCleaned))
             {
                 minAmountValidator.overrideResult(new NumberValidator.ValidationResult(false, "Minimum amount cannot be larger than amount.", NumberValidator.ErrorType.MIN_AMOUNT_LARGER_THAN_MIN_AMOUNT));
                 minAmountTextField.reValidate();

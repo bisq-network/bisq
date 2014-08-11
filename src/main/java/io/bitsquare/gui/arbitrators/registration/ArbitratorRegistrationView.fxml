@@ -18,11 +18,11 @@
                     <TextField fx:id="nameTextField" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
                     <Label text="ID type:" GridPane.rowIndex="1"/>
-                    <TextField fx:id="idTypeTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    <TextField fx:id="idTypeTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
                     <ComboBox fx:id="idTypeComboBox" onAction="#onSelectIDType" promptText="Select ID type" prefWidth="150.0" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
 
                     <Label text="Supported language(s):" GridPane.rowIndex="2"/>
-                    <TextField fx:id="languagesTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    <TextField fx:id="languagesTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
                     <Button onAction="#onClearLanguages" text="Clear" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
                     <ComboBox fx:id="languageComboBox" onAction="#onAddLanguage" prefWidth="150.0" promptText="Add language" GridPane.columnIndex="3" GridPane.rowIndex="2"/>
 
@@ -42,12 +42,12 @@
                     <TextField fx:id="minArbitrationFeeTextField" promptText="Recommended: 0.1 - 0.2 BTC" GridPane.columnIndex="1" GridPane.rowIndex="7" GridPane.columnSpan="3"/>
 
                     <Label text="Method(s) used for arbitration:" GridPane.rowIndex="8"/>
-                    <TextField fx:id="methodsTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="8"/>
+                    <TextField fx:id="methodsTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="8"/>
                     <Button onAction="#onClearMethods" text="Clear" GridPane.columnIndex="2" GridPane.rowIndex="8"/>
                     <ComboBox fx:id="methodsComboBox" onAction="#onAddMethod" prefWidth="150.0" promptText="Add method" GridPane.columnIndex="3" GridPane.rowIndex="8"/>
 
                     <Label text="Offer ID verification(s):" GridPane.rowIndex="9"/>
-                    <TextField fx:id="idVerificationsTextField" promptText="Optional" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
+                    <TextField fx:id="idVerificationsTextField" promptText="Optional" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
                     <Button onAction="#onClearIDVerifications" text="Clear" GridPane.columnIndex="2" GridPane.rowIndex="9"/>
                     <ComboBox fx:id="idVerificationsComboBox" onAction="#onAddIDVerification" prefWidth="150.0" promptText="Add verification" GridPane.columnIndex="3"
                               GridPane.rowIndex="9"/>
@@ -99,7 +99,7 @@
                         <GridPane hgap="5.0" vgap="5.0">
 
                             <Label text="Collateral address:"/>
-                            <TextField fx:id="collateralAddressTextField" editable="false" GridPane.columnIndex="1"/>
+                            <TextField fx:id="collateralAddressTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"/>
                             <Label fx:id="copyIcon" id="copy-icon" GridPane.columnIndex="2">
                                 <padding>
                                     <Insets bottom="0.0" left="0.0" right="0.0" top="-1.0"/>
@@ -110,7 +110,7 @@
                             </Label>
 
                             <Label text="Balance:" GridPane.rowIndex="1"/>
-                            <TextField fx:id="balanceTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                            <TextField fx:id="balanceTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
                             <ConfidenceProgressIndicator fx:id="progressIndicator" GridPane.columnIndex="2" GridPane.halignment="LEFT"
                                                          GridPane.rowIndex="1" GridPane.rowSpan="2" GridPane.valignment="TOP">
                                 <GridPane.margin>

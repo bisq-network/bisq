@@ -27,7 +27,6 @@ import io.bitsquare.user.User;
 import java.net.URL;
 import java.util.Random;
 import java.util.ResourceBundle;
-import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -43,9 +42,6 @@ import javafx.scene.layout.Region;
 import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static javafx.beans.binding.Bindings.createDoubleBinding;
-import static javafx.beans.binding.Bindings.createStringBinding;
 
 /**
  * Represents the visible state of the view
@@ -158,7 +154,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         //TODO just for dev testing
         if (BitSquare.fillFormsWithDummyData)
         {
-            amountTextField.setText("1");
+            amountTextField.setText("1.0");
             minAmountTextField.setText("0.1");
             priceTextField.setText("" + (int) (499 - new Random().nextDouble() * 1000 / 100));
         }
@@ -166,21 +162,40 @@ public class CreateOfferController implements Initializable, ChildController, Hi
 
     private void setupBindings()
     {
-        // setup bindings
-        DoubleBinding amountBinding = createDoubleBinding(() -> BitSquareFormatter.parseToDouble(viewModel.amount.get()), viewModel.amount);
-        DoubleBinding priceBinding = createDoubleBinding(() -> BitSquareFormatter.parseToDouble(viewModel.price.get()), viewModel.price);
+        viewModel.amount.addListener((ov, oldValue, newValue) -> {
+            double amount = BitSquareFormatter.parseToDouble(newValue);
+            double price = BitSquareFormatter.parseToDouble(viewModel.price.get());
+            double volume = amount * price;
+            viewModel.volume.set(BitSquareFormatter.formatVolume(volume));
+            viewModel.totals.set(BitSquareFormatter.formatTotalsAsBtc(viewModel.amount.get(), collateral, FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+            viewModel.collateral.set(BitSquareFormatter.formatCollateralAsBtc(viewModel.amount.get(), collateral));
+        });
 
-        viewModel.volume.bind(createStringBinding(() -> BitSquareFormatter.formatVolume(amountBinding.get() * priceBinding.get()), amountBinding, priceBinding));
-        viewModel.collateral.bind(createStringBinding(() -> BitSquareFormatter.formatCollateralAsBtc(viewModel.amount.get(), collateral), amountBinding));
-        viewModel.totals.bind(createStringBinding(() -> BitSquareFormatter.formatTotalsAsBtc(viewModel.amount.get(), collateral, FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)), amountBinding, priceBinding));
+        viewModel.price.addListener((ov, oldValue, newValue) -> {
+            double price = BitSquareFormatter.parseToDouble(newValue);
+            double amount = BitSquareFormatter.parseToDouble(viewModel.amount.get());
+            double volume = amount * price;
+            viewModel.volume.set(BitSquareFormatter.formatVolume(volume));
+        });
 
-        // apply bindings to controls
+        viewModel.volume.addListener((ov, oldValue, newValue) -> {
+            double volume = BitSquareFormatter.parseToDouble(newValue);
+            double price = BitSquareFormatter.parseToDouble(viewModel.price.get());
+            if (price != 0)
+            {
+                double amount = volume / price;
+                viewModel.amount.set(BitSquareFormatter.formatVolume(amount));
+                viewModel.totals.set(BitSquareFormatter.formatTotalsAsBtc(viewModel.amount.get(), collateral, FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+                viewModel.collateral.set(BitSquareFormatter.formatCollateralAsBtc(viewModel.amount.get(), collateral));
+            }
+        });
+
         buyLabel.textProperty().bind(viewModel.directionLabel);
         amountTextField.textProperty().bindBidirectional(viewModel.amount);
         priceTextField.textProperty().bindBidirectional(viewModel.price);
-        minAmountTextField.textProperty().bindBidirectional(viewModel.minAmount);
+        volumeTextField.textProperty().bindBidirectional(viewModel.volume);
 
-        volumeTextField.textProperty().bind(viewModel.volume);
+        minAmountTextField.textProperty().bindBidirectional(viewModel.minAmount);
         collateralLabel.textProperty().bind(viewModel.collateralLabel);
         collateralTextField.textProperty().bind(viewModel.collateral);
         totalsTextField.textProperty().bind(viewModel.totals);
@@ -207,8 +222,14 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         BtcValidator amountValidator = new BtcValidator();
         amountTextField.setNumberValidator(amountValidator);
         amountTextField.setErrorPopupLayoutReference((Region) amountTextField.getParent());
+
         priceTextField.setNumberValidator(new FiatValidator());
         priceTextField.setErrorPopupLayoutReference((Region) amountTextField.getParent());
+
+        BtcValidator volumeValidator = new BtcValidator();
+        volumeTextField.setNumberValidator(volumeValidator);
+        volumeTextField.setErrorPopupLayoutReference((Region) volumeTextField.getParent());
+
         BtcValidator minAmountValidator = new BtcValidator();
         minAmountTextField.setNumberValidator(minAmountValidator);
 
@@ -219,6 +240,21 @@ public class CreateOfferController implements Initializable, ChildController, Hi
                                                                  amountValidator,
                                                                  minAmountValidator);
 
+        amountTextField.focusedProperty().addListener((ov, oldValue, newValue) -> {
+            // only on focus out and ignore focus loss from window
+            if (!newValue && amountTextField.getScene().getWindow().isFocused())
+                volumeTextField.reValidate();
+        });
+        volumeTextField.focusedProperty().addListener((ov, oldValue, newValue) -> {
+            // only on focus out and ignore focus loss from window
+            if (!newValue && volumeTextField.getScene().getWindow().isFocused())
+                amountTextField.reValidate();
+        });
+        priceTextField.focusedProperty().addListener((ov, oldValue, newValue) -> {
+            // only on focus out and ignore focus loss from window
+            if (!newValue && priceTextField.getScene().getWindow().isFocused())
+                volumeTextField.reValidate();
+        });
     }
 
 

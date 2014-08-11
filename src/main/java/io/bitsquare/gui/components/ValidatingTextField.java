@@ -107,9 +107,12 @@ public class ValidatingTextField extends TextField
 
     private void validate(String input)
     {
-        NumberValidator.ValidationResult validationResult = numberValidator.validate(input);
-        valid.set(validationResult.isValid);
-        applyErrorMessage(validationResult);
+        if (input != null)
+        {
+            NumberValidator.ValidationResult validationResult = numberValidator.validate(input);
+            valid.set(validationResult.isValid);
+            applyErrorMessage(validationResult);
+        }
     }
 
     private void applyErrorMessage(NumberValidator.ValidationResult validationResult)

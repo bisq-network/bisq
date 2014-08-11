@@ -53,7 +53,7 @@
 
 .text-field:readonly {
     -fx-text-fill: #000000;
-    -fx-background-color: #ffffff;
+    -fx-background-color: #FAFAFA;
 }
 
 #feedback-text {
