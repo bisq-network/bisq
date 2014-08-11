@@ -10,7 +10,7 @@ import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.util.BitSquareValidator;
-import io.bitsquare.gui.util.Icons;
+import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.*;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
@@ -358,7 +358,7 @@ public class SettingsController implements Initializable, ChildController, Navig
                     final HBox hBox = new HBox();
                     final Label label = new Label();
                     final Button removeButton = new Button();
-                    final ImageView icon = Icons.getIconImageView(Icons.REMOVE);
+                    final ImageView icon = ImageUtil.getIconImageView(ImageUtil.REMOVE);
 
                     {
                         label.setPrefWidth(565);
@@ -443,7 +443,7 @@ public class SettingsController implements Initializable, ChildController, Navig
                     final HBox hBox = new HBox();
                     final Label label = new Label();
                     final Button removeButton = new Button();
-                    final ImageView icon = Icons.getIconImageView(Icons.REMOVE);
+                    final ImageView icon = ImageUtil.getIconImageView(ImageUtil.REMOVE);
 
                     {
                         label.setPrefWidth(565);
@@ -513,7 +513,7 @@ public class SettingsController implements Initializable, ChildController, Navig
                     final HBox hBox = new HBox();
                     final Label label = new Label();
                     final Button removeButton = new Button();
-                    final ImageView icon = Icons.getIconImageView(Icons.REMOVE);
+                    final ImageView icon = ImageUtil.getIconImageView(ImageUtil.REMOVE);
 
                     {
                         label.setPrefWidth(565);

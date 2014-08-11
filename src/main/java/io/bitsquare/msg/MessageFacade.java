@@ -258,7 +258,7 @@ public class MessageFacade implements MessageBroker
                 Platform.runLater(() -> orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOffersReceived(futureGet.dataMap(), baseFuture.isSuccess())));
                 if (baseFuture.isSuccess())
                 {
-                    log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey + ", values: " + futureGet.dataMap() + "]");
+                    //log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey + ", values: " + futureGet.dataMap() + "]");
                 }
                 else
                 {

@@ -6,46 +6,75 @@ import javafx.scene.Node;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkState;
 
 @SuppressWarnings("WeakerAccess")
 public class Transitions
 {
+    private static final Logger log = LoggerFactory.getLogger(Transitions.class);
 
     public static final int UI_ANIMATION_TIME = 800;
 
-    public static void fadeIn(Node ui)
+    public static void fadeIn(Node node)
     {
-        fadeIn(ui, UI_ANIMATION_TIME);
+        fadeIn(node, UI_ANIMATION_TIME);
     }
 
     @SuppressWarnings("SameParameterValue")
-    public static void fadeIn(Node ui, int time)
+    public static void fadeIn(Node node, int duration)
     {
-        FadeTransition ft = new FadeTransition(Duration.millis(time), ui);
+        FadeTransition ft = new FadeTransition(Duration.millis(duration), node);
         ft.setFromValue(0.0);
         ft.setToValue(1.0);
         ft.play();
     }
 
-
-    public static Animation fadeOut(Node ui)
+    public static Animation fadeOut(Node node)
     {
-        FadeTransition ft = new FadeTransition(Duration.millis(UI_ANIMATION_TIME), ui);
-        ft.setFromValue(ui.getOpacity());
+        return fadeOut(node, UI_ANIMATION_TIME);
+    }
+
+    public static Animation fadeOut(Node node, int duration)
+    {
+        FadeTransition ft = new FadeTransition(Duration.millis(duration), node);
+        ft.setFromValue(node.getOpacity());
         ft.setToValue(0.0);
         ft.play();
         return ft;
     }
 
     @SuppressWarnings("UnusedReturnValue")
-
-    public static Animation fadeOutAndRemove(Node ui)
+    public static Animation fadeOutAndRemove(Node node)
     {
-        Animation animation = fadeOut(ui);
-        animation.setOnFinished(actionEvent -> ((Pane) (ui.getParent())).getChildren().remove(ui));
+        return fadeOutAndRemove(node, UI_ANIMATION_TIME);
+    }
+
+    public static Animation fadeOutAndRemove(Node node, int duration)
+    {
+        Animation animation = fadeOut(node, duration);
+        animation.setOnFinished(actionEvent -> {
+            ((Pane) (node.getParent())).getChildren().remove(node);
+            Profiler.printMsgWithTime("fadeOutAndRemove");
+        });
         return animation;
+    }
+
+    public static Timeline blurOutAndRemove(Node node)
+    {
+        return blurOutAndRemove(node, UI_ANIMATION_TIME);
+    }
+
+    public static Timeline blurOutAndRemove(Node node, int duration)
+    {
+        Timeline timeline = blurOut(node, duration);
+        timeline.setOnFinished(actionEvent -> {
+            ((Pane) (node.getParent())).getChildren().remove(node);
+            Profiler.printMsgWithTime("blurOutAndRemove");
+        });
+        return timeline;
     }
 
     public static void blurOut(Node node)
@@ -54,26 +83,27 @@ public class Transitions
     }
 
     @SuppressWarnings("SameParameterValue")
-    public static void blurOut(Node node, int time)
+    public static Timeline blurOut(Node node, int duration)
     {
         GaussianBlur blur = new GaussianBlur(0.0);
         node.setEffect(blur);
         Timeline timeline = new Timeline();
         KeyValue kv = new KeyValue(blur.radiusProperty(), 10.0);
-        KeyFrame kf = new KeyFrame(Duration.millis(time), kv);
+        KeyFrame kf = new KeyFrame(Duration.millis(duration), kv);
         timeline.getKeyFrames().add(kf);
         timeline.play();
+        return timeline;
     }
 
     public static void blurIn(Node node)
     {
         GaussianBlur blur = (GaussianBlur) node.getEffect();
-        Timeline timeline = new Timeline();
+        Timeline durationline = new Timeline();
         KeyValue kv = new KeyValue(blur.radiusProperty(), 0.0);
         KeyFrame kf = new KeyFrame(Duration.millis(UI_ANIMATION_TIME), kv);
-        timeline.getKeyFrames().add(kf);
-        timeline.setOnFinished(actionEvent -> node.setEffect(null));
-        timeline.play();
+        durationline.getKeyFrames().add(kf);
+        durationline.setOnFinished(actionEvent -> node.setEffect(null));
+        durationline.play();
     }
 
     public static void checkGuiThread()

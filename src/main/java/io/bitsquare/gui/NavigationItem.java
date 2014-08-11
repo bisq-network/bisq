@@ -1,17 +1,17 @@
 package io.bitsquare.gui;
 
-import io.bitsquare.gui.util.Icons;
+import io.bitsquare.gui.util.ImageUtil;
 
 public enum NavigationItem
 {
     MAIN("/io/bitsquare/gui/MainView.fxml"),
-    HOME("/io/bitsquare/gui/home/HomeView.fxml", Icons.HOME, Icons.HOME_ACTIVE),
-    BUY("/io/bitsquare/gui/market/MarketView.fxml", Icons.NAV_BUY, Icons.NAV_BUY_ACTIVE),
-    SELL("/io/bitsquare/gui/market/MarketView.fxml", Icons.NAV_SELL, Icons.NAV_SELL_ACTIVE),
-    ORDERS("/io/bitsquare/gui/orders/OrdersView.fxml", Icons.ORDERS, Icons.ORDERS_ACTIVE),
-    FUNDS("/io/bitsquare/gui/funds/FundsView.fxml", Icons.FUNDS, Icons.FUNDS_ACTIVE),
-    MSG("/io/bitsquare/gui/msg/MsgView.fxml", Icons.MSG, Icons.MSG_ACTIVE),
-    SETTINGS("/io/bitsquare/gui/settings/SettingsView.fxml", Icons.SETTINGS, Icons.SETTINGS_ACTIVE),
+    HOME("/io/bitsquare/gui/home/HomeView.fxml", ImageUtil.HOME, ImageUtil.HOME_ACTIVE),
+    BUY("/io/bitsquare/gui/market/MarketView.fxml", ImageUtil.NAV_BUY, ImageUtil.NAV_BUY_ACTIVE),
+    SELL("/io/bitsquare/gui/market/MarketView.fxml", ImageUtil.NAV_SELL, ImageUtil.NAV_SELL_ACTIVE),
+    ORDERS("/io/bitsquare/gui/orders/OrdersView.fxml", ImageUtil.ORDERS, ImageUtil.ORDERS_ACTIVE),
+    FUNDS("/io/bitsquare/gui/funds/FundsView.fxml", ImageUtil.FUNDS, ImageUtil.FUNDS_ACTIVE),
+    MSG("/io/bitsquare/gui/msg/MsgView.fxml", ImageUtil.MSG, ImageUtil.MSG_ACTIVE),
+    SETTINGS("/io/bitsquare/gui/settings/SettingsView.fxml", ImageUtil.SETTINGS, ImageUtil.SETTINGS_ACTIVE),
 
     ORDER_BOOK("/io/bitsquare/gui/market/orderbook/OrderBookView.fxml"),
     CREATE_OFFER("/io/bitsquare/gui/market/createOffer/CreateOfferView.fxml"),

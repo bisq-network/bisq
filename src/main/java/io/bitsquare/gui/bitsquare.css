@@ -1,4 +1,13 @@
-#root-pane {
+#splash {
+    -fx-background-color: #ffffff;
+}
+
+#logo-sub-title-label{
+   -fx-font-weight: bold;
+    -fx-font-size: 24;
+}
+
+#main-view {
     -fx-background-color: #dddddd;
 }
 
@@ -53,7 +62,7 @@
 
 .text-field:readonly {
     -fx-text-fill: #000000;
-    -fx-background-color: #FAFAFA;
+    -fx-background-color: #FBFBFB;
 }
 
 #feedback-text {

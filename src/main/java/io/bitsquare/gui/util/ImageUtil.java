@@ -3,8 +3,11 @@ package io.bitsquare.gui.util;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class Icons
+public class ImageUtil
 {
+    public static final String SPLASH_LOGO = "/images/logo_200_270.png";
+    public static final String SPLASH_LABEL = "/images/bitsquare_logo_label_300_69.png";
+
     public static final String SYS_TRAY = "/images/systemTrayIcon.png";
     public static final String SYS_TRAY_ALERT = "/images/systemTrayAlertIcon.png";
 
@@ -32,12 +35,12 @@ public class Icons
 
     public static Image getIconImage(String iconName)
     {
-        return new Image(Icons.class.getResourceAsStream(iconName));
+        return new Image(ImageUtil.class.getResourceAsStream(iconName));
     }
 
 
     public static ImageView getIconImageView(String iconName)
     {
-        return new ImageView(new Image(Icons.class.getResourceAsStream(iconName)));
+        return new ImageView(new Image(ImageUtil.class.getResourceAsStream(iconName)));
     }
 }

@@ -14,7 +14,7 @@ import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.ConfidenceDisplay;
-import io.bitsquare.gui.util.Icons;
+import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
@@ -52,8 +52,8 @@ public class PendingTradeController implements Initializable, ChildController, H
 
     private Trade currentTrade;
     private NavigationController navigationController;
-    private Image buyIcon = Icons.getIconImage(Icons.BUY);
-    private Image sellIcon = Icons.getIconImage(Icons.SELL);
+    private Image buyIcon = ImageUtil.getIconImage(ImageUtil.BUY);
+    private Image sellIcon = ImageUtil.getIconImage(ImageUtil.SELL);
     private ConfidenceDisplay confidenceDisplay;
 
     @FXML
@@ -390,7 +390,7 @@ public class PendingTradeController implements Initializable, ChildController, H
                             Country country = tradesTableItem.getTrade().getOffer().getBankAccountCountry();
                             try
                             {
-                                hBox.getChildren().add(Icons.getIconImageView("/images/countries/" + country.getCode().toLowerCase() + ".png"));
+                                hBox.getChildren().add(ImageUtil.getIconImageView("/images/countries/" + country.getCode().toLowerCase() + ".png"));
 
                             } catch (Exception e)
                             {

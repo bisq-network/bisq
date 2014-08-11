@@ -3,7 +3,7 @@ package io.bitsquare.gui.orders.offer;
 import io.bitsquare.gui.ChildController;
 import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
-import io.bitsquare.gui.util.Icons;
+import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.TradeManager;
 import java.net.URL;
@@ -172,7 +172,7 @@ public class OfferController implements Initializable, ChildController, Hibernat
             {
                 return new TableCell<String, OfferListItem>()
                 {
-                    final ImageView iconView = Icons.getIconImageView(Icons.REMOVE);
+                    final ImageView iconView = ImageUtil.getIconImageView(ImageUtil.REMOVE);
                     final Button button = new Button();
 
                     {

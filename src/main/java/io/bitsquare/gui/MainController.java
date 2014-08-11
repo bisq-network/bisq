@@ -8,7 +8,8 @@ import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.market.MarketController;
 import io.bitsquare.gui.orders.OrdersController;
-import io.bitsquare.gui.util.Icons;
+import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.msg.BootstrapListener;
 import io.bitsquare.msg.MessageFacade;
@@ -20,24 +21,29 @@ import io.bitsquare.util.AWTSystemTray;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.util.StringConverter;
 import javax.inject.Inject;
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Holds the splash screen and the application views.
+ * It builds up all the views and initializes the facades.
+ * We use a sequence of Platform.runLater cascaded calls to make the startup more smooth, otherwise the rendering is frozen for too long.
+ * Pre-loading of views is not implemented yet, and after a quick test it seemed that it does not give much improvements.
+ */
 public class MainController implements Initializable, NavigationController
 {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
@@ -49,7 +55,7 @@ public class MainController implements Initializable, NavigationController
     private final TradeManager tradeManager;
     private final Persistence persistence;
     private final ToggleGroup toggleGroup = new ToggleGroup();
-
+    private final ViewBuilder viewBuilder;
 
     private ChildController controller;
     private ToggleButton prevToggleButton;
@@ -59,18 +65,7 @@ public class MainController implements Initializable, NavigationController
     private boolean messageFacadeInited;
     private boolean walletFacadeInited;
 
-    @FXML
-    private Pane contentPane;
-    @FXML
-    private HBox leftNavPane, rightNavPane;
-    @FXML
-    private ProgressBar loadingBar;
-    @FXML
-    private AnchorPane rootPane;
-    @FXML
-    private Label loadingLabel;
-    @FXML
-    private NetworkSyncPane networkSyncPane;
+    @FXML private BorderPane root;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -85,6 +80,8 @@ public class MainController implements Initializable, NavigationController
         this.messageFacade = messageFacade;
         this.tradeManager = tradeManager;
         this.persistence = persistence;
+
+        viewBuilder = new ViewBuilder();
 
         MainController.INSTANCE = this;
     }
@@ -107,48 +104,13 @@ public class MainController implements Initializable, NavigationController
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        messageFacade.init(new BootstrapListener()
-        {
-            @Override
-            public void onCompleted()
-            {
-                messageFacadeInited = true;
-                if (walletFacadeInited) initialisationDone();
-            }
-
-            @Override
-            public void onFailed(Throwable throwable)
-            {
-            }
-        });
-
-        walletFacade.addDownloadListener(new WalletFacade.DownloadListener()
-        {
-            @Override
-            public void progress(double percent)
-            {
-                networkSyncPane.setProgress(percent);
-            }
-
-            @Override
-            public void doneDownload()
-            {
-                networkSyncPane.doneDownload();
-            }
-        });
-        walletFacade.initialize(() -> {
-            walletFacadeInited = true;
-            if (messageFacadeInited) initialisationDone();
-        });
-
-        tradeManager.addTakeOfferRequestListener(this::onTakeOfferRequested);
+        Profiler.printMsgWithTime("MainController.initialize");
+        Platform.runLater(() -> viewBuilder.buildSplashScreen(root, this));
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: NavigationController
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     @Override
     public ChildController navigateToView(NavigationItem navigationItem)
@@ -181,57 +143,69 @@ public class MainController implements Initializable, NavigationController
     }
 
 
-    private ChildController loadView(NavigationItem navigationItem)
-    {
-        if (controller != null)
-        {
-            controller.cleanup();
-        }
-
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
-        try
-        {
-            final Node view = loader.load();
-            contentPane.getChildren().setAll(view);
-            controller = loader.getController();
-            controller.setNavigationController(this);
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-            log.error("Loading view failed. " + navigationItem.getFxmlUrl());
-        }
-        return controller;
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
+    // Startup Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void initialisationDone()
+    public void onViewInitialized()
     {
-        addNavigation();
-
-        Transitions.fadeOutAndRemove(loadingLabel);
-        Transitions.fadeOutAndRemove(loadingBar);
-
-        Transitions.fadeIn(leftNavPane);
-        Transitions.fadeIn(rightNavPane);
-        Transitions.fadeIn(contentPane);
-
-        NavigationItem selectedNavigationItem = (NavigationItem) persistence.read(this, "selectedNavigationItem");
-        if (selectedNavigationItem == null)
-        {
-            selectedNavigationItem = NavigationItem.HOME;
-        }
-
-        navigateToView(selectedNavigationItem);
+        Profiler.printMsgWithTime("MainController.onViewInitialized");
+        Platform.runLater(this::initFacades);
     }
+
+    private void onFacadesInitialised()
+    {
+        Profiler.printMsgWithTime("MainController.onFacadesInitialised");
+        // never called on regtest
+        walletFacade.addDownloadListener(new WalletFacade.DownloadListener()
+        {
+            @Override
+            public void progress(double percent)
+            {
+                viewBuilder.loadingLabel.setText("Synchronise with network...");
+            }
+
+            @Override
+            public void doneDownload()
+            {
+                viewBuilder.loadingLabel.setText("Synchronise with network done.");
+            }
+        });
+
+        tradeManager.addTakeOfferRequestListener(this::onTakeOfferRequested);
+        Platform.runLater(this::addNavigation);
+    }
+
+    private void onNavigationAdded()
+    {
+        Profiler.printMsgWithTime("MainController.onNavigationAdded");
+        Platform.runLater(this::loadContentView);
+    }
+
+    private void onContentViewLoaded()
+    {
+        Profiler.printMsgWithTime("MainController.onContentViewLoaded");
+        root.setId("main-view");
+        Platform.runLater(this::fadeOutSplash);
+    }
+
+    private void fadeOutSplash()
+    {
+        Profiler.printMsgWithTime("MainController.fadeOutSplash");
+        Transitions.blurOutAndRemove(viewBuilder.splashVBox);
+        Transitions.fadeIn(viewBuilder.menuBar);
+        Transitions.fadeIn(viewBuilder.anchorPane);
+    }
+    
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     //TODO make ordersButton also reacting to jump to pending tab
     private void onTakeOfferRequested(String offerId, PeerAddress sender)
     {
-        final Button alertButton = new Button("", Icons.getIconImageView(Icons.MSG_ALERT));
+        final Button alertButton = new Button("", ImageUtil.getIconImageView(ImageUtil.MSG_ALERT));
         alertButton.setId("nav-alert-button");
         alertButton.relocate(36, 19);
         alertButton.setOnAction((e) -> {
@@ -244,36 +218,103 @@ public class MainController implements Initializable, NavigationController
         AWTSystemTray.setAlert();
     }
 
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private startup methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void initFacades()
+    {
+        Profiler.printMsgWithTime("MainController.initFacades");
+        messageFacade.init(new BootstrapListener()
+        {
+            @Override
+            public void onCompleted()
+            {
+                messageFacadeInited = true;
+                if (walletFacadeInited) onFacadesInitialised();
+            }
+
+            @Override
+            public void onFailed(Throwable throwable)
+            {
+                log.error(throwable.toString());
+            }
+        });
+
+        walletFacade.initialize(() -> {
+            walletFacadeInited = true;
+            if (messageFacadeInited) onFacadesInitialised();
+        });
+    }
+
     private void addNavigation()
     {
-        homeButton = addNavButton(leftNavPane, "Overview", NavigationItem.HOME);
-
-        buyButton = addNavButton(leftNavPane, "Buy BTC", NavigationItem.BUY);
-
-        sellButton = addNavButton(leftNavPane, "Sell BTC", NavigationItem.SELL);
+        Profiler.printMsgWithTime("MainController.addNavigation");
+        homeButton = addNavButton(viewBuilder.leftNavPane, "Overview", NavigationItem.HOME);
+        buyButton = addNavButton(viewBuilder.leftNavPane, "Buy BTC", NavigationItem.BUY);
+        sellButton = addNavButton(viewBuilder.leftNavPane, "Sell BTC", NavigationItem.SELL);
 
         ordersButtonButtonHolder = new Pane();
         ordersButton = addNavButton(ordersButtonButtonHolder, "Orders", NavigationItem.ORDERS);
-        leftNavPane.getChildren().add(ordersButtonButtonHolder);
+        viewBuilder.leftNavPane.getChildren().add(ordersButtonButtonHolder);
 
-        fundsButton = addNavButton(leftNavPane, "Funds", NavigationItem.FUNDS);
+        fundsButton = addNavButton(viewBuilder.leftNavPane, "Funds", NavigationItem.FUNDS);
 
         final Pane msgButtonHolder = new Pane();
         msgButton = addNavButton(msgButtonHolder, "Message", NavigationItem.MSG);
-        leftNavPane.getChildren().add(msgButtonHolder);
+        viewBuilder.leftNavPane.getChildren().add(msgButtonHolder);
 
-        addBalanceInfo(rightNavPane);
-        addAccountComboBox(rightNavPane);
+        addBalanceInfo(viewBuilder.rightNavPane);
+        addAccountComboBox(viewBuilder.rightNavPane);
 
-        settingsButton = addNavButton(rightNavPane, "Settings", NavigationItem.SETTINGS);
+        settingsButton = addNavButton(viewBuilder.rightNavPane, "Settings", NavigationItem.SETTINGS);
+
+        Platform.runLater(this::onNavigationAdded);
     }
 
+    private void loadContentView()
+    {
+        Profiler.printMsgWithTime("MainController.loadContentView");
+        NavigationItem selectedNavigationItem = (NavigationItem) persistence.read(this, "selectedNavigationItem");
+        if (selectedNavigationItem == null)
+            selectedNavigationItem = NavigationItem.BUY;
+
+        navigateToView(selectedNavigationItem);
+
+        Platform.runLater(this::onContentViewLoaded);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private ChildController loadView(NavigationItem navigationItem)
+    {
+        if (controller != null)
+            controller.cleanup();
+
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        try
+        {
+            final Node view = loader.load();
+            viewBuilder.contentPane.getChildren().setAll(view);
+            controller = loader.getController();
+            controller.setNavigationController(this);
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+            log.error("Loading view failed. " + navigationItem.getFxmlUrl());
+        }
+        return controller;
+    }
 
     private ToggleButton addNavButton(Pane parent, String title, NavigationItem navigationItem)
     {
         final Pane pane = new Pane();
         pane.setPrefSize(50, 50);
-        final ToggleButton toggleButton = new ToggleButton("", Icons.getIconImageView(navigationItem.getIcon()));
+        final ToggleButton toggleButton = new ToggleButton("", ImageUtil.getIconImageView(navigationItem.getIcon()));
         toggleButton.setToggleGroup(toggleGroup);
         toggleButton.setId("nav-button");
         toggleButton.setPrefSize(50, 50);
@@ -283,7 +324,7 @@ public class MainController implements Initializable, NavigationController
                 ((ImageView) (prevToggleButton.getGraphic())).setImage(prevToggleButtonIcon);
             }
             prevToggleButtonIcon = ((ImageView) (toggleButton.getGraphic())).getImage();
-            ((ImageView) (toggleButton.getGraphic())).setImage(Icons.getIconImage(navigationItem.getActiveIcon()));
+            ((ImageView) (toggleButton.getGraphic())).setImage(ImageUtil.getIconImage(navigationItem.getActiveIcon()));
 
             controller = loadView(navigationItem);
 
@@ -313,7 +354,7 @@ public class MainController implements Initializable, NavigationController
     {
         final TextField balanceTextField = new TextField();
         balanceTextField.setEditable(false);
-        balanceTextField.setPrefWidth(90);
+        balanceTextField.setPrefWidth(110);
         balanceTextField.setId("nav-balance-label");
         balanceTextField.setText(walletFacade.getWalletBalance().toFriendlyString());
         walletFacade.addBalanceListener(new BalanceListener()
@@ -325,12 +366,9 @@ public class MainController implements Initializable, NavigationController
             }
         });
 
-        final Label balanceCurrencyLabel = new Label("BTC");
-        balanceCurrencyLabel.setPadding(new Insets(6, 0, 0, 0));
-
         final HBox hBox = new HBox();
         hBox.setSpacing(2);
-        hBox.getChildren().setAll(balanceTextField, balanceCurrencyLabel);
+        hBox.getChildren().setAll(balanceTextField);
 
         final Label titleLabel = new Label("Balance");
         titleLabel.setMouseTransparent(true);
@@ -381,5 +419,135 @@ public class MainController implements Initializable, NavigationController
             vBox.getChildren().setAll(accountComboBox, titleLabel);
             parent.getChildren().add(vBox);
         }
+    }
+
+}
+
+
+class ViewBuilder
+{
+    HBox leftNavPane, rightNavPane;
+    AnchorPane contentPane;
+    NetworkSyncPane networkSyncPane;
+    StackPane stackPane;
+    AnchorPane anchorPane;
+    VBox splashVBox;
+    MenuBar menuBar;
+    BorderPane root;
+    Label loadingLabel;
+
+    void buildSplashScreen(BorderPane root, MainController controller)
+    {
+        Profiler.printMsgWithTime("MainController.ViewBuilder.buildSplashScreen");
+        this.root = root;
+
+        stackPane = new StackPane();
+        splashVBox = getSplashScreen();
+        stackPane.getChildren().add(splashVBox);
+        root.setCenter(stackPane);
+
+        menuBar = getMenuBar();
+        root.setTop(menuBar);
+
+        Platform.runLater(() -> buildContentView(controller));
+    }
+
+    void buildContentView(MainController controller)
+    {
+        Profiler.printMsgWithTime("MainController.ViewBuilder.buildContentView");
+        anchorPane = getContentScreen();
+        stackPane.getChildren().add(anchorPane);
+
+        Platform.runLater(controller::onViewInitialized);
+    }
+
+    AnchorPane getContentScreen()
+    {
+        AnchorPane anchorPane = new AnchorPane();
+        anchorPane.setId("content-pane");
+
+        leftNavPane = new HBox();
+        leftNavPane.setAlignment(Pos.CENTER);
+        leftNavPane.setSpacing(10);
+        AnchorPane.setLeftAnchor(leftNavPane, 0d);
+        AnchorPane.setTopAnchor(leftNavPane, 0d);
+
+        rightNavPane = new HBox();
+        rightNavPane.setAlignment(Pos.CENTER);
+        rightNavPane.setSpacing(10);
+        AnchorPane.setRightAnchor(rightNavPane, 10d);
+        AnchorPane.setTopAnchor(rightNavPane, 0d);
+
+        contentPane = new AnchorPane();
+        contentPane.setId("content-pane");
+        AnchorPane.setLeftAnchor(contentPane, 0d);
+        AnchorPane.setRightAnchor(contentPane, 0d);
+        AnchorPane.setTopAnchor(contentPane, 60d);
+        AnchorPane.setBottomAnchor(contentPane, 20d);
+
+        networkSyncPane = new NetworkSyncPane();
+        networkSyncPane.setSpacing(10);
+        networkSyncPane.setPrefHeight(20);
+        AnchorPane.setLeftAnchor(networkSyncPane, 0d);
+        AnchorPane.setBottomAnchor(networkSyncPane, 0d);
+
+        anchorPane.getChildren().addAll(leftNavPane, rightNavPane, contentPane, networkSyncPane);
+        anchorPane.setOpacity(0);
+
+        return anchorPane;
+    }
+
+    VBox getSplashScreen()
+    {
+        VBox splashVBox = new VBox();
+        splashVBox.setAlignment(Pos.CENTER);
+        splashVBox.setSpacing(10);
+
+        ImageView logo = ImageUtil.getIconImageView(ImageUtil.SPLASH_LOGO);
+        logo.setFitWidth(270);
+        logo.setFitHeight(200);
+
+        ImageView titleLabel = ImageUtil.getIconImageView(ImageUtil.SPLASH_LABEL);
+        titleLabel.setFitWidth(300);
+        titleLabel.setFitHeight(79);
+
+        Label subTitle = new Label("The P2P Fiat-Bitcoin Exchange");
+        subTitle.setAlignment(Pos.CENTER);
+        subTitle.setId("logo-sub-title-label");
+
+        loadingLabel = new Label("Initializing...");
+        loadingLabel.setAlignment(Pos.CENTER);
+        loadingLabel.setPadding(new Insets(80, 0, 0, 0));
+
+        splashVBox.getChildren().addAll(logo, titleLabel, subTitle, loadingLabel);
+        return splashVBox;
+    }
+
+    MenuBar getMenuBar()
+    {
+        MenuBar menuBar = new MenuBar();
+        // on mac we could place menu bar in the systems menu
+        // menuBar.setUseSystemMenuBar(true);
+        menuBar.setUseSystemMenuBar(false);
+
+        Menu fileMenu = new Menu("_File");
+        fileMenu.setMnemonicParsing(true);
+        MenuItem backupMenuItem = new MenuItem("Backup wallet");
+        fileMenu.getItems().addAll(backupMenuItem);
+
+        Menu settingsMenu = new Menu("_Settings");
+        settingsMenu.setMnemonicParsing(true);
+        MenuItem changePwMenuItem = new MenuItem("Change password");
+        settingsMenu.getItems().addAll(changePwMenuItem);
+
+        Menu helpMenu = new Menu("_Help");
+        helpMenu.setMnemonicParsing(true);
+        MenuItem faqMenuItem = new MenuItem("FAQ");
+        MenuItem forumMenuItem = new MenuItem("Forum");
+        helpMenu.getItems().addAll(faqMenuItem, forumMenuItem);
+
+        menuBar.getMenus().setAll(fileMenu, settingsMenu, helpMenu);
+        menuBar.setOpacity(0);
+        return menuBar;
     }
 }

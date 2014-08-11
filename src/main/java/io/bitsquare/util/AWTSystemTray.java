@@ -2,7 +2,7 @@ package io.bitsquare.util;
 
 
 import io.bitsquare.BitSquare;
-import io.bitsquare.gui.util.Icons;
+import io.bitsquare.gui.util.ImageUtil;
 import java.awt.*;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -27,7 +27,7 @@ public class AWTSystemTray
             Platform.setImplicitExit(false);
 
             SystemTray systemTray = SystemTray.getSystemTray();
-            trayIcon = new TrayIcon(getImage(Icons.SYS_TRAY));
+            trayIcon = new TrayIcon(getImage(ImageUtil.SYS_TRAY));
             trayIcon.setToolTip("BitSquare P2P Fiat-Bitcoin exchange");
 
             PopupMenu popupMenu = new PopupMenu();
@@ -78,12 +78,12 @@ public class AWTSystemTray
 
     public static void setAlert()
     {
-        trayIcon.setImage(getImage(Icons.SYS_TRAY_ALERT));
+        trayIcon.setImage(getImage(ImageUtil.SYS_TRAY_ALERT));
     }
 
     public static void unSetAlert()
     {
-        trayIcon.setImage(getImage(Icons.SYS_TRAY));
+        trayIcon.setImage(getImage(ImageUtil.SYS_TRAY));
     }
 
     public static void setStageHidden()

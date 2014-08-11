@@ -21,13 +21,9 @@ import java.util.Arrays;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,8 +43,7 @@ public class BitSquare extends Application
     public static void main(String[] args)
     {
         Profiler.init();
-        Profiler.printMsgWithTime("main called");
-        log.debug("Startup: main " + Arrays.asList(args).toString());
+        Profiler.printMsgWithTime("BitSquare.main called with args " + Arrays.asList(args).toString());
         if (args != null && args.length > 0) APP_NAME = args[0];
 
         launch(args);
@@ -67,7 +62,7 @@ public class BitSquare extends Application
     @Override
     public void start(Stage primaryStage) throws IOException
     {
-        Profiler.printMsgWithTime("start called");
+        Profiler.printMsgWithTime("BitSquare.start called");
         BitSquare.primaryStage = primaryStage;
 
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
@@ -81,7 +76,7 @@ public class BitSquare extends Application
 
         walletFacade = injector.getInstance(WalletFacade.class);
         messageFacade = injector.getInstance(MessageFacade.class);
-        Profiler.printMsgWithTime("Startup: messageFacade, walletFacade inited");
+        Profiler.printMsgWithTime("BitSquare: messageFacade, walletFacade created");
 
         // apply stored data
         final User user = injector.getInstance(User.class);
@@ -100,14 +95,9 @@ public class BitSquare extends Application
         GuiceFXMLLoader.setInjector(injector);
 
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()));
-        final Parent mainView = loader.load();
-        BorderPane rootPane = new BorderPane();
-        rootPane.setTop(getMenuBar());
-        rootPane.setCenter(mainView);
-
-        final Scene scene = new Scene(rootPane, 1000, 750);
-        scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm(),
-                                      getClass().getResource("/io/bitsquare/gui/validation.css").toExternalForm());
+        final Parent view = loader.load();
+        final Scene scene = new Scene(view, 1000, 750);
+        scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm());
 
         setupCloseHandlers(primaryStage, scene);
 
@@ -117,7 +107,7 @@ public class BitSquare extends Application
 
         primaryStage.show();
 
-        Profiler.printMsgWithTime("Startup: primaryStage.show");
+        Profiler.printMsgWithTime("BitSquare: start finished");
     }
 
     private void setupCloseHandlers(Stage primaryStage, Scene scene)
@@ -129,34 +119,6 @@ public class BitSquare extends Application
             if (keyCodeCombination.match(keyEvent)) AWTSystemTray.setStageHidden();
         });
     }
-
-    private MenuBar getMenuBar()
-    {
-        MenuBar menuBar = new MenuBar();
-        // on mac we could placemenu bar in the systems menu
-        // menuBar.setUseSystemMenuBar(true);
-        menuBar.setUseSystemMenuBar(false);
-
-        Menu fileMenu = new Menu("_File");
-        fileMenu.setMnemonicParsing(true);
-        MenuItem backupMenuItem = new MenuItem("Backup wallet");
-        fileMenu.getItems().addAll(backupMenuItem);
-
-        Menu settingsMenu = new Menu("_Settings");
-        settingsMenu.setMnemonicParsing(true);
-        MenuItem changePwMenuItem = new MenuItem("Change password");
-        settingsMenu.getItems().addAll(changePwMenuItem);
-
-        Menu helpMenu = new Menu("_Help");
-        helpMenu.setMnemonicParsing(true);
-        MenuItem faqMenuItem = new MenuItem("FAQ");
-        MenuItem forumMenuItem = new MenuItem("Forum");
-        helpMenu.getItems().addAll(faqMenuItem, forumMenuItem);
-
-        menuBar.getMenus().setAll(fileMenu, settingsMenu, helpMenu);
-        return menuBar;
-    }
-
 
     @Override
     public void stop() throws Exception

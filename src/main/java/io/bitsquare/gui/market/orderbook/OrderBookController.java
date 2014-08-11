@@ -15,7 +15,7 @@ import io.bitsquare.gui.market.createOffer.CreateOfferController;
 import io.bitsquare.gui.market.trade.TakerOfferController;
 import io.bitsquare.gui.popups.Popups;
 import io.bitsquare.gui.util.BitSquareFormatter;
-import io.bitsquare.gui.util.Icons;
+import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.Localisation;
@@ -65,8 +65,8 @@ public class OrderBookController implements Initializable, ChildController
     private final Settings settings;
     private final Persistence persistence;
 
-    private final Image buyIcon = Icons.getIconImage(Icons.BUY);
-    private final Image sellIcon = Icons.getIconImage(Icons.SELL);
+    private final Image buyIcon = ImageUtil.getIconImage(ImageUtil.BUY);
+    private final Image sellIcon = ImageUtil.getIconImage(ImageUtil.SELL);
     @FXML
     public AnchorPane holderPane;
     @FXML
@@ -433,7 +433,7 @@ public class OrderBookController implements Initializable, ChildController
 
                             if (offer.getMessagePublicKey().equals(user.getMessagePublicKey()))
                             {
-                                icon = Icons.getIconImage(Icons.REMOVE);
+                                icon = ImageUtil.getIconImage(ImageUtil.REMOVE);
                                 title = "Remove";
                                 button.setOnAction(event -> removeOffer(orderBookListItem.getOffer()));
                             }
@@ -499,7 +499,7 @@ public class OrderBookController implements Initializable, ChildController
                             Country country = orderBookListItem.getOffer().getBankAccountCountry();
                             try
                             {
-                                hBox.getChildren().add(Icons.getIconImageView("/images/countries/" + country.getCode().toLowerCase() + ".png"));
+                                hBox.getChildren().add(ImageUtil.getIconImageView("/images/countries/" + country.getCode().toLowerCase() + ".png"));
 
                             } catch (Exception e)
                             {
