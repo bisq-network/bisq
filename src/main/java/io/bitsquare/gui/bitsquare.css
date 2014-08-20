@@ -62,7 +62,7 @@
 
 .text-field:readonly {
     -fx-text-fill: #000000;
-    -fx-background-color: #FBFBFB;
+    -fx-background-color: #FAFAFA;
 }
 
 #feedback-text {
@@ -169,13 +169,20 @@
 #form-group-label {
     -fx-font-weight: bold;
     -fx-font-size: 14;
-    -fx-text-fill:#0096c9;
+    -fx-text-fill:#111;
     -fx-background-color:#f4f4f4;
 }
 
 #form-group-border {
-    -fx-border-color: #96D3E9;
-    -fx-border-radius: 4;
+    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, #ddd, #ccc);
+           -fx-background-color: 
+       -fx-shadow-highlight-color, 
+       -fx-outer-border, 
+       -fx-inner-border, 
+       -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
 }
 
 #form-title {

@@ -163,12 +163,16 @@ public class MainController implements Initializable, NavigationController
             public void progress(double percent)
             {
                 viewBuilder.loadingLabel.setText("Synchronise with network...");
+                if (viewBuilder.networkSyncPane == null)
+                    viewBuilder.setShowNetworkSyncPane();
             }
 
             @Override
-            public void doneDownload()
+            public void downloadComplete()
             {
                 viewBuilder.loadingLabel.setText("Synchronise with network done.");
+                if (viewBuilder.networkSyncPane != null) 
+                    viewBuilder.networkSyncPane.downloadComplete();
             }
         });
 
@@ -194,10 +198,10 @@ public class MainController implements Initializable, NavigationController
         Profiler.printMsgWithTime("MainController.fadeOutSplash");
         Transitions.blurOutAndRemove(viewBuilder.splashVBox);
         Transitions.fadeIn(viewBuilder.menuBar);
-        Transitions.fadeIn(viewBuilder.anchorPane);
+        Transitions.fadeIn(viewBuilder.contentScreen);
     }
-    
-    
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -218,7 +222,7 @@ public class MainController implements Initializable, NavigationController
         AWTSystemTray.setAlert();
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private startup methods
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -430,11 +434,12 @@ class ViewBuilder
     AnchorPane contentPane;
     NetworkSyncPane networkSyncPane;
     StackPane stackPane;
-    AnchorPane anchorPane;
+    AnchorPane contentScreen;
     VBox splashVBox;
     MenuBar menuBar;
     BorderPane root;
     Label loadingLabel;
+    boolean showNetworkSyncPane;
 
     void buildSplashScreen(BorderPane root, MainController controller)
     {
@@ -455,8 +460,8 @@ class ViewBuilder
     void buildContentView(MainController controller)
     {
         Profiler.printMsgWithTime("MainController.ViewBuilder.buildContentView");
-        anchorPane = getContentScreen();
-        stackPane.getChildren().add(anchorPane);
+        contentScreen = getContentScreen();
+        stackPane.getChildren().add(contentScreen);
 
         Platform.runLater(controller::onViewInitialized);
     }
@@ -485,16 +490,32 @@ class ViewBuilder
         AnchorPane.setTopAnchor(contentPane, 60d);
         AnchorPane.setBottomAnchor(contentPane, 20d);
 
+        anchorPane.getChildren().addAll(leftNavPane, rightNavPane, contentPane);
+        anchorPane.setOpacity(0);
+
+        if (showNetworkSyncPane)
+            addNetworkSyncPane();
+
+        return anchorPane;
+    }
+
+    void setShowNetworkSyncPane()
+    {
+        showNetworkSyncPane = true;
+
+        if (contentScreen != null)
+            addNetworkSyncPane();
+    }
+
+    private void addNetworkSyncPane()
+    {
         networkSyncPane = new NetworkSyncPane();
         networkSyncPane.setSpacing(10);
         networkSyncPane.setPrefHeight(20);
         AnchorPane.setLeftAnchor(networkSyncPane, 0d);
-        AnchorPane.setBottomAnchor(networkSyncPane, 0d);
+        AnchorPane.setBottomAnchor(networkSyncPane, 5d);
 
-        anchorPane.getChildren().addAll(leftNavPane, rightNavPane, contentPane, networkSyncPane);
-        anchorPane.setOpacity(0);
-
-        return anchorPane;
+        contentScreen.getChildren().addAll(networkSyncPane);
     }
 
     VBox getSplashScreen()

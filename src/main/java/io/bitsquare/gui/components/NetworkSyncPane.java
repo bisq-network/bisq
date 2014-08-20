@@ -31,7 +31,7 @@ public class NetworkSyncPane extends HBox
         networkSyncInfoLabel.setText("Synchronize with network: " + (int) percent + "%");
     }
 
-    public void doneDownload()
+    public void downloadComplete()
     {
         networkSyncInfoLabel.setText("Sync with network: Done");
         networkSyncProgressBar.setProgress(1);
@@ -43,5 +43,4 @@ public class NetworkSyncPane extends HBox
         fade.play();
         fade.setOnFinished(e -> getChildren().clear());
     }
-
 }

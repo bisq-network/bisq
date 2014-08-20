@@ -14,7 +14,7 @@
 
         <!-- group -->
         <VSpacer GridPane.rowIndex="0" prefHeight="20"/>
-        <Pane GridPane.rowIndex="1" GridPane.columnSpan="2" GridPane.rowSpan="2" style="-fx-border-color:#96D3E9; -fx-border-radius: 4;">
+        <Pane GridPane.rowIndex="1" GridPane.columnSpan="2" GridPane.rowSpan="2" id="form-group-border">
             <GridPane.margin>
                 <Insets top="-10" right="-10" bottom="-10" left="-10"/>
             </GridPane.margin>
@@ -64,6 +64,7 @@
         <!-- button -->
         <VSpacer GridPane.rowIndex="7" prefHeight="10"/>
         <Button GridPane.rowIndex="8" GridPane.columnIndex="1" fx:id="placeOfferButton" onAction="#onPlaceOffer" defaultButton="true" text="Place offer"/>
+        <Button GridPane.rowIndex="8" GridPane.columnIndex="1" fx:id="closeButton" onAction="#onClose"  visible="false" defaultButton="true" focusTraversable="false" text="Close"/>
 
 
         <!-- group -->
@@ -127,8 +128,7 @@
         </ConfidenceProgressIndicator>
         <Label fx:id="confirmationLabel" text="Checking confirmations..." visible="false" GridPane.columnIndex="3" GridPane.rowIndex="14"/>
 
-        <Button fx:id="closeButton" onAction="#onClose"  visible="false" defaultButton="true" focusTraversable="false" text="Close" GridPane.columnIndex="1" GridPane.rowIndex="15"/>
-
+       
         <columnConstraints>
             <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>
             <ColumnConstraints hgrow="ALWAYS" minWidth="400"/>

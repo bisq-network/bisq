@@ -214,11 +214,12 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         transactionIdTextField.textProperty().bind(viewModel.transactionId);
 
         placeOfferButton.visibleProperty().bind(viewModel.isOfferPlacedScreen.not());
-        progressIndicator.visibleProperty().bind(viewModel.isOfferPlacedScreen);
+        closeButton.visibleProperty().bind(viewModel.isOfferPlacedScreen);
+       /* progressIndicator.visibleProperty().bind(viewModel.isOfferPlacedScreen);
         confirmationLabel.visibleProperty().bind(viewModel.isOfferPlacedScreen);
         txTitleLabel.visibleProperty().bind(viewModel.isOfferPlacedScreen);
         transactionIdTextField.visibleProperty().bind(viewModel.isOfferPlacedScreen);
-        closeButton.visibleProperty().bind(viewModel.isOfferPlacedScreen);
+       */
     }
 
     private void setupValidation()

@@ -648,7 +648,7 @@ public class WalletFacade
         Coin fee = FeePolicy.CREATE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
         log.trace("fee: " + fee.toFriendlyString());
         tx.addOutput(fee, feePolicy.getAddressForCreateOfferFee());
-
+        printInputs("payCreateOfferFee", tx);
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         sendRequest.shuffleOutputs = false;
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
@@ -1233,7 +1233,7 @@ public class WalletFacade
     {
         void progress(double percent);
 
-        void doneDownload();
+        void downloadComplete();
     }
 
     private class BlockChainDownloadListener extends com.google.bitcoin.core.DownloadListener
@@ -1242,7 +1242,7 @@ public class WalletFacade
         protected void progress(double percent, int blocksSoFar, Date date)
         {
             super.progress(percent, blocksSoFar, date);
-            Platform.runLater(() -> onProgressInUserThread(percent, blocksSoFar, date));
+            Platform.runLater(() -> onProgressInUserThread(percent));
         }
 
         @Override
@@ -1252,7 +1252,7 @@ public class WalletFacade
             Platform.runLater(this::onDoneDownloadInUserThread);
         }
 
-        private void onProgressInUserThread(double percent, int blocksSoFar, final Date date)
+        private void onProgressInUserThread(double percent)
         {
             for (DownloadListener downloadListener : downloadListeners)
             {
@@ -1264,7 +1264,7 @@ public class WalletFacade
         {
             for (DownloadListener downloadListener : downloadListeners)
             {
-                downloadListener.doneDownload();
+                downloadListener.downloadComplete();
             }
         }
     }
