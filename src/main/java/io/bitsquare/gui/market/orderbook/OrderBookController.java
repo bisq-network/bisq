@@ -92,7 +92,7 @@ public class OrderBookController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private OrderBookController(OrderBook orderBook,  User user, MessageFacade messageFacade, WalletFacade walletFacade, Settings settings, Persistence persistence)
+    private OrderBookController(OrderBook orderBook, User user, MessageFacade messageFacade, WalletFacade walletFacade, Settings settings, Persistence persistence)
     {
         this.orderBook = orderBook;
         this.user = user;
@@ -100,7 +100,7 @@ public class OrderBookController implements Initializable, ChildController
         this.walletFacade = walletFacade;
         this.settings = settings;
         this.persistence = persistence;
-        
+
         this.orderBookFilter = new OrderBookFilter();
     }
 

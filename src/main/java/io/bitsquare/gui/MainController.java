@@ -169,7 +169,7 @@ public class MainController implements Initializable, NavigationController
             public void downloadComplete()
             {
                 viewBuilder.loadingLabel.setText("Synchronise with network done.");
-                if (viewBuilder.networkSyncPane != null) 
+                if (viewBuilder.networkSyncPane != null)
                     viewBuilder.networkSyncPane.downloadComplete();
             }
         });

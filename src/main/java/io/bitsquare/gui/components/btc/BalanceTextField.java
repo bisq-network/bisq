@@ -106,7 +106,7 @@ public class BalanceTextField extends AnchorPane
     {
         return balance;
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods

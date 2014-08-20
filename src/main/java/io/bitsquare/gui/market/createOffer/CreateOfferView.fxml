@@ -8,7 +8,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <AnchorPane fx:id="rootContainer" prefHeight="500" prefWidth="800" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0"
-            AnchorPane.topAnchor="10.0" xmlns="http://javafx.com/javafx/8" fx:controller="io.bitsquare.gui.market.createOffer.CreateOfferController" xmlns:fx="http://javafx.com/fxml/1" >
+            AnchorPane.topAnchor="10.0" xmlns="http://javafx.com/javafx/8" fx:controller="io.bitsquare.gui.market.createOffer.CreateOfferController" xmlns:fx="http://javafx.com/fxml/1">
 
     <GridPane hgap="5.0" vgap="5.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
 
@@ -25,7 +25,7 @@
             </Label>
         </Pane>
 
-        <Label GridPane.rowIndex="1" fx:id="buyLabel" />
+        <Label GridPane.rowIndex="1" fx:id="buyLabel"/>
         <HBox GridPane.rowIndex="1" GridPane.columnIndex="1" spacing="5" GridPane.hgrow="NEVER" alignment="CENTER_LEFT">
             <ValidatingTextField fx:id="amountTextField" prefWidth="70.0" alignment="CENTER_RIGHT"/>
             <Label text="BTC for:"/>
@@ -64,7 +64,7 @@
         <!-- button -->
         <VSpacer GridPane.rowIndex="7" prefHeight="10"/>
         <Button GridPane.rowIndex="8" GridPane.columnIndex="1" fx:id="placeOfferButton" onAction="#onPlaceOffer" disable="true" defaultButton="true" text="Place offer"/>
-        <Button GridPane.rowIndex="8" GridPane.columnIndex="1" fx:id="closeButton" onAction="#onClose"  visible="false" defaultButton="true" focusTraversable="false" text="Close"/>
+        <Button GridPane.rowIndex="8" GridPane.columnIndex="1" fx:id="closeButton" onAction="#onClose" visible="false" defaultButton="true" focusTraversable="false" text="Close"/>
 
 
         <!-- group -->
@@ -116,7 +116,6 @@
         <TextField fx:id="acceptedLanguagesTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="17"/>
 
 
-
         <!-- on placed offer screen -->
         <Label fx:id="txTitleLabel" text="Transaction ID:" visible="false" GridPane.rowIndex="14"/>
         <TextField fx:id="transactionIdTextField" visible="false" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="14"/>
@@ -128,7 +127,7 @@
         </ConfidenceProgressIndicator>
         <Label fx:id="confirmationLabel" text="Checking confirmations..." visible="false" GridPane.columnIndex="3" GridPane.rowIndex="14"/>
 
-       
+
         <columnConstraints>
             <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>
             <ColumnConstraints hgrow="ALWAYS" minWidth="400"/>

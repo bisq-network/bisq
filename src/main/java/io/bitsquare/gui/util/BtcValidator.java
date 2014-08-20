@@ -40,7 +40,7 @@ public class BtcValidator extends NumberValidator
                     .and(validateIfNotFractionalBtcValue(input))
                     .and(validateIfNotExceedsMaxBtcValue(input));
         }
-        
+
         return result;
     }
 
@@ -54,7 +54,7 @@ public class BtcValidator extends NumberValidator
     {
         this.externalValidationResult = externalValidationResult;
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected methods
