@@ -92,15 +92,16 @@ public class OrderBookController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private OrderBookController(OrderBook orderBook, OrderBookFilter orderBookFilter, User user, MessageFacade messageFacade, WalletFacade walletFacade, Settings settings, Persistence persistence)
+    private OrderBookController(OrderBook orderBook,  User user, MessageFacade messageFacade, WalletFacade walletFacade, Settings settings, Persistence persistence)
     {
         this.orderBook = orderBook;
-        this.orderBookFilter = orderBookFilter;
         this.user = user;
         this.messageFacade = messageFacade;
         this.walletFacade = walletFacade;
         this.settings = settings;
         this.persistence = persistence;
+        
+        this.orderBookFilter = new OrderBookFilter();
     }
 
 
@@ -111,12 +112,15 @@ public class OrderBookController implements Initializable, ChildController
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        orderBook.init();
-
         // init table
         setCountryColumnCellFactory();
         setBankAccountTypeColumnCellFactory();
         setDirectionColumnCellFactory();
+    }
+
+    private void init()
+    {
+        orderBook.init();
         offerList = orderBook.getOfferList();
         offerList.comparatorProperty().bind(orderBookTable.comparatorProperty());
         orderBookTable.setItems(offerList);
@@ -178,8 +182,9 @@ public class OrderBookController implements Initializable, ChildController
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setDirection(Direction direction)
+    public void applyDirection(Direction direction)
     {
+        init();
         orderBookTable.getSelectionModel().clearSelection();
         price.setText("");
         orderBookFilter.setDirection(direction);

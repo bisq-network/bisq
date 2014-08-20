@@ -6,7 +6,6 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.components.NetworkSyncPane;
-import io.bitsquare.gui.market.MarketController;
 import io.bitsquare.gui.orders.OrdersController;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Profiler;
@@ -14,7 +13,6 @@ import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.msg.BootstrapListener;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.storage.Persistence;
-import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;
@@ -331,11 +329,6 @@ public class MainController implements Initializable, NavigationController
             ((ImageView) (toggleButton.getGraphic())).setImage(ImageUtil.getIconImage(navigationItem.getActiveIcon()));
 
             controller = loadView(navigationItem);
-
-            if (controller instanceof MarketController)
-            {
-                ((MarketController) controller).setDirection(navigationItem == NavigationItem.BUY ? Direction.BUY : Direction.SELL);
-            }
 
             persistence.write(this, "selectedNavigationItem", navigationItem);
 

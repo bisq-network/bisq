@@ -7,8 +7,8 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:id="rootContainer" prefHeight="500" prefWidth="800" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0"
-            AnchorPane.topAnchor="10.0" xmlns="http://javafx.com/javafx/8" fx:controller="io.bitsquare.gui.market.createOffer.CreateOfferController">
+<AnchorPane fx:id="rootContainer" prefHeight="500" prefWidth="800" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0"
+            AnchorPane.topAnchor="10.0" xmlns="http://javafx.com/javafx/8" fx:controller="io.bitsquare.gui.market.createOffer.CreateOfferController" xmlns:fx="http://javafx.com/fxml/1" >
 
     <GridPane hgap="5.0" vgap="5.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
 
@@ -63,7 +63,7 @@
 
         <!-- button -->
         <VSpacer GridPane.rowIndex="7" prefHeight="10"/>
-        <Button GridPane.rowIndex="8" GridPane.columnIndex="1" fx:id="placeOfferButton" onAction="#onPlaceOffer" defaultButton="true" text="Place offer"/>
+        <Button GridPane.rowIndex="8" GridPane.columnIndex="1" fx:id="placeOfferButton" onAction="#onPlaceOffer" disable="true" defaultButton="true" text="Place offer"/>
         <Button GridPane.rowIndex="8" GridPane.columnIndex="1" fx:id="closeButton" onAction="#onClose"  visible="false" defaultButton="true" focusTraversable="false" text="Close"/>
 
 

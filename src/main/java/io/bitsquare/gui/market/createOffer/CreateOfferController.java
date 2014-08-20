@@ -77,6 +77,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     final ViewModel viewModel = new ViewModel();
     private final double collateral;
     private Direction direction;
+    private AddressEntry addressEntry;
 
     @FXML private AnchorPane rootContainer;
     @FXML private Label buyLabel, confirmationLabel, txTitleLabel, collateralLabel;
@@ -137,17 +138,13 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-
-        //  Node wrappedButton = Borders.wrap(button).etchedBorder().buildAll()
-
-
         setupBindings();
         setupValidation();
 
         //TODO
         if (walletFacade.getWallet() != null)
         {
-            AddressEntry addressEntry = walletFacade.getUnusedTradeAddressInfo();
+            addressEntry = walletFacade.getUnusedTradeAddressInfo();
             addressTextField.setAddress(addressEntry.getAddress().toString());
 
             balanceTextField.setAddress(addressEntry.getAddress());
@@ -215,11 +212,18 @@ public class CreateOfferController implements Initializable, ChildController, Hi
 
         placeOfferButton.visibleProperty().bind(viewModel.isOfferPlacedScreen.not());
         closeButton.visibleProperty().bind(viewModel.isOfferPlacedScreen);
+
+        //TODO
        /* progressIndicator.visibleProperty().bind(viewModel.isOfferPlacedScreen);
         confirmationLabel.visibleProperty().bind(viewModel.isOfferPlacedScreen);
         txTitleLabel.visibleProperty().bind(viewModel.isOfferPlacedScreen);
         transactionIdTextField.visibleProperty().bind(viewModel.isOfferPlacedScreen);
        */
+
+        placeOfferButton.disableProperty().bind(amountTextField.isValidProperty()
+                                                               .and(minAmountTextField.isValidProperty())
+                                                               .and(volumeTextField.isValidProperty())
+                                                               .and(priceTextField.isValidProperty()).not());
     }
 
     private void setupValidation()
@@ -258,7 +262,7 @@ public class CreateOfferController implements Initializable, ChildController, Hi
         priceTextField.focusedProperty().addListener((ov, oldValue, newValue) -> {
             // only on focus out and ignore focus loss from window
             if (!newValue && priceTextField.getScene() != null && priceTextField.getScene().getWindow().isFocused())
-            volumeTextField.reValidate();
+                volumeTextField.reValidate();
         });
     }
 
@@ -302,20 +306,30 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     @FXML
     public void onPlaceOffer()
     {
-        viewModel.isPlaceOfferButtonDisabled.set(true);
+        amountTextField.reValidate();
+        minAmountTextField.reValidate();
+        volumeTextField.reValidate();
+        priceTextField.reValidate();
 
-        tradeManager.requestPlaceOffer(direction,
-                                       BitSquareFormatter.parseToDouble(viewModel.price.get()),
-                                       BitSquareFormatter.parseToCoin(viewModel.amount.get()),
-                                       BitSquareFormatter.parseToCoin(viewModel.minAmount.get()),
-                                       (transaction) -> {
-                                           viewModel.isOfferPlacedScreen.set(true);
-                                           viewModel.transactionId.set(transaction.getHashAsString());
-                                       },
-                                       errorMessage -> {
-                                           Popups.openErrorPopup("An error occurred", errorMessage);
-                                           viewModel.isPlaceOfferButtonDisabled.set(false);
-                                       });
+        //balanceTextField.getBalance()
+
+        if (amountTextField.getIsValid() && minAmountTextField.getIsValid() && volumeTextField.getIsValid() && amountTextField.getIsValid())
+        {
+            viewModel.isPlaceOfferButtonDisabled.set(true);
+
+            tradeManager.requestPlaceOffer(direction,
+                                           BitSquareFormatter.parseToDouble(viewModel.price.get()),
+                                           BitSquareFormatter.parseToCoin(viewModel.amount.get()),
+                                           BitSquareFormatter.parseToCoin(viewModel.minAmount.get()),
+                                           (transaction) -> {
+                                               viewModel.isOfferPlacedScreen.set(true);
+                                               viewModel.transactionId.set(transaction.getHashAsString());
+                                           },
+                                           errorMessage -> {
+                                               Popups.openErrorPopup("An error occurred", errorMessage);
+                                               viewModel.isPlaceOfferButtonDisabled.set(false);
+                                           });
+        }
     }
 
     @FXML

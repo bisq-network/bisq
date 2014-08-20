@@ -20,7 +20,6 @@ import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Persistence;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.orderbook.OrderBook;
-import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
 import javax.inject.Inject;
 
@@ -34,7 +33,6 @@ public class BitSquareModule extends AbstractModule
         bind(OrderBook.class).asEagerSingleton();
         bind(Persistence.class).asEagerSingleton();
         bind(Settings.class).asEagerSingleton();
-        bind(OrderBookFilter.class).asEagerSingleton();
 
         bind(CryptoFacade.class).asEagerSingleton();
         bind(WalletFacade.class).asEagerSingleton();

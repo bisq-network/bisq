@@ -648,7 +648,7 @@ public class WalletFacade
         Coin fee = FeePolicy.CREATE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
         log.trace("fee: " + fee.toFriendlyString());
         tx.addOutput(fee, feePolicy.getAddressForCreateOfferFee());
-        printInputs("payCreateOfferFee", tx);
+       // printInputs("payCreateOfferFee", tx);
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         sendRequest.shuffleOutputs = false;
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)

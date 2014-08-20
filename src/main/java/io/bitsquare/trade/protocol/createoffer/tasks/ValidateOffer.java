@@ -1,5 +1,7 @@
 package io.bitsquare.trade.protocol.createoffer.tasks;
 
+import com.google.bitcoin.core.Coin;
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.Restritions;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.handlers.FaultHandler;
@@ -37,17 +39,22 @@ public class ValidateOffer
 
             checkArgument(offer.getAcceptedCountries().size() > 0);
             checkArgument(offer.getAcceptedLanguageLocales().size() > 0);
-            checkArgument(offer.getAmount().isGreaterThan(Restritions.MIN_TRADE_AMOUNT));
+            checkArgument(offer.getMinAmount().compareTo(Restritions.MIN_TRADE_AMOUNT) >= 0);
             checkArgument(offer.getAmount().compareTo(Restritions.MIN_TRADE_AMOUNT) >= 0);
             checkArgument(offer.getAmount().compareTo(offer.getMinAmount()) >= 0);
             checkArgument(offer.getCollateral() > 0);
             checkArgument(offer.getPrice() > 0);
+
+            // TODO check balance
+            Coin collateralAsCoin = offer.getAmount().divide((long) (1d / offer.getCollateral()));
+            Coin totalsToFund = collateralAsCoin.add(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE));
+            // getAddressInfoByTradeID(offerId)
             // TODO when offer is flattened continue here...
 
             resultHandler.onResult();
         } catch (Throwable t)
         {
-            faultHandler.onFault("Offer validation failed with exception: " + t.getMessage(), t);
+            faultHandler.onFault("Offer validation failed.", t);
         }
     }
 }

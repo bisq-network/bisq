@@ -140,7 +140,7 @@ public class OrderBook implements OrderBookListener
             //noinspection UnnecessaryLocalVariable
             boolean result = currencyResult && countryResult && languageResult && amountResult && directionResult && priceResult && arbitratorResult;
 
-                  /*
+                /* 
             log.debug("result = " + result +
                     ", currencyResult = " + currencyResult +
                     ", countryResult = " + countryResult +
@@ -149,8 +149,8 @@ public class OrderBook implements OrderBookListener
                     ", directionResult = " + directionResult +
                     ", priceResult = " + priceResult +
                     ", arbitratorResult = " + arbitratorResult
-            );
-
+            );*/
+ /*
             log.debug("currentBankAccount.getCurrency() = " + currentBankAccount.getCurrency() +
                     ", offer.getCurrency() = " + offer.getCurrency());
             log.debug("offer.getCountryLocale() = " + offer.getBankAccountCountryLocale() +

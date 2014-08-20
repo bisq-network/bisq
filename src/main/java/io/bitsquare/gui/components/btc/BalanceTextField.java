@@ -24,6 +24,7 @@ public class BalanceTextField extends AnchorPane
     private WalletFacade walletFacade;
     private ConfidenceListener confidenceListener;
     private BalanceListener balanceListener;
+    private Coin balance;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -96,10 +97,20 @@ public class BalanceTextField extends AnchorPane
         walletFacade.removeBalanceListener(balanceListener);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Coin getBalance()
+    {
+        return balance;
+    }
+    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     private void updateConfidence(TransactionConfidence confidence)
     {
@@ -136,10 +147,12 @@ public class BalanceTextField extends AnchorPane
 
     private void updateBalance(Coin balance)
     {
+        this.balance = balance;
         if (balance != null)
         {
             //TODO use BitSquareFormatter
             balanceTextField.setText(balance.toFriendlyString());
         }
     }
+
 }

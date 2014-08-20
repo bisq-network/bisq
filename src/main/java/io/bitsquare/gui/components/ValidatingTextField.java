@@ -1,7 +1,6 @@
 package io.bitsquare.gui.components;
 
 import io.bitsquare.gui.util.NumberValidator;
-import java.util.LinkedList;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
@@ -28,21 +27,26 @@ import org.slf4j.LoggerFactory;
 public class ValidatingTextField extends TextField
 {
     private static final Logger log = LoggerFactory.getLogger(ValidatingTextField.class);
-    private static final Effect DEFAULT_EFFECT = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
+    private static PopOver popOver;
 
-    // we hold all error popups any only display the latest one
-    private static final LinkedList<PopOver> allErrorPopups = new LinkedList<>();
+    private Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
 
-    private Effect invalidEffect = DEFAULT_EFFECT;
-    private final BooleanProperty valid = new SimpleBooleanProperty(true);
+    private final BooleanProperty isValid = new SimpleBooleanProperty(true);
     private NumberValidator numberValidator;
     private boolean validateOnFocusOut = true;
     private boolean needsValidationOnFocusOut;
-    private PopOver popOver;
-
     private Region errorPopupLayoutReference;
-    private double errorPopOverX;
-    private double errorPopOverY;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static void hidePopover()
+    {
+        if (popOver != null)
+            popOver.hide();
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +56,7 @@ public class ValidatingTextField extends TextField
     public ValidatingTextField()
     {
         super();
+
         setupListeners();
     }
 
@@ -75,6 +80,9 @@ public class ValidatingTextField extends TextField
         this.numberValidator = numberValidator;
     }
 
+    /**
+     * @param errorPopupLayoutReference The node used as reference for positioning
+     */
     public void setErrorPopupLayoutReference(Region errorPopupLayoutReference)
     {
         this.errorPopupLayoutReference = errorPopupLayoutReference;
@@ -82,12 +90,34 @@ public class ValidatingTextField extends TextField
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean getIsValid()
+    {
+        return isValid.get();
+    }
+
+    public BooleanProperty isValidProperty()
+    {
+        return isValid;
+    }
+    
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setupListeners()
     {
-        this.textProperty().addListener((ov, oldValue, newValue) -> {
+        sceneProperty().addListener((ov, oldValue, newValue) -> {
+            // we got removed from the scene
+            // lets hide an open popup
+            if (newValue == null)
+                hidePopover();
+        });
+
+        textProperty().addListener((ov, oldValue, newValue) -> {
             if (numberValidator != null)
             {
                 if (!validateOnFocusOut)
@@ -97,12 +127,12 @@ public class ValidatingTextField extends TextField
             }
         });
 
-        this.focusedProperty().addListener((ov, oldValue, newValue) -> {
-            if (validateOnFocusOut && needsValidationOnFocusOut && !newValue && getScene()!= null && getScene().getWindow().isFocused())
+        focusedProperty().addListener((ov, oldValue, newValue) -> {
+            if (validateOnFocusOut && needsValidationOnFocusOut && !newValue && getScene() != null && getScene().getWindow().isFocused())
                 validate(getText());
         });
 
-        this.valid.addListener((ov, oldValue, newValue) -> applyEffect(newValue));
+        isValid.addListener((ov, oldValue, newValue) -> applyEffect(newValue));
     }
 
     private void validate(String input)
@@ -110,7 +140,7 @@ public class ValidatingTextField extends TextField
         if (input != null)
         {
             NumberValidator.ValidationResult validationResult = numberValidator.validate(input);
-            valid.set(validationResult.isValid);
+            isValid.set(validationResult.isValid);
             applyErrorMessage(validationResult);
         }
     }
@@ -119,35 +149,19 @@ public class ValidatingTextField extends TextField
     {
         if (validationResult.isValid)
         {
-            if (allErrorPopups.contains(popOver))
+            if (popOver != null)
             {
-                allErrorPopups.remove(popOver);
                 popOver.hide();
             }
-            if (allErrorPopups.size() > 0)
-            {
-                PopOver lastPopOver = allErrorPopups.getLast();
-                lastPopOver.show(getScene().getWindow());
-            }
-            popOver = null;
         }
         else
         {
-            if (allErrorPopups.size() > 0)
-            {
-                PopOver lastPopOver = allErrorPopups.getLast();
-                lastPopOver.hide();
-            }
+            if (popOver == null)
+                createErrorPopOver(validationResult.errorMessage);
+            else
+                setErrorMessage(validationResult.errorMessage);
 
-            if (allErrorPopups.contains(popOver))
-            {
-                allErrorPopups.remove(popOver);
-                popOver.hide();
-            }
-
-            popOver = createErrorPopOver(validationResult.errorMessage);
-            popOver.show(getScene().getWindow(), errorPopOverX, errorPopOverY);
-            allErrorPopups.add(popOver);
+            popOver.show(getScene().getWindow(), getErrorPopupPosition().getX(), getErrorPopupPosition().getY());
         }
     }
 
@@ -156,30 +170,39 @@ public class ValidatingTextField extends TextField
         setEffect(isValid ? null : invalidEffect);
     }
 
-    private PopOver createErrorPopOver(String errorMessage)
+    private Point2D getErrorPopupPosition()
+    {
+        Window window = getScene().getWindow();
+        Point2D point;
+        double x;
+        if (errorPopupLayoutReference == null)
+        {
+            point = localToScene(0, 0);
+            x = point.getX() + window.getX() + getWidth() + 20;
+        }
+        else
+        {
+            point = errorPopupLayoutReference.localToScene(0, 0);
+            x = point.getX() + window.getX() + errorPopupLayoutReference.getWidth() + 20;
+        }
+        double y = point.getY() + window.getY() + Math.floor(getHeight() / 2);
+        return new Point2D(x, y);
+    }
+
+    private static void setErrorMessage(String errorMessage)
+    {
+        ((Label) popOver.getContentNode()).setText(errorMessage);
+    }
+
+    private static void createErrorPopOver(String errorMessage)
     {
         Label errorLabel = new Label(errorMessage);
         errorLabel.setId("validation-error");
         errorLabel.setPadding(new Insets(0, 10, 0, 10));
 
-        PopOver popOver = new PopOver(errorLabel);
+        popOver = new PopOver(errorLabel);
         popOver.setAutoFix(true);
         popOver.setDetachedTitle("");
         popOver.setArrowIndent(5);
-        Window window = getScene().getWindow();
-
-        Point2D point;
-        if (errorPopupLayoutReference == null)
-        {
-            point = localToScene(0, 0);
-            errorPopOverX = point.getX() + window.getX() + getWidth() + 20;
-        }
-        else
-        {
-            point = errorPopupLayoutReference.localToScene(0, 0);
-            errorPopOverX = point.getX() + window.getX() + errorPopupLayoutReference.getWidth() + 20;
-        }
-        errorPopOverY = point.getY() + window.getY() + Math.floor(getHeight() / 2);
-        return popOver;
     }
 }

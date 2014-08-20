@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 public class BtcValidator extends NumberValidator
 {
     private static final Logger log = LoggerFactory.getLogger(BtcValidator.class);
-    private ValidationResult overriddenValidationResult;
+    private ValidationResult externalValidationResult;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -23,6 +23,9 @@ public class BtcValidator extends NumberValidator
     @Override
     public ValidationResult validate(String input)
     {
+        if (externalValidationResult != null)
+            return externalValidationResult;
+
         ValidationResult result = validateIfNotEmpty(input);
         if (result.isValid)
         {
@@ -37,23 +40,21 @@ public class BtcValidator extends NumberValidator
                     .and(validateIfNotFractionalBtcValue(input))
                     .and(validateIfNotExceedsMaxBtcValue(input));
         }
-
-        if (overriddenValidationResult != null)
-            return overriddenValidationResult;
-
+        
         return result;
     }
 
     /**
      * Used to integrate external validation (e.g. for MinAmount/Amount)
-     * TODO Might be improved but does the job for now...
+     * TODO To be improved but does the job for now...
      *
-     * @param overriddenValidationResult
+     * @param externalValidationResult
      */
-    public void overrideResult(ValidationResult overriddenValidationResult)
+    public void overrideResult(ValidationResult externalValidationResult)
     {
-        this.overriddenValidationResult = overriddenValidationResult;
+        this.externalValidationResult = externalValidationResult;
     }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected methods

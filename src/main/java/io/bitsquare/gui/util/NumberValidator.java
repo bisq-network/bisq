@@ -25,7 +25,6 @@ public abstract class NumberValidator
     // Protected methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     protected ValidationResult validateIfNotEmpty(String input)
     {
         if (input == null || input.length() == 0)
