@@ -125,7 +125,7 @@ public class ProtocolForTakerAsSeller
 
         peersMessagePublicKey = offer.getMessagePublicKey();
 
-        bankAccount = user.getBankAccount(offer.getBankAccountId());
+        bankAccount = user.getCurrentBankAccount();
         accountId = user.getAccountId();
         messagePublicKey = user.getMessagePublicKey();
 

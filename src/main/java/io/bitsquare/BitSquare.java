@@ -33,7 +33,7 @@ public class BitSquare extends Application
 {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
 
-    public static boolean fillFormsWithDummyData = true;
+    public static boolean fillFormsWithDummyData = false;
 
     private static String APP_NAME = "bitsquare";
     private static Stage primaryStage;
