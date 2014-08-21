@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-Archiver-Version: Plexus Archiver
-Created-By: Apache Maven
-Built-By: Manfred Karrer
-Build-Jdk: 1.8.0
-Main-Class: io.bitsquare.BitSquare
