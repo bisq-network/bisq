@@ -3,8 +3,8 @@ package io.bitsquare.msg;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.inject.name.Named;
 import io.bitsquare.BitSquare;
-import io.bitsquare.util.DSAKeyUtil;
 import io.bitsquare.util.StorageDirectory;
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +13,7 @@ import java.security.PublicKey;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import net.tomp2p.connection.DSASignatureFactory;
 import net.tomp2p.dht.*;
 import net.tomp2p.futures.BaseFuture;
@@ -42,7 +43,7 @@ public class P2PNode
     private Thread bootstrapToServerThread;
 
     // just for lightweight client test
-    public static void main(String[] args)
+   /* public static void main(String[] args)
     {
         P2PNode p2pNode = new P2PNode(DSAKeyUtil.generateKeyPair(), false, SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN,
                                       (message, peerAddress) -> log.debug("handleMessage: message= " + message + "/ peerAddress=" + peerAddress));
@@ -63,28 +64,31 @@ public class P2PNode
         for (; ; )
         {
         }
-    }
+    }*/
 
-    private final KeyPair keyPair;
+    private KeyPair keyPair;
     private final Boolean useDiskStorage;
     private final SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses;
-    private final MessageBroker messageBroker;
+    private MessageBroker messageBroker;
 
     private PeerAddress storedPeerAddress;
     private PeerDHT peerDHT;
     private Storage storage;
+    private BootstrappedPeerFactory bootstrappedPeerFactory;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public P2PNode(KeyPair keyPair, Boolean useDiskStorage, SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses, MessageBroker messageBroker)
+    @Inject
+    public P2PNode(BootstrappedPeerFactory bootstrappedPeerFactory,
+                   @Named("useDiskStorage") Boolean useDiskStorage,
+                   @Named("defaultSeedNode") SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses)
     {
-        this.keyPair = keyPair;
+        this.bootstrappedPeerFactory = bootstrappedPeerFactory;
         this.useDiskStorage = useDiskStorage;
         this.defaultStaticSeedNodeAddresses = defaultStaticSeedNodeAddresses;
-        this.messageBroker = messageBroker;
     }
 
     // for unit testing
@@ -92,11 +96,11 @@ public class P2PNode
     {
         this.keyPair = keyPair;
         this.peerDHT = peerDHT;
+        peerDHT.peerBean().keyPair(keyPair);
         messageBroker = (message, peerAddress) -> {
         };
         useDiskStorage = false;
         defaultStaticSeedNodeAddresses = SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST;
-        peerDHT.peerBean().keyPair(keyPair);
     }
 
 
@@ -104,63 +108,28 @@ public class P2PNode
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void setMessageBroker(MessageBroker messageBroker)
+    {
+        this.messageBroker = messageBroker;
+    }
+
+    public void setKeyPair(@NotNull KeyPair keyPair)
+    {
+        this.keyPair = keyPair;
+        bootstrappedPeerFactory.setKeyPair(keyPair);
+    }
 
     public void start(FutureCallback<PeerDHT> callback)
     {
         useDiscStorage(useDiskStorage);
+
+        bootstrappedPeerFactory.setStorage(storage);
         setupTimerForIPCheck();
 
-       /* FutureCallback<PeerDHT> localCallback = new FutureCallback<PeerDHT>()
-        {
-            @Override
-            public void onSuccess(@Nullable PeerDHT result)
-            {
-                log.debug("p2pNode.start success result = " + result);
-                callback.onSuccess(result);
-                bootstrapThreadCompleted();
-            }
-
-            @Override
-            public void onFailure(Throwable t)
-            {
-                log.error(t.toString());
-                callback.onFailure(t);
-            }
-        };   */
-
-        ListenableFuture<PeerDHT> bootstrapComplete = bootstrap(new SeedNodeAddress(defaultStaticSeedNodeAddresses));
+        ListenableFuture<PeerDHT> bootstrapComplete = bootstrap();
         Futures.addCallback(bootstrapComplete, callback);
-
-        // bootstrapToLocalhostThread = runBootstrapThread(localCallback, new SeedNodeAddress(defaultStaticSeedNodeAddresses));
-        // bootstrapToServerThread = runBootstrapThread(localCallback, new SeedNodeAddress(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN));
     }
 
-    // TODO: start multiple threads for bootstrapping, so we can get it done faster.
-
-  /*  public void bootstrapThreadCompleted()
-    {
-        if (bootstrapToLocalhostThread != null)
-            bootstrapToLocalhostThread.interrupt();
-
-        if (bootstrapToServerThread != null)
-            bootstrapToServerThread.interrupt();
-    }
-
-    private Thread runBootstrapThread(FutureCallback<PeerDHT> callback, SeedNodeAddress seedNodeAddress)
-    {
-        Thread bootstrapThread = new Thread(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                log.debug("runBootstrapThread");
-                ListenableFuture<PeerDHT> bootstrapComplete = bootstrap(seedNodeAddress);
-                Futures.addCallback(bootstrapComplete, callback);
-            }
-        });
-        bootstrapThread.start();
-        return bootstrapThread;
-    }   */
 
     public void shutDown()
     {
@@ -260,9 +229,8 @@ public class P2PNode
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private ListenableFuture<PeerDHT> bootstrap(SeedNodeAddress seedNodeAddress)
+    private ListenableFuture<PeerDHT> bootstrap()
     {
-        BootstrappedPeerFactory bootstrappedPeerFactory = new BootstrappedPeerFactory(keyPair, storage, seedNodeAddress);
         ListenableFuture<PeerDHT> bootstrapComplete = bootstrappedPeerFactory.start();
         Futures.addCallback(bootstrapComplete, new FutureCallback<PeerDHT>()
         {

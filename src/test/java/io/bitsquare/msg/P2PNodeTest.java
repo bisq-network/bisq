@@ -1,20 +1,18 @@
 package io.bitsquare.msg;
 
 import java.io.IOException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
+import java.security.*;
 import java.util.Random;
 import net.tomp2p.connection.Ports;
-import net.tomp2p.dht.FutureGet;
-import net.tomp2p.dht.FuturePut;
-import net.tomp2p.dht.FutureRemove;
-import net.tomp2p.dht.PeerDHT;
+import net.tomp2p.dht.*;
 import net.tomp2p.futures.FutureDirect;
+import net.tomp2p.p2p.PeerBuilder;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.rpc.ObjectDataReply;
 import net.tomp2p.storage.Data;
 import net.tomp2p.utils.Utils;
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,10 +154,45 @@ public class P2PNodeTest
 
         master.shutdown();
     }
-
+    
     @Test
+    public void testChangeEntryProtectionKey() throws IOException, ClassNotFoundException, NoSuchAlgorithmException, InterruptedException, InvalidKeyException, SignatureException
+    {
+        KeyPairGenerator gen = KeyPairGenerator.getInstance("DSA");
+
+        KeyPair keyPair1 = gen.generateKeyPair();
+        KeyPair keyPair2 = gen.generateKeyPair();
+        PeerDHT p1 = new PeerBuilderDHT(new PeerBuilder(Number160.createHash(1)).ports(4838)
+                                                                                .keyPair(keyPair1).start()).start();
+        PeerDHT p2 = new PeerBuilderDHT(new PeerBuilder(Number160.createHash(2)).ports(4839)
+                                                                                .keyPair(keyPair2).start()).start();
+
+        p2.peer().bootstrap().peerAddress(p1.peerAddress()).start().awaitUninterruptibly();
+        p1.peer().bootstrap().peerAddress(p2.peerAddress()).start().awaitUninterruptibly();
+
+        Data data = new Data("test").protectEntry(keyPair1);
+        FuturePut fp1 = p1.put(Number160.createHash("key1")).sign().data(data).start().awaitUninterruptibly();
+        Assert.assertTrue(fp1.isSuccess());
+        FuturePut fp2 = p2.put(Number160.createHash("key1")).data(data).start().awaitUninterruptibly();
+        Assert.assertTrue(!fp2.isSuccess());
+
+        Data data2 = new Data().protectEntry(keyPair2);
+        data2.publicKey(keyPair2.getPublic());
+        FuturePut fp3 = p1.put(Number160.createHash("key1")).sign().putMeta().data(data2).start().awaitUninterruptibly();
+        Assert.assertTrue(fp3.isSuccess());
+
+        FuturePut fp4 = p2.put(Number160.createHash("key1")).sign().data(data).start().awaitUninterruptibly();
+        Assert.assertTrue(fp4.isSuccess());
+
+        p1.shutdown().awaitUninterruptibly();
+        p2.shutdown().awaitUninterruptibly();
+    }
+    
+    
+   // @Test
     public void testAddToListGetList() throws Exception
     {
+
         PeerDHT[] peers = UtilsDHT2.createNodes(3, rnd, new Ports().tcpPort());
         PeerDHT master = peers[0];
         PeerDHT client = peers[1];
@@ -178,6 +211,11 @@ public class P2PNodeTest
         FutureGet futureGet;
 
         // client add a value
+
+        KeyPairGenerator gen = KeyPairGenerator.getInstance("DSA");
+        KeyPair keyPair1 = gen.generateKeyPair();
+        keyPairClient = keyPair1;
+        
         node = new P2PNode(keyPairClient, client);
         locationKey = Number160.createHash("add to list clients location");
         data = new Data("add to list client data1");

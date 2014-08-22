@@ -16,7 +16,6 @@ import net.tomp2p.peers.PeerMapChangeListener;
 import net.tomp2p.peers.PeerStatatistic;
 import net.tomp2p.relay.FutureRelay;
 import net.tomp2p.relay.RelayRPC;
-import net.tomp2p.tracker.PeerBuilderTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,7 +105,7 @@ public class SeedNode extends Thread
             new PeerBuilderDHT(peer).start();
             PeerNAT nodeBehindNat = new PeerBuilderNAT(peer).start();
             new RelayRPC(peer);
-            new PeerBuilderTracker(peer);
+            //new PeerBuilderTracker(peer);
             nodeBehindNat.startSetupRelay(new FutureRelay());
 
             log.debug("Peer started. " + peer.peerAddress());

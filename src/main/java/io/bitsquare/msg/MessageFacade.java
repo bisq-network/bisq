@@ -1,7 +1,6 @@
 package io.bitsquare.msg;
 
 import com.google.common.util.concurrent.FutureCallback;
-import com.google.inject.name.Named;
 import io.bitsquare.msg.listeners.*;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.protocol.TradeMessage;
@@ -65,7 +64,6 @@ public class MessageFacade implements MessageBroker
     private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
     private final List<IncomingTradeMessageListener> incomingTradeMessageListeners = new ArrayList<>();
     private User user;
-    private Boolean useDiskStorage;
     private SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses;
 
 
@@ -74,11 +72,10 @@ public class MessageFacade implements MessageBroker
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MessageFacade(User user, @Named("useDiskStorage") Boolean useDiskStorage, @Named("defaultSeedNode") SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses)
+    public MessageFacade(User user, P2PNode p2pNode)
     {
         this.user = user;
-        this.useDiskStorage = useDiskStorage;
-        this.defaultStaticSeedNodeAddresses = defaultStaticSeedNodeAddresses;
+        this.p2pNode = p2pNode;
     }
 
 
@@ -88,7 +85,9 @@ public class MessageFacade implements MessageBroker
 
     public void init(BootstrapListener bootstrapListener)
     {
-        p2pNode = new P2PNode(user.getMessageKeyPair(), useDiskStorage, defaultStaticSeedNodeAddresses, this);
+        p2pNode.setMessageBroker(this);
+        p2pNode.setKeyPair(user.getMessageKeyPair());
+
         p2pNode.start(new FutureCallback<PeerDHT>()
         {
             @Override

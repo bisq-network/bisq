@@ -14,7 +14,9 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.gui.util.BitSquareFormatter;
+import io.bitsquare.msg.BootstrappedPeerFactory;
 import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.P2PNode;
 import io.bitsquare.msg.SeedNodeAddress;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Persistence;
@@ -40,6 +42,8 @@ public class BitSquareModule extends AbstractModule
 
         bind(BlockChainFacade.class).asEagerSingleton();
         bind(MessageFacade.class).asEagerSingleton();
+        bind(P2PNode.class).asEagerSingleton();
+        bind(BootstrappedPeerFactory.class).asEagerSingleton();
 
         bind(TradeManager.class).asEagerSingleton();
         bind(BitSquareFormatter.class).asEagerSingleton();
