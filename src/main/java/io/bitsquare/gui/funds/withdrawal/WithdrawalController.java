@@ -11,10 +11,8 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BtcValidator;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.Hibernate;
-import io.bitsquare.gui.NavigationController;
-import io.bitsquare.gui.popups.Popups;
+import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.BitSquareValidator;
 import java.net.URL;
@@ -25,11 +23,9 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javax.inject.Inject;
 import org.controlsfx.control.action.Action;
@@ -37,7 +33,7 @@ import org.controlsfx.dialog.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WithdrawalController implements Initializable, ChildController, Hibernate
+public class WithdrawalController extends CachedViewController
 {
     private static final Logger log = LoggerFactory.getLogger(WithdrawalController.class);
 
@@ -45,7 +41,6 @@ public class WithdrawalController implements Initializable, ChildController, Hib
     private final WalletFacade walletFacade;
     private ObservableList<WithdrawalListItem> addressList;
 
-    @FXML private VBox root;
     @FXML private TableView<WithdrawalListItem> tableView;
     @FXML private TableColumn<String, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn, confidenceColumn;
     @FXML private Button addNewAddressButton;
@@ -62,21 +57,36 @@ public class WithdrawalController implements Initializable, ChildController, Hib
         this.walletFacade = walletFacade;
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
+    // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        awake();
+        super.initialize(url, rb);
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         setLabelColumnCellFactory();
         setBalanceColumnCellFactory();
         setCopyColumnCellFactory();
         setConfidenceColumnCellFactory();
+    }
+
+    @Override
+    public void deactivate()
+    {
+        super.deactivate();
+
+        for (WithdrawalListItem anAddressList : addressList)
+            anAddressList.cleanup();
+    }
+
+    @Override
+    public void activate()
+    {
+        super.activate();
 
         tableView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
             if (newValue != null)
@@ -98,41 +108,7 @@ public class WithdrawalController implements Initializable, ChildController, Hib
                 }
             }
         });
-    }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ChildController
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void setNavigationController(NavigationController navigationController)
-    {
-    }
-
-    @Override
-    public void cleanup()
-    {
-        for (WithdrawalListItem anAddressList : addressList)
-        {
-            anAddressList.cleanup();
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Hibernate
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void sleep()
-    {
-        cleanup();
-    }
-
-    @Override
-    public void awake()
-    {
         List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
         addressList = FXCollections.observableArrayList();
         addressList.addAll(addressEntryList.stream().map(anAddressEntryList -> new WithdrawalListItem(anAddressEntryList, walletFacade)).collect(Collectors.toList()));

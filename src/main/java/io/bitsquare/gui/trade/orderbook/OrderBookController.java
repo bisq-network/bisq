@@ -1,4 +1,4 @@
-package io.bitsquare.gui.market.orderbook;
+package io.bitsquare.gui.trade.orderbook;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.InsufficientMoneyException;
@@ -7,13 +7,13 @@ import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.ChildController;
+import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.MainController;
-import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.market.createOffer.CreateOfferController;
-import io.bitsquare.gui.market.trade.TakerOfferController;
-import io.bitsquare.gui.popups.Popups;
+import io.bitsquare.gui.ViewController;
+import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.trade.createoffer.CreateOfferController;
+import io.bitsquare.gui.trade.takeoffer.TakerOfferController;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.Country;
@@ -39,12 +39,10 @@ import javafx.animation.AnimationTimer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import javax.inject.Inject;
@@ -54,9 +52,10 @@ import org.controlsfx.dialog.Dialogs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OrderBookController implements Initializable, ChildController
+public class OrderBookController extends CachedViewController
 {
     private static final Logger log = LoggerFactory.getLogger(OrderBookController.class);
+
     private final OrderBook orderBook;
     private final OrderBookFilter orderBookFilter;
     private final User user;
@@ -65,26 +64,18 @@ public class OrderBookController implements Initializable, ChildController
     private final Settings settings;
     private final Persistence persistence;
 
+    private SortedList<OrderBookListItem> offerList;
+    private AnimationTimer pollingTimer;
+
     private final Image buyIcon = ImageUtil.getIconImage(ImageUtil.BUY);
     private final Image sellIcon = ImageUtil.getIconImage(ImageUtil.SELL);
-    @FXML
-    public AnchorPane holderPane;
-    @FXML
-    public HBox topHBox;
-    @FXML
-    public TextField volume, amount, price;
-    @FXML
-    public TableView<OrderBookListItem> orderBookTable;
-    @FXML
-    public TableColumn<OrderBookListItem, String> priceColumn, amountColumn, volumeColumn;
-    @FXML
-    public Button createOfferButton;
-    private NavigationController navigationController;
-    private SortedList<OrderBookListItem> offerList;
 
-    private AnimationTimer pollingTimer;
-    @FXML
-    private TableColumn<String, OrderBookListItem> directionColumn, countryColumn, bankAccountTypeColumn;
+    @FXML public HBox topHBox;
+    @FXML public TextField volume, amount, price;
+    @FXML public TableView<OrderBookListItem> orderBookTable;
+    @FXML public TableColumn<OrderBookListItem, String> priceColumn, amountColumn, volumeColumn;
+    @FXML public Button createOfferButton;
+    @FXML private TableColumn<String, OrderBookListItem> directionColumn, countryColumn, bankAccountTypeColumn;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -106,17 +97,65 @@ public class OrderBookController implements Initializable, ChildController
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
+    // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
+        super.initialize(url, rb);
+
         // init table
         setCountryColumnCellFactory();
         setBankAccountTypeColumnCellFactory();
         setDirectionColumnCellFactory();
     }
+
+    @Override
+    public void deactivate()
+    {
+        super.deactivate();
+
+        orderBook.cleanup();
+
+        orderBookTable.setItems(null);
+        orderBookTable.getSortOrder().clear();
+        offerList.comparatorProperty().unbind();
+
+        if (pollingTimer != null)
+        {
+            pollingTimer.stop();
+            pollingTimer = null;
+        }
+    }
+
+    @Override
+    public void activate()
+    {
+        super.activate();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Navigation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void setParentController(ViewController parentController)
+    {
+        super.setParentController(parentController);
+    }
+
+    @Override
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
+    {
+        return null;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void init()
     {
@@ -152,33 +191,6 @@ public class OrderBookController implements Initializable, ChildController
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ChildController
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void setNavigationController(NavigationController navigationController)
-    {
-        this.navigationController = navigationController;
-    }
-
-    @Override
-    public void cleanup()
-    {
-        orderBook.cleanup();
-
-        orderBookTable.setItems(null);
-        orderBookTable.getSortOrder().clear();
-        offerList.comparatorProperty().unbind();
-
-        if (pollingTimer != null)
-        {
-            pollingTimer.stop();
-            pollingTimer = null;
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -190,6 +202,35 @@ public class OrderBookController implements Initializable, ChildController
         orderBookFilter.setDirection(direction);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @FXML
+    public void createOffer()
+    {
+        if (isRegistered())
+        {
+            createOfferButton.setDisable(true);
+           /* if (walletFacade.isUnusedTradeAddressBalanceAboveCreationFee())
+            { */
+            ViewController nextController = parentController.loadViewAndGetChildController(NavigationItem.CREATE_OFFER);
+            if (nextController != null)
+                ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
+           /* }
+            else
+            {
+                Action response = Popups.openErrorPopup("No funds for a trade", "You have to add some funds before you create a new offer.");
+                if (response == Dialog.Actions.OK)
+                    MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
+            }  */
+        }
+        else
+        {
+            showRegistrationDialog();
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
@@ -227,7 +268,7 @@ public class OrderBookController implements Initializable, ChildController
                                                                 "The registration fee transaction has not been confirmed yet in the blockchain. Please wait until it has at least 1 confirmation.");
                         if (response == Dialog.Actions.OK)
                         {
-                            MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
+                            MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.FUNDS);
                         }
                     }
                 }
@@ -237,7 +278,7 @@ public class OrderBookController implements Initializable, ChildController
                                                             "You have not funded the full registration fee of " + BitSquareFormatter.formatCoinWithCode(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
                     if (response == Dialog.Actions.OK)
                     {
-                        MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
+                        MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.FUNDS);
                     }
                 }
             }
@@ -267,11 +308,11 @@ public class OrderBookController implements Initializable, ChildController
                                                                                    selectedIndex);
             if (registrationMissingAction == settingsCommandLink)
             {
-                MainController.GET_INSTANCE().navigateToView(NavigationItem.SETTINGS);
+                MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.SETTINGS);
             }
             else if (registrationMissingAction == depositFeeCommandLink)
             {
-                MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
+                MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.FUNDS);
             }
             else if (registrationMissingAction == sendRegistrationCommandLink)
             {
@@ -315,35 +356,11 @@ public class OrderBookController implements Initializable, ChildController
         }
     }
 
-
-    private void createOffer()
-    {
-        if (isRegistered())
-        {
-           /* if (walletFacade.isUnusedTradeAddressBalanceAboveCreationFee())
-            { */
-            ChildController nextController = navigationController.navigateToView(NavigationItem.CREATE_OFFER);
-            if (nextController != null)
-                ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
-           /* }
-            else
-            {
-                Action response = Popups.openErrorPopup("No funds for a trade", "You have to add some funds before you create a new offer.");
-                if (response == Dialog.Actions.OK)
-                    MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
-            }  */
-        }
-        else
-        {
-            showRegistrationDialog();
-        }
-    }
-
     private void takeOffer(Offer offer)
     {
         if (isRegistered())
         {
-            TakerOfferController takerOfferController = (TakerOfferController) navigationController.navigateToView(NavigationItem.TAKE_OFFER);
+            TakerOfferController takerOfferController = (TakerOfferController) parentController.loadViewAndGetChildController(NavigationItem.TAKE_OFFER);
 
             Coin requestedAmount;
             if (!"".equals(amount.getText()))
@@ -580,5 +597,13 @@ public class OrderBookController implements Initializable, ChildController
         double p = textInputToNumber(price.getText(), price.getText());
         volume.setText(BitSquareFormatter.formatPrice(a * p));
     }
+
+
+    public void onCreateOfferViewRemoved()
+    {
+        createOfferButton.setDisable(false);
+    }
+
+
 }
 

@@ -4,8 +4,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:id="rootContainer"
-            fx:controller="io.bitsquare.gui.market.trade.TakerOfferController">
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.trade.takeoffer.TakerOfferController" xmlns:fx="http://javafx.com/fxml">
     <Accordion fx:id="accordion" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
         <panes>
 

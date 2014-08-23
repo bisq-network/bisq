@@ -7,7 +7,7 @@ import com.google.bitcoin.core.Utils;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
-import io.bitsquare.gui.popups.Popups;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.TakeOfferRequestListener;
 import io.bitsquare.settings.Settings;
@@ -193,7 +193,7 @@ public class TradeManager
     }
 
     public void removeOffer(Offer offer)
-    {    
+    {
         if (!offers.containsKey(offer.getId()))
         {
             throw new IllegalStateException("offers does not contain the offer with the ID " + offer.getId());

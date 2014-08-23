@@ -1,8 +1,6 @@
 package io.bitsquare.gui.orders.offer;
 
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.Hibernate;
-import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.TradeManager;
@@ -16,7 +14,6 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.util.Callback;
@@ -25,15 +22,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("EmptyMethod")
-public class OfferController implements Initializable, ChildController, Hibernate
+public class OfferController extends CachedViewController
 {
     private static final Logger log = LoggerFactory.getLogger(OfferController.class);
     private final TradeManager tradeManager;
     private ObservableList<OfferListItem> offerListItems;
-    @FXML
-    private TableColumn<String, OfferListItem> offerIdColumn, dateColumn, amountColumn, priceColumn, volumeColumn, removeColumn;
-    @FXML
-    private TableView<OfferListItem> offerTable;
+
+    @FXML private TableColumn<String, OfferListItem> offerIdColumn, dateColumn, amountColumn, priceColumn, volumeColumn, removeColumn;
+    @FXML private TableView<OfferListItem> offerTable;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -48,47 +44,30 @@ public class OfferController implements Initializable, ChildController, Hibernat
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
+    // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        awake();
+        super.initialize(url, rb);
+
         setOfferIdColumnColumnCellFactory();
         setRemoveColumnCellFactory();
         offerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ChildController
-    ///////////////////////////////////////////////////////////////////////////////////////////
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void deactivate()
     {
+        super.deactivate();
     }
 
     @Override
-    public void cleanup()
+    public void activate()
     {
-        log.debug("cleanup" + this);
-    }
+        super.activate();
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Hibernate
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void sleep()
-    {
-        cleanup();
-    }
-
-    @Override
-    public void awake()
-    {
         offerListItems = FXCollections.observableArrayList();
         Map<String, Offer> offerMap = tradeManager.getOffers();
         List<Offer> offerList = new ArrayList<>(offerMap.values());
@@ -106,14 +85,12 @@ public class OfferController implements Initializable, ChildController, Hibernat
     // Private Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     private void removeOffer(OfferListItem offerListItem)
     {
         tradeManager.removeOffer(offerListItem.getOffer());
         offerListItems.remove(offerListItem);
     }
 
-    @SuppressWarnings("UnusedParameters")
     private void openOfferDetails(OfferListItem offerListItem)
     {
 

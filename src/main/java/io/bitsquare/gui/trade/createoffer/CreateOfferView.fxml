@@ -7,8 +7,9 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="rootContainer" prefHeight="500" prefWidth="800" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0"
-            AnchorPane.topAnchor="10.0" xmlns="http://javafx.com/javafx/8" fx:controller="io.bitsquare.gui.market.createOffer.CreateOfferController" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.trade.createoffer.CreateOfferController"
+            prefHeight="500" prefWidth="800" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
+            xmlns:fx="http://javafx.com/fxml">
 
     <GridPane hgap="5.0" vgap="5.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
 

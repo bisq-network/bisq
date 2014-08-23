@@ -2,9 +2,7 @@ package io.bitsquare.gui.funds.transactions;
 
 import com.google.bitcoin.core.Transaction;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.Hibernate;
-import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.CachedViewController;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -13,22 +11,19 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TransactionsController implements Initializable, ChildController, Hibernate
+public class TransactionsController extends CachedViewController
 {
     private static final Logger log = LoggerFactory.getLogger(TransactionsController.class);
 
     private final WalletFacade walletFacade;
     private ObservableList<TransactionsListItem> transactionsListItems;
 
-    @FXML private VBox root;
     @FXML private TableView<TransactionsListItem> tableView;
     @FXML private TableColumn<String, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn, confidenceColumn;
     @FXML private Button addNewAddressButton;
@@ -46,52 +41,34 @@ public class TransactionsController implements Initializable, ChildController, H
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
+    // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        awake();
+        super.initialize(url, rb);
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         setAddressColumnCellFactory();
         setConfidenceColumnCellFactory();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ChildController
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void deactivate()
     {
-    }
+        super.deactivate();
 
-    @Override
-    public void cleanup()
-    {
         for (TransactionsListItem transactionsListItem : transactionsListItems)
-        {
             transactionsListItem.cleanup();
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Hibernate
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void sleep()
-    {
-        cleanup();
     }
 
     @Override
-    public void awake()
+    public void activate()
     {
+        super.activate();
+
         List<Transaction> transactions = walletFacade.getWallet().getRecentTransactions(10000, true);
         transactionsListItems = FXCollections.observableArrayList();
         transactionsListItems.addAll(transactions.stream().map(transaction -> new TransactionsListItem(transaction, walletFacade)).collect(Collectors.toList()));

@@ -6,9 +6,9 @@ import io.bitsquare.BitSquare;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.di.GuiceFXMLLoader;
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.*;
@@ -25,7 +25,6 @@ import java.util.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -40,43 +39,29 @@ import javafx.util.StringConverter;
 import javax.inject.Inject;
 
 // TODO separate in 2 view/controllers
-public class SettingsController implements Initializable, ChildController, NavigationController
+public class SettingsController extends CachedViewController
 {
     private final User user;
-
     private final Settings settings;
-
     private final Persistence persistence;
     private final MessageFacade messageFacade;
+
     private final ObservableList<Locale> languageList;
     private final ObservableList<Country> countryList;
-    private ChildController childController;
-    private List<String> regionList;
+    private ViewController childController;
     private ObservableList<Arbitrator> arbitratorList;
 
-    @FXML private TabPane root;
-    @FXML
-    private ListView<Locale> languagesListView;
-    @FXML
-    private ListView<Country> countriesListView;
-    @FXML
-    private ListView<Arbitrator> arbitratorsListView;
-    @FXML
-    private ComboBox<Locale> languageComboBox;
-    @FXML
-    private ComboBox<Region> regionComboBox, bankAccountRegionComboBox;
-    @FXML
-    private ComboBox<Country> countryComboBox, bankAccountCountryComboBox;
-    @FXML
-    private TextField bankAccountTitleTextField, bankAccountHolderNameTextField, bankAccountPrimaryIDTextField, bankAccountSecondaryIDTextField;
-    @FXML
-    private Button saveBankAccountButton, addBankAccountButton;
-    @FXML
-    private ComboBox<BankAccount> bankAccountComboBox;
-    @FXML
-    private ComboBox<BankAccountType> bankAccountTypesComboBox;
-    @FXML
-    private ComboBox<Currency> bankAccountCurrencyComboBox;
+    @FXML private ListView<Locale> languagesListView;
+    @FXML private ListView<Country> countriesListView;
+    @FXML private ListView<Arbitrator> arbitratorsListView;
+    @FXML private ComboBox<Locale> languageComboBox;
+    @FXML private ComboBox<Region> regionComboBox, bankAccountRegionComboBox;
+    @FXML private ComboBox<Country> countryComboBox, bankAccountCountryComboBox;
+    @FXML private TextField bankAccountTitleTextField, bankAccountHolderNameTextField, bankAccountPrimaryIDTextField, bankAccountSecondaryIDTextField;
+    @FXML private Button saveBankAccountButton, addBankAccountButton;
+    @FXML private ComboBox<BankAccount> bankAccountComboBox;
+    @FXML private ComboBox<BankAccountType> bankAccountTypesComboBox;
+    @FXML private ComboBox<Currency> bankAccountCurrencyComboBox;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -110,106 +95,54 @@ public class SettingsController implements Initializable, ChildController, Navig
         }
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void updateArbitrators()
-    {
-        arbitratorList = FXCollections.observableArrayList(settings.getAcceptedArbitrators());
-        initArbitrators();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
+    // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
+        super.initialize(url, rb);
+
         setupGeneralSettingsScreen();
         initBankAccountScreen();
         addMockArbitrator();
     }
 
-    private void addMockArbitrator()
+    @Override
+    public void deactivate()
     {
-        if (settings.getAcceptedArbitrators().isEmpty())
-        {
-            String pubKeyAsHex = Utils.HEX.encode(new ECKey().getPubKey());
-            String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
-            List<Locale> languages = new ArrayList<>();
-            languages.add(LanguageUtil.getDefaultLanguageLocale());
-            List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
-            arbitrationMethods.add(Arbitrator.METHOD.TLS_NOTARY);
-            List<Arbitrator.ID_VERIFICATION> idVerifications = new ArrayList<>();
-            idVerifications.add(Arbitrator.ID_VERIFICATION.PASSPORT);
-            idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
+        super.deactivate();
+    }
 
-            Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
-                                                   messagePubKeyAsHex,
-                                                   "Manfred Karrer",
-                                                   Arbitrator.ID_TYPE.REAL_LIFE_ID,
-                                                   languages,
-                                                   new Reputation(),
-                                                   1,
-                                                   0.01,
-                                                   0.001,
-                                                   10,
-                                                   0.1,
-                                                   arbitrationMethods,
-                                                   idVerifications,
-                                                   "http://bitsquare.io/",
-                                                   "Bla bla...");
-
-            arbitratorList.add(arbitrator);
-            settings.addAcceptedArbitrator(arbitrator);
-            persistence.write(settings);
-
-            messageFacade.addArbitrator(arbitrator);
-        }
+    @Override
+    public void activate()
+    {
+        super.activate();
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ChildController
+    // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
     {
 
-    }
+        /*if (childController instanceof CachedViewController)
+            ((CachedViewController) childController).deactivate();
+        else if (childController != null)
+            childController.terminate();*/
 
-    @Override
-    public void cleanup()
-    {
-
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: NavigationController
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    @Override
-    public ChildController navigateToView(NavigationItem navigationItem)
-    {
-
-        if (childController != null)
-        {
-            childController.cleanup();
-        }
-
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        // TODO
+        // caching causes exception
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
         try
         {
             final Node view = loader.load();
             childController = loader.getController();
-            childController.setNavigationController(this);
+            childController.setParentController(this);
 
             final Stage rootStage = BitSquare.getPrimaryStage();
             final Stage stage = new Stage();
@@ -226,9 +159,7 @@ public class SettingsController implements Initializable, ChildController, Navig
             stage.setScene(scene);
             stage.setOnHidden(windowEvent -> {
                 if (navigationItem == NavigationItem.ARBITRATOR_OVERVIEW)
-                {
                     updateArbitrators();
-                }
             });
             stage.show();
 
@@ -242,9 +173,19 @@ public class SettingsController implements Initializable, ChildController, Navig
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI handlers
+    // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    void updateArbitrators()
+    {
+        arbitratorList = FXCollections.observableArrayList(settings.getAcceptedArbitrators());
+        initArbitrators();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     // General Settings
     @FXML
@@ -272,7 +213,7 @@ public class SettingsController implements Initializable, ChildController, Navig
     @FXML
     public void onAddArbitrator()
     {
-        navigateToView(NavigationItem.ARBITRATOR_OVERVIEW);
+        loadViewAndGetChildController(NavigationItem.ARBITRATOR_OVERVIEW);
     }
 
 
@@ -852,6 +793,50 @@ public class SettingsController implements Initializable, ChildController, Navig
             return false;
         }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Arbitrators
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void addMockArbitrator()
+    {
+        if (settings.getAcceptedArbitrators().isEmpty())
+        {
+            String pubKeyAsHex = Utils.HEX.encode(new ECKey().getPubKey());
+            String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
+            List<Locale> languages = new ArrayList<>();
+            languages.add(LanguageUtil.getDefaultLanguageLocale());
+            List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
+            arbitrationMethods.add(Arbitrator.METHOD.TLS_NOTARY);
+            List<Arbitrator.ID_VERIFICATION> idVerifications = new ArrayList<>();
+            idVerifications.add(Arbitrator.ID_VERIFICATION.PASSPORT);
+            idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
+
+            Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
+                                                   messagePubKeyAsHex,
+                                                   "Manfred Karrer",
+                                                   Arbitrator.ID_TYPE.REAL_LIFE_ID,
+                                                   languages,
+                                                   new Reputation(),
+                                                   1,
+                                                   0.01,
+                                                   0.001,
+                                                   10,
+                                                   0.1,
+                                                   arbitrationMethods,
+                                                   idVerifications,
+                                                   "http://bitsquare.io/",
+                                                   "Bla bla...");
+
+            arbitratorList.add(arbitrator);
+            settings.addAcceptedArbitrator(arbitrator);
+            persistence.write(settings);
+
+            messageFacade.addArbitrator(arbitrator);
+        }
+    }
+
 
 }
 

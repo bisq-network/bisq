@@ -1,15 +1,15 @@
 package io.bitsquare.gui.msg;
 
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.ViewController;
 import java.net.URL;
 import java.util.ResourceBundle;
-import javafx.fxml.Initializable;
 import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MsgController implements Initializable, ChildController
+public class MsgController extends CachedViewController
 {
     private static final Logger log = LoggerFactory.getLogger(MsgController.class);
 
@@ -23,30 +23,46 @@ public class MsgController implements Initializable, ChildController
     {
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
+        super.initialize(url, rb);
+    }
+
+    @Override
+    public void terminate()
+    {
+        super.terminate();
+    }
+
+    @Override
+    public void deactivate()
+    {
+        super.deactivate();
+    }
+
+    @Override
+    public void activate()
+    {
+        super.activate();
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ChildController
+    // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
     {
+        return null;
     }
 
-    @Override
-    public void cleanup()
-    {
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // GUI Event handlers

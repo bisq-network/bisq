@@ -1,27 +1,21 @@
 package io.bitsquare.gui.funds;
 
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.Hibernate;
-import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.CachingTabPane;
 import io.bitsquare.storage.Persistence;
 import java.net.URL;
 import java.util.ResourceBundle;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FundsController implements Initializable, ChildController, NavigationController, Hibernate
+public class FundsController extends CachedViewController
 {
     private static final Logger log = LoggerFactory.getLogger(FundsController.class);
     private final Persistence persistence;
-    private ChildController childController;
-
-    @FXML
-    private CachingTabPane root;
+    private ViewController childController;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -36,58 +30,40 @@ public class FundsController implements Initializable, ChildController, Navigati
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
+    // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        root.initialize(this, persistence, NavigationItem.DEPOSIT.getFxmlUrl(), NavigationItem.WITHDRAWAL.getFxmlUrl(), NavigationItem.TRANSACTIONS.getFxmlUrl());
+        super.initialize(url, rb);
+
+        ((CachingTabPane) root).initialize(this, persistence, NavigationItem.DEPOSIT.getFxmlUrl(), NavigationItem.WITHDRAWAL.getFxmlUrl(), NavigationItem.TRANSACTIONS.getFxmlUrl());
+    }
+
+    @Override
+    public void deactivate()
+    {
+        super.deactivate();
+    }
+
+    @Override
+    public void activate()
+    {
+        super.activate();
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ChildController
+    // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
     {
-    }
-
-    @Override
-    public void cleanup()
-    {
-        root.cleanup();
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: NavigationController
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public ChildController navigateToView(NavigationItem navigationItem)
-    {
-        childController = root.navigateToView(navigationItem.getFxmlUrl());
+        childController = ((CachingTabPane) root).loadViewAndGetChildController(navigationItem.getFxmlUrl());
         return childController;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Hibernate
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void sleep()
-    {
-        if (childController instanceof Hibernate)
-            ((Hibernate) childController).sleep();
-    }
-
-    @Override
-    public void awake()
-    {
-        if (childController instanceof Hibernate)
-            ((Hibernate) childController).awake();
-    }
 }
 

@@ -1,7 +1,8 @@
 package io.bitsquare.gui.arbitrators.profile;
 
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Persistence;
@@ -9,29 +10,24 @@ import io.bitsquare.user.Arbitrator;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javax.inject.Inject;
 
-@SuppressWarnings("ALL")
-public class ArbitratorProfileController implements Initializable, ChildController
+public class ArbitratorProfileController extends CachedViewController
 {
 
     private final Settings settings;
 
     private final Persistence persistence;
     private Arbitrator arbitrator;
-    private NavigationController navigationController;
 
-    @FXML
-    private Label nameLabel;
-    @FXML
-    private TextField nameTextField, languagesTextField, reputationTextField, maxTradeVolumeTextField, passiveServiceFeeTextField, arbitrationFeeTextField, methodsTextField,
+
+    @FXML private Label nameLabel;
+    @FXML private TextField nameTextField, languagesTextField, reputationTextField, maxTradeVolumeTextField, passiveServiceFeeTextField, arbitrationFeeTextField, methodsTextField,
             idVerificationsTextField, webPageTextField;
-    @FXML
-    private TextArea descriptionTextArea;
+    @FXML private TextArea descriptionTextArea;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -46,6 +42,52 @@ public class ArbitratorProfileController implements Initializable, ChildControll
 
         //  Settings persistedSettings = (Settings) storage.read(settings.getClass().getName());
         // settings.applyPersistedSettings(persistedSettings);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb)
+    {
+        super.initialize(url, rb);
+    }
+
+    @Override
+    public void terminate()
+    {
+        super.terminate();
+    }
+
+    @Override
+    public void deactivate()
+    {
+        super.deactivate();
+    }
+
+    @Override
+    public void activate()
+    {
+        super.activate();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Navigation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void setParentController(ViewController parentController)
+    {
+        super.setParentController(parentController);
+    }
+
+    @Override
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
+    {
+        return null;
     }
 
 
@@ -84,42 +126,6 @@ public class ArbitratorProfileController implements Initializable, ChildControll
             descriptionTextArea.setText(arbitrator.getDescription());
         }
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void initialize(URL url, ResourceBundle rb)
-    {
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ChildController
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void setNavigationController(NavigationController navigationController)
-    {
-        this.navigationController = navigationController;
-    }
-
-    @Override
-    public void cleanup()
-    {
-
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI handlers
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
 
 }
 

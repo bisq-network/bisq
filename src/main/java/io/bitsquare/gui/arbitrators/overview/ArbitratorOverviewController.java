@@ -1,9 +1,9 @@
 package io.bitsquare.gui.arbitrators.overview;
 
 import io.bitsquare.di.GuiceFXMLLoader;
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.arbitrators.profile.ArbitratorProfileController;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.msg.MessageFacade;
@@ -18,10 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javax.inject.Inject;
@@ -34,7 +32,7 @@ import net.tomp2p.storage.Data;
  * import net.tomp2p.storage.Data;
  */
 @SuppressWarnings({"ALL", "UnusedParameters"})
-public class ArbitratorOverviewController implements Initializable, ChildController, NavigationController, ArbitratorListener
+public class ArbitratorOverviewController extends CachedViewController implements ArbitratorListener
 {
     private final Settings settings;
     private final Persistence persistence;
@@ -42,16 +40,11 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     private final MessageFacade messageFacade;
     private final List<Arbitrator> allArbitrators = new ArrayList<>();
     private Arbitrator currentArbitrator;
-    private NavigationController navigationController;
     private ArbitratorProfileController arbitratorProfileController;
     private int index = -1;
 
-    @FXML
-    private Button prevButton, nextButton, selectButton, closeButton;
-    @FXML
-    private AnchorPane rootContainer;
-    @FXML
-    private Pane arbitratorProfile;
+    @FXML private Button prevButton, nextButton, selectButton, closeButton;
+    @FXML private Pane arbitratorProfile;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -71,54 +64,57 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
+    // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        navigateToView(NavigationItem.ARBITRATOR_PROFILE);
+        super.initialize(url, rb);
+
+        loadViewAndGetChildController(NavigationItem.ARBITRATOR_PROFILE);
         checkButtonState();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ChildController
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void terminate()
     {
-        this.navigationController = navigationController;
+        super.terminate();
     }
 
     @Override
-    public void cleanup()
+    public void deactivate()
     {
+        super.deactivate();
+    }
 
+    @Override
+    public void activate()
+    {
+        super.activate();
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: NavigationController
+    // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public void setParentController(ViewController parentController)
+    {
+        super.setParentController(parentController);
+    }
 
     @Override
-    public ChildController navigateToView(NavigationItem navigationItem)
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
     {
-        if (arbitratorProfileController != null)
-        {
-            arbitratorProfileController.cleanup();
-        }
-
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try
         {
             final Node view = loader.load();
             arbitratorProfileController = loader.getController();
-            arbitratorProfileController.setNavigationController(this);
-            rootContainer.getChildren().set(0, view);
+            arbitratorProfileController.setParentController(this);
+            ((Pane) root).getChildren().set(0, view);
 
             return arbitratorProfileController;
         } catch (IOException e)
@@ -219,7 +215,7 @@ public class ArbitratorOverviewController implements Initializable, ChildControl
     @FXML
     public void onClose()
     {
-        Stage stage = (Stage) rootContainer.getScene().getWindow();
+        Stage stage = (Stage) root.getScene().getWindow();
         stage.close();
     }
 

@@ -1,4 +1,4 @@
-package io.bitsquare.gui.market.orderbook;
+package io.bitsquare.gui.trade.orderbook;
 
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.trade.Offer;

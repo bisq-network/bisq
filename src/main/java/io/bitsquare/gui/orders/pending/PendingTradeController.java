@@ -8,9 +8,7 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.Hibernate;
-import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.ConfidenceDisplay;
@@ -29,7 +27,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -37,13 +34,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PendingTradeController implements Initializable, ChildController, Hibernate
+public class PendingTradeController extends CachedViewController
 {
     private static final Logger log = LoggerFactory.getLogger(PendingTradeController.class);
 
@@ -51,13 +47,11 @@ public class PendingTradeController implements Initializable, ChildController, H
     private WalletFacade walletFacade;
 
     private Trade currentTrade;
-    private NavigationController navigationController;
+
     private Image buyIcon = ImageUtil.getIconImage(ImageUtil.BUY);
     private Image sellIcon = ImageUtil.getIconImage(ImageUtil.SELL);
     private ConfidenceDisplay confidenceDisplay;
 
-    @FXML
-    private VBox rootContainer;
     @FXML
     private TableView openTradesTable;
     @FXML
@@ -86,43 +80,26 @@ public class PendingTradeController implements Initializable, ChildController, H
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
+    // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        awake();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ChildController
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void setNavigationController(NavigationController navigationController)
-    {
-        this.navigationController = navigationController;
+        super.initialize(url, rb);
     }
 
     @Override
-    public void cleanup()
+    public void deactivate()
     {
-    }
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Hibernate
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void sleep()
-    {
-        cleanup();
+        super.deactivate();
     }
 
     @Override
-    public void awake()
+    public void activate()
     {
+        super.activate();
+
         Map<String, Trade> trades = tradeManager.getTrades();
         List<Trade> tradeList = new ArrayList<>(trades.values());
         ObservableList<PendingTradesListItem> tradeItems = FXCollections.observableArrayList();
@@ -173,6 +150,7 @@ public class PendingTradeController implements Initializable, ChildController, H
             }
         });
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // GUI handlers

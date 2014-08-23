@@ -21,8 +21,6 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -42,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * We use a sequence of Platform.runLater cascaded calls to make the startup more smooth, otherwise the rendering is frozen for too long.
  * Pre-loading of views is not implemented yet, and after a quick test it seemed that it does not give much improvements.
  */
-public class MainController implements Initializable, NavigationController
+public class MainController extends ViewController
 {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
     private static MainController INSTANCE;
@@ -55,7 +53,6 @@ public class MainController implements Initializable, NavigationController
     private final ToggleGroup toggleGroup = new ToggleGroup();
     private final ViewBuilder viewBuilder;
 
-    private ChildController childController;
     private ToggleButton prevToggleButton;
     private Image prevToggleButtonIcon;
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton;
@@ -63,7 +60,15 @@ public class MainController implements Initializable, NavigationController
     private boolean messageFacadeInited;
     private boolean walletFacadeInited;
 
-    @FXML private BorderPane root;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static MainController GET_INSTANCE()
+    {
+        return INSTANCE;
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -84,34 +89,33 @@ public class MainController implements Initializable, NavigationController
         MainController.INSTANCE = this;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Static
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public static MainController GET_INSTANCE()
-    {
-        return INSTANCE;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
+    // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
+        super.initialize(url, rb);
+
         Profiler.printMsgWithTime("MainController.initialize");
-        Platform.runLater(() -> viewBuilder.buildSplashScreen(root, this));
+        Platform.runLater(() -> viewBuilder.buildSplashScreen((BorderPane) root, this));
     }
 
+    @Override
+    public void terminate()
+    {
+        super.terminate();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: NavigationController
+    // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ChildController navigateToView(NavigationItem navigationItem)
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
     {
         switch (navigationItem)
         {
@@ -145,7 +149,7 @@ public class MainController implements Initializable, NavigationController
     // Startup Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onViewInitialized()
+    void onViewInitialized()
     {
         Profiler.printMsgWithTime("MainController.onViewInitialized");
         Platform.runLater(this::initFacades);
@@ -282,7 +286,7 @@ public class MainController implements Initializable, NavigationController
         if (selectedNavigationItem == null)
             selectedNavigationItem = NavigationItem.BUY;
 
-        navigateToView(selectedNavigationItem);
+        loadViewAndGetChildController(selectedNavigationItem);
 
         Platform.runLater(this::onContentViewLoaded);
     }
@@ -292,31 +296,25 @@ public class MainController implements Initializable, NavigationController
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private ChildController loadView(NavigationItem navigationItem)
+    private void loadViewFromNavButton(NavigationItem navigationItem)
     {
-        if (childController != null)
-        {
-            childController.cleanup();
-            if (childController instanceof Hibernate)
-                ((Hibernate) childController).sleep();
-        }
-        
+
+       /* if (childController instanceof CachedViewController)
+            ((CachedViewController) childController).deactivate();
+        else if (childController != null)
+            childController.terminate();*/
+
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try
         {
             final Node view = loader.load();
             viewBuilder.contentPane.getChildren().setAll(view);
             childController = loader.getController();
-            childController.setNavigationController(this);
+            childController.setParentController(this);
         } catch (IOException e)
         {
-            e.printStackTrace();
             log.error("Loading view failed. " + navigationItem.getFxmlUrl());
         }
-        if (childController instanceof Hibernate)
-            ((Hibernate) childController).awake();
-
-        return childController;
     }
 
     private ToggleButton addNavButton(Pane parent, String title, NavigationItem navigationItem)
@@ -335,7 +333,7 @@ public class MainController implements Initializable, NavigationController
             prevToggleButtonIcon = ((ImageView) (toggleButton.getGraphic())).getImage();
             ((ImageView) (toggleButton.getGraphic())).setImage(ImageUtil.getIconImage(navigationItem.getActiveIcon()));
 
-            childController = loadView(navigationItem);
+            loadViewFromNavButton(navigationItem);
 
             persistence.write(this, "selectedNavigationItem", navigationItem);
 

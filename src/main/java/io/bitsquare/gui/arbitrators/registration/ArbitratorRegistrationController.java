@@ -5,8 +5,9 @@ import com.google.bitcoin.script.Script;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.arbitrators.profile.ArbitratorProfileController;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BitSquareFormatter;
@@ -24,11 +25,9 @@ import java.net.URL;
 import java.util.*;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javax.inject.Inject;
@@ -36,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings({"ALL", "EmptyMethod", "UnusedParameters"})
-public class ArbitratorRegistrationController implements Initializable, ChildController
+public class ArbitratorRegistrationController extends CachedViewController
 {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorRegistrationController.class);
 
@@ -56,31 +55,18 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
     private Arbitrator.ID_TYPE idType;
     private ConfidenceDisplay confidenceDisplay;
 
-    @FXML
-    private AnchorPane rootContainer;
-    @FXML
-    private Accordion accordion;
-    @FXML
-    private TitledPane profileTitledPane, payCollateralTitledPane;
-    @FXML
-    private Button saveProfileButton, paymentDoneButton;
-    @FXML
-    private Label nameLabel, infoLabel, copyIcon, confirmationLabel;
-    @FXML
-    private ComboBox<Locale> languageComboBox;
-    @FXML
-    private ComboBox<Arbitrator.ID_TYPE> idTypeComboBox;
-    @FXML
-    private ComboBox<Arbitrator.METHOD> methodsComboBox;
-    @FXML
-    private ComboBox<Arbitrator.ID_VERIFICATION> idVerificationsComboBox;
-    @FXML
-    private TextField nameTextField, idTypeTextField, languagesTextField, maxTradeVolumeTextField, passiveServiceFeeTextField, minPassiveServiceFeeTextField, arbitrationFeeTextField,
+    @FXML private Accordion accordion;
+    @FXML private TitledPane profileTitledPane, payCollateralTitledPane;
+    @FXML private Button saveProfileButton, paymentDoneButton;
+    @FXML private Label nameLabel, infoLabel, copyIcon, confirmationLabel;
+    @FXML private ComboBox<Locale> languageComboBox;
+    @FXML private ComboBox<Arbitrator.ID_TYPE> idTypeComboBox;
+    @FXML private ComboBox<Arbitrator.METHOD> methodsComboBox;
+    @FXML private ComboBox<Arbitrator.ID_VERIFICATION> idVerificationsComboBox;
+    @FXML private TextField nameTextField, idTypeTextField, languagesTextField, maxTradeVolumeTextField, passiveServiceFeeTextField, minPassiveServiceFeeTextField, arbitrationFeeTextField,
             minArbitrationFeeTextField, methodsTextField, idVerificationsTextField, webPageTextField, collateralAddressTextField, balanceTextField;
-    @FXML
-    private TextArea descriptionTextArea;
-    @FXML
-    private ConfidenceProgressIndicator progressIndicator;
+    @FXML private TextArea descriptionTextArea;
+    @FXML private ConfidenceProgressIndicator progressIndicator;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -98,29 +84,14 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setEditMode(@SuppressWarnings("SameParameterValue") boolean isEditMode)
-    {
-        this.isEditMode = isEditMode;
-
-        if (isEditMode)
-        {
-            saveProfileButton.setText("Save");
-            profileTitledPane.setCollapsible(false);
-            payCollateralTitledPane.setVisible(false);
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
+    // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
+        super.initialize(url, rb);
+        
         accordion.setExpandedPane(profileTitledPane);
 
         Arbitrator persistedArbitrator = (Arbitrator) persistence.read(arbitrator);
@@ -207,19 +178,56 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
         });
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ChildController
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void terminate()
     {
+        super.terminate();
     }
 
     @Override
-    public void cleanup()
+    public void deactivate()
     {
+        super.deactivate();
+    }
+
+    @Override
+    public void activate()
+    {
+        super.activate();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Navigation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void setParentController(ViewController parentController)
+    {
+        super.setParentController(parentController);
+    }
+
+    @Override
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
+    {
+        return null;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setEditMode(@SuppressWarnings("SameParameterValue") boolean isEditMode)
+    {
+        this.isEditMode = isEditMode;
+
+        if (isEditMode)
+        {
+            saveProfileButton.setText("Save");
+            profileTitledPane.setCollapsible(false);
+            payCollateralTitledPane.setVisible(false);
+        }
     }
 
 
@@ -506,7 +514,7 @@ public class ArbitratorRegistrationController implements Initializable, ChildCon
 
     private void close()
     {
-        Stage stage = (Stage) rootContainer.getScene().getWindow();
+        Stage stage = (Stage) root.getScene().getWindow();
         stage.close();
     }
 

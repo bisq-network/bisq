@@ -1,17 +1,15 @@
-package io.bitsquare.gui.market.trade;
+package io.bitsquare.gui.trade.takeoffer;
 
 import com.google.bitcoin.core.Coin;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.NavigationController;
-import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.ValidatedTextField;
-import io.bitsquare.gui.popups.Popups;
+import io.bitsquare.gui.trade.TradeController;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.BitSquareValidator;
-import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -20,31 +18,24 @@ import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSellerListener;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.layout.AnchorPane;
 import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("UnusedParameters")
-public class TakerOfferController implements Initializable, ChildController
+public class TakerOfferController extends CachedViewController
 {
     private static final Logger log = LoggerFactory.getLogger(TakerOfferController.class);
 
     private final TradeManager tradeManager;
     private final WalletFacade walletFacade;
-    private final MessageFacade messageFacade;
 
 
-    private NavigationController navigationController;
     private Offer offer;
     private Coin requestedAmount;
     private String tradeId;
     private String depositTxId;
 
-    @FXML
-    private AnchorPane rootContainer;
     @FXML
     private Accordion accordion;
     @FXML
@@ -65,11 +56,36 @@ public class TakerOfferController implements Initializable, ChildController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TakerOfferController(TradeManager tradeManager, WalletFacade walletFacade, MessageFacade messageFacade)
+    private TakerOfferController(TradeManager tradeManager, WalletFacade walletFacade)
     {
         this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
-        this.messageFacade = messageFacade;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb)
+    {
+        super.initialize(url, rb);
+
+        accordion.setExpandedPane(takeOfferTitledPane);
+    }
+
+    @Override
+    public void deactivate()
+    {
+        super.deactivate();
+        ((TradeController) parentController).onTakeOfferViewRemoved();
+    }
+
+    @Override
+    public void activate()
+    {
+        super.activate();
     }
 
 
@@ -86,16 +102,6 @@ public class TakerOfferController implements Initializable, ChildController
         {
             applyData();
         }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void initialize(URL url, ResourceBundle rb)
-    {
-        accordion.setExpandedPane(takeOfferTitledPane);
     }
 
     public void applyData()
@@ -126,22 +132,6 @@ public class TakerOfferController implements Initializable, ChildController
         });
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ChildController
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void setNavigationController(NavigationController navigationController)
-    {
-        this.navigationController = navigationController;
-    }
-
-    @Override
-    public void cleanup()
-    {
-
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // GUI handlers
@@ -248,10 +238,8 @@ public class TakerOfferController implements Initializable, ChildController
     @FXML
     public void onClose()
     {
-        TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
+        TabPane tabPane = ((TabPane) (root.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
-
-        navigationController.navigateToView(NavigationItem.ORDER_BOOK);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

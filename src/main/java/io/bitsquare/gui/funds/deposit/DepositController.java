@@ -4,9 +4,7 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.Hibernate;
-import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.CachedViewController;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -15,24 +13,21 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DepositController implements Initializable, ChildController, Hibernate
+public class DepositController extends CachedViewController
 {
     private static final Logger log = LoggerFactory.getLogger(DepositController.class);
 
     private final WalletFacade walletFacade;
     private ObservableList<DepositListItem> addressList;
 
-    @FXML private VBox root;
     @FXML private TableView<DepositListItem> tableView;
     @FXML private TableColumn<String, DepositListItem> labelColumn, addressColumn, balanceColumn, copyColumn, confidenceColumn;
     @FXML private Button addNewAddressButton;
@@ -50,13 +45,14 @@ public class DepositController implements Initializable, ChildController, Hibern
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
+    // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        awake();
+        super.initialize(url, rb);
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         setLabelColumnCellFactory();
@@ -65,39 +61,20 @@ public class DepositController implements Initializable, ChildController, Hibern
         setConfidenceColumnCellFactory();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ChildController
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void deactivate()
     {
-    }
+        super.deactivate();
 
-    @Override
-    public void cleanup()
-    {
         for (DepositListItem anAddressList : addressList)
-        {
             anAddressList.cleanup();
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Hibernate
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void sleep()
-    {
-        cleanup();
     }
 
     @Override
-    public void awake()
+    public void activate()
     {
+        super.activate();
+
         List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
         addressList = FXCollections.observableArrayList();
         addressList.addAll(addressEntryList.stream().map(anAddressEntryList -> new DepositListItem(anAddressEntryList, walletFacade)).collect(Collectors.toList()));

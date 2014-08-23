@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.scene.control.TabPane?>
-<?import javafx.scene.layout.AnchorPane?>
-<TabPane xmlns:fx="http://javafx.com/fxml/1" fx:id="tabPane" AnchorPane.bottomAnchor="0.0"
-         AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
-         fx:controller="io.bitsquare.gui.market.BuyController"/>

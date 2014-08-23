@@ -6,16 +6,16 @@ public enum NavigationItem
 {
     MAIN("/io/bitsquare/gui/MainView.fxml"),
     HOME("/io/bitsquare/gui/home/HomeView.fxml", ImageUtil.HOME, ImageUtil.HOME_ACTIVE),
-    BUY("/io/bitsquare/gui/market/BuyView.fxml", ImageUtil.NAV_BUY, ImageUtil.NAV_BUY_ACTIVE),
-    SELL("/io/bitsquare/gui/market/SellView.fxml", ImageUtil.NAV_SELL, ImageUtil.NAV_SELL_ACTIVE),
+    BUY("/io/bitsquare/gui/trade/BuyView.fxml", ImageUtil.NAV_BUY, ImageUtil.NAV_BUY_ACTIVE),
+    SELL("/io/bitsquare/gui/trade/SellView.fxml", ImageUtil.NAV_SELL, ImageUtil.NAV_SELL_ACTIVE),
     ORDERS("/io/bitsquare/gui/orders/OrdersView.fxml", ImageUtil.ORDERS, ImageUtil.ORDERS_ACTIVE),
     FUNDS("/io/bitsquare/gui/funds/FundsView.fxml", ImageUtil.FUNDS, ImageUtil.FUNDS_ACTIVE),
     MSG("/io/bitsquare/gui/msg/MsgView.fxml", ImageUtil.MSG, ImageUtil.MSG_ACTIVE),
     SETTINGS("/io/bitsquare/gui/settings/SettingsView.fxml", ImageUtil.SETTINGS, ImageUtil.SETTINGS_ACTIVE),
 
-    ORDER_BOOK("/io/bitsquare/gui/market/orderbook/OrderBookView.fxml"),
-    CREATE_OFFER("/io/bitsquare/gui/market/createOffer/CreateOfferView.fxml"),
-    TAKE_OFFER("/io/bitsquare/gui/market/trade/TakeOfferView.fxml"),
+    ORDER_BOOK("/io/bitsquare/gui/trade/orderbook/OrderBookView.fxml"),
+    CREATE_OFFER("/io/bitsquare/gui/trade/createoffer/CreateOfferView.fxml"),
+    TAKE_OFFER("/io/bitsquare/gui/trade/takeoffer/TakeOfferView.fxml"),
     //OFFERER_TRADE("/io/bitsquare/gui/orders/OffererTradeView.fxml"),
 
     OFFER("/io/bitsquare/gui/orders/offer/OfferView.fxml"),

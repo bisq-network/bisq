@@ -7,7 +7,7 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.popups.Popups;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
@@ -94,7 +94,7 @@ public class BitSquare extends Application
 
         GuiceFXMLLoader.setInjector(injector);
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()));
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), false);
         final Parent view = loader.load();
         final Scene scene = new Scene(view, 1000, 750);
         scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm());

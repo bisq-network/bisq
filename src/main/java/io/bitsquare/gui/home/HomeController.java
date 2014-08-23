@@ -2,60 +2,66 @@ package io.bitsquare.gui.home;
 
 import io.bitsquare.BitSquare;
 import io.bitsquare.di.GuiceFXMLLoader;
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.arbitrators.registration.ArbitratorRegistrationController;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-public class HomeController implements Initializable, ChildController, NavigationController
+public class HomeController extends CachedViewController
 {
     private ArbitratorRegistrationController arbitratorRegistrationController;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-        // navigateToView(NavigationController.ARBITRATOR_REGISTRATION, "Registration as Arbitrator");
+        super.initialize(url, rb);
     }
 
     @Override
-    public void setNavigationController(NavigationController navigationController)
+    public void terminate()
     {
+        super.terminate();
     }
 
     @Override
-    public void cleanup()
+    public void deactivate()
     {
-
+        super.deactivate();
     }
+
+    @Override
+    public void activate()
+    {
+        super.activate();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: NavigationController
+    // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     @Override
-    public ChildController navigateToView(NavigationItem navigationItem)
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
     {
-        if (arbitratorRegistrationController != null)
-        {
-            arbitratorRegistrationController.cleanup();
-        }
-
-        // dont use caching here, cause exc. -> need to investigate and is rarely called so no caching is better
+        // don't use caching here, cause exc. -> need to investigate and is rarely called so no caching is better
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
         try
         {
             final Parent view = loader.load();
             arbitratorRegistrationController = loader.getController();
-            arbitratorRegistrationController.setNavigationController(this);
+            arbitratorRegistrationController.setParentController(this);
 
             final Stage rootStage = BitSquare.getPrimaryStage();
             final Stage stage = new Stage();
@@ -80,16 +86,21 @@ public class HomeController implements Initializable, ChildController, Navigatio
         return null;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI Handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @FXML
     public void onArbitratorRegistration()
     {
-        navigateToView(NavigationItem.ARBITRATOR_REGISTRATION);
+        loadViewAndGetChildController(NavigationItem.ARBITRATOR_REGISTRATION);
     }
 
     @FXML
     public void onArbitratorEdit()
     {
-        navigateToView(NavigationItem.ARBITRATOR_REGISTRATION);
+        loadViewAndGetChildController(NavigationItem.ARBITRATOR_REGISTRATION);
         arbitratorRegistrationController.setEditMode(true);
     }
 

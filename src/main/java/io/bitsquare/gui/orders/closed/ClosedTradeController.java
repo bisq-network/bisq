@@ -1,16 +1,13 @@
 package io.bitsquare.gui.orders.closed;
 
-import io.bitsquare.gui.ChildController;
-import io.bitsquare.gui.Hibernate;
-import io.bitsquare.gui.NavigationController;
+import io.bitsquare.gui.CachedViewController;
 import java.net.URL;
 import java.util.ResourceBundle;
-import javafx.fxml.Initializable;
 import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ClosedTradeController implements Initializable, ChildController, Hibernate
+public class ClosedTradeController extends CachedViewController
 {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradeController.class);
 
@@ -26,45 +23,25 @@ public class ClosedTradeController implements Initializable, ChildController, Hi
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Initializable
+    // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ChildController
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void setNavigationController(NavigationController navigationController)
-    {
-        log.debug("setNavigationController" + this);
+        super.initialize(url, rb);
     }
 
     @Override
-    public void cleanup()
+    public void deactivate()
     {
-        log.debug("cleanup" + this);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: Hibernate
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void sleep()
-    {
-        cleanup();
+        super.deactivate();
     }
 
     @Override
-    public void awake()
+    public void activate()
     {
+        super.activate();
     }
 
 

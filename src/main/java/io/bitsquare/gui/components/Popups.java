@@ -1,4 +1,4 @@
-package io.bitsquare.gui.popups;
+package io.bitsquare.gui.components;
 
 import com.google.bitcoin.store.BlockStoreException;
 import com.google.common.base.Throwables;

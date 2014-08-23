@@ -1,7 +1,7 @@
 package io.bitsquare.trade.orderbook;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.gui.market.orderbook.OrderBookListItem;
+import io.bitsquare.gui.trade.orderbook.OrderBookListItem;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.msg.MessageFacade;

@@ -40,8 +40,6 @@ public class GuiceFXMLLoader
     {
         this.url = url;
 
-        //TODO
-        useCaching = false;
         isCached = useCaching && cachedGUIItems.containsKey(url);
         if (!isCached)
         {
