@@ -55,7 +55,7 @@ public class MainController implements Initializable, NavigationController
     private final ToggleGroup toggleGroup = new ToggleGroup();
     private final ViewBuilder viewBuilder;
 
-    private ChildController controller;
+    private ChildController childController;
     private ToggleButton prevToggleButton;
     private Image prevToggleButtonIcon;
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton;
@@ -137,7 +137,7 @@ public class MainController implements Initializable, NavigationController
                 buyButton.fire();
                 break;
         }
-        return controller;
+        return childController;
     }
 
 
@@ -294,22 +294,29 @@ public class MainController implements Initializable, NavigationController
 
     private ChildController loadView(NavigationItem navigationItem)
     {
-        if (controller != null)
-            controller.cleanup();
-
+        if (childController != null)
+        {
+            childController.cleanup();
+            if (childController instanceof Hibernate)
+                ((Hibernate) childController).sleep();
+        }
+        
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try
         {
             final Node view = loader.load();
             viewBuilder.contentPane.getChildren().setAll(view);
-            controller = loader.getController();
-            controller.setNavigationController(this);
+            childController = loader.getController();
+            childController.setNavigationController(this);
         } catch (IOException e)
         {
             e.printStackTrace();
             log.error("Loading view failed. " + navigationItem.getFxmlUrl());
         }
-        return controller;
+        if (childController instanceof Hibernate)
+            ((Hibernate) childController).awake();
+
+        return childController;
     }
 
     private ToggleButton addNavButton(Pane parent, String title, NavigationItem navigationItem)
@@ -328,7 +335,7 @@ public class MainController implements Initializable, NavigationController
             prevToggleButtonIcon = ((ImageView) (toggleButton.getGraphic())).getImage();
             ((ImageView) (toggleButton.getGraphic())).setImage(ImageUtil.getIconImage(navigationItem.getActiveIcon()));
 
-            controller = loadView(navigationItem);
+            childController = loadView(navigationItem);
 
             persistence.write(this, "selectedNavigationItem", navigationItem);
 

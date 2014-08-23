@@ -138,6 +138,14 @@ public class CreateOfferController implements Initializable, ChildController, Hi
     @Override
     public void initialize(URL url, ResourceBundle rb)
     {
+        //TODO just for dev testing
+        if (BitSquare.fillFormsWithDummyData)
+        {
+            amountTextField.setText("1.0");
+            minAmountTextField.setText("0.1");
+            priceTextField.setText("" + (int) (499 - new Random().nextDouble() * 1000 / 100));
+        }
+        
         setupBindings();
         setupValidation();
 
@@ -149,15 +157,6 @@ public class CreateOfferController implements Initializable, ChildController, Hi
 
             balanceTextField.setAddress(addressEntry.getAddress());
             balanceTextField.setWalletFacade(walletFacade);
-        }
-
-
-        //TODO just for dev testing
-        if (BitSquare.fillFormsWithDummyData)
-        {
-            amountTextField.setText("1.0");
-            minAmountTextField.setText("0.1");
-            priceTextField.setText("" + (int) (499 - new Random().nextDouble() * 1000 / 100));
         }
     }
 

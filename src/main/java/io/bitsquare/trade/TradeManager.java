@@ -162,8 +162,8 @@ public class TradeManager
                                                                                        (transactionId) -> {
                                                                                            try
                                                                                            {
-                                                                                               addOffer(offer);
                                                                                                offer.setOfferFeePaymentTxID(transactionId.getHashAsString());
+                                                                                               addOffer(offer);
                                                                                                createOfferCoordinatorMap.remove(offer.getId());
 
                                                                                                resultHandler.onResult(transactionId);
@@ -193,11 +193,11 @@ public class TradeManager
     }
 
     public void removeOffer(Offer offer)
-    {     //TODO
-       /* if (!offers.containsKey(offer.getId()))
+    {    
+        if (!offers.containsKey(offer.getId()))
         {
             throw new IllegalStateException("offers does not contain the offer with the ID " + offer.getId());
-        }*/
+        }
 
         offers.remove(offer.getId());
         persistOffers();

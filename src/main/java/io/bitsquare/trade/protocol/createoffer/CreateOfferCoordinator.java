@@ -109,6 +109,7 @@ public class CreateOfferCoordinator
     {
         model.transaction = transaction;
         model.setState(State.OFFER_FEE_TX_CREATED);
+        offer.setOfferFeePaymentTxID(transaction.getHashAsString());
         BroadCastOfferFeeTx.run(this::onOfferFeeTxBroadCasted, this::onFailed, walletFacade, transaction);
     }
 

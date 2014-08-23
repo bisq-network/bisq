@@ -1,6 +1,7 @@
 package io.bitsquare.gui.orders;
 
 import io.bitsquare.gui.ChildController;
+import io.bitsquare.gui.Hibernate;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.CachingTabPane;
@@ -13,12 +14,14 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OrdersController implements Initializable, ChildController, NavigationController
+public class OrdersController implements Initializable, ChildController, NavigationController, Hibernate
 {
     private static final Logger log = LoggerFactory.getLogger(OrdersController.class);
     private static int SELECTED_TAB_INDEX = -1;
     private static OrdersController INSTANCE;
     private final Persistence persistence;
+    private ChildController childController;
+
     @FXML
     private CachingTabPane tabPane;
 
@@ -86,8 +89,28 @@ public class OrdersController implements Initializable, ChildController, Navigat
     @Override
     public ChildController navigateToView(NavigationItem navigationItem)
     {
-        return tabPane.navigateToView(navigationItem.getFxmlUrl());
+        childController = tabPane.navigateToView(navigationItem.getFxmlUrl());
+        return childController;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Interface implementation: Hibernate
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void sleep()
+    {
+        if (childController instanceof Hibernate)
+            ((Hibernate) childController).sleep();
+    }
+
+    @Override
+    public void awake()
+    {
+        if (childController instanceof Hibernate)
+            ((Hibernate) childController).awake();
+    }
+    
 }
 
