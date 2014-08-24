@@ -1,10 +1,12 @@
 package io.bitsquare.gui.components.btc;
 
+import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.uri.BitcoinURI;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.BitSquare;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.util.BitSquareFormatter;
 import java.awt.Desktop;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -32,6 +34,7 @@ public class AddressTextField extends AnchorPane
     private final Label addressLabel;
     private final Label qrCode;
     private String address;
+    private String amountToPay;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -111,13 +114,9 @@ public class AddressTextField extends AnchorPane
         });
     }
 
-    private String getBitcoinURI()
-    {
-        return BitcoinURI.convertToBitcoinURI(address, null, BitSquare.getAppName(), null);
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
+    // Getters/Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setAddress(String address)
@@ -125,5 +124,21 @@ public class AddressTextField extends AnchorPane
         this.address = address;
         addressLabel.setText(address);
     }
+
+    public void setAmountToPay(String amountToPay)
+    {
+        this.amountToPay = amountToPay;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private String getBitcoinURI()
+    {
+        Coin d = BitSquareFormatter.parseToCoin(amountToPay);
+        return BitcoinURI.convertToBitcoinURI(address, BitSquareFormatter.parseToCoin(amountToPay), BitSquare.getAppName(), null);
+    }
+
 
 }
