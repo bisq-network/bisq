@@ -367,7 +367,7 @@ public class ArbitratorRegistrationController extends CachedViewController
                                   "Please pay in " + arbitrator.getMaxTradeVolume() * 10 + " BTC");
 
 
-        String collateralAddress = walletFacade.getRegistrationAddressInfo() != null ? walletFacade.getRegistrationAddressInfo().toString() : "";
+        String collateralAddress = walletFacade.getRegistrationAddressEntry() != null ? walletFacade.getRegistrationAddressEntry().toString() : "";
         collateralAddressTextField.setText(collateralAddress);
 
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
@@ -478,7 +478,7 @@ public class ArbitratorRegistrationController extends CachedViewController
                                                                  arbitrationFeeTextField,
                                                                  minArbitrationFeeTextField);
 
-            String pubKeyAsHex = walletFacade.getArbitratorDepositAddressInfo().getPubKeyAsHexString();
+            String pubKeyAsHex = walletFacade.getArbitratorDepositAddressEntry().getPubKeyAsHexString();
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
             String name = nameTextField.getText();
 

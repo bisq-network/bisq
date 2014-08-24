@@ -13,6 +13,8 @@ import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class WithdrawalListItem
 {
     private final StringProperty addressString = new SimpleStringProperty();
@@ -122,14 +124,8 @@ public class WithdrawalListItem
             case REGISTRATION_FEE:
                 return "Registration fee";
             case TRADE:
-                if (addressEntry.getOfferId() != null)
-                {
-                    return "Trade ID: " + addressEntry.getOfferId();
-                }
-                else
-                {
-                    return "Trade (not used yet)";
-                }
+                checkNotNull(addressEntry.getOfferId());
+                return "Offer ID: " + addressEntry.getOfferId();
             case ARBITRATOR_DEPOSIT:
                 return "Arbitration deposit";
         }

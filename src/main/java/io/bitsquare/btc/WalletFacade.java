@@ -61,7 +61,7 @@ public class WalletFacade
     private Wallet wallet;
     private WalletEventListener walletEventListener;
     private AddressEntry registrationAddressEntry;
-    private AddressEntry arbitratorDepositAddressInfo;
+    private AddressEntry arbitratorDepositAddressEntry;
 
     @GuardedBy("lock")
     private List<AddressEntry> addressEntryList = new ArrayList<>();
@@ -201,6 +201,7 @@ public class WalletFacade
                 persistedAddressEntry.setDeterministicKey((DeterministicKey) wallet.findKeyFromPubHash(persistedAddressEntry.getPubKeyHash()));
             }
             addressEntryList = persistedAddressEntryList;
+            registrationAddressEntry = addressEntryList.get(0);
         }
         else
         {
@@ -273,22 +274,22 @@ public class WalletFacade
         return ImmutableList.copyOf(addressEntryList);
     }
 
-    public AddressEntry getRegistrationAddressInfo()
+    public AddressEntry getRegistrationAddressEntry()
     {
         return registrationAddressEntry;
     }
 
-    public AddressEntry getArbitratorDepositAddressInfo()
+    public AddressEntry getArbitratorDepositAddressEntry()
     {
-        if (arbitratorDepositAddressInfo == null)
-            arbitratorDepositAddressInfo = getNewAddressEntry(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT, null);
+        if (arbitratorDepositAddressEntry == null)
+            arbitratorDepositAddressEntry = getNewAddressEntry(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT, null);
 
-        return arbitratorDepositAddressInfo;
+        return arbitratorDepositAddressEntry;
     }
 
     public AddressEntry getAddressInfoByTradeID(String offerId)
     {
-        Optional<AddressEntry> addressEntry = getAddressEntryList().stream().filter(e -> e.getOfferId().equals(offerId)).findFirst();
+        Optional<AddressEntry> addressEntry = getAddressEntryList().stream().filter(e -> offerId.equals(e.getOfferId())).findFirst();
 
         if (addressEntry.isPresent())
             return addressEntry.get();
@@ -316,7 +317,7 @@ public class WalletFacade
 
     private Optional<AddressEntry> getAddressEntryByAddressString(String address)
     {
-        return getAddressEntryList().stream().filter(e -> e.getAddressString().equals(address)).findFirst();
+        return getAddressEntryList().stream().filter(e -> address.equals(e.getAddressString())).findFirst();
     }
 
 
@@ -359,7 +360,7 @@ public class WalletFacade
         List<TransactionOutput> mergedOutputs = getOutputsWithConnectedOutputs(tx);
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
 
-        mergedOutputs.stream().filter(transactionOutput -> transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH()).forEach(transactionOutput -> {
+        mergedOutputs.stream().filter(e -> e.getScriptPubKey().isSentToAddress() || e.getScriptPubKey().isSentToP2SH()).forEach(transactionOutput -> {
             Address outputAddress = transactionOutput.getScriptPubKey().getToAddress(params);
             if (address.equals(outputAddress))
             {
@@ -432,9 +433,9 @@ public class WalletFacade
     public boolean isRegistrationFeeConfirmed()
     {
         TransactionConfidence transactionConfidence = null;
-        if (getRegistrationAddressInfo() != null)
+        if (getRegistrationAddressEntry() != null)
         {
-            transactionConfidence = getConfidenceForAddress(getRegistrationAddressInfo().getAddress());
+            transactionConfidence = getConfidenceForAddress(getRegistrationAddressEntry().getAddress());
         }
         return transactionConfidence != null && transactionConfidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING);
     }
@@ -491,12 +492,12 @@ public class WalletFacade
 
     Coin getRegistrationBalance()
     {
-        return getBalanceForAddress(getRegistrationAddressInfo().getAddress());
+        return getBalanceForAddress(getRegistrationAddressEntry().getAddress());
     }
 
     public Coin getArbitratorDepositBalance()
     {
-        return getBalanceForAddress(getArbitratorDepositAddressInfo().getAddress());
+        return getBalanceForAddress(getArbitratorDepositAddressEntry().getAddress());
     }
 
     public boolean isRegistrationFeeBalanceNonZero()
@@ -543,7 +544,7 @@ public class WalletFacade
 
         Transaction tx = new Transaction(params);
 
-        byte[] data = cryptoFacade.getEmbeddedAccountRegistrationData(getRegistrationAddressInfo().getKey(), stringifiedBankAccounts);
+        byte[] data = cryptoFacade.getEmbeddedAccountRegistrationData(getRegistrationAddressEntry().getKey(), stringifiedBankAccounts);
         tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 
         Coin fee = FeePolicy.ACCOUNT_REGISTRATION_FEE.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(FeePolicy.TX_FEE);
@@ -554,8 +555,8 @@ public class WalletFacade
         sendRequest.shuffleOutputs = false;
         // we don't allow spending of unconfirmed tx as with fake registrations we would open up doors for spam and market manipulation with fake offers
         // so set includePending to false
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getRegistrationAddressInfo(), false);
-        sendRequest.changeAddress = getRegistrationAddressInfo().getAddress();
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getRegistrationAddressEntry(), false);
+        sendRequest.changeAddress = getRegistrationAddressEntry().getAddress();
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         //Object k = getRegistrationAddressInfo().getKey();
         Futures.addCallback(sendResult.broadcastComplete, callback);

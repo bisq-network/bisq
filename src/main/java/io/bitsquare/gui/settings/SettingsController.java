@@ -567,7 +567,11 @@ public class SettingsController extends CachedViewController
             bankAccountTypesComboBox.getSelectionModel().selectFirst();
             bankAccountCurrencyComboBox.getSelectionModel().selectFirst();
             bankAccountRegionComboBox.getSelectionModel().select(3);
-            bankAccountCountryComboBox.getSelectionModel().select(5);
+
+            Optional<Country> country = bankAccountCountryComboBox.getItems().stream().filter(e -> e.getCode().equals(CountryUtil.getDefaultCountry().getCode())).findFirst();
+            if (country.isPresent())
+                bankAccountCountryComboBox.getSelectionModel().select(country.get());
+
             bankAccountTitleTextField.setText("dummy title");
             bankAccountHolderNameTextField.setText("dummy name");
             bankAccountPrimaryIDTextField.setText("dummy primary ID");

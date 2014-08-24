@@ -130,7 +130,7 @@ public class ProtocolForTakerAsSeller
         messagePublicKey = user.getMessagePublicKey();
 
         pubKeyForThatTrade = walletFacade.getAddressInfoByTradeID(tradeId).getPubKeyAsHexString();
-        accountKey = walletFacade.getRegistrationAddressInfo().getKey();
+        accountKey = walletFacade.getRegistrationAddressEntry().getKey();
 
         state = State.Init;
     }

@@ -132,7 +132,7 @@ public class ProtocolForOffererAsBuyer
         accountId = user.getAccountId();
         messagePublicKey = user.getMessagePublicKey();
 
-        accountKey = walletFacade.getRegistrationAddressInfo().getKey();
+        accountKey = walletFacade.getRegistrationAddressEntry().getKey();
         payoutAddress = walletFacade.getAddressInfoByTradeID(tradeId).getAddressString();
 
         state = State.Init;

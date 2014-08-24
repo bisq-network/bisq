@@ -103,6 +103,9 @@ public class CreateOfferController extends CachedViewController
     {
         super.initialize(url, rb);
 
+        setupBindings();
+        setupValidation();
+        
         //TODO just for dev testing
         if (BitSquare.fillFormsWithDummyData)
         {
@@ -111,8 +114,6 @@ public class CreateOfferController extends CachedViewController
             priceTextField.setText("" + (int) (499 - new Random().nextDouble() * 1000 / 100));
         }
 
-        setupBindings();
-        setupValidation();
 
         //TODO
         if (walletFacade.getWallet() != null)

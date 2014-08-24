@@ -344,9 +344,9 @@ public class OrderBookController extends CachedViewController
         try
         {
             walletFacade.payRegistrationFee(user.getStringifiedBankAccounts(), callback);
-            if (walletFacade.getRegistrationAddressInfo() != null)
+            if (walletFacade.getRegistrationAddressEntry() != null)
             {
-                user.setAccountID(walletFacade.getRegistrationAddressInfo().toString());
+                user.setAccountID(walletFacade.getRegistrationAddressEntry().toString());
             }
 
             persistence.write(user.getClass().getName(), user);
