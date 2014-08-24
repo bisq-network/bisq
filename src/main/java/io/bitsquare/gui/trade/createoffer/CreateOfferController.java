@@ -196,6 +196,8 @@ public class CreateOfferController extends CachedViewController
 
     private void setupBindings()
     {
+        // TODO check that entered decimal places are nto exceeded supported
+
         viewModel.amount.addListener((ov, oldValue, newValue) -> {
             double amount = BitSquareFormatter.parseToDouble(newValue);
             double price = BitSquareFormatter.parseToDouble(viewModel.price.get());
@@ -221,6 +223,17 @@ public class CreateOfferController extends CachedViewController
                 viewModel.amount.set(BitSquareFormatter.formatVolume(amount));
                 viewModel.totals.set(BitSquareFormatter.formatTotalsAsBtc(viewModel.amount.get(), collateral, FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
                 viewModel.collateral.set(BitSquareFormatter.formatCollateralAsBtc(viewModel.amount.get(), collateral));
+            }
+        });
+
+        volumeTextField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (oldValue && !newValue)
+            {
+                if (!volumeTextField.getText().equals(viewModel.volume.get()))
+                {
+                    Popups.openWarningPopup("Warning", "The total volume you have entered leads to invalid fractional Bitcoin amounts.\nThe amount has been adjusted and a new total volume be calculated from it.");
+                    volumeTextField.setText(viewModel.volume.get());
+                }
             }
         });
 

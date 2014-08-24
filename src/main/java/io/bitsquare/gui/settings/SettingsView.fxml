@@ -25,7 +25,7 @@
                 <ComboBox fx:id="countryComboBox" onAction="#onAddCountry" visible="false" prefWidth="150.0" promptText="Add country"/>
             </HBox>
 
-            <Button onAction="#onAddArbitrator" text="Add arbitrator" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+            <Button onAction="#onOpenArbitratorScreen" text="Add arbitrator" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
 
             <columnConstraints>
                 <ColumnConstraints/>

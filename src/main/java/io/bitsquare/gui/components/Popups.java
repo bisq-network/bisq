@@ -26,9 +26,9 @@ public class Popups
     }
 
     // Confirm
-    public static void openConfirmPopup(String title, String message)
+    public static Action openConfirmPopup(String title, String message)
     {
-        openConfirmPopup(title, message, null);
+        return openConfirmPopup(title, message, null);
     }
 
     public static Action openConfirmPopup(String title, String message, String masthead)
@@ -36,6 +36,11 @@ public class Popups
         List<Action> actions = new ArrayList<>();
         actions.add(Dialog.Actions.OK);
         actions.add(Dialog.Actions.CANCEL);
+        return openConfirmPopup(title, message, masthead, actions);
+    }
+
+    public static Action openConfirmPopup(String title, String message, String masthead, List<Action> actions)
+    {
         return Dialogs.create().owner(BitSquare.getPrimaryStage()).title(title).message(message).masthead(masthead).actions(actions).showConfirm();
     }
 

@@ -50,9 +50,9 @@ public class CachingTabPane extends TabPane
         selectedTabIndex = (indexObject == null) ? 0 : (int) indexObject;
 
         // if selectedTabIndex = 0 the the change listener will not fire so we load it manually
-        // if (selectedTabIndex == 0) loadView();
+        if (selectedTabIndex == 0) loadView();
 
-        //getSelectionModel().select(selectedTabIndex);
+        getSelectionModel().select(selectedTabIndex);
     }
 
     public ViewController loadViewAndGetChildController(String fxmlView)

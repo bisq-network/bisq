@@ -132,7 +132,7 @@ public class BitSquareFormatter
 
     public static String formatDouble(double value)
     {
-        return formatDouble(value, 2);
+        return formatDouble(value, 4);
     }
 
     public static String formatDouble(double value, int fractionDigits)

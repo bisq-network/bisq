@@ -33,9 +33,13 @@ public class LanguageUtil
         return allLocales;
     }
 
-
     public static Locale getDefaultLanguageLocale()
     {
         return new Locale(Locale.getDefault().getLanguage(), "");
+    }
+
+    public static Locale getEnglishLanguageLocale()
+    {
+        return new Locale(Locale.ENGLISH.getLanguage(), "");
     }
 }
