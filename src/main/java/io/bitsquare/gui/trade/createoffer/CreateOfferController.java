@@ -25,6 +25,7 @@ import io.bitsquare.user.User;
 import java.net.URL;
 import java.util.Random;
 import java.util.ResourceBundle;
+import java.util.UUID;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -49,6 +50,7 @@ public class CreateOfferController extends CachedViewController
     private final WalletFacade walletFacade;
     final ViewModel viewModel = new ViewModel();
     private final double collateral;
+    private final String offerId;
     private Direction direction;
     private AddressEntry addressEntry;
 
@@ -87,6 +89,8 @@ public class CreateOfferController extends CachedViewController
         viewModel.acceptedCountries.set(BitSquareFormatter.countryLocalesToString(settings.getAcceptedCountries()));
         viewModel.acceptedLanguages.set(BitSquareFormatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
         viewModel.feeLabel.set(BitSquareFormatter.formatCoinWithCode(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+
+        offerId = UUID.randomUUID().toString();
     }
 
 
@@ -113,7 +117,7 @@ public class CreateOfferController extends CachedViewController
         //TODO
         if (walletFacade.getWallet() != null)
         {
-            addressEntry = walletFacade.getUnusedTradeAddressInfo();
+            addressEntry = walletFacade.getAddressInfoByTradeID(offerId);
             addressTextField.setAddress(addressEntry.getAddress().toString());
 
             balanceTextField.setAddress(addressEntry.getAddress());
@@ -166,8 +170,9 @@ public class CreateOfferController extends CachedViewController
         if (amountTextField.getIsValid() && minAmountTextField.getIsValid() && volumeTextField.getIsValid() && amountTextField.getIsValid())
         {
             viewModel.isPlaceOfferButtonDisabled.set(true);
-
-            tradeManager.requestPlaceOffer(direction,
+           
+            tradeManager.requestPlaceOffer(offerId,
+                                           direction,
                                            BitSquareFormatter.parseToDouble(viewModel.price.get()),
                                            BitSquareFormatter.parseToCoin(viewModel.amount.get()),
                                            BitSquareFormatter.parseToCoin(viewModel.minAmount.get()),

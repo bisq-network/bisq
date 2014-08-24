@@ -227,7 +227,7 @@ public class UtilsDHT2
         for (int i = 0; i < peers.length; i++)
         {
             for (int j = 0; j < peers.length; j++)
-                peers[i].peer().peerBean().peerMap().peerFound(peers[j].peer().peerAddress(), null, null);
+                peers[i].peer().peerBean().peerMap().peerFound(peers[j].peer().peerAddress(), null);
         }
         System.err.println("perfect routing done.");
     }
@@ -237,7 +237,7 @@ public class UtilsDHT2
         for (int i = 0; i < peers.length; i++)
         {
             for (int j = 0; j < peers.length; j++)
-                peers[i].peerBean().peerMap().peerFound(peers[j].peerAddress(), peers[j].peerAddress(), null);
+                peers[i].peerBean().peerMap().peerFound(peers[j].peerAddress(), peers[j].peerAddress());
         }
         System.err.println("perfect routing done.");
     }

@@ -30,7 +30,6 @@ public class DepositController extends CachedViewController
 
     @FXML private TableView<DepositListItem> tableView;
     @FXML private TableColumn<String, DepositListItem> labelColumn, addressColumn, balanceColumn, copyColumn, confidenceColumn;
-    @FXML private Button addNewAddressButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -87,12 +86,6 @@ public class DepositController extends CachedViewController
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @FXML
-    public void onAddNewTradeAddress()
-    {
-        addressList.add(new DepositListItem(walletFacade.getNewTradeAddressEntry(), walletFacade));
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
@@ -126,12 +119,12 @@ public class DepositController extends CachedViewController
                         {
                             hyperlink = new Hyperlink(item.getLabel());
                             hyperlink.setId("id-link");
-                            if (item.getAddressEntry().getTradeId() != null)
+                            if (item.getAddressEntry().getOfferId() != null)
                             {
-                                Tooltip tooltip = new Tooltip(item.getAddressEntry().getTradeId());
+                                Tooltip tooltip = new Tooltip(item.getAddressEntry().getOfferId());
                                 Tooltip.install(hyperlink, tooltip);
 
-                                hyperlink.setOnAction(event -> log.info("Show trade details " + item.getAddressEntry().getTradeId()));
+                                hyperlink.setOnAction(event -> log.info("Show trade details " + item.getAddressEntry().getOfferId()));
                             }
                             setGraphic(hyperlink);
                         }

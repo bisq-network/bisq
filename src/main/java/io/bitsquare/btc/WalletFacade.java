@@ -9,9 +9,7 @@ import com.google.bitcoin.params.RegTestParams;
 import com.google.bitcoin.script.Script;
 import com.google.bitcoin.script.ScriptBuilder;
 import com.google.bitcoin.utils.Threading;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -62,6 +60,8 @@ public class WalletFacade
     private final List<BalanceListener> balanceListeners = new ArrayList<>();
     private Wallet wallet;
     private WalletEventListener walletEventListener;
+    private AddressEntry registrationAddressEntry;
+    private AddressEntry arbitratorDepositAddressInfo;
 
     @GuardedBy("lock")
     private List<AddressEntry> addressEntryList = new ArrayList<>();
@@ -206,10 +206,10 @@ public class WalletFacade
         {
             lock.lock();
             DeterministicKey registrationKey = wallet.currentReceiveKey();
-            addressEntryList.add(new AddressEntry(registrationKey, params, AddressEntry.AddressContext.REGISTRATION_FEE));
+            registrationAddressEntry = new AddressEntry(registrationKey, params, AddressEntry.AddressContext.REGISTRATION_FEE);
+            addressEntryList.add(registrationAddressEntry);
             lock.unlock();
             saveAddressInfoList();
-            getNewTradeAddressEntry();
         }
     }
 
@@ -273,71 +273,27 @@ public class WalletFacade
         return ImmutableList.copyOf(addressEntryList);
     }
 
-
     public AddressEntry getRegistrationAddressInfo()
     {
-        return getAddressInfoByAddressContext(AddressEntry.AddressContext.REGISTRATION_FEE);
+        return registrationAddressEntry;
     }
-
 
     public AddressEntry getArbitratorDepositAddressInfo()
     {
-        AddressEntry arbitratorDepositAddressEntry = getAddressInfoByAddressContext(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT);
-        if (arbitratorDepositAddressEntry == null)
-        {
-            arbitratorDepositAddressEntry = getNewArbitratorDepositAddressEntry();
-        }
+        if (arbitratorDepositAddressInfo == null)
+            arbitratorDepositAddressInfo = getNewAddressEntry(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT, null);
 
-        return arbitratorDepositAddressEntry;
+        return arbitratorDepositAddressInfo;
     }
 
-
-    public AddressEntry getUnusedTradeAddressInfo()
+    public AddressEntry getAddressInfoByTradeID(String offerId)
     {
-        List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(ImmutableList.copyOf(addressEntryList),
-                                                                                 e -> (e != null && e.getAddressContext().equals(AddressEntry.AddressContext.TRADE) && e.getTradeId() == null)));
+        Optional<AddressEntry> addressEntry = getAddressEntryList().stream().filter(e -> e.getOfferId().equals(offerId)).findFirst();
 
-        if (filteredList != null && !filteredList.isEmpty())
-        {
-            return filteredList.get(0);
-        }
+        if (addressEntry.isPresent())
+            return addressEntry.get();
         else
-        {
-            return getNewTradeAddressEntry();
-        }
-    }
-
-
-    private AddressEntry getAddressInfoByAddressContext(AddressEntry.AddressContext addressContext)
-    {
-        List<AddressEntry> filteredList = Lists.newArrayList(Collections2.filter(ImmutableList.copyOf(addressEntryList),
-                                                                                 e -> (e != null && e.getAddressContext() != null && e.getAddressContext().equals(addressContext))));
-
-        if (filteredList != null && !filteredList.isEmpty())
-        {
-            return filteredList.get(0);
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-
-    public AddressEntry getAddressInfoByTradeID(String tradeId)
-    {
-        for (AddressEntry addressEntry : ImmutableList.copyOf(addressEntryList))
-        {
-            if (addressEntry.getTradeId() != null && addressEntry.getTradeId().equals(tradeId))
-            {
-                return addressEntry;
-            }
-        }
-
-        AddressEntry addressEntry = getUnusedTradeAddressInfo();
-        assert addressEntry != null;
-        addressEntry.setTradeId(tradeId);
-        return addressEntry;
+            return getNewAddressEntry(AddressEntry.AddressContext.TRADE, offerId);
     }
 
 
@@ -345,20 +301,12 @@ public class WalletFacade
     // Create new AddressInfo objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public AddressEntry getNewTradeAddressEntry()
-    {
-        return getNewAddressEntry(AddressEntry.AddressContext.TRADE);
-    }
-
-
-    private AddressEntry getNewAddressEntry(AddressEntry.AddressContext addressContext)
+    private AddressEntry getNewAddressEntry(AddressEntry.AddressContext addressContext, String offerId)
     {
         lock.lock();
         wallet.getLock().lock();
-
         DeterministicKey key = wallet.freshReceiveKey();
-        AddressEntry addressEntry = new AddressEntry(key, params, addressContext);
+        AddressEntry addressEntry = new AddressEntry(key, params, addressContext, offerId);
         addressEntryList.add(addressEntry);
         saveAddressInfoList();
         lock.unlock();
@@ -366,21 +314,9 @@ public class WalletFacade
         return addressEntry;
     }
 
-
-    private AddressEntry getNewArbitratorDepositAddressEntry()
+    private Optional<AddressEntry> getAddressEntryByAddressString(String address)
     {
-        return getNewAddressEntry(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT);
-    }
-
-
-    private AddressEntry getAddressEntryByAddressString(String address)
-    {
-        for (AddressEntry addressEntry : addressEntryList)
-        {
-            if (addressEntry.getAddressString().equals(address))
-                return addressEntry;
-        }
-        return null;
+        return getAddressEntryList().stream().filter(e -> e.getAddressString().equals(address)).findFirst();
     }
 
 
@@ -573,7 +509,7 @@ public class WalletFacade
         return getRegistrationBalance().compareTo(FeePolicy.ACCOUNT_REGISTRATION_FEE) >= 0;
     }
 
-    public boolean isUnusedTradeAddressBalanceAboveCreationFee()
+  /*  public boolean isUnusedTradeAddressBalanceAboveCreationFee()
     {
         AddressEntry unUsedAddressEntry = getUnusedTradeAddressInfo();
         Coin unUsedAddressInfoBalance = getBalanceForAddress(unUsedAddressEntry.getAddress());
@@ -585,7 +521,7 @@ public class WalletFacade
         AddressEntry unUsedAddressEntry = getUnusedTradeAddressInfo();
         Coin unUsedAddressInfoBalance = getBalanceForAddress(unUsedAddressEntry.getAddress());
         return unUsedAddressInfoBalance.compareTo(FeePolicy.TAKE_OFFER_FEE) > 0;
-    }
+    }*/
 
     //TODO
     public int getNumOfPeersSeenTx(String txID)
@@ -706,9 +642,12 @@ public class WalletFacade
         sendRequest.shuffleOutputs = false;
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
 
+        Optional<AddressEntry> addressEntry = getAddressEntryByAddressString(withdrawFromAddress);
+        if (!addressEntry.isPresent())
+            throw new IllegalArgumentException("WithdrawFromAddress is not found in our wallets.");
 
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getAddressEntryByAddressString(withdrawFromAddress), true);
-        sendRequest.changeAddress = getAddressEntryByAddressString(changeAddress).getAddress();
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry.get(), true);
+        sendRequest.changeAddress = addressEntry.get().getAddress();
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
@@ -759,7 +698,6 @@ public class WalletFacade
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         sendRequest.shuffleOutputs = false;
         AddressEntry addressEntry = getAddressInfoByTradeID(tradeId);
-        addressEntry.setTradeId(tradeId);
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
         sendRequest.changeAddress = addressEntry.getAddress();
@@ -819,7 +757,6 @@ public class WalletFacade
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tempTx);
         sendRequest.shuffleOutputs = false;
         AddressEntry addressEntry = getAddressInfoByTradeID(tradeId);
-        addressEntry.setTradeId(tradeId);
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
         sendRequest.changeAddress = addressEntry.getAddress();

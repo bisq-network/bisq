@@ -41,7 +41,8 @@ public class Offer implements Serializable
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Offer(PublicKey messagePublicKey,
+    public Offer(String id,
+                 PublicKey messagePublicKey,
                  Direction direction,
                  double price,
                  Coin amount,
@@ -55,6 +56,7 @@ public class Offer implements Serializable
                  List<Country> acceptedCountries,
                  List<Locale> acceptedLanguageLocales)
     {
+        this.id = id;
         this.messagePublicKey = messagePublicKey;
         this.direction = direction;
         this.price = price;
@@ -71,7 +73,6 @@ public class Offer implements Serializable
         this.acceptedLanguageLocales = acceptedLanguageLocales;
 
         creationDate = new Date();
-        id = UUID.randomUUID().toString();
     }
 
 

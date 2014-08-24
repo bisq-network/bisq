@@ -122,9 +122,9 @@ public class WithdrawalListItem
             case REGISTRATION_FEE:
                 return "Registration fee";
             case TRADE:
-                if (addressEntry.getTradeId() != null)
+                if (addressEntry.getOfferId() != null)
                 {
-                    return "Trade ID: " + addressEntry.getTradeId();
+                    return "Trade ID: " + addressEntry.getOfferId();
                 }
                 else
                 {

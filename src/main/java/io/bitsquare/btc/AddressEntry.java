@@ -12,28 +12,28 @@ public class AddressEntry implements Serializable
     private transient DeterministicKey key;
     private final NetworkParameters params;
     private final AddressContext addressContext;
+    private final String offerId;
     private final byte[] pubKeyHash;
 
-    private String tradeId = null;
 
     public AddressEntry(DeterministicKey key, NetworkParameters params, AddressContext addressContext)
+    {
+        this(key, params, addressContext, null);
+    }
+
+    public AddressEntry(DeterministicKey key, NetworkParameters params, AddressContext addressContext, String offerId)
     {
         this.key = key;
         this.params = params;
         this.addressContext = addressContext;
+        this.offerId = offerId;
 
         pubKeyHash = key.getPubOnly().getPubKeyHash();
     }
 
-
-    public String getTradeId()
+    public String getOfferId()
     {
-        return tradeId;
-    }
-
-    public void setTradeId(String tradeId)
-    {
-        this.tradeId = tradeId;
+        return offerId;
     }
 
     public AddressContext getAddressContext()

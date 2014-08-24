@@ -22,6 +22,4 @@
             <TableColumn text="Status" fx:id="confidenceColumn" minWidth="30" sortable="false"/>
         </columns>
     </TableView>
-
-    <Button fx:id="addNewAddressButton" text="Add new address" onAction="#onAddNewTradeAddress"/>
 </VBox>

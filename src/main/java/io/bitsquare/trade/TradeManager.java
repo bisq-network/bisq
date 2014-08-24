@@ -127,7 +127,8 @@ public class TradeManager
     // Manage offers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestPlaceOffer(Direction direction,
+    public void requestPlaceOffer(String id,
+                                  Direction direction,
                                   double price,
                                   Coin amount,
                                   Coin minAmount,
@@ -135,7 +136,8 @@ public class TradeManager
                                   ErrorMessageHandler errorMessageHandler)
     {
 
-        Offer offer = new Offer(user.getMessagePublicKey(),
+        Offer offer = new Offer(id, 
+                                user.getMessagePublicKey(),
                                 direction,
                                 price,
                                 amount,
