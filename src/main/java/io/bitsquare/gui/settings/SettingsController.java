@@ -229,7 +229,7 @@ public class SettingsController extends CachedViewController
         {
             user.setCurrentBankAccount(bankAccount);
             persistence.write(user);
-            initBankAccountScreen();
+            fillWithCurrentBankAccount();
         }
     }
 
@@ -539,13 +539,8 @@ public class SettingsController extends CachedViewController
 
 
     // Bank Account Settings
-    private void initBankAccountScreen()
+    private void fillWithCurrentBankAccount()
     {
-        initBankAccountComboBox();
-        initBankAccountTypesComboBox();
-        initBankAccountCurrencyComboBox();
-        initBankAccountCountryComboBox();
-
         BankAccount currentBankAccount = user.getCurrentBankAccount();
         if (currentBankAccount != null)
         {
@@ -560,6 +555,16 @@ public class SettingsController extends CachedViewController
         {
             resetBankAccountInput();
         }
+    }
+
+    private void initBankAccountScreen()
+    {
+        initBankAccountComboBox();
+        initBankAccountTypesComboBox();
+        initBankAccountCurrencyComboBox();
+        initBankAccountCountryComboBox();
+
+        fillWithCurrentBankAccount();
 
         //TODO
         if (BitSquare.fillFormsWithDummyData)
@@ -751,8 +756,6 @@ public class SettingsController extends CachedViewController
 
             saveUser();
 
-            initBankAccountScreen();
-
             if (!settings.getAcceptedCountries().contains(bankAccount.getCountry()))
             {
                 List<Action> actions = new ArrayList<>();
@@ -775,7 +778,7 @@ public class SettingsController extends CachedViewController
 
         saveUser();
         saveSettings();
-        initBankAccountScreen();
+        fillWithCurrentBankAccount();
     }
 
     private boolean verifyBankAccountData()

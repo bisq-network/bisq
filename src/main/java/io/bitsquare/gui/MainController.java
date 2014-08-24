@@ -7,6 +7,7 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.orders.OrdersController;
+import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
@@ -59,6 +60,7 @@ public class MainController extends ViewController
     private Pane ordersButtonButtonHolder;
     private boolean messageFacadeInited;
     private boolean walletFacadeInited;
+    private VBox accountComboBoxHolder;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -272,7 +274,15 @@ public class MainController extends ViewController
         viewBuilder.leftNavPane.getChildren().add(msgButtonHolder);
 
         addBalanceInfo(viewBuilder.rightNavPane);
+
         addAccountComboBox(viewBuilder.rightNavPane);
+
+        user.getBankAccountsSizeProperty().addListener((observableValue, oldValue, newValue) -> {
+            if ((int) newValue == 2)
+                viewBuilder.rightNavPane.getChildren().add(1, accountComboBoxHolder);// accountComboBoxHolder.setVisible(true);
+            else if ((int) newValue < 2)
+                viewBuilder.rightNavPane.getChildren().remove(accountComboBoxHolder);//accountComboBoxHolder.setVisible(false);
+        });
 
         settingsButton = addNavButton(viewBuilder.rightNavPane, "Settings", NavigationItem.SETTINGS);
 
@@ -358,71 +368,71 @@ public class MainController extends ViewController
         balanceTextField.setEditable(false);
         balanceTextField.setPrefWidth(110);
         balanceTextField.setId("nav-balance-label");
-        balanceTextField.setText(walletFacade.getWalletBalance().toFriendlyString());
+        balanceTextField.setText(BitSquareFormatter.formatCoinWithCode(walletFacade.getWalletBalance()));
         walletFacade.addBalanceListener(new BalanceListener()
         {
             @Override
             public void onBalanceChanged(Coin balance)
             {
-                balanceTextField.setText(balance.toFriendlyString());
+                balanceTextField.setText(BitSquareFormatter.formatCoinWithCode(walletFacade.getWalletBalance()));
             }
         });
 
-        final HBox hBox = new HBox();
-        hBox.setSpacing(2);
-        hBox.getChildren().setAll(balanceTextField);
-
         final Label titleLabel = new Label("Balance");
+        titleLabel.prefWidthProperty().bind(balanceTextField.widthProperty());
         titleLabel.setMouseTransparent(true);
-        titleLabel.setPrefWidth(90);
         titleLabel.setId("nav-button-label");
 
         final VBox vBox = new VBox();
         vBox.setPadding(new Insets(12, 0, 0, 0));
         vBox.setSpacing(2);
-        vBox.getChildren().setAll(hBox, titleLabel);
+        vBox.getChildren().setAll(balanceTextField, titleLabel);
         parent.getChildren().add(vBox);
     }
 
     private void addAccountComboBox(Pane parent)
     {
-        if (user.getBankAccounts().size() > 1)
+        final ComboBox<BankAccount> accountComboBox = new ComboBox<>(FXCollections.observableArrayList(user.getBankAccounts()));
+        accountComboBox.setId("nav-account-combo-box");
+        accountComboBox.setLayoutY(12);
+        if (user.getCurrentBankAccount() != null)
+            accountComboBox.getSelectionModel().select(user.getCurrentBankAccount());
+        accountComboBox.valueProperty().addListener((ov, oldValue, newValue) -> user.setCurrentBankAccount(newValue));
+        accountComboBox.setConverter(new StringConverter<BankAccount>()
         {
-            final ComboBox<BankAccount> accountComboBox = new ComboBox<>(FXCollections.observableArrayList(user.getBankAccounts()));
-            accountComboBox.setLayoutY(12);
-            accountComboBox.setValue(user.getCurrentBankAccount());
-            accountComboBox.valueProperty().addListener((ov, oldValue, newValue) -> user.setCurrentBankAccount(newValue));
-            accountComboBox.setConverter(new StringConverter<BankAccount>()
+            @Override
+            public String toString(BankAccount bankAccount)
             {
+                return bankAccount.getAccountTitle();
+            }
 
-                @Override
-                public String toString(BankAccount bankAccount)
-                {
-                    return bankAccount.getAccountTitle();
-                }
+            @Override
+            public BankAccount fromString(String s)
+            {
+                return null;
+            }
+        });
 
+        user.getSelectedBankAccountIndexProperty().addListener(observable -> accountComboBox.getSelectionModel().select(user.getCurrentBankAccount()));
+        user.getBankAccountsSizeProperty().addListener(observable -> {
+            accountComboBox.setItems(FXCollections.observableArrayList(user.getBankAccounts()));
+            // need to delay it a bit otherwise it will not be set
+            Platform.runLater(() -> accountComboBox.getSelectionModel().select(user.getCurrentBankAccount()));
+        });
 
-                @Override
-                public BankAccount fromString(String s)
-                {
-                    return null;
-                }
-            });
+        final Label titleLabel = new Label("Bank account");
+        titleLabel.prefWidthProperty().bind(accountComboBox.widthProperty());
+        titleLabel.setMouseTransparent(true);
+        titleLabel.setId("nav-button-label");
 
+        accountComboBoxHolder = new VBox();
+        accountComboBoxHolder.setPadding(new Insets(12, 0, 0, 0));
+        accountComboBoxHolder.setSpacing(2);
+        accountComboBoxHolder.getChildren().setAll(accountComboBox, titleLabel);
 
-            final Label titleLabel = new Label("Bank account");
-            titleLabel.setMouseTransparent(true);
-            titleLabel.setPrefWidth(90);
-            titleLabel.setId("nav-button-label");
-
-            final VBox vBox = new VBox();
-            vBox.setPadding(new Insets(12, 0, 0, 0));
-            vBox.setSpacing(2);
-            vBox.getChildren().setAll(accountComboBox, titleLabel);
-            parent.getChildren().add(vBox);
-        }
+        if (user.getBankAccounts().size() > 1)
+            parent.getChildren().add(accountComboBoxHolder);
     }
-
 }
 
 

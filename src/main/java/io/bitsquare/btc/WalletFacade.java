@@ -473,13 +473,9 @@ public class WalletFacade
         {
             Coin balance;
             if (balanceListener.getAddress() != null)
-            {
                 balance = getBalanceForAddress(balanceListener.getAddress());
-            }
             else
-            {
                 balance = getWalletBalance();
-            }
 
             balanceListener.onBalanceChanged(balance);
         }

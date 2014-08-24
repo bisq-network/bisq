@@ -179,9 +179,9 @@ public class OrderBookController extends CachedViewController
             updateVolume();
         });
 
-        orderBookFilter.getDirectionChangedProperty().addListener((observable, oldValue, newValue) -> applyOffers());
+        orderBookFilter.getDirectionChangedProperty().addListener((observable) -> applyOffers());
 
-        user.getBankAccountChangedProperty().addListener((observable, oldValue, newValue) -> orderBook.loadOffers());
+        user.getSelectedBankAccountIndexProperty().addListener((observable) -> orderBook.loadOffers());
 
         createOfferButton.setOnAction(e -> createOffer());
 
@@ -213,18 +213,9 @@ public class OrderBookController extends CachedViewController
         if (isRegistered())
         {
             createOfferButton.setDisable(true);
-           /* if (walletFacade.isUnusedTradeAddressBalanceAboveCreationFee())
-            { */
             ViewController nextController = parentController.loadViewAndGetChildController(NavigationItem.CREATE_OFFER);
             if (nextController != null)
                 ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
-           /* }
-            else
-            {
-                Action response = Popups.openErrorPopup("No funds for a trade", "You have to add some funds before you create a new offer.");
-                if (response == Dialog.Actions.OK)
-                    MainController.GET_INSTANCE().navigateToView(NavigationItem.FUNDS);
-            }  */
         }
         else
         {

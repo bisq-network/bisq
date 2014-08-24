@@ -3,7 +3,7 @@
 
 ## About Bitsquare
 Bitsquare is a **P2P Fiat-BTC Exchange**.   
-It allows to trade fiat money (USD, EURO, ...) for Bitcoins without relying on a centralized exchange like MtGox.  
+It allows to trade fiat money (USD, EURO, ...) for Bitcoins without relying on a centralized exchange like Coinbase or BitStamp.  
 Instead, all participants form a peer to peer market.
 
 ## Dependencies

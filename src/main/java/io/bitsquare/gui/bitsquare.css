@@ -47,17 +47,15 @@
 
 #nav-button-label {
     -fx-font-size: 10;
-    -fx-text-alignment: center;
     -fx-alignment: center;
 }
 
 #nav-balance-label {
     -fx-font-weight: bold;
-    -fx-text-alignment: right;
+    -fx-alignment: center;
 }
-
-#nav-balance-currency-label {
-    -fx-text-alignment: left;
+#nav-account-combo-box .list-cell{
+    -fx-alignment: center;
 }
 
 .text-field:readonly {

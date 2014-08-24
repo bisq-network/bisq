@@ -7,7 +7,9 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +21,8 @@ public class User implements Serializable
     private static final Logger log = LoggerFactory.getLogger(User.class);
     private static final long serialVersionUID = 7409078808248518638L;
 
-    transient private final SimpleBooleanProperty bankAccountChangedProperty = new SimpleBooleanProperty();
+    transient private final IntegerProperty selectedBankAccountIndexProperty = new SimpleIntegerProperty();
+    transient private final IntegerProperty bankAccountsSizeProperty = new SimpleIntegerProperty();
 
     private KeyPair messageKeyPair;
     private String accountID;
@@ -42,7 +45,6 @@ public class User implements Serializable
         {
             bankAccounts = persistedUser.getBankAccounts();
             messageKeyPair = persistedUser.getMessageKeyPair();
-
             accountID = persistedUser.getAccountId();
             setCurrentBankAccount(persistedUser.getCurrentBankAccount());
         }
@@ -52,22 +54,33 @@ public class User implements Serializable
             bankAccounts = new ArrayList<>();
             messageKeyPair = DSAKeyUtil.generateKeyPair();  // DSAKeyUtil.getKeyPair() runs in same thread now
         }
-        DSAKeyUtil.generateKeyPair();
+
+        bankAccountsSizeProperty.set(bankAccounts.size());
     }
 
     public void addBankAccount(BankAccount bankAccount)
     {
-        if (!bankAccounts.contains(bankAccount)) bankAccounts.add(bankAccount);
+        if (!bankAccounts.contains(bankAccount))
+        {
+            bankAccounts.add(bankAccount);
+            bankAccountsSizeProperty.set(bankAccounts.size());
+        }
 
         setCurrentBankAccount(bankAccount);
     }
 
     public void removeCurrentBankAccount()
     {
-        if (currentBankAccount != null) bankAccounts.remove(currentBankAccount);
+        if (currentBankAccount != null)
+        {
+            bankAccounts.remove(currentBankAccount);
+            bankAccountsSizeProperty.set(bankAccounts.size());
+        }
 
-        if (bankAccounts.isEmpty()) currentBankAccount = null;
-        else setCurrentBankAccount(bankAccounts.get(0));
+        if (bankAccounts.isEmpty())
+            setCurrentBankAccount(null);
+        else
+            setCurrentBankAccount(bankAccounts.get(0));
     }
 
 
@@ -82,10 +95,16 @@ public class User implements Serializable
         this.accountID = accountID;
     }
 
-    public void setCurrentBankAccount(BankAccount bankAccount)
+    public void setCurrentBankAccount(@Nullable BankAccount bankAccount)
     {
-        this.currentBankAccount = bankAccount;
-        bankAccountChangedProperty.set(!bankAccountChangedProperty.get());
+        currentBankAccount = bankAccount;
+        int index = -1;
+        for (index = 0; index < bankAccounts.size(); index++)
+        {
+            if (currentBankAccount != null && currentBankAccount.equals(bankAccounts.get(index)))
+                break;
+        }
+        selectedBankAccountIndexProperty.set(index);
     }
 
 
@@ -137,9 +156,9 @@ public class User implements Serializable
         return null;
     }
 
-    public SimpleBooleanProperty getBankAccountChangedProperty()
+    public IntegerProperty getSelectedBankAccountIndexProperty()
     {
-        return bankAccountChangedProperty;
+        return selectedBankAccountIndexProperty;
     }
 
     public KeyPair getMessageKeyPair()
@@ -155,5 +174,10 @@ public class User implements Serializable
     public String getMessagePublicKeyAsString()
     {
         return DSAKeyUtil.getHexStringFromPublicKey(getMessagePublicKey());
+    }
+
+    public IntegerProperty getBankAccountsSizeProperty()
+    {
+        return bankAccountsSizeProperty;
     }
 }
