@@ -105,7 +105,7 @@ public class CreateOfferController extends CachedViewController
 
         setupBindings();
         setupValidation();
-        
+
         //TODO just for dev testing
         if (BitSquare.fillFormsWithDummyData)
         {
@@ -171,7 +171,7 @@ public class CreateOfferController extends CachedViewController
         if (amountTextField.getIsValid() && minAmountTextField.getIsValid() && volumeTextField.getIsValid() && amountTextField.getIsValid())
         {
             viewModel.isPlaceOfferButtonDisabled.set(true);
-           
+
             tradeManager.requestPlaceOffer(offerId,
                                            direction,
                                            BitSquareFormatter.parseToDouble(viewModel.price.get()),

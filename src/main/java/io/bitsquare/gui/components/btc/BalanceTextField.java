@@ -49,7 +49,7 @@ public class BalanceTextField extends AnchorPane
         Tooltip.install(progressIndicator, progressIndicatorTooltip);
 
         AnchorPane.setRightAnchor(progressIndicator, 0.0);
-        AnchorPane.setRightAnchor(balanceTextField, 35.0);
+        AnchorPane.setRightAnchor(balanceTextField, 55.0);
         AnchorPane.setLeftAnchor(balanceTextField, 0.0);
 
         getChildren().addAll(balanceTextField, progressIndicator);

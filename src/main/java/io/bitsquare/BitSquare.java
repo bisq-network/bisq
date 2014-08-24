@@ -35,7 +35,7 @@ public class BitSquare extends Application
 
     public static boolean fillFormsWithDummyData = true;
 
-    private static String APP_NAME = "bitsquare";
+    private static String APP_NAME = "Bitsquare";
     private static Stage primaryStage;
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;

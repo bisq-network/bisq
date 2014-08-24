@@ -32,6 +32,7 @@
     -fx-fill: red;
 }
 
+
 /* main nav */
 #nav-button {
     -fx-cursor: hand;
@@ -78,14 +79,19 @@
     -fx-background-color: transparent;
 }
 
+#qr-code-icon {
+    -fx-fill: #0096c9;
+    -fx-cursor: hand;
+}
+
 #copy-icon {
-     -fx-fill: black;
-     -fx-cursor: hand;
+    -fx-fill: #0096c9;
+    -fx-cursor: hand;
 }
 
 #copy-icon .hover{
-      -fx-fill: #0096c9;
-      -fx-cursor: hand;
+    -fx-fill: #0096c9;
+    -fx-cursor: hand;
 }
 
 .copy-icon {
@@ -95,6 +101,22 @@
 
 .copy-icon:hover {
     -fx-fill: black;
+}
+
+/* Same stlye like non editable textfield. But textfield spans a whole column in a grid, so we use generally textfield */
+#label-with-background {
+    -fx-background-color: #FAFAFA;
+    -fx-border-radius: 4;
+    -fx-padding: 4 4 4 4;
+}
+
+#address-label {
+    -fx-cursor: hand;
+    -fx-text-fill: #0096c9;
+    -fx-underline: true;
+    -fx-background-color: #FAFAFA;
+    -fx-border-radius: 4;
+    -fx-padding: 4 4 4 4;
 }
 
 #funds-confidence {
