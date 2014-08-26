@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkState;
 
-@SuppressWarnings("WeakerAccess")
 public class Transitions {
     private static final Logger log = LoggerFactory.getLogger(Transitions.class);
 
@@ -43,7 +42,6 @@ public class Transitions {
         fadeIn(node, UI_ANIMATION_TIME);
     }
 
-    @SuppressWarnings("SameParameterValue")
     public static void fadeIn(Node node, int duration) {
         FadeTransition ft = new FadeTransition(Duration.millis(duration), node);
         ft.setFromValue(0.0);
@@ -63,7 +61,6 @@ public class Transitions {
         return ft;
     }
 
-    @SuppressWarnings("UnusedReturnValue")
     public static Animation fadeOutAndRemove(Node node) {
         return fadeOutAndRemove(node, UI_ANIMATION_TIME);
     }
@@ -94,7 +91,6 @@ public class Transitions {
         blurOut(node, UI_ANIMATION_TIME);
     }
 
-    @SuppressWarnings("SameParameterValue")
     public static Timeline blurOut(Node node, int duration) {
         GaussianBlur blur = new GaussianBlur(0.0);
         node.setEffect(blur);

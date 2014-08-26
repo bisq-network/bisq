@@ -35,7 +35,6 @@ import javafx.scene.control.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("CanBeFinal")
 public class ConfidenceDisplay {
     private static final Logger log = LoggerFactory.getLogger(ConfidenceDisplay.class);
 

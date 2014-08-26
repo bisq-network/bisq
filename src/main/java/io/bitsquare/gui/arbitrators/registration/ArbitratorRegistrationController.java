@@ -65,7 +65,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings({"ALL", "EmptyMethod", "UnusedParameters"})
+// Arbitration is not much developed yet
 public class ArbitratorRegistrationController extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorRegistrationController.class);
 
@@ -233,7 +233,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setEditMode(@SuppressWarnings("SameParameterValue") boolean isEditMode) {
+    public void setEditMode(boolean isEditMode) {
         this.isEditMode = isEditMode;
 
         if (isEditMode) {

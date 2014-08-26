@@ -107,7 +107,6 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
     }
 
 
-    @SuppressWarnings("EmptyMethod")
     public static class LabelWithBorder extends Label {
         final double borderWidth = 1;
         private final double arrowWidth = 10;

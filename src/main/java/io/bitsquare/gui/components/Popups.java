@@ -32,7 +32,6 @@ import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 import org.controlsfx.dialog.Dialogs;
 
-@SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class Popups {
 
     // Information
@@ -126,7 +125,6 @@ public class Popups {
     }
 
     // Support handling of uncaught exception from any thread (also non gui thread)
-    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     public static void handleUncaughtExceptions(Throwable throwable) {
         // while dev
         throwable.printStackTrace();

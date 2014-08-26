@@ -24,7 +24,6 @@ import javax.inject.Inject;
 /**
  * A facade delivers blockchain functionality from the BitcoinJ library.
  */
-@SuppressWarnings({"SameReturnValue", "UnusedParameters"})
 public class BlockChainFacade {
     @Inject
     public BlockChainFacade() {

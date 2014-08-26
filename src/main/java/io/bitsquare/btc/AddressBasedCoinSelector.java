@@ -61,7 +61,6 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector {
         this.includePending = includePending;
     }
 
-    @SuppressWarnings("WeakerAccess")
     @VisibleForTesting
     static void sortOutputs(ArrayList<TransactionOutput> outputs) {
         Collections.sort(outputs, new Comparator<TransactionOutput>() {
@@ -122,7 +121,6 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector {
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
     protected boolean matchesRequiredAddress(TransactionOutput transactionOutput) {
         if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH
                 ()) {

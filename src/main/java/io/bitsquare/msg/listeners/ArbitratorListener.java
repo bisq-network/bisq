@@ -22,7 +22,7 @@ import java.util.Map;
 import net.tomp2p.peers.Number640;
 import net.tomp2p.storage.Data;
 
-@SuppressWarnings({"EmptyMethod", "UnusedParameters"})
+// Arbitration is not much developed yet
 public interface ArbitratorListener {
     void onArbitratorAdded(Data offerData, boolean success);
 

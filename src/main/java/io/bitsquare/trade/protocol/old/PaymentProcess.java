@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 //TODO not used but let it for reference until all use cases are impl.
-@SuppressWarnings({"WeakerAccess", "EmptyMethod"})
 public class PaymentProcess {
     private static final Logger log = LoggerFactory.getLogger(PaymentProcess.class);
     protected String offererDepositPubKey;

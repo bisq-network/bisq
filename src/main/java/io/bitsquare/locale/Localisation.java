@@ -37,11 +37,9 @@ import org.slf4j.LoggerFactory;
 public class Localisation {
     private static final Logger log = LoggerFactory.getLogger(Localisation.class);
 
-
     public static ResourceBundle getResourceBundle() {
         return ResourceBundle.getBundle("i18n.displayStrings", new UTF8Control());
     }
-
 
     public static String get(String key) {
         if (key == null)
@@ -55,12 +53,12 @@ public class Localisation {
         }
     }
 
-
     public static String get(String key, String... arguments) {
         return MessageFormat.format(Localisation.get(key), arguments);
     }
 }
 
+// Adds UTF8 support for property files
 class UTF8Control extends ResourceBundle.Control {
 
     public ResourceBundle newBundle(String baseName, Locale locale, String format, ClassLoader loader, boolean reload)

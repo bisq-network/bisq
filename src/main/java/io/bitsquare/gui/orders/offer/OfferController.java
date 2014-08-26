@@ -43,7 +43,6 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("EmptyMethod")
 public class OfferController extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(OfferController.class);
     private final TradeManager tradeManager;

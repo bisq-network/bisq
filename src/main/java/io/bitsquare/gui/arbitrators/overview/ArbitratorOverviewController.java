@@ -53,8 +53,9 @@ import net.tomp2p.storage.Data;
  * TODO remove tomp2p dependencies
  * import net.tomp2p.peers.Number160;
  * import net.tomp2p.storage.Data;
+ * 
+ * Arbitration is not much developed yet
  */
-@SuppressWarnings({"ALL", "UnusedParameters"})
 public class ArbitratorOverviewController extends CachedViewController implements ArbitratorListener {
     private final Settings settings;
     private final Persistence persistence;

@@ -95,7 +95,6 @@ public class Utilities {
         return result;
     }
 
-    @SuppressWarnings("SameParameterValue")
     private static void printElapsedTime(String msg) {
         if (!msg.isEmpty()) {
             msg += " / ";
@@ -135,8 +134,6 @@ public class Utilities {
         return obj;
     }
 
-    @SuppressWarnings("SameParameterValue")
-
     public static AnimationTimer setTimeout(int delay, Function<AnimationTimer, Void> callback) {
         AnimationTimer animationTimer = new AnimationTimer() {
             final long lastTimeStamp = System.currentTimeMillis();
@@ -152,8 +149,6 @@ public class Utilities {
         animationTimer.start();
         return animationTimer;
     }
-
-    @SuppressWarnings("SameParameterValue")
 
     public static AnimationTimer setInterval(int delay, Function<AnimationTimer, Void> callback) {
         AnimationTimer animationTimer = new AnimationTimer() {

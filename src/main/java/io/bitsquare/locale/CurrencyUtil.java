@@ -56,7 +56,6 @@ public class CurrencyUtil {
         return resultList;
     }
 
-
     public static Currency getDefaultCurrency() {
         return NumberFormat.getNumberInstance(Locale.getDefault()).getCurrency();
     }

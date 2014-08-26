@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
+// Arbitration is not much developed yet
 public class ArbitratorProfileController extends CachedViewController {
 
     private final Settings settings;

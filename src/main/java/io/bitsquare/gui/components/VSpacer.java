@@ -24,7 +24,6 @@ public class VSpacer extends Pane {
     public VSpacer() {
     }
 
-    @SuppressWarnings("SameParameterValue")
     public VSpacer(double height) {
         setPrefHeight(height);
     }

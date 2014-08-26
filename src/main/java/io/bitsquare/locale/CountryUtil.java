@@ -35,6 +35,7 @@ public class CountryUtil {
             "MY", "NI", "NL", "NO", "NZ", "OM", "PA", "PE", "PH", "PL", "PR", "PT", "PY", "QA", "RO", "RS", "RU",
             "SA", "SD", "SE", "SG", "SI", "SK", "SV", "SY", "TH", "TN", "TR", "TW", "UA", "US", "UY", "VE", "VN",
             "YE", "ZA"};
+    
     private static final List<String> countryCodeList = Arrays.asList(countryCodes);
     private static final String[] regionCodes = new String[]{"AS", "EU", "SA", "EU", "OC", "EU", "EU", "EU", "AS",
             "SA", "SA", "EU", "NA", "EU", "SA", "AS", "SA", "NA", "EU", "NA", "AS", "EU", "EU", "EU", "NA", "AF",
@@ -47,7 +48,6 @@ public class CountryUtil {
     private static final String[][] regionCodeToName = new String[][]{
             {"NA", "North America"}, {"SA", "South America"}, {"AF", "Africa"}, {"EU", "Europe"}, {"AS", "Asia"},
             {"OC", "Oceania"}};
-
 
     public static List<Region> getAllRegions() {
         final List<Region> allRegions = new ArrayList<>();
@@ -84,7 +84,6 @@ public class CountryUtil {
                 selectedRegion != null && country != null && selectedRegion.equals(country.getRegion())));
     }
 
-
     private static List<Country> getAllCountries() {
         final List<Country> allCountries = new ArrayList<>();
         for (final Locale locale : getAllCountryLocales()) {
@@ -96,14 +95,12 @@ public class CountryUtil {
         return allCountries;
     }
 
-
     public static Country getDefaultCountry() {
         final Locale locale = new Locale("", Locale.getDefault().getCountry());
         String regionCode = getRegionCode(locale.getCountry());
         final Region region = new Region(regionCode, getRegionName(regionCode));
         return new Country(locale.getCountry(), locale.getDisplayCountry(), region);
     }
-
 
     private static String getRegionName(final String regionCode) {
         for (final String[] regionName : regionCodeToName) {
@@ -113,7 +110,6 @@ public class CountryUtil {
         }
         return regionCode;
     }
-
 
     private static List<Locale> getAllCountryLocales() {
         List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
@@ -126,7 +122,6 @@ public class CountryUtil {
         allLocales.sort((locale1, locale2) -> locale1.getDisplayCountry().compareTo(locale2.getDisplayCountry()));
         return allLocales;
     }
-
 
     private static String getRegionCode(String countryCode) {
         if (!countryCode.isEmpty() && countryCodeList.contains(countryCode)) {

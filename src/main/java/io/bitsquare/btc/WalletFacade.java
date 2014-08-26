@@ -257,7 +257,6 @@ public class WalletFacade {
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("UnusedReturnValue")
     public DownloadListener addDownloadListener(DownloadListener listener) {
         downloadListeners.add(listener);
         return listener;
@@ -574,7 +573,6 @@ public class WalletFacade {
     // Withdrawal
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("UnusedReturnValue")
     public String sendFunds(String withdrawFromAddress,
                             String withdrawToAddress,
                             String changeAddress,

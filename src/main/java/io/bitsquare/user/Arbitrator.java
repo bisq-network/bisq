@@ -104,7 +104,7 @@ public class Arbitrator implements Serializable {
         id = name;
     }
 
-    @SuppressWarnings("NonFinalFieldReferencedInHashCode")
+    @Override
     public int hashCode() {
         if (id != null) {
             return Objects.hashCode(id);
@@ -114,7 +114,7 @@ public class Arbitrator implements Serializable {
         }
     }
 
-    @SuppressWarnings("NonFinalFieldReferenceInEquals")
+    @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Arbitrator)) {
             return false;

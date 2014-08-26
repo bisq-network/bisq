@@ -115,7 +115,6 @@ public class BitSquareValidator {
     }
 
     //TODO
-    @SuppressWarnings("UnusedParameters")
     public static void textFieldBankAccountPrimaryIDIsValid(TextField textField, BankAccountType bankAccountType)
             throws ValidationException {
         if (!validateStringNotEmpty(textField.getText())) {
@@ -126,7 +125,6 @@ public class BitSquareValidator {
     }
 
     //TODO
-    @SuppressWarnings("UnusedParameters")
     public static void textFieldBankAccountSecondaryIDIsValid(TextField textField,
                                                               BankAccountType bankAccountType) throws
             ValidationException {
