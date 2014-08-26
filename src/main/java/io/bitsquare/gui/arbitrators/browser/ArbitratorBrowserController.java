@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.arbitrators.overview;
+package io.bitsquare.gui.arbitrators.browser;
 
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.CachedViewController;
@@ -26,8 +26,8 @@ import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.storage.Persistence;
-import io.bitsquare.user.Arbitrator;
+import io.bitsquare.persistence.Persistence;
+import io.bitsquare.arbitrator.Arbitrator;
 
 import java.io.IOException;
 
@@ -56,7 +56,7 @@ import net.tomp2p.storage.Data;
  * 
  * Arbitration is not much developed yet
  */
-public class ArbitratorOverviewController extends CachedViewController implements ArbitratorListener {
+public class ArbitratorBrowserController extends CachedViewController implements ArbitratorListener {
     private final Settings settings;
     private final Persistence persistence;
 
@@ -74,7 +74,7 @@ public class ArbitratorOverviewController extends CachedViewController implement
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorOverviewController(Settings settings, Persistence persistence, MessageFacade messageFacade) {
+    public ArbitratorBrowserController(Settings settings, Persistence persistence, MessageFacade messageFacade) {
 
         this.settings = settings;
         this.persistence = persistence;

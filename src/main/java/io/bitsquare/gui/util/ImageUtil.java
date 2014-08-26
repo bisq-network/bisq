@@ -47,11 +47,9 @@ public class ImageUtil {
     public static final String SELL = "/images/sell.png";
     public static final String REMOVE = "/images/removeOffer.png";
 
-
     public static Image getIconImage(String iconName) {
         return new Image(ImageUtil.class.getResourceAsStream(iconName));
     }
-
 
     public static ImageView getIconImageView(String iconName) {
         return new ImageView(new Image(ImageUtil.class.getResourceAsStream(iconName)));

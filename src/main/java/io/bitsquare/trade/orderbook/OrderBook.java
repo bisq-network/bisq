@@ -27,7 +27,7 @@ import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.user.Arbitrator;
+import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.user.User;
 
 import java.io.IOException;

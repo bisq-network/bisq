@@ -29,7 +29,7 @@ import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.storage.Persistence;
+import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;

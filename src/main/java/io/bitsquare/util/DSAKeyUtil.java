@@ -31,12 +31,6 @@ import org.slf4j.LoggerFactory;
 public class DSAKeyUtil {
     private static final Logger log = LoggerFactory.getLogger(DSAKeyUtil.class);
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
     public static String getHexStringFromPublicKey(PublicKey publicKey) {
         final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
         return Utils.HEX.encode(x509EncodedKeySpec.getEncoded());

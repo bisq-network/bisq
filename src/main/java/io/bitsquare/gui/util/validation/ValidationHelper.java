@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.util;
+package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.gui.components.ValidatingTextField;
 

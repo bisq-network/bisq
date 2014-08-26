@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.messages;
 
-import io.bitsquare.trade.protocol.TradeMessage;
+import io.bitsquare.trade.protocol.trade.TradeMessage;
 
 import java.io.Serializable;
 

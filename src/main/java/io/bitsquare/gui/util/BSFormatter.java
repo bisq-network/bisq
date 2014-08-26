@@ -20,7 +20,7 @@ package io.bitsquare.gui.util;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
-import io.bitsquare.user.Arbitrator;
+import io.bitsquare.arbitrator.Arbitrator;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.utils.CoinFormat;

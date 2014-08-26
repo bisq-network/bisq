@@ -23,8 +23,8 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StorageDirectory {
-    private static final Logger log = LoggerFactory.getLogger(StorageDirectory.class);
+public class AppDirectoryUtil {
+    private static final Logger log = LoggerFactory.getLogger(AppDirectoryUtil.class);
     private static File storageDirectory;
 
     static {
@@ -53,7 +53,7 @@ public class StorageDirectory {
 
     public static File getApplicationDirectory() {
         File executionRoot =
-                new File(StorageDirectory.class.getProtectionDomain().getCodeSource().getLocation().getFile());
+                new File(AppDirectoryUtil.class.getProtectionDomain().getCodeSource().getLocation().getFile());
         try {
             log.trace("executionRoot " + executionRoot.getCanonicalPath());
 

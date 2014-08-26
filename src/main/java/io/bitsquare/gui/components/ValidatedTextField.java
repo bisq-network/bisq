@@ -46,6 +46,8 @@ import org.slf4j.LoggerFactory;
  * </div>
  * </p>
  */
+
+//TODO replace with ValidatingTextField
 @Deprecated
 public class ValidatedTextField extends TextField {
     private static final Logger log = LoggerFactory.getLogger(ValidatedTextField.class);

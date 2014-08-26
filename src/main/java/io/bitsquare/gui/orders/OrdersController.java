@@ -21,7 +21,7 @@ import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.CachingTabPane;
-import io.bitsquare.storage.Persistence;
+import io.bitsquare.persistence.Persistence;
 
 import java.net.URL;
 

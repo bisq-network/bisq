@@ -26,7 +26,7 @@ import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.trade.createoffer.CreateOfferCodeBehind;
-import io.bitsquare.gui.trade.takeoffer.TakerOfferController;
+import io.bitsquare.gui.trade.takeoffer.TakeOfferController;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.Country;
@@ -34,7 +34,7 @@ import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.storage.Persistence;
+import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.orderbook.OrderBook;
@@ -343,8 +343,8 @@ public class OrderBookController extends CachedViewController {
 
     private void takeOffer(Offer offer) {
         if (isRegistered()) {
-            TakerOfferController takerOfferController =
-                    (TakerOfferController) parentController.loadViewAndGetChildController(NavigationItem.TAKE_OFFER);
+            TakeOfferController takeOfferController =
+                    (TakeOfferController) parentController.loadViewAndGetChildController(NavigationItem.TAKE_OFFER);
 
             Coin requestedAmount;
             if (!"".equals(amount.getText())) {
@@ -354,8 +354,8 @@ public class OrderBookController extends CachedViewController {
                 requestedAmount = offer.getAmount();
             }
 
-            if (takerOfferController != null) {
-                takerOfferController.initWithData(offer, requestedAmount);
+            if (takeOfferController != null) {
+                takeOfferController.initWithData(offer, requestedAmount);
             }
         }
         else {

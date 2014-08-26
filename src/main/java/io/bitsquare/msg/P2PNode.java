@@ -18,7 +18,7 @@
 package io.bitsquare.msg;
 
 import io.bitsquare.BitSquare;
-import io.bitsquare.util.StorageDirectory;
+import io.bitsquare.util.AppDirectoryUtil;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -302,7 +302,7 @@ public class P2PNode {
         if (useDiscStorage) {
             try {
 
-                File path = new File(StorageDirectory.getStorageDirectory().getCanonicalPath() + "/" + BitSquare
+                File path = new File(AppDirectoryUtil.getStorageDirectory().getCanonicalPath() + "/" + BitSquare
                         .getAppName() + "_tomP2P");
                 if (!path.exists()) {
                     boolean created = path.mkdir();

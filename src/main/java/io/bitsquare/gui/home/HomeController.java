@@ -35,6 +35,8 @@ import javafx.scene.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+// home is just hosting the arbiters buttons yet, but that's just for dev, not clear yet what will be in home, 
+// probably overview, event history, new, charts,... -> low prio
 public class HomeController extends CachedViewController {
     private ArbitratorRegistrationController arbitratorRegistrationController;
 

@@ -24,10 +24,10 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.TakeOfferRequestListener;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.storage.Persistence;
+import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.ErrorMessageHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.trade.protocol.TradeMessage;
+import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.createoffer.CreateOfferCoordinator;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocol;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocolListener;
@@ -67,6 +67,10 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The domain for the trading 
+ * TODO: Too messy, need to be improved a lot....
+ */
 public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 

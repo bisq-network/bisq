@@ -24,7 +24,7 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.ConfidenceDisplay;
+import io.bitsquare.gui.components.ConfidenceDisplay;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Localisation;

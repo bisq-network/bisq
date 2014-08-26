@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.util;
+package io.bitsquare.gui.components;
 
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 
@@ -35,19 +35,15 @@ import javafx.scene.control.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// TODO refactor
 public class ConfidenceDisplay {
     private static final Logger log = LoggerFactory.getLogger(ConfidenceDisplay.class);
 
     private WalletEventListener walletEventListener;
-
-
     private Wallet wallet;
-
     private Label confirmationLabel;
-
     private TextField balanceTextField;
     private Transaction transaction;
-
     private ConfidenceProgressIndicator progressIndicator;
 
     public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, TextField balanceTextField,

@@ -17,7 +17,7 @@
 
 package io.bitsquare.msg;
 
-import io.bitsquare.storage.Persistence;
+import io.bitsquare.persistence.Persistence;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;

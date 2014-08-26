@@ -31,6 +31,10 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * There is no JavaFX support yet, so we need to use AWT. 
+ * TODO research more
+ */
 public class AWTSystemTray {
     private static final Logger log = LoggerFactory.getLogger(AWTSystemTray.class);
     private static boolean isStageVisible = true;

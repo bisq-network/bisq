@@ -45,7 +45,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
  * Knows Model, does not know the View (CodeBehind)
  * <p/>
  * - Holds data and state of the View (formatted)
- * - Receive view input from Controller. Validates input, apply business logic, format to Presenter properties and
+ * - Receive view input from CodeBehind. Validates input, apply business logic, format to Presenter properties and
  * convert input to Model.
  * - Listen to updates from Model, apply business logic and format it to Presenter properties. Model update handling
  * can be done via Binding.

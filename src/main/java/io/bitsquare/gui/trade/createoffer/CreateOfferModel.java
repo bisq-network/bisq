@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * Model:
+ * Data model:
  * Does not know the Presenter and View (CodeBehind)
  * Use Guice for DI
  * <p/>

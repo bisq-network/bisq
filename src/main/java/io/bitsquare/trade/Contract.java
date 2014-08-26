@@ -26,6 +26,9 @@ import java.io.Serializable;
 
 import java.security.PublicKey;
 
+//TODO flatten down?
+// TODO The relation Offer, Trade and Contract need to be reviewed and might be changed
+
 public class Contract implements Serializable {
     private static final long serialVersionUID = 71472356206100158L;
 

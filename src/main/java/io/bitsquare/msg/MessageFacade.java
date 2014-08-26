@@ -24,8 +24,8 @@ import io.bitsquare.msg.listeners.IncomingTradeMessageListener;
 import io.bitsquare.msg.listeners.OrderBookListener;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
 import io.bitsquare.trade.Offer;
-import io.bitsquare.trade.protocol.TradeMessage;
-import io.bitsquare.user.Arbitrator;
+import io.bitsquare.trade.protocol.trade.TradeMessage;
+import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.user.User;
 
 import com.google.common.util.concurrent.FutureCallback;

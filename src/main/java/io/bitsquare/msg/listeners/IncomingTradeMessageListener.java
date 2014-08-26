@@ -17,7 +17,7 @@
 
 package io.bitsquare.msg.listeners;
 
-import io.bitsquare.trade.protocol.TradeMessage;
+import io.bitsquare.trade.protocol.trade.TradeMessage;
 
 import net.tomp2p.peers.PeerAddress;
 

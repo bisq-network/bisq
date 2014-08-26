@@ -46,8 +46,8 @@ import javafx.scene.control.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerOfferController extends CachedViewController {
-    private static final Logger log = LoggerFactory.getLogger(TakerOfferController.class);
+public class TakeOfferController extends CachedViewController {
+    private static final Logger log = LoggerFactory.getLogger(TakeOfferController.class);
 
     private final TradeManager tradeManager;
     private final WalletFacade walletFacade;
@@ -74,7 +74,7 @@ public class TakerOfferController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TakerOfferController(TradeManager tradeManager, WalletFacade walletFacade) {
+    private TakeOfferController(TradeManager tradeManager, WalletFacade walletFacade) {
         this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
     }

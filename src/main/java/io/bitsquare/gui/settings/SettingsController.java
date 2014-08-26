@@ -35,9 +35,9 @@ import io.bitsquare.locale.Localisation;
 import io.bitsquare.locale.Region;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.storage.Persistence;
-import io.bitsquare.user.Arbitrator;
-import io.bitsquare.user.Reputation;
+import io.bitsquare.persistence.Persistence;
+import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 
@@ -74,6 +74,9 @@ import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 
 // TODO separate in 2 view/controllers
+// TODO: change ui to dispaly a menu on the left and the content on the right
+// there will be more screens
+
 public class SettingsController extends CachedViewController {
     private final User user;
     private final Settings settings;
@@ -183,7 +186,7 @@ public class SettingsController extends CachedViewController {
             Scene scene = new Scene((Parent) view, 800, 600);
             stage.setScene(scene);
             stage.setOnHidden(windowEvent -> {
-                if (navigationItem == NavigationItem.ARBITRATOR_OVERVIEW)
+                if (navigationItem == NavigationItem.ARBITRATOR_BROWSER)
                     updateArbitrators();
             });
             stage.show();
@@ -232,7 +235,7 @@ public class SettingsController extends CachedViewController {
 
     @FXML
     public void onOpenArbitratorScreen() {
-        loadViewAndGetChildController(NavigationItem.ARBITRATOR_OVERVIEW);
+        loadViewAndGetChildController(NavigationItem.ARBITRATOR_BROWSER);
     }
 
 

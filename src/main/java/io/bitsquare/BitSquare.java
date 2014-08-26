@@ -25,10 +25,10 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.storage.Persistence;
+import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;
-import io.bitsquare.util.StorageDirectory;
+import io.bitsquare.util.AppDirectoryUtil;
 
 import com.google.common.base.Throwables;
 
@@ -47,7 +47,6 @@ import javafx.stage.Stage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class BitSquare extends Application {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
@@ -83,8 +82,8 @@ public class BitSquare extends Application {
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions
                 (Throwables.getRootCause(throwable)));
 
-        StorageDirectory.setStorageDirectory(
-                new File(StorageDirectory.getApplicationDirectory().getCanonicalPath() + "/data"));
+        AppDirectoryUtil.setStorageDirectory(
+                new File(AppDirectoryUtil.getApplicationDirectory().getCanonicalPath() + "/data"));
 
         // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
         AWTSystemTray.createSystemTray(primaryStage);

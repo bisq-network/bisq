@@ -21,8 +21,8 @@ import io.bitsquare.BitSquare;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.crypto.CryptoFacade;
-import io.bitsquare.storage.Persistence;
-import io.bitsquare.util.StorageDirectory;
+import io.bitsquare.persistence.Persistence;
+import io.bitsquare.util.AppDirectoryUtil;
 
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.AddressFormatException;
@@ -139,7 +139,7 @@ public class WalletFacade {
         Threading.USER_THREAD = Platform::runLater;
 
         // If seed is non-null it means we are restoring from backup.
-        walletAppKit = new WalletAppKit(params, StorageDirectory.getStorageDirectory(), WALLET_PREFIX) {
+        walletAppKit = new WalletAppKit(params, AppDirectoryUtil.getStorageDirectory(), WALLET_PREFIX) {
             @Override
             protected void onSetupCompleted() {
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it

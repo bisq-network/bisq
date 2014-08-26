@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.messages;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.trade.protocol.TradeMessage;
+import io.bitsquare.trade.protocol.trade.TradeMessage;
 
 import java.io.Serializable;
 

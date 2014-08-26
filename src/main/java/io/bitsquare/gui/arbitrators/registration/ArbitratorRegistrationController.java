@@ -25,13 +25,13 @@ import io.bitsquare.gui.arbitrators.profile.ArbitratorProfileController;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.BitSquareValidator;
-import io.bitsquare.gui.util.ConfidenceDisplay;
+import io.bitsquare.gui.components.ConfidenceDisplay;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.storage.Persistence;
-import io.bitsquare.user.Arbitrator;
-import io.bitsquare.user.Reputation;
+import io.bitsquare.persistence.Persistence;
+import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 

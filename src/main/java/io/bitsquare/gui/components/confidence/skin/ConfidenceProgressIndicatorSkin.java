@@ -64,7 +64,9 @@ import com.sun.javafx.css.converters.PaintConverter;
 import com.sun.javafx.css.converters.SizeConverter;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 
-@SuppressWarnings({"WeakerAccess", "SameReturnValue"})
+// TODO Copied form OpenJFX, check license issues and way how we integrated it
+// We changed behaviour which was not exposed via APIs
+
 public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<ConfidenceProgressIndicator,
         ConfidenceProgressIndicatorBehavior<ConfidenceProgressIndicator>> {
 

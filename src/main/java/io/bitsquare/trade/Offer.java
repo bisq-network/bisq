@@ -19,7 +19,7 @@ package io.bitsquare.trade;
 
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.locale.Country;
-import io.bitsquare.user.Arbitrator;
+import io.bitsquare.arbitrator.Arbitrator;
 
 import com.google.bitcoin.core.Coin;
 
@@ -33,6 +33,8 @@ import java.util.Currency;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
+//TODO flatten down?
 
 public class Offer implements Serializable {
     private static final long serialVersionUID = -971164804305475826L;

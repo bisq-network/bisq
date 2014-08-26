@@ -25,6 +25,8 @@ import java.io.Serializable;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 
+//TODO flatten down?
+
 public class Trade implements Serializable {
     private static final long serialVersionUID = -8275323072940974077L;
 

@@ -43,7 +43,7 @@ public enum NavigationItem {
     TRANSACTIONS("/io/bitsquare/gui/funds/transactions/TransactionsView.fxml"),
 
     ARBITRATOR_PROFILE("/io/bitsquare/gui/arbitrators/profile/ArbitratorProfileView.fxml"),
-    ARBITRATOR_OVERVIEW("/io/bitsquare/gui/arbitrators/overview/ArbitratorOverviewView.fxml"),
+    ARBITRATOR_BROWSER("/io/bitsquare/gui/arbitrators/browser/ArbitratorBrowserView.fxml"),
     ARBITRATOR_REGISTRATION("/io/bitsquare/gui/arbitrators/registration/ArbitratorRegistrationView.fxml");
 
     private final String fxmlUrl;

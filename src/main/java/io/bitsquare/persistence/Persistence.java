@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.storage;
+package io.bitsquare.persistence;
 
 import io.bitsquare.BitSquare;
 import io.bitsquare.util.FileUtil;

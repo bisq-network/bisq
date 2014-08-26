@@ -40,7 +40,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The User is persisted locally it is never transmitted over the wire (messageKeyPair contains private key!).
+ * The User is persisted locally.
+ * It must never be transmitted over the wire (messageKeyPair contains private key!).
  */
 public class User implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(User.class);

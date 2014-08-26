@@ -17,6 +17,9 @@
 
 package io.bitsquare.gui.util;
 
+import io.bitsquare.gui.util.validation.BtcValidator;
+import io.bitsquare.gui.util.validation.NumberValidator;
+
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.NetworkParameters;
 

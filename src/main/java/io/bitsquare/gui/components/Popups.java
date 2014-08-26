@@ -32,6 +32,9 @@ import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 import org.controlsfx.dialog.Dialogs;
 
+/**
+ * Collection of controlsfx Popups
+ */
 public class Popups {
 
     // Information

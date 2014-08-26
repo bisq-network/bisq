@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.createoffer;
 
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.storage.Persistence;
+import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;

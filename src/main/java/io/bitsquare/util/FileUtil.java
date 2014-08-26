@@ -29,11 +29,11 @@ public class FileUtil {
     private static final Logger log = LoggerFactory.getLogger(FileUtil.class);
 
     public static File getFile(String name, String suffix) {
-        return new File(StorageDirectory.getStorageDirectory(), name + "." + suffix);
+        return new File(AppDirectoryUtil.getStorageDirectory(), name + "." + suffix);
     }
 
     public static File getTempFile(String prefix) throws IOException {
-        return File.createTempFile("temp_" + prefix, null, StorageDirectory.getStorageDirectory());
+        return File.createTempFile("temp_" + prefix, null, AppDirectoryUtil.getStorageDirectory());
     }
 
     public static void writeTempFileToFile(File tempFile, File file) throws IOException {

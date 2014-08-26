@@ -28,7 +28,7 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.P2PNode;
 import io.bitsquare.msg.SeedNodeAddress;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.storage.Persistence;
+import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.user.User;

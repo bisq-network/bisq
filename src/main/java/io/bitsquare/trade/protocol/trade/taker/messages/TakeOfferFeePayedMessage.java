@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker.messages;
 
-import io.bitsquare.trade.protocol.TradeMessage;
+import io.bitsquare.trade.protocol.trade.TradeMessage;
 
 import com.google.bitcoin.core.Coin;
 

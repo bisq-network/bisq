@@ -43,6 +43,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// TODO: might be removed completely
 public class DepositController extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(DepositController.class);
 

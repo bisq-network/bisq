@@ -24,7 +24,7 @@ import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.ValidatingTextField;
 import io.bitsquare.gui.trade.createoffer.CreateOfferCodeBehind;
 import io.bitsquare.gui.trade.orderbook.OrderBookController;
-import io.bitsquare.gui.trade.takeoffer.TakerOfferController;
+import io.bitsquare.gui.trade.takeoffer.TakeOfferController;
 import io.bitsquare.trade.Direction;
 
 import java.io.IOException;
@@ -47,7 +47,7 @@ public class TradeController extends CachedViewController {
 
     protected OrderBookController orderBookController;
     protected CreateOfferCodeBehind createOfferCodeBehind;
-    protected TakerOfferController takerOfferController;
+    protected TakeOfferController takeOfferController;
     protected GuiceFXMLLoader orderBookLoader;
 
 
@@ -126,20 +126,20 @@ public class TradeController extends CachedViewController {
             return null;
         }
         else if (navigationItem == NavigationItem.TAKE_OFFER) {
-            checkArgument(takerOfferController == null);
+            checkArgument(takeOfferController == null);
 
             // CreateOffer and TakeOffer must not be cached by GuiceFXMLLoader as we cannot use a view multiple times
             // in different graphs
             GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
             try {
                 final Parent view = loader.load();
-                takerOfferController = loader.getController();
-                takerOfferController.setParentController(this);
+                takeOfferController = loader.getController();
+                takeOfferController.setParentController(this);
                 final Tab tab = new Tab("Take offer");
                 tab.setContent(view);
                 tabPane.getTabs().add(tab);
                 tabPane.getSelectionModel().select(tabPane.getTabs().size() - 1);
-                return takerOfferController;
+                return takeOfferController;
             } catch (IOException e) {
                 log.error(e.getMessage());
             }
@@ -163,7 +163,7 @@ public class TradeController extends CachedViewController {
     }
 
     public void onTakeOfferViewRemoved() {
-        takerOfferController = null;
+        takeOfferController = null;
     }
 
 

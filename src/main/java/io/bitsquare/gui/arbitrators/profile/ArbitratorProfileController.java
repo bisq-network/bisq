@@ -22,8 +22,8 @@ import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.storage.Persistence;
-import io.bitsquare.user.Arbitrator;
+import io.bitsquare.persistence.Persistence;
+import io.bitsquare.arbitrator.Arbitrator;
 
 import java.net.URL;
 

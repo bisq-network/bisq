@@ -19,7 +19,7 @@ package io.bitsquare.gui.components;
 
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ViewController;
-import io.bitsquare.storage.Persistence;
+import io.bitsquare.persistence.Persistence;
 
 import java.io.IOException;
 
@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
  * So when switching back to an already opened tab it is faster as no fxml loading is needed anymore.
  */
 
-//TODO remove manual caching as its done now in loader
 public class CachingTabPane extends TabPane {
     private static final Logger log = LoggerFactory.getLogger(CachingTabPane.class);
 

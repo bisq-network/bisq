@@ -15,23 +15,22 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.util;
-
-import com.google.bitcoin.core.NetworkParameters;
-
-import java.math.BigDecimal;
+package io.bitsquare.gui.util.validation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * BtcValidator for validating BTC values.
+ * FiatNumberValidator for validating fiat values.
  * <p/>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
-public class BtcValidator extends NumberValidator {
-    private static final Logger log = LoggerFactory.getLogger(BtcValidator.class);
-    private ValidationResult externalValidationResult;
+public class FiatValidator extends NumberValidator {
+    private static final Logger log = LoggerFactory.getLogger(FiatValidator.class);
+
+    //TODO Find appropriate values - depends on currencies
+    public static final double MIN_FIAT_VALUE = 0.01; // usually a cent is the smallest currency unit
+    public static final double MAX_FIAT_VALUE = 1000000;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -40,9 +39,6 @@ public class BtcValidator extends NumberValidator {
 
     @Override
     public ValidationResult validate(String input) {
-        if (externalValidationResult != null)
-            return externalValidationResult;
-
         ValidationResult result = validateIfNotEmpty(input);
         if (result.isValid) {
             input = cleanInput(input);
@@ -52,21 +48,11 @@ public class BtcValidator extends NumberValidator {
         if (result.isValid) {
             result = validateIfNotZero(input)
                     .and(validateIfNotNegative(input))
-                    .and(validateIfNotFractionalBtcValue(input))
-                    .and(validateIfNotExceedsMaxBtcValue(input));
+                    .and(validateIfNotExceedsMinFiatValue(input))
+                    .and(validateIfNotExceedsMaxFiatValue(input));
         }
 
         return result;
-    }
-
-    /**
-     * Used to integrate external validation (e.g. for MinAmount/Amount)
-     * TODO To be improved but does the job for now...
-     *
-     * @param externalValidationResult
-     */
-    public void overrideResult(ValidationResult externalValidationResult) {
-        this.externalValidationResult = externalValidationResult;
     }
 
 
@@ -74,26 +60,24 @@ public class BtcValidator extends NumberValidator {
     // Protected methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected ValidationResult validateIfNotFractionalBtcValue(String input) {
-        BigDecimal bd = new BigDecimal(input);
-        final BigDecimal satoshis = bd.movePointRight(8);
-        if (satoshis.scale() > 0)
+    protected ValidationResult validateIfNotExceedsMinFiatValue(String input) {
+        double d = Double.parseDouble(input);
+        if (d < MIN_FIAT_VALUE)
             return new ValidationResult(
                     false,
-                    "Input results in a Bitcoin value with a fraction of the smallest unit (Satoshi).",
-                    ErrorType.FRACTIONAL_SATOSHI);
+                    "Input smaller as minimum possible Fiat value is not allowed..",
+                    ErrorType.UNDERCUT_MIN_FIAT_VALUE);
         else
             return new ValidationResult(true);
     }
 
-    protected ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
-        BigDecimal bd = new BigDecimal(input);
-        final BigDecimal satoshis = bd.movePointRight(8);
-        if (satoshis.longValue() > NetworkParameters.MAX_MONEY.longValue())
+    protected ValidationResult validateIfNotExceedsMaxFiatValue(String input) {
+        double d = Double.parseDouble(input);
+        if (d > MAX_FIAT_VALUE)
             return new ValidationResult(
                     false,
-                    "Input larger as maximum possible Bitcoin value is not allowed.",
-                    ErrorType.EXCEEDS_MAX_BTC_VALUE);
+                    "Input larger as maximum possible Fiat value is not allowed.",
+                    ErrorType.EXCEEDS_MAX_FIAT_VALUE);
         else
             return new ValidationResult(true);
     }

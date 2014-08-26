@@ -23,6 +23,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
 
+// TODO replace with new notification component from lighthouse/bitcoinJ
+
 public class NetworkSyncPane extends HBox {
 
     private final ProgressBar networkSyncProgressBar;

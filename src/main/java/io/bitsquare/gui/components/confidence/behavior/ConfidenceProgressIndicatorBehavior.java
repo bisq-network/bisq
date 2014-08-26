@@ -31,6 +31,11 @@ import java.util.Collections;
 
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 
+// TODO Copied form OpenJFX, check license issues and way how we integrated it
+// We changed behaviour which was not exposed via APIs
+/**
+ * @param <C>
+ */
 public class ConfidenceProgressIndicatorBehavior<C extends ConfidenceProgressIndicator> extends BehaviorBase<C> {
 
     /**

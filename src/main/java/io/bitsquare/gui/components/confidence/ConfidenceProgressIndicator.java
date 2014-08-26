@@ -35,6 +35,8 @@ import javafx.css.PseudoClass;
 import javafx.css.StyleableProperty;
 import javafx.scene.control.*;
 
+// TODO Copied form OpenJFX, check license issues and way how we integrated it
+// We changed behaviour which was not exposed via APIs
 
 /**
  * A circular control which is used for indicating progress, either
