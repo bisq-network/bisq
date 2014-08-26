@@ -19,9 +19,8 @@ package io.bitsquare.gui.components;
 
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.layout.HBox;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.util.Duration;
 
 public class NetworkSyncPane extends HBox {

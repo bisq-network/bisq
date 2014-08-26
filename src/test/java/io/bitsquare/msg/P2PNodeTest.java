@@ -18,11 +18,18 @@
 package io.bitsquare.msg;
 
 import java.io.IOException;
-import java.security.*;
+
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+
 import java.util.Random;
 
 import net.tomp2p.connection.Ports;
-import net.tomp2p.dht.*;
+import net.tomp2p.dht.FutureGet;
+import net.tomp2p.dht.FuturePut;
+import net.tomp2p.dht.FutureRemove;
+import net.tomp2p.dht.PeerBuilderDHT;
+import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.futures.FutureDirect;
 import net.tomp2p.p2p.PeerBuilder;
 import net.tomp2p.peers.Number160;
@@ -30,8 +37,10 @@ import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.rpc.ObjectDataReply;
 import net.tomp2p.storage.Data;
 import net.tomp2p.utils.Utils;
+
 import org.junit.Assert;
 import org.junit.Test;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

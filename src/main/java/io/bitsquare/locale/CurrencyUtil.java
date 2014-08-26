@@ -18,7 +18,12 @@
 package io.bitsquare.locale;
 
 import java.text.NumberFormat;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 public class CurrencyUtil {
 

@@ -21,6 +21,7 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

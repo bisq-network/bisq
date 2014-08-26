@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.components;
 
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.*;
 
 class NoFocusScrollPane extends ScrollPane {
     public NoFocusScrollPane() {

@@ -22,6 +22,7 @@ import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
 import io.bitsquare.trade.protocol.shared.VerifyPeerAccount;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

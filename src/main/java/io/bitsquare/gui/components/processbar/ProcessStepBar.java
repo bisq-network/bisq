@@ -19,8 +19,7 @@ package io.bitsquare.gui.components.processbar;
 
 import java.util.List;
 
-import javafx.scene.control.Control;
-import javafx.scene.control.Skin;
+import javafx.scene.control.*;
 
 public class ProcessStepBar<T> extends Control {
 

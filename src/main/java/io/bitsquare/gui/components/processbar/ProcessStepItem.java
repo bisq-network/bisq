@@ -18,7 +18,8 @@
 package io.bitsquare.gui.components.processbar;
 
 import io.bitsquare.gui.util.Colors;
-import javafx.scene.paint.Paint;
+
+import javafx.scene.paint.*;
 
 public class ProcessStepItem {
     private final String label;

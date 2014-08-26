@@ -20,8 +20,10 @@ package io.bitsquare.bank;
 import io.bitsquare.locale.Country;
 
 import java.io.Serializable;
+
 import java.util.Currency;
 import java.util.Objects;
+
 import javax.annotation.concurrent.Immutable;
 
 @Immutable

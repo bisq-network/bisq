@@ -20,7 +20,9 @@ package io.bitsquare.gui.orders.closed;
 import io.bitsquare.gui.CachedViewController;
 
 import java.net.URL;
+
 import java.util.ResourceBundle;
+
 import javax.inject.Inject;
 
 import org.slf4j.Logger;

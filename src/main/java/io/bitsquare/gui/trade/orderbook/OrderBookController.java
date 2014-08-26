@@ -17,10 +17,6 @@
 
 package io.bitsquare.gui.trade.orderbook;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.InsufficientMoneyException;
-import com.google.bitcoin.core.Transaction;
-import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
@@ -46,13 +42,23 @@ import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
 
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.InsufficientMoneyException;
+import com.google.bitcoin.core.Transaction;
+
+import com.google.common.util.concurrent.FutureCallback;
+
 import java.net.URL;
+
 import java.text.DecimalFormat;
 import java.text.ParseException;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
+
+import javax.inject.Inject;
 
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -60,16 +66,14 @@ import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
+import javafx.scene.image.*;
+import javafx.scene.layout.*;
 import javafx.util.Callback;
-
-import javax.inject.Inject;
 
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 import org.controlsfx.dialog.Dialogs;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -21,6 +21,7 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.trade.protocol.TradeMessage;
 
 import java.io.Serializable;
+
 import java.security.PublicKey;
 
 public class RequestOffererPublishDepositTxMessage implements Serializable, TradeMessage {

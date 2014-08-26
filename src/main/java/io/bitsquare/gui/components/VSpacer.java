@@ -18,7 +18,7 @@
 package io.bitsquare.gui.components;
 
 
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.*;
 
 public class VSpacer extends Pane {
     public VSpacer() {

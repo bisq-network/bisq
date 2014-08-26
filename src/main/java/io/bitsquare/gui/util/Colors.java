@@ -17,8 +17,7 @@
 
 package io.bitsquare.gui.util;
 
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
+import javafx.scene.paint.*;
 
 public class Colors {
     public static final Paint YELLOW = Color.valueOf("#edc035");

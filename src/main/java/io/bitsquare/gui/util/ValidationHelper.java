@@ -18,8 +18,10 @@
 package io.bitsquare.gui.util;
 
 import io.bitsquare.gui.components.ValidatingTextField;
+
 import javafx.beans.property.StringProperty;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -17,10 +17,6 @@
 
 package io.bitsquare.trade;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.TransactionConfidence;
-import com.google.bitcoin.core.Utils;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
@@ -33,23 +29,41 @@ import io.bitsquare.trade.handlers.ErrorMessageHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.TradeMessage;
 import io.bitsquare.trade.protocol.createoffer.CreateOfferCoordinator;
-import io.bitsquare.trade.protocol.offerer.*;
-import io.bitsquare.trade.protocol.taker.*;
+import io.bitsquare.trade.protocol.offerer.BankTransferInitedMessage;
+import io.bitsquare.trade.protocol.offerer.DepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.offerer.ProtocolForOffererAsBuyer;
+import io.bitsquare.trade.protocol.offerer.ProtocolForOffererAsBuyerListener;
+import io.bitsquare.trade.protocol.offerer.RequestTakerDepositPaymentMessage;
+import io.bitsquare.trade.protocol.offerer.RespondToTakeOfferRequestMessage;
+import io.bitsquare.trade.protocol.taker.PayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSeller;
+import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSellerListener;
+import io.bitsquare.trade.protocol.taker.RequestOffererPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.taker.RequestTakeOfferMessage;
+import io.bitsquare.trade.protocol.taker.TakeOfferFeePayedMessage;
 import io.bitsquare.user.User;
 
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.TransactionConfidence;
+import com.google.bitcoin.core.Utils;
+
 import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import javax.inject.Inject;
-
 import net.tomp2p.peers.PeerAddress;
+
 import org.jetbrains.annotations.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

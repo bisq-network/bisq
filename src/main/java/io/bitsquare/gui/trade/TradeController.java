@@ -28,13 +28,15 @@ import io.bitsquare.gui.trade.takeoffer.TakerOfferController;
 import io.bitsquare.trade.Direction;
 
 import java.io.IOException;
+
 import java.net.URL;
+
 import java.util.ResourceBundle;
 
 import javafx.application.Platform;
-import javafx.scene.Parent;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
+import javafx.scene.*;
+import javafx.scene.control.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

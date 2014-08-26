@@ -4,6 +4,75 @@
     <option name="PER_PROJECT_SETTINGS">
       <value>
         <option name="LINE_SEPARATOR" value="&#10;" />
+        <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="99" />
+        <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="2" />
+        <option name="PACKAGES_TO_USE_IMPORT_ON_DEMAND">
+          <value>
+            <package name="java.awt" withSubpackages="false" static="false" />
+            <package name="javafx.scene" withSubpackages="true" static="false" />
+            <package name="javax.swing" withSubpackages="false" static="false" />
+            <package name="org.junit.Assert" withSubpackages="true" static="true" />
+          </value>
+        </option>
+        <option name="IMPORT_LAYOUT_TABLE">
+          <value>
+            <package name="io.bitsquare" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="com.google.bitcoin" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="com.google.common" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="com.google.gson" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="com.google.inject" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="java.awt" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="java.io" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="java.math" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="java.net" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="java.nio" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="java.security" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="java.text" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="java.util" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="javax.annotation" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="javax.inject" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="javax.swing" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="javafx" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="com.sun.javafx" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="de.jensd.fx" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="net.glxn" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="net.tomp2p" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="org.controlsfx" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="org.jetbrains" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="org.junit" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="org.slf4j" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="org.spongycastle" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="" withSubpackages="true" static="true" />
+          </value>
+        </option>
         <option name="WRAP_WHEN_TYPING_REACHES_RIGHT_MARGIN" value="true" />
         <XML>
           <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />

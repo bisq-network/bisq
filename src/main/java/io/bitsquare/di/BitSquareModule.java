@@ -18,14 +18,6 @@
 package io.bitsquare.di;
 
 
-import com.google.bitcoin.core.NetworkParameters;
-import com.google.bitcoin.params.MainNetParams;
-import com.google.bitcoin.params.RegTestParams;
-import com.google.bitcoin.params.TestNet3Params;
-import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
@@ -40,6 +32,16 @@ import io.bitsquare.storage.Persistence;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.user.User;
+
+import com.google.bitcoin.core.NetworkParameters;
+import com.google.bitcoin.params.MainNetParams;
+import com.google.bitcoin.params.RegTestParams;
+import com.google.bitcoin.params.TestNet3Params;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 import javax.inject.Inject;
 

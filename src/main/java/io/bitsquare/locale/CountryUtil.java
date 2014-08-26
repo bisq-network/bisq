@@ -20,7 +20,11 @@ package io.bitsquare.locale;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CountryUtil {

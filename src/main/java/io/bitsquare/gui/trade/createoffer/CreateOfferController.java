@@ -41,23 +41,20 @@ import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
 
 import java.net.URL;
+
 import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.UUID;
+
+import javax.inject.Inject;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Region;
-
-import javax.inject.Inject;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

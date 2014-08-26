@@ -17,8 +17,6 @@
 
 package io.bitsquare.trade.protocol.taker;
 
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.Utils;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
@@ -26,9 +24,13 @@ import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
 import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
 
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.Utils;
+
 import java.security.PublicKey;
 
 import net.tomp2p.peers.PeerAddress;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

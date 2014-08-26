@@ -17,12 +17,15 @@
 
 package io.bitsquare.trade.protocol.taker;
 
-import com.google.bitcoin.core.Coin;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
 import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
+
+import com.google.bitcoin.core.Coin;
+
 import net.tomp2p.peers.PeerAddress;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -22,7 +22,9 @@ import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
 
 import java.net.URL;
+
 import java.util.ResourceBundle;
+
 import javax.inject.Inject;
 
 import org.slf4j.Logger;

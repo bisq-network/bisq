@@ -25,12 +25,13 @@ import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.arbitrators.registration.ArbitratorRegistrationController;
 
 import java.io.IOException;
+
 import java.net.URL;
+
 import java.util.ResourceBundle;
 
 import javafx.fxml.FXML;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 

@@ -17,8 +17,9 @@
 
 package io.bitsquare.trade.protocol.offerer;
 
-import com.google.bitcoin.core.TransactionConfidence;
 import io.bitsquare.trade.Offer;
+
+import com.google.bitcoin.core.TransactionConfidence;
 
 public interface ProtocolForOffererAsBuyerListener {
     void onOfferAccepted(Offer offer);

@@ -17,27 +17,28 @@
 
 package io.bitsquare.gui.funds.deposit;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
 
 import java.net.URL;
+
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.*;
 import javafx.util.Callback;
 
-import javax.inject.Inject;
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

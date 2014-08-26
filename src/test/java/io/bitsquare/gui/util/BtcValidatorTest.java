@@ -19,10 +19,10 @@ package io.bitsquare.gui.util;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.NetworkParameters;
+
 import org.junit.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class BtcValidatorTest {
     @Test

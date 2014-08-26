@@ -41,10 +41,11 @@ package io.bitsquare.gui.components.confidence.behavior;
  * questions.
  */
 
-import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 
 import java.util.Collections;
+
+import com.sun.javafx.scene.control.behavior.BehaviorBase;
 
 public class ConfidenceProgressIndicatorBehavior<C extends ConfidenceProgressIndicator> extends BehaviorBase<C> {
 

@@ -17,24 +17,34 @@
 
 package io.bitsquare.msg;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.inject.name.Named;
 import io.bitsquare.BitSquare;
 import io.bitsquare.util.StorageDirectory;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+
+import com.google.inject.name.Named;
+
 import java.io.File;
 import java.io.IOException;
+
 import java.security.KeyPair;
 import java.security.PublicKey;
+
 import java.util.Timer;
 import java.util.TimerTask;
+
 import javax.annotation.Nullable;
+
 import javax.inject.Inject;
 
 import net.tomp2p.connection.DSASignatureFactory;
-import net.tomp2p.dht.*;
+import net.tomp2p.dht.FutureGet;
+import net.tomp2p.dht.FuturePut;
+import net.tomp2p.dht.FutureRemove;
+import net.tomp2p.dht.PeerDHT;
+import net.tomp2p.dht.StorageMemory;
 import net.tomp2p.futures.BaseFuture;
 import net.tomp2p.futures.BaseFutureListener;
 import net.tomp2p.futures.FutureDirect;
@@ -45,7 +55,9 @@ import net.tomp2p.storage.Data;
 import net.tomp2p.storage.Storage;
 import net.tomp2p.storage.StorageDisk;
 import net.tomp2p.utils.Utils;
+
 import org.jetbrains.annotations.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

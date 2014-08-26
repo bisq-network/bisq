@@ -17,16 +17,27 @@
 
 package io.bitsquare.storage;
 
-import com.google.bitcoin.utils.Threading;
 import io.bitsquare.BitSquare;
 import io.bitsquare.util.FileUtil;
 
-import java.io.*;
+import com.google.bitcoin.utils.Threading;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
+
 import javax.annotation.concurrent.GuardedBy;
+
 import javax.inject.Inject;
 
 import org.slf4j.Logger;

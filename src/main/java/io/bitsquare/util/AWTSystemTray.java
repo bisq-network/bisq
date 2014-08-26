@@ -23,10 +23,10 @@ import io.bitsquare.gui.util.ImageUtil;
 
 import java.awt.*;
 
+import javax.swing.*;
+
 import javafx.application.Platform;
 import javafx.stage.Stage;
-
-import javax.swing.ImageIcon;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

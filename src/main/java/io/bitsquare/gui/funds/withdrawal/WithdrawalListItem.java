@@ -17,18 +17,19 @@
 
 package io.bitsquare.gui.funds.withdrawal;
 
-import com.google.bitcoin.core.Address;
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.TransactionConfidence;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+
+import com.google.bitcoin.core.Address;
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.TransactionConfidence;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

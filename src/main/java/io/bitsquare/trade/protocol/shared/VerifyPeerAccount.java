@@ -21,6 +21,7 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -17,7 +17,6 @@
 
 package io.bitsquare.trade.protocol.createoffer;
 
-import com.google.bitcoin.core.Transaction;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.storage.Persistence;
@@ -29,7 +28,10 @@ import io.bitsquare.trade.protocol.createoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.createoffer.tasks.PublishOfferToDHT;
 import io.bitsquare.trade.protocol.createoffer.tasks.ValidateOffer;
 
+import com.google.bitcoin.core.Transaction;
+
 import java.io.Serializable;
+
 import javax.annotation.concurrent.Immutable;
 
 import org.slf4j.Logger;

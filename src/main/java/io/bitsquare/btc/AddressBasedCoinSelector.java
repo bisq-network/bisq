@@ -17,14 +17,25 @@
 
 package io.bitsquare.btc;
 
-import com.google.bitcoin.core.*;
+import com.google.bitcoin.core.Address;
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.NetworkParameters;
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.TransactionConfidence;
+import com.google.bitcoin.core.TransactionOutput;
 import com.google.bitcoin.params.RegTestParams;
 import com.google.bitcoin.wallet.CoinSelection;
 import com.google.bitcoin.wallet.DefaultCoinSelector;
+
 import com.google.common.annotations.VisibleForTesting;
 
 import java.math.BigInteger;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

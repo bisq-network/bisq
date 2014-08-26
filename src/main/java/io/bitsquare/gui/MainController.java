@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui;
 
-import com.google.bitcoin.core.Coin;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
@@ -35,24 +34,28 @@ import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;
 
+import com.google.bitcoin.core.Coin;
+
 import java.io.IOException;
+
 import java.net.URL;
+
 import java.util.ResourceBundle;
+
+import javax.inject.Inject;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
+import javafx.scene.*;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.image.*;
 import javafx.scene.layout.*;
 import javafx.util.StringConverter;
 
-import javax.inject.Inject;
-
 import net.tomp2p.peers.PeerAddress;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

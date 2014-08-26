@@ -17,16 +17,18 @@
 
 package io.bitsquare.gui.components.btc;
 
-import com.google.bitcoin.core.Address;
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.TransactionConfidence;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
-import javafx.scene.layout.AnchorPane;
+
+import com.google.bitcoin.core.Address;
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.TransactionConfidence;
+
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

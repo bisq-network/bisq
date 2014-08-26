@@ -17,26 +17,34 @@
 
 package io.bitsquare.msg;
 
-import com.google.common.util.concurrent.FutureCallback;
-import io.bitsquare.msg.listeners.*;
+import io.bitsquare.msg.listeners.ArbitratorListener;
+import io.bitsquare.msg.listeners.GetPeerAddressListener;
+import io.bitsquare.msg.listeners.IncomingTradeMessageListener;
+import io.bitsquare.msg.listeners.OrderBookListener;
+import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.protocol.TradeMessage;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.User;
 
+import com.google.common.util.concurrent.FutureCallback;
+
 import java.io.IOException;
+
 import java.security.PublicKey;
+
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 
+import javax.annotation.Nullable;
+
+import javax.inject.Inject;
+
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-
-import javax.annotation.Nullable;
-import javax.inject.Inject;
 
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
@@ -50,6 +58,7 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.storage.Data;
 import net.tomp2p.utils.Utils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

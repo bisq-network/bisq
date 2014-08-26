@@ -21,7 +21,9 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.handlers.ExceptionHandler;
+
 import net.tomp2p.peers.PeerAddress;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

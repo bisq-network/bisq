@@ -17,8 +17,10 @@
 
 package io.bitsquare.trade.orderbook;
 
-import com.google.bitcoin.core.Coin;
 import io.bitsquare.trade.Direction;
+
+import com.google.bitcoin.core.Coin;
+
 import javafx.beans.property.SimpleBooleanProperty;
 
 public class OrderBookFilter {

@@ -17,15 +17,22 @@
 
 package io.bitsquare.trade;
 
-import com.google.bitcoin.core.Coin;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.locale.Country;
 import io.bitsquare.user.Arbitrator;
 
+import com.google.bitcoin.core.Coin;
+
 import java.io.Serializable;
+
 import java.math.BigDecimal;
+
 import java.security.PublicKey;
-import java.util.*;
+
+import java.util.Currency;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 public class Offer implements Serializable {
     private static final long serialVersionUID = -971164804305475826L;

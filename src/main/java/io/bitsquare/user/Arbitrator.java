@@ -18,6 +18,7 @@
 package io.bitsquare.user;
 
 import java.io.Serializable;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;

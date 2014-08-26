@@ -19,6 +19,7 @@ package io.bitsquare.gui.trade.orderbook;
 
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.trade.Offer;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 

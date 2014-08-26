@@ -21,15 +21,17 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.util.DSAKeyUtil;
 
 import java.io.Serializable;
+
 import java.security.KeyPair;
 import java.security.PublicKey;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-
-import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

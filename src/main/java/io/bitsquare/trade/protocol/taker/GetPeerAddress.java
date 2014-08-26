@@ -24,6 +24,7 @@ import io.bitsquare.trade.handlers.ExceptionHandler;
 import java.security.PublicKey;
 
 import net.tomp2p.peers.PeerAddress;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

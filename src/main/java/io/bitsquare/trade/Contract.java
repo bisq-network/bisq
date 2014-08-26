@@ -17,11 +17,13 @@
 
 package io.bitsquare.trade;
 
-import com.google.bitcoin.core.Coin;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.util.DSAKeyUtil;
 
+import com.google.bitcoin.core.Coin;
+
 import java.io.Serializable;
+
 import java.security.PublicKey;
 
 public class Contract implements Serializable {

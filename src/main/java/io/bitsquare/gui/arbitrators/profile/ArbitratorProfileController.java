@@ -26,14 +26,13 @@ import io.bitsquare.storage.Persistence;
 import io.bitsquare.user.Arbitrator;
 
 import java.net.URL;
+
 import java.util.ResourceBundle;
 
-import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-
 import javax.inject.Inject;
+
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
 
 public class ArbitratorProfileController extends CachedViewController {
 

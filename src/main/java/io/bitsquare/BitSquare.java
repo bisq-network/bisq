@@ -17,9 +17,6 @@
 
 package io.bitsquare;
 
-import com.google.common.base.Throwables;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.di.GuiceFXMLLoader;
@@ -33,17 +30,21 @@ import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;
 import io.bitsquare.util.StorageDirectory;
 
+import com.google.common.base.Throwables;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import java.io.File;
 import java.io.IOException;
+
 import java.util.Arrays;
 
 import javafx.application.Application;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
+import javafx.scene.*;
+import javafx.scene.input.*;
 import javafx.stage.Stage;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

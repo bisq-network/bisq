@@ -17,8 +17,6 @@
 
 package io.bitsquare.gui.settings;
 
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Utils;
 import io.bitsquare.BitSquare;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
@@ -29,7 +27,12 @@ import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.locale.*;
+import io.bitsquare.locale.Country;
+import io.bitsquare.locale.CountryUtil;
+import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.locale.Localisation;
+import io.bitsquare.locale.Region;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Persistence;
@@ -38,26 +41,34 @@ import io.bitsquare.user.Reputation;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 
+import com.google.bitcoin.core.ECKey;
+import com.google.bitcoin.core.Utils;
+
 import java.io.IOException;
+
 import java.net.URL;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.ResourceBundle;
+
+import javax.inject.Inject;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.*;
 import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
+import javafx.scene.image.*;
+import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-
-import javax.inject.Inject;
 
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;

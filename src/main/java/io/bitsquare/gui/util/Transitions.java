@@ -17,12 +17,17 @@
 
 package io.bitsquare.gui.util;
 
-import javafx.animation.*;
+import javafx.animation.Animation;
+import javafx.animation.FadeTransition;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.scene.Node;
-import javafx.scene.effect.GaussianBlur;
-import javafx.scene.layout.Pane;
+import javafx.scene.*;
+import javafx.scene.effect.*;
+import javafx.scene.layout.*;
 import javafx.util.Duration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

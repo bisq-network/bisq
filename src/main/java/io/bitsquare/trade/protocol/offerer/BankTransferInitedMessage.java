@@ -17,8 +17,9 @@
 
 package io.bitsquare.trade.protocol.offerer;
 
-import com.google.bitcoin.core.Coin;
 import io.bitsquare.trade.protocol.TradeMessage;
+
+import com.google.bitcoin.core.Coin;
 
 import java.io.Serializable;
 

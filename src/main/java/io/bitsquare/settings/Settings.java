@@ -17,11 +17,13 @@
 
 package io.bitsquare.settings;
 
-import com.google.bitcoin.core.Coin;
 import io.bitsquare.locale.Country;
 import io.bitsquare.user.Arbitrator;
 
+import com.google.bitcoin.core.Coin;
+
 import java.io.Serializable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;

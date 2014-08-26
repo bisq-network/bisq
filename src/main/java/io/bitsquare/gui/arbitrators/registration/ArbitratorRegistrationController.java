@@ -17,10 +17,6 @@
 
 package io.bitsquare.gui.arbitrators.registration;
 
-import com.google.bitcoin.core.*;
-import com.google.bitcoin.script.Script;
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
@@ -39,18 +35,32 @@ import io.bitsquare.user.Reputation;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.ECKey;
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.Wallet;
+import com.google.bitcoin.core.WalletEventListener;
+import com.google.bitcoin.script.Script;
+
 import java.net.URL;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
+
+import javax.inject.Inject;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.*;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
-import javax.inject.Inject;
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

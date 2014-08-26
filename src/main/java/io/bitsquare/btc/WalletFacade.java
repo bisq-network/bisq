@@ -17,7 +17,30 @@
 
 package io.bitsquare.btc;
 
-import com.google.bitcoin.core.*;
+import io.bitsquare.BitSquare;
+import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.btc.listeners.ConfidenceListener;
+import io.bitsquare.crypto.CryptoFacade;
+import io.bitsquare.storage.Persistence;
+import io.bitsquare.util.StorageDirectory;
+
+import com.google.bitcoin.core.Address;
+import com.google.bitcoin.core.AddressFormatException;
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.ECKey;
+import com.google.bitcoin.core.InsufficientMoneyException;
+import com.google.bitcoin.core.NetworkParameters;
+import com.google.bitcoin.core.ScriptException;
+import com.google.bitcoin.core.Sha256Hash;
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.TransactionConfidence;
+import com.google.bitcoin.core.TransactionInput;
+import com.google.bitcoin.core.TransactionOutPoint;
+import com.google.bitcoin.core.TransactionOutput;
+import com.google.bitcoin.core.Utils;
+import com.google.bitcoin.core.VerificationException;
+import com.google.bitcoin.core.Wallet;
+import com.google.bitcoin.core.WalletEventListener;
 import com.google.bitcoin.crypto.DeterministicKey;
 import com.google.bitcoin.crypto.TransactionSignature;
 import com.google.bitcoin.kits.WalletAppKit;
@@ -26,28 +49,31 @@ import com.google.bitcoin.params.RegTestParams;
 import com.google.bitcoin.script.Script;
 import com.google.bitcoin.script.ScriptBuilder;
 import com.google.bitcoin.utils.Threading;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import io.bitsquare.BitSquare;
-import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.listeners.ConfidenceListener;
-import io.bitsquare.crypto.CryptoFacade;
-import io.bitsquare.storage.Persistence;
-import io.bitsquare.util.StorageDirectory;
 
 import java.io.Serializable;
+
 import java.math.BigInteger;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+import javax.annotation.concurrent.GuardedBy;
+
+import javax.inject.Inject;
+
 import javafx.application.Platform;
 import javafx.util.Pair;
-
-import javax.annotation.concurrent.GuardedBy;
-import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

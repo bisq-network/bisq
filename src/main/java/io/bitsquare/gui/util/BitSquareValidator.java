@@ -17,14 +17,14 @@
 
 package io.bitsquare.gui.util;
 
-import com.google.bitcoin.core.Coin;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.trade.Offer;
-import javafx.scene.control.TextField;
-import javafx.scene.effect.BlurType;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.effect.Effect;
-import javafx.scene.paint.Color;
+
+import com.google.bitcoin.core.Coin;
+
+import javafx.scene.control.*;
+import javafx.scene.effect.*;
+import javafx.scene.paint.*;
 
 //TODO to be removed
 @Deprecated

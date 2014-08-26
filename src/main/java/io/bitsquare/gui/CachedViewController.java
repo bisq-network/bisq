@@ -18,6 +18,7 @@
 package io.bitsquare.gui;
 
 import java.net.URL;
+
 import java.util.ResourceBundle;
 
 import org.slf4j.Logger;

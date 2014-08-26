@@ -18,6 +18,7 @@
 package io.bitsquare.locale;
 
 import java.io.Serializable;
+
 import java.util.Objects;
 
 public class Region implements Serializable {

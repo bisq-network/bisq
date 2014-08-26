@@ -18,19 +18,19 @@
 package io.bitsquare.gui.components;
 
 import io.bitsquare.gui.util.NumberValidator;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.effect.BlurType;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.effect.Effect;
-import javafx.scene.layout.Region;
-import javafx.scene.paint.Color;
+import javafx.scene.control.*;
+import javafx.scene.effect.*;
+import javafx.scene.layout.*;
+import javafx.scene.paint.*;
 import javafx.stage.Window;
+
 import org.controlsfx.control.PopOver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

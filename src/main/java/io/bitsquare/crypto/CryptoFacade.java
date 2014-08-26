@@ -21,15 +21,20 @@ import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Sha256Hash;
 import com.google.bitcoin.core.Utils;
 import com.google.bitcoin.crypto.KeyCrypterException;
+
 import com.google.common.base.Charsets;
 
 import java.nio.charset.Charset;
+
 import java.security.SignatureException;
+
 import javax.annotation.Nullable;
+
 import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.util.encoders.Base64;
 

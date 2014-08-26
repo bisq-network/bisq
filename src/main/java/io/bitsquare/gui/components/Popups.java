@@ -17,14 +17,17 @@
 
 package io.bitsquare.gui.components;
 
-import com.google.bitcoin.store.BlockStoreException;
-import com.google.common.base.Throwables;
 import io.bitsquare.BitSquare;
+
+import com.google.bitcoin.store.BlockStoreException;
+
+import com.google.common.base.Throwables;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javafx.application.Platform;
+
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 import org.controlsfx.dialog.Dialogs;

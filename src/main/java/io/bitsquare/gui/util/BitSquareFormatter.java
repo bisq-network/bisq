@@ -17,14 +17,16 @@
 
 package io.bitsquare.gui.util;
 
-import com.google.bitcoin.core.Coin;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.user.Arbitrator;
 
+import com.google.bitcoin.core.Coin;
+
 import java.text.DateFormat;
 import java.text.DecimalFormat;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -32,8 +34,7 @@ import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 //TODO cleanup...
 public class BitSquareFormatter {

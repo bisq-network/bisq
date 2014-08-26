@@ -17,20 +17,20 @@
 
 package io.bitsquare.trade.protocol.createoffer.tasks;
 
-import com.google.bitcoin.core.Coin;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.Restritions;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
 
+import com.google.bitcoin.core.Coin;
+
 import javax.annotation.concurrent.Immutable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 @Immutable
 public class ValidateOffer {

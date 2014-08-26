@@ -17,16 +17,22 @@
 
 package io.bitsquare.msg;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
-import com.google.inject.name.Named;
 import io.bitsquare.storage.Persistence;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
+
+import com.google.inject.name.Named;
+
 import java.io.IOException;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+
 import java.security.KeyPair;
+
 import javax.annotation.concurrent.Immutable;
+
 import javax.inject.Inject;
 
 import net.tomp2p.connection.Ports;
@@ -49,7 +55,9 @@ import net.tomp2p.peers.PeerStatatistic;
 import net.tomp2p.relay.DistributedRelay;
 import net.tomp2p.relay.FutureRelay;
 import net.tomp2p.storage.Storage;
+
 import org.jetbrains.annotations.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -43,14 +43,14 @@
 package io.bitsquare.gui.components.confidence;
 
 import io.bitsquare.gui.components.confidence.skin.ConfidenceProgressIndicatorSkin;
+
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.DoublePropertyBase;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.css.PseudoClass;
 import javafx.css.StyleableProperty;
-import javafx.scene.control.Control;
-import javafx.scene.control.Skin;
+import javafx.scene.control.*;
 
 
 /**

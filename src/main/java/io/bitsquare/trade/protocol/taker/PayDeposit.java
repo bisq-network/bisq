@@ -17,11 +17,13 @@
 
 package io.bitsquare.trade.protocol.taker;
 
+import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.trade.handlers.ExceptionHandler;
+
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
-import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.trade.handlers.ExceptionHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

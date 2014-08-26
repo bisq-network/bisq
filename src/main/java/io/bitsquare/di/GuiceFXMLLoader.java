@@ -17,15 +17,18 @@
 
 package io.bitsquare.di;
 
-import com.google.inject.Injector;
 import io.bitsquare.locale.Localisation;
 
+import com.google.inject.Injector;
+
 import java.net.URL;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import javafx.fxml.FXMLLoader;
 import javafx.util.Callback;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

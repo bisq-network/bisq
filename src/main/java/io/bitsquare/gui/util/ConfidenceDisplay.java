@@ -17,15 +17,21 @@
 
 package io.bitsquare.gui.util;
 
-import com.google.bitcoin.core.*;
-import com.google.bitcoin.script.Script;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.ECKey;
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.TransactionConfidence;
+import com.google.bitcoin.core.Wallet;
+import com.google.bitcoin.core.WalletEventListener;
+import com.google.bitcoin.script.Script;
 
 import java.util.List;
 import java.util.Set;
 
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

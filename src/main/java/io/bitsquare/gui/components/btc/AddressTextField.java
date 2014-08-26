@@ -17,31 +17,36 @@
 
 package io.bitsquare.gui.components.btc;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.uri.BitcoinURI;
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.BitSquare;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BitSquareFormatter;
 
-import java.awt.Desktop;
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.uri.BitcoinURI;
+
+import java.awt.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+
 import java.net.URI;
 
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
+import javafx.scene.image.*;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
 import javafx.stage.Window;
+
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
+
 import org.controlsfx.control.PopOver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

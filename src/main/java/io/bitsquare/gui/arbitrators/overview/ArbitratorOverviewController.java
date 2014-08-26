@@ -30,19 +30,21 @@ import io.bitsquare.storage.Persistence;
 import io.bitsquare.user.Arbitrator;
 
 import java.io.IOException;
+
 import java.net.URL;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-import javafx.fxml.FXML;
-import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.layout.Pane;
-import javafx.stage.Stage;
-
 import javax.inject.Inject;
+
+import javafx.fxml.FXML;
+import javafx.scene.*;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
 
 import net.tomp2p.peers.Number640;
 import net.tomp2p.storage.Data;

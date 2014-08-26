@@ -21,12 +21,21 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.awt.Desktop;
-import java.io.*;
+import java.awt.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 import java.net.URI;
+
 import java.util.function.Function;
 
 import javafx.animation.AnimationTimer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

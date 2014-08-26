@@ -19,6 +19,7 @@ package io.bitsquare.gui.orders.pending;
 
 import io.bitsquare.gui.trade.orderbook.OrderBookListItem;
 import io.bitsquare.trade.Trade;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

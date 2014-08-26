@@ -17,9 +17,6 @@
 
 package io.bitsquare.trade.protocol.offerer;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Transaction;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.FeePolicy;
@@ -34,10 +31,16 @@ import io.bitsquare.trade.protocol.taker.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.taker.TakeOfferFeePayedMessage;
 import io.bitsquare.user.User;
 
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.ECKey;
+import com.google.bitcoin.core.Transaction;
+
 import java.security.PublicKey;
 
 import net.tomp2p.peers.PeerAddress;
+
 import org.jetbrains.annotations.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

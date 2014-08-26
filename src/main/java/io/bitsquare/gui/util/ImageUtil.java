@@ -17,8 +17,7 @@
 
 package io.bitsquare.gui.util;
 
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.image.*;
 
 public class ImageUtil {
     public static final String SPLASH_LOGO = "/images/logo_200_270.png";

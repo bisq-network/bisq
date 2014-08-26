@@ -20,6 +20,7 @@ package io.bitsquare;
 import io.bitsquare.msg.SeedNodeAddress;
 
 import java.io.IOException;
+
 import java.util.List;
 
 import net.tomp2p.dht.PeerBuilderDHT;
@@ -35,6 +36,7 @@ import net.tomp2p.peers.PeerMapChangeListener;
 import net.tomp2p.peers.PeerStatatistic;
 import net.tomp2p.relay.FutureRelay;
 import net.tomp2p.relay.RelayRPC;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

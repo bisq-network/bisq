@@ -18,7 +18,7 @@
 package io.bitsquare.gui.components;
 
 
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.*;
 
 @SuppressWarnings("WeakerAccess")
 public class HSpacer extends Pane {

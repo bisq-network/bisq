@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.trade.takeoffer;
 
-import com.google.bitcoin.core.Coin;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
@@ -33,13 +32,16 @@ import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSeller;
 import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSellerListener;
 
+import com.google.bitcoin.core.Coin;
+
 import java.net.URL;
+
 import java.util.ResourceBundle;
+
+import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-
-import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

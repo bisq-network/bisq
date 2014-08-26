@@ -31,19 +31,21 @@ import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.User;
 
 import java.io.IOException;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
-import javax.inject.Inject;
-
 import net.tomp2p.peers.Number640;
 import net.tomp2p.storage.Data;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

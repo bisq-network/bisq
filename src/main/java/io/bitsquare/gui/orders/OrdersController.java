@@ -24,7 +24,9 @@ import io.bitsquare.gui.components.CachingTabPane;
 import io.bitsquare.storage.Persistence;
 
 import java.net.URL;
+
 import java.util.ResourceBundle;
+
 import javax.inject.Inject;
 
 import org.slf4j.Logger;

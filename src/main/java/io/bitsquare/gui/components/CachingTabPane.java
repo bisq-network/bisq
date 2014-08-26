@@ -22,11 +22,13 @@ import io.bitsquare.gui.ViewController;
 import io.bitsquare.storage.Persistence;
 
 import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.scene.Node;
-import javafx.scene.control.TabPane;
+import javafx.scene.*;
+import javafx.scene.control.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

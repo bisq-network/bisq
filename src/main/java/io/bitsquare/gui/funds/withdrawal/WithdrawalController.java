@@ -17,13 +17,6 @@
 
 package io.bitsquare.gui.funds.withdrawal;
 
-import com.google.bitcoin.core.AddressFormatException;
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.InsufficientMoneyException;
-import com.google.bitcoin.core.Transaction;
-import com.google.common.util.concurrent.FutureCallback;
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.BtcValidator;
 import io.bitsquare.btc.FeePolicy;
@@ -33,24 +26,35 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.gui.util.BitSquareValidator;
 
+import com.google.bitcoin.core.AddressFormatException;
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.InsufficientMoneyException;
+import com.google.bitcoin.core.Transaction;
+
+import com.google.common.util.concurrent.FutureCallback;
+
 import java.net.URL;
+
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.*;
 import javafx.util.Callback;
 
-import javax.inject.Inject;
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
