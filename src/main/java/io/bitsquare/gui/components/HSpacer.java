@@ -21,6 +21,8 @@ package io.bitsquare.gui.components;
 import javafx.scene.layout.*;
 
 public class HSpacer extends Pane {
+    public HSpacer() {
+    }
 
     public HSpacer(double width) {
         setPrefWidth(width);

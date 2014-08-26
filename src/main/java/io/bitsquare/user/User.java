@@ -116,9 +116,10 @@ public class User implements Serializable {
     public void setCurrentBankAccount(@Nullable BankAccount bankAccount) {
         currentBankAccount = bankAccount;
 
-        BSFormatter.setFiatCurrencyCode(currentBankAccount.getCurrency().getCurrencyCode());
+        if (bankAccount != null)
+            BSFormatter.setFiatCurrencyCode(currentBankAccount.getCurrency().getCurrencyCode());
 
-        int index = -1;
+        int index;
         for (index = 0; index < bankAccounts.size(); index++) {
             if (currentBankAccount != null && currentBankAccount.equals(bankAccounts.get(index)))
                 break;

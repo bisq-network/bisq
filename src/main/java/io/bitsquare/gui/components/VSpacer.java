@@ -21,6 +21,8 @@ package io.bitsquare.gui.components;
 import javafx.scene.layout.*;
 
 public class VSpacer extends Pane {
+    public VSpacer() {
+    }
 
     public VSpacer(double height) {
         setPrefHeight(height);
