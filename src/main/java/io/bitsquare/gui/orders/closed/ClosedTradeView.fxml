@@ -23,7 +23,8 @@
 <AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.orders.closed.ClosedTradeController"
             AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
             xmlns:fx="http://javafx.com/fxml">
-    <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+    <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+          AnchorPane.topAnchor="0.0">
 
         <Label id="form-header-text" text="Closed"/>
 

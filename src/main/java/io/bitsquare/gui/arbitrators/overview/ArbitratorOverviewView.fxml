@@ -20,11 +20,16 @@
 <?import javafx.scene.layout.*?>
 
 <AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.arbitrators.overview.ArbitratorOverviewController"
-            prefHeight="600" prefWidth="800" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
+            prefHeight="600" prefWidth="800" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="10.0"
+            AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
             xmlns:fx="http://javafx.com/fxml">
     <Pane fx:id="arbitratorProfile"/>
-    <Button fx:id="prevButton" text="Previous" onAction="#onPrevious" AnchorPane.bottomAnchor="45.0" AnchorPane.leftAnchor="10.0"/>
-    <Button fx:id="nextButton" text="Next" onAction="#onNext" AnchorPane.bottomAnchor="45.0" AnchorPane.rightAnchor="10.0"/>
-    <Button fx:id="selectButton" text="Select" onAction="#onSelect" AnchorPane.bottomAnchor="45.0" AnchorPane.leftAnchor="350.0"/>
-    <Button fx:id="closeButton" text="close" onAction="#onClose" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0"/>
+    <Button fx:id="prevButton" text="Previous" onAction="#onPrevious" AnchorPane.bottomAnchor="45.0"
+            AnchorPane.leftAnchor="10.0"/>
+    <Button fx:id="nextButton" text="Next" onAction="#onNext" AnchorPane.bottomAnchor="45.0"
+            AnchorPane.rightAnchor="10.0"/>
+    <Button fx:id="selectButton" text="Select" onAction="#onSelect" AnchorPane.bottomAnchor="45.0"
+            AnchorPane.leftAnchor="350.0"/>
+    <Button fx:id="closeButton" text="close" onAction="#onClose" AnchorPane.bottomAnchor="10.0"
+            AnchorPane.leftAnchor="10.0"/>
 </AnchorPane>

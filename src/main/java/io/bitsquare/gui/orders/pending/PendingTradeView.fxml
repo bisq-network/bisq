@@ -70,11 +70,13 @@
     <GridPane hgap="5.0" vgap="5.0">
 
         <!-- row 0 -->
-        <Label fx:id="txHeaderLabel" id="form-header-text" text="Deposit transaction" GridPane.columnSpan="2" GridPane.halignment="LEFT"/>
+        <Label fx:id="txHeaderLabel" id="form-header-text" text="Deposit transaction" GridPane.columnSpan="2"
+               GridPane.halignment="LEFT"/>
 
         <!-- row 1 -->
         <Label fx:id="txTitleLabel" text="Deposit transaction ID:" GridPane.rowIndex="1"/>
-        <TextField fx:id="txTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+        <TextField fx:id="txTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"
+                   GridPane.rowIndex="1"/>
         <Label fx:id="txIDCopyIcon" id="copy-icon" minWidth="10" GridPane.columnIndex="2" GridPane.rowIndex="1">
             <padding>
                 <Insets bottom="0.0" left="0.0" right="0.0" top="-1.0"/>
@@ -83,7 +85,8 @@
                 <Tooltip text="Copy address to clipboard"/>
             </tooltip>
         </Label>
-        <ConfidenceProgressIndicator fx:id="progressIndicator" visible="false" progress="0" GridPane.columnIndex="3" GridPane.halignment="LEFT" GridPane.rowIndex="1"
+        <ConfidenceProgressIndicator fx:id="progressIndicator" visible="false" progress="0" GridPane.columnIndex="3"
+                                     GridPane.halignment="LEFT" GridPane.rowIndex="1"
                                      GridPane.rowSpan="2" GridPane.valignment="TOP">
             <GridPane.margin>
                 <Insets top="2.0"/>
@@ -92,16 +95,20 @@
         <Label fx:id="confirmationLabel" visible="false" GridPane.columnIndex="4" GridPane.rowIndex="1"/>
 
         <!-- row 2 -->
-        <Label fx:id="bankAccountDetailsHeaderLabel" id="form-header-text" text="Bank details" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.halignment="LEFT"
+        <Label fx:id="bankAccountDetailsHeaderLabel" id="form-header-text" text="Bank details" GridPane.columnIndex="0"
+               GridPane.columnSpan="2" GridPane.halignment="LEFT"
                GridPane.rowIndex="2"/>
 
         <!-- row 3 -->
-        <Label fx:id="bankAccountTypeTitleLabel" text="Bank account type:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-        <TextField fx:id="bankAccountTypeTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+        <Label fx:id="bankAccountTypeTitleLabel" text="Bank account type:" GridPane.columnIndex="0"
+               GridPane.rowIndex="3"/>
+        <TextField fx:id="bankAccountTypeTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"
+                   GridPane.rowIndex="3"/>
 
         <!-- row 4 -->
         <Label fx:id="holderNameTitleLabel" text="Holder name:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-        <TextField fx:id="holderNameTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+        <TextField fx:id="holderNameTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"
+                   GridPane.rowIndex="4"/>
         <Label fx:id="holderNameCopyIcon" id="copy-icon" minWidth="10" GridPane.columnIndex="2" GridPane.rowIndex="4">
             <padding>
                 <Insets bottom="0.0" left="0.0" right="0.0" top="-1.0"/>
@@ -112,9 +119,12 @@
         </Label>
 
         <!-- row 5 -->
-        <Label fx:id="primaryBankAccountIDTitleLabel" text="Primary bank account ID:" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
-        <TextField fx:id="primaryBankAccountIDTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
-        <Label fx:id="primaryBankAccountIDCopyIcon" id="copy-icon" minWidth="10" GridPane.columnIndex="2" GridPane.rowIndex="5">
+        <Label fx:id="primaryBankAccountIDTitleLabel" text="Primary bank account ID:" GridPane.columnIndex="0"
+               GridPane.rowIndex="5"/>
+        <TextField fx:id="primaryBankAccountIDTextField" editable="false" focusTraversable="false"
+                   GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+        <Label fx:id="primaryBankAccountIDCopyIcon" id="copy-icon" minWidth="10" GridPane.columnIndex="2"
+               GridPane.rowIndex="5">
             <padding>
                 <Insets bottom="0.0" left="0.0" right="0.0" top="-1.0"/>
             </padding>
@@ -124,9 +134,12 @@
         </Label>
 
         <!-- row 6 -->
-        <Label fx:id="secondaryBankAccountIDTitleLabel" text="Secondary bank account ID:" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
-        <TextField fx:id="secondaryBankAccountIDTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
-        <Label fx:id="secondaryBankAccountIDCopyIcon" id="copy-icon" minWidth="10" GridPane.columnIndex="2" GridPane.rowIndex="6">
+        <Label fx:id="secondaryBankAccountIDTitleLabel" text="Secondary bank account ID:" GridPane.columnIndex="0"
+               GridPane.rowIndex="6"/>
+        <TextField fx:id="secondaryBankAccountIDTextField" editable="false" focusTraversable="false"
+                   GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+        <Label fx:id="secondaryBankAccountIDCopyIcon" id="copy-icon" minWidth="10" GridPane.columnIndex="2"
+               GridPane.rowIndex="6">
             <padding>
                 <Insets bottom="0.0" left="0.0" right="0.0" top="-1.0"/>
             </padding>
@@ -136,7 +149,8 @@
         </Label>
 
         <!-- row 7 -->
-        <Button fx:id="bankTransferInitedButton" defaultButton="true" onAction="#bankTransferInited" disable="true" text="Bank transfer initiated"
+        <Button fx:id="bankTransferInitedButton" defaultButton="true" onAction="#bankTransferInited" disable="true"
+                text="Bank transfer initiated"
                 GridPane.columnIndex="1"
                 GridPane.rowIndex="7"/>
 

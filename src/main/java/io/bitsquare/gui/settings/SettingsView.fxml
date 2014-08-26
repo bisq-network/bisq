@@ -22,7 +22,8 @@
 <?import javafx.scene.layout.*?>
 
 <TabPane fx:id="root" fx:controller="io.bitsquare.gui.settings.SettingsController"
-         AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
+         AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+         AnchorPane.topAnchor="0.0"
          xmlns:fx="http://javafx.com/fxml">
 
     <Tab text="General" closable="false">
@@ -34,16 +35,22 @@
             <ListView fx:id="languagesListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1"/>
             <Label text="Accepted countries:" GridPane.rowIndex="2"/>
             <Label text="Accepted arbitrators:" GridPane.rowIndex="4"/>
-            <ListView fx:id="countriesListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-            <ListView fx:id="arbitratorsListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
-            <ComboBox fx:id="languageComboBox" onAction="#onAddLanguage" prefWidth="150.0" promptText="Add language" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+            <ListView fx:id="countriesListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1"
+                      GridPane.rowIndex="2"/>
+            <ListView fx:id="arbitratorsListView" prefHeight="300.0" prefWidth="400.0" GridPane.columnIndex="1"
+                      GridPane.rowIndex="4"/>
+            <ComboBox fx:id="languageComboBox" onAction="#onAddLanguage" prefWidth="150.0" promptText="Add language"
+                      GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
             <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                <ComboBox fx:id="regionComboBox" onAction="#onSelectRegion" prefWidth="150.0" promptText="Select region"/>
-                <ComboBox fx:id="countryComboBox" onAction="#onAddCountry" visible="false" prefWidth="150.0" promptText="Add country"/>
+                <ComboBox fx:id="regionComboBox" onAction="#onSelectRegion" prefWidth="150.0"
+                          promptText="Select region"/>
+                <ComboBox fx:id="countryComboBox" onAction="#onAddCountry" visible="false" prefWidth="150.0"
+                          promptText="Add country"/>
             </HBox>
 
-            <Button onAction="#onOpenArbitratorScreen" text="Add arbitrator" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+            <Button onAction="#onOpenArbitratorScreen" text="Add arbitrator" GridPane.columnIndex="1"
+                    GridPane.rowIndex="5"/>
 
             <columnConstraints>
                 <ColumnConstraints/>
@@ -87,7 +94,8 @@
             <ComboBox fx:id="bankAccountComboBox" onAction="#selectBankAccount" GridPane.columnIndex="1"/>
 
             <Label text="Bank account type:" GridPane.rowIndex="1"/>
-            <ComboBox fx:id="bankAccountTypesComboBox" promptText="Select bank account type" onAction="#selectBankAccountType" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+            <ComboBox fx:id="bankAccountTypesComboBox" promptText="Select bank account type"
+                      onAction="#selectBankAccountType" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
             <Label text="Bank account title:" GridPane.rowIndex="2"/>
             <TextField fx:id="bankAccountTitleTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
@@ -102,16 +110,20 @@
             <TextField fx:id="bankAccountSecondaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
 
             <Label text="Currency used for bank account:" GridPane.rowIndex="6"/>
-            <ComboBox fx:id="bankAccountCurrencyComboBox" promptText="Select currency" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+            <ComboBox fx:id="bankAccountCurrencyComboBox" promptText="Select currency" GridPane.columnIndex="1"
+                      GridPane.rowIndex="6"/>
 
             <Label text="Country of bank account" GridPane.rowIndex="7"/>
             <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="7">
-                <ComboBox fx:id="bankAccountRegionComboBox" onAction="#onSelectBankAccountRegion" prefWidth="150.0" promptText="Select region"/>
-                <ComboBox fx:id="bankAccountCountryComboBox" visible="false" prefWidth="150.0" promptText="Select country"/>
+                <ComboBox fx:id="bankAccountRegionComboBox" onAction="#onSelectBankAccountRegion" prefWidth="150.0"
+                          promptText="Select region"/>
+                <ComboBox fx:id="bankAccountCountryComboBox" visible="false" prefWidth="150.0"
+                          promptText="Select country"/>
             </HBox>
 
             <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="8">
-                <Button fx:id="saveBankAccountButton" defaultButton="true" onAction="#onSaveBankAccount" text="Save bank account"/>
+                <Button fx:id="saveBankAccountButton" defaultButton="true" onAction="#onSaveBankAccount"
+                        text="Save bank account"/>
                 <Button fx:id="addBankAccountButton" onAction="#onAddBankAccount" text="Add new bank account"/>
                 <Button onAction="#onRemoveBankAccount" text="Remove bank account"/>
             </HBox>

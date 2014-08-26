@@ -23,7 +23,8 @@
 <?import javafx.scene.layout.*?>
 
 <AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.trade.orderbook.OrderBookController"
-            AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
+            AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+            AnchorPane.topAnchor="0.0"
             xmlns:fx="http://javafx.com/fxml">
 
     <HBox fx:id="topHBox" prefHeight="22.0" AnchorPane.topAnchor="10.0" AnchorPane.leftAnchor="10.0"
@@ -55,7 +56,8 @@
         </Label>
     </HBox>
 
-    <Button fx:id="createOfferButton" text="Create new offer" onAction="#createOffer" AnchorPane.topAnchor="10.0" AnchorPane.rightAnchor="10.0"/>
+    <Button fx:id="createOfferButton" text="Create new offer" onAction="#createOffer" AnchorPane.topAnchor="10.0"
+            AnchorPane.rightAnchor="10.0"/>
 
     <TableView fx:id="orderBookTable" AnchorPane.leftAnchor="10.0"
                AnchorPane.topAnchor="45.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">

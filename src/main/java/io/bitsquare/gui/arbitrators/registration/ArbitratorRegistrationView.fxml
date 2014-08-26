@@ -22,65 +22,85 @@
 <?import javafx.scene.layout.*?>
 
 <AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.arbitrators.registration.ArbitratorRegistrationController"
-            prefHeight="600" prefWidth="800" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
+            prefHeight="600" prefWidth="800" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="10.0"
+            AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
             xmlns:fx="http://javafx.com/fxml">
 
-    <Accordion fx:id="accordion" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+    <Accordion fx:id="accordion" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="10.0"
+               AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
         <panes>
 
             <TitledPane fx:id="profileTitledPane" text="Profile" expanded="true">
 
-                <GridPane hgap="5.0" vgap="5.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+                <GridPane hgap="5.0" vgap="5.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0"
+                          AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
 
                     <Label fx:id="nameLabel" text="Name:"/>
                     <TextField fx:id="nameTextField" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
                     <Label text="ID type:" GridPane.rowIndex="1"/>
-                    <TextField fx:id="idTypeTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                    <ComboBox fx:id="idTypeComboBox" onAction="#onSelectIDType" promptText="Select ID type" prefWidth="150.0" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
+                    <TextField fx:id="idTypeTextField" editable="false" focusTraversable="false"
+                               GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    <ComboBox fx:id="idTypeComboBox" onAction="#onSelectIDType" promptText="Select ID type"
+                              prefWidth="150.0" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
 
                     <Label text="Supported language(s):" GridPane.rowIndex="2"/>
-                    <TextField fx:id="languagesTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    <TextField fx:id="languagesTextField" editable="false" focusTraversable="false"
+                               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
                     <Button onAction="#onClearLanguages" text="Clear" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
-                    <ComboBox fx:id="languageComboBox" onAction="#onAddLanguage" prefWidth="150.0" promptText="Add language" GridPane.columnIndex="3" GridPane.rowIndex="2"/>
+                    <ComboBox fx:id="languageComboBox" onAction="#onAddLanguage" prefWidth="150.0"
+                              promptText="Add language" GridPane.columnIndex="3" GridPane.rowIndex="2"/>
 
                     <Label text="Max. trade volume:" GridPane.rowIndex="3"/>
-                    <TextField fx:id="maxTradeVolumeTextField" promptText="Recommended: 0.1 - 2 BTC" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.columnSpan="3"/>
+                    <TextField fx:id="maxTradeVolumeTextField" promptText="Recommended: 0.1 - 2 BTC"
+                               GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.columnSpan="3"/>
 
                     <Label text="Passive service fee (%):" GridPane.rowIndex="4"/>
-                    <TextField fx:id="passiveServiceFeeTextField" promptText="Recommended: 0.1 - 1%" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.columnSpan="3"/>
+                    <TextField fx:id="passiveServiceFeeTextField" promptText="Recommended: 0.1 - 1%"
+                               GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.columnSpan="3"/>
 
                     <Label text="Min. passive service fee" GridPane.rowIndex="5"/>
-                    <TextField fx:id="minPassiveServiceFeeTextField" promptText="Recommended: 0.0001 - 0.005 BTC" GridPane.columnIndex="1" GridPane.rowIndex="5" GridPane.columnSpan="3"/>
+                    <TextField fx:id="minPassiveServiceFeeTextField" promptText="Recommended: 0.0001 - 0.005 BTC"
+                               GridPane.columnIndex="1" GridPane.rowIndex="5" GridPane.columnSpan="3"/>
 
                     <Label text="Arbitration fee (%):" GridPane.rowIndex="6"/>
-                    <TextField fx:id="arbitrationFeeTextField" promptText="Recommended: 5 - 20 %" GridPane.columnIndex="1" GridPane.rowIndex="6" GridPane.columnSpan="3"/>
+                    <TextField fx:id="arbitrationFeeTextField" promptText="Recommended: 5 - 20 %"
+                               GridPane.columnIndex="1" GridPane.rowIndex="6" GridPane.columnSpan="3"/>
 
                     <Label text="Min. arbitration fee:" GridPane.rowIndex="7"/>
-                    <TextField fx:id="minArbitrationFeeTextField" promptText="Recommended: 0.1 - 0.2 BTC" GridPane.columnIndex="1" GridPane.rowIndex="7" GridPane.columnSpan="3"/>
+                    <TextField fx:id="minArbitrationFeeTextField" promptText="Recommended: 0.1 - 0.2 BTC"
+                               GridPane.columnIndex="1" GridPane.rowIndex="7" GridPane.columnSpan="3"/>
 
                     <Label text="Method(s) used for arbitration:" GridPane.rowIndex="8"/>
-                    <TextField fx:id="methodsTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="8"/>
+                    <TextField fx:id="methodsTextField" editable="false" focusTraversable="false"
+                               GridPane.columnIndex="1" GridPane.rowIndex="8"/>
                     <Button onAction="#onClearMethods" text="Clear" GridPane.columnIndex="2" GridPane.rowIndex="8"/>
-                    <ComboBox fx:id="methodsComboBox" onAction="#onAddMethod" prefWidth="150.0" promptText="Add method" GridPane.columnIndex="3" GridPane.rowIndex="8"/>
+                    <ComboBox fx:id="methodsComboBox" onAction="#onAddMethod" prefWidth="150.0" promptText="Add method"
+                              GridPane.columnIndex="3" GridPane.rowIndex="8"/>
 
                     <Label text="Offer ID verification(s):" GridPane.rowIndex="9"/>
-                    <TextField fx:id="idVerificationsTextField" promptText="Optional" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
-                    <Button onAction="#onClearIDVerifications" text="Clear" GridPane.columnIndex="2" GridPane.rowIndex="9"/>
-                    <ComboBox fx:id="idVerificationsComboBox" onAction="#onAddIDVerification" prefWidth="150.0" promptText="Add verification" GridPane.columnIndex="3"
+                    <TextField fx:id="idVerificationsTextField" promptText="Optional" editable="false"
+                               focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
+                    <Button onAction="#onClearIDVerifications" text="Clear" GridPane.columnIndex="2"
+                            GridPane.rowIndex="9"/>
+                    <ComboBox fx:id="idVerificationsComboBox" onAction="#onAddIDVerification" prefWidth="150.0"
+                              promptText="Add verification" GridPane.columnIndex="3"
                               GridPane.rowIndex="9"/>
 
                     <Label text="Web page:" GridPane.rowIndex="10"/>
-                    <TextField fx:id="webPageTextField" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="10"/>
+                    <TextField fx:id="webPageTextField" GridPane.columnIndex="1" GridPane.columnSpan="3"
+                               GridPane.rowIndex="10"/>
 
                     <Label text="Description:" GridPane.rowIndex="11" GridPane.valignment="TOP">
                         <GridPane.margin>
                             <Insets top="10.0"/>
                         </GridPane.margin>
                     </Label>
-                    <TextArea fx:id="descriptionTextArea" prefHeight="150.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="11"/>
+                    <TextArea fx:id="descriptionTextArea" prefHeight="150.0" GridPane.columnIndex="1"
+                              GridPane.columnSpan="3" GridPane.rowIndex="11"/>
 
-                    <Button fx:id="saveProfileButton" defaultButton="true" onAction="#onSaveProfile" text="Next" GridPane.columnIndex="1" GridPane.rowIndex="12"/>
+                    <Button fx:id="saveProfileButton" defaultButton="true" onAction="#onSaveProfile" text="Next"
+                            GridPane.columnIndex="1" GridPane.rowIndex="12"/>
 
                     <columnConstraints>
                         <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="10.0"/>
@@ -110,14 +130,16 @@
 
             <TitledPane fx:id="payCollateralTitledPane" text="Pay collateral">
                 <AnchorPane>
-                    <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 
                         <Label fx:id="infoLabel"/>
 
                         <GridPane hgap="5.0" vgap="5.0">
 
                             <Label text="Collateral address:"/>
-                            <TextField fx:id="collateralAddressTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"/>
+                            <TextField fx:id="collateralAddressTextField" editable="false" focusTraversable="false"
+                                       GridPane.columnIndex="1"/>
                             <Label fx:id="copyIcon" id="copy-icon" GridPane.columnIndex="2">
                                 <padding>
                                     <Insets bottom="0.0" left="0.0" right="0.0" top="-1.0"/>
@@ -128,16 +150,21 @@
                             </Label>
 
                             <Label text="Balance:" GridPane.rowIndex="1"/>
-                            <TextField fx:id="balanceTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                            <ConfidenceProgressIndicator fx:id="progressIndicator" GridPane.columnIndex="2" GridPane.halignment="LEFT"
-                                                         GridPane.rowIndex="1" GridPane.rowSpan="2" GridPane.valignment="TOP">
+                            <TextField fx:id="balanceTextField" editable="false" focusTraversable="false"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                            <ConfidenceProgressIndicator fx:id="progressIndicator" GridPane.columnIndex="2"
+                                                         GridPane.halignment="LEFT"
+                                                         GridPane.rowIndex="1" GridPane.rowSpan="2"
+                                                         GridPane.valignment="TOP">
                                 <GridPane.margin>
                                     <Insets top="2.0"/>
                                 </GridPane.margin>
                             </ConfidenceProgressIndicator>
-                            <Label fx:id="confirmationLabel" text="Checking confirmations..." GridPane.columnIndex="3" GridPane.rowIndex="1"/>
+                            <Label fx:id="confirmationLabel" text="Checking confirmations..." GridPane.columnIndex="3"
+                                   GridPane.rowIndex="1"/>
 
-                            <Button fx:id="paymentDoneButton" defaultButton="true" onAction="#onPaymentDone" text="Payment done" disable="true" GridPane.columnIndex="1"
+                            <Button fx:id="paymentDoneButton" defaultButton="true" onAction="#onPaymentDone"
+                                    text="Payment done" disable="true" GridPane.columnIndex="1"
                                     GridPane.rowIndex="2"/>
 
 
