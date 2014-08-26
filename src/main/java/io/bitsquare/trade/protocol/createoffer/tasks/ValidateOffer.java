@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.createoffer.tasks;
 
 import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.Restritions;
+import io.bitsquare.btc.Restrictions;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
@@ -55,8 +55,8 @@ public class ValidateOffer {
 
             checkArgument(offer.getAcceptedCountries().size() > 0);
             checkArgument(offer.getAcceptedLanguageLocales().size() > 0);
-            checkArgument(offer.getMinAmount().compareTo(Restritions.MIN_TRADE_AMOUNT) >= 0);
-            checkArgument(offer.getAmount().compareTo(Restritions.MIN_TRADE_AMOUNT) >= 0);
+            checkArgument(offer.getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0);
+            checkArgument(offer.getAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0);
             checkArgument(offer.getAmount().compareTo(offer.getMinAmount()) >= 0);
             checkArgument(offer.getCollateral() > 0);
             checkArgument(offer.getPrice() > 0);

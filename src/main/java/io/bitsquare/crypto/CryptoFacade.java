@@ -40,6 +40,7 @@ import org.spongycastle.util.encoders.Base64;
 
 /**
  * That facade delivers crypto functionality from the bitcoinJ library
+ * //TODO still very basic as not much used yet, missing implementations
  */
 public class CryptoFacade {
     private static final Logger log = LoggerFactory.getLogger(CryptoFacade.class);

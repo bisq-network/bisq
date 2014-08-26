@@ -47,9 +47,8 @@ public class FeePolicy {
         this.params = params;
     }
 
-    //TODO other users or dev address? use donation option list?
+    //TODO who is receiver? other users or dev address? use donation option list?
     // (dev, other users, wikileaks, tor, sub projects (bitcoinj, tomp2p,...)...)
-
     public Address getAddressForRegistrationFee() {
         try {
             return new Address(params, registrationFeeAddress);
@@ -60,7 +59,6 @@ public class FeePolicy {
     }
 
     //TODO get address form arbitrator list
-
     public Address getAddressForCreateOfferFee() {
         try {
             return new Address(params, createOfferFeeAddress);
@@ -71,7 +69,6 @@ public class FeePolicy {
     }
 
     //TODO get address form the intersection of  both traders arbitrator lists
-
     public Address getAddressForTakeOfferFee() {
         try {
             return new Address(params, takeOfferFeeAddress);

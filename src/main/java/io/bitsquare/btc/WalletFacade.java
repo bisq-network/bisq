@@ -82,7 +82,8 @@ import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
 
 /**
  * TODO: use walletextension (with protobuffer) instead of saving addressEntryList via storage
- * TODO: use HD wallet features instead of addressEntryList
+ * TODO: break that class up. maybe a bitsquarewallet
+ * Wait until steve's akka version to see how to continue here
  */
 public class WalletFacade {
     public static final String MAIN_NET = "MAIN_NET";

@@ -19,8 +19,9 @@ package io.bitsquare.btc;
 
 import com.google.bitcoin.core.Coin;
 
-public class Restritions {
-    public static final Coin MIN_TRADE_AMOUNT = Coin.CENT; // 0.01 Bitcoins
+// Lets see if we get more restriction otherwise move it to other class
+public class Restrictions {
+    public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.0001");
 
 
 }
