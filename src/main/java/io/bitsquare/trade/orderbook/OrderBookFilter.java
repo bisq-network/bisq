@@ -24,6 +24,7 @@ import com.google.bitcoin.core.Coin;
 import javafx.beans.property.SimpleBooleanProperty;
 
 public class OrderBookFilter {
+    // TODO use ObjectProperty<Direction> instead
     private final SimpleBooleanProperty directionChangedProperty = new SimpleBooleanProperty();
 
     private double price;
@@ -65,10 +66,7 @@ public class OrderBookFilter {
         this.price = price;
     }
 
-
     public SimpleBooleanProperty getDirectionChangedProperty() {
         return directionChangedProperty;
     }
-
-
 }

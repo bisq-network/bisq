@@ -29,8 +29,8 @@ import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSeller;
-import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSellerListener;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocol;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocolListener;
 
 import com.google.bitcoin.core.Coin;
 
@@ -173,7 +173,7 @@ public class TakerOfferController extends CachedViewController {
         else {
             takeOfferButton.setDisable(true);
             amountTextField.setEditable(false);
-            tradeManager.takeOffer(amount, offer, new ProtocolForTakerAsSellerListener() {
+            tradeManager.takeOffer(amount, offer, new SellerTakesOfferProtocolListener() {
                 @Override
                 public void onDepositTxPublished(String depositTxId) {
                     setDepositTxId(depositTxId);
@@ -207,19 +207,19 @@ public class TakerOfferController extends CachedViewController {
                 }
 
                 @Override
-                public void onFault(Throwable throwable, ProtocolForTakerAsSeller.State state) {
+                public void onFault(Throwable throwable, SellerTakesOfferProtocol.State state) {
                     log.error("Error while executing trade process at state: " + state + " / " + throwable);
                     Popups.openErrorPopup("Error while executing trade process",
                             "Error while executing trade process at state: " + state + " / " + throwable);
                 }
 
                 @Override
-                public void onWaitingForPeerResponse(ProtocolForTakerAsSeller.State state) {
+                public void onWaitingForPeerResponse(SellerTakesOfferProtocol.State state) {
                     log.debug("Waiting for peers response at state " + state);
                 }
 
                 @Override
-                public void onCompleted(ProtocolForTakerAsSeller.State state) {
+                public void onCompleted(SellerTakesOfferProtocol.State state) {
                     log.debug("Trade protocol completed at state " + state);
                 }
 

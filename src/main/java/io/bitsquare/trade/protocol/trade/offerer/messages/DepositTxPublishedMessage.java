@@ -15,13 +15,30 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg;
+package io.bitsquare.trade.protocol.trade.offerer.messages;
 
-import net.tomp2p.peers.PeerAddress;
+import io.bitsquare.trade.protocol.TradeMessage;
 
-/**
- * Interface for the object handling incoming messages.
- */
-public interface MessageBroker {
-    void handleMessage(Object message, PeerAddress peerAddress);
+import java.io.Serializable;
+
+public class DepositTxPublishedMessage implements Serializable, TradeMessage {
+
+    private static final long serialVersionUID = -1532231540167406581L;
+    private final String tradeId;
+
+    private String depositTxAsHex;
+
+    public DepositTxPublishedMessage(String tradeId, String depositTxAsHex) {
+        this.tradeId = tradeId;
+        this.depositTxAsHex = depositTxAsHex;
+    }
+
+    @Override
+    public String getTradeId() {
+        return tradeId;
+    }
+
+    public String getDepositTxAsHex() {
+        return depositTxAsHex;
+    }
 }

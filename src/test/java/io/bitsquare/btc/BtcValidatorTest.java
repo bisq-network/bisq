@@ -28,7 +28,6 @@ public class BtcValidatorTest {
     @Test
     public void testIsMinSpendableAmount() {
         Coin amount = null;
-        //noinspection ConstantConditions
         assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
 
         amount = Coin.ZERO;

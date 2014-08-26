@@ -15,13 +15,22 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg;
+package io.bitsquare.trade.protocol.trade.taker;
 
-import net.tomp2p.peers.PeerAddress;
+import io.bitsquare.trade.Trade;
 
-/**
- * Interface for the object handling incoming messages.
- */
-public interface MessageBroker {
-    void handleMessage(Object message, PeerAddress peerAddress);
+public interface SellerTakesOfferProtocolListener {
+    void onDepositTxPublished(String depositTxId);
+
+    void onBankTransferInited(String tradeId);
+
+    void onPayoutTxPublished(Trade trade, String hashAsString);
+
+    void onFault(Throwable throwable, SellerTakesOfferProtocol.State state);
+
+    void onWaitingForPeerResponse(SellerTakesOfferProtocol.State state);
+
+    void onCompleted(SellerTakesOfferProtocol.State state);
+
+    void onTakeOfferRequestRejected(Trade trade);
 }

@@ -29,18 +29,18 @@ import io.bitsquare.trade.handlers.ErrorMessageHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.TradeMessage;
 import io.bitsquare.trade.protocol.createoffer.CreateOfferCoordinator;
-import io.bitsquare.trade.protocol.offerer.BankTransferInitedMessage;
-import io.bitsquare.trade.protocol.offerer.DepositTxPublishedMessage;
-import io.bitsquare.trade.protocol.offerer.ProtocolForOffererAsBuyer;
-import io.bitsquare.trade.protocol.offerer.ProtocolForOffererAsBuyerListener;
-import io.bitsquare.trade.protocol.offerer.RequestTakerDepositPaymentMessage;
-import io.bitsquare.trade.protocol.offerer.RespondToTakeOfferRequestMessage;
-import io.bitsquare.trade.protocol.taker.PayoutTxPublishedMessage;
-import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSeller;
-import io.bitsquare.trade.protocol.taker.ProtocolForTakerAsSellerListener;
-import io.bitsquare.trade.protocol.taker.RequestOffererPublishDepositTxMessage;
-import io.bitsquare.trade.protocol.taker.RequestTakeOfferMessage;
-import io.bitsquare.trade.protocol.taker.TakeOfferFeePayedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocol;
+import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocolListener;
+import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.messages.RequestTakerDepositPaymentMessage;
+import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocol;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocolListener;
+import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
+import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
+import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
 import io.bitsquare.user.User;
 
 import com.google.bitcoin.core.Coin;
@@ -81,8 +81,8 @@ public class TradeManager {
     private final List<TakeOfferRequestListener> takeOfferRequestListeners = new ArrayList<>();
 
     //TODO store TakerAsSellerProtocol in trade
-    private final Map<String, ProtocolForTakerAsSeller> takerAsSellerProtocolMap = new HashMap<>();
-    private final Map<String, ProtocolForOffererAsBuyer> offererAsBuyerProtocolMap = new HashMap<>();
+    private final Map<String, SellerTakesOfferProtocol> takerAsSellerProtocolMap = new HashMap<>();
+    private final Map<String, BuyerAcceptsOfferProtocol> offererAsBuyerProtocolMap = new HashMap<>();
     private final Map<String, CreateOfferCoordinator> createOfferCoordinatorMap = new HashMap<>();
 
     private final StringProperty newTradeProperty = new SimpleStringProperty();
@@ -227,14 +227,14 @@ public class TradeManager {
         messageFacade.removeOffer(offer);
     }
 
-    public Trade takeOffer(Coin amount, Offer offer, ProtocolForTakerAsSellerListener listener) {
+    public Trade takeOffer(Coin amount, Offer offer, SellerTakesOfferProtocolListener listener) {
         Trade trade = createTrade(offer);
         trade.setTradeAmount(amount);
 
-        ProtocolForTakerAsSeller protocolForTakerAsSeller = new ProtocolForTakerAsSeller(
+        SellerTakesOfferProtocol sellerTakesOfferProtocol = new SellerTakesOfferProtocol(
                 trade, listener, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
-        takerAsSellerProtocolMap.put(trade.getId(), protocolForTakerAsSeller);
-        protocolForTakerAsSeller.start();
+        takerAsSellerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
+        sellerTakesOfferProtocol.start();
 
         return trade;
     }
@@ -284,14 +284,14 @@ public class TradeManager {
             Trade trade = createTrade(offer);
             pendingTrade = trade;
 
-            ProtocolForOffererAsBuyer protocolForOffererAsBuyer = new ProtocolForOffererAsBuyer(trade,
+            BuyerAcceptsOfferProtocol buyerAcceptsOfferProtocol = new BuyerAcceptsOfferProtocol(trade,
                     sender,
                     messageFacade,
                     walletFacade,
                     blockChainFacade,
                     cryptoFacade,
                     user,
-                    new ProtocolForOffererAsBuyerListener() {
+                    new BuyerAcceptsOfferProtocolListener() {
                         @Override
                         public void onOfferAccepted(Offer offer) {
                             removeOffer(offer);
@@ -317,7 +317,7 @@ public class TradeManager {
                         }
 
                         @Override
-                        public void onFault(Throwable throwable, ProtocolForOffererAsBuyer.State state) {
+                        public void onFault(Throwable throwable, BuyerAcceptsOfferProtocol.State state) {
                             log.error("Error while executing trade process at state: " + state + " / " + throwable);
                             Popups.openErrorPopup("Error while executing trade process",
                                     "Error while executing trade process at state: " + state + " / " +
@@ -325,17 +325,17 @@ public class TradeManager {
                         }
 
                         @Override
-                        public void onWaitingForPeerResponse(ProtocolForOffererAsBuyer.State state) {
+                        public void onWaitingForPeerResponse(BuyerAcceptsOfferProtocol.State state) {
                             log.debug("Waiting for peers response at state " + state);
                         }
 
                         @Override
-                        public void onCompleted(ProtocolForOffererAsBuyer.State state) {
+                        public void onCompleted(BuyerAcceptsOfferProtocol.State state) {
                             log.debug("Trade protocol completed at state " + state);
                         }
 
                         @Override
-                        public void onWaitingForUserInteraction(ProtocolForOffererAsBuyer.State state) {
+                        public void onWaitingForUserInteraction(BuyerAcceptsOfferProtocol.State state) {
                             log.debug("Waiting for UI activity at state " + state);
                         }
 
@@ -348,7 +348,7 @@ public class TradeManager {
                     });
 
             if (!offererAsBuyerProtocolMap.containsKey(trade.getId())) {
-                offererAsBuyerProtocolMap.put(trade.getId(), protocolForOffererAsBuyer);
+                offererAsBuyerProtocolMap.put(trade.getId(), buyerAcceptsOfferProtocol);
             }
             else {
                 // We don't store the protocol in case we have already a pending offer. The protocol is only
@@ -356,7 +356,7 @@ public class TradeManager {
                 log.trace("offererAsBuyerProtocol not stored as offer is already pending.");
             }
 
-            protocolForOffererAsBuyer.start();
+            buyerAcceptsOfferProtocol.start();
         }
         else {
             log.warn("Incoming offer take request does not match with any saved offer. We ignore that request.");

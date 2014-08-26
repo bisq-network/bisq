@@ -55,6 +55,7 @@ remove dependencies to tomp2p
 import net.tomp2p.peers.Number160;
 import net.tomp2p.storage.Data;
  */
+
 public class OrderBook implements OrderBookListener {
     private static final Logger log = LoggerFactory.getLogger(OrderBook.class);
     private final ObservableList<OrderBookListItem> allOffers = FXCollections.observableArrayList();
@@ -148,8 +149,6 @@ public class OrderBook implements OrderBookListener {
             // (1 to n)
             boolean arbitratorResult = arbitratorInList(offer.getArbitrator(), settings.getAcceptedArbitrators());
 
-
-            //noinspection UnnecessaryLocalVariable
             boolean result = currencyResult && countryResult && languageResult && amountResult && directionResult &&
                     priceResult && arbitratorResult;
 

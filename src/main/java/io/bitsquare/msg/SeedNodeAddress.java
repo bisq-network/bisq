@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+// TODO Might be better with a config file
 public class SeedNodeAddress {
     private final String id;
     private final String ip;

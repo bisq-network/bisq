@@ -27,7 +27,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
-import io.bitsquare.msg.BootstrapListener;
+import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.storage.Persistence;
 import io.bitsquare.trade.TradeManager;

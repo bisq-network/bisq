@@ -15,13 +15,24 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg;
+package io.bitsquare.trade.protocol.trade.taker.messages;
 
-import net.tomp2p.peers.PeerAddress;
+import io.bitsquare.trade.protocol.TradeMessage;
 
-/**
- * Interface for the object handling incoming messages.
- */
-public interface MessageBroker {
-    void handleMessage(Object message, PeerAddress peerAddress);
+import java.io.Serializable;
+
+public class RequestTakeOfferMessage implements Serializable, TradeMessage {
+    private static final long serialVersionUID = 4660151440192191798L;
+    private final String tradeId;
+
+    public RequestTakeOfferMessage(String tradeId) {
+        this.tradeId = tradeId;
+    }
+
+    @Override
+    public String getTradeId() {
+        return tradeId;
+    }
+
+
 }

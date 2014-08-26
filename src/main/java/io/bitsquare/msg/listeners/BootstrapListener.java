@@ -15,13 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg;
+package io.bitsquare.msg.listeners;
 
-import net.tomp2p.peers.PeerAddress;
+public interface BootstrapListener {
+    public void onCompleted();
 
-/**
- * Interface for the object handling incoming messages.
- */
-public interface MessageBroker {
-    void handleMessage(Object message, PeerAddress peerAddress);
+    public void onFailed(Throwable throwable);
+
 }

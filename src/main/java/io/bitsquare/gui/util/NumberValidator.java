@@ -55,7 +55,6 @@ public abstract class NumberValidator {
 
     protected ValidationResult validateIfNumber(String input) {
         try {
-            //noinspection ResultOfMethodCallIgnored
             Double.parseDouble(input);
             return new ValidationResult(true);
         } catch (Exception e) {

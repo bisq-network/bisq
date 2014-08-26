@@ -18,6 +18,7 @@
 package io.bitsquare.msg;
 
 import io.bitsquare.msg.listeners.ArbitratorListener;
+import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.msg.listeners.GetPeerAddressListener;
 import io.bitsquare.msg.listeners.IncomingTradeMessageListener;
 import io.bitsquare.msg.listeners.OrderBookListener;

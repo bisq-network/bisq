@@ -35,7 +35,8 @@ public class Settings implements Serializable {
     private List<Country> acceptedCountryLocales = new ArrayList<>();
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
 
-    private long collateral = 100; // is 1/1000 so 100 is a multiplier of 0,1 or 10% of the amount
+    private long collateral = 100;  // is 1/1000 so 100 results to 100/1000 = 0,1 (or 10%) 
+    // which will be used for multiplying with the amount to get the collateral size in BTC.
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +112,6 @@ public class Settings implements Serializable {
     //TODO
     public Arbitrator getRandomArbitrator(Coin amount) {
         List<Arbitrator> candidates = new ArrayList<>();
-        //noinspection Convert2streamapi
         for (Arbitrator arbitrator : acceptedArbitrators) {
             candidates.add(arbitrator);
         }

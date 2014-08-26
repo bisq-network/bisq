@@ -45,6 +45,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Simple storage solution for serialized data
+ * TODO: Should be improved with a more robust solution or maybe a lightweight database.
+ * TODO: Should run in a dedicated thread.
  */
 public class Persistence {
     private static final Logger log = LoggerFactory.getLogger(Persistence.class);
@@ -191,7 +193,6 @@ public class Persistence {
             }
             else {
                 if (object instanceof Map) {
-                    //noinspection unchecked
                     return (Map<String, Serializable>) object;
                 }
                 else {
