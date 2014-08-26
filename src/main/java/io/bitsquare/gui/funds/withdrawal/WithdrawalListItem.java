@@ -99,7 +99,8 @@ public class WithdrawalListItem {
 
     private void updateConfidence(TransactionConfidence confidence) {
         if (confidence != null) {
-            //log.debug("Type numBroadcastPeers getDepthInBlocks " + confidence.getConfidenceType() + " / " + confidence.numBroadcastPeers() + " / " + confidence.getDepthInBlocks());
+            //log.debug("Type numBroadcastPeers getDepthInBlocks " + confidence.getConfidenceType() + " / " +
+            // confidence.numBroadcastPeers() + " / " + confidence.getDepthInBlocks());
             switch (confidence.getConfidenceType()) {
                 case UNKNOWN:
                     tooltip.setText("Unknown transaction status");

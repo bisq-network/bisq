@@ -34,11 +34,13 @@ public class BankAccount implements Serializable {
     private final String accountHolderName;
     private final Country country;     // where bank is registered
     // The main currency if account support multiple currencies.
-    // The user can create multiple bank accounts with same bank account but other currency if his bank account support that.
+    // The user can create multiple bank accounts with same bank account but other currency if his bank account
+    // support that.
     private final Currency currency;
     private final String accountTitle;
 
-    public BankAccount(BankAccountType bankAccountType, Currency currency, Country country, String accountTitle, String accountHolderName, String accountPrimaryID, String accountSecondaryID) {
+    public BankAccount(BankAccountType bankAccountType, Currency currency, Country country, String accountTitle,
+                       String accountHolderName, String accountPrimaryID, String accountSecondaryID) {
         this.bankAccountType = bankAccountType;
         this.currency = currency;
         this.country = country;

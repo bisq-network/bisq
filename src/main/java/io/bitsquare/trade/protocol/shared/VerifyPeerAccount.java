@@ -27,7 +27,8 @@ import org.slf4j.LoggerFactory;
 public class VerifyPeerAccount {
     private static final Logger log = LoggerFactory.getLogger(VerifyPeerAccount.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, BlockChainFacade blockChainFacade, String peersAccountId, BankAccount peersBankAccount) {
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler,
+                           BlockChainFacade blockChainFacade, String peersAccountId, BankAccount peersBankAccount) {
         //TODO mocked yet
         if (blockChainFacade.verifyAccountRegistration()) {
             if (blockChainFacade.isAccountBlackListed(peersAccountId, peersBankAccount)) {

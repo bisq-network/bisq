@@ -44,7 +44,8 @@ public class ArbitratorProfileController extends CachedViewController {
 
 
     @FXML private Label nameLabel;
-    @FXML private TextField nameTextField, languagesTextField, reputationTextField, maxTradeVolumeTextField, passiveServiceFeeTextField, arbitrationFeeTextField, methodsTextField,
+    @FXML private TextField nameTextField, languagesTextField, reputationTextField, maxTradeVolumeTextField,
+            passiveServiceFeeTextField, arbitrationFeeTextField, methodsTextField,
             idVerificationsTextField, webPageTextField;
     @FXML private TextArea descriptionTextArea;
 
@@ -127,10 +128,13 @@ public class ArbitratorProfileController extends CachedViewController {
             languagesTextField.setText(BitSquareFormatter.languageLocalesToString(arbitrator.getLanguages()));
             reputationTextField.setText(arbitrator.getReputation().toString());
             maxTradeVolumeTextField.setText(String.valueOf(arbitrator.getMaxTradeVolume()) + " BTC");
-            passiveServiceFeeTextField.setText(String.valueOf(arbitrator.getPassiveServiceFee()) + " % (Min. " + String.valueOf(arbitrator.getMinPassiveServiceFee()) + " BTC)");
-            arbitrationFeeTextField.setText(String.valueOf(arbitrator.getArbitrationFee()) + " % (Min. " + String.valueOf(arbitrator.getMinArbitrationFee()) + " BTC)");
+            passiveServiceFeeTextField.setText(String.valueOf(arbitrator.getPassiveServiceFee()) + " % (Min. " +
+                    String.valueOf(arbitrator.getMinPassiveServiceFee()) + " BTC)");
+            arbitrationFeeTextField.setText(String.valueOf(arbitrator.getArbitrationFee()) + " % (Min. " + String
+                    .valueOf(arbitrator.getMinArbitrationFee()) + " BTC)");
             methodsTextField.setText(BitSquareFormatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
-            idVerificationsTextField.setText(BitSquareFormatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));
+            idVerificationsTextField.setText(BitSquareFormatter.arbitrationIDVerificationsToString(arbitrator
+                    .getIdVerifications()));
             webPageTextField.setText(arbitrator.getWebUrl());
             descriptionTextArea.setText(arbitrator.getDescription());
         }

@@ -32,7 +32,9 @@ public class RequestTakerDepositPaymentMessage implements Serializable, TradeMes
     private String preparedOffererDepositTxAsHex;
     private long offererTxOutIndex;
 
-    public RequestTakerDepositPaymentMessage(String tradeId, BankAccount bankAccount, String accountID, String offererPubKey, String preparedOffererDepositTxAsHex, long offererTxOutIndex) {
+    public RequestTakerDepositPaymentMessage(String tradeId, BankAccount bankAccount, String accountID,
+                                             String offererPubKey, String preparedOffererDepositTxAsHex,
+                                             long offererTxOutIndex) {
         this.tradeId = tradeId;
         this.bankAccount = bankAccount;
         this.accountID = accountID;

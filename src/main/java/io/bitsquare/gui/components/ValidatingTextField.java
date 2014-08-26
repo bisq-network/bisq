@@ -135,7 +135,8 @@ public class ValidatingTextField extends TextField {
         });
 
         focusedProperty().addListener((ov, oldValue, newValue) -> {
-            if (validateOnFocusOut && needsValidationOnFocusOut && !newValue && getScene() != null && getScene().getWindow().isFocused())
+            if (validateOnFocusOut && needsValidationOnFocusOut && !newValue && getScene() != null && getScene()
+                    .getWindow().isFocused())
                 validate(getText());
         });
 

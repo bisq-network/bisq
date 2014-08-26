@@ -62,7 +62,8 @@ public class WithdrawalController extends CachedViewController {
     private ObservableList<WithdrawalListItem> addressList;
 
     @FXML private TableView<WithdrawalListItem> tableView;
-    @FXML private TableColumn<String, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn, confidenceColumn;
+    @FXML private TableColumn<String, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
+            confidenceColumn;
     @FXML private Button addNewAddressButton;
     @FXML private TextField withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField;
 
@@ -106,7 +107,8 @@ public class WithdrawalController extends CachedViewController {
 
         tableView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
             if (newValue != null) {
-                BitSquareValidator.resetTextFields(withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField);
+                BitSquareValidator.resetTextFields(withdrawFromTextField, withdrawToTextField, amountTextField,
+                        changeAddressTextField);
 
                 if (Coin.ZERO.compareTo(newValue.getBalance()) <= 0) {
                     amountTextField.setText(newValue.getBalance().toPlainString());
@@ -123,7 +125,8 @@ public class WithdrawalController extends CachedViewController {
 
         List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
         addressList = FXCollections.observableArrayList();
-        addressList.addAll(addressEntryList.stream().map(anAddressEntryList -> new WithdrawalListItem(anAddressEntryList, walletFacade)).collect(Collectors.toList()));
+        addressList.addAll(addressEntryList.stream().map(anAddressEntryList -> new WithdrawalListItem
+                (anAddressEntryList, walletFacade)).collect(Collectors.toList()));
 
         tableView.setItems(addressList);
     }
@@ -136,7 +139,8 @@ public class WithdrawalController extends CachedViewController {
     @FXML
     public void onWithdraw() {
         try {
-            BitSquareValidator.textFieldsNotEmpty(amountTextField, withdrawFromTextField, withdrawToTextField, changeAddressTextField);
+            BitSquareValidator.textFieldsNotEmpty(amountTextField, withdrawFromTextField, withdrawToTextField,
+                    changeAddressTextField);
             BitSquareValidator.textFieldsHasDoubleValueWithReset(amountTextField);
 
             Coin amount = BitSquareFormatter.parseToCoin(amountTextField.getText());
@@ -144,7 +148,8 @@ public class WithdrawalController extends CachedViewController {
                 FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
                     @Override
                     public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
-                        BitSquareValidator.resetTextFields(withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField);
+                        BitSquareValidator.resetTextFields(withdrawFromTextField, withdrawToTextField,
+                                amountTextField, changeAddressTextField);
                         if (transaction != null) {
                             log.info("onWithdraw onSuccess txid:" + transaction.getHashAsString());
                         }
@@ -156,18 +161,22 @@ public class WithdrawalController extends CachedViewController {
                     }
                 };
 
-                Action response = Popups.openConfirmPopup("Withdrawal request", "Confirm your request", "Your withdrawal request:\n\n" +
+                Action response = Popups.openConfirmPopup("Withdrawal request", "Confirm your request",
+                        "Your withdrawal request:\n\n" +
                         "Amount: " + amountTextField.getText() + " BTC\n" +
                         "Sending address: " + withdrawFromTextField.getText() + "\n" +
                         "Receiving address: " + withdrawToTextField.getText() + "\n" +
                         "Transaction fee: " + BitSquareFormatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
-                        "You receive in total: " + BitSquareFormatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
+                        "You receive in total: " + BitSquareFormatter.formatCoinWithCode(amount.subtract(FeePolicy
+                                .TX_FEE)) + " BTC\n\n" +
                         "Are you sure you withdraw that amount?");
                 if (response == Dialog.Actions.OK) {
                     try {
-                        walletFacade.sendFunds(withdrawFromTextField.getText(), withdrawToTextField.getText(), changeAddressTextField.getText(), amount, callback);
+                        walletFacade.sendFunds(withdrawFromTextField.getText(), withdrawToTextField.getText(),
+                                changeAddressTextField.getText(), amount, callback);
                     } catch (AddressFormatException e) {
-                        Popups.openErrorPopup("Address invalid", "The address is not correct. Please check the address format.");
+                        Popups.openErrorPopup("Address invalid", "The address is not correct. Please check the " +
+                                "address format.");
 
                     } catch (InsufficientMoneyException e) {
                         Popups.openInsufficientMoneyPopup();
@@ -177,7 +186,8 @@ public class WithdrawalController extends CachedViewController {
                 }
 
             } else {
-                Popups.openErrorPopup("Insufficient amount", "The amount to transfer is lower the the transaction fee and the min. possible tx value.");
+                Popups.openErrorPopup("Insufficient amount", "The amount to transfer is lower the the transaction fee" +
+                        " and the min. possible tx value.");
             }
 
         } catch (BitSquareValidator.ValidationException e) {
@@ -197,7 +207,8 @@ public class WithdrawalController extends CachedViewController {
 
     private void setLabelColumnCellFactory() {
         labelColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        labelColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>() {
+        labelColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String,
+                WithdrawalListItem>>() {
 
             @Override
             public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column) {
@@ -216,7 +227,8 @@ public class WithdrawalController extends CachedViewController {
                                 Tooltip tooltip = new Tooltip(item.getAddressEntry().getOfferId());
                                 Tooltip.install(hyperlink, tooltip);
 
-                                hyperlink.setOnAction(event -> log.info("Show trade details " + item.getAddressEntry().getOfferId()));
+                                hyperlink.setOnAction(event -> log.info("Show trade details " + item.getAddressEntry
+                                        ().getOfferId()));
                             }
                             setGraphic(hyperlink);
                         } else {
@@ -231,7 +243,8 @@ public class WithdrawalController extends CachedViewController {
 
     private void setBalanceColumnCellFactory() {
         balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        balanceColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>() {
+        balanceColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String,
+                WithdrawalListItem>>() {
 
             @Override
             public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column) {
@@ -248,7 +261,8 @@ public class WithdrawalController extends CachedViewController {
 
     private void setCopyColumnCellFactory() {
         copyColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        copyColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>() {
+        copyColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String,
+                WithdrawalListItem>>() {
 
             @Override
             public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column) {
@@ -284,8 +298,10 @@ public class WithdrawalController extends CachedViewController {
     }
 
     private void setConfidenceColumnCellFactory() {
-        confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        confidenceColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>() {
+        confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue
+                ()));
+        confidenceColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String,
+                WithdrawalListItem>>() {
 
             @Override
             public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column) {

@@ -54,7 +54,8 @@ public class FundsController extends CachedViewController {
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
-        ((CachingTabPane) root).initialize(this, persistence, NavigationItem.DEPOSIT.getFxmlUrl(), NavigationItem.WITHDRAWAL.getFxmlUrl(), NavigationItem.TRANSACTIONS.getFxmlUrl());
+        ((CachingTabPane) root).initialize(this, persistence, NavigationItem.DEPOSIT.getFxmlUrl(),
+                NavigationItem.WITHDRAWAL.getFxmlUrl(), NavigationItem.TRANSACTIONS.getFxmlUrl());
     }
 
     @Override

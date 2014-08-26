@@ -118,7 +118,8 @@ public class OrderBook implements OrderBookListener {
             boolean countryResult = countryInList(offer.getBankAccountCountry(), settings.getAcceptedCountries());
 
             // One of the supported languages from the settings must match one of the offer languages (n to n)
-            boolean languageResult = languagesInList(settings.getAcceptedLanguageLocales(), offer.getAcceptedLanguageLocales());
+            boolean languageResult = languagesInList(settings.getAcceptedLanguageLocales(),
+                    offer.getAcceptedLanguageLocales());
 
             // Apply applyFilter only if there is a valid value set
             // The requested amount must be lower or equal then the offer amount
@@ -139,14 +140,16 @@ public class OrderBook implements OrderBookListener {
                 }
             }
 
-            // The arbitrator defined in the offer must match one of the accepted arbitrators defined in the settings (1 to n)
+            // The arbitrator defined in the offer must match one of the accepted arbitrators defined in the settings
+            // (1 to n)
             boolean arbitratorResult = arbitratorInList(offer.getArbitrator(), settings.getAcceptedArbitrators());
 
 
             //noinspection UnnecessaryLocalVariable
-            boolean result = currencyResult && countryResult && languageResult && amountResult && directionResult && priceResult && arbitratorResult;
+            boolean result = currencyResult && countryResult && languageResult && amountResult && directionResult &&
+                    priceResult && arbitratorResult;
 
-                /* 
+                /*
             log.debug("result = " + result +
                     ", currencyResult = " + currencyResult +
                     ", countryResult = " + countryResult +
@@ -163,7 +166,8 @@ public class OrderBook implements OrderBookListener {
                     ", settings.getAcceptedCountries() = " + settings.getAcceptedCountries().toString());
             log.debug("settings.getAcceptedLanguageLocales() = " + settings.getAcceptedLanguageLocales() +
                     ", offer.getAcceptedLanguageLocales() = " + offer.getAcceptedLanguageLocales());
-            log.debug("currentBankAccount.getBankAccountType().getType() = " + currentBankAccount.getBankAccountType().getType() +
+            log.debug("currentBankAccount.getBankAccountType().getType() = " + currentBankAccount.getBankAccountType
+            ().getType() +
                     ", offer.getBankAccountTypeEnum() = " + offer.getBankAccountTypeEnum());
             log.debug("orderBookFilter.getAmount() = " + orderBookFilter.getAmount() +
                     ", offer.getAmount() = " + offer.getAmount());

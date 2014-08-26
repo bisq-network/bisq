@@ -28,7 +28,8 @@ import org.slf4j.LoggerFactory;
 public class VerifyOffererAccount {
     private static final Logger log = LoggerFactory.getLogger(VerifyOffererAccount.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, BlockChainFacade blockChainFacade, String peersAccountId, BankAccount peersBankAccount) {
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler,
+                           BlockChainFacade blockChainFacade, String peersAccountId, BankAccount peersBankAccount) {
         log.trace("Run task");
         VerifyPeerAccount.run(resultHandler, exceptionHandler, blockChainFacade, peersAccountId, peersBankAccount);
     }

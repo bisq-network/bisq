@@ -28,9 +28,11 @@ import org.slf4j.LoggerFactory;
 public class RequestTakeOffer {
     private static final Logger log = LoggerFactory.getLogger(RequestTakeOffer.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, PeerAddress peerAddress, MessageFacade messageFacade, String tradeId) {
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, PeerAddress peerAddress,
+                           MessageFacade messageFacade, String tradeId) {
         log.trace("Run task");
-        messageFacade.sendTradeMessage(peerAddress, new RequestTakeOfferMessage(tradeId), new OutgoingTradeMessageListener() {
+        messageFacade.sendTradeMessage(peerAddress, new RequestTakeOfferMessage(tradeId),
+                new OutgoingTradeMessageListener() {
             @Override
             public void onResult() {
                 log.trace("RequestTakeOfferMessage successfully arrived at peer");

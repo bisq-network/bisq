@@ -48,7 +48,8 @@ public class OfferController extends CachedViewController {
     private final TradeManager tradeManager;
     private ObservableList<OfferListItem> offerListItems;
 
-    @FXML private TableColumn<String, OfferListItem> offerIdColumn, dateColumn, amountColumn, priceColumn, volumeColumn, removeColumn;
+    @FXML private TableColumn<String, OfferListItem> offerIdColumn, dateColumn, amountColumn, priceColumn,
+            volumeColumn, removeColumn;
     @FXML private TableView<OfferListItem> offerTable;
 
 
@@ -116,7 +117,8 @@ public class OfferController extends CachedViewController {
 
     private void setOfferIdColumnColumnCellFactory() {
         offerIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper(offerListItem.getValue()));
-        offerIdColumn.setCellFactory(new Callback<TableColumn<String, OfferListItem>, TableCell<String, OfferListItem>>() {
+        offerIdColumn.setCellFactory(new Callback<TableColumn<String, OfferListItem>, TableCell<String,
+                OfferListItem>>() {
 
             @Override
             public TableCell<String, OfferListItem> call(TableColumn<String, OfferListItem> column) {
@@ -146,7 +148,8 @@ public class OfferController extends CachedViewController {
 
     private void setRemoveColumnCellFactory() {
         removeColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper(offerListItem.getValue()));
-        removeColumn.setCellFactory(new Callback<TableColumn<String, OfferListItem>, TableCell<String, OfferListItem>>() {
+        removeColumn.setCellFactory(new Callback<TableColumn<String, OfferListItem>, TableCell<String,
+                OfferListItem>>() {
 
             @Override
             public TableCell<String, OfferListItem> call(TableColumn<String, OfferListItem> directionColumn) {

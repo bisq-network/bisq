@@ -84,7 +84,8 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeManager(User user, Settings settings, Persistence persistence, MessageFacade messageFacade, BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade) {
+    public TradeManager(User user, Settings settings, Persistence persistence, MessageFacade messageFacade,
+                        BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade) {
         this.user = user;
         this.settings = settings;
         this.persistence = persistence;
@@ -161,7 +162,8 @@ public class TradeManager {
                 settings.getAcceptedLanguageLocales());
 
         if (createOfferCoordinatorMap.containsKey(offer.getId())) {
-            errorMessageHandler.onFault("A createOfferCoordinator for the offer with the id " + offer.getId() + " already exists.");
+            errorMessageHandler.onFault("A createOfferCoordinator for the offer with the id " + offer.getId() + " " +
+                    "already exists.");
         } else {
             CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(persistence,
                     offer,
@@ -212,7 +214,8 @@ public class TradeManager {
         Trade trade = createTrade(offer);
         trade.setTradeAmount(amount);
 
-        ProtocolForTakerAsSeller protocolForTakerAsSeller = new ProtocolForTakerAsSeller(trade, listener, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
+        ProtocolForTakerAsSeller protocolForTakerAsSeller = new ProtocolForTakerAsSeller(trade, listener,
+                messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
         takerAsSellerProtocolMap.put(trade.getId(), protocolForTakerAsSeller);
         protocolForTakerAsSeller.start();
 
@@ -330,7 +333,8 @@ public class TradeManager {
             if (!offererAsBuyerProtocolMap.containsKey(trade.getId())) {
                 offererAsBuyerProtocolMap.put(trade.getId(), protocolForOffererAsBuyer);
             } else {
-                // We don't store the protocol in case we have already a pending offer. The protocol is only temporary used to reply with a reject message.
+                // We don't store the protocol in case we have already a pending offer. The protocol is only
+                // temporary used to reply with a reject message.
                 log.trace("offererAsBuyerProtocol not stored as offer is already pending.");
             }
 
@@ -362,13 +366,16 @@ public class TradeManager {
             createOffererAsBuyerProtocol(tradeId, sender);
             takeOfferRequestListeners.stream().forEach(e -> e.onTakeOfferRequested(tradeId, sender));
         } else if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
-            takerAsSellerProtocolMap.get(tradeId).onRespondToTakeOfferRequestMessage((RespondToTakeOfferRequestMessage) tradeMessage);
+            takerAsSellerProtocolMap.get(tradeId).onRespondToTakeOfferRequestMessage(
+                    (RespondToTakeOfferRequestMessage) tradeMessage);
         } else if (tradeMessage instanceof TakeOfferFeePayedMessage) {
             offererAsBuyerProtocolMap.get(tradeId).onTakeOfferFeePayedMessage((TakeOfferFeePayedMessage) tradeMessage);
         } else if (tradeMessage instanceof RequestTakerDepositPaymentMessage) {
-            takerAsSellerProtocolMap.get(tradeId).onRequestTakerDepositPaymentMessage((RequestTakerDepositPaymentMessage) tradeMessage);
+            takerAsSellerProtocolMap.get(tradeId).onRequestTakerDepositPaymentMessage(
+                    (RequestTakerDepositPaymentMessage) tradeMessage);
         } else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
-            offererAsBuyerProtocolMap.get(tradeId).onRequestOffererPublishDepositTxMessage((RequestOffererPublishDepositTxMessage) tradeMessage);
+            offererAsBuyerProtocolMap.get(tradeId).onRequestOffererPublishDepositTxMessage(
+                    (RequestOffererPublishDepositTxMessage) tradeMessage);
         } else if (tradeMessage instanceof DepositTxPublishedMessage) {
             takerAsSellerProtocolMap.get(tradeId).onDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
         } else if (tradeMessage instanceof BankTransferInitedMessage) {

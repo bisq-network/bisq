@@ -41,7 +41,8 @@ public class FeePolicy {
         this.params = params;
     }
 
-    //TODO other users or dev address? use donation option list? (dev, other users, wikileaks, tor, sub projects (bitcoinj, tomp2p,...)...)
+    //TODO other users or dev address? use donation option list? (dev, other users, wikileaks, tor,
+    // sub projects (bitcoinj, tomp2p,...)...)
 
     public Address getAddressForRegistrationFee() {
         try {

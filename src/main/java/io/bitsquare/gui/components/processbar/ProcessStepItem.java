@@ -33,7 +33,8 @@ public class ProcessStepItem {
         this(label, color, false);
     }
 
-    private ProcessStepItem(String label, Paint color, @SuppressWarnings("SameParameterValue") boolean hasProgressIndicator) {
+    private ProcessStepItem(String label, Paint color, @SuppressWarnings("SameParameterValue") boolean
+            hasProgressIndicator) {
         this.label = label;
         this.color = color;
         this.progressIndicator = hasProgressIndicator;

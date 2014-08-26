@@ -73,7 +73,8 @@ public class BootstrappedPeerFactory {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BootstrappedPeerFactory(Persistence persistence, @Named("defaultSeedNode") SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses) {
+    public BootstrappedPeerFactory(Persistence persistence, @Named("defaultSeedNode") SeedNodeAddress
+            .StaticSeedNodeAddresses defaultStaticSeedNodeAddresses) {
         this.persistence = persistence;
         this.seedNodeAddress = new SeedNodeAddress(defaultStaticSeedNodeAddresses);
     }
@@ -129,7 +130,7 @@ public class BootstrappedPeerFactory {
                 }
             });
 
-            // We save last successful bootstrap method. 
+            // We save last successful bootstrap method.
             // Reset it to "default" after 5 start ups.
             Object lastSuccessfulBootstrapCounterObject = persistence.read(this, "lastSuccessfulBootstrapCounter");
             int lastSuccessfulBootstrapCounter = 0;
@@ -153,7 +154,8 @@ public class BootstrappedPeerFactory {
                     bootstrapWithRelay(peerDHT, nodeBehindNat);
                     break;
                 case "startPortForwarding":
-                    FutureDiscover futureDiscover = peerDHT.peer().discover().peerAddress(getBootstrapAddress()).start();
+                    FutureDiscover futureDiscover = peerDHT.peer().discover().peerAddress(getBootstrapAddress())
+                            .start();
                     bootstrapWithPortForwarding(peerDHT, futureDiscover);
                     break;
                 case "default":
@@ -190,14 +192,16 @@ public class BootstrappedPeerFactory {
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
                     // We are not behind a NAT and reachable to other peers
-                    log.debug("We are not behind a NAT and reachable to other peers: My address visible to the outside is " + futureDiscover.peerAddress());
+                    log.debug("We are not behind a NAT and reachable to other peers: My address visible to the " +
+                            "outside is " + futureDiscover.peerAddress());
                     requestBootstrapPeerMap();
                     settableFuture.set(peerDHT);
 
                     persistence.write(ref, "lastSuccessfulBootstrap", "default");
                 } else {
                     log.warn("Discover has failed. Reason: " + futureDiscover.failedReason());
-                    log.warn("We are probably behind a NAT and not reachable to other peers. We try port forwarding as next step.");
+                    log.warn("We are probably behind a NAT and not reachable to other peers. We try port forwarding " +
+                            "as next step.");
 
                     bootstrapWithPortForwarding(peerDHT, futureDiscover);
                 }
@@ -223,7 +227,8 @@ public class BootstrappedPeerFactory {
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
                     // Port forwarding has succeed
-                    log.debug("Port forwarding was successful. My address visible to the outside is " + futureNAT.peerAddress());
+                    log.debug("Port forwarding was successful. My address visible to the outside is " + futureNAT
+                            .peerAddress());
                     requestBootstrapPeerMap();
                     settableFuture.set(peerDHT);
 

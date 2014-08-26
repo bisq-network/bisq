@@ -172,15 +172,18 @@ public class MessageFacade implements MessageBroker {
                     if (future.isSuccess()) {
                         Platform.runLater(() -> {
                             addOfferListener.onComplete();
-                            orderBookListeners.stream().forEach(listener -> listener.onOfferAdded(data, future.isSuccess()));
+                            orderBookListeners.stream().forEach(listener -> listener.onOfferAdded(data,
+                                    future.isSuccess()));
 
                             // TODO will be removed when we don't use polling anymore
                             setDirty(locationKey);
-                            log.trace("Add offer to DHT was successful. Stored data: [key: " + locationKey + ", value: " + data + "]");
+                            log.trace("Add offer to DHT was successful. Stored data: [key: " + locationKey + ", " +
+                                    "value: " + data + "]");
                         });
                     } else {
                         Platform.runLater(() -> {
-                            addOfferListener.onFailed("Add offer to DHT failed.", new Exception("Add offer to DHT failed. Reason: " + future.failedReason()));
+                            addOfferListener.onFailed("Add offer to DHT failed.",
+                                    new Exception("Add offer to DHT failed. Reason: " + future.failedReason()));
                             log.error("Add offer to DHT failed. Reason: " + future.failedReason());
                         });
                     }
@@ -211,11 +214,13 @@ public class MessageFacade implements MessageBroker {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
                     Platform.runLater(() -> {
-                        orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOfferRemoved(data, future.isSuccess()));
+                        orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOfferRemoved
+                                (data, future.isSuccess()));
                         setDirty(locationKey);
                     });
                     if (future.isSuccess()) {
-                        log.trace("Remove offer from DHT was successful. Stored data: [key: " + locationKey + ", value: " + data + "]");
+                        log.trace("Remove offer from DHT was successful. Stored data: [key: " + locationKey + ", " +
+                                "value: " + data + "]");
                     } else {
                         log.error("Remove offer from DHT failed. Reason: " + future.failedReason());
                     }
@@ -237,9 +242,11 @@ public class MessageFacade implements MessageBroker {
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture baseFuture) throws Exception {
-                Platform.runLater(() -> orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOffersReceived(futureGet.dataMap(), baseFuture.isSuccess())));
+                Platform.runLater(() -> orderBookListeners.stream().forEach(orderBookListener -> orderBookListener
+                        .onOffersReceived(futureGet.dataMap(), baseFuture.isSuccess())));
                 if (baseFuture.isSuccess()) {
-                    //log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey + ", values: " + futureGet.dataMap() + "]");
+                    //log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey + ",
+                    // values: " + futureGet.dataMap() + "]");
                 } else {
                     log.error("Get offers from DHT failed with reason:" + baseFuture.failedReason());
                 }
@@ -252,7 +259,8 @@ public class MessageFacade implements MessageBroker {
     // Trade process
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void sendTradeMessage(PeerAddress peerAddress, TradeMessage tradeMessage, OutgoingTradeMessageListener listener) {
+    public void sendTradeMessage(PeerAddress peerAddress, TradeMessage tradeMessage,
+                                 OutgoingTradeMessageListener listener) {
         FutureDirect futureDirect = p2pNode.sendData(peerAddress, tradeMessage);
         futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
@@ -285,9 +293,11 @@ public class MessageFacade implements MessageBroker {
             addFuture.addListener(new BaseFutureAdapter<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    Platform.runLater(() -> arbitratorListeners.stream().forEach(listener -> listener.onArbitratorAdded(arbitratorData, addFuture.isSuccess())));
+                    Platform.runLater(() -> arbitratorListeners.stream().forEach(listener -> listener
+                            .onArbitratorAdded(arbitratorData, addFuture.isSuccess())));
                     if (addFuture.isSuccess()) {
-                        log.trace("Add arbitrator to DHT was successful. Stored data: [key: " + locationKey + ", values: " + arbitratorData + "]");
+                        log.trace("Add arbitrator to DHT was successful. Stored data: [key: " + locationKey + ", " +
+                                "values: " + arbitratorData + "]");
                     } else {
                         log.error("Add arbitrator to DHT failed with reason:" + addFuture.failedReason());
                     }
@@ -307,9 +317,11 @@ public class MessageFacade implements MessageBroker {
         removeFuture.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
-                Platform.runLater(() -> arbitratorListeners.stream().forEach(listener -> listener.onArbitratorRemoved(arbitratorData, removeFuture.isSuccess())));
+                Platform.runLater(() -> arbitratorListeners.stream().forEach(listener -> listener.onArbitratorRemoved
+                        (arbitratorData, removeFuture.isSuccess())));
                 if (removeFuture.isSuccess()) {
-                    log.trace("Remove arbitrator from DHT was successful. Stored data: [key: " + locationKey + ", values: " + arbitratorData + "]");
+                    log.trace("Remove arbitrator from DHT was successful. Stored data: [key: " + locationKey + ", " +
+                            "values: " + arbitratorData + "]");
                 } else {
                     log.error("Remove arbitrators from DHT failed with reason:" + removeFuture.failedReason());
                 }
@@ -323,9 +335,11 @@ public class MessageFacade implements MessageBroker {
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture baseFuture) throws Exception {
-                Platform.runLater(() -> arbitratorListeners.stream().forEach(listener -> listener.onArbitratorsReceived(futureGet.dataMap(), baseFuture.isSuccess())));
+                Platform.runLater(() -> arbitratorListeners.stream().forEach(listener -> listener
+                        .onArbitratorsReceived(futureGet.dataMap(), baseFuture.isSuccess())));
                 if (baseFuture.isSuccess()) {
-                    log.trace("Get arbitrators from DHT was successful. Stored data: [key: " + locationKey + ", values: " + futureGet.dataMap() + "]");
+                    log.trace("Get arbitrators from DHT was successful. Stored data: [key: " + locationKey + ", " +
+                            "values: " + futureGet.dataMap() + "]");
                 } else {
                     log.error("Get arbitrators from DHT failed with reason:" + baseFuture.failedReason());
                 }
@@ -424,7 +438,8 @@ public class MessageFacade implements MessageBroker {
     }
 
     public void setDirty(Number160 locationKey) {
-        // we don't want to get an update from dirty for own changes, so update the lastTimeStamp to omit a change trigger
+        // we don't want to get an update from dirty for own changes, so update the lastTimeStamp to omit a change
+        // trigger
         lastTimeStamp = System.currentTimeMillis();
         try {
             FuturePut putFuture = p2pNode.putData(getDirtyLocationKey(locationKey), new Data(lastTimeStamp));
@@ -457,7 +472,8 @@ public class MessageFacade implements MessageBroker {
     public void handleMessage(Object message, PeerAddress peerAddress) {
         if (message instanceof TradeMessage) {
             log.error("####################");
-            Platform.runLater(() -> incomingTradeMessageListeners.stream().forEach(e -> e.onMessage((TradeMessage) message, peerAddress)));
+            Platform.runLater(() -> incomingTradeMessageListeners.stream().forEach(e -> e.onMessage((TradeMessage)
+                    message, peerAddress)));
         }
     }
 }

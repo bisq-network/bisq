@@ -98,7 +98,8 @@ public class BitSquareFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * @param input String to be converted to a double. Both decimal points "." and "," are supported. Thousands separator is not supported.
+     * @param input String to be converted to a double. Both decimal points "." and ",
+     *              " are supported. Thousands separator is not supported.
      * @return Returns a double value. Any invalid value returns Double.NEGATIVE_INFINITY.
      */
     public static double parseToDouble(String input) {

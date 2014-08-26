@@ -4,10 +4,12 @@
     <option name="PER_PROJECT_SETTINGS">
       <value>
         <option name="LINE_SEPARATOR" value="&#10;" />
+        <option name="WRAP_WHEN_TYPING_REACHES_RIGHT_MARGIN" value="true" />
         <XML>
           <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
         </XML>
         <codeStyleSettings language="JAVA">
+          <option name="WRAP_LONG_LINES" value="true" />
           <option name="FIELD_ANNOTATION_WRAP" value="0" />
         </codeStyleSettings>
       </value>

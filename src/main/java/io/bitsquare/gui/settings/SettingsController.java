@@ -80,7 +80,8 @@ public class SettingsController extends CachedViewController {
     @FXML private ComboBox<Locale> languageComboBox;
     @FXML private ComboBox<Region> regionComboBox, bankAccountRegionComboBox;
     @FXML private ComboBox<Country> countryComboBox, bankAccountCountryComboBox;
-    @FXML private TextField bankAccountTitleTextField, bankAccountHolderNameTextField, bankAccountPrimaryIDTextField, bankAccountSecondaryIDTextField;
+    @FXML private TextField bankAccountTitleTextField, bankAccountHolderNameTextField, bankAccountPrimaryIDTextField,
+            bankAccountSecondaryIDTextField;
     @FXML private Button saveBankAccountButton, addBankAccountButton;
     @FXML private ComboBox<BankAccount> bankAccountComboBox;
     @FXML private ComboBox<BankAccountType> bankAccountTypesComboBox;
@@ -251,7 +252,8 @@ public class SettingsController extends CachedViewController {
     public void onSelectBankAccountRegion() {
         bankAccountCountryComboBox.setVisible(true);
         Region selectedBankAccountRegion = bankAccountRegionComboBox.getSelectionModel().getSelectedItem();
-        bankAccountCountryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllCountriesFor(selectedBankAccountRegion)));
+        bankAccountCountryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllCountriesFor
+                (selectedBankAccountRegion)));
     }
 
     @FXML
@@ -520,7 +522,8 @@ public class SettingsController extends CachedViewController {
             bankAccountCurrencyComboBox.getSelectionModel().selectFirst();
             bankAccountRegionComboBox.getSelectionModel().select(3);
 
-            Optional<Country> country = bankAccountCountryComboBox.getItems().stream().filter(e -> e.getCode().equals(CountryUtil.getDefaultCountry().getCode())).findFirst();
+            Optional<Country> country = bankAccountCountryComboBox.getItems().stream().filter(e -> e.getCode().equals
+                    (CountryUtil.getDefaultCountry().getCode())).findFirst();
             if (country.isPresent())
                 bankAccountCountryComboBox.getSelectionModel().select(country.get());
 
@@ -680,7 +683,8 @@ public class SettingsController extends CachedViewController {
                 actions.add(Dialog.Actions.NO);
 
                 Action response = Popups.openConfirmPopup("Warning",
-                        "The country of your bank account is not included in the accepted countries in the general settings.\n\nDo you want to add it automatically?",
+                        "The country of your bank account is not included in the accepted countries in the general " +
+                                "settings.\n\nDo you want to add it automatically?",
                         null,
                         actions);
                 if (response == Dialog.Actions.YES)
@@ -699,13 +703,16 @@ public class SettingsController extends CachedViewController {
 
     private boolean verifyBankAccountData() {
         try {
-            BitSquareValidator.textFieldsNotEmptyWithReset(bankAccountTitleTextField, bankAccountHolderNameTextField, bankAccountPrimaryIDTextField, bankAccountSecondaryIDTextField);
+            BitSquareValidator.textFieldsNotEmptyWithReset(bankAccountTitleTextField, bankAccountHolderNameTextField,
+                    bankAccountPrimaryIDTextField, bankAccountSecondaryIDTextField);
 
             BankAccountType bankAccountTypeInfo = bankAccountTypesComboBox.getSelectionModel().getSelectedItem();
             BitSquareValidator.textFieldBankAccountPrimaryIDIsValid(bankAccountPrimaryIDTextField, bankAccountTypeInfo);
-            BitSquareValidator.textFieldBankAccountSecondaryIDIsValid(bankAccountSecondaryIDTextField, bankAccountTypeInfo);
+            BitSquareValidator.textFieldBankAccountSecondaryIDIsValid(bankAccountSecondaryIDTextField,
+                    bankAccountTypeInfo);
 
-            return bankAccountTypesComboBox.getSelectionModel().getSelectedItem() != null && bankAccountCountryComboBox.getSelectionModel()
+            return bankAccountTypesComboBox.getSelectionModel().getSelectedItem() != null &&
+                    bankAccountCountryComboBox.getSelectionModel()
                     .getSelectedItem() != null && bankAccountCurrencyComboBox.getSelectionModel()
                     .getSelectedItem() !=
                     null;

@@ -30,7 +30,8 @@ import org.slf4j.LoggerFactory;
 public class BroadCastOfferFeeTx {
     private static final Logger log = LoggerFactory.getLogger(BroadCastOfferFeeTx.class);
 
-    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, WalletFacade walletFacade, Transaction tx) {
+    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, WalletFacade walletFacade,
+                           Transaction tx) {
         try {
             walletFacade.broadcastCreateOfferFeeTx(tx, new FutureCallback<Transaction>() {
                 @Override
@@ -43,7 +44,8 @@ public class BroadCastOfferFeeTx {
                             faultHandler.onFault("Offer fee payment failed.", e);
                         }
                     } else {
-                        faultHandler.onFault("Offer fee payment failed.", new Exception("Offer fee payment failed. Transaction = null."));
+                        faultHandler.onFault("Offer fee payment failed.", new Exception("Offer fee payment failed. " +
+                                "Transaction = null."));
                     }
                 }
 
@@ -53,7 +55,8 @@ public class BroadCastOfferFeeTx {
                 }
             });
         } catch (InsufficientMoneyException e) {
-            faultHandler.onFault("Offer fee payment failed because there is insufficient money in the trade pocket. ", e);
+            faultHandler.onFault("Offer fee payment failed because there is insufficient money in the trade pocket. " +
+                    "", e);
         } catch (Throwable t) {
             faultHandler.onFault("Offer fee payment failed because of an exception occurred. ", t);
         }

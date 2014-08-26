@@ -30,7 +30,8 @@ import org.slf4j.LoggerFactory;
 public class GetPeerAddress {
     private static final Logger log = LoggerFactory.getLogger(GetPeerAddress.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, MessageFacade messageFacade, PublicKey messagePublicKey) {
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler,
+                           MessageFacade messageFacade, PublicKey messagePublicKey) {
         log.trace("Run task");
         messageFacade.getPeerAddress(messagePublicKey, new GetPeerAddressListener() {
             @Override

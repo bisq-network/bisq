@@ -28,13 +28,15 @@ import org.slf4j.LoggerFactory;
 public class HandleTakeOfferRequest {
     private static final Logger log = LoggerFactory.getLogger(HandleTakeOfferRequest.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, PeerAddress peerAddress, MessageFacade messageFacade, Trade.State tradeState, String tradeId) {
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, PeerAddress peerAddress,
+                           MessageFacade messageFacade, Trade.State tradeState, String tradeId) {
         log.trace("Run task");
         boolean takeOfferRequestAccepted = tradeState == Trade.State.OPEN;
         if (!takeOfferRequestAccepted) {
             log.info("Received take offer request but the offer not marked as open anymore.");
         }
-        messageFacade.sendTradeMessage(peerAddress, new RespondToTakeOfferRequestMessage(tradeId, takeOfferRequestAccepted), new OutgoingTradeMessageListener() {
+        messageFacade.sendTradeMessage(peerAddress, new RespondToTakeOfferRequestMessage(tradeId,
+                takeOfferRequestAccepted), new OutgoingTradeMessageListener() {
             @Override
             public void onResult() {
                 log.trace("RespondToTakeOfferRequestMessage successfully arrived at peer");

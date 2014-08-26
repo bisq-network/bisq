@@ -50,7 +50,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The fully bootstrapped P2PNode which is responsible himself for his availability in the messaging system. It saves for instance the IP address periodically.
+ * The fully bootstrapped P2PNode which is responsible himself for his availability in the messaging system. It saves
+ * for instance the IP address periodically.
  * This class is offering generic functionality of TomP2P needed for Bitsquare, like data and domain protection.
  * It does not handle any domain aspects of Bitsquare.
  */
@@ -63,8 +64,10 @@ public class P2PNode {
     // just for lightweight client test
    /* public static void main(String[] args)
     {
-        P2PNode p2pNode = new P2PNode(DSAKeyUtil.generateKeyPair(), false, SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN,
-                                      (message, peerAddress) -> log.debug("handleMessage: message= " + message + "/ peerAddress=" + peerAddress));
+        P2PNode p2pNode = new P2PNode(DSAKeyUtil.generateKeyPair(), false, SeedNodeAddress.StaticSeedNodeAddresses
+        .DIGITAL_OCEAN,
+                                      (message, peerAddress) -> log.debug("handleMessage: message= " + message + "/
+                                      peerAddress=" + peerAddress));
         p2pNode.start(new FutureCallback<PeerDHT>()
         {
             @Override
@@ -158,7 +161,8 @@ public class P2PNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // The data and the domain are protected by that key pair.
-    public FuturePut putDomainProtectedData(Number160 locationKey, Data data) throws IOException, ClassNotFoundException {
+    public FuturePut putDomainProtectedData(Number160 locationKey, Data data) throws IOException,
+            ClassNotFoundException {
         data.protectEntry(keyPair);
         final Number160 ownerKeyHash = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
         return peerDHT.put(locationKey).data(data).keyPair(keyPair).domainKey(ownerKeyHash).protectDomain().start();
@@ -170,7 +174,8 @@ public class P2PNode {
     }
 
     // Not public readable. Only users with the public key of the peer who stored the data can read that data
-    public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey) throws IOException, ClassNotFoundException {
+    public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey) throws IOException,
+            ClassNotFoundException {
         final Number160 ownerKeyHash = Utils.makeSHAHash(publicKey.getEncoded());
         return peerDHT.get(locationKey).domainKey(ownerKeyHash).start();
     }
@@ -308,7 +313,8 @@ public class P2PNode {
         if (useDiscStorage) {
             try {
 
-                File path = new File(StorageDirectory.getStorageDirectory().getCanonicalPath() + "/" + BitSquare.getAppName() + "_tomP2P");
+                File path = new File(StorageDirectory.getStorageDirectory().getCanonicalPath() + "/" + BitSquare
+                        .getAppName() + "_tomP2P");
                 if (!path.exists()) {
                     boolean created = path.mkdir();
                     if (!created)

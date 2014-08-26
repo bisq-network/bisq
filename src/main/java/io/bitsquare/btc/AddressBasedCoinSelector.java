@@ -90,7 +90,8 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector {
         // Pick chain-included transactions and transactions that are pending.
         TransactionConfidence confidence = tx.getConfidence();
         TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
-        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) || type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
+        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) || type.equals(TransactionConfidence
+                .ConfidenceType.PENDING) &&
                 // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
                 // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
                 (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
@@ -116,7 +117,8 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector {
 
     @SuppressWarnings("WeakerAccess")
     protected boolean matchesRequiredAddress(TransactionOutput transactionOutput) {
-        if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH()) {
+        if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH
+                ()) {
             Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
             if (addressEntry != null && addressOutput.equals(addressEntry.getAddress())) {
                 return true;
@@ -168,7 +170,8 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector {
                 type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
                         confidence.getSource().equals(TransactionConfidence.Source.SELF) &&
                         // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
-                        // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
+                        // TODO: The value 1 below dates from a time when transactions we broadcast *to* were
+                        counted, set to 0
                         (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
     }
      */

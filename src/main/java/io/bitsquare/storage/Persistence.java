@@ -202,7 +202,8 @@ public class Persistence {
         try {
             tempFile = FileUtil.getTempFile(prefix);
 
-            // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile) and we need to close it
+            // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile)
+            // and we need to close it
             // manually before replacing file with temp file
             fileOutputStream = new FileOutputStream(tempFile);
             objectOutputStream = new ObjectOutputStream(fileOutputStream);
@@ -214,7 +215,8 @@ public class Persistence {
             fileOutputStream.flush();
             fileOutputStream.getFD().sync();
 
-            // Close resources before replacing file with temp file because otherwise it causes problems on windows when rename temp file
+            // Close resources before replacing file with temp file because otherwise it causes problems on windows
+            // when rename temp file
             fileOutputStream.close();
             objectOutputStream.close();
 

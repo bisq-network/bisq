@@ -41,7 +41,8 @@ public class LanguageUtil {
 
     public static List<Locale> getAllLanguageLocales() {
         List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
-        final Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !"".equals(locale.getLanguage())).map(locale -> new Locale(locale.getLanguage(), "")).collect(Collectors.toSet());
+        final Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !"".equals(locale.getLanguage()))
+                .map(locale -> new Locale(locale.getLanguage(), "")).collect(Collectors.toSet());
         allLocales = new ArrayList<>();
         allLocales.addAll(allLocalesAsSet);
         allLocales.sort((locale1, locale2) -> locale1.getDisplayLanguage().compareTo(locale2.getDisplayLanguage()));

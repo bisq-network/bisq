@@ -58,7 +58,8 @@ public class OrdersController extends CachedViewController {
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
-        ((CachingTabPane) root).initialize(this, persistence, NavigationItem.OFFER.getFxmlUrl(), NavigationItem.PENDING_TRADE.getFxmlUrl(), NavigationItem.CLOSED_TRADE.getFxmlUrl());
+        ((CachingTabPane) root).initialize(this, persistence, NavigationItem.OFFER.getFxmlUrl(),
+                NavigationItem.PENDING_TRADE.getFxmlUrl(), NavigationItem.CLOSED_TRADE.getFxmlUrl());
     }
 
     @Override

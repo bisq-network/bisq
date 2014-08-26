@@ -49,7 +49,8 @@ public class CreateAndSignContract {
                            ECKey registrationKey) {
         log.trace("Run task");
         try {
-            Contract contract = new Contract(offer, tradeAmount, takeOfferFeeTxId, peersAccountId, accountId, peersBankAccount, bankAccount, peersMessagePublicKey, messagePublicKey);
+            Contract contract = new Contract(offer, tradeAmount, takeOfferFeeTxId, peersAccountId, accountId,
+                    peersBankAccount, bankAccount, peersMessagePublicKey, messagePublicKey);
 
             String contractAsJson = Utilities.objectToJson(contract);
             String signature = cryptoFacade.signContract(registrationKey, contractAsJson);

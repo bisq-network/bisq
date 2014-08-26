@@ -55,7 +55,8 @@ public class ValidationHelper {
 
         minAmountTextField.focusedProperty().addListener((ov, oldValue, newValue) -> {
             // only on focus out and ignore focus loss from window
-            if (!newValue && minAmountTextField.getScene() != null && minAmountTextField.getScene().getWindow().isFocused())
+            if (!newValue && minAmountTextField.getScene() != null && minAmountTextField.getScene().getWindow()
+                    .isFocused())
                 validateMinAmount(amountTextField,
                         minAmountTextField,
                         amount,
@@ -86,7 +87,9 @@ public class ValidationHelper {
 
         if (currentTextField == amountTextField) {
             if (Double.parseDouble(amountCleaned) < Double.parseDouble(minAmountCleaned)) {
-                amountValidator.overrideResult(new NumberValidator.ValidationResult(false, "Amount cannot be smaller than minimum amount.", NumberValidator.ErrorType.AMOUNT_LESS_THAN_MIN_AMOUNT));
+                amountValidator.overrideResult(new NumberValidator.ValidationResult(false,
+                        "Amount cannot be smaller than minimum amount.",
+                        NumberValidator.ErrorType.AMOUNT_LESS_THAN_MIN_AMOUNT));
                 amountTextField.reValidate();
             } else {
                 amountValidator.overrideResult(null);
@@ -94,7 +97,9 @@ public class ValidationHelper {
             }
         } else if (currentTextField == minAmountTextField) {
             if (Double.parseDouble(minAmountCleaned) > Double.parseDouble(amountCleaned)) {
-                minAmountValidator.overrideResult(new NumberValidator.ValidationResult(false, "Minimum amount cannot be larger than amount.", NumberValidator.ErrorType.MIN_AMOUNT_LARGER_THAN_MIN_AMOUNT));
+                minAmountValidator.overrideResult(new NumberValidator.ValidationResult(false,
+                        "Minimum amount cannot be larger than amount.",
+                        NumberValidator.ErrorType.MIN_AMOUNT_LARGER_THAN_MIN_AMOUNT));
                 minAmountTextField.reValidate();
             } else {
                 minAmountValidator.overrideResult(null);

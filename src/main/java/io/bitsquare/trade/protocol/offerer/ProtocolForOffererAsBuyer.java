@@ -45,7 +45,8 @@ import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.util.Validator.*;
 
 /**
- * Responsible for the correct execution of the sequence of tasks, message passing to the peer and message processing from the peer.
+ * Responsible for the correct execution of the sequence of tasks, message passing to the peer and message processing
+ * from the peer.
  * <p/>
  * This class handles the role of the offerer as the Bitcoin buyer.
  * <p/>
@@ -158,7 +159,8 @@ public class ProtocolForOffererAsBuyer {
     public void start() {
         log.debug("start called " + step++);
         state = State.HandleTakeOfferRequest;
-        HandleTakeOfferRequest.run(this::onResultHandleTakeOfferRequest, this::onFault, peerAddress, messageFacade, trade.getState(), tradeId);
+        HandleTakeOfferRequest.run(this::onResultHandleTakeOfferRequest, this::onFault, peerAddress, messageFacade,
+                trade.getState(), tradeId);
     }
 
     public void onResultHandleTakeOfferRequest(boolean takeOfferRequestAccepted) {
@@ -198,7 +200,8 @@ public class ProtocolForOffererAsBuyer {
 
         // next task
         state = State.VerifyTakeOfferFeePayment;
-        VerifyTakeOfferFeePayment.run(this::onResultVerifyTakeOfferFeePayment, this::onFault, walletFacade, this.takeOfferFeeTxId);
+        VerifyTakeOfferFeePayment.run(this::onResultVerifyTakeOfferFeePayment, this::onFault, walletFacade,
+                this.takeOfferFeeTxId);
     }
 
     public void onResultVerifyTakeOfferFeePayment() {
@@ -207,10 +210,12 @@ public class ProtocolForOffererAsBuyer {
         Coin collateral = trade.getCollateralAmount();
         Coin offererInputAmount = collateral.add(FeePolicy.TX_FEE);
         state = State.CreateDepositTx;
-        CreateDepositTx.run(this::onResultCreateDepositTx, this::onFault, walletFacade, tradeId, offererInputAmount, takerPubKey, arbitratorPubKey);
+        CreateDepositTx.run(this::onResultCreateDepositTx, this::onFault, walletFacade, tradeId, offererInputAmount,
+                takerPubKey, arbitratorPubKey);
     }
 
-    public void onResultCreateDepositTx(String offererPubKey, String preparedOffererDepositTxAsHex, long offererTxOutIndex) {
+    public void onResultCreateDepositTx(String offererPubKey, String preparedOffererDepositTxAsHex,
+                                        long offererTxOutIndex) {
         log.debug("onResultCreateDepositTx called " + step++);
         this.preparedOffererDepositTxAsHex = preparedOffererDepositTxAsHex;
         this.offererTxOutIndex = offererTxOutIndex;
@@ -269,7 +274,8 @@ public class ProtocolForOffererAsBuyer {
 
         // next task
         state = State.VerifyTakerAccount;
-        VerifyTakerAccount.run(this::onResultVerifyTakerAccount, this::onFault, blockChainFacade, this.peersAccountId, this.peersBankAccount);
+        VerifyTakerAccount.run(this::onResultVerifyTakerAccount, this::onFault, blockChainFacade,
+                this.peersAccountId, this.peersBankAccount);
     }
 
     public void onResultVerifyTakerAccount() {
@@ -318,14 +324,16 @@ public class ProtocolForOffererAsBuyer {
         listener.onDepositTxPublished(depositTransaction.getHashAsString());
 
         state = State.SendDepositTxIdToTaker;
-        SendDepositTxIdToTaker.run(this::onResultSendDepositTxIdToTaker, this::onFault, peerAddress, messageFacade, tradeId, depositTransaction);
+        SendDepositTxIdToTaker.run(this::onResultSendDepositTxIdToTaker, this::onFault, peerAddress, messageFacade,
+                tradeId, depositTransaction);
     }
 
     public void onResultSendDepositTxIdToTaker() {
         log.debug("onResultSendDepositTxIdToTaker called " + step++);
 
         state = State.SetupListenerForBlockChainConfirmation;
-        SetupListenerForBlockChainConfirmation.run(this::onResultSetupListenerForBlockChainConfirmation, this::onFault, trade.getDepositTransaction(), listener);
+        SetupListenerForBlockChainConfirmation.run(this::onResultSetupListenerForBlockChainConfirmation,
+                this::onFault, trade.getDepositTransaction(), listener);
     }
 
     public void onResultSetupListenerForBlockChainConfirmation() {
@@ -346,7 +354,8 @@ public class ProtocolForOffererAsBuyer {
         log.debug("state " + state);
 
         // validation
-        checkState(state.ordinal() >= State.SignAndPublishDepositTx.ordinal() && state.ordinal() <= State.onResultSetupListenerForBlockChainConfirmation.ordinal());
+        checkState(state.ordinal() >= State.SignAndPublishDepositTx.ordinal() && state.ordinal() <= State
+                .onResultSetupListenerForBlockChainConfirmation.ordinal());
 
         state = State.onUIEventBankTransferInited;
 

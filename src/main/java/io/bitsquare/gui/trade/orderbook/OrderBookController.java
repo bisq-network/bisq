@@ -103,7 +103,8 @@ public class OrderBookController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private OrderBookController(OrderBook orderBook, User user, MessageFacade messageFacade, WalletFacade walletFacade, Settings settings, Persistence persistence) {
+    private OrderBookController(OrderBook orderBook, User user, MessageFacade messageFacade,
+                                WalletFacade walletFacade, Settings settings, Persistence persistence) {
         this.orderBook = orderBook;
         this.user = user;
         this.messageFacade = messageFacade;
@@ -254,14 +255,16 @@ public class OrderBookController extends CachedViewController {
                         selectedIndex = 2;
                     } else {
                         Action response = Popups.openErrorPopup("Registration fee not confirmed yet",
-                                "The registration fee transaction has not been confirmed yet in the blockchain. Please wait until it has at least 1 confirmation.");
+                                "The registration fee transaction has not been confirmed yet in the blockchain. " +
+                                        "Please wait until it has at least 1 confirmation.");
                         if (response == Dialog.Actions.OK) {
                             MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.FUNDS);
                         }
                     }
                 } else {
                     Action response = Popups.openErrorPopup("Missing registration fee",
-                            "You have not funded the full registration fee of " + BitSquareFormatter.formatCoinWithCode(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
+                            "You have not funded the full registration fee of " + BitSquareFormatter
+                                    .formatCoinWithCode(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
                     if (response == Dialog.Actions.OK) {
                         MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.FUNDS);
                     }
@@ -274,13 +277,17 @@ public class OrderBookController extends CachedViewController {
         }
 
         if (selectedIndex >= 0) {
-            Dialogs.CommandLink settingsCommandLink = new Dialogs.CommandLink("Open settings", "You need to configure your settings before you can actively trade.");
+            Dialogs.CommandLink settingsCommandLink = new Dialogs.CommandLink("Open settings",
+                    "You need to configure your settings before you can actively trade.");
             Dialogs.CommandLink depositFeeCommandLink = new Dialogs.CommandLink("Deposit funds",
-                    "You need to pay the registration fee before you can actively trade. That is needed as prevention against fraud.");
+                    "You need to pay the registration fee before you can actively trade. That is needed as prevention" +
+                            " against fraud.");
             Dialogs.CommandLink sendRegistrationCommandLink = new Dialogs.CommandLink("Publish registration",
-                    "When settings are configured and the fee deposit is done your registration transaction will be published to "
+                    "When settings are configured and the fee deposit is done your registration transaction will be " +
+                            "published to "
                             + "the Bitcoin \nnetwork.");
-            List<Dialogs.CommandLink> commandLinks = Arrays.asList(settingsCommandLink, depositFeeCommandLink, sendRegistrationCommandLink);
+            List<Dialogs.CommandLink> commandLinks = Arrays.asList(settingsCommandLink, depositFeeCommandLink,
+                    sendRegistrationCommandLink);
             Action registrationMissingAction = Popups.openRegistrationMissingPopup("Not registered yet",
                     "Please follow these steps:",
                     "You need to register before you can place an offer.",
@@ -325,7 +332,8 @@ public class OrderBookController extends CachedViewController {
 
     private void takeOffer(Offer offer) {
         if (isRegistered()) {
-            TakerOfferController takerOfferController = (TakerOfferController) parentController.loadViewAndGetChildController(NavigationItem.TAKE_OFFER);
+            TakerOfferController takerOfferController = (TakerOfferController) parentController
+                    .loadViewAndGetChildController(NavigationItem.TAKE_OFFER);
 
             Coin requestedAmount;
             if (!"".equals(amount.getText())) {
@@ -349,7 +357,8 @@ public class OrderBookController extends CachedViewController {
     private void applyOffers() {
         orderBook.applyFilter(orderBookFilter);
 
-        priceColumn.setSortType((orderBookFilter.getDirection() == Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
+        priceColumn.setSortType((orderBookFilter.getDirection() == Direction.BUY) ? TableColumn.SortType.ASCENDING :
+                TableColumn.SortType.DESCENDING);
         orderBookTable.sort();
 
         if (orderBookTable.getItems() != null) {
@@ -377,7 +386,8 @@ public class OrderBookController extends CachedViewController {
 
     private void setDirectionColumnCellFactory() {
         directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
-        directionColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>() {
+        directionColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String,
+                OrderBookListItem>>() {
 
             @Override
             public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn) {
@@ -431,7 +441,8 @@ public class OrderBookController extends CachedViewController {
 
     private void setCountryColumnCellFactory() {
         countryColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
-        countryColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>() {
+        countryColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String,
+                OrderBookListItem>>() {
 
             @Override
             public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn) {
@@ -452,10 +463,12 @@ public class OrderBookController extends CachedViewController {
                         if (orderBookListItem != null) {
                             Country country = orderBookListItem.getOffer().getBankAccountCountry();
                             try {
-                                hBox.getChildren().add(ImageUtil.getIconImageView("/images/countries/" + country.getCode().toLowerCase() + ".png"));
+                                hBox.getChildren().add(ImageUtil.getIconImageView("/images/countries/" + country
+                                        .getCode().toLowerCase() + ".png"));
 
                             } catch (Exception e) {
-                                log.warn("Country icon not found: " + "/images/countries/" + country.getCode().toLowerCase() + ".png country name: " + country.getName());
+                                log.warn("Country icon not found: " + "/images/countries/" + country.getCode()
+                                        .toLowerCase() + ".png country name: " + country.getName());
                             }
                             Tooltip.install(this, new Tooltip(country.getName()));
                         }
@@ -467,7 +480,8 @@ public class OrderBookController extends CachedViewController {
 
     private void setBankAccountTypeColumnCellFactory() {
         bankAccountTypeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
-        bankAccountTypeColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>() {
+        bankAccountTypeColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String,
+                OrderBookListItem>>() {
 
             @Override
             public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn) {

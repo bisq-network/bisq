@@ -45,7 +45,8 @@ public class TransactionsController extends CachedViewController {
     private ObservableList<TransactionsListItem> transactionsListItems;
 
     @FXML private TableView<TransactionsListItem> tableView;
-    @FXML private TableColumn<String, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn, confidenceColumn;
+    @FXML private TableColumn<String, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn,
+            confidenceColumn;
     @FXML private Button addNewAddressButton;
 
 
@@ -87,7 +88,8 @@ public class TransactionsController extends CachedViewController {
 
         List<Transaction> transactions = walletFacade.getWallet().getRecentTransactions(10000, true);
         transactionsListItems = FXCollections.observableArrayList();
-        transactionsListItems.addAll(transactions.stream().map(transaction -> new TransactionsListItem(transaction, walletFacade)).collect(Collectors.toList()));
+        transactionsListItems.addAll(transactions.stream().map(transaction -> new TransactionsListItem(transaction,
+                walletFacade)).collect(Collectors.toList()));
 
         tableView.setItems(transactionsListItems);
     }
@@ -109,7 +111,8 @@ public class TransactionsController extends CachedViewController {
 
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        addressColumn.setCellFactory(new Callback<TableColumn<String, TransactionsListItem>, TableCell<String, TransactionsListItem>>() {
+        addressColumn.setCellFactory(new Callback<TableColumn<String, TransactionsListItem>, TableCell<String,
+                TransactionsListItem>>() {
 
             @Override
             public TableCell<String, TransactionsListItem> call(TableColumn<String, TransactionsListItem> column) {
@@ -136,8 +139,10 @@ public class TransactionsController extends CachedViewController {
     }
 
     private void setConfidenceColumnCellFactory() {
-        confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        confidenceColumn.setCellFactory(new Callback<TableColumn<String, TransactionsListItem>, TableCell<String, TransactionsListItem>>() {
+        confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue
+                ()));
+        confidenceColumn.setCellFactory(new Callback<TableColumn<String, TransactionsListItem>, TableCell<String,
+                TransactionsListItem>>() {
 
             @Override
             public TableCell<String, TransactionsListItem> call(TableColumn<String, TransactionsListItem> column) {

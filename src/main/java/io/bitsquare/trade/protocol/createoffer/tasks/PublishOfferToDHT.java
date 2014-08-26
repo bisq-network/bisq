@@ -27,7 +27,8 @@ import org.slf4j.LoggerFactory;
 public class PublishOfferToDHT {
     private static final Logger log = LoggerFactory.getLogger(PublishOfferToDHT.class);
 
-    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, MessageFacade messageFacade, Offer offer) {
+    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, MessageFacade messageFacade,
+                           Offer offer) {
         messageFacade.addOffer(offer, new MessageFacade.AddOfferListener() {
             @Override
             public void onComplete() {

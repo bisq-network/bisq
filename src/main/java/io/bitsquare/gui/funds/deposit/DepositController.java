@@ -49,7 +49,8 @@ public class DepositController extends CachedViewController {
     private ObservableList<DepositListItem> addressList;
 
     @FXML private TableView<DepositListItem> tableView;
-    @FXML private TableColumn<String, DepositListItem> labelColumn, addressColumn, balanceColumn, copyColumn, confidenceColumn;
+    @FXML private TableColumn<String, DepositListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
+            confidenceColumn;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +93,8 @@ public class DepositController extends CachedViewController {
 
         List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
         addressList = FXCollections.observableArrayList();
-        addressList.addAll(addressEntryList.stream().map(anAddressEntryList -> new DepositListItem(anAddressEntryList, walletFacade)).collect(Collectors.toList()));
+        addressList.addAll(addressEntryList.stream().map(anAddressEntryList -> new DepositListItem
+                (anAddressEntryList, walletFacade)).collect(Collectors.toList()));
 
         tableView.setItems(addressList);
     }
@@ -114,7 +116,8 @@ public class DepositController extends CachedViewController {
 
     private void setLabelColumnCellFactory() {
         labelColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        labelColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>() {
+        labelColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String,
+                DepositListItem>>() {
 
             @Override
             public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
@@ -133,7 +136,8 @@ public class DepositController extends CachedViewController {
                                 Tooltip tooltip = new Tooltip(item.getAddressEntry().getOfferId());
                                 Tooltip.install(hyperlink, tooltip);
 
-                                hyperlink.setOnAction(event -> log.info("Show trade details " + item.getAddressEntry().getOfferId()));
+                                hyperlink.setOnAction(event -> log.info("Show trade details " + item.getAddressEntry
+                                        ().getOfferId()));
                             }
                             setGraphic(hyperlink);
                         } else {
@@ -148,7 +152,8 @@ public class DepositController extends CachedViewController {
 
     private void setBalanceColumnCellFactory() {
         balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        balanceColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>() {
+        balanceColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String,
+                DepositListItem>>() {
 
             @Override
             public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
@@ -170,7 +175,8 @@ public class DepositController extends CachedViewController {
 
     private void setCopyColumnCellFactory() {
         copyColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        copyColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>() {
+        copyColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String,
+                DepositListItem>>() {
 
             @Override
             public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
@@ -206,8 +212,10 @@ public class DepositController extends CachedViewController {
     }
 
     private void setConfidenceColumnCellFactory() {
-        confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        confidenceColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>() {
+        confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue
+                ()));
+        confidenceColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String,
+                DepositListItem>>() {
 
             @Override
             public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {

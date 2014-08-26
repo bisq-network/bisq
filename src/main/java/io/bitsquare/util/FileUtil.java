@@ -39,7 +39,8 @@ public class FileUtil {
     /*
     public static String getApplicationFileName()
     {
-        File executionRoot = new File(StorageDirectory.class.getProtectionDomain().getCodeSource().getLocation().getFile());
+        File executionRoot = new File(StorageDirectory.class.getProtectionDomain().getCodeSource().getLocation()
+        .getFile());
         try
         {
             log.trace("getApplicationFileName " + executionRoot.getCanonicalPath());
@@ -50,7 +51,8 @@ public class FileUtil {
         // check if it is packed into a mac app  (e.g.: "/Users/mk/Desktop/bitsquare.app/Contents/Java/bitsquare.jar")
         try
         {
-            if (executionRoot.getCanonicalPath().endsWith(".app/Contents/Java/bitsquare.jar") && System.getProperty("os.name").startsWith("Mac"))
+            if (executionRoot.getCanonicalPath().endsWith(".app/Contents/Java/bitsquare.jar") && System.getProperty
+            ("os.name").startsWith("Mac"))
             {
                 File appFile = executionRoot.getParentFile().getParentFile().getParentFile();
                 try
@@ -66,7 +68,7 @@ public class FileUtil {
         {
             e.printStackTrace();
         }
-        
+
         // fallback use AppName
         return BitSquare.getAppName();
     }

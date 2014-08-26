@@ -60,7 +60,7 @@ public class CreateOfferCoordinator {
 
         private final Persistence persistence;
         private State state;
-        //TODO use tx id 
+        //TODO use tx id
         Transaction transaction;
 
         Model(Persistence persistence) {
@@ -74,7 +74,8 @@ public class CreateOfferCoordinator {
         public void setState(State state) {
             this.state = state;
 
-            //TODO will have performance issues, but could be handled inside the persistence solution (queue up save requests and exec. them on dedicated thread)
+            //TODO will have performance issues, but could be handled inside the persistence solution (queue up save
+            // requests and exec. them on dedicated thread)
             persistence.write(this, "state", state);
         }
     }
@@ -88,12 +89,15 @@ public class CreateOfferCoordinator {
     private final FaultHandler faultHandler;
     private final Model model;
 
-    public CreateOfferCoordinator(Persistence persistence, Offer offer, WalletFacade walletFacade, MessageFacade messageFacade, TransactionResultHandler resultHandler, FaultHandler faultHandler) {
+    public CreateOfferCoordinator(Persistence persistence, Offer offer, WalletFacade walletFacade,
+                                  MessageFacade messageFacade, TransactionResultHandler resultHandler,
+                                  FaultHandler faultHandler) {
         this(offer, walletFacade, messageFacade, resultHandler, faultHandler, new Model(persistence));
     }
 
     // for recovery from model
-    public CreateOfferCoordinator(Offer offer, WalletFacade walletFacade, MessageFacade messageFacade, TransactionResultHandler resultHandler, FaultHandler faultHandler, Model model) {
+    public CreateOfferCoordinator(Offer offer, WalletFacade walletFacade, MessageFacade messageFacade,
+                                  TransactionResultHandler resultHandler, FaultHandler faultHandler, Model model) {
         this.offer = offer;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
@@ -138,7 +142,7 @@ public class CreateOfferCoordinator {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Recovery 
+    // Recovery
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void recover() {
@@ -151,7 +155,7 @@ public class CreateOfferCoordinator {
                 start();
                 break;
             case OFFER_FEE_BROAD_CASTED:
-                // actually the only replay case here, tx publish was successful but storage to dht failed. 
+                // actually the only replay case here, tx publish was successful but storage to dht failed.
                 // Republish the offer to DHT
                 PublishOfferToDHT.run(this::onOfferPublishedToDHT, this::onFailed, messageFacade, offer);
                 break;

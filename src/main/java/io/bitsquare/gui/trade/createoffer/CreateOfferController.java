@@ -79,7 +79,9 @@ public class CreateOfferController extends CachedViewController {
 
     @FXML private ValidatingTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
     @FXML private Button placeOfferButton, closeButton;
-    @FXML private TextField totalsTextField, collateralTextField, bankAccountTypeTextField, bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField, acceptedLanguagesTextField,
+    @FXML private TextField totalsTextField, collateralTextField, bankAccountTypeTextField,
+            bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField,
+            acceptedLanguagesTextField,
             feeLabel, transactionIdTextField;
     @FXML private ConfidenceProgressIndicator progressIndicator;
     @FXML private AddressTextField addressTextField;
@@ -105,7 +107,8 @@ public class CreateOfferController extends CachedViewController {
             viewModel.bankAccountCounty.set(bankAccount.getCountry().getName());
         }
         viewModel.acceptedCountries.set(BitSquareFormatter.countryLocalesToString(settings.getAcceptedCountries()));
-        viewModel.acceptedLanguages.set(BitSquareFormatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
+        viewModel.acceptedLanguages.set(BitSquareFormatter.languageLocalesToString(settings
+                .getAcceptedLanguageLocales()));
         viewModel.feeLabel.set(BitSquareFormatter.formatCoinWithCode(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
 
         offerId = UUID.randomUUID().toString();
@@ -179,7 +182,8 @@ public class CreateOfferController extends CachedViewController {
 
         //balanceTextField.getBalance()
 
-        if (amountTextField.getIsValid() && minAmountTextField.getIsValid() && volumeTextField.getIsValid() && amountTextField.getIsValid()) {
+        if (amountTextField.getIsValid() && minAmountTextField.getIsValid() && volumeTextField.getIsValid() &&
+                amountTextField.getIsValid()) {
             viewModel.isPlaceOfferButtonDisabled.set(true);
 
             tradeManager.requestPlaceOffer(offerId,
@@ -217,7 +221,8 @@ public class CreateOfferController extends CachedViewController {
             double price = BitSquareFormatter.parseToDouble(viewModel.price.get());
             double volume = amount * price;
             viewModel.volume.set(BitSquareFormatter.formatVolume(volume));
-            viewModel.totals.set(BitSquareFormatter.formatTotalsAsBtc(viewModel.amount.get(), collateral, FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+            viewModel.totals.set(BitSquareFormatter.formatTotalsAsBtc(viewModel.amount.get(), collateral,
+                    FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
             viewModel.collateral.set(BitSquareFormatter.formatCollateralAsBtc(viewModel.amount.get(), collateral));
         });
 
@@ -234,7 +239,8 @@ public class CreateOfferController extends CachedViewController {
             if (price != 0) {
                 double amount = volume / price;
                 viewModel.amount.set(BitSquareFormatter.formatVolume(amount));
-                viewModel.totals.set(BitSquareFormatter.formatTotalsAsBtc(viewModel.amount.get(), collateral, FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+                viewModel.totals.set(BitSquareFormatter.formatTotalsAsBtc(viewModel.amount.get(), collateral,
+                        FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
                 viewModel.collateral.set(BitSquareFormatter.formatCollateralAsBtc(viewModel.amount.get(), collateral));
             }
         });
@@ -242,7 +248,9 @@ public class CreateOfferController extends CachedViewController {
         volumeTextField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
             if (oldValue && !newValue) {
                 if (!volumeTextField.getText().equals(viewModel.volume.get())) {
-                    Popups.openWarningPopup("Warning", "The total volume you have entered leads to invalid fractional Bitcoin amounts.\nThe amount has been adjusted and a new total volume be calculated from it.");
+                    Popups.openWarningPopup("Warning", "The total volume you have entered leads to invalid fractional" +
+                            " Bitcoin amounts.\nThe amount has been adjusted and a new total volume be calculated " +
+                            "from it.");
                     volumeTextField.setText(viewModel.volume.get());
                 }
             }

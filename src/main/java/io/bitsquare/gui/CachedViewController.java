@@ -24,7 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * If caching is used for loader we use the CachedViewController for turning the controller into sleep mode if not active and awake it at reactivation.
+ * If caching is used for loader we use the CachedViewController for turning the controller into sleep mode if not
+ * active and awake it at reactivation.
  */
 public abstract class CachedViewController extends ViewController {
     private static final Logger log = LoggerFactory.getLogger(CachedViewController.class);
@@ -43,7 +44,8 @@ public abstract class CachedViewController extends ViewController {
         root.sceneProperty().addListener((ov, oldValue, newValue) -> {
             // we got removed from the scene
             // lets terminate
-            log.trace("Lifecycle: sceneProperty changed: " + this.getClass().getSimpleName() + " / oldValue=" + oldValue + " / newValue=" + newValue);
+            log.trace("Lifecycle: sceneProperty changed: " + this.getClass().getSimpleName() + " / oldValue=" +
+                    oldValue + " / newValue=" + newValue);
             if (oldValue == null && newValue != null) activate();
             else if (oldValue != null && newValue == null) deactivate();
         });

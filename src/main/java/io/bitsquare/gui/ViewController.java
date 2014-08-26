@@ -54,7 +54,8 @@ public abstract class ViewController implements Initializable {
     }
 
     /**
-     * Called automatically when view gets removed. Used for house keeping (removing listeners, stopping timers or animations,...).
+     * Called automatically when view gets removed. Used for house keeping (removing listeners,
+     * stopping timers or animations,...).
      */
     public void terminate() {
         log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
@@ -62,10 +63,12 @@ public abstract class ViewController implements Initializable {
     }
 
     /**
-     * @param parentController Controller who has created this.getClass().getSimpleName() instance (via navigateToView/FXMLLoader).
+     * @param parentController Controller who has created this.getClass().getSimpleName() instance (via
+     *                         navigateToView/FXMLLoader).
      */
     public void setParentController(ViewController parentController) {
-        log.trace("Lifecycle: setParentController " + this.getClass().getSimpleName() + " / parent = " + parentController);
+        log.trace("Lifecycle: setParentController " + this.getClass().getSimpleName() + " / parent = " +
+                parentController);
         this.parentController = parentController;
     }
 
@@ -74,7 +77,8 @@ public abstract class ViewController implements Initializable {
      * @return The ViewController of the loaded view.
      */
     public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
-        log.trace("Lifecycle: loadViewAndGetChildController " + this.getClass().getSimpleName() + " / navigationItem = " + navigationItem);
+        log.trace("Lifecycle: loadViewAndGetChildController " + this.getClass().getSimpleName() + " / navigationItem " +
+                "= " + navigationItem);
         return null;
     }
 

@@ -45,7 +45,8 @@ public class ConfidenceDisplay {
 
     private ConfidenceProgressIndicator progressIndicator;
 
-    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, TextField balanceTextField, ConfidenceProgressIndicator progressIndicator) {
+    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, TextField balanceTextField,
+                             ConfidenceProgressIndicator progressIndicator) {
         this.wallet = wallet;
         this.confirmationLabel = confirmationLabel;
         this.balanceTextField = balanceTextField;
@@ -98,7 +99,8 @@ public class ConfidenceDisplay {
         wallet.addEventListener(walletEventListener);
     }
 
-    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, final Transaction transaction, ConfidenceProgressIndicator progressIndicator) {
+    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, final Transaction transaction,
+                             ConfidenceProgressIndicator progressIndicator) {
         this.wallet = wallet;
         this.confirmationLabel = confirmationLabel;
         this.transaction = transaction;
@@ -184,7 +186,8 @@ public class ConfidenceDisplay {
                     latestTransaction = transaction;
                 }
             }
-            if (latestTransaction != null && (transaction == null || latestTransaction.getHashAsString().equals(transaction.getHashAsString()))) {
+            if (latestTransaction != null && (transaction == null || latestTransaction.getHashAsString().equals
+                    (transaction.getHashAsString()))) {
                 updateConfidence(latestTransaction);
             }
         }

@@ -80,7 +80,8 @@ import javafx.scene.transform.Scale;
 import javafx.util.Duration;
 
 @SuppressWarnings({"WeakerAccess", "SameReturnValue"})
-public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<ConfidenceProgressIndicator, ConfidenceProgressIndicatorBehavior<ConfidenceProgressIndicator>> {
+public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<ConfidenceProgressIndicator,
+        ConfidenceProgressIndicatorBehavior<ConfidenceProgressIndicator>> {
 
     /**
      * ************************************************************************
@@ -226,7 +227,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
             public void invalidated(Observable valueModel) {
                 if (getSkinnable().isIndeterminate() && timelineNulled && spinner == null) {
                     timelineNulled = false;
-                    spinner = new IndeterminateSpinner(getSkinnable(), ConfidenceProgressIndicatorSkin.this, spinEnabled.get(), progressColor.get());
+                    spinner = new IndeterminateSpinner(getSkinnable(), ConfidenceProgressIndicatorSkin.this,
+                            spinEnabled.get(), progressColor.get());
                     getChildren().add(spinner);
                 }
 
@@ -258,7 +260,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                 } else {
                     if (getSkinnable().getScene() != null && getSkinnable().isIndeterminate()) {
                         timelineNulled = false;
-                        spinner = new IndeterminateSpinner(getSkinnable(), ConfidenceProgressIndicatorSkin.this, spinEnabled.get(), progressColor.get());
+                        spinner = new IndeterminateSpinner(getSkinnable(), ConfidenceProgressIndicatorSkin.this,
+                                spinEnabled.get(), progressColor.get());
                         getChildren().add(spinner);
                         if (getSkinnable().impl_isTreeVisible()) {
                             spinner.indeterminateTimeline.play();
@@ -303,7 +306,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                 spinner = null;
             }
             // create determinateIndicator
-            determinateIndicator = new ConfidenceProgressIndicatorSkin.DeterminateIndicator(control, this, progressColor.get());
+            determinateIndicator = new ConfidenceProgressIndicatorSkin.DeterminateIndicator(control, this,
+                    progressColor.get());
             getChildren().clear();
             getChildren().add(determinateIndicator);
         }
@@ -373,7 +377,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
         // only update pie arc to nearest degree
         private int degProgress;
 
-        public DeterminateIndicator(ConfidenceProgressIndicator control, ConfidenceProgressIndicatorSkin s, Paint fillOverride) {
+        public DeterminateIndicator(ConfidenceProgressIndicator control, ConfidenceProgressIndicatorSkin s,
+                                    Paint fillOverride) {
             this.control = control;
 
             getStyleClass().add("determinate-indicator");
@@ -423,7 +428,9 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
         private void setFillOverride(Paint fillOverride) {
             if (fillOverride instanceof Color) {
                 Color c = (Color) fillOverride;
-                progress.setStyle("-fx-background-color: rgba(" + ((int) (255 * c.getRed())) + "," + ((int) (255 * c.getGreen())) + "," + ((int) (255 * c.getBlue())) + "," + c.getOpacity() + ");");
+                progress.setStyle("-fx-background-color: rgba(" + ((int) (255 * c.getRed())) + "," +
+                        "" + ((int) (255 * c.getGreen())) + "," + ((int) (255 * c.getBlue())) + "," +
+                        "" + c.getOpacity() + ");");
             } else {
                 progress.setStyle(null);
             }
@@ -474,7 +481,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
             final double iRight = snapSize(indicatorInsets.getRight());
             final double iTop = snapSize(indicatorInsets.getTop());
             final double iBottom = snapSize(indicatorInsets.getBottom());
-            final double progressRadius = snapSize(Math.min(Math.min(radius - iLeft, radius - iRight), Math.min(radius - iTop, radius - iBottom)));
+            final double progressRadius = snapSize(Math.min(Math.min(radius - iLeft, radius - iRight),
+                    Math.min(radius - iTop, radius - iBottom)));
 
             indicatorCircle.setRadius(radius);
             indicator.setLayoutX(centerX);
@@ -491,7 +499,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
             final double pRight = snapSize(progressInsets.getRight());
             final double pTop = snapSize(progressInsets.getTop());
             final double pBottom = snapSize(progressInsets.getBottom());
-            final double indicatorRadius = snapSize(Math.min(Math.min(progressRadius - pLeft, progressRadius - pRight), Math.min(progressRadius - pTop, progressRadius - pBottom)));
+            final double indicatorRadius = snapSize(Math.min(Math.min(progressRadius - pLeft,
+                    progressRadius - pRight), Math.min(progressRadius - pTop, progressRadius - pBottom)));
 
             // find size of spare box that fits inside indicator radius
             double squareBoxHalfWidth = Math.ceil(Math.sqrt((indicatorRadius * indicatorRadius) / 2));
@@ -594,7 +603,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
 
         private Paint fillOverride = null;
 
-        public IndeterminateSpinner(ConfidenceProgressIndicator control, ConfidenceProgressIndicatorSkin s, boolean spinEnabled, Paint fillOverride) {
+        public IndeterminateSpinner(ConfidenceProgressIndicator control, ConfidenceProgressIndicatorSkin s,
+                                    boolean spinEnabled, Paint fillOverride) {
             this.control = control;
             this.skin = s;
             this.spinEnabled = spinEnabled;
@@ -675,7 +685,9 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                 region.getStyleClass().addAll("segment", "segment" + i);
                 if (fillOverride instanceof Color) {
                     Color c = (Color) fillOverride;
-                    region.setStyle("-fx-background-color: rgba(" + ((int) (255 * c.getRed())) + "," + ((int) (255 * c.getGreen())) + "," + ((int) (255 * c.getBlue())) + "," + c.getOpacity() + ");");
+                    region.setStyle("-fx-background-color: rgba(" + ((int) (255 * c.getRed())) + "," +
+                            "" + ((int) (255 * c.getGreen())) + "," + ((int) (255 * c.getBlue())) + "," +
+                            "" + c.getOpacity() + ");");
                 } else {
                     region.setStyle(null);
                 }
@@ -751,7 +763,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                 getChildren().stream().filter(child -> child instanceof Region).forEach(child -> {
                     Region region = (Region) child;
                     if (region.getShape() != null) {
-                        region.resize(region.getShape().getLayoutBounds().getMaxX(), region.getShape().getLayoutBounds().getMaxY());
+                        region.resize(region.getShape().getLayoutBounds().getMaxX(),
+                                region.getShape().getLayoutBounds().getMaxY());
                         region.getTransforms().setAll(new Scale(scale, scale, 0, 0));
                     } else {
                         region.autosize();
@@ -768,7 +781,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
     private static class StyleableProperties {
         public static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
 
-        private static final CssMetaData<ConfidenceProgressIndicator, Paint> PROGRESS_COLOR = new CssMetaData<ConfidenceProgressIndicator, Paint>("-fx-progress-color",
+        private static final CssMetaData<ConfidenceProgressIndicator, Paint> PROGRESS_COLOR = new
+                CssMetaData<ConfidenceProgressIndicator, Paint>("-fx-progress-color",
                 PaintConverter.getInstance(),
                 null) {
 
@@ -787,7 +801,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
         };
 
 
-        private static final CssMetaData<ConfidenceProgressIndicator, Number> INDETERMINATE_SEGMENT_COUNT = new CssMetaData<ConfidenceProgressIndicator, Number>("-fx-indeterminate-segment-count",
+        private static final CssMetaData<ConfidenceProgressIndicator, Number> INDETERMINATE_SEGMENT_COUNT = new
+                CssMetaData<ConfidenceProgressIndicator, Number>("-fx-indeterminate-segment-count",
                 SizeConverter.getInstance(),
                 8) {
 
@@ -810,7 +825,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
             }
         };
 
-        private static final CssMetaData<ConfidenceProgressIndicator, Boolean> SPIN_ENABLED = new CssMetaData<ConfidenceProgressIndicator, Boolean>("-fx-spin-enabled",
+        private static final CssMetaData<ConfidenceProgressIndicator, Boolean> SPIN_ENABLED = new
+                CssMetaData<ConfidenceProgressIndicator, Boolean>("-fx-spin-enabled",
                 BooleanConverter.getInstance(),
                 Boolean.FALSE) {
 
@@ -829,7 +845,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
         };
 
         static {
-            final List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(SkinBase.getClassCssMetaData());
+            final List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(SkinBase.getClassCssMetaData
+                    ());
             styleables.add(PROGRESS_COLOR);
             styleables.add(INDETERMINATE_SEGMENT_COUNT);
             styleables.add(SPIN_ENABLED);

@@ -63,7 +63,8 @@ public class FiatValidator extends NumberValidator {
     protected ValidationResult validateIfNotExceedsMinFiatValue(String input) {
         double d = Double.parseDouble(input);
         if (d < MIN_FIAT_VALUE)
-            return new ValidationResult(false, "Input smaller as minimum possible Fiat value is not allowed..", ErrorType.UNDERCUT_MIN_FIAT_VALUE);
+            return new ValidationResult(false, "Input smaller as minimum possible Fiat value is not allowed..",
+                    ErrorType.UNDERCUT_MIN_FIAT_VALUE);
         else
             return new ValidationResult(true);
     }
@@ -71,7 +72,8 @@ public class FiatValidator extends NumberValidator {
     protected ValidationResult validateIfNotExceedsMaxFiatValue(String input) {
         double d = Double.parseDouble(input);
         if (d > MAX_FIAT_VALUE)
-            return new ValidationResult(false, "Input larger as maximum possible Fiat value is not allowed.", ErrorType.EXCEEDS_MAX_FIAT_VALUE);
+            return new ValidationResult(false, "Input larger as maximum possible Fiat value is not allowed.",
+                    ErrorType.EXCEEDS_MAX_FIAT_VALUE);
         else
             return new ValidationResult(true);
     }

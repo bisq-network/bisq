@@ -39,7 +39,8 @@ public class CreateDepositTx {
         log.trace("Run task");
         try {
             String offererPubKey = walletFacade.getAddressInfoByTradeID(tradeId).getPubKeyAsHexString();
-            Transaction transaction = walletFacade.offererCreatesMSTxAndAddPayment(offererInputAmount, offererPubKey, takerMultiSigPubKey, arbitratorPubKeyAsHex, tradeId);
+            Transaction transaction = walletFacade.offererCreatesMSTxAndAddPayment(offererInputAmount, offererPubKey,
+                    takerMultiSigPubKey, arbitratorPubKeyAsHex, tradeId);
 
             String preparedOffererDepositTxAsHex = Utils.HEX.encode(transaction.bitcoinSerialize());
             long offererTxOutIndex = transaction.getInput(0).getOutpoint().getIndex();
@@ -47,7 +48,8 @@ public class CreateDepositTx {
             resultHandler.onResult(offererPubKey, preparedOffererDepositTxAsHex, offererTxOutIndex);
         } catch (InsufficientMoneyException e) {
             log.error("Create deposit tx faultHandler.onFault due InsufficientMoneyException " + e);
-            exceptionHandler.onError(new Exception("Create deposit tx faultHandler.onFault due InsufficientMoneyException " + e));
+            exceptionHandler.onError(new Exception("Create deposit tx faultHandler.onFault due " +
+                    "InsufficientMoneyException " + e));
         }
     }
 

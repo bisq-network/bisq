@@ -127,7 +127,8 @@ public class BalanceTextField extends AnchorPane {
                     progressIndicator.setProgress(0);
                     break;
                 case PENDING:
-                    progressIndicatorTooltip.setText("Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 confirmations");
+                    progressIndicatorTooltip.setText("Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 " +
+                            "confirmations");
                     progressIndicator.setProgress(-1.0);
                     break;
                 case BUILDING:

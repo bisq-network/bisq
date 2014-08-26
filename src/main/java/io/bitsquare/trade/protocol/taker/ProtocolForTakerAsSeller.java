@@ -44,7 +44,8 @@ import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.util.Validator.*;
 
 /**
- * Responsible for the correct execution of the sequence of tasks, message passing to the peer and message processing from the peer.
+ * Responsible for the correct execution of the sequence of tasks, message passing to the peer and message processing
+ * from the peer.
  * That class handles the role of the taker as the Bitcoin seller.
  * It uses sub tasks to not pollute the main class too much with all the async result/fault handling.
  * Any data from incoming messages as well data used to send to the peer need to be validated before further processing.
@@ -195,7 +196,8 @@ public class ProtocolForTakerAsSeller {
         trade.setTakeOfferFeeTxID(takeOfferFeeTxId);
 
         state = State.SendTakeOfferFeePayedTxId;
-        SendTakeOfferFeePayedTxId.run(this::onResultSendTakeOfferFeePayedTxId, this::onFault, peerAddress, messageFacade, tradeId, takeOfferFeeTxId, tradeAmount, pubKeyForThatTrade);
+        SendTakeOfferFeePayedTxId.run(this::onResultSendTakeOfferFeePayedTxId, this::onFault, peerAddress,
+                messageFacade, tradeId, takeOfferFeeTxId, tradeAmount, pubKeyForThatTrade);
     }
 
     public void onResultSendTakeOfferFeePayedTxId() {
@@ -231,7 +233,8 @@ public class ProtocolForTakerAsSeller {
 
         // next task
         state = State.VerifyOffererAccount;
-        VerifyOffererAccount.run(this::onResultVerifyOffererAccount, this::onFault, blockChainFacade, peersAccountId, peersBankAccount);
+        VerifyOffererAccount.run(this::onResultVerifyOffererAccount, this::onFault, blockChainFacade, peersAccountId,
+                peersBankAccount);
     }
 
     public void onResultVerifyOffererAccount() {
@@ -261,7 +264,8 @@ public class ProtocolForTakerAsSeller {
         trade.setContractTakerSignature(signature);
 
         state = State.PayDeposit;
-        PayDeposit.run(this::onResultPayDeposit, this::onFault, walletFacade, collateral, tradeAmount, tradeId, pubKeyForThatTrade, arbitratorPubKey, peersPubKey, preparedPeersDepositTxAsHex);
+        PayDeposit.run(this::onResultPayDeposit, this::onFault, walletFacade, collateral, tradeAmount, tradeId,
+                pubKeyForThatTrade, arbitratorPubKey, peersPubKey, preparedPeersDepositTxAsHex);
     }
 
     public void onResultPayDeposit(Transaction signedTakerDepositTx) {
@@ -314,7 +318,8 @@ public class ProtocolForTakerAsSeller {
         log.debug("onBankTransferInitedMessage called " + step++);
         log.debug("state " + state);
         // validate
-        checkState(state.ordinal() >= State.SendSignedTakerDepositTxAsHex.ordinal() && state.ordinal() < State.SignAndPublishPayoutTx.ordinal());
+        checkState(state.ordinal() >= State.SendSignedTakerDepositTxAsHex.ordinal() && state.ordinal() < State
+                .SignAndPublishPayoutTx.ordinal());
         checkArgument(tradeId.equals(message.getTradeId()));
         String depositTxAsHex = nonEmptyStringOf(message.getDepositTxAsHex());
         String offererSignatureR = nonEmptyStringOf(message.getOffererSignatureR());
@@ -364,7 +369,8 @@ public class ProtocolForTakerAsSeller {
         listener.onPayoutTxPublished(trade, transactionId);
 
         state = State.SendPayoutTxToOfferer;
-        SendPayoutTxToOfferer.run(this::onResultSendPayoutTxToOfferer, this::onFault, peerAddress, messageFacade, tradeId, payoutTxAsHex);
+        SendPayoutTxToOfferer.run(this::onResultSendPayoutTxToOfferer, this::onFault, peerAddress, messageFacade,
+                tradeId, payoutTxAsHex);
     }
 
     public void onResultSendPayoutTxToOfferer() {

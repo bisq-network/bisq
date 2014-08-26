@@ -146,7 +146,8 @@ public class P2PNodeTest {
         data.protectEntry(keyPairOtherPeer);
         // he use the pub key from the client
         final Number160 keyHash = Utils.makeSHAHash(keyPairClient.getPublic().getEncoded());
-        futurePut = otherPeer.put(locationKey).data(data).keyPair(keyPairOtherPeer).domainKey(keyHash).protectDomain().start();
+        futurePut = otherPeer.put(locationKey).data(data).keyPair(keyPairOtherPeer).domainKey(keyHash).protectDomain
+                ().start();
 
         futurePut.awaitUninterruptibly();
         assertFalse(futurePut.isSuccess());
@@ -168,7 +169,8 @@ public class P2PNodeTest {
     }
 
     @Test
-    public void testChangeEntryProtectionKey() throws IOException, ClassNotFoundException, NoSuchAlgorithmException, InterruptedException, InvalidKeyException, SignatureException {
+    public void testChangeEntryProtectionKey() throws IOException, ClassNotFoundException, NoSuchAlgorithmException,
+            InterruptedException, InvalidKeyException, SignatureException {
         KeyPairGenerator gen = KeyPairGenerator.getInstance("DSA");
 
         KeyPair keyPair1 = gen.generateKeyPair();
@@ -189,7 +191,8 @@ public class P2PNodeTest {
 
         Data data2 = new Data().protectEntry(keyPair2);
         data2.publicKey(keyPair2.getPublic());
-        FuturePut fp3 = p1.put(Number160.createHash("key1")).sign().putMeta().data(data2).start().awaitUninterruptibly();
+        FuturePut fp3 = p1.put(Number160.createHash("key1")).sign().putMeta().data(data2).start()
+                .awaitUninterruptibly();
         Assert.assertTrue(fp3.isSuccess());
 
         FuturePut fp4 = p2.put(Number160.createHash("key1")).sign().data(data).start().awaitUninterruptibly();
@@ -267,7 +270,8 @@ public class P2PNodeTest {
         // other peer tried to overwrite that entry
         // but will not succeed, instead he will add a new entry.
         // TODO investigate why it is not possible to overwrite the entry with that method
-        // The protection entry with the key does not make any difference as also the client himself cannot overwrite any entry
+        // The protection entry with the key does not make any difference as also the client himself cannot overwrite
+        // any entry
         // http://tomp2p.net/doc/P2P-with-TomP2P-1.pdf
         // "add(location_key, value) is translated to put(location_key, hash(value), value)"
 

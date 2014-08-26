@@ -23,7 +23,8 @@ import org.slf4j.LoggerFactory;
 /**
  * NumberValidator for validating basic number values.
  * Localisation not supported at the moment
- * The decimal mark can be either "." or ",". Thousand separators are not supported yet, but might be added alter with Local support.
+ * The decimal mark can be either "." or ",". Thousand separators are not supported yet,
+ * but might be added alter with Local support.
  * <p/>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
@@ -87,7 +88,8 @@ public abstract class NumberValidator {
         ZERO_NUMBER,
         NEGATIVE_NUMBER,
         FRACTIONAL_SATOSHI,
-        EXCEEDS_MAX_FIAT_VALUE, UNDERCUT_MIN_FIAT_VALUE, AMOUNT_LESS_THAN_MIN_AMOUNT, MIN_AMOUNT_LARGER_THAN_MIN_AMOUNT, EXCEEDS_MAX_BTC_VALUE
+        EXCEEDS_MAX_FIAT_VALUE, UNDERCUT_MIN_FIAT_VALUE, AMOUNT_LESS_THAN_MIN_AMOUNT,
+        MIN_AMOUNT_LARGER_THAN_MIN_AMOUNT, EXCEEDS_MAX_BTC_VALUE
     }
 
 

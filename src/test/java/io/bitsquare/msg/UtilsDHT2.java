@@ -17,13 +17,13 @@
 
 /*
  * Copyright 2012 Thomas Bocek
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -91,7 +91,8 @@ public class UtilsDHT2 {
     }
 
     public static PeerAddress createAddress(Number160 idSender, String inetSender, int tcpPortSender,
-                                            int udpPortSender, boolean firewallUDP, boolean firewallTCP) throws UnknownHostException {
+                                            int udpPortSender, boolean firewallUDP,
+                                            boolean firewallTCP) throws UnknownHostException {
         InetAddress inetSend = InetAddress.getByName(inetSender);
         PeerSocketAddress peerSocketAddress = new PeerSocketAddress(inetSend, tcpPortSender, udpPortSender);
         PeerAddress n1 = new PeerAddress(idSender, peerSocketAddress, firewallTCP, firewallUDP, false,
@@ -100,8 +101,10 @@ public class UtilsDHT2 {
     }
 
     public static Message createDummyMessage(Number160 idSender, String inetSender, int tcpPortSendor,
-                                             int udpPortSender, Number160 idRecipien, String inetRecipient, int tcpPortRecipient,
-                                             int udpPortRecipient, byte command, Type type, boolean firewallUDP, boolean firewallTCP)
+                                             int udpPortSender, Number160 idRecipien, String inetRecipient,
+                                             int tcpPortRecipient,
+                                             int udpPortRecipient, byte command, Type type, boolean firewallUDP,
+                                             boolean firewallTCP)
             throws UnknownHostException {
         Message message = new Message();
         PeerAddress n1 = createAddress(idSender, inetSender, tcpPortSendor, udpPortSender, firewallUDP,
@@ -165,7 +168,8 @@ public class UtilsDHT2 {
                 PeerMap peerMap = new PeerMap(new PeerMapConfiguration(peerId));
                 Peer peer = new PeerBuilder(peerId)
                         .masterPeer(master)
-                        .enableMaintenance(maintenance).enableMaintenance(maintenance).peerMap(peerMap).externalBindings(bindings).start().addAutomaticFuture(automaticFuture);
+                        .enableMaintenance(maintenance).enableMaintenance(maintenance).peerMap(peerMap)
+                        .externalBindings(bindings).start().addAutomaticFuture(automaticFuture);
                 peers[i] = new PeerBuilderDHT(peer).start();
             } else {
                 Number160 peerId = new Number160(rnd);

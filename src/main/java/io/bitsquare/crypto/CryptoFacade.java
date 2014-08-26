@@ -70,7 +70,8 @@ public class CryptoFacade {
 
     public byte[] getEmbeddedAccountRegistrationData(ECKey registrationKey, String stringifiedBankAccounts) {
         String signedBankAccountIDs = signMessage(registrationKey, stringifiedBankAccounts, null);
-        return Utils.sha256hash160(concatenateChunks(stringifiedBankAccounts, signedBankAccountIDs).getBytes(Charsets.UTF_8));
+        return Utils.sha256hash160(concatenateChunks(stringifiedBankAccounts, signedBankAccountIDs).getBytes(Charsets
+                .UTF_8));
     }
 
     public String signContract(ECKey key, String contractAsJson) {
