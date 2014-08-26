@@ -22,8 +22,7 @@ import io.bitsquare.trade.Offer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-public class OrderBookListItem
-{
+public class OrderBookListItem {
     private final StringProperty price = new SimpleStringProperty();
     private final StringProperty amount = new SimpleStringProperty();
     private final StringProperty volume = new SimpleStringProperty();
@@ -32,8 +31,7 @@ public class OrderBookListItem
     private final Offer offer;
 
 
-    public OrderBookListItem(Offer offer)
-    {
+    public OrderBookListItem(Offer offer) {
         this.offer = offer;
         this.price.set(BitSquareFormatter.formatPrice(offer.getPrice()));
         this.amount.set(BitSquareFormatter.formatCoin(offer.getAmount()) + " (" + BitSquareFormatter.formatCoin(offer.getMinAmount()) + ")");
@@ -41,27 +39,23 @@ public class OrderBookListItem
     }
 
 
-    public Offer getOffer()
-    {
+    public Offer getOffer() {
         return offer;
     }
 
     // called form table columns
 
-    public final StringProperty priceProperty()
-    {
+    public final StringProperty priceProperty() {
         return this.price;
     }
 
 
-    public final StringProperty amountProperty()
-    {
+    public final StringProperty amountProperty() {
         return this.amount;
     }
 
 
-    public final StringProperty volumeProperty()
-    {
+    public final StringProperty volumeProperty() {
         return this.volume;
     }
 }

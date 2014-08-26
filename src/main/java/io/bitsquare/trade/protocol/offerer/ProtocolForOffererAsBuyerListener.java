@@ -20,8 +20,7 @@ package io.bitsquare.trade.protocol.offerer;
 import com.google.bitcoin.core.TransactionConfidence;
 import io.bitsquare.trade.Offer;
 
-public interface ProtocolForOffererAsBuyerListener
-{
+public interface ProtocolForOffererAsBuyerListener {
     void onOfferAccepted(Offer offer);
 
     void onDepositTxPublished(String depositTxID);

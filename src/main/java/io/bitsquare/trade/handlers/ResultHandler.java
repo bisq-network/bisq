@@ -17,7 +17,6 @@
 
 package io.bitsquare.trade.handlers;
 
-public interface ResultHandler
-{
+public interface ResultHandler {
     void onResult();
 }

@@ -19,11 +19,11 @@ package io.bitsquare.trade.protocol.taker;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.trade.protocol.TradeMessage;
+
 import java.io.Serializable;
 import java.security.PublicKey;
 
-public class RequestOffererPublishDepositTxMessage implements Serializable, TradeMessage
-{
+public class RequestOffererPublishDepositTxMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = 2179683654379803071L;
     private final String tradeId;
     private BankAccount bankAccount;
@@ -51,8 +51,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
                                                  String takerContractSignature,
                                                  String takerPayoutAddress,
                                                  long takerTxOutIndex,
-                                                 long offererTxOutIndex)
-    {
+                                                 long offererTxOutIndex) {
 
         this.tradeId = tradeId;
         this.bankAccount = bankAccount;
@@ -70,63 +69,51 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
 
 
     @Override
-    public String getTradeId()
-    {
+    public String getTradeId() {
         return tradeId;
     }
 
-    public long getOffererTxOutIndex()
-    {
+    public long getOffererTxOutIndex() {
         return offererTxOutIndex;
     }
 
-    public BankAccount getTakerBankAccount()
-    {
+    public BankAccount getTakerBankAccount() {
         return bankAccount;
     }
 
-    public String getTakerAccountId()
-    {
+    public String getTakerAccountId() {
         return accountID;
     }
 
-    public PublicKey getTakerMessagePublicKey()
-    {
+    public PublicKey getTakerMessagePublicKey() {
         return takerMessagePublicKey;
     }
 
-    public String getSignedTakerDepositTxAsHex()
-    {
+    public String getSignedTakerDepositTxAsHex() {
         return signedTakerDepositTxAsHex;
     }
 
-    public String getTxScriptSigAsHex()
-    {
+    public String getTxScriptSigAsHex() {
         return txScriptSigAsHex;
     }
 
-    public String getTxConnOutAsHex()
-    {
+    public String getTxConnOutAsHex() {
         return txConnOutAsHex;
     }
 
-    public String getTakerContractAsJson()
-    {
+    public String getTakerContractAsJson() {
         return contractAsJson;
     }
 
-    public String getTakerContractSignature()
-    {
+    public String getTakerContractSignature() {
         return takerContractSignature;
     }
 
-    public String getTakerPayoutAddress()
-    {
+    public String getTakerPayoutAddress() {
         return takerPayoutAddress;
     }
 
-    public long getTakerTxOutIndex()
-    {
+    public long getTakerTxOutIndex() {
         return takerTxOutIndex;
     }
 

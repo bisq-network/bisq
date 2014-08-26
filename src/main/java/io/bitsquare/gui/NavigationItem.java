@@ -19,8 +19,7 @@ package io.bitsquare.gui;
 
 import io.bitsquare.gui.util.ImageUtil;
 
-public enum NavigationItem
-{
+public enum NavigationItem {
     MAIN("/io/bitsquare/gui/MainView.fxml"),
     HOME("/io/bitsquare/gui/home/HomeView.fxml", ImageUtil.HOME, ImageUtil.HOME_ACTIVE),
     BUY("/io/bitsquare/gui/trade/BuyView.fxml", ImageUtil.NAV_BUY, ImageUtil.NAV_BUY_ACTIVE),
@@ -51,30 +50,25 @@ public enum NavigationItem
     private String icon;
     private String activeIcon;
 
-    NavigationItem(String fxmlUrl, String icon, String activeIcon)
-    {
+    NavigationItem(String fxmlUrl, String icon, String activeIcon) {
         this.fxmlUrl = fxmlUrl;
         this.icon = icon;
         this.activeIcon = activeIcon;
     }
 
-    NavigationItem(String fxmlUrl)
-    {
+    NavigationItem(String fxmlUrl) {
         this.fxmlUrl = fxmlUrl;
     }
 
-    public String getFxmlUrl()
-    {
+    public String getFxmlUrl() {
         return fxmlUrl;
     }
 
-    public String getIcon()
-    {
+    public String getIcon() {
         return icon;
     }
 
-    public String getActiveIcon()
-    {
+    public String getActiveIcon() {
         return activeIcon;
     }
 }

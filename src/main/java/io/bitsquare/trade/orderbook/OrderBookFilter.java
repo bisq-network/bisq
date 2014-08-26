@@ -21,8 +21,7 @@ import com.google.bitcoin.core.Coin;
 import io.bitsquare.trade.Direction;
 import javafx.beans.property.SimpleBooleanProperty;
 
-public class OrderBookFilter
-{
+public class OrderBookFilter {
     private final SimpleBooleanProperty directionChangedProperty = new SimpleBooleanProperty();
 
     private double price;
@@ -34,18 +33,15 @@ public class OrderBookFilter
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Coin getAmount()
-    {
+    public Coin getAmount() {
         return amount;
     }
 
-    public void setAmount(Coin amount)
-    {
+    public void setAmount(Coin amount) {
         this.amount = amount;
     }
 
-    public Direction getDirection()
-    {
+    public Direction getDirection() {
         return direction;
     }
 
@@ -54,25 +50,21 @@ public class OrderBookFilter
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setDirection(Direction direction)
-    {
+    public void setDirection(Direction direction) {
         this.direction = direction;
         directionChangedProperty.set(!directionChangedProperty.get());
     }
 
-    public double getPrice()
-    {
+    public double getPrice() {
         return price;
     }
 
-    public void setPrice(double price)
-    {
+    public void setPrice(double price) {
         this.price = price;
     }
 
 
-    public SimpleBooleanProperty getDirectionChangedProperty()
-    {
+    public SimpleBooleanProperty getDirectionChangedProperty() {
         return directionChangedProperty;
     }
 

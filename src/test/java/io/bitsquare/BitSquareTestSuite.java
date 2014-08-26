@@ -27,14 +27,13 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-                            BtcValidatorTest.class,
-                            BitSquareConverterTest.class,
-                            BitSquareNumberValidatorTest.class,
-                            P2PNodeTest.class,
-                            FiatValidatorTest.class,
-                            BtcValidatorTest.class
-                    })
+        BtcValidatorTest.class,
+        BitSquareConverterTest.class,
+        BitSquareNumberValidatorTest.class,
+        P2PNodeTest.class,
+        FiatValidatorTest.class,
+        BtcValidatorTest.class
+})
 
-public class BitSquareTestSuite
-{
+public class BitSquareTestSuite {
 }

@@ -36,21 +36,24 @@ import io.bitsquare.trade.protocol.createoffer.CreateOfferCoordinator;
 import io.bitsquare.trade.protocol.offerer.*;
 import io.bitsquare.trade.protocol.taker.*;
 import io.bitsquare.user.User;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+
 import javax.inject.Inject;
+
 import net.tomp2p.peers.PeerAddress;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TradeManager
-{
+public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
     private final User user;
@@ -81,8 +84,7 @@ public class TradeManager
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeManager(User user, Settings settings, Persistence persistence, MessageFacade messageFacade, BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade)
-    {
+    public TradeManager(User user, Settings settings, Persistence persistence, MessageFacade messageFacade, BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade) {
         this.user = user;
         this.settings = settings;
         this.persistence = persistence;
@@ -92,22 +94,16 @@ public class TradeManager
         this.cryptoFacade = cryptoFacade;
 
         Object offersObject = persistence.read(this, "offers");
-        if (offersObject instanceof HashMap)
-        {
+        if (offersObject instanceof HashMap) {
             offers = (Map<String, Offer>) offersObject;
-        }
-        else
-        {
+        } else {
             offers = new HashMap<>();
         }
 
         Object tradesObject = persistence.read(this, "trades");
-        if (tradesObject instanceof HashMap)
-        {
+        if (tradesObject instanceof HashMap) {
             trades = (Map<String, Trade>) tradesObject;
-        }
-        else
-        {
+        } else {
             trades = new HashMap<>();
         }
 
@@ -119,8 +115,7 @@ public class TradeManager
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void cleanup()
-    {
+    public void cleanup() {
         messageFacade.removeIncomingTradeMessageListener(this::onIncomingTradeMessage);
     }
 
@@ -129,13 +124,11 @@ public class TradeManager
     // Event Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addTakeOfferRequestListener(TakeOfferRequestListener listener)
-    {
+    public void addTakeOfferRequestListener(TakeOfferRequestListener listener) {
         takeOfferRequestListeners.add(listener);
     }
 
-    public void removeTakeOfferRequestListener(TakeOfferRequestListener listener)
-    {
+    public void removeTakeOfferRequestListener(TakeOfferRequestListener listener) {
         takeOfferRequestListeners.remove(listener);
     }
 
@@ -150,60 +143,53 @@ public class TradeManager
                                   Coin amount,
                                   Coin minAmount,
                                   TransactionResultHandler resultHandler,
-                                  ErrorMessageHandler errorMessageHandler)
-    {
+                                  ErrorMessageHandler errorMessageHandler) {
 
-        Offer offer = new Offer(id, 
-                                user.getMessagePublicKey(),
-                                direction,
-                                price,
-                                amount,
-                                minAmount,
-                                user.getCurrentBankAccount().getBankAccountType(),
-                                user.getCurrentBankAccount().getCurrency(),
-                                user.getCurrentBankAccount().getCountry(),
-                                user.getCurrentBankAccount().getUid(),
-                                settings.getRandomArbitrator(amount),
-                                settings.getCollateral(),
-                                settings.getAcceptedCountries(),
-                                settings.getAcceptedLanguageLocales());
+        Offer offer = new Offer(id,
+                user.getMessagePublicKey(),
+                direction,
+                price,
+                amount,
+                minAmount,
+                user.getCurrentBankAccount().getBankAccountType(),
+                user.getCurrentBankAccount().getCurrency(),
+                user.getCurrentBankAccount().getCountry(),
+                user.getCurrentBankAccount().getUid(),
+                settings.getRandomArbitrator(amount),
+                settings.getCollateral(),
+                settings.getAcceptedCountries(),
+                settings.getAcceptedLanguageLocales());
 
-        if (createOfferCoordinatorMap.containsKey(offer.getId()))
-        {
+        if (createOfferCoordinatorMap.containsKey(offer.getId())) {
             errorMessageHandler.onFault("A createOfferCoordinator for the offer with the id " + offer.getId() + " already exists.");
-        }
-        else
-        {
+        } else {
             CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(persistence,
-                                                                                       offer,
-                                                                                       walletFacade,
-                                                                                       messageFacade,
-                                                                                       (transactionId) -> {
-                                                                                           try
-                                                                                           {
-                                                                                               offer.setOfferFeePaymentTxID(transactionId.getHashAsString());
-                                                                                               addOffer(offer);
-                                                                                               createOfferCoordinatorMap.remove(offer.getId());
+                    offer,
+                    walletFacade,
+                    messageFacade,
+                    (transactionId) -> {
+                        try {
+                            offer.setOfferFeePaymentTxID(transactionId.getHashAsString());
+                            addOffer(offer);
+                            createOfferCoordinatorMap.remove(offer.getId());
 
-                                                                                               resultHandler.onResult(transactionId);
-                                                                                           } catch (Exception e)
-                                                                                           {
-                                                                                               //TODO retry policy
-                                                                                               errorMessageHandler.onFault("Could not save offer. Reason: " + e.getMessage());
-                                                                                               createOfferCoordinatorMap.remove(offer.getId());
-                                                                                           }
-                                                                                       },
-                                                                                       (message, throwable) -> {
-                                                                                           errorMessageHandler.onFault(message);
-                                                                                           createOfferCoordinatorMap.remove(offer.getId());
-                                                                                       });
+                            resultHandler.onResult(transactionId);
+                        } catch (Exception e) {
+                            //TODO retry policy
+                            errorMessageHandler.onFault("Could not save offer. Reason: " + e.getMessage());
+                            createOfferCoordinatorMap.remove(offer.getId());
+                        }
+                    },
+                    (message, throwable) -> {
+                        errorMessageHandler.onFault(message);
+                        createOfferCoordinatorMap.remove(offer.getId());
+                    });
             createOfferCoordinatorMap.put(offer.getId(), createOfferCoordinator);
             createOfferCoordinator.start();
         }
     }
 
-    private void addOffer(Offer offer) throws IOException
-    {
+    private void addOffer(Offer offer) throws IOException {
         if (offers.containsKey(offer.getId()))
             throw new IllegalStateException("An offer with the id " + offer.getId() + " already exists. ");
 
@@ -211,10 +197,8 @@ public class TradeManager
         persistOffers();
     }
 
-    public void removeOffer(Offer offer)
-    {
-        if (!offers.containsKey(offer.getId()))
-        {
+    public void removeOffer(Offer offer) {
+        if (!offers.containsKey(offer.getId())) {
             throw new IllegalStateException("offers does not contain the offer with the ID " + offer.getId());
         }
 
@@ -224,8 +208,7 @@ public class TradeManager
         messageFacade.removeOffer(offer);
     }
 
-    public Trade takeOffer(Coin amount, Offer offer, ProtocolForTakerAsSellerListener listener)
-    {
+    public Trade takeOffer(Coin amount, Offer offer, ProtocolForTakerAsSellerListener listener) {
         Trade trade = createTrade(offer);
         trade.setTradeAmount(amount);
 
@@ -241,10 +224,8 @@ public class TradeManager
     // Manage trades
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Trade createTrade(Offer offer)
-    {
-        if (trades.containsKey(offer.getId()))
-        {
+    public Trade createTrade(Offer offer) {
+        if (trades.containsKey(offer.getId())) {
             throw new IllegalStateException("trades contains already an trade with the ID " + offer.getId());
         }
 
@@ -258,10 +239,8 @@ public class TradeManager
         return trade;
     }
 
-    public void removeTrade(Trade trade)
-    {
-        if (!trades.containsKey(trade.getId()))
-        {
+    public void removeTrade(Trade trade) {
+        if (!trades.containsKey(trade.getId())) {
             throw new IllegalStateException("trades does not contain the trade with the ID " + trade.getId());
         }
 
@@ -277,114 +256,95 @@ public class TradeManager
     // Trading protocols
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createOffererAsBuyerProtocol(String offerId, PeerAddress sender)
-    {
+    private void createOffererAsBuyerProtocol(String offerId, PeerAddress sender) {
         log.trace("createOffererAsBuyerProtocol offerId = " + offerId);
-        if (offers.containsKey(offerId))
-        {
+        if (offers.containsKey(offerId)) {
             Offer offer = offers.get(offerId);
 
             Trade trade = createTrade(offer);
             pendingTrade = trade;
 
             ProtocolForOffererAsBuyer protocolForOffererAsBuyer = new ProtocolForOffererAsBuyer(trade,
-                                                                                                sender,
-                                                                                                messageFacade,
-                                                                                                walletFacade,
-                                                                                                blockChainFacade,
-                                                                                                cryptoFacade,
-                                                                                                user,
-                                                                                                new ProtocolForOffererAsBuyerListener()
-                                                                                                {
-                                                                                                    @Override
-                                                                                                    public void onOfferAccepted(Offer offer)
-                                                                                                    {
-                                                                                                        removeOffer(offer);
-                                                                                                    }
+                    sender,
+                    messageFacade,
+                    walletFacade,
+                    blockChainFacade,
+                    cryptoFacade,
+                    user,
+                    new ProtocolForOffererAsBuyerListener() {
+                        @Override
+                        public void onOfferAccepted(Offer offer) {
+                            removeOffer(offer);
+                        }
 
-                                                                                                    @Override
-                                                                                                    public void onDepositTxPublished(String depositTxID)
-                                                                                                    {
-                                                                                                        log.trace("trading onDepositTxPublishedMessage " + depositTxID);
-                                                                                                    }
+                        @Override
+                        public void onDepositTxPublished(String depositTxID) {
+                            log.trace("trading onDepositTxPublishedMessage " + depositTxID);
+                        }
 
-                                                                                                    @Override
-                                                                                                    public void onDepositTxConfirmedUpdate(TransactionConfidence confidence)
-                                                                                                    {
-                                                                                                        log.trace("trading onDepositTxConfirmedUpdate");
-                                                                                                    }
+                        @Override
+                        public void onDepositTxConfirmedUpdate(TransactionConfidence confidence) {
+                            log.trace("trading onDepositTxConfirmedUpdate");
+                        }
 
-                                                                                                    @Override
-                                                                                                    public void onPayoutTxPublished(String payoutTxAsHex)
-                                                                                                    {
-                                                                                                        Transaction payoutTx = new Transaction(walletFacade.getWallet().getParams(),
-                                                                                                                                               Utils.parseAsHexOrBase58(payoutTxAsHex));
-                                                                                                        trade.setPayoutTransaction(payoutTx);
-                                                                                                        trade.setState(Trade.State.COMPLETED);
-                                                                                                        log.debug("trading onPayoutTxPublishedMessage");
-                                                                                                    }
+                        @Override
+                        public void onPayoutTxPublished(String payoutTxAsHex) {
+                            Transaction payoutTx = new Transaction(walletFacade.getWallet().getParams(),
+                                    Utils.parseAsHexOrBase58(payoutTxAsHex));
+                            trade.setPayoutTransaction(payoutTx);
+                            trade.setState(Trade.State.COMPLETED);
+                            log.debug("trading onPayoutTxPublishedMessage");
+                        }
 
-                                                                                                    @Override
-                                                                                                    public void onFault(Throwable throwable, ProtocolForOffererAsBuyer.State state)
-                                                                                                    {
-                                                                                                        log.error("Error while executing trade process at state: " + state + " / " + throwable);
-                                                                                                        Popups.openErrorPopup("Error while executing trade process",
-                                                                                                                              "Error while executing trade process at state: " + state + " / " +
-                                                                                                                                      throwable);
-                                                                                                    }
+                        @Override
+                        public void onFault(Throwable throwable, ProtocolForOffererAsBuyer.State state) {
+                            log.error("Error while executing trade process at state: " + state + " / " + throwable);
+                            Popups.openErrorPopup("Error while executing trade process",
+                                    "Error while executing trade process at state: " + state + " / " +
+                                            throwable);
+                        }
 
-                                                                                                    @Override
-                                                                                                    public void onWaitingForPeerResponse(ProtocolForOffererAsBuyer.State state)
-                                                                                                    {
-                                                                                                        log.debug("Waiting for peers response at state " + state);
-                                                                                                    }
+                        @Override
+                        public void onWaitingForPeerResponse(ProtocolForOffererAsBuyer.State state) {
+                            log.debug("Waiting for peers response at state " + state);
+                        }
 
-                                                                                                    @Override
-                                                                                                    public void onCompleted(ProtocolForOffererAsBuyer.State state)
-                                                                                                    {
-                                                                                                        log.debug("Trade protocol completed at state " + state);
-                                                                                                    }
+                        @Override
+                        public void onCompleted(ProtocolForOffererAsBuyer.State state) {
+                            log.debug("Trade protocol completed at state " + state);
+                        }
 
-                                                                                                    @Override
-                                                                                                    public void onWaitingForUserInteraction(ProtocolForOffererAsBuyer.State state)
-                                                                                                    {
-                                                                                                        log.debug("Waiting for UI activity at state " + state);
-                                                                                                    }
+                        @Override
+                        public void onWaitingForUserInteraction(ProtocolForOffererAsBuyer.State state) {
+                            log.debug("Waiting for UI activity at state " + state);
+                        }
 
 
-                                                                                                    @Override
-                                                                                                    public void onDepositTxConfirmedInBlockchain()
-                                                                                                    {
-                                                                                                        log.trace("trading onDepositTxConfirmedInBlockchain");
-                                                                                                    }
+                        @Override
+                        public void onDepositTxConfirmedInBlockchain() {
+                            log.trace("trading onDepositTxConfirmedInBlockchain");
+                        }
 
-                                                                                                });
+                    });
 
-            if (!offererAsBuyerProtocolMap.containsKey(trade.getId()))
-            {
+            if (!offererAsBuyerProtocolMap.containsKey(trade.getId())) {
                 offererAsBuyerProtocolMap.put(trade.getId(), protocolForOffererAsBuyer);
-            }
-            else
-            {
+            } else {
                 // We don't store the protocol in case we have already a pending offer. The protocol is only temporary used to reply with a reject message.
                 log.trace("offererAsBuyerProtocol not stored as offer is already pending.");
             }
 
             protocolForOffererAsBuyer.start();
-        }
-        else
-        {
+        } else {
             log.warn("Incoming offer take request does not match with any saved offer. We ignore that request.");
         }
     }
 
-    public void bankTransferInited(String tradeUID)
-    {
+    public void bankTransferInited(String tradeUID) {
         offererAsBuyerProtocolMap.get(tradeUID).onUIEventBankTransferInited();
     }
 
-    public void onFiatReceived(String tradeUID)
-    {
+    public void onFiatReceived(String tradeUID) {
         takerAsSellerProtocolMap.get(tradeUID).onUIEventFiatReceived();
     }
 
@@ -392,44 +352,28 @@ public class TradeManager
     // Process incoming tradeMessages
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onIncomingTradeMessage(TradeMessage tradeMessage, PeerAddress sender)
-    {
+    private void onIncomingTradeMessage(TradeMessage tradeMessage, PeerAddress sender) {
         // log.trace("processTradingMessage TradeId " + tradeMessage.getTradeId());
         log.trace("processTradingMessage instance " + tradeMessage.getClass().getSimpleName());
 
         String tradeId = tradeMessage.getTradeId();
 
-        if (tradeMessage instanceof RequestTakeOfferMessage)
-        {
+        if (tradeMessage instanceof RequestTakeOfferMessage) {
             createOffererAsBuyerProtocol(tradeId, sender);
             takeOfferRequestListeners.stream().forEach(e -> e.onTakeOfferRequested(tradeId, sender));
-        }
-        else if (tradeMessage instanceof RespondToTakeOfferRequestMessage)
-        {
+        } else if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
             takerAsSellerProtocolMap.get(tradeId).onRespondToTakeOfferRequestMessage((RespondToTakeOfferRequestMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof TakeOfferFeePayedMessage)
-        {
+        } else if (tradeMessage instanceof TakeOfferFeePayedMessage) {
             offererAsBuyerProtocolMap.get(tradeId).onTakeOfferFeePayedMessage((TakeOfferFeePayedMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof RequestTakerDepositPaymentMessage)
-        {
+        } else if (tradeMessage instanceof RequestTakerDepositPaymentMessage) {
             takerAsSellerProtocolMap.get(tradeId).onRequestTakerDepositPaymentMessage((RequestTakerDepositPaymentMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage)
-        {
+        } else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
             offererAsBuyerProtocolMap.get(tradeId).onRequestOffererPublishDepositTxMessage((RequestOffererPublishDepositTxMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof DepositTxPublishedMessage)
-        {
+        } else if (tradeMessage instanceof DepositTxPublishedMessage) {
             takerAsSellerProtocolMap.get(tradeId).onDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof BankTransferInitedMessage)
-        {
+        } else if (tradeMessage instanceof BankTransferInitedMessage) {
             takerAsSellerProtocolMap.get(tradeId).onBankTransferInitedMessage((BankTransferInitedMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof PayoutTxPublishedMessage)
-        {
+        } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             offererAsBuyerProtocolMap.get(tradeId).onPayoutTxPublishedMessage((PayoutTxPublishedMessage) tradeMessage);
         }
     }
@@ -439,8 +383,7 @@ public class TradeManager
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean isOfferAlreadyInTrades(Offer offer)
-    {
+    public boolean isOfferAlreadyInTrades(Offer offer) {
         return trades.containsKey(offer.getId());
     }
 
@@ -449,28 +392,23 @@ public class TradeManager
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Map<String, Trade> getTrades()
-    {
+    public Map<String, Trade> getTrades() {
         return trades;
     }
 
-    public Map<String, Offer> getOffers()
-    {
+    public Map<String, Offer> getOffers() {
         return offers;
     }
 
-    public Offer getOffer(String offerId)
-    {
+    public Offer getOffer(String offerId) {
         return offers.get(offerId);
     }
 
-    public Trade getPendingTrade()
-    {
+    public Trade getPendingTrade() {
         return pendingTrade;
     }
 
-    public final StringProperty getNewTradeProperty()
-    {
+    public final StringProperty getNewTradeProperty() {
         return this.newTradeProperty;
     }
 
@@ -479,25 +417,19 @@ public class TradeManager
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void persistOffers()
-    {
+    private void persistOffers() {
         persistence.write(this, "offers", offers);
     }
 
-    private void saveTrades()
-    {
+    private void saveTrades() {
         persistence.write(this, "trades", trades);
     }
 
     @Nullable
-    public Trade getTrade(String tradeId)
-    {
-        if (trades.containsKey(tradeId))
-        {
+    public Trade getTrade(String tradeId) {
+        if (trades.containsKey(tradeId)) {
             return trades.get(trades);
-        }
-        else
-        {
+        } else {
             return null;
         }
     }

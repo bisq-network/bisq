@@ -20,14 +20,15 @@ package io.bitsquare.gui.msg;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
+
 import java.net.URL;
 import java.util.ResourceBundle;
 import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MsgController extends CachedViewController
-{
+public class MsgController extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(MsgController.class);
 
 
@@ -36,8 +37,7 @@ public class MsgController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MsgController()
-    {
+    private MsgController() {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -46,26 +46,22 @@ public class MsgController extends CachedViewController
 
 
     @Override
-    public void initialize(URL url, ResourceBundle rb)
-    {
+    public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
     }
 
     @Override
-    public void terminate()
-    {
+    public void terminate() {
         super.terminate();
     }
 
     @Override
-    public void deactivate()
-    {
+    public void deactivate() {
         super.deactivate();
     }
 
     @Override
-    public void activate()
-    {
+    public void activate() {
         super.activate();
     }
 
@@ -75,8 +71,7 @@ public class MsgController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
-    {
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
         return null;
     }
 

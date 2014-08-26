@@ -19,11 +19,11 @@ package io.bitsquare.locale;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CountryUtil
-{
+public class CountryUtil {
     private static final String[] countryCodes = new String[]{"AE", "AL", "AR", "AT", "AU", "BA", "BE", "BG", "BH", "BO", "BR", "BY", "CA", "CH", "CL", "CN", "CO", "CR", "CS", "CU", "CY", "CZ",
             "DE", "DK", "DO", "DZ", "EC", "EE", "EG", "ES", "FI", "FR", "GB", "GR", "GT", "HK", "HN", "HR", "HU", "ID", "IE", "IL", "IN", "IQ", "IS", "IT", "JO", "JP", "KR", "KW", "LB", "LT", "LU",
             "LV", "LY", "MA", "ME", "MK", "MT", "MX", "MY", "NI", "NL", "NO", "NZ", "OM", "PA", "PE", "PH", "PL", "PR", "PT", "PY", "QA", "RO", "RS", "RU", "SA", "SD", "SE", "SG", "SI", "SK", "SV",
@@ -37,8 +37,7 @@ public class CountryUtil
     private static final String[][] regionCodeToName = new String[][]{{"NA", "North America"}, {"SA", "South America"}, {"AF", "Africa"}, {"EU", "Europe"}, {"AS", "Asia"}, {"OC", "Oceania"}};
 
 
-    public static List<Region> getAllRegions()
-    {
+    public static List<Region> getAllRegions() {
         final List<Region> allRegions = new ArrayList<>();
 
         String regionCode = "NA";
@@ -68,17 +67,14 @@ public class CountryUtil
         return allRegions;
     }
 
-    public static List<Country> getAllCountriesFor(Region selectedRegion)
-    {
+    public static List<Country> getAllCountriesFor(Region selectedRegion) {
         return Lists.newArrayList(Collections2.filter(getAllCountries(), country -> selectedRegion != null && country != null && selectedRegion.equals(country.getRegion())));
     }
 
 
-    private static List<Country> getAllCountries()
-    {
+    private static List<Country> getAllCountries() {
         final List<Country> allCountries = new ArrayList<>();
-        for (final Locale locale : getAllCountryLocales())
-        {
+        for (final Locale locale : getAllCountryLocales()) {
             String regionCode = getRegionCode(locale.getCountry());
             final Region region = new Region(regionCode, getRegionName(regionCode));
             final Country country = new Country(locale.getCountry(), locale.getDisplayCountry(), region);
@@ -88,8 +84,7 @@ public class CountryUtil
     }
 
 
-    public static Country getDefaultCountry()
-    {
+    public static Country getDefaultCountry() {
         final Locale locale = new Locale("", Locale.getDefault().getCountry());
         String regionCode = getRegionCode(locale.getCountry());
         final Region region = new Region(regionCode, getRegionName(regionCode));
@@ -97,12 +92,9 @@ public class CountryUtil
     }
 
 
-    private static String getRegionName(final String regionCode)
-    {
-        for (final String[] regionName : regionCodeToName)
-        {
-            if (regionName[0].equals(regionCode))
-            {
+    private static String getRegionName(final String regionCode) {
+        for (final String[] regionName : regionCodeToName) {
+            if (regionName[0].equals(regionCode)) {
                 return regionName[1];
             }
         }
@@ -110,8 +102,7 @@ public class CountryUtil
     }
 
 
-    private static List<Locale> getAllCountryLocales()
-    {
+    private static List<Locale> getAllCountryLocales() {
         List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
         Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !"".equals(locale.getCountry())).map(locale -> new Locale("", locale.getCountry(), "")).collect(Collectors.toSet());
         /*
@@ -132,14 +123,10 @@ public class CountryUtil
     }
 
 
-    private static String getRegionCode(String countryCode)
-    {
-        if (!countryCode.isEmpty() && countryCodeList.contains(countryCode))
-        {
+    private static String getRegionCode(String countryCode) {
+        if (!countryCode.isEmpty() && countryCodeList.contains(countryCode)) {
             return regionCodeList.get(countryCodeList.indexOf(countryCode));
-        }
-        else
-        {
+        } else {
             return "Undefined";
         }
     }

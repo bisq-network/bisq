@@ -18,11 +18,11 @@
 package io.bitsquare.msg.listeners;
 
 import java.util.Map;
+
 import net.tomp2p.peers.Number640;
 import net.tomp2p.storage.Data;
 
-public interface OrderBookListener
-{
+public interface OrderBookListener {
     @SuppressWarnings("UnusedParameters")
     void onOfferAdded(Data offerData, boolean success);
 

@@ -22,11 +22,9 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class BitSquareNumberValidatorTest
-{
+public class BitSquareNumberValidatorTest {
     @Test
-    public void testValidateStringAsDouble()
-    {
+    public void testValidateStringAsDouble() {
         assertTrue(BitSquareValidator.validateStringAsDouble("0"));
         assertTrue(BitSquareValidator.validateStringAsDouble("1"));
         assertTrue(BitSquareValidator.validateStringAsDouble("0,1"));
@@ -41,8 +39,7 @@ public class BitSquareNumberValidatorTest
     }
 
     @Test
-    public void testValidateStringNotEmpty()
-    {
+    public void testValidateStringNotEmpty() {
         assertTrue(BitSquareValidator.validateStringNotEmpty("a"));
         assertTrue(BitSquareValidator.validateStringNotEmpty("123"));
 

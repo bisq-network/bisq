@@ -20,9 +20,11 @@ package io.bitsquare.gui.components.processbar;
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -34,16 +36,14 @@ import javafx.scene.layout.BorderWidths;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 
-class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, BehaviorBase<ProcessStepBar<T>>>
-{
+class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, BehaviorBase<ProcessStepBar<T>>> {
     private final ProcessStepBar<T> controller;
     private LabelWithBorder currentLabelWithBorder;
     private LabelWithBorder prevLabelWithBorder;
     private int index;
     private List<LabelWithBorder> labelWithBorders;
 
-    public ProcessStepBarSkin(final ProcessStepBar<T> control)
-    {
+    public ProcessStepBarSkin(final ProcessStepBar<T> control) {
         super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
 
         controller = getSkinnable();
@@ -51,25 +51,20 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
         applyData();
     }
 
-    public void dataChanged()
-    {
+    public void dataChanged() {
         applyData();
     }
 
-    private void applyData()
-    {
-        if (controller.getProcessStepItems() != null)
-        {
+    private void applyData() {
+        if (controller.getProcessStepItems() != null) {
             int i = 0;
             labelWithBorders = new ArrayList<>();
             int size = controller.getProcessStepItems().size();
-            for (ProcessStepItem processStepItem : controller.getProcessStepItems())
-            {
+            for (ProcessStepItem processStepItem : controller.getProcessStepItems()) {
                 LabelWithBorder labelWithBorder = new LabelWithBorder(processStepItem, i == 0, i == size - 1);
                 getChildren().add(labelWithBorder);
                 labelWithBorders.add(labelWithBorder);
-                if (i == 0)
-                {
+                if (i == 0) {
                     currentLabelWithBorder = prevLabelWithBorder = labelWithBorder;
                 }
 
@@ -80,13 +75,11 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
         }
     }
 
-    public void next()
-    {
+    public void next() {
         index++;
 
         prevLabelWithBorder.deSelect();
-        if (index < labelWithBorders.size())
-        {
+        if (index < labelWithBorders.size()) {
             currentLabelWithBorder = labelWithBorders.get(index);
             currentLabelWithBorder.select();
 
@@ -95,19 +88,16 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
     }
 
     @Override
-    protected void layoutChildren(double x, double y, double width, double height)
-    {
+    protected void layoutChildren(double x, double y, double width, double height) {
         double distance = 10;
         double padding = 50;
-        for (int i = 0; i < getChildren().size(); i++)
-        {
+        for (int i = 0; i < getChildren().size(); i++) {
             Node node = getChildren().get(i);
 
             double newWidth = snapSize(node.prefWidth(height)) + padding;
             double newHeight = snapSize(node.prefHeight(-1) + 10);
 
-            if (i > 0)
-            {
+            if (i > 0) {
                 x = snapPosition(x - ((LabelWithBorder) node).getArrowWidth());
             }
 
@@ -121,8 +111,7 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
 
 
     @SuppressWarnings("EmptyMethod")
-    public static class LabelWithBorder extends Label
-    {
+    public static class LabelWithBorder extends Label {
         final double borderWidth = 1;
         private final double arrowWidth = 10;
         private final double arrowHeight = 30;
@@ -131,8 +120,7 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
         private final boolean isFirst;
         private final boolean isLast;
 
-        public LabelWithBorder(ProcessStepItem processStepItem, boolean isFirst, boolean isLast)
-        {
+        public LabelWithBorder(ProcessStepItem processStepItem, boolean isFirst, boolean isLast) {
             super(processStepItem.getLabel());
             this.processStepItem = processStepItem;
 
@@ -149,15 +137,13 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
             this.setBorder(new Border(borderStroke));
         }
 
-        public void select()
-        {
+        public void select() {
             BorderStroke borderStroke = new BorderStroke(processStepItem.getColor(), BorderStrokeStyle.SOLID, null, new BorderWidths(borderWidth, borderWidth, borderWidth, borderWidth), Insets.EMPTY);
             this.setBorder(new Border(borderStroke));
             setTextFill(processStepItem.getColor());
         }
 
-        public void deSelect()
-        {
+        public void deSelect() {
             /*BorderStroke borderStroke = new BorderStroke(Color.GRAY, BorderStrokeStyle.SOLID, null,
                     new BorderWidths(borderWidth, borderWidth, borderWidth, borderWidth), Insets.EMPTY);
             this.setBorder(new Border(borderStroke));
@@ -165,14 +151,12 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
         }
 
 
-        public double getArrowWidth()
-        {
+        public double getArrowWidth() {
             return arrowWidth;
         }
 
 
-        private Path createButtonShape()
-        {
+        private Path createButtonShape() {
             // build the following shape (or home without left arrow)
 
             //   --------
@@ -191,8 +175,7 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
             e2.xProperty().bind(this.widthProperty().subtract(arrowWidth));
             path.getElements().add(e2);
 
-            if (!isLast)
-            {
+            if (!isLast) {
                 // draw upper part of right arrow
                 LineTo e3 = new LineTo();
                 // the x endpoint of this line depends on the x property of line e2
@@ -213,8 +196,7 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
             HLineTo e5 = new HLineTo(0);
             path.getElements().add(e5);
 
-            if (!isFirst)
-            {
+            if (!isFirst) {
                 LineTo e6 = new LineTo(arrowWidth, arrowHeight / 2.0);
                 path.getElements().add(e6);
             }

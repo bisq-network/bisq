@@ -18,29 +18,26 @@
 package io.bitsquare.btc;
 
 import io.bitsquare.bank.BankAccount;
+
 import javax.inject.Inject;
 
 /**
  * That facade delivers blockchain functionality from the bitcoinJ library
  */
 @SuppressWarnings({"SameReturnValue", "UnusedParameters"})
-public class BlockChainFacade
-{
+public class BlockChainFacade {
     @Inject
-    public BlockChainFacade()
-    {
+    public BlockChainFacade() {
 
     }
 
     //TODO
-    public boolean isAccountBlackListed(String accountID, BankAccount bankAccount)
-    {
+    public boolean isAccountBlackListed(String accountID, BankAccount bankAccount) {
         return false;
     }
 
     //TODO
-    public boolean verifyAccountRegistration()
-    {
+    public boolean verifyAccountRegistration() {
         return true;
 
         // tx id 76982adc582657b2eb68f3e43341596a68aadc4ef6b9590e88e93387d4d5d1f9
@@ -52,37 +49,32 @@ public class BlockChainFacade
             return true;  */
     }
 
-    private boolean findAddressInBlockChain(String address)
-    {
+    private boolean findAddressInBlockChain(String address) {
         // TODO
         // lookup for address in blockchain
         return true;
     }
 
 
-    private byte[] getDataForTxWithAddress(String address)
-    {
+    private byte[] getDataForTxWithAddress(String address) {
         // TODO
         // return data after OP_RETURN
         return null;
     }
 
-    private boolean isFeePayed(String address)
-    {
+    private boolean isFeePayed(String address) {
         // TODO
         // check if fee is payed
         return true;
     }
 
-    private boolean isAccountIDBlacklisted(String accountID)
-    {
+    private boolean isAccountIDBlacklisted(String accountID) {
         // TODO
         // check if accountID is on blacklist
         return false;
     }
 
-    private boolean isBankAccountBlacklisted(BankAccount bankAccount)
-    {
+    private boolean isBankAccountBlacklisted(BankAccount bankAccount) {
         // TODO
         // check if accountID is on blacklist
         return false;

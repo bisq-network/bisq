@@ -60,30 +60,29 @@ import javafx.scene.control.Skin;
  * <p>
  * ProgressIndicator sets focusTraversable to false.
  * </p>
- * <p>
- * <p>
+ * <p/>
+ * <p/>
  * This first example creates a ProgressIndicator with an indeterminate value :
  * <pre><code>
  * import javafx.scene.control.ProgressIndicator;
  * ProgressIndicator p1 = new ProgressIndicator();
  * </code></pre>
- * <p>
- * <p>
+ * <p/>
+ * <p/>
  * This next example creates a ProgressIndicator which is 25% complete :
  * <pre><code>
  * import javafx.scene.control.ProgressIndicator;
  * ProgressIndicator p2 = new ProgressIndicator();
  * p2.setProgress(0.25F);
  * </code></pre>
- * <p>
+ * <p/>
  * Implementation of ProgressIndicator According to JavaFX UI Control API Specification
  *
  * @since JavaFX 2.0
  */
 
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
-public class ConfidenceProgressIndicator extends Control
-{
+public class ConfidenceProgressIndicator extends Control {
 
     /**
      * Value for progress indicating that the progress is indeterminate.
@@ -99,7 +98,7 @@ public class ConfidenceProgressIndicator extends Control
      **************************************************************************/
     /**
      * Initialize the style class to 'progress-indicator'.
-     * <p>
+     * <p/>
      * This is the selector class from which CSS can be used to style
      * this control.
      */
@@ -137,8 +136,7 @@ public class ConfidenceProgressIndicator extends Control
     /**
      * Creates a new indeterminate ProgressIndicator.
      */
-    public ConfidenceProgressIndicator()
-    {
+    public ConfidenceProgressIndicator() {
         this(INDETERMINATE_PROGRESS);
     }
 
@@ -146,8 +144,7 @@ public class ConfidenceProgressIndicator extends Control
      * Creates a new ProgressIndicator with the given progress value.
      */
     @SuppressWarnings("unchecked")
-    public ConfidenceProgressIndicator(double progress)
-    {
+    public ConfidenceProgressIndicator(double progress) {
         // focusTraversable is styleable through css. Calling setFocusTraversable
         // makes it look to css like the user set the value and css will not
         // override. Initializing focusTraversable by calling applyStyle with null
@@ -162,30 +159,23 @@ public class ConfidenceProgressIndicator extends Control
         pseudoClassStateChanged(PSEUDO_CLASS_DETERMINATE, c != 0);
     }
 
-    public final boolean isIndeterminate()
-    {
+    public final boolean isIndeterminate() {
         return indeterminate == null || indeterminate.get();
     }
 
-    private void setIndeterminate(boolean value)
-    {
+    private void setIndeterminate(boolean value) {
         indeterminatePropertyImpl().set(value);
     }
 
-    public final ReadOnlyBooleanProperty indeterminateProperty()
-    {
+    public final ReadOnlyBooleanProperty indeterminateProperty() {
         return indeterminatePropertyImpl().getReadOnlyProperty();
     }
 
-    private ReadOnlyBooleanWrapper indeterminatePropertyImpl()
-    {
-        if (indeterminate == null)
-        {
-            indeterminate = new ReadOnlyBooleanWrapper(true)
-            {
+    private ReadOnlyBooleanWrapper indeterminatePropertyImpl() {
+        if (indeterminate == null) {
+            indeterminate = new ReadOnlyBooleanWrapper(true) {
                 @Override
-                protected void invalidated()
-                {
+                protected void invalidated() {
                     final boolean active = get();
                     pseudoClassStateChanged(PSEUDO_CLASS_INDETERMINATE, active);
                     pseudoClassStateChanged(PSEUDO_CLASS_DETERMINATE, !active);
@@ -193,15 +183,13 @@ public class ConfidenceProgressIndicator extends Control
 
 
                 @Override
-                public Object getBean()
-                {
+                public Object getBean() {
                     return ConfidenceProgressIndicator.this;
                 }
 
 
                 @Override
-                public String getName()
-                {
+                public String getName() {
                     return "indeterminate";
                 }
             };
@@ -217,8 +205,7 @@ public class ConfidenceProgressIndicator extends Control
      * ************************************************************************
      */
 
-    public final double getProgress()
-    {
+    public final double getProgress() {
         return progress == null ? INDETERMINATE_PROGRESS : progress.get();
     }
 
@@ -230,34 +217,27 @@ public class ConfidenceProgressIndicator extends Control
      * ************************************************************************
      */
 
-    public final void setProgress(double value)
-    {
+    public final void setProgress(double value) {
         progressProperty().set(value);
     }
 
-    public final DoubleProperty progressProperty()
-    {
-        if (progress == null)
-        {
-            progress = new DoublePropertyBase(-1.0)
-            {
+    public final DoubleProperty progressProperty() {
+        if (progress == null) {
+            progress = new DoublePropertyBase(-1.0) {
                 @Override
-                protected void invalidated()
-                {
+                protected void invalidated() {
                     setIndeterminate(getProgress() < 0.0);
                 }
 
 
                 @Override
-                public Object getBean()
-                {
+                public Object getBean() {
                     return ConfidenceProgressIndicator.this;
                 }
 
 
                 @Override
-                public String getName()
-                {
+                public String getName() {
                     return "progress";
                 }
             };
@@ -270,8 +250,7 @@ public class ConfidenceProgressIndicator extends Control
      */
 
     @Override
-    protected Skin<?> createDefaultSkin()
-    {
+    protected Skin<?> createDefaultSkin() {
         return new ConfidenceProgressIndicatorSkin(this);
     }
 
@@ -284,8 +263,7 @@ public class ConfidenceProgressIndicator extends Control
     @Deprecated
     @Override
     @SuppressWarnings("deprecation")
-    protected /*do not make final*/ Boolean impl_cssGetFocusTraversableInitialValue()
-    {
+    protected /*do not make final*/ Boolean impl_cssGetFocusTraversableInitialValue() {
         return Boolean.FALSE;
     }
 

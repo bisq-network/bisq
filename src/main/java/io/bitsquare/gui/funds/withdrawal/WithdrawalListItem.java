@@ -32,8 +32,7 @@ import javafx.scene.control.Tooltip;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class WithdrawalListItem
-{
+public class WithdrawalListItem {
     private final StringProperty addressString = new SimpleStringProperty();
     private final BalanceListener balanceListener;
 
@@ -50,8 +49,7 @@ public class WithdrawalListItem
 
     private Coin balance;
 
-    public WithdrawalListItem(AddressEntry addressEntry, WalletFacade walletFacade)
-    {
+    public WithdrawalListItem(AddressEntry addressEntry, WalletFacade walletFacade) {
         this.addressEntry = addressEntry;
         this.walletFacade = walletFacade;
         this.addressString.set(getAddress().toString());
@@ -64,11 +62,9 @@ public class WithdrawalListItem
         progressIndicator.setPrefSize(24, 24);
         Tooltip.install(progressIndicator, tooltip);
 
-        confidenceListener = walletFacade.addConfidenceListener(new ConfidenceListener(getAddress())
-        {
+        confidenceListener = walletFacade.addConfidenceListener(new ConfidenceListener(getAddress()) {
             @Override
-            public void onTransactionConfidenceChanged(TransactionConfidence confidence)
-            {
+            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                 updateConfidence(confidence);
             }
         });
@@ -78,11 +74,9 @@ public class WithdrawalListItem
 
         // balance
         balanceLabel = new Label();
-        balanceListener = walletFacade.addBalanceListener(new BalanceListener(getAddress())
-        {
+        balanceListener = walletFacade.addBalanceListener(new BalanceListener(getAddress()) {
             @Override
-            public void onBalanceChanged(Coin balance)
-            {
+            public void onBalanceChanged(Coin balance) {
                 updateBalance(balance);
             }
         });
@@ -90,29 +84,23 @@ public class WithdrawalListItem
         updateBalance(walletFacade.getBalanceForAddress(getAddress()));
     }
 
-    public void cleanup()
-    {
+    public void cleanup() {
         walletFacade.removeConfidenceListener(confidenceListener);
         walletFacade.removeBalanceListener(balanceListener);
     }
 
-    private void updateBalance(Coin balance)
-    {
+    private void updateBalance(Coin balance) {
         this.balance = balance;
-        if (balance != null)
-        {
+        if (balance != null) {
             //TODO use BitSquareFormatter
             balanceLabel.setText(balance.toFriendlyString());
         }
     }
 
-    private void updateConfidence(TransactionConfidence confidence)
-    {
-        if (confidence != null)
-        {
+    private void updateConfidence(TransactionConfidence confidence) {
+        if (confidence != null) {
             //log.debug("Type numBroadcastPeers getDepthInBlocks " + confidence.getConfidenceType() + " / " + confidence.numBroadcastPeers() + " / " + confidence.getDepthInBlocks());
-            switch (confidence.getConfidenceType())
-            {
+            switch (confidence.getConfidenceType()) {
                 case UNKNOWN:
                     tooltip.setText("Unknown transaction status");
                     progressIndicator.setProgress(0);
@@ -134,10 +122,8 @@ public class WithdrawalListItem
     }
 
 
-    public final String getLabel()
-    {
-        switch (addressEntry.getAddressContext())
-        {
+    public final String getLabel() {
+        switch (addressEntry.getAddressContext()) {
             case REGISTRATION_FEE:
                 return "Registration fee";
             case TRADE:
@@ -150,37 +136,31 @@ public class WithdrawalListItem
     }
 
 
-    public final StringProperty addressStringProperty()
-    {
+    public final StringProperty addressStringProperty() {
         return this.addressString;
     }
 
-    Address getAddress()
-    {
+    Address getAddress() {
         return addressEntry.getAddress();
     }
 
 
-    public AddressEntry getAddressEntry()
-    {
+    public AddressEntry getAddressEntry() {
         return addressEntry;
     }
 
 
-    public ConfidenceProgressIndicator getProgressIndicator()
-    {
+    public ConfidenceProgressIndicator getProgressIndicator() {
         return progressIndicator;
     }
 
 
-    public Label getBalanceLabel()
-    {
+    public Label getBalanceLabel() {
         return balanceLabel;
     }
 
 
-    public Coin getBalance()
-    {
+    public Coin getBalance() {
         return balance;
     }
 }

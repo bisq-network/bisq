@@ -24,11 +24,9 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class BtcValidatorTest
-{
+public class BtcValidatorTest {
     @Test
-    public void testIsMinSpendableAmount()
-    {
+    public void testIsMinSpendableAmount() {
         Coin amount = null;
         //noinspection ConstantConditions
         assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));

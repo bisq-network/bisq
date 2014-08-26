@@ -22,11 +22,9 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class FiatValidatorTest
-{
+public class FiatValidatorTest {
     @Test
-    public void testValidate()
-    {
+    public void testValidate() {
         FiatValidator validator = new FiatValidator();
         NumberValidator.ValidationResult validationResult;
 

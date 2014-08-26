@@ -18,17 +18,14 @@
 package io.bitsquare.trade.protocol.old;
 
 //TODO not used but let it for reference until all use cases are impl.
-public class BuyTakerPaymentProcess extends PaymentProcess
-{
+public class BuyTakerPaymentProcess extends PaymentProcess {
 
-    public BuyTakerPaymentProcess()
-    {
+    public BuyTakerPaymentProcess() {
         super();
     }
 
     @Override
-    public void executeStep0()
-    {
+    public void executeStep0() {
         // bitcoinServices.createMultiSig();
         createDepositTx();
         payPaymentAndCollateral();
@@ -37,8 +34,7 @@ public class BuyTakerPaymentProcess extends PaymentProcess
     }
 
     @Override
-    public void executeStep1()
-    {
+    public void executeStep1() {
         onMessageDepositTxPublished();
         onMessageFiatTxInited();
         onUserInputFiatReceived();
@@ -46,8 +42,7 @@ public class BuyTakerPaymentProcess extends PaymentProcess
     }
 
     @Override
-    public void executeStep2()
-    {
+    public void executeStep2() {
         signPayoutTx();
         publishPayoutTx();
         sendMessagePayoutTxPublished();

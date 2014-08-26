@@ -20,8 +20,7 @@ package io.bitsquare.locale;
 import java.io.Serializable;
 import java.util.Objects;
 
-public class Region implements Serializable
-{
+public class Region implements Serializable {
     private static final long serialVersionUID = -5930294199097793187L;
 
 
@@ -29,25 +28,20 @@ public class Region implements Serializable
 
     private final String name;
 
-    public Region(String code, String name)
-    {
+    public Region(String code, String name) {
         this.code = code;
         this.name = name;
     }
 
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hashCode(code);
     }
 
-    public boolean equals(Object obj)
-    {
-        if (!(obj instanceof Region))
-        {
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Region)) {
             return false;
         }
-        if (obj == this)
-        {
+        if (obj == this) {
             return true;
         }
 
@@ -56,21 +50,18 @@ public class Region implements Serializable
     }
 
 
-    String getCode()
-    {
+    String getCode() {
         return code;
     }
 
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "regionCode='" + code + '\'' +
                 ", continentName='" + name;
     }

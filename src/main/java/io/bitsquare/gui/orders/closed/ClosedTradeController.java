@@ -18,14 +18,15 @@
 package io.bitsquare.gui.orders.closed;
 
 import io.bitsquare.gui.CachedViewController;
+
 import java.net.URL;
 import java.util.ResourceBundle;
 import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ClosedTradeController extends CachedViewController
-{
+public class ClosedTradeController extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradeController.class);
 
 
@@ -34,8 +35,7 @@ public class ClosedTradeController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ClosedTradeController()
-    {
+    private ClosedTradeController() {
     }
 
 
@@ -44,20 +44,17 @@ public class ClosedTradeController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb)
-    {
+    public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
     }
 
     @Override
-    public void deactivate()
-    {
+    public void deactivate() {
         super.deactivate();
     }
 
     @Override
-    public void activate()
-    {
+    public void activate() {
         super.activate();
     }
 

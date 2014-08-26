@@ -24,15 +24,13 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.HBox;
 import javafx.util.Duration;
 
-public class NetworkSyncPane extends HBox
-{
+public class NetworkSyncPane extends HBox {
 
     private final ProgressBar networkSyncProgressBar;
 
     private final Label networkSyncInfoLabel;
 
-    public NetworkSyncPane()
-    {
+    public NetworkSyncPane() {
         networkSyncInfoLabel = new Label();
         networkSyncInfoLabel.setText("Synchronize with network...");
         networkSyncProgressBar = new ProgressBar();
@@ -42,14 +40,12 @@ public class NetworkSyncPane extends HBox
         getChildren().addAll(new HSpacer(5), networkSyncProgressBar, networkSyncInfoLabel);
     }
 
-    public void setProgress(double percent)
-    {
+    public void setProgress(double percent) {
         networkSyncProgressBar.setProgress(percent / 100.0);
         networkSyncInfoLabel.setText("Synchronize with network: " + (int) percent + "%");
     }
 
-    public void downloadComplete()
-    {
+    public void downloadComplete() {
         networkSyncInfoLabel.setText("Sync with network: Done");
         networkSyncProgressBar.setProgress(1);
 

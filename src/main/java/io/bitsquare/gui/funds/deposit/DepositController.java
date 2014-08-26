@@ -22,10 +22,12 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
+
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -34,12 +36,13 @@ import javafx.scene.control.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.util.Callback;
+
 import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DepositController extends CachedViewController
-{
+public class DepositController extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(DepositController.class);
 
     private final WalletFacade walletFacade;
@@ -54,8 +57,7 @@ public class DepositController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private DepositController(WalletFacade walletFacade)
-    {
+    private DepositController(WalletFacade walletFacade) {
         this.walletFacade = walletFacade;
     }
 
@@ -65,8 +67,7 @@ public class DepositController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb)
-    {
+    public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -78,8 +79,7 @@ public class DepositController extends CachedViewController
     }
 
     @Override
-    public void deactivate()
-    {
+    public void deactivate() {
         super.deactivate();
 
         for (DepositListItem anAddressList : addressList)
@@ -87,8 +87,7 @@ public class DepositController extends CachedViewController
     }
 
     @Override
-    public void activate()
-    {
+    public void activate() {
         super.activate();
 
         List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
@@ -113,40 +112,31 @@ public class DepositController extends CachedViewController
     // Cell factories
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setLabelColumnCellFactory()
-    {
+    private void setLabelColumnCellFactory() {
         labelColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        labelColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>()
-        {
+        labelColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>() {
 
             @Override
-            public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column)
-            {
-                return new TableCell<String, DepositListItem>()
-                {
+            public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
+                return new TableCell<String, DepositListItem>() {
 
                     Hyperlink hyperlink;
 
                     @Override
-                    public void updateItem(final DepositListItem item, boolean empty)
-                    {
+                    public void updateItem(final DepositListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
-                        if (item != null && !empty)
-                        {
+                        if (item != null && !empty) {
                             hyperlink = new Hyperlink(item.getLabel());
                             hyperlink.setId("id-link");
-                            if (item.getAddressEntry().getOfferId() != null)
-                            {
+                            if (item.getAddressEntry().getOfferId() != null) {
                                 Tooltip tooltip = new Tooltip(item.getAddressEntry().getOfferId());
                                 Tooltip.install(hyperlink, tooltip);
 
                                 hyperlink.setOnAction(event -> log.info("Show trade details " + item.getAddressEntry().getOfferId()));
                             }
                             setGraphic(hyperlink);
-                        }
-                        else
-                        {
+                        } else {
                             setGraphic(null);
                             setId(null);
                         }
@@ -156,28 +146,20 @@ public class DepositController extends CachedViewController
         });
     }
 
-    private void setBalanceColumnCellFactory()
-    {
+    private void setBalanceColumnCellFactory() {
         balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        balanceColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>()
-        {
+        balanceColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>() {
 
             @Override
-            public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column)
-            {
-                return new TableCell<String, DepositListItem>()
-                {
+            public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
+                return new TableCell<String, DepositListItem>() {
                     @Override
-                    public void updateItem(final DepositListItem item, boolean empty)
-                    {
+                    public void updateItem(final DepositListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
-                        if (item != null && !empty)
-                        {
+                        if (item != null && !empty) {
                             setGraphic(item.getBalanceLabel());
-                        }
-                        else
-                        {
+                        } else {
                             setGraphic(null);
                         }
                     }
@@ -186,17 +168,13 @@ public class DepositController extends CachedViewController
         });
     }
 
-    private void setCopyColumnCellFactory()
-    {
+    private void setCopyColumnCellFactory() {
         copyColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        copyColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>()
-        {
+        copyColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>() {
 
             @Override
-            public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column)
-            {
-                return new TableCell<String, DepositListItem>()
-                {
+            public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
+                return new TableCell<String, DepositListItem>() {
                     final Label copyIcon = new Label();
 
                     {
@@ -206,12 +184,10 @@ public class DepositController extends CachedViewController
                     }
 
                     @Override
-                    public void updateItem(final DepositListItem item, boolean empty)
-                    {
+                    public void updateItem(final DepositListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
-                        if (item != null && !empty)
-                        {
+                        if (item != null && !empty) {
                             setGraphic(copyIcon);
                             copyIcon.setOnMouseClicked(e -> {
                                 Clipboard clipboard = Clipboard.getSystemClipboard();
@@ -220,9 +196,7 @@ public class DepositController extends CachedViewController
                                 clipboard.setContent(content);
                             });
 
-                        }
-                        else
-                        {
+                        } else {
                             setGraphic(null);
                         }
                     }
@@ -231,29 +205,21 @@ public class DepositController extends CachedViewController
         });
     }
 
-    private void setConfidenceColumnCellFactory()
-    {
+    private void setConfidenceColumnCellFactory() {
         confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        confidenceColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>()
-        {
+        confidenceColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>() {
 
             @Override
-            public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column)
-            {
-                return new TableCell<String, DepositListItem>()
-                {
+            public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
+                return new TableCell<String, DepositListItem>() {
 
                     @Override
-                    public void updateItem(final DepositListItem item, boolean empty)
-                    {
+                    public void updateItem(final DepositListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
-                        if (item != null && !empty)
-                        {
+                        if (item != null && !empty) {
                             setGraphic(item.getProgressIndicator());
-                        }
-                        else
-                        {
+                        } else {
                             setGraphic(null);
                         }
                     }

@@ -43,10 +43,10 @@ package io.bitsquare.gui.components.confidence.behavior;
 
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+
 import java.util.Collections;
 
-public class ConfidenceProgressIndicatorBehavior<C extends ConfidenceProgressIndicator> extends BehaviorBase<C>
-{
+public class ConfidenceProgressIndicatorBehavior<C extends ConfidenceProgressIndicator> extends BehaviorBase<C> {
 
     /**
      * ************************************************************************
@@ -56,8 +56,7 @@ public class ConfidenceProgressIndicatorBehavior<C extends ConfidenceProgressInd
      * ************************************************************************
      */
 
-    public ConfidenceProgressIndicatorBehavior(final C progress)
-    {
+    public ConfidenceProgressIndicatorBehavior(final C progress) {
         super(progress, Collections.emptyList());
     }
 }

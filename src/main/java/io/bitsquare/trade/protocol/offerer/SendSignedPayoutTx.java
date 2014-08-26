@@ -29,8 +29,7 @@ import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendSignedPayoutTx
-{
+public class SendSignedPayoutTx {
     private static final Logger log = LoggerFactory.getLogger(SendSignedPayoutTx.class);
 
     public static void run(ResultHandler resultHandler,
@@ -43,11 +42,9 @@ public class SendSignedPayoutTx
                            String offererPayoutAddress,
                            String depositTransactionId,
                            Coin collateral,
-                           Coin tradeAmount)
-    {
+                           Coin tradeAmount) {
         log.trace("Run task");
-        try
-        {
+        try {
             Coin offererPaybackAmount = tradeAmount.add(collateral);
             Coin takerPaybackAmount = collateral;
 
@@ -59,32 +56,28 @@ public class SendSignedPayoutTx
             String depositTxAsHex = result.getValue();
 
             BankTransferInitedMessage tradeMessage = new BankTransferInitedMessage(tradeId,
-                                                                                   depositTxAsHex,
-                                                                                   offererSignatureR,
-                                                                                   offererSignatureS,
-                                                                                   offererPaybackAmount,
-                                                                                   takerPaybackAmount,
-                                                                                   offererPayoutAddress);
+                    depositTxAsHex,
+                    offererSignatureR,
+                    offererSignatureS,
+                    offererPaybackAmount,
+                    takerPaybackAmount,
+                    offererPayoutAddress);
 
-            messageFacade.sendTradeMessage(peerAddress, tradeMessage, new OutgoingTradeMessageListener()
-            {
+            messageFacade.sendTradeMessage(peerAddress, tradeMessage, new OutgoingTradeMessageListener() {
                 @Override
-                public void onResult()
-                {
+                public void onResult() {
                     log.trace("BankTransferInitedMessage successfully arrived at peer");
                     resultHandler.onResult();
                 }
 
                 @Override
-                public void onFailed()
-                {
+                public void onFailed() {
                     log.error("BankTransferInitedMessage did not arrive at peer");
                     exceptionHandler.onError(new Exception("BankTransferInitedMessage did not arrive at peer"));
 
                 }
             });
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             log.error("Exception at OffererCreatesAndSignsPayoutTx " + e);
             exceptionHandler.onError(e);
         }

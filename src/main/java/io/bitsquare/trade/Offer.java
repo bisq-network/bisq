@@ -21,13 +21,13 @@ import com.google.bitcoin.core.Coin;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.locale.Country;
 import io.bitsquare.user.Arbitrator;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.security.PublicKey;
 import java.util.*;
 
-public class Offer implements Serializable
-{
+public class Offer implements Serializable {
     private static final long serialVersionUID = -971164804305475826L;
 
     // key attributes for lookup
@@ -71,8 +71,7 @@ public class Offer implements Serializable
                  Arbitrator arbitrator,
                  double collateral,
                  List<Country> acceptedCountries,
-                 List<Locale> acceptedLanguageLocales)
-    {
+                 List<Locale> acceptedLanguageLocales) {
         this.id = id;
         this.messagePublicKey = messagePublicKey;
         this.direction = direction;
@@ -97,8 +96,7 @@ public class Offer implements Serializable
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PublicKey getMessagePublicKey()
-    {
+    public PublicKey getMessagePublicKey() {
         return messagePublicKey;
     }
 
@@ -107,102 +105,83 @@ public class Offer implements Serializable
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getId()
-    {
+    public String getId() {
         return id;
     }
 
-    public double getPrice()
-    {
+    public double getPrice() {
         return price;
     }
 
-    public Coin getAmount()
-    {
+    public Coin getAmount() {
         return amount;
     }
 
-    public Coin getMinAmount()
-    {
+    public Coin getMinAmount() {
         return minAmount;
     }
 
-    public Direction getDirection()
-    {
+    public Direction getDirection() {
         return direction;
     }
 
-    public BankAccountType getBankAccountType()
-    {
+    public BankAccountType getBankAccountType() {
         return bankAccountType;
     }
 
-    public Currency getCurrency()
-    {
+    public Currency getCurrency() {
         return currency;
     }
 
-    public Country getBankAccountCountry()
-    {
+    public Country getBankAccountCountry() {
         return bankAccountCountry;
     }
 
-    public List<Country> getAcceptedCountries()
-    {
+    public List<Country> getAcceptedCountries() {
         return acceptedCountries;
     }
 
-    public List<Locale> getAcceptedLanguageLocales()
-    {
+    public List<Locale> getAcceptedLanguageLocales() {
         return acceptedLanguageLocales;
     }
 
-    public double getVolumeForCoin(Coin coin)
-    {
+    public double getVolumeForCoin(Coin coin) {
         BigDecimal amountBD = BigDecimal.valueOf(coin.longValue());
         BigDecimal volumeBD = amountBD.multiply(BigDecimal.valueOf(price));
         return volumeBD.divide(BigDecimal.valueOf(Coin.COIN.value)).doubleValue();
     }
 
-    public double getOfferVolume()
-    {
+    public double getOfferVolume() {
         return getVolumeForCoin(amount);
     }
 
-    public double getMinOfferVolume()
-    {
+    public double getMinOfferVolume() {
         return getVolumeForCoin(minAmount);
     }
 
-    public String getOfferFeePaymentTxID()
-    {
+    public String getOfferFeePaymentTxID() {
         return offerFeePaymentTxID;
     }
 
-    public void setOfferFeePaymentTxID(String offerFeePaymentTxID)
-    {
+    public void setOfferFeePaymentTxID(String offerFeePaymentTxID) {
         this.offerFeePaymentTxID = offerFeePaymentTxID;
     }
 
-    public Arbitrator getArbitrator()
-    {
+    public Arbitrator getArbitrator() {
         return arbitrator;
     }
 
-    public double getCollateral()
-    {
+    public double getCollateral() {
         return collateral;
     }
 
-    public String getBankAccountId()
-    {
+    public String getBankAccountId() {
         return bankAccountUID;
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "Offer{" +
                 "direction=" + direction +
                 ", currency=" + currency +
@@ -223,8 +202,7 @@ public class Offer implements Serializable
     }
 
 
-    public Date getCreationDate()
-    {
+    public Date getCreationDate() {
         return creationDate;
     }
 }

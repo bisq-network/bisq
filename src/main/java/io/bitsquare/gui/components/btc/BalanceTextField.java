@@ -30,8 +30,7 @@ import javafx.scene.layout.AnchorPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BalanceTextField extends AnchorPane
-{
+public class BalanceTextField extends AnchorPane {
     private static final Logger log = LoggerFactory.getLogger(BalanceTextField.class);
 
     private final TextField balanceTextField;
@@ -48,8 +47,7 @@ public class BalanceTextField extends AnchorPane
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BalanceTextField()
-    {
+    public BalanceTextField() {
         balanceTextField = new TextField();
         balanceTextField.setFocusTraversable(false);
         balanceTextField.setEditable(false);
@@ -77,30 +75,24 @@ public class BalanceTextField extends AnchorPane
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setAddress(Address address)
-    {
+    public void setAddress(Address address) {
         this.address = address;
     }
 
-    public void setWalletFacade(WalletFacade walletFacade)
-    {
+    public void setWalletFacade(WalletFacade walletFacade) {
         this.walletFacade = walletFacade;
-        confidenceListener = walletFacade.addConfidenceListener(new ConfidenceListener(address)
-        {
+        confidenceListener = walletFacade.addConfidenceListener(new ConfidenceListener(address) {
             @Override
-            public void onTransactionConfidenceChanged(TransactionConfidence confidence)
-            {
+            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                 updateConfidence(confidence);
             }
         });
         updateConfidence(walletFacade.getConfidenceForAddress(address));
 
 
-        balanceListener = walletFacade.addBalanceListener(new BalanceListener(address)
-        {
+        balanceListener = walletFacade.addBalanceListener(new BalanceListener(address) {
             @Override
-            public void onBalanceChanged(Coin balance)
-            {
+            public void onBalanceChanged(Coin balance) {
                 updateBalance(balance);
             }
         });
@@ -108,8 +100,7 @@ public class BalanceTextField extends AnchorPane
     }
 
     // TODO not called yet...
-    public void cleanup()
-    {
+    public void cleanup() {
         walletFacade.removeConfidenceListener(confidenceListener);
         walletFacade.removeBalanceListener(balanceListener);
     }
@@ -119,8 +110,7 @@ public class BalanceTextField extends AnchorPane
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Coin getBalance()
-    {
+    public Coin getBalance() {
         return balance;
     }
 
@@ -129,12 +119,9 @@ public class BalanceTextField extends AnchorPane
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void updateConfidence(TransactionConfidence confidence)
-    {
-        if (confidence != null)
-        {
-            switch (confidence.getConfidenceType())
-            {
+    private void updateConfidence(TransactionConfidence confidence) {
+        if (confidence != null) {
+            switch (confidence.getConfidenceType()) {
                 case UNKNOWN:
                     progressIndicatorTooltip.setText("Unknown transaction status");
                     progressIndicator.setProgress(0);
@@ -153,8 +140,7 @@ public class BalanceTextField extends AnchorPane
                     break;
             }
 
-            if (progressIndicator.getProgress() != 0)
-            {
+            if (progressIndicator.getProgress() != 0) {
                 progressIndicator.setVisible(true);
                 AnchorPane.setRightAnchor(progressIndicator, 0.0);
                 AnchorPane.setRightAnchor(balanceTextField, 35.0);
@@ -162,11 +148,9 @@ public class BalanceTextField extends AnchorPane
         }
     }
 
-    private void updateBalance(Coin balance)
-    {
+    private void updateBalance(Coin balance) {
         this.balance = balance;
-        if (balance != null)
-        {
+        if (balance != null) {
             //TODO use BitSquareFormatter
             balanceTextField.setText(balance.toFriendlyString());
         }

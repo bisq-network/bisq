@@ -20,8 +20,7 @@ package io.bitsquare.gui.util;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class ImageUtil
-{
+public class ImageUtil {
     public static final String SPLASH_LOGO = "/images/logo_200_270.png";
     public static final String SPLASH_LABEL = "/images/bitsquare_logo_label_300_69.png";
 
@@ -50,14 +49,12 @@ public class ImageUtil
     public static final String REMOVE = "/images/removeOffer.png";
 
 
-    public static Image getIconImage(String iconName)
-    {
+    public static Image getIconImage(String iconName) {
         return new Image(ImageUtil.class.getResourceAsStream(iconName));
     }
 
 
-    public static ImageView getIconImageView(String iconName)
-    {
+    public static ImageView getIconImageView(String iconName) {
         return new ImageView(new Image(ImageUtil.class.getResourceAsStream(iconName)));
     }
 }

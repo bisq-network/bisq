@@ -18,17 +18,18 @@
 package io.bitsquare.gui.util;
 
 import com.google.bitcoin.core.NetworkParameters;
+
 import java.math.BigDecimal;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * BtcValidator for validating BTC values.
- * <p>
+ * <p/>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
-public class BtcValidator extends NumberValidator
-{
+public class BtcValidator extends NumberValidator {
     private static final Logger log = LoggerFactory.getLogger(BtcValidator.class);
     private ValidationResult externalValidationResult;
 
@@ -38,20 +39,17 @@ public class BtcValidator extends NumberValidator
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ValidationResult validate(String input)
-    {
+    public ValidationResult validate(String input) {
         if (externalValidationResult != null)
             return externalValidationResult;
 
         ValidationResult result = validateIfNotEmpty(input);
-        if (result.isValid)
-        {
+        if (result.isValid) {
             input = cleanInput(input);
             result = validateIfNumber(input);
         }
 
-        if (result.isValid)
-        {
+        if (result.isValid) {
             result = validateIfNotZero(input)
                     .and(validateIfNotNegative(input))
                     .and(validateIfNotFractionalBtcValue(input))
@@ -67,8 +65,7 @@ public class BtcValidator extends NumberValidator
      *
      * @param externalValidationResult
      */
-    public void overrideResult(ValidationResult externalValidationResult)
-    {
+    public void overrideResult(ValidationResult externalValidationResult) {
         this.externalValidationResult = externalValidationResult;
     }
 
@@ -77,8 +74,7 @@ public class BtcValidator extends NumberValidator
     // Protected methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected ValidationResult validateIfNotFractionalBtcValue(String input)
-    {
+    protected ValidationResult validateIfNotFractionalBtcValue(String input) {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
         if (satoshis.scale() > 0)
@@ -87,8 +83,7 @@ public class BtcValidator extends NumberValidator
             return new ValidationResult(true);
     }
 
-    protected ValidationResult validateIfNotExceedsMaxBtcValue(String input)
-    {
+    protected ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
         if (satoshis.longValue() > NetworkParameters.MAX_MONEY.longValue())

@@ -26,8 +26,7 @@ import io.bitsquare.trade.handlers.ExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SignAndPublishPayoutTx
-{
+public class SignAndPublishPayoutTx {
     private static final Logger log = LoggerFactory.getLogger(SignAndPublishPayoutTx.class);
 
     public static void run(ResultHandler resultHandler,
@@ -39,45 +38,38 @@ public class SignAndPublishPayoutTx
                            String offererSignatureS,
                            Coin offererPaybackAmount,
                            Coin takerPaybackAmount,
-                           String offererPayoutAddress)
-    {
+                           String offererPayoutAddress) {
         log.trace("Run task");
-        try
-        {
+        try {
 
             walletFacade.takerSignsAndSendsTx(depositTxAsHex,
-                                              offererSignatureR,
-                                              offererSignatureS,
-                                              offererPaybackAmount,
-                                              takerPaybackAmount,
-                                              offererPayoutAddress,
-                                              tradeId,
-                                              new FutureCallback<Transaction>()
-                                              {
-                                                  @Override
-                                                  public void onSuccess(Transaction transaction)
-                                                  {
-                                                      log.debug("takerSignsAndSendsTx " + transaction);
-                                                      String payoutTxAsHex = Utils.HEX.encode(transaction.bitcoinSerialize());
-                                                      resultHandler.onResult(transaction.getHashAsString(), payoutTxAsHex);
-                                                  }
+                    offererSignatureR,
+                    offererSignatureS,
+                    offererPaybackAmount,
+                    takerPaybackAmount,
+                    offererPayoutAddress,
+                    tradeId,
+                    new FutureCallback<Transaction>() {
+                        @Override
+                        public void onSuccess(Transaction transaction) {
+                            log.debug("takerSignsAndSendsTx " + transaction);
+                            String payoutTxAsHex = Utils.HEX.encode(transaction.bitcoinSerialize());
+                            resultHandler.onResult(transaction.getHashAsString(), payoutTxAsHex);
+                        }
 
-                                                  @Override
-                                                  public void onFailure(Throwable t)
-                                                  {
-                                                      log.error("Exception at takerSignsAndSendsTx " + t);
-                                                      exceptionHandler.onError(t);
-                                                  }
-                                              });
-        } catch (Exception e)
-        {
+                        @Override
+                        public void onFailure(Throwable t) {
+                            log.error("Exception at takerSignsAndSendsTx " + t);
+                            exceptionHandler.onError(t);
+                        }
+                    });
+        } catch (Exception e) {
             log.error("Exception at takerSignsAndSendsTx " + e);
             exceptionHandler.onError(e);
         }
     }
 
-    public interface ResultHandler
-    {
+    public interface ResultHandler {
         void onResult(String transactionId, String payoutTxAsHex);
     }
 

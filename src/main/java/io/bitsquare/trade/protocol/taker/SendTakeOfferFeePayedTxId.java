@@ -26,8 +26,7 @@ import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendTakeOfferFeePayedTxId
-{
+public class SendTakeOfferFeePayedTxId {
     private static final Logger log = LoggerFactory.getLogger(SendTakeOfferFeePayedTxId.class);
 
     public static void run(ResultHandler resultHandler,
@@ -37,23 +36,19 @@ public class SendTakeOfferFeePayedTxId
                            String tradeId,
                            String takeOfferFeeTxId,
                            Coin tradeAmount,
-                           String pubKeyForThatTradeAsHex)
-    {
+                           String pubKeyForThatTradeAsHex) {
         log.trace("Run task");
         TakeOfferFeePayedMessage msg = new TakeOfferFeePayedMessage(tradeId, takeOfferFeeTxId, tradeAmount, pubKeyForThatTradeAsHex);
 
-        messageFacade.sendTradeMessage(peerAddress, msg, new OutgoingTradeMessageListener()
-        {
+        messageFacade.sendTradeMessage(peerAddress, msg, new OutgoingTradeMessageListener() {
             @Override
-            public void onResult()
-            {
+            public void onResult() {
                 log.trace("TakeOfferFeePayedMessage successfully arrived at peer");
                 resultHandler.onResult();
             }
 
             @Override
-            public void onFailed()
-            {
+            public void onFailed() {
                 log.error("TakeOfferFeePayedMessage  did not arrive at peer");
                 exceptionHandler.onError(new Exception("TakeOfferFeePayedMessage did not arrive at peer"));
             }

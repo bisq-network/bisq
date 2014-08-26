@@ -29,15 +29,19 @@ import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.User;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+
 import javax.inject.Inject;
+
 import net.tomp2p.peers.Number640;
 import net.tomp2p.storage.Data;
 import org.slf4j.Logger;
@@ -49,8 +53,7 @@ remove dependencies to tomp2p
 import net.tomp2p.peers.Number160;
 import net.tomp2p.storage.Data;
  */
-public class OrderBook implements OrderBookListener
-{
+public class OrderBook implements OrderBookListener {
     private static final Logger log = LoggerFactory.getLogger(OrderBook.class);
     private final ObservableList<OrderBookListItem> allOffers = FXCollections.observableArrayList();
     private final FilteredList<OrderBookListItem> filteredList = new FilteredList<>(allOffers);
@@ -67,8 +70,7 @@ public class OrderBook implements OrderBookListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OrderBook(Settings settings, User user, MessageFacade messageFacade, TradeManager tradeManager)
-    {
+    public OrderBook(Settings settings, User user, MessageFacade messageFacade, TradeManager tradeManager) {
         this.settings = settings;
         this.user = user;
         this.messageFacade = messageFacade;
@@ -80,41 +82,32 @@ public class OrderBook implements OrderBookListener
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void init()
-    {
+    public void init() {
         messageFacade.addOrderBookListener(this);
     }
 
-    public void cleanup()
-    {
+    public void cleanup() {
         messageFacade.removeOrderBookListener(this);
     }
 
-    public void loadOffers()
-    {
-        if (user.getCurrentBankAccount() != null)
-        {
+    public void loadOffers() {
+        if (user.getCurrentBankAccount() != null) {
             messageFacade.getOffers(user.getCurrentBankAccount().getCurrency().getCurrencyCode());
-        }
-        else
-        {
+        } else {
             messageFacade.getOffers(CurrencyUtil.getDefaultCurrency().getCurrencyCode());
         }
     }
 
-    public void removeOffer(Offer offer)
-    {
+    public void removeOffer(Offer offer) {
         tradeManager.removeOffer(offer);
     }
 
-    public void applyFilter(OrderBookFilter orderBookFilter)
-    {
+    public void applyFilter(OrderBookFilter orderBookFilter) {
         filteredList.setPredicate(orderBookListItem -> {
             Offer offer = orderBookListItem.getOffer();
             BankAccount currentBankAccount = user.getCurrentBankAccount();
 
-            if (orderBookFilter == null || currentBankAccount == null || orderBookFilter.getDirection() == null)
-            {
+            if (orderBookFilter == null || currentBankAccount == null || orderBookFilter.getDirection() == null) {
                 return false;
             }
 
@@ -138,14 +131,10 @@ public class OrderBook implements OrderBookListener
 
             // Apply applyFilter only if there is a valid value set
             boolean priceResult = true;
-            if (orderBookFilter.getPrice() > 0)
-            {
-                if (offer.getDirection() == Direction.SELL)
-                {
+            if (orderBookFilter.getPrice() > 0) {
+                if (offer.getDirection() == Direction.SELL) {
                     priceResult = orderBookFilter.getPrice() >= offer.getPrice();
-                }
-                else
-                {
+                } else {
                     priceResult = orderBookFilter.getPrice() <= offer.getPrice();
                 }
             }
@@ -194,72 +183,53 @@ public class OrderBook implements OrderBookListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onOfferAdded(Data offerData, boolean success)
-    {
-        try
-        {
+    public void onOfferAdded(Data offerData, boolean success) {
+        try {
             Object offerDataObject = offerData.object();
-            if (offerDataObject instanceof Offer)
-            {
+            if (offerDataObject instanceof Offer) {
                 Offer offer = (Offer) offerDataObject;
                 allOffers.add(new OrderBookListItem(offer));
             }
-        } catch (ClassNotFoundException | IOException e)
-        {
+        } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
     }
 
     @Override
-    public void onOffersReceived(Map<Number640, Data> dataMap, boolean success)
-    {
-        if (success && dataMap != null)
-        {
+    public void onOffersReceived(Map<Number640, Data> dataMap, boolean success) {
+        if (success && dataMap != null) {
             allOffers.clear();
 
-            for (Data offerData : dataMap.values())
-            {
-                try
-                {
+            for (Data offerData : dataMap.values()) {
+                try {
                     Object offerDataObject = offerData.object();
-                    if (offerDataObject instanceof Offer)
-                    {
+                    if (offerDataObject instanceof Offer) {
                         Offer offer = (Offer) offerDataObject;
                         OrderBookListItem orderBookListItem = new OrderBookListItem(offer);
                         allOffers.add(orderBookListItem);
                     }
-                } catch (ClassNotFoundException | IOException e)
-                {
+                } catch (ClassNotFoundException | IOException e) {
                     e.printStackTrace();
                 }
             }
-        }
-        else
-        {
+        } else {
             allOffers.clear();
         }
     }
 
     @Override
-    public void onOfferRemoved(Data offerData, boolean success)
-    {
-        if (success && offerData != null)
-        {
-            try
-            {
+    public void onOfferRemoved(Data offerData, boolean success) {
+        if (success && offerData != null) {
+            try {
                 Object offerDataObject = offerData.object();
-                if (offerDataObject instanceof Offer)
-                {
+                if (offerDataObject instanceof Offer) {
                     Offer offer = (Offer) offerDataObject;
                     allOffers.removeIf(orderBookListItem -> orderBookListItem.getOffer().getId().equals(offer.getId()));
                 }
-            } catch (ClassNotFoundException | IOException e)
-            {
+            } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
-        }
-        else
-        {
+        } else {
             log.warn("onOfferRemoved failed");
         }
     }
@@ -270,8 +240,7 @@ public class OrderBook implements OrderBookListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public SortedList<OrderBookListItem> getOfferList()
-    {
+    public SortedList<OrderBookListItem> getOfferList() {
         return offerList;
     }
 
@@ -280,26 +249,19 @@ public class OrderBook implements OrderBookListener
     // Private Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean countryInList(Country countryToMatch, List<Country> list)
-    {
-        for (Country country : list)
-        {
-            if (country.getCode().equals(countryToMatch.getCode()))
-            {
+    private boolean countryInList(Country countryToMatch, List<Country> list) {
+        for (Country country : list) {
+            if (country.getCode().equals(countryToMatch.getCode())) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean languagesInList(List<Locale> list1, List<Locale> list2)
-    {
-        for (Locale locale1 : list2)
-        {
-            for (Locale locale2 : list1)
-            {
-                if (locale1.getLanguage().equals(locale2.getLanguage()))
-                {
+    private boolean languagesInList(List<Locale> list1, List<Locale> list2) {
+        for (Locale locale1 : list2) {
+            for (Locale locale2 : list1) {
+                if (locale1.getLanguage().equals(locale2.getLanguage())) {
                     return true;
                 }
             }
@@ -307,20 +269,14 @@ public class OrderBook implements OrderBookListener
         return false;
     }
 
-    private boolean arbitratorInList(Arbitrator arbitratorToMatch, List<Arbitrator> list)
-    {
-        if (arbitratorToMatch != null)
-        {
-            for (Arbitrator arbitrator : list)
-            {
-                try
-                {
-                    if (arbitrator.getId().equals(arbitratorToMatch.getId()))
-                    {
+    private boolean arbitratorInList(Arbitrator arbitratorToMatch, List<Arbitrator> list) {
+        if (arbitratorToMatch != null) {
+            for (Arbitrator arbitrator : list) {
+                try {
+                    if (arbitrator.getId().equals(arbitratorToMatch.getId())) {
                         return true;
                     }
-                } catch (Exception e)
-                {
+                } catch (Exception e) {
                     log.error(e.toString());
                 }
             }

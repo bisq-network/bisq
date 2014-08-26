@@ -20,8 +20,7 @@ package io.bitsquare.bank;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public enum BankAccountType
-{
+public enum BankAccountType {
     SEPA("IBAN", "BIC"),
     WIRE("primary ID", "secondary ID"),
     INTERNATIONAL("primary ID", "secondary ID"),
@@ -33,24 +32,20 @@ public enum BankAccountType
     private final String primaryId;
     private final String secondaryId;
 
-    BankAccountType(String primaryId, String secondaryId)
-    {
+    BankAccountType(String primaryId, String secondaryId) {
         this.primaryId = primaryId;
         this.secondaryId = secondaryId;
     }
 
-    public static ArrayList<BankAccountType> getAllBankAccountTypes()
-    {
+    public static ArrayList<BankAccountType> getAllBankAccountTypes() {
         return new ArrayList<>(Arrays.asList(BankAccountType.values()));
     }
 
-    public String getPrimaryId()
-    {
+    public String getPrimaryId() {
         return primaryId;
     }
 
-    public String getSecondaryId()
-    {
+    public String getSecondaryId() {
         return secondaryId;
     }
 }

@@ -26,9 +26,11 @@ import io.bitsquare.gui.trade.createoffer.CreateOfferController;
 import io.bitsquare.gui.trade.orderbook.OrderBookController;
 import io.bitsquare.gui.trade.takeoffer.TakerOfferController;
 import io.bitsquare.trade.Direction;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+
 import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.control.Tab;
@@ -38,8 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class TradeController extends CachedViewController
-{
+public class TradeController extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(TradeController.class);
 
     protected OrderBookController orderBookController;
@@ -53,22 +54,19 @@ public class TradeController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb)
-    {
+    public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
         loadViewAndGetChildController(NavigationItem.ORDER_BOOK);
     }
 
     @Override
-    public void deactivate()
-    {
+    public void deactivate() {
         super.deactivate();
     }
 
     @Override
-    public void activate()
-    {
+    public void activate() {
         super.activate();
 
         applyDirection();
@@ -84,37 +82,30 @@ public class TradeController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
-    {
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
         TabPane tabPane = (TabPane) root;
-        if (navigationItem == NavigationItem.ORDER_BOOK)
-        {
+        if (navigationItem == NavigationItem.ORDER_BOOK) {
             checkArgument(orderBookLoader == null);
             // Orderbook must not be cached by GuiceFXMLLoader as we use 2 instances for sell and buy screens.
             orderBookLoader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.ORDER_BOOK.getFxmlUrl()), false);
-            try
-            {
+            try {
                 final Parent view = orderBookLoader.load();
                 final Tab tab = new Tab("Orderbook");
                 tab.setClosable(false);
                 tab.setContent(view);
                 tabPane.getTabs().add(tab);
-            } catch (IOException e)
-            {
+            } catch (IOException e) {
                 log.error(e.getMessage());
             }
             orderBookController = orderBookLoader.getController();
             orderBookController.setParentController(this);
             return orderBookController;
-        }
-        else if (navigationItem == NavigationItem.CREATE_OFFER)
-        {
+        } else if (navigationItem == NavigationItem.CREATE_OFFER) {
             checkArgument(createOfferController == null);
 
             // CreateOffer and TakeOffer must not be cached by GuiceFXMLLoader as we cannot use a view multiple times in different graphs
             GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
-            try
-            {
+            try {
                 final Parent view = loader.load();
                 createOfferController = loader.getController();
                 createOfferController.setParentController(this);
@@ -123,20 +114,16 @@ public class TradeController extends CachedViewController
                 tabPane.getTabs().add(tab);
                 tabPane.getSelectionModel().select(tabPane.getTabs().size() - 1);
                 return createOfferController;
-            } catch (IOException e)
-            {
+            } catch (IOException e) {
                 log.error(e.getMessage());
             }
             return null;
-        }
-        else if (navigationItem == NavigationItem.TAKE_OFFER)
-        {
+        } else if (navigationItem == NavigationItem.TAKE_OFFER) {
             checkArgument(takerOfferController == null);
 
             // CreateOffer and TakeOffer must not be cached by GuiceFXMLLoader as we cannot use a view multiple times in different graphs
             GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
-            try
-            {
+            try {
                 final Parent view = loader.load();
                 takerOfferController = loader.getController();
                 takerOfferController.setParentController(this);
@@ -145,14 +132,11 @@ public class TradeController extends CachedViewController
                 tabPane.getTabs().add(tab);
                 tabPane.getSelectionModel().select(tabPane.getTabs().size() - 1);
                 return takerOfferController;
-            } catch (IOException e)
-            {
+            } catch (IOException e) {
                 log.error(e.getMessage());
             }
             return null;
-        }
-        else
-        {
+        } else {
             log.error("navigationItem not supported: " + navigationItem);
             return null;
         }
@@ -163,15 +147,13 @@ public class TradeController extends CachedViewController
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onCreateOfferViewRemoved()
-    {
+    public void onCreateOfferViewRemoved() {
         createOfferController = null;
 
         orderBookController.onCreateOfferViewRemoved();
     }
 
-    public void onTakeOfferViewRemoved()
-    {
+    public void onTakeOfferViewRemoved() {
         takerOfferController = null;
     }
 
@@ -181,8 +163,7 @@ public class TradeController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Template method to be overwritten by sub class.
-    protected void applyDirection()
-    {
+    protected void applyDirection() {
         orderBookController.applyDirection(Direction.SELL);
     }
 

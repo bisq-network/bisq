@@ -19,12 +19,13 @@ package io.bitsquare.trade;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.Transaction;
+
 import java.io.Serializable;
+
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 
-public class Trade implements Serializable
-{
+public class Trade implements Serializable {
     private static final long serialVersionUID = -8275323072940974077L;
 
     private final Offer offer;
@@ -45,8 +46,7 @@ public class Trade implements Serializable
     transient private SimpleBooleanProperty _contractChangedProperty;
     transient private SimpleStringProperty _stateChangedProperty;
 
-    public Trade(Offer offer)
-    {
+    public Trade(Offer offer) {
         this.offer = offer;
 
         _depositTxChangedProperty = new SimpleBooleanProperty();
@@ -55,8 +55,7 @@ public class Trade implements Serializable
         _stateChangedProperty = new SimpleStringProperty();
     }
 
-    public double getTradeVolume()
-    {
+    public double getTradeVolume() {
         return offer.getVolumeForCoin(tradeAmount);
     }
 
@@ -64,54 +63,44 @@ public class Trade implements Serializable
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setContractTakerSignature(String takerSignature)
-    {
+    public void setContractTakerSignature(String takerSignature) {
         this.takerSignature = takerSignature;
     }
 
-    public void setTakeOfferFeeTxID(String takeOfferFeeTxID)
-    {
+    public void setTakeOfferFeeTxID(String takeOfferFeeTxID) {
         this.takeOfferFeeTxID = takeOfferFeeTxID;
     }
 
-    public Coin getTradeAmount()
-    {
+    public Coin getTradeAmount() {
         return tradeAmount;
     }
 
-    public void setTradeAmount(Coin tradeAmount)
-    {
+    public void setTradeAmount(Coin tradeAmount) {
         this.tradeAmount = tradeAmount;
     }
 
-    public Contract getContract()
-    {
+    public Contract getContract() {
         return contract;
     }
 
-    public void setContract(Contract contract)
-    {
+    public void setContract(Contract contract) {
         this.contract = contract;
         _contractChangedProperty.set(!_contractChangedProperty.get());
     }
 
-    public String getId()
-    {
+    public String getId() {
         return offer.getId();
     }
 
-    public Offer getOffer()
-    {
+    public Offer getOffer() {
         return offer;
     }
 
-    public String getTakeOfferFeeTxId()
-    {
+    public String getTakeOfferFeeTxId() {
         return takeOfferFeeTxID;
     }
 
-    public String getContractAsJson()
-    {
+    public String getContractAsJson() {
         return contractAsJson;
     }
 
@@ -120,88 +109,74 @@ public class Trade implements Serializable
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setContractAsJson(String contractAsJson)
-    {
+    public void setContractAsJson(String contractAsJson) {
         this.contractAsJson = contractAsJson;
     }
 
-    public String getTakerSignature()
-    {
+    public String getTakerSignature() {
         return takerSignature;
     }
 
-    public Transaction getDepositTransaction()
-    {
+    public Transaction getDepositTransaction() {
         return depositTransaction;
     }
 
-    public void setDepositTransaction(Transaction depositTransaction)
-    {
+    public void setDepositTransaction(Transaction depositTransaction) {
         this.depositTransaction = depositTransaction;
         depositTxChangedProperty().set(!depositTxChangedProperty().get());
     }
 
-    public Transaction getPayoutTransaction()
-    {
+    public Transaction getPayoutTransaction() {
         return payoutTransaction;
     }
 
-    public void setPayoutTransaction(Transaction payoutTransaction)
-    {
+    public void setPayoutTransaction(Transaction payoutTransaction) {
         this.payoutTransaction = payoutTransaction;
         payoutTxChangedProperty().set(!payoutTxChangedProperty().get());
     }
 
-    public State getState()
-    {
+    public State getState() {
         return state;
     }
 
-    public void setState(State state)
-    {
+    public void setState(State state) {
         this.state = state;
         stateChangedProperty().set(state.toString());
     }
 
     // The Property fields are not serialized and therefore not initialized when read from disc.
     // We need to access then with the getter to be sure it is not null.
-    public SimpleBooleanProperty depositTxChangedProperty()
-    {
+    public SimpleBooleanProperty depositTxChangedProperty() {
         if (_depositTxChangedProperty == null) _depositTxChangedProperty = new SimpleBooleanProperty();
 
         return _depositTxChangedProperty;
     }
 
 
-    public SimpleBooleanProperty contractChangedProperty()
-    {
+    public SimpleBooleanProperty contractChangedProperty() {
         if (_contractChangedProperty == null) _contractChangedProperty = new SimpleBooleanProperty();
         return _contractChangedProperty;
     }
 
 
-    public SimpleBooleanProperty payoutTxChangedProperty()
-    {
+    public SimpleBooleanProperty payoutTxChangedProperty() {
         if (_payoutTxChangedProperty == null) _payoutTxChangedProperty = new SimpleBooleanProperty();
         return _payoutTxChangedProperty;
     }
 
 
-    public SimpleStringProperty stateChangedProperty()
-    {
+    public SimpleStringProperty stateChangedProperty() {
         if (_stateChangedProperty == null) _stateChangedProperty = new SimpleStringProperty();
         return _stateChangedProperty;
     }
 
-    public Coin getCollateralAmount()
-    {
+    public Coin getCollateralAmount() {
         return tradeAmount.divide((long) (1d / offer.getCollateral()));
     }
 
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "Trade{" +
                 "offer=" + offer +
                 ", takeOfferFeeTxID='" + takeOfferFeeTxID + '\'' +
@@ -219,8 +194,7 @@ public class Trade implements Serializable
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public static enum State
-    {
+    public static enum State {
         OPEN,
         ACCEPTED,
         COMPLETED

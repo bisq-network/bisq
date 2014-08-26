@@ -20,8 +20,7 @@ package io.bitsquare.locale;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class LanguageUtil
-{
+public class LanguageUtil {
 
     /*public static List<Locale> getPopularLanguages()
     {
@@ -40,8 +39,7 @@ public class LanguageUtil
     }  */
 
 
-    public static List<Locale> getAllLanguageLocales()
-    {
+    public static List<Locale> getAllLanguageLocales() {
         List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
         final Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !"".equals(locale.getLanguage())).map(locale -> new Locale(locale.getLanguage(), "")).collect(Collectors.toSet());
         allLocales = new ArrayList<>();
@@ -50,13 +48,11 @@ public class LanguageUtil
         return allLocales;
     }
 
-    public static Locale getDefaultLanguageLocale()
-    {
+    public static Locale getDefaultLanguageLocale() {
         return new Locale(Locale.getDefault().getLanguage(), "");
     }
 
-    public static Locale getEnglishLanguageLocale()
-    {
+    public static Locale getEnglishLanguageLocale() {
         return new Locale(Locale.ENGLISH.getLanguage(), "");
     }
 }

@@ -24,10 +24,12 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.BitSquare;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BitSquareFormatter;
+
 import java.awt.Desktop;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
+
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
@@ -43,8 +45,7 @@ import org.controlsfx.control.PopOver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AddressTextField extends AnchorPane
-{
+public class AddressTextField extends AnchorPane {
     private static final Logger log = LoggerFactory.getLogger(AddressTextField.class);
 
     private final Label copyIcon;
@@ -57,8 +58,7 @@ public class AddressTextField extends AnchorPane
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AddressTextField()
-    {
+    public AddressTextField() {
         addressLabel = new Label();
         addressLabel.setFocusTraversable(false);
         addressLabel.setId("address-label");
@@ -69,8 +69,7 @@ public class AddressTextField extends AnchorPane
         Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> {
-            if (address != null && address.length() > 0)
-            {
+            if (address != null && address.length() > 0) {
                 Clipboard clipboard = Clipboard.getSystemClipboard();
                 ClipboardContent content = new ClipboardContent();
                 content.putString(address);
@@ -85,8 +84,7 @@ public class AddressTextField extends AnchorPane
         AwesomeDude.setIcon(qrCode, AwesomeIcon.QRCODE);
         Tooltip.install(qrCode, new Tooltip("Show QR code for this address"));
         qrCode.setOnMouseClicked(e -> {
-            if (address != null && address.length() > 0)
-            {
+            if (address != null && address.length() > 0) {
                 final byte[] imageBytes = QRCode
                         .from(getBitcoinURI())
                         .withSize(300, 220)
@@ -119,12 +117,10 @@ public class AddressTextField extends AnchorPane
         getChildren().addAll(addressLabel, copyIcon, qrCode);
 
         addressLabel.setOnMouseClicked(mouseEvent -> {
-            try
-            {
+            try {
                 if (address != null)
                     Desktop.getDesktop().browse(URI.create(getBitcoinURI()));
-            } catch (IOException e)
-            {
+            } catch (IOException e) {
                 log.warn(e.getMessage());
                 Popups.openWarningPopup("Opening wallet app failed", "Perhaps you don't have one installed?");
             }
@@ -136,14 +132,12 @@ public class AddressTextField extends AnchorPane
     // Getters/Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setAddress(String address)
-    {
+    public void setAddress(String address) {
         this.address = address;
         addressLabel.setText(address);
     }
 
-    public void setAmountToPay(String amountToPay)
-    {
+    public void setAmountToPay(String amountToPay) {
         this.amountToPay = amountToPay;
     }
 
@@ -151,8 +145,7 @@ public class AddressTextField extends AnchorPane
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private String getBitcoinURI()
-    {
+    private String getBitcoinURI() {
         Coin d = BitSquareFormatter.parseToCoin(amountToPay);
         return BitcoinURI.convertToBitcoinURI(address, BitSquareFormatter.parseToCoin(amountToPay), BitSquare.getAppName(), null);
     }

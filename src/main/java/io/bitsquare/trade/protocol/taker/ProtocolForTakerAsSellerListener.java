@@ -19,8 +19,7 @@ package io.bitsquare.trade.protocol.taker;
 
 import io.bitsquare.trade.Trade;
 
-public interface ProtocolForTakerAsSellerListener
-{
+public interface ProtocolForTakerAsSellerListener {
     void onDepositTxPublished(String depositTxId);
 
     void onBankTransferInited(String tradeId);

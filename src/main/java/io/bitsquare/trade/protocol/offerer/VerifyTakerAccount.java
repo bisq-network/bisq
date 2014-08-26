@@ -25,12 +25,10 @@ import io.bitsquare.trade.protocol.shared.VerifyPeerAccount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyTakerAccount
-{
+public class VerifyTakerAccount {
     private static final Logger log = LoggerFactory.getLogger(VerifyTakerAccount.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, BlockChainFacade blockChainFacade, String peersAccountId, BankAccount peersBankAccount)
-    {
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, BlockChainFacade blockChainFacade, String peersAccountId, BankAccount peersBankAccount) {
         log.trace("Run task");
         VerifyPeerAccount.run(resultHandler, exceptionHandler, blockChainFacade, peersAccountId, peersBankAccount);
     }

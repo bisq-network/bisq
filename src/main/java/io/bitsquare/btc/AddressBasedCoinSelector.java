@@ -22,8 +22,10 @@ import com.google.bitcoin.params.RegTestParams;
 import com.google.bitcoin.wallet.CoinSelection;
 import com.google.bitcoin.wallet.DefaultCoinSelector;
 import com.google.common.annotations.VisibleForTesting;
+
 import java.math.BigInteger;
 import java.util.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +34,7 @@ import org.slf4j.LoggerFactory;
  * possible. This means that the transaction is the most likely to get confirmed. Note that this means we may end up
  * "spending" more priority than would be required to get the transaction we are creating confirmed.
  */
-public class AddressBasedCoinSelector extends DefaultCoinSelector
-{
+public class AddressBasedCoinSelector extends DefaultCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(AddressBasedCoinSelector.class);
     private final NetworkParameters params;
     private final AddressEntry addressEntry;
@@ -48,8 +49,7 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
         this(params, addressInfo, false);
     }   */
 
-    public AddressBasedCoinSelector(NetworkParameters params, AddressEntry addressEntry, boolean includePending)
-    {
+    public AddressBasedCoinSelector(NetworkParameters params, AddressEntry addressEntry, boolean includePending) {
         this.params = params;
         this.addressEntry = addressEntry;
         this.includePending = includePending;
@@ -57,13 +57,10 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
 
     @SuppressWarnings("WeakerAccess")
     @VisibleForTesting
-    static void sortOutputs(ArrayList<TransactionOutput> outputs)
-    {
-        Collections.sort(outputs, new Comparator<TransactionOutput>()
-        {
+    static void sortOutputs(ArrayList<TransactionOutput> outputs) {
+        Collections.sort(outputs, new Comparator<TransactionOutput>() {
             @Override
-            public int compare(TransactionOutput a, TransactionOutput b)
-            {
+            public int compare(TransactionOutput a, TransactionOutput b) {
                 int depth1 = 0;
                 int depth2 = 0;
                 TransactionConfidence conf1 = a.getParentTransaction().getConfidence();
@@ -89,8 +86,7 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
         });
     }
 
-    private static boolean isInBlockChainOrPending(Transaction tx)
-    {
+    private static boolean isInBlockChainOrPending(Transaction tx) {
         // Pick chain-included transactions and transactions that are pending.
         TransactionConfidence confidence = tx.getConfidence();
         TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
@@ -100,8 +96,7 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
                 (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
     }
 
-    private static boolean isInBlockChain(Transaction tx)
-    {
+    private static boolean isInBlockChain(Transaction tx) {
         // Only pick chain-included transactions.
         TransactionConfidence confidence = tx.getConfidence();
         TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
@@ -111,26 +106,19 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
     /**
      * Sub-classes can override this to just customize whether transactions are usable, but keep age sorting.
      */
-    protected boolean shouldSelect(Transaction tx)
-    {
-        if (includePending)
-        {
+    protected boolean shouldSelect(Transaction tx) {
+        if (includePending) {
             return isInBlockChainOrPending(tx);
-        }
-        else
-        {
+        } else {
             return isInBlockChain(tx);
         }
     }
 
     @SuppressWarnings("WeakerAccess")
-    protected boolean matchesRequiredAddress(TransactionOutput transactionOutput)
-    {
-        if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
-        {
+    protected boolean matchesRequiredAddress(TransactionOutput transactionOutput) {
+        if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH()) {
             Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-            if (addressEntry != null && addressOutput.equals(addressEntry.getAddress()))
-            {
+            if (addressEntry != null && addressOutput.equals(addressEntry.getAddress())) {
                 return true;
             }
         }
@@ -138,8 +126,7 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
     }
 
     @Override
-    public CoinSelection select(Coin target, List<TransactionOutput> candidates)
-    {
+    public CoinSelection select(Coin target, List<TransactionOutput> candidates) {
         long targetAsLong = target.longValue();
         HashSet<TransactionOutput> selected = new HashSet<>();
         // Sort the inputs by age*value so we get the highest "coindays" spent.
@@ -147,23 +134,19 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
         ArrayList<TransactionOutput> sortedOutputs = new ArrayList<>(candidates);
         // When calculating the wallet balance, we may be asked to select all possible coins, if so, avoid sorting
         // them in order to improve performance.
-        if (!target.equals(NetworkParameters.MAX_MONEY))
-        {
+        if (!target.equals(NetworkParameters.MAX_MONEY)) {
             sortOutputs(sortedOutputs);
         }
         // Now iterate over the sorted outputs until we have got as close to the target as possible or a little
         // bit over (excessive value will be change).
         long total = 0;
-        for (TransactionOutput output : sortedOutputs)
-        {
-            if (total >= targetAsLong)
-            {
+        for (TransactionOutput output : sortedOutputs) {
+            if (total >= targetAsLong) {
                 break;
             }
             // Only pick chain-included transactions, or transactions that are ours and pending.
             // Only select outputs from our defined address(es)
-            if (!shouldSelect(output.getParentTransaction()) || !matchesRequiredAddress(output))
-            {
+            if (!shouldSelect(output.getParentTransaction()) || !matchesRequiredAddress(output)) {
                 continue;
             }
 

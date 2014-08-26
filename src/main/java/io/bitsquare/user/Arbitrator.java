@@ -22,8 +22,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-public class Arbitrator implements Serializable
-{
+public class Arbitrator implements Serializable {
     private static final long serialVersionUID = -2625059604136756635L;
 
     private String id;
@@ -45,8 +44,7 @@ public class Arbitrator implements Serializable
 
     private String description;
 
-    public Arbitrator()
-    {
+    public Arbitrator() {
     }
 
     public Arbitrator(String pubKeyAsHex,
@@ -63,8 +61,7 @@ public class Arbitrator implements Serializable
                       List<METHOD> arbitrationMethods,
                       List<ID_VERIFICATION> idVerifications,
                       String webUrl,
-                      String description)
-    {
+                      String description) {
         this.pubKeyAsHex = pubKeyAsHex;
         this.messagePubKeyAsHex = messagePubKeyAsHex;
         this.name = name;
@@ -85,8 +82,7 @@ public class Arbitrator implements Serializable
         id = name;
     }
 
-    public void applyPersistedArbitrator(Arbitrator persistedArbitrator)
-    {
+    public void applyPersistedArbitrator(Arbitrator persistedArbitrator) {
         this.pubKeyAsHex = persistedArbitrator.getPubKeyAsHex();
         this.messagePubKeyAsHex = persistedArbitrator.getPubKeyAsHex();
         this.name = persistedArbitrator.getName();
@@ -108,27 +104,20 @@ public class Arbitrator implements Serializable
     }
 
     @SuppressWarnings("NonFinalFieldReferencedInHashCode")
-    public int hashCode()
-    {
-        if (id != null)
-        {
+    public int hashCode() {
+        if (id != null) {
             return Objects.hashCode(id);
-        }
-        else
-        {
+        } else {
             return 0;
         }
     }
 
     @SuppressWarnings("NonFinalFieldReferenceInEquals")
-    public boolean equals(Object obj)
-    {
-        if (!(obj instanceof Arbitrator))
-        {
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Arbitrator)) {
             return false;
         }
-        if (obj == this)
-        {
+        if (obj == this) {
             return true;
         }
 
@@ -137,20 +126,17 @@ public class Arbitrator implements Serializable
     }
 
 
-    public String getId()
-    {
+    public String getId() {
         return id;
     }
 
 
-    public String getPubKeyAsHex()
-    {
+    public String getPubKeyAsHex() {
         return pubKeyAsHex;
     }
 
 
-    public String getMessagePubKeyAsHex()
-    {
+    public String getMessagePubKeyAsHex() {
         return messagePubKeyAsHex;
     }
 
@@ -160,75 +146,62 @@ public class Arbitrator implements Serializable
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
 
-    public ID_TYPE getIdType()
-    {
+    public ID_TYPE getIdType() {
         return idType;
     }
 
 
-    public List<Locale> getLanguages()
-    {
+    public List<Locale> getLanguages() {
         return languages;
     }
 
 
-    public Reputation getReputation()
-    {
+    public Reputation getReputation() {
         return reputation;
     }
 
-    public double getMaxTradeVolume()
-    {
+    public double getMaxTradeVolume() {
         return maxTradeVolume;
     }
 
-    public double getPassiveServiceFee()
-    {
+    public double getPassiveServiceFee() {
         return passiveServiceFee;
     }
 
-    public double getMinPassiveServiceFee()
-    {
+    public double getMinPassiveServiceFee() {
         return minPassiveServiceFee;
     }
 
-    public double getArbitrationFee()
-    {
+    public double getArbitrationFee() {
         return arbitrationFee;
     }
 
-    public double getMinArbitrationFee()
-    {
+    public double getMinArbitrationFee() {
         return minArbitrationFee;
     }
 
 
-    public List<METHOD> getArbitrationMethods()
-    {
+    public List<METHOD> getArbitrationMethods() {
         return arbitrationMethods;
     }
 
 
-    public List<ID_VERIFICATION> getIdVerifications()
-    {
+    public List<ID_VERIFICATION> getIdVerifications() {
         return idVerifications;
     }
 
 
-    public String getWebUrl()
-    {
+    public String getWebUrl() {
         return webUrl;
     }
 
 
-    public String getDescription()
-    {
+    public String getDescription() {
         return description;
     }
 
@@ -237,15 +210,13 @@ public class Arbitrator implements Serializable
     // Enums
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum ID_TYPE
-    {
+    public enum ID_TYPE {
         REAL_LIFE_ID,
         NICKNAME,
         COMPANY
     }
 
-    public enum METHOD
-    {
+    public enum METHOD {
         TLS_NOTARY,
         SKYPE_SCREEN_SHARING,
         SMART_PHONE_VIDEO_CHAT,
@@ -254,8 +225,7 @@ public class Arbitrator implements Serializable
         OTHER
     }
 
-    public enum ID_VERIFICATION
-    {
+    public enum ID_VERIFICATION {
         PASSPORT,
         GOV_ID,
         UTILITY_BILLS,

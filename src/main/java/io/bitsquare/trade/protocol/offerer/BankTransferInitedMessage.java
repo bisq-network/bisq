@@ -19,10 +19,10 @@ package io.bitsquare.trade.protocol.offerer;
 
 import com.google.bitcoin.core.Coin;
 import io.bitsquare.trade.protocol.TradeMessage;
+
 import java.io.Serializable;
 
-public class BankTransferInitedMessage implements Serializable, TradeMessage
-{
+public class BankTransferInitedMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = -3479634129543632523L;
     private final String tradeId;
 
@@ -39,8 +39,7 @@ public class BankTransferInitedMessage implements Serializable, TradeMessage
                                      String offererSignatureS,
                                      Coin offererPaybackAmount,
                                      Coin takerPaybackAmount,
-                                     String offererPayoutAddress)
-    {
+                                     String offererPayoutAddress) {
         this.tradeId = tradeId;
         this.depositTxAsHex = depositTxAsHex;
         this.offererSignatureR = offererSignatureR;
@@ -51,38 +50,31 @@ public class BankTransferInitedMessage implements Serializable, TradeMessage
     }
 
     @Override
-    public String getTradeId()
-    {
+    public String getTradeId() {
         return tradeId;
     }
 
-    public String getDepositTxAsHex()
-    {
+    public String getDepositTxAsHex() {
         return depositTxAsHex;
     }
 
-    public String getOffererPayoutAddress()
-    {
+    public String getOffererPayoutAddress() {
         return offererPayoutAddress;
     }
 
-    public String getOffererSignatureS()
-    {
+    public String getOffererSignatureS() {
         return offererSignatureS;
     }
 
-    public Coin getOffererPaybackAmount()
-    {
+    public Coin getOffererPaybackAmount() {
         return offererPaybackAmount;
     }
 
-    public Coin getTakerPaybackAmount()
-    {
+    public Coin getTakerPaybackAmount() {
         return takerPaybackAmount;
     }
 
-    public String getOffererSignatureR()
-    {
+    public String getOffererSignatureR() {
         return offererSignatureR;
     }
 }

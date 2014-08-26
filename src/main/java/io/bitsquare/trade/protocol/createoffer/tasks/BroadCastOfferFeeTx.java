@@ -27,47 +27,34 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BroadCastOfferFeeTx
-{
+public class BroadCastOfferFeeTx {
     private static final Logger log = LoggerFactory.getLogger(BroadCastOfferFeeTx.class);
 
-    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, WalletFacade walletFacade, Transaction tx)
-    {
-        try
-        {
-            walletFacade.broadcastCreateOfferFeeTx(tx, new FutureCallback<Transaction>()
-            {
+    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, WalletFacade walletFacade, Transaction tx) {
+        try {
+            walletFacade.broadcastCreateOfferFeeTx(tx, new FutureCallback<Transaction>() {
                 @Override
-                public void onSuccess(@javax.annotation.Nullable Transaction transaction)
-                {
+                public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                     log.info("sendResult onSuccess:" + transaction);
-                    if (transaction != null)
-                    {
-                        try
-                        {
+                    if (transaction != null) {
+                        try {
                             resultHandler.onResult();
-                        } catch (Exception e)
-                        {
+                        } catch (Exception e) {
                             faultHandler.onFault("Offer fee payment failed.", e);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         faultHandler.onFault("Offer fee payment failed.", new Exception("Offer fee payment failed. Transaction = null."));
                     }
                 }
 
                 @Override
-                public void onFailure(@NotNull Throwable t)
-                {
+                public void onFailure(@NotNull Throwable t) {
                     faultHandler.onFault("Offer fee payment failed with an exception.", t);
                 }
             });
-        } catch (InsufficientMoneyException e)
-        {
+        } catch (InsufficientMoneyException e) {
             faultHandler.onFault("Offer fee payment failed because there is insufficient money in the trade pocket. ", e);
-        } catch (Throwable t)
-        {
+        } catch (Throwable t) {
             faultHandler.onFault("Offer fee payment failed because of an exception occurred. ", t);
         }
     }

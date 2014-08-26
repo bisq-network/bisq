@@ -24,23 +24,18 @@ import io.bitsquare.trade.handlers.ResultHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PublishOfferToDHT
-{
+public class PublishOfferToDHT {
     private static final Logger log = LoggerFactory.getLogger(PublishOfferToDHT.class);
 
-    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, MessageFacade messageFacade, Offer offer)
-    {
-        messageFacade.addOffer(offer, new MessageFacade.AddOfferListener()
-        {
+    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, MessageFacade messageFacade, Offer offer) {
+        messageFacade.addOffer(offer, new MessageFacade.AddOfferListener() {
             @Override
-            public void onComplete()
-            {
+            public void onComplete() {
                 resultHandler.onResult();
             }
 
             @Override
-            public void onFailed(String reason, Throwable throwable)
-            {
+            public void onFailed(String reason, Throwable throwable) {
                 faultHandler.onFault("Publish offer to DHT failed.", throwable);
             }
         });

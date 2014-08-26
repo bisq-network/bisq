@@ -25,26 +25,21 @@ import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendPayoutTxToOfferer
-{
+public class SendPayoutTxToOfferer {
     private static final Logger log = LoggerFactory.getLogger(SendPayoutTxToOfferer.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, PeerAddress peerAddress, MessageFacade messageFacade, String tradeId, String payoutTxAsHex)
-    {
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, PeerAddress peerAddress, MessageFacade messageFacade, String tradeId, String payoutTxAsHex) {
         log.trace("Run task");
         PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(tradeId, payoutTxAsHex);
-        messageFacade.sendTradeMessage(peerAddress, tradeMessage, new OutgoingTradeMessageListener()
-        {
+        messageFacade.sendTradeMessage(peerAddress, tradeMessage, new OutgoingTradeMessageListener() {
             @Override
-            public void onResult()
-            {
+            public void onResult() {
                 log.trace("PayoutTxPublishedMessage successfully arrived at peer");
                 resultHandler.onResult();
             }
 
             @Override
-            public void onFailed()
-            {
+            public void onFailed() {
                 log.error("PayoutTxPublishedMessage  did not arrive at peer");
                 exceptionHandler.onError(new Exception("PayoutTxPublishedMessage did not arrive at peer"));
             }

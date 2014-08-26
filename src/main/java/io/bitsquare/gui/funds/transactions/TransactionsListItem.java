@@ -28,8 +28,7 @@ import javafx.scene.control.Tooltip;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TransactionsListItem
-{
+public class TransactionsListItem {
     private static final Logger log = LoggerFactory.getLogger(TransactionsListItem.class);
     private final StringProperty date = new SimpleStringProperty();
     private final StringProperty amount = new SimpleStringProperty();
@@ -43,87 +42,63 @@ public class TransactionsListItem
     private String addressString;
     private ConfidenceListener confidenceListener;
 
-    public TransactionsListItem(Transaction transaction, WalletFacade walletFacade)
-    {
+    public TransactionsListItem(Transaction transaction, WalletFacade walletFacade) {
         this.walletFacade = walletFacade;
 
         Coin valueSentToMe = transaction.getValueSentToMe(walletFacade.getWallet());
         Coin valueSentFromMe = transaction.getValueSentFromMe(walletFacade.getWallet());
         Address address = null;
-        if (valueSentToMe.isZero())
-        {
+        if (valueSentToMe.isZero()) {
             //TODO use BitSquareFormatter
             amount.set("-" + valueSentFromMe.toFriendlyString());
 
-            for (TransactionOutput transactionOutput : transaction.getOutputs())
-            {
-                if (!transactionOutput.isMine(walletFacade.getWallet()))
-                {
+            for (TransactionOutput transactionOutput : transaction.getOutputs()) {
+                if (!transactionOutput.isMine(walletFacade.getWallet())) {
                     type.set("Sent to");
 
-                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash())
-                    {
+                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
                         address = transactionOutput.getScriptPubKey().getToAddress(walletFacade.getWallet().getParams());
                         addressString = address.toString();
-                    }
-                    else
-                    {
+                    } else {
                         addressString = "No sent to address script used.";
                     }
                 }
             }
-        }
-        else if (valueSentFromMe.isZero())
-        {
+        } else if (valueSentFromMe.isZero()) {
             //TODO use BitSquareFormatter
             amount.set(valueSentToMe.toFriendlyString());
             type.set("Received with");
 
-            for (TransactionOutput transactionOutput : transaction.getOutputs())
-            {
-                if (transactionOutput.isMine(walletFacade.getWallet()))
-                {
-                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash())
-                    {
+            for (TransactionOutput transactionOutput : transaction.getOutputs()) {
+                if (transactionOutput.isMine(walletFacade.getWallet())) {
+                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
                         address = transactionOutput.getScriptPubKey().getToAddress(walletFacade.getWallet().getParams());
                         addressString = address.toString();
-                    }
-                    else
-                    {
+                    } else {
                         addressString = "No sent to address script used.";
                     }
                 }
             }
-        }
-        else
-        {
+        } else {
             //TODO use BitSquareFormatter
             amount.set(valueSentToMe.subtract(valueSentFromMe).toFriendlyString());
 
             boolean outgoing = false;
-            for (TransactionOutput transactionOutput : transaction.getOutputs())
-            {
-                if (!transactionOutput.isMine(walletFacade.getWallet()))
-                {
+            for (TransactionOutput transactionOutput : transaction.getOutputs()) {
+                if (!transactionOutput.isMine(walletFacade.getWallet())) {
                     outgoing = true;
-                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash())
-                    {
+                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
                         address = transactionOutput.getScriptPubKey().getToAddress(walletFacade.getWallet().getParams());
                         addressString = address.toString();
-                    }
-                    else
-                    {
+                    } else {
                         addressString = "No sent to address script used.";
                     }
                 }
             }
 
-            if (outgoing)
-            {
+            if (outgoing) {
                 type.set("Sent to");
-            }
-            else
-            {
+            } else {
                 type.set("Internal (TX Fee)");
                 addressString = "Internal swap between addresses.";
             }
@@ -140,13 +115,10 @@ public class TransactionsListItem
         progressIndicator.setPrefWidth(30);
         Tooltip.install(progressIndicator, tooltip);
 
-        if (address != null)
-        {
-            confidenceListener = walletFacade.addConfidenceListener(new ConfidenceListener(address)
-            {
+        if (address != null) {
+            confidenceListener = walletFacade.addConfidenceListener(new ConfidenceListener(address) {
                 @Override
-                public void onTransactionConfidenceChanged(TransactionConfidence confidence)
-                {
+                public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                     updateConfidence(confidence);
                 }
             });
@@ -156,18 +128,14 @@ public class TransactionsListItem
     }
 
 
-    public void cleanup()
-    {
+    public void cleanup() {
         walletFacade.removeConfidenceListener(confidenceListener);
     }
 
-    private void updateConfidence(TransactionConfidence confidence)
-    {
-        if (confidence != null)
-        {
+    private void updateConfidence(TransactionConfidence confidence) {
+        if (confidence != null) {
             //log.debug("Type numBroadcastPeers getDepthInBlocks " + confidence.getConfidenceType() + " / " + confidence.numBroadcastPeers() + " / " + confidence.getDepthInBlocks());
-            switch (confidence.getConfidenceType())
-            {
+            switch (confidence.getConfidenceType()) {
                 case UNKNOWN:
                     tooltip.setText("Unknown transaction status");
                     progressIndicator.setProgress(0);
@@ -191,31 +159,26 @@ public class TransactionsListItem
     }
 
 
-    public ConfidenceProgressIndicator getProgressIndicator()
-    {
+    public ConfidenceProgressIndicator getProgressIndicator() {
         return progressIndicator;
     }
 
 
-    public final StringProperty dateProperty()
-    {
+    public final StringProperty dateProperty() {
         return this.date;
     }
 
 
-    public final StringProperty amountProperty()
-    {
+    public final StringProperty amountProperty() {
         return this.amount;
     }
 
 
-    public final StringProperty typeProperty()
-    {
+    public final StringProperty typeProperty() {
         return this.type;
     }
 
-    public String getAddressString()
-    {
+    public String getAddressString() {
         return addressString;
     }
 }

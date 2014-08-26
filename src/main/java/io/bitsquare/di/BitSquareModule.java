@@ -40,14 +40,13 @@ import io.bitsquare.storage.Persistence;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.user.User;
+
 import javax.inject.Inject;
 
-public class BitSquareModule extends AbstractModule
-{
+public class BitSquareModule extends AbstractModule {
 
     @Override
-    protected void configure()
-    {
+    protected void configure() {
         bind(User.class).asEagerSingleton();
         bind(OrderBook.class).asEagerSingleton();
         bind(Persistence.class).asEagerSingleton();
@@ -80,23 +79,19 @@ public class BitSquareModule extends AbstractModule
     }
 }
 
-class NetworkParametersProvider implements Provider<NetworkParameters>
-{
+class NetworkParametersProvider implements Provider<NetworkParameters> {
     private final String networkType;
 
     @Inject
-    public NetworkParametersProvider(@Named("networkType") String networkType)
-    {
+    public NetworkParametersProvider(@Named("networkType") String networkType) {
         this.networkType = networkType;
     }
 
 
-    public NetworkParameters get()
-    {
+    public NetworkParameters get() {
         NetworkParameters result = null;
 
-        switch (networkType)
-        {
+        switch (networkType) {
             case WalletFacade.MAIN_NET:
                 result = MainNetParams.get();
                 break;

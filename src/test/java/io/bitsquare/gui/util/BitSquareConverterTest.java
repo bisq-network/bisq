@@ -21,12 +21,10 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class BitSquareConverterTest
-{
+public class BitSquareConverterTest {
 
     @Test
-    public void testStringToDouble()
-    {
+    public void testStringToDouble() {
 
         assertEquals(1, BitSquareFormatter.parseToDouble("1"), 0);
         assertEquals(0.1, BitSquareFormatter.parseToDouble("0.1"), 0);

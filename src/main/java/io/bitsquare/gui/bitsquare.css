@@ -2,8 +2,8 @@
     -fx-background-color: #ffffff;
 }
 
-#logo-sub-title-label{
-   -fx-font-weight: bold;
+#logo-sub-title-label {
+    -fx-font-weight: bold;
     -fx-font-size: 24;
 }
 
@@ -32,7 +32,6 @@
     -fx-fill: red;
 }
 
-
 /* main nav */
 #nav-button {
     -fx-cursor: hand;
@@ -55,7 +54,8 @@
     -fx-font-weight: bold;
     -fx-alignment: center;
 }
-#nav-account-combo-box .list-cell{
+
+#nav-account-combo-box .list-cell {
     -fx-alignment: center;
 }
 
@@ -89,7 +89,7 @@
     -fx-cursor: hand;
 }
 
-#copy-icon .hover{
+#copy-icon .hover {
     -fx-fill: #0096c9;
     -fx-cursor: hand;
 }
@@ -189,18 +189,17 @@
 #form-group-label {
     -fx-font-weight: bold;
     -fx-font-size: 14;
-    -fx-text-fill:#111;
-    -fx-background-color:#f4f4f4;
+    -fx-text-fill: #111;
+    -fx-background-color: #f4f4f4;
 }
 
 #form-group-border {
     -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
     -fx-outer-border: linear-gradient(to bottom, #ddd, #ccc);
-           -fx-background-color: 
-       -fx-shadow-highlight-color, 
-       -fx-outer-border, 
-       -fx-inner-border, 
-       -fx-body-color;
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
     -fx-background-insets: 0 0 -1 0, 0, 1, 2;
     -fx-background-radius: 3px, 3px, 2px, 1px;
 }
@@ -208,7 +207,6 @@
 #form-title {
     -fx-font-weight: bold;
 }
-
 
 /* tab pane */
 .tab-pane .tab-label {
@@ -247,8 +245,7 @@
     -fx-background-insets: 0;
 }
 
-
 /* validation */
 #validation-error {
-   -fx-text-fill: red;
+    -fx-text-fill: red;
 }

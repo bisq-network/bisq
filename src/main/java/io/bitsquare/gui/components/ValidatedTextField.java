@@ -40,8 +40,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  */
 @Deprecated
-public class ValidatedTextField extends TextField
-{
+public class ValidatedTextField extends TextField {
     private static final Logger log = LoggerFactory.getLogger(ValidatedTextField.class);
 
     private final BooleanProperty invalid = new SimpleBooleanProperty(false);
@@ -51,8 +50,7 @@ public class ValidatedTextField extends TextField
 
     private Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
 
-    public ValidatedTextField()
-    {
+    public ValidatedTextField() {
         super();
         this.mask = new SimpleStringProperty("^[0-9.,]*$");
         this.minLength = new SimpleIntegerProperty(1);
@@ -61,13 +59,11 @@ public class ValidatedTextField extends TextField
         bind();
     }
 
-    public ValidatedTextField(String mask, int minLength, int maxLength, boolean nullable)
-    {
+    public ValidatedTextField(String mask, int minLength, int maxLength, boolean nullable) {
         this(mask, minLength, maxLength, nullable, null);
     }
 
-    public ValidatedTextField(String mask, int minLength, int maxLength, boolean nullable, String string)
-    {
+    public ValidatedTextField(String mask, int minLength, int maxLength, boolean nullable, String string) {
         super(string);
         this.mask = new SimpleStringProperty(mask);
         this.minLength = new SimpleIntegerProperty(minLength);
@@ -76,101 +72,78 @@ public class ValidatedTextField extends TextField
         bind();
     }
 
-    public ReadOnlyBooleanProperty invalidProperty()
-    {
+    public ReadOnlyBooleanProperty invalidProperty() {
         return invalid;
     }
 
-    public ReadOnlyStringProperty maskProperty()
-    {
+    public ReadOnlyStringProperty maskProperty() {
         return mask;
     }
 
-    public ReadOnlyIntegerProperty minLengthProperty()
-    {
+    public ReadOnlyIntegerProperty minLengthProperty() {
         return minLength;
     }
 
-    public ReadOnlyIntegerProperty maxLengthProperty()
-    {
+    public ReadOnlyIntegerProperty maxLengthProperty() {
         return maxLength;
     }
 
-    public boolean isInvalid()
-    {
+    public boolean isInvalid() {
         return invalid.get();
     }
 
-    public String getMask()
-    {
+    public String getMask() {
         return mask.get();
     }
 
-    public void setMask(String mask)
-    {
+    public void setMask(String mask) {
         this.mask.set(mask);
     }
 
-    public int getMinLength()
-    {
+    public int getMinLength() {
         return minLength.get();
     }
 
-    public void setMinLength(int minLength)
-    {
+    public void setMinLength(int minLength) {
         this.minLength.set(minLength);
     }
 
-    public int getMaxLength()
-    {
+    public int getMaxLength() {
         return maxLength.get();
     }
 
-    public void setMaxLength(int maxLength)
-    {
+    public void setMaxLength(int maxLength) {
         this.maxLength.set(maxLength);
     }
 
-    public Effect getInvalidEffect()
-    {
+    public Effect getInvalidEffect() {
         return this.invalidEffect;
     }
 
-    public void setInvalidEffect(Effect effect)
-    {
+    public void setInvalidEffect(Effect effect) {
         this.invalidEffect = effect;
     }
 
-    private void bind()
-    {
+    private void bind() {
         this.invalid.bind(maskCheck().or(minLengthCheck()));
 
-        this.textProperty().addListener(new ChangeListener<String>()
-        {
+        this.textProperty().addListener(new ChangeListener<String>() {
             @Override
-            public void changed(ObservableValue<? extends String> ov, String t, String t1)
-            {
-                if (textProperty().get() != null && textProperty().get().length() > maxLength.get())
-                {
+            public void changed(ObservableValue<? extends String> ov, String t, String t1) {
+                if (textProperty().get() != null && textProperty().get().length() > maxLength.get()) {
                     setText(t);
                 }
             }
         });
 
-        this.invalid.addListener(new ChangeListener<Boolean>()
-        {
+        this.invalid.addListener(new ChangeListener<Boolean>() {
             @Override
-            public void changed(ObservableValue<? extends Boolean> ov, Boolean t, Boolean t1)
-            {
-                if (t ^ t1)
-                {
-                    if (t1)
-                    {
+            public void changed(ObservableValue<? extends Boolean> ov, Boolean t, Boolean t1) {
+                if (t ^ t1) {
+                    if (t1) {
                         //                        setStyle("-fx-font-weight: bold; -fx-text-fill: red;");
                         setEffect(invalidEffect);
-                    }
-                    else
-                    {
+                    } else {
                         //                        setStyle("-fx-font-weight: normal; -fx-text-fill: inherit;");
                         setEffect(null);
                     }
@@ -180,49 +153,40 @@ public class ValidatedTextField extends TextField
         });
     }
 
-    private BooleanBinding maskCheck()
-    {
-        return new BooleanBinding()
-        {
+    private BooleanBinding maskCheck() {
+        return new BooleanBinding() {
             {
                 super.bind(textProperty(), mask);
             }
 
             @Override
-            protected boolean computeValue()
-            {
+            protected boolean computeValue() {
                 return (textProperty().get() != null) ? !textProperty().get().matches(mask.get()) : false;
             }
         };
     }
 
-    private BooleanBinding minLengthCheck()
-    {
-        return new BooleanBinding()
-        {
+    private BooleanBinding minLengthCheck() {
+        return new BooleanBinding() {
             {
                 super.bind(textProperty(), minLength);
             }
 
             @Override
-            protected boolean computeValue()
-            {
+            protected boolean computeValue() {
                 return (textProperty().get() != null) ? textProperty().get().length() < minLength.get() : false;
             }
         };
     }
 
-    private BooleanBinding maxLengthCheck()
-    {
-        return new BooleanBinding()
-        {
+    private BooleanBinding maxLengthCheck() {
+        return new BooleanBinding() {
             {
                 super.bind(textProperty(), maxLength);
             }
 
             @Override
-            protected boolean computeValue()
-            {
+            protected boolean computeValue() {
                 return textProperty().get().length() > maxLength.get();
             }
         };

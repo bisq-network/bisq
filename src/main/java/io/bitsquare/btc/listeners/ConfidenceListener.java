@@ -20,22 +20,18 @@ package io.bitsquare.btc.listeners;
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.TransactionConfidence;
 
-public class ConfidenceListener
-{
+public class ConfidenceListener {
     private final Address address;
 
-    public ConfidenceListener(Address address)
-    {
+    public ConfidenceListener(Address address) {
         this.address = address;
     }
 
-    public Address getAddress()
-    {
+    public Address getAddress() {
         return address;
     }
 
-    public void onTransactionConfidenceChanged(TransactionConfidence confidence)
-    {
+    public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
 
     }
 }

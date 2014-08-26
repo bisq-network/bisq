@@ -24,16 +24,18 @@ import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Persistence;
 import io.bitsquare.user.Arbitrator;
+
 import java.net.URL;
 import java.util.ResourceBundle;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+
 import javax.inject.Inject;
 
-public class ArbitratorProfileController extends CachedViewController
-{
+public class ArbitratorProfileController extends CachedViewController {
 
     private final Settings settings;
 
@@ -52,8 +54,7 @@ public class ArbitratorProfileController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorProfileController(Settings settings, Persistence persistence)
-    {
+    public ArbitratorProfileController(Settings settings, Persistence persistence) {
         this.settings = settings;
         this.persistence = persistence;
 
@@ -67,26 +68,22 @@ public class ArbitratorProfileController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb)
-    {
+    public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
     }
 
     @Override
-    public void terminate()
-    {
+    public void terminate() {
         super.terminate();
     }
 
     @Override
-    public void deactivate()
-    {
+    public void deactivate() {
         super.deactivate();
     }
 
     @Override
-    public void activate()
-    {
+    public void activate() {
         super.activate();
     }
 
@@ -96,14 +93,12 @@ public class ArbitratorProfileController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setParentController(ViewController parentController)
-    {
+    public void setParentController(ViewController parentController) {
         super.setParentController(parentController);
     }
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
-    {
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
         return null;
     }
 
@@ -112,13 +107,10 @@ public class ArbitratorProfileController extends CachedViewController
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void applyArbitrator(Arbitrator arbitrator)
-    {
-        if (arbitrator != null)
-        {
+    public void applyArbitrator(Arbitrator arbitrator) {
+        if (arbitrator != null) {
             String name = "";
-            switch (arbitrator.getIdType())
-            {
+            switch (arbitrator.getIdType()) {
                 case REAL_LIFE_ID:
                     name = "Name:";
                     break;

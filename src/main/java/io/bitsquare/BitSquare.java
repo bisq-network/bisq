@@ -32,9 +32,11 @@ import io.bitsquare.storage.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;
 import io.bitsquare.util.StorageDirectory;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -46,8 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class BitSquare extends Application
-{
+public class BitSquare extends Application {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
 
     public static boolean fillFormsWithDummyData = true;
@@ -57,8 +58,7 @@ public class BitSquare extends Application
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         Profiler.init();
         Profiler.printMsgWithTime("BitSquare.main called with args " + Arrays.asList(args).toString());
         if (args != null && args.length > 0) APP_NAME = args[0];
@@ -66,19 +66,16 @@ public class BitSquare extends Application
         launch(args);
     }
 
-    public static Stage getPrimaryStage()
-    {
+    public static Stage getPrimaryStage() {
         return primaryStage;
     }
 
-    public static String getAppName()
-    {
+    public static String getAppName() {
         return APP_NAME;
     }
 
     @Override
-    public void start(Stage primaryStage) throws IOException
-    {
+    public void start(Stage primaryStage) throws IOException {
         Profiler.printMsgWithTime("BitSquare.start called");
         BitSquare.primaryStage = primaryStage;
 
@@ -127,8 +124,7 @@ public class BitSquare extends Application
         Profiler.printMsgWithTime("BitSquare: start finished");
     }
 
-    private void setupCloseHandlers(Stage primaryStage, Scene scene)
-    {
+    private void setupCloseHandlers(Stage primaryStage, Scene scene) {
         primaryStage.setOnCloseRequest(e -> AWTSystemTray.setStageHidden());
 
         KeyCodeCombination keyCodeCombination = new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN);
@@ -138,8 +134,7 @@ public class BitSquare extends Application
     }
 
     @Override
-    public void stop() throws Exception
-    {
+    public void stop() throws Exception {
         walletFacade.shutDown();
         messageFacade.shutDown();
 

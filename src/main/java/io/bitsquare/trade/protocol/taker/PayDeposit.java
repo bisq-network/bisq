@@ -25,8 +25,7 @@ import io.bitsquare.trade.handlers.ExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PayDeposit
-{
+public class PayDeposit {
     private static final Logger log = LoggerFactory.getLogger(PayDeposit.class);
 
     public static void run(ResultHandler resultHandler,
@@ -38,33 +37,29 @@ public class PayDeposit
                            String pubKeyForThatTrade,
                            String arbitratorPubKey,
                            String offererPubKey,
-                           String preparedOffererDepositTxAsHex)
-    {
+                           String preparedOffererDepositTxAsHex) {
         log.trace("Run task");
-        try
-        {
+        try {
             Coin amountToPay = tradeAmount.add(collateral);
             Coin msOutputAmount = amountToPay.add(collateral);
 
             Transaction signedTakerDepositTx = walletFacade.takerAddPaymentAndSignTx(amountToPay,
-                                                                                     msOutputAmount,
-                                                                                     offererPubKey,
-                                                                                     pubKeyForThatTrade,
-                                                                                     arbitratorPubKey,
-                                                                                     preparedOffererDepositTxAsHex,
-                                                                                     tradeId);
+                    msOutputAmount,
+                    offererPubKey,
+                    pubKeyForThatTrade,
+                    arbitratorPubKey,
+                    preparedOffererDepositTxAsHex,
+                    tradeId);
 
             log.trace("sharedModel.signedTakerDepositTx: " + signedTakerDepositTx);
             resultHandler.onResult(signedTakerDepositTx);
-        } catch (InsufficientMoneyException e)
-        {
+        } catch (InsufficientMoneyException e) {
             log.error("Pay deposit faultHandler.onFault due InsufficientMoneyException " + e);
             exceptionHandler.onError(new Exception("Pay deposit faultHandler.onFault due InsufficientMoneyException " + e));
         }
     }
 
-    public interface ResultHandler
-    {
+    public interface ResultHandler {
         void onResult(Transaction signedTakerDepositTx);
     }
 

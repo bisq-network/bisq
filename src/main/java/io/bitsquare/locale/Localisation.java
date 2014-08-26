@@ -27,74 +27,59 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Localisation
-{
+public class Localisation {
     private static final Logger log = LoggerFactory.getLogger(Localisation.class);
 
 
-    public static ResourceBundle getResourceBundle()
-    {
+    public static ResourceBundle getResourceBundle() {
         return ResourceBundle.getBundle("i18n.displayStrings", new UTF8Control());
     }
 
 
-    public static String get(String key)
-    {
-        try
-        {
+    public static String get(String key) {
+        try {
             return Localisation.getResourceBundle().getString(key);
-        } catch (MissingResourceException e)
-        {
+        } catch (MissingResourceException e) {
             log.error("MissingResourceException for key: " + key);
             return key + " is missing";
         }
     }
 
 
-    public static String get(String key, String... arguments)
-    {
+    public static String get(String key, String... arguments) {
         return MessageFormat.format(Localisation.get(key), arguments);
     }
 }
 
-class UTF8Control extends ResourceBundle.Control
-{
+class UTF8Control extends ResourceBundle.Control {
 
-    public ResourceBundle newBundle(String baseName, Locale locale, String format, ClassLoader loader, boolean reload) throws IllegalAccessException, InstantiationException, IOException
-    {
+    public ResourceBundle newBundle(String baseName, Locale locale, String format, ClassLoader loader, boolean reload) throws IllegalAccessException, InstantiationException, IOException {
         // The below is a copy of the default implementation.
         final String bundleName = toBundleName(baseName, locale);
         final String resourceName = toResourceName(bundleName, "properties");
         ResourceBundle bundle = null;
         InputStream stream = null;
-        if (reload)
-        {
+        if (reload) {
             final URL url = loader.getResource(resourceName);
-            if (url != null)
-            {
+            if (url != null) {
                 final URLConnection connection = url.openConnection();
-                if (connection != null)
-                {
+                if (connection != null) {
                     connection.setUseCaches(false);
                     stream = connection.getInputStream();
                 }
             }
-        }
-        else
-        {
+        } else {
             stream = loader.getResourceAsStream(resourceName);
         }
-        if (stream != null)
-        {
-            try
-            {
+        if (stream != null) {
+            try {
                 // Only this line is changed to make it to read properties files as UTF-8.
                 bundle = new PropertyResourceBundle(new InputStreamReader(stream, "UTF-8"));
-            } finally
-            {
+            } finally {
                 stream.close();
             }
         }

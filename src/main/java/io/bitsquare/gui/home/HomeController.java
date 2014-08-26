@@ -23,17 +23,18 @@ import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.arbitrators.registration.ArbitratorRegistrationController;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-public class HomeController extends CachedViewController
-{
+public class HomeController extends CachedViewController {
     private ArbitratorRegistrationController arbitratorRegistrationController;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -41,26 +42,22 @@ public class HomeController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb)
-    {
+    public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
     }
 
     @Override
-    public void terminate()
-    {
+    public void terminate() {
         super.terminate();
     }
 
     @Override
-    public void deactivate()
-    {
+    public void deactivate() {
         super.deactivate();
     }
 
     @Override
-    public void activate()
-    {
+    public void activate() {
         super.activate();
     }
 
@@ -70,12 +67,10 @@ public class HomeController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
-    {
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
         // don't use caching here, cause exc. -> need to investigate and is rarely called so no caching is better
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
-        try
-        {
+        try {
             final Parent view = loader.load();
             arbitratorRegistrationController = loader.getController();
             arbitratorRegistrationController.setParentController(this);
@@ -96,8 +91,7 @@ public class HomeController extends CachedViewController
             stage.show();
 
             return arbitratorRegistrationController;
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
@@ -109,14 +103,12 @@ public class HomeController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
-    public void onArbitratorRegistration()
-    {
+    public void onArbitratorRegistration() {
         loadViewAndGetChildController(NavigationItem.ARBITRATOR_REGISTRATION);
     }
 
     @FXML
-    public void onArbitratorEdit()
-    {
+    public void onArbitratorEdit() {
         loadViewAndGetChildController(NavigationItem.ARBITRATOR_REGISTRATION);
         arbitratorRegistrationController.setEditMode(true);
     }

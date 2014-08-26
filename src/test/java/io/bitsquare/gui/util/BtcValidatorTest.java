@@ -24,11 +24,9 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class BtcValidatorTest
-{
+public class BtcValidatorTest {
     @Test
-    public void testValidate()
-    {
+    public void testValidate() {
         BtcValidator validator = new BtcValidator();
         NumberValidator.ValidationResult validationResult;
 

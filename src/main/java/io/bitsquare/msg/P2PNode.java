@@ -23,6 +23,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.name.Named;
 import io.bitsquare.BitSquare;
 import io.bitsquare.util.StorageDirectory;
+
 import java.io.File;
 import java.io.IOException;
 import java.security.KeyPair;
@@ -31,6 +32,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+
 import net.tomp2p.connection.DSASignatureFactory;
 import net.tomp2p.dht.*;
 import net.tomp2p.futures.BaseFuture;
@@ -52,8 +54,7 @@ import org.slf4j.LoggerFactory;
  * This class is offering generic functionality of TomP2P needed for Bitsquare, like data and domain protection.
  * It does not handle any domain aspects of Bitsquare.
  */
-public class P2PNode
-{
+public class P2PNode {
     private static final Logger log = LoggerFactory.getLogger(P2PNode.class);
 
     private Thread bootstrapToLocalhostThread;
@@ -101,16 +102,14 @@ public class P2PNode
     @Inject
     public P2PNode(BootstrappedPeerFactory bootstrappedPeerFactory,
                    @Named("useDiskStorage") Boolean useDiskStorage,
-                   @Named("defaultSeedNode") SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses)
-    {
+                   @Named("defaultSeedNode") SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses) {
         this.bootstrappedPeerFactory = bootstrappedPeerFactory;
         this.useDiskStorage = useDiskStorage;
         this.defaultStaticSeedNodeAddresses = defaultStaticSeedNodeAddresses;
     }
 
     // for unit testing
-    P2PNode(KeyPair keyPair, PeerDHT peerDHT)
-    {
+    P2PNode(KeyPair keyPair, PeerDHT peerDHT) {
         this.keyPair = keyPair;
         this.peerDHT = peerDHT;
         peerDHT.peerBean().keyPair(keyPair);
@@ -125,19 +124,16 @@ public class P2PNode
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setMessageBroker(MessageBroker messageBroker)
-    {
+    public void setMessageBroker(MessageBroker messageBroker) {
         this.messageBroker = messageBroker;
     }
 
-    public void setKeyPair(@NotNull KeyPair keyPair)
-    {
+    public void setKeyPair(@NotNull KeyPair keyPair) {
         this.keyPair = keyPair;
         bootstrappedPeerFactory.setKeyPair(keyPair);
     }
 
-    public void start(FutureCallback<PeerDHT> callback)
-    {
+    public void start(FutureCallback<PeerDHT> callback) {
         useDiscStorage(useDiskStorage);
 
         bootstrappedPeerFactory.setStorage(storage);
@@ -148,8 +144,7 @@ public class P2PNode
     }
 
 
-    public void shutDown()
-    {
+    public void shutDown() {
         if (peerDHT != null && peerDHT.peer() != null)
             peerDHT.peer().shutdown();
 
@@ -163,78 +158,64 @@ public class P2PNode
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // The data and the domain are protected by that key pair.
-    public FuturePut putDomainProtectedData(Number160 locationKey, Data data) throws IOException, ClassNotFoundException
-    {
+    public FuturePut putDomainProtectedData(Number160 locationKey, Data data) throws IOException, ClassNotFoundException {
         data.protectEntry(keyPair);
         final Number160 ownerKeyHash = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
         return peerDHT.put(locationKey).data(data).keyPair(keyPair).domainKey(ownerKeyHash).protectDomain().start();
     }
 
     // No protection, everybody can write.
-    public FuturePut putData(Number160 locationKey, Data data) throws IOException, ClassNotFoundException
-    {
+    public FuturePut putData(Number160 locationKey, Data data) throws IOException, ClassNotFoundException {
         return peerDHT.put(locationKey).data(data).start();
     }
 
     // Not public readable. Only users with the public key of the peer who stored the data can read that data
-    public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey) throws IOException, ClassNotFoundException
-    {
+    public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey) throws IOException, ClassNotFoundException {
         final Number160 ownerKeyHash = Utils.makeSHAHash(publicKey.getEncoded());
         return peerDHT.get(locationKey).domainKey(ownerKeyHash).start();
     }
 
     // No protection, everybody can read.
-    public FutureGet getData(Number160 locationKey) throws IOException, ClassNotFoundException
-    {
+    public FutureGet getData(Number160 locationKey) throws IOException, ClassNotFoundException {
         return peerDHT.get(locationKey).start();
     }
 
     // No domain protection, but entry protection
-    public FuturePut addProtectedData(Number160 locationKey, Data data) throws IOException, ClassNotFoundException
-    {
+    public FuturePut addProtectedData(Number160 locationKey, Data data) throws IOException, ClassNotFoundException {
         data.protectEntry(keyPair);
         log.trace("addProtectedData with contentKey " + data.hash().toString());
         return peerDHT.add(locationKey).data(data).keyPair(keyPair).start();
     }
 
     // No domain protection, but entry protection
-    public FutureRemove removeFromDataMap(Number160 locationKey, Data data) throws IOException, ClassNotFoundException
-    {
+    public FutureRemove removeFromDataMap(Number160 locationKey, Data data) throws IOException, ClassNotFoundException {
         Number160 contentKey = data.hash();
         log.trace("removeFromDataMap with contentKey " + contentKey.toString());
         return peerDHT.remove(locationKey).contentKey(contentKey).keyPair(keyPair).start();
     }
 
     // Public readable
-    public FutureGet getDataMap(Number160 locationKey)
-    {
+    public FutureGet getDataMap(Number160 locationKey) {
         return peerDHT.get(locationKey).all().start();
     }
 
     // Send signed payLoad to peer
-    public FutureDirect sendData(PeerAddress peerAddress, Object payLoad)
-    {
+    public FutureDirect sendData(PeerAddress peerAddress, Object payLoad) {
         // use 30 seconds as max idle time before connection get closed
         FuturePeerConnection futurePeerConnection = peerDHT.peer().createPeerConnection(peerAddress, 30000);
         FutureDirect futureDirect = peerDHT.peer().sendDirect(futurePeerConnection).object(payLoad).sign().start();
-        futureDirect.addListener(new BaseFutureListener<BaseFuture>()
-        {
+        futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
-            public void operationComplete(BaseFuture future) throws Exception
-            {
-                if (futureDirect.isSuccess())
-                {
+            public void operationComplete(BaseFuture future) throws Exception {
+                if (futureDirect.isSuccess()) {
                     log.debug("sendMessage completed");
-                }
-                else
-                {
+                } else {
                     log.error("sendData failed with Reason " + futureDirect.failedReason());
                 }
             }
 
             @Override
-            public void exceptionCaught(Throwable t) throws Exception
-            {
+            public void exceptionCaught(Throwable t) throws Exception {
                 log.error("Exception at sendData " + t.toString());
             }
         });
@@ -246,66 +227,50 @@ public class P2PNode
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private ListenableFuture<PeerDHT> bootstrap()
-    {
+    private ListenableFuture<PeerDHT> bootstrap() {
         ListenableFuture<PeerDHT> bootstrapComplete = bootstrappedPeerFactory.start();
-        Futures.addCallback(bootstrapComplete, new FutureCallback<PeerDHT>()
-        {
+        Futures.addCallback(bootstrapComplete, new FutureCallback<PeerDHT>() {
             @Override
-            public void onSuccess(@Nullable PeerDHT peerDHT)
-            {
-                try
-                {
-                    if (peerDHT != null)
-                    {
+            public void onSuccess(@Nullable PeerDHT peerDHT) {
+                try {
+                    if (peerDHT != null) {
                         P2PNode.this.peerDHT = peerDHT;
                         setupReplyHandler();
                         FuturePut futurePut = storePeerAddress();
-                        futurePut.addListener(new BaseFutureListener<BaseFuture>()
-                        {
+                        futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                             @Override
-                            public void operationComplete(BaseFuture future) throws Exception
-                            {
-                                if (future.isSuccess())
-                                {
+                            public void operationComplete(BaseFuture future) throws Exception {
+                                if (future.isSuccess()) {
                                     storedPeerAddress = peerDHT.peerAddress();
                                     log.debug("storedPeerAddress = " + storedPeerAddress);
-                                }
-                                else
-                                {
+                                } else {
                                     log.error("");
                                 }
                             }
 
                             @Override
-                            public void exceptionCaught(Throwable t) throws Exception
-                            {
+                            public void exceptionCaught(Throwable t) throws Exception {
                                 log.error(t.toString());
                             }
                         });
-                    }
-                    else
-                    {
+                    } else {
                         log.error("peerDHT is null");
                     }
-                } catch (IOException | ClassNotFoundException e)
-                {
+                } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                     log.error(e.toString());
                 }
             }
 
             @Override
-            public void onFailure(@NotNull Throwable t)
-            {
+            public void onFailure(@NotNull Throwable t) {
                 log.error(t.toString());
             }
         });
         return bootstrapComplete;
     }
 
-    private void setupReplyHandler()
-    {
+    private void setupReplyHandler() {
         peerDHT.peer().objectDataReply((sender, request) -> {
             if (!sender.equals(peerDHT.peer().peerAddress()))
                 if (messageBroker != null) messageBroker.handleMessage(request, sender);
@@ -315,22 +280,16 @@ public class P2PNode
         });
     }
 
-    private void setupTimerForIPCheck()
-    {
+    private void setupTimerForIPCheck() {
         Timer timer = new Timer();
         long checkIfIPChangedPeriod = 600 * 1000;
-        timer.scheduleAtFixedRate(new TimerTask()
-        {
+        timer.scheduleAtFixedRate(new TimerTask() {
             @Override
-            public void run()
-            {
-                if (peerDHT != null && !storedPeerAddress.equals(peerDHT.peerAddress()))
-                {
-                    try
-                    {
+            public void run() {
+                if (peerDHT != null && !storedPeerAddress.equals(peerDHT.peerAddress())) {
+                    try {
                         storePeerAddress();
-                    } catch (IOException | ClassNotFoundException e)
-                    {
+                    } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                         log.error(e.toString());
                     }
@@ -339,36 +298,28 @@ public class P2PNode
         }, checkIfIPChangedPeriod, checkIfIPChangedPeriod);
     }
 
-    private FuturePut storePeerAddress() throws IOException, ClassNotFoundException
-    {
+    private FuturePut storePeerAddress() throws IOException, ClassNotFoundException {
         Number160 locationKey = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
         Data data = new Data(peerDHT.peerAddress());
         return putDomainProtectedData(locationKey, data);
     }
 
-    private void useDiscStorage(boolean useDiscStorage)
-    {
-        if (useDiscStorage)
-        {
-            try
-            {
+    private void useDiscStorage(boolean useDiscStorage) {
+        if (useDiscStorage) {
+            try {
 
                 File path = new File(StorageDirectory.getStorageDirectory().getCanonicalPath() + "/" + BitSquare.getAppName() + "_tomP2P");
-                if (!path.exists())
-                {
+                if (!path.exists()) {
                     boolean created = path.mkdir();
                     if (!created)
                         throw new RuntimeException("Could not create the directory '" + path + "'");
                 }
                 storage = new StorageDisk(Number160.ZERO, path, new DSASignatureFactory());
 
-            } catch (IOException e)
-            {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-        else
-        {
+        } else {
             storage = new StorageMemory();
         }
     }

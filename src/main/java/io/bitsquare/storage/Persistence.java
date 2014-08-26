@@ -20,6 +20,7 @@ package io.bitsquare.storage;
 import com.google.bitcoin.utils.Threading;
 import io.bitsquare.BitSquare;
 import io.bitsquare.util.FileUtil;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.List;
@@ -27,14 +28,14 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.concurrent.GuardedBy;
 import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Simple storage solution for serialized data
  */
-public class Persistence
-{
+public class Persistence {
     private static final Logger log = LoggerFactory.getLogger(Persistence.class);
     private static final ReentrantLock lock = Threading.lock("Storage");
 
@@ -50,146 +51,113 @@ public class Persistence
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Persistence()
-    {
+    public Persistence() {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void init()
-    {
-        try
-        {
+    public void init() {
+        try {
             lock.lock();
             final Map<String, Serializable> map = readRootMap();
 
-            if (map == null)
-            {
+            if (map == null) {
                 lock.lock();
-                try
-                {
+                try {
                     saveObjectToFile((Serializable) rootMap);
-                } finally
-                {
+                } finally {
                     lock.unlock();
                 }
-            }
-            else
-            {
+            } else {
                 rootMap = map;
             }
-        } finally
-        {
+        } finally {
             lock.unlock();
         }
     }
 
     // Map
-    public void write(String key, Map<String, ? extends Serializable> value)
-    {
+    public void write(String key, Map<String, ? extends Serializable> value) {
         write(key, (Serializable) value);
     }
 
-    public void write(Object classInstance, String propertyKey, Map<String, ? extends Serializable> value)
-    {
+    public void write(Object classInstance, String propertyKey, Map<String, ? extends Serializable> value) {
         write(classInstance.getClass().getName() + "." + propertyKey, value);
     }
 
-    public void write(Object classInstance, Map<String, ? extends Serializable> value)
-    {
+    public void write(Object classInstance, Map<String, ? extends Serializable> value) {
         write(classInstance.getClass().getName(), value);
     }
 
     // List
-    public void write(String key, List<? extends Serializable> value)
-    {
+    public void write(String key, List<? extends Serializable> value) {
         write(key, (Serializable) value);
     }
 
-    public void write(Object classInstance, String propertyKey, List<? extends Serializable> value)
-    {
+    public void write(Object classInstance, String propertyKey, List<? extends Serializable> value) {
         write(classInstance.getClass().getName() + "." + propertyKey, value);
     }
 
-    public void write(Object classInstance, List<? extends Serializable> value)
-    {
+    public void write(Object classInstance, List<? extends Serializable> value) {
         write(classInstance.getClass().getName(), value);
     }
 
     // Serializable
-    public void write(Object classInstance, String propertyKey, Serializable value)
-    {
+    public void write(Object classInstance, String propertyKey, Serializable value) {
         write(classInstance.getClass().getName() + "." + propertyKey, value);
     }
 
-    public void write(Object classInstance, Serializable value)
-    {
+    public void write(Object classInstance, Serializable value) {
         write(classInstance.getClass().getName(), value);
     }
 
-    public void write(Serializable classInstance)
-    {
+    public void write(Serializable classInstance) {
         write(classInstance.getClass().getName(), classInstance);
     }
 
-    public void write(String key, Serializable value)
-    {
+    public void write(String key, Serializable value) {
         // log.trace("Write object with key = " + key + " / value = " + value);
-        try
-        {
+        try {
             lock.lock();
             rootMap.put(key, value);
             saveObjectToFile((Serializable) rootMap);
-        } finally
-        {
+        } finally {
             lock.unlock();
         }
     }
 
 
-    public Serializable read(Object classInstance)
-    {
+    public Serializable read(Object classInstance) {
         return read(classInstance.getClass().getName());
     }
 
-    public Serializable read(Object classInstance, String propertyKey)
-    {
+    public Serializable read(Object classInstance, String propertyKey) {
         return read(classInstance.getClass().getName() + "." + propertyKey);
     }
 
     // read from local rootMap, just if not found read from disc
-    public Serializable read(String key)
-    {
-        try
-        {
+    public Serializable read(String key) {
+        try {
             lock.lock();
-            if (rootMap.containsKey(key))
-            {
+            if (rootMap.containsKey(key)) {
                 // log.trace("Read object with key = " + key + " / value = " + rootMap.get(key));
                 return rootMap.get(key);
-            }
-            else
-            {
+            } else {
                 final Map<String, Serializable> map = readRootMap();
-                if (map != null)
-                {
+                if (map != null) {
                     rootMap = map;
                 }
-                if (rootMap.containsKey(key))
-                {
+                if (rootMap.containsKey(key)) {
                     // log.trace("Read object with key = " + key + " / value = " + rootMap.get(key));
                     return rootMap.get(key);
-                }
-                else
-                {
+                } else {
                     log.info("Object with key = " + key + " not found.");
                     return null;
                 }
             }
-        } finally
-        {
+        } finally {
             lock.unlock();
         }
     }
@@ -200,50 +168,38 @@ public class Persistence
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    private Map<String, Serializable> readRootMap()
-    {
-        try
-        {
+    private Map<String, Serializable> readRootMap() {
+        try {
             final Object object = readObjectFromFile(storageFile);
-            if (object == null)
-            {
+            if (object == null) {
                 log.error("readRootMap returned null object.");
                 return null;
-            }
-            else
-            {
-                if (object instanceof Map)
-                {
+            } else {
+                if (object instanceof Map) {
                     //noinspection unchecked
                     return (Map<String, Serializable>) object;
-                }
-                else
-                {
+                } else {
                     log.error("Object is not type of Map<String, Serializable>");
                     return null;
                 }
             }
 
-        } catch (FileNotFoundException e)
-        {
+        } catch (FileNotFoundException e) {
 
             log.trace("File not found is ok for the first execute.");
             return null;
-        } catch (ClassNotFoundException | IOException e2)
-        {
+        } catch (ClassNotFoundException | IOException e2) {
             e2.printStackTrace();
             log.error("Could not read rootMap. " + e2);
             return null;
         }
     }
 
-    private void saveObjectToFile(Serializable serializable)
-    {
+    private void saveObjectToFile(Serializable serializable) {
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
         ObjectOutputStream objectOutputStream = null;
-        try
-        {
+        try {
             tempFile = FileUtil.getTempFile(prefix);
 
             // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile) and we need to close it
@@ -263,39 +219,31 @@ public class Persistence
             objectOutputStream.close();
 
             FileUtil.writeTempFileToFile(tempFile, storageFile);
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
             log.error("save object to file failed." + e);
-        } finally
-        {
-            if (tempFile != null && tempFile.exists())
-            {
+        } finally {
+            if (tempFile != null && tempFile.exists()) {
                 log.warn("Temp file still exists after failed save.");
                 if (!tempFile.delete()) log.error("Cannot delete temp file.");
             }
 
-            try
-            {
+            try {
                 if (objectOutputStream != null) objectOutputStream.close();
                 if (fileOutputStream != null) fileOutputStream.close();
-            } catch (IOException e)
-            {
+            } catch (IOException e) {
                 e.printStackTrace();
                 log.error("Cannot close resources.");
             }
         }
     }
 
-    private Object readObjectFromFile(File file) throws IOException, ClassNotFoundException
-    {
+    private Object readObjectFromFile(File file) throws IOException, ClassNotFoundException {
         lock.lock();
         try (final FileInputStream fileInputStream = new FileInputStream(file);
-             final ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream))
-        {
+             final ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
             return objectInputStream.readObject();
-        } finally
-        {
+        } finally {
             lock.unlock();
         }
     }

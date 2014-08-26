@@ -28,18 +28,22 @@ import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Persistence;
 import io.bitsquare.user.Arbitrator;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
+
 import javax.inject.Inject;
+
 import net.tomp2p.peers.Number640;
 import net.tomp2p.storage.Data;
 
@@ -49,8 +53,7 @@ import net.tomp2p.storage.Data;
  * import net.tomp2p.storage.Data;
  */
 @SuppressWarnings({"ALL", "UnusedParameters"})
-public class ArbitratorOverviewController extends CachedViewController implements ArbitratorListener
-{
+public class ArbitratorOverviewController extends CachedViewController implements ArbitratorListener {
     private final Settings settings;
     private final Persistence persistence;
 
@@ -68,8 +71,7 @@ public class ArbitratorOverviewController extends CachedViewController implement
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorOverviewController(Settings settings, Persistence persistence, MessageFacade messageFacade)
-    {
+    public ArbitratorOverviewController(Settings settings, Persistence persistence, MessageFacade messageFacade) {
 
         this.settings = settings;
         this.persistence = persistence;
@@ -85,8 +87,7 @@ public class ArbitratorOverviewController extends CachedViewController implement
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb)
-    {
+    public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
         loadViewAndGetChildController(NavigationItem.ARBITRATOR_PROFILE);
@@ -94,20 +95,17 @@ public class ArbitratorOverviewController extends CachedViewController implement
     }
 
     @Override
-    public void terminate()
-    {
+    public void terminate() {
         super.terminate();
     }
 
     @Override
-    public void deactivate()
-    {
+    public void deactivate() {
         super.deactivate();
     }
 
     @Override
-    public void activate()
-    {
+    public void activate() {
         super.activate();
     }
 
@@ -117,25 +115,21 @@ public class ArbitratorOverviewController extends CachedViewController implement
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setParentController(ViewController parentController)
-    {
+    public void setParentController(ViewController parentController) {
         super.setParentController(parentController);
     }
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
-    {
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
-        try
-        {
+        try {
             final Node view = loader.load();
             arbitratorProfileController = loader.getController();
             arbitratorProfileController.setParentController(this);
             ((Pane) root).getChildren().set(0, view);
 
             return arbitratorProfileController;
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
@@ -147,40 +141,30 @@ public class ArbitratorOverviewController extends CachedViewController implement
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onArbitratorAdded(Data offerData, boolean success)
-    {
+    public void onArbitratorAdded(Data offerData, boolean success) {
     }
 
     @Override
-    public void onArbitratorsReceived(Map<Number640, Data> dataMap, boolean success)
-    {
-        if (success && dataMap != null)
-        {
+    public void onArbitratorsReceived(Map<Number640, Data> dataMap, boolean success) {
+        if (success && dataMap != null) {
             allArbitrators.clear();
 
-            for (Data arbitratorData : dataMap.values())
-            {
-                try
-                {
+            for (Data arbitratorData : dataMap.values()) {
+                try {
                     Object arbitratorDataObject = arbitratorData.object();
-                    if (arbitratorDataObject instanceof Arbitrator)
-                    {
+                    if (arbitratorDataObject instanceof Arbitrator) {
                         Arbitrator arbitrator = (Arbitrator) arbitratorDataObject;
                         allArbitrators.add(arbitrator);
                     }
-                } catch (ClassNotFoundException | IOException e)
-                {
+                } catch (ClassNotFoundException | IOException e) {
                     e.printStackTrace();
                 }
             }
-        }
-        else
-        {
+        } else {
             allArbitrators.clear();
         }
 
-        if (!allArbitrators.isEmpty())
-        {
+        if (!allArbitrators.isEmpty()) {
             index = 0;
             currentArbitrator = allArbitrators.get(index);
             arbitratorProfileController.applyArbitrator(currentArbitrator);
@@ -189,8 +173,7 @@ public class ArbitratorOverviewController extends CachedViewController implement
     }
 
     @Override
-    public void onArbitratorRemoved(Data data, boolean success)
-    {
+    public void onArbitratorRemoved(Data data, boolean success) {
     }
 
 
@@ -199,10 +182,8 @@ public class ArbitratorOverviewController extends CachedViewController implement
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
-    public void onPrevious()
-    {
-        if (index > 0)
-        {
+    public void onPrevious() {
+        if (index > 0) {
             index--;
             currentArbitrator = allArbitrators.get(index);
             arbitratorProfileController.applyArbitrator(currentArbitrator);
@@ -211,10 +192,8 @@ public class ArbitratorOverviewController extends CachedViewController implement
     }
 
     @FXML
-    public void onNext()
-    {
-        if (index < allArbitrators.size() - 1)
-        {
+    public void onNext() {
+        if (index < allArbitrators.size() - 1) {
             index++;
             currentArbitrator = allArbitrators.get(index);
             arbitratorProfileController.applyArbitrator(currentArbitrator);
@@ -223,15 +202,13 @@ public class ArbitratorOverviewController extends CachedViewController implement
     }
 
     @FXML
-    public void onSelect()
-    {
+    public void onSelect() {
         settings.addAcceptedArbitrator(currentArbitrator);
         persistence.write(settings);
     }
 
     @FXML
-    public void onClose()
-    {
+    public void onClose() {
         Stage stage = (Stage) root.getScene().getWindow();
         stage.close();
     }
@@ -241,8 +218,7 @@ public class ArbitratorOverviewController extends CachedViewController implement
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void checkButtonState()
-    {
+    private void checkButtonState() {
         prevButton.setDisable(index < 1);
         nextButton.setDisable(index == allArbitrators.size() - 1 || index == -1);
     }

@@ -25,25 +25,20 @@ import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RequestTakeOffer
-{
+public class RequestTakeOffer {
     private static final Logger log = LoggerFactory.getLogger(RequestTakeOffer.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, PeerAddress peerAddress, MessageFacade messageFacade, String tradeId)
-    {
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, PeerAddress peerAddress, MessageFacade messageFacade, String tradeId) {
         log.trace("Run task");
-        messageFacade.sendTradeMessage(peerAddress, new RequestTakeOfferMessage(tradeId), new OutgoingTradeMessageListener()
-        {
+        messageFacade.sendTradeMessage(peerAddress, new RequestTakeOfferMessage(tradeId), new OutgoingTradeMessageListener() {
             @Override
-            public void onResult()
-            {
+            public void onResult() {
                 log.trace("RequestTakeOfferMessage successfully arrived at peer");
                 resultHandler.onResult();
             }
 
             @Override
-            public void onFailed()
-            {
+            public void onFailed() {
                 log.error("RequestTakeOfferMessage  did not arrive at peer");
                 exceptionHandler.onError(new Exception("RequestTakeOfferMessage did not arrive at peer"));
             }

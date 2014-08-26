@@ -22,11 +22,10 @@ import org.slf4j.LoggerFactory;
 
 /**
  * FiatNumberValidator for validating fiat values.
- * <p>
+ * <p/>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
-public class FiatValidator extends NumberValidator
-{
+public class FiatValidator extends NumberValidator {
     private static final Logger log = LoggerFactory.getLogger(FiatValidator.class);
 
     //TODO Find appropriate values - depends on currencies
@@ -39,17 +38,14 @@ public class FiatValidator extends NumberValidator
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ValidationResult validate(String input)
-    {
+    public ValidationResult validate(String input) {
         ValidationResult result = validateIfNotEmpty(input);
-        if (result.isValid)
-        {
+        if (result.isValid) {
             input = cleanInput(input);
             result = validateIfNumber(input);
         }
 
-        if (result.isValid)
-        {
+        if (result.isValid) {
             result = validateIfNotZero(input)
                     .and(validateIfNotNegative(input))
                     .and(validateIfNotExceedsMinFiatValue(input))
@@ -64,8 +60,7 @@ public class FiatValidator extends NumberValidator
     // Protected methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected ValidationResult validateIfNotExceedsMinFiatValue(String input)
-    {
+    protected ValidationResult validateIfNotExceedsMinFiatValue(String input) {
         double d = Double.parseDouble(input);
         if (d < MIN_FIAT_VALUE)
             return new ValidationResult(false, "Input smaller as minimum possible Fiat value is not allowed..", ErrorType.UNDERCUT_MIN_FIAT_VALUE);
@@ -73,8 +68,7 @@ public class FiatValidator extends NumberValidator
             return new ValidationResult(true);
     }
 
-    protected ValidationResult validateIfNotExceedsMaxFiatValue(String input)
-    {
+    protected ValidationResult validateIfNotExceedsMaxFiatValue(String input) {
         double d = Double.parseDouble(input);
         if (d > MAX_FIAT_VALUE)
             return new ValidationResult(false, "Input larger as maximum possible Fiat value is not allowed.", ErrorType.EXCEEDS_MAX_FIAT_VALUE);

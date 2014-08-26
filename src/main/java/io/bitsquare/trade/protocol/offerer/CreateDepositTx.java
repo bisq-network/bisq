@@ -26,8 +26,7 @@ import io.bitsquare.trade.handlers.ExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreateDepositTx
-{
+public class CreateDepositTx {
     private static final Logger log = LoggerFactory.getLogger(CreateDepositTx.class);
 
     public static void run(ResultHandler resultHandler,
@@ -36,11 +35,9 @@ public class CreateDepositTx
                            String tradeId,
                            Coin offererInputAmount,
                            String takerMultiSigPubKey,
-                           String arbitratorPubKeyAsHex)
-    {
+                           String arbitratorPubKeyAsHex) {
         log.trace("Run task");
-        try
-        {
+        try {
             String offererPubKey = walletFacade.getAddressInfoByTradeID(tradeId).getPubKeyAsHexString();
             Transaction transaction = walletFacade.offererCreatesMSTxAndAddPayment(offererInputAmount, offererPubKey, takerMultiSigPubKey, arbitratorPubKeyAsHex, tradeId);
 
@@ -48,15 +45,13 @@ public class CreateDepositTx
             long offererTxOutIndex = transaction.getInput(0).getOutpoint().getIndex();
 
             resultHandler.onResult(offererPubKey, preparedOffererDepositTxAsHex, offererTxOutIndex);
-        } catch (InsufficientMoneyException e)
-        {
+        } catch (InsufficientMoneyException e) {
             log.error("Create deposit tx faultHandler.onFault due InsufficientMoneyException " + e);
             exceptionHandler.onError(new Exception("Create deposit tx faultHandler.onFault due InsufficientMoneyException " + e));
         }
     }
 
-    public interface ResultHandler
-    {
+    public interface ResultHandler {
         void onResult(String offererPubKey, String preparedOffererDepositTxAsHex, long offererTxOutIndex);
     }
 

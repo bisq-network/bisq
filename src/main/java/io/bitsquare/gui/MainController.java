@@ -34,9 +34,11 @@ import io.bitsquare.storage.Persistence;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -47,7 +49,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.util.StringConverter;
+
 import javax.inject.Inject;
+
 import net.tomp2p.peers.PeerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,8 +62,7 @@ import org.slf4j.LoggerFactory;
  * We use a sequence of Platform.runLater cascaded calls to make the startup more smooth, otherwise the rendering is frozen for too long.
  * Pre-loading of views is not implemented yet, and after a quick test it seemed that it does not give much improvements.
  */
-public class MainController extends ViewController
-{
+public class MainController extends ViewController {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
     private static MainController INSTANCE;
 
@@ -84,8 +87,7 @@ public class MainController extends ViewController
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static MainController GET_INSTANCE()
-    {
+    public static MainController GET_INSTANCE() {
         return INSTANCE;
     }
 
@@ -95,8 +97,7 @@ public class MainController extends ViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MainController(User user, WalletFacade walletFacade, MessageFacade messageFacade, TradeManager tradeManager, Persistence persistence)
-    {
+    private MainController(User user, WalletFacade walletFacade, MessageFacade messageFacade, TradeManager tradeManager, Persistence persistence) {
         this.user = user;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
@@ -114,8 +115,7 @@ public class MainController extends ViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb)
-    {
+    public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
         Profiler.printMsgWithTime("MainController.initialize");
@@ -123,8 +123,7 @@ public class MainController extends ViewController
     }
 
     @Override
-    public void terminate()
-    {
+    public void terminate() {
         super.terminate();
     }
 
@@ -134,10 +133,8 @@ public class MainController extends ViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
-    {
-        switch (navigationItem)
-        {
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
+        switch (navigationItem) {
             case HOME:
                 homeButton.fire();
                 break;
@@ -168,29 +165,24 @@ public class MainController extends ViewController
     // Startup Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void onViewInitialized()
-    {
+    void onViewInitialized() {
         Profiler.printMsgWithTime("MainController.onViewInitialized");
         Platform.runLater(this::initFacades);
     }
 
-    private void onFacadesInitialised()
-    {
+    private void onFacadesInitialised() {
         Profiler.printMsgWithTime("MainController.onFacadesInitialised");
         // never called on regtest
-        walletFacade.addDownloadListener(new WalletFacade.DownloadListener()
-        {
+        walletFacade.addDownloadListener(new WalletFacade.DownloadListener() {
             @Override
-            public void progress(double percent)
-            {
+            public void progress(double percent) {
                 viewBuilder.loadingLabel.setText("Synchronise with network...");
                 if (viewBuilder.networkSyncPane == null)
                     viewBuilder.setShowNetworkSyncPane();
             }
 
             @Override
-            public void downloadComplete()
-            {
+            public void downloadComplete() {
                 viewBuilder.loadingLabel.setText("Synchronise with network done.");
                 if (viewBuilder.networkSyncPane != null)
                     viewBuilder.networkSyncPane.downloadComplete();
@@ -201,21 +193,18 @@ public class MainController extends ViewController
         Platform.runLater(this::addNavigation);
     }
 
-    private void onNavigationAdded()
-    {
+    private void onNavigationAdded() {
         Profiler.printMsgWithTime("MainController.onNavigationAdded");
         Platform.runLater(this::loadContentView);
     }
 
-    private void onContentViewLoaded()
-    {
+    private void onContentViewLoaded() {
         Profiler.printMsgWithTime("MainController.onContentViewLoaded");
         root.setId("main-view");
         Platform.runLater(this::fadeOutSplash);
     }
 
-    private void fadeOutSplash()
-    {
+    private void fadeOutSplash() {
         Profiler.printMsgWithTime("MainController.fadeOutSplash");
         Transitions.blurOutAndRemove(viewBuilder.splashVBox);
         Transitions.fadeIn(viewBuilder.menuBar);
@@ -228,8 +217,7 @@ public class MainController extends ViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     //TODO make ordersButton also reacting to jump to pending tab
-    private void onTakeOfferRequested(String offerId, PeerAddress sender)
-    {
+    private void onTakeOfferRequested(String offerId, PeerAddress sender) {
         final Button alertButton = new Button("", ImageUtil.getIconImageView(ImageUtil.MSG_ALERT));
         alertButton.setId("nav-alert-button");
         alertButton.relocate(36, 19);
@@ -248,21 +236,17 @@ public class MainController extends ViewController
     // Private startup methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void initFacades()
-    {
+    private void initFacades() {
         Profiler.printMsgWithTime("MainController.initFacades");
-        messageFacade.init(new BootstrapListener()
-        {
+        messageFacade.init(new BootstrapListener() {
             @Override
-            public void onCompleted()
-            {
+            public void onCompleted() {
                 messageFacadeInited = true;
                 if (walletFacadeInited) onFacadesInitialised();
             }
 
             @Override
-            public void onFailed(Throwable throwable)
-            {
+            public void onFailed(Throwable throwable) {
                 log.error(throwable.toString());
             }
         });
@@ -273,8 +257,7 @@ public class MainController extends ViewController
         });
     }
 
-    private void addNavigation()
-    {
+    private void addNavigation() {
         Profiler.printMsgWithTime("MainController.addNavigation");
         homeButton = addNavButton(viewBuilder.leftNavPane, "Overview", NavigationItem.HOME);
         buyButton = addNavButton(viewBuilder.leftNavPane, "Buy BTC", NavigationItem.BUY);
@@ -306,8 +289,7 @@ public class MainController extends ViewController
         Platform.runLater(this::onNavigationAdded);
     }
 
-    private void loadContentView()
-    {
+    private void loadContentView() {
         Profiler.printMsgWithTime("MainController.loadContentView");
         NavigationItem selectedNavigationItem = (NavigationItem) persistence.read(this, "selectedNavigationItem");
         if (selectedNavigationItem == null)
@@ -323,8 +305,7 @@ public class MainController extends ViewController
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void loadViewFromNavButton(NavigationItem navigationItem)
-    {
+    private void loadViewFromNavButton(NavigationItem navigationItem) {
 
        /* if (childController instanceof CachedViewController)
             ((CachedViewController) childController).deactivate();
@@ -332,20 +313,17 @@ public class MainController extends ViewController
             childController.terminate();*/
 
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
-        try
-        {
+        try {
             final Node view = loader.load();
             viewBuilder.contentPane.getChildren().setAll(view);
             childController = loader.getController();
             childController.setParentController(this);
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             log.error("Loading view failed. " + navigationItem.getFxmlUrl());
         }
     }
 
-    private ToggleButton addNavButton(Pane parent, String title, NavigationItem navigationItem)
-    {
+    private ToggleButton addNavButton(Pane parent, String title, NavigationItem navigationItem) {
         final Pane pane = new Pane();
         pane.setPrefSize(50, 50);
         final ToggleButton toggleButton = new ToggleButton("", ImageUtil.getIconImageView(navigationItem.getIcon()));
@@ -353,8 +331,7 @@ public class MainController extends ViewController
         toggleButton.setId("nav-button");
         toggleButton.setPrefSize(50, 50);
         toggleButton.setOnAction(e -> {
-            if (prevToggleButton != null)
-            {
+            if (prevToggleButton != null) {
                 ((ImageView) (prevToggleButton.getGraphic())).setImage(prevToggleButtonIcon);
             }
             prevToggleButtonIcon = ((ImageView) (toggleButton.getGraphic())).getImage();
@@ -379,18 +356,15 @@ public class MainController extends ViewController
         return toggleButton;
     }
 
-    private void addBalanceInfo(Pane parent)
-    {
+    private void addBalanceInfo(Pane parent) {
         final TextField balanceTextField = new TextField();
         balanceTextField.setEditable(false);
         balanceTextField.setPrefWidth(110);
         balanceTextField.setId("nav-balance-label");
         balanceTextField.setText(BitSquareFormatter.formatCoinWithCode(walletFacade.getWalletBalance()));
-        walletFacade.addBalanceListener(new BalanceListener()
-        {
+        walletFacade.addBalanceListener(new BalanceListener() {
             @Override
-            public void onBalanceChanged(Coin balance)
-            {
+            public void onBalanceChanged(Coin balance) {
                 balanceTextField.setText(BitSquareFormatter.formatCoinWithCode(walletFacade.getWalletBalance()));
             }
         });
@@ -407,25 +381,21 @@ public class MainController extends ViewController
         parent.getChildren().add(vBox);
     }
 
-    private void addAccountComboBox(Pane parent)
-    {
+    private void addAccountComboBox(Pane parent) {
         final ComboBox<BankAccount> accountComboBox = new ComboBox<>(FXCollections.observableArrayList(user.getBankAccounts()));
         accountComboBox.setId("nav-account-combo-box");
         accountComboBox.setLayoutY(12);
         if (user.getCurrentBankAccount() != null)
             accountComboBox.getSelectionModel().select(user.getCurrentBankAccount());
         accountComboBox.valueProperty().addListener((ov, oldValue, newValue) -> user.setCurrentBankAccount(newValue));
-        accountComboBox.setConverter(new StringConverter<BankAccount>()
-        {
+        accountComboBox.setConverter(new StringConverter<BankAccount>() {
             @Override
-            public String toString(BankAccount bankAccount)
-            {
+            public String toString(BankAccount bankAccount) {
                 return bankAccount.getAccountTitle();
             }
 
             @Override
-            public BankAccount fromString(String s)
-            {
+            public BankAccount fromString(String s) {
                 return null;
             }
         });
@@ -453,8 +423,7 @@ public class MainController extends ViewController
 }
 
 
-class ViewBuilder
-{
+class ViewBuilder {
     HBox leftNavPane, rightNavPane;
     AnchorPane contentPane;
     NetworkSyncPane networkSyncPane;
@@ -466,8 +435,7 @@ class ViewBuilder
     Label loadingLabel;
     boolean showNetworkSyncPane;
 
-    void buildSplashScreen(BorderPane root, MainController controller)
-    {
+    void buildSplashScreen(BorderPane root, MainController controller) {
         Profiler.printMsgWithTime("MainController.ViewBuilder.buildSplashScreen");
         this.root = root;
 
@@ -482,8 +450,7 @@ class ViewBuilder
         Platform.runLater(() -> buildContentView(controller));
     }
 
-    void buildContentView(MainController controller)
-    {
+    void buildContentView(MainController controller) {
         Profiler.printMsgWithTime("MainController.ViewBuilder.buildContentView");
         contentScreen = getContentScreen();
         stackPane.getChildren().add(contentScreen);
@@ -491,8 +458,7 @@ class ViewBuilder
         Platform.runLater(controller::onViewInitialized);
     }
 
-    AnchorPane getContentScreen()
-    {
+    AnchorPane getContentScreen() {
         AnchorPane anchorPane = new AnchorPane();
         anchorPane.setId("content-pane");
 
@@ -524,16 +490,14 @@ class ViewBuilder
         return anchorPane;
     }
 
-    void setShowNetworkSyncPane()
-    {
+    void setShowNetworkSyncPane() {
         showNetworkSyncPane = true;
 
         if (contentScreen != null)
             addNetworkSyncPane();
     }
 
-    private void addNetworkSyncPane()
-    {
+    private void addNetworkSyncPane() {
         networkSyncPane = new NetworkSyncPane();
         networkSyncPane.setSpacing(10);
         networkSyncPane.setPrefHeight(20);
@@ -543,8 +507,7 @@ class ViewBuilder
         contentScreen.getChildren().addAll(networkSyncPane);
     }
 
-    VBox getSplashScreen()
-    {
+    VBox getSplashScreen() {
         VBox splashVBox = new VBox();
         splashVBox.setAlignment(Pos.CENTER);
         splashVBox.setSpacing(10);
@@ -569,8 +532,7 @@ class ViewBuilder
         return splashVBox;
     }
 
-    MenuBar getMenuBar()
-    {
+    MenuBar getMenuBar() {
         MenuBar menuBar = new MenuBar();
         // on mac we could place menu bar in the systems menu
         // menuBar.setUseSystemMenuBar(true);

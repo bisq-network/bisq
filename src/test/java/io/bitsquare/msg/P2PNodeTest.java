@@ -20,6 +20,7 @@ package io.bitsquare.msg;
 import java.io.IOException;
 import java.security.*;
 import java.util.Random;
+
 import net.tomp2p.connection.Ports;
 import net.tomp2p.dht.*;
 import net.tomp2p.futures.FutureDirect;
@@ -36,15 +37,13 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
-public class P2PNodeTest
-{
+public class P2PNodeTest {
     private static final Logger log = LoggerFactory.getLogger(P2PNodeTest.class);
 
     final private static Random rnd = new Random(42L);
 
     @Test
-    public void testSendData() throws Exception
-    {
+    public void testSendData() throws Exception {
         PeerDHT[] peers = UtilsDHT2.createNodes(3, rnd, new Ports().tcpPort());
         PeerDHT master = peers[0];
         PeerDHT client = peers[1];
@@ -52,13 +51,10 @@ public class P2PNodeTest
         UtilsDHT2.perfectRouting(peers);
 
 
-        for (final PeerDHT peer : peers)
-        {
-            peer.peer().objectDataReply(new ObjectDataReply()
-            {
+        for (final PeerDHT peer : peers) {
+            peer.peer().objectDataReply(new ObjectDataReply() {
                 @Override
-                public Object reply(PeerAddress sender, Object request) throws Exception
-                {
+                public Object reply(PeerAddress sender, Object request) throws Exception {
                     return true;
                 }
             });
@@ -87,8 +83,7 @@ public class P2PNodeTest
     }
 
     @Test
-    public void testProtectedPutGet() throws Exception
-    {
+    public void testProtectedPutGet() throws Exception {
         PeerDHT[] peers = UtilsDHT2.createNodes(3, rnd, new Ports().tcpPort());
         PeerDHT master = peers[0];
         PeerDHT client = peers[1];
@@ -171,18 +166,17 @@ public class P2PNodeTest
 
         master.shutdown();
     }
-    
+
     @Test
-    public void testChangeEntryProtectionKey() throws IOException, ClassNotFoundException, NoSuchAlgorithmException, InterruptedException, InvalidKeyException, SignatureException
-    {
+    public void testChangeEntryProtectionKey() throws IOException, ClassNotFoundException, NoSuchAlgorithmException, InterruptedException, InvalidKeyException, SignatureException {
         KeyPairGenerator gen = KeyPairGenerator.getInstance("DSA");
 
         KeyPair keyPair1 = gen.generateKeyPair();
         KeyPair keyPair2 = gen.generateKeyPair();
         PeerDHT p1 = new PeerBuilderDHT(new PeerBuilder(Number160.createHash(1)).ports(4838)
-                                                                                .keyPair(keyPair1).start()).start();
+                .keyPair(keyPair1).start()).start();
         PeerDHT p2 = new PeerBuilderDHT(new PeerBuilder(Number160.createHash(2)).ports(4839)
-                                                                                .keyPair(keyPair2).start()).start();
+                .keyPair(keyPair2).start()).start();
 
         p2.peer().bootstrap().peerAddress(p1.peerAddress()).start().awaitUninterruptibly();
         p1.peer().bootstrap().peerAddress(p2.peerAddress()).start().awaitUninterruptibly();
@@ -204,11 +198,10 @@ public class P2PNodeTest
         p1.shutdown().awaitUninterruptibly();
         p2.shutdown().awaitUninterruptibly();
     }
-    
-    
-   // @Test
-    public void testAddToListGetList() throws Exception
-    {
+
+
+    // @Test
+    public void testAddToListGetList() throws Exception {
 
         PeerDHT[] peers = UtilsDHT2.createNodes(3, rnd, new Ports().tcpPort());
         PeerDHT master = peers[0];
@@ -232,7 +225,7 @@ public class P2PNodeTest
         KeyPairGenerator gen = KeyPairGenerator.getInstance("DSA");
         KeyPair keyPair1 = gen.generateKeyPair();
         keyPairClient = keyPair1;
-        
+
         node = new P2PNode(keyPairClient, client);
         locationKey = Number160.createHash("add to list clients location");
         data = new Data("add to list client data1");
@@ -251,21 +244,17 @@ public class P2PNodeTest
         futureGet.awaitUninterruptibly();
         assertTrue(futureGet.isSuccess());
         boolean foundData1 = futureGet.dataMap().values().stream().anyMatch(data1 -> {
-            try
-            {
+            try {
                 return data1.object().equals("add to list client data1");
-            } catch (ClassNotFoundException | IOException e)
-            {
+            } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
             return false;
         });
         boolean foundData2 = futureGet.dataMap().values().stream().anyMatch(data1 -> {
-            try
-            {
+            try {
                 return data1.object().equals("add to list client data2");
-            } catch (ClassNotFoundException | IOException e)
-            {
+            } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
             return false;
@@ -297,31 +286,25 @@ public class P2PNodeTest
         assertTrue(futureGet.isSuccess());
 
         foundData1 = futureGet.dataMap().values().stream().anyMatch(data1 -> {
-            try
-            {
+            try {
                 return data1.object().equals("add to list client data1");
-            } catch (ClassNotFoundException | IOException e)
-            {
+            } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
             return false;
         });
         foundData2 = futureGet.dataMap().values().stream().anyMatch(data1 -> {
-            try
-            {
+            try {
                 return data1.object().equals("add to list client data2");
-            } catch (ClassNotFoundException | IOException e)
-            {
+            } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
             return false;
         });
         boolean foundData3 = futureGet.dataMap().values().stream().anyMatch(data1 -> {
-            try
-            {
+            try {
                 return data1.object().equals("add to list other peer data HACK!");
-            } catch (ClassNotFoundException | IOException e)
-            {
+            } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
             return false;
@@ -343,31 +326,25 @@ public class P2PNodeTest
         assertTrue(futureGet.isSuccess());
 
         foundData1 = futureGet.dataMap().values().stream().anyMatch(data1 -> {
-            try
-            {
+            try {
                 return data1.object().equals("add to list client data1");
-            } catch (ClassNotFoundException | IOException e)
-            {
+            } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
             return false;
         });
         foundData2 = futureGet.dataMap().values().stream().anyMatch(data1 -> {
-            try
-            {
+            try {
                 return data1.object().equals("add to list client data2");
-            } catch (ClassNotFoundException | IOException e)
-            {
+            } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
             return false;
         });
         foundData3 = futureGet.dataMap().values().stream().anyMatch(data1 -> {
-            try
-            {
+            try {
                 return data1.object().equals("add to list other peer data HACK!");
-            } catch (ClassNotFoundException | IOException e)
-            {
+            } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
             return false;
@@ -390,31 +367,25 @@ public class P2PNodeTest
         assertTrue(futureGet.isSuccess());
 
         foundData1 = futureGet.dataMap().values().stream().anyMatch(data1 -> {
-            try
-            {
+            try {
                 return data1.object().equals("add to list client data1");
-            } catch (ClassNotFoundException | IOException e)
-            {
+            } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
             return false;
         });
         foundData2 = futureGet.dataMap().values().stream().anyMatch(data1 -> {
-            try
-            {
+            try {
                 return data1.object().equals("add to list client data2");
-            } catch (ClassNotFoundException | IOException e)
-            {
+            } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
             return false;
         });
         foundData3 = futureGet.dataMap().values().stream().anyMatch(data1 -> {
-            try
-            {
+            try {
                 return data1.object().equals("add to list other peer data HACK!");
-            } catch (ClassNotFoundException | IOException e)
-            {
+            } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
             return false;

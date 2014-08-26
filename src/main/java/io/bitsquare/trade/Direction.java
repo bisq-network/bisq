@@ -17,7 +17,6 @@
 
 package io.bitsquare.trade;
 
-public enum Direction
-{
+public enum Direction {
     BUY, SELL
 }

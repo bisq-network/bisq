@@ -36,15 +36,19 @@ import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.storage.Persistence;
 import io.bitsquare.util.StorageDirectory;
+
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+
 import javafx.application.Platform;
 import javafx.util.Pair;
+
 import javax.annotation.concurrent.GuardedBy;
 import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,8 +58,7 @@ import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
  * TODO: use walletextension (with protobuffer) instead of saving addressEntryList via storage
  * TODO: use HD wallet features instead of addressEntryList
  */
-public class WalletFacade
-{
+public class WalletFacade {
     public static final String MAIN_NET = "MAIN_NET";
     public static final String TEST_NET = "TEST_NET";
     public static final String REG_TEST_NET = "REG_TEST_NET";
@@ -88,8 +91,7 @@ public class WalletFacade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletFacade(NetworkParameters params, FeePolicy feePolicy, CryptoFacade cryptoFacade, Persistence persistence)
-    {
+    public WalletFacade(NetworkParameters params, FeePolicy feePolicy, CryptoFacade cryptoFacade, Persistence persistence) {
         this.params = params;
         this.feePolicy = feePolicy;
         this.cryptoFacade = cryptoFacade;
@@ -101,8 +103,7 @@ public class WalletFacade
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(StartupListener startupListener)
-    {
+    public void initialize(StartupListener startupListener) {
         // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
         // we cannot forget to switch threads when adding event handlers. Unfortunately, the DownloadListener
         // we give to the app kit is currently an exception and runs on a library thread. It'll get fixed in
@@ -110,11 +111,9 @@ public class WalletFacade
         Threading.USER_THREAD = Platform::runLater;
 
         // If seed is non-null it means we are restoring from backup.
-        walletAppKit = new WalletAppKit(params, StorageDirectory.getStorageDirectory(), WALLET_PREFIX)
-        {
+        walletAppKit = new WalletAppKit(params, StorageDirectory.getStorageDirectory(), WALLET_PREFIX) {
             @Override
-            protected void onSetupCompleted()
-            {
+            protected void onSetupCompleted() {
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it
                 // their own money!
                 walletAppKit.wallet().allowSpendingUnconfirmedTransactions();
@@ -127,12 +126,9 @@ public class WalletFacade
         };
         // Now configure and start the appkit. This will take a second or two - we could show a temporary splash screen
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
-        if (params == RegTestParams.get())
-        {
+        if (params == RegTestParams.get()) {
             walletAppKit.connectToLocalHost();   // You should run a regtest mode bitcoind locally.
-        }
-        else if (params == MainNetParams.get())
-        {
+        } else if (params == MainNetParams.get()) {
             // Checkpoints are block headers that ship inside our app: for a new user, we pick the last header
             // in the checkpoints file and then download the rest from the network. It makes things much faster.
             // Checkpoint files are made using the BuildCheckpoints tool and usually we have to download the
@@ -142,68 +138,58 @@ public class WalletFacade
             // walletAppKit.useTor();
         }
         walletAppKit.setDownloadListener(new BlockChainDownloadListener())
-                    .setBlockingStartup(false)
-                    .restoreWalletFromSeed(null)
-                    .setUserAgent("BitSquare", "0.1");
+                .setBlockingStartup(false)
+                .restoreWalletFromSeed(null)
+                .setUserAgent("BitSquare", "0.1");
 
         walletAppKit.startAsync();
     }
 
-    private void initWallet()
-    {
+    private void initWallet() {
         wallet = walletAppKit.wallet();
 
         wallet.allowSpendingUnconfirmedTransactions();
         //walletAppKit.peerGroup().setMaxConnections(11);
 
-        if (params == RegTestParams.get())
-        {
+        if (params == RegTestParams.get()) {
             walletAppKit.peerGroup().setMinBroadcastConnections(1);
         }
        /* else
             walletAppKit.peerGroup().setMinBroadcastConnections(2);  */
 
-        walletEventListener = new WalletEventListener()
-        {
+        walletEventListener = new WalletEventListener() {
             @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance)
-            {
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
                 notifyBalanceListeners();
             }
 
             @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance)
-            {
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
                 notifyBalanceListeners();
             }
 
             @Override
-            public void onReorganize(Wallet wallet)
-            {
+            public void onReorganize(Wallet wallet) {
 
             }
 
             @Override
-            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
-            {
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
                 notifyConfidenceListeners(tx);
             }
 
             @Override
-            public void onWalletChanged(Wallet wallet)
-            {
+            public void onWalletChanged(Wallet wallet) {
 
             }
 
             @Override
-            public void onScriptsAdded(Wallet wallet, List<Script> scripts)
-            {
+            public void onScriptsAdded(Wallet wallet, List<Script> scripts) {
 
             }
 
             @Override
-            public void onKeysAdded(List<ECKey> keys)
-            {
+            public void onKeysAdded(List<ECKey> keys) {
 
             }
         };
@@ -211,17 +197,13 @@ public class WalletFacade
 
         Serializable serializable = persistence.read(this, "addressEntryList");
         List<AddressEntry> persistedAddressEntryList = (List<AddressEntry>) serializable;
-        if (serializable instanceof List)
-        {
-            for (AddressEntry persistedAddressEntry : persistedAddressEntryList)
-            {
+        if (serializable instanceof List) {
+            for (AddressEntry persistedAddressEntry : persistedAddressEntryList) {
                 persistedAddressEntry.setDeterministicKey((DeterministicKey) wallet.findKeyFromPubHash(persistedAddressEntry.getPubKeyHash()));
             }
             addressEntryList = persistedAddressEntryList;
             registrationAddressEntry = addressEntryList.get(0);
-        }
-        else
-        {
+        } else {
             lock.lock();
             DeterministicKey registrationKey = wallet.currentReceiveKey();
             registrationAddressEntry = new AddressEntry(registrationKey, params, AddressEntry.AddressContext.REGISTRATION_FEE);
@@ -231,14 +213,12 @@ public class WalletFacade
         }
     }
 
-    public void shutDown()
-    {
+    public void shutDown() {
         wallet.removeEventListener(walletEventListener);
         walletAppKit.stopAsync();
     }
 
-    public Wallet getWallet()
-    {
+    public Wallet getWallet() {
         return wallet;
     }
 
@@ -248,36 +228,30 @@ public class WalletFacade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @SuppressWarnings("UnusedReturnValue")
-    public DownloadListener addDownloadListener(DownloadListener listener)
-    {
+    public DownloadListener addDownloadListener(DownloadListener listener) {
         downloadListeners.add(listener);
         return listener;
     }
 
-    public void removeDownloadListener(DownloadListener listener)
-    {
+    public void removeDownloadListener(DownloadListener listener) {
         downloadListeners.remove(listener);
     }
 
-    public ConfidenceListener addConfidenceListener(ConfidenceListener listener)
-    {
+    public ConfidenceListener addConfidenceListener(ConfidenceListener listener) {
         confidenceListeners.add(listener);
         return listener;
     }
 
-    public void removeConfidenceListener(ConfidenceListener listener)
-    {
+    public void removeConfidenceListener(ConfidenceListener listener) {
         confidenceListeners.remove(listener);
     }
 
-    public BalanceListener addBalanceListener(BalanceListener listener)
-    {
+    public BalanceListener addBalanceListener(BalanceListener listener) {
         balanceListeners.add(listener);
         return listener;
     }
 
-    public void removeBalanceListener(BalanceListener listener)
-    {
+    public void removeBalanceListener(BalanceListener listener) {
         balanceListeners.remove(listener);
     }
 
@@ -286,26 +260,22 @@ public class WalletFacade
     // Get AddressInfo objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<AddressEntry> getAddressEntryList()
-    {
+    public List<AddressEntry> getAddressEntryList() {
         return ImmutableList.copyOf(addressEntryList);
     }
 
-    public AddressEntry getRegistrationAddressEntry()
-    {
+    public AddressEntry getRegistrationAddressEntry() {
         return registrationAddressEntry;
     }
 
-    public AddressEntry getArbitratorDepositAddressEntry()
-    {
+    public AddressEntry getArbitratorDepositAddressEntry() {
         if (arbitratorDepositAddressEntry == null)
             arbitratorDepositAddressEntry = getNewAddressEntry(AddressEntry.AddressContext.ARBITRATOR_DEPOSIT, null);
 
         return arbitratorDepositAddressEntry;
     }
 
-    public AddressEntry getAddressInfoByTradeID(String offerId)
-    {
+    public AddressEntry getAddressInfoByTradeID(String offerId) {
         Optional<AddressEntry> addressEntry = getAddressEntryList().stream().filter(e -> offerId.equals(e.getOfferId())).findFirst();
 
         if (addressEntry.isPresent())
@@ -319,8 +289,7 @@ public class WalletFacade
     // Create new AddressInfo objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private AddressEntry getNewAddressEntry(AddressEntry.AddressContext addressContext, String offerId)
-    {
+    private AddressEntry getNewAddressEntry(AddressEntry.AddressContext addressContext, String offerId) {
         lock.lock();
         wallet.getLock().lock();
         DeterministicKey key = wallet.freshReceiveKey();
@@ -332,8 +301,7 @@ public class WalletFacade
         return addressEntry;
     }
 
-    private Optional<AddressEntry> getAddressEntryByAddressString(String address)
-    {
+    private Optional<AddressEntry> getAddressEntryByAddressString(String address) {
         return getAddressEntryList().stream().filter(e -> address.equals(e.getAddressString())).findFirst();
     }
 
@@ -342,12 +310,10 @@ public class WalletFacade
     // TransactionConfidence
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TransactionConfidence getConfidenceForAddress(Address address)
-    {
+    public TransactionConfidence getConfidenceForAddress(Address address) {
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
         Set<Transaction> transactions = wallet.getTransactions(true);
-        if (transactions != null)
-        {
+        if (transactions != null) {
             transactionConfidenceList.addAll(transactions.stream().map(tx -> getTransactionConfidence(tx, address)).collect(Collectors.toList()));
             /*  same as:
              for (Transaction tx : transactions)
@@ -359,10 +325,8 @@ public class WalletFacade
         return getMostRecentConfidence(transactionConfidenceList);
     }
 
-    private void notifyConfidenceListeners(Transaction tx)
-    {
-        for (ConfidenceListener confidenceListener : confidenceListeners)
-        {
+    private void notifyConfidenceListeners(Transaction tx) {
+        for (ConfidenceListener confidenceListener : confidenceListeners) {
             List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
             transactionConfidenceList.add(getTransactionConfidence(tx, confidenceListener.getAddress()));
 
@@ -372,15 +336,13 @@ public class WalletFacade
     }
 
 
-    private TransactionConfidence getTransactionConfidence(Transaction tx, Address address)
-    {
+    private TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
         List<TransactionOutput> mergedOutputs = getOutputsWithConnectedOutputs(tx);
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
 
         mergedOutputs.stream().filter(e -> e.getScriptPubKey().isSentToAddress() || e.getScriptPubKey().isSentToP2SH()).forEach(transactionOutput -> {
             Address outputAddress = transactionOutput.getScriptPubKey().getToAddress(params);
-            if (address.equals(outputAddress))
-            {
+            if (address.equals(outputAddress)) {
                 transactionConfidenceList.add(tx.getConfidence());
             }
         });
@@ -402,18 +364,15 @@ public class WalletFacade
     }
 
 
-    private List<TransactionOutput> getOutputsWithConnectedOutputs(Transaction tx)
-    {
+    private List<TransactionOutput> getOutputsWithConnectedOutputs(Transaction tx) {
         List<TransactionOutput> transactionOutputs = tx.getOutputs();
         List<TransactionOutput> connectedOutputs = new ArrayList<>();
 
         // add all connected outputs from any inputs as well
         List<TransactionInput> transactionInputs = tx.getInputs();
-        for (TransactionInput transactionInput : transactionInputs)
-        {
+        for (TransactionInput transactionInput : transactionInputs) {
             TransactionOutput transactionOutput = transactionInput.getConnectedOutput();
-            if (transactionOutput != null)
-            {
+            if (transactionOutput != null) {
                 connectedOutputs.add(transactionOutput);
             }
         }
@@ -425,19 +384,15 @@ public class WalletFacade
     }
 
 
-    private TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList)
-    {
+    private TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList) {
         TransactionConfidence transactionConfidence = null;
-        for (TransactionConfidence confidence : transactionConfidenceList)
-        {
-            if (confidence != null)
-            {
+        for (TransactionConfidence confidence : transactionConfidenceList) {
+            if (confidence != null) {
                 if (transactionConfidence == null ||
                         confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.PENDING) ||
                         (confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING) &&
                                 transactionConfidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING) &&
-                                confidence.getDepthInBlocks() < transactionConfidence.getDepthInBlocks()))
-                {
+                                confidence.getDepthInBlocks() < transactionConfidence.getDepthInBlocks())) {
                     transactionConfidence = confidence;
                 }
             }
@@ -447,11 +402,9 @@ public class WalletFacade
     }
 
 
-    public boolean isRegistrationFeeConfirmed()
-    {
+    public boolean isRegistrationFeeConfirmed() {
         TransactionConfidence transactionConfidence = null;
-        if (getRegistrationAddressEntry() != null)
-        {
+        if (getRegistrationAddressEntry() != null) {
             transactionConfidence = getConfidenceForAddress(getRegistrationAddressEntry().getAddress());
         }
         return transactionConfidence != null && transactionConfidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING);
@@ -462,21 +415,16 @@ public class WalletFacade
     // Balance
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Coin getBalanceForAddress(Address address)
-    {
+    public Coin getBalanceForAddress(Address address) {
         return getBalance(wallet.calculateAllSpendCandidates(true), address);
     }
 
-    private Coin getBalance(LinkedList<TransactionOutput> transactionOutputs, Address address)
-    {
+    private Coin getBalance(LinkedList<TransactionOutput> transactionOutputs, Address address) {
         Coin balance = Coin.ZERO;
-        for (TransactionOutput transactionOutput : transactionOutputs)
-        {
-            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
-            {
+        for (TransactionOutput transactionOutput : transactionOutputs) {
+            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH()) {
                 Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-                if (addressOutput.equals(address))
-                {
+                if (addressOutput.equals(address)) {
                     balance = balance.add(transactionOutput.getValue());
                 }
             }
@@ -484,10 +432,8 @@ public class WalletFacade
         return balance;
     }
 
-    private void notifyBalanceListeners()
-    {
-        for (BalanceListener balanceListener : balanceListeners)
-        {
+    private void notifyBalanceListeners() {
+        for (BalanceListener balanceListener : balanceListeners) {
             Coin balance;
             if (balanceListener.getAddress() != null)
                 balance = getBalanceForAddress(balanceListener.getAddress());
@@ -498,28 +444,23 @@ public class WalletFacade
         }
     }
 
-    public Coin getWalletBalance()
-    {
+    public Coin getWalletBalance() {
         return wallet.getBalance(Wallet.BalanceType.ESTIMATED);
     }
 
-    Coin getRegistrationBalance()
-    {
+    Coin getRegistrationBalance() {
         return getBalanceForAddress(getRegistrationAddressEntry().getAddress());
     }
 
-    public Coin getArbitratorDepositBalance()
-    {
+    public Coin getArbitratorDepositBalance() {
         return getBalanceForAddress(getArbitratorDepositAddressEntry().getAddress());
     }
 
-    public boolean isRegistrationFeeBalanceNonZero()
-    {
+    public boolean isRegistrationFeeBalanceNonZero() {
         return getRegistrationBalance().compareTo(Coin.ZERO) > 0;
     }
 
-    public boolean isRegistrationFeeBalanceSufficient()
-    {
+    public boolean isRegistrationFeeBalanceSufficient() {
         return getRegistrationBalance().compareTo(FeePolicy.ACCOUNT_REGISTRATION_FEE) >= 0;
     }
 
@@ -538,8 +479,7 @@ public class WalletFacade
     }*/
 
     //TODO
-    public int getNumOfPeersSeenTx(String txID)
-    {
+    public int getNumOfPeersSeenTx(String txID) {
         // TODO check from blockchain
         // will be async
         return 3;
@@ -550,8 +490,7 @@ public class WalletFacade
     // Transactions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void payRegistrationFee(String stringifiedBankAccounts, FutureCallback<Transaction> callback) throws InsufficientMoneyException
-    {
+    public void payRegistrationFee(String stringifiedBankAccounts, FutureCallback<Transaction> callback) throws InsufficientMoneyException {
         log.debug("payRegistrationFee");
         log.trace("stringifiedBankAccounts " + stringifiedBankAccounts);
 
@@ -591,8 +530,7 @@ public class WalletFacade
         printInputs("payRegistrationFee", tx);
     }
 
-    public Transaction createOfferFeeTx(String offerId) throws InsufficientMoneyException
-    {
+    public Transaction createOfferFeeTx(String offerId) throws InsufficientMoneyException {
         log.trace("createOfferFeeTx");
         Transaction tx = new Transaction(params);
         Coin fee = FeePolicy.CREATE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
@@ -609,15 +547,13 @@ public class WalletFacade
         return tx;
     }
 
-    public void broadcastCreateOfferFeeTx(Transaction tx, FutureCallback<Transaction> callback) throws InsufficientMoneyException
-    {
+    public void broadcastCreateOfferFeeTx(Transaction tx, FutureCallback<Transaction> callback) throws InsufficientMoneyException {
         log.trace("broadcast tx");
         ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(tx);
         Futures.addCallback(future, callback);
     }
 
-    public String payTakeOfferFee(String offerId, FutureCallback<Transaction> callback) throws InsufficientMoneyException
-    {
+    public String payTakeOfferFee(String offerId, FutureCallback<Transaction> callback) throws InsufficientMoneyException {
         Transaction tx = new Transaction(params);
         Coin fee = FeePolicy.TAKE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
         log.trace("fee: " + fee.toFriendlyString());
@@ -647,8 +583,7 @@ public class WalletFacade
                             String withdrawToAddress,
                             String changeAddress,
                             Coin amount,
-                            FutureCallback<Transaction> callback) throws AddressFormatException, InsufficientMoneyException, IllegalArgumentException
-    {
+                            FutureCallback<Transaction> callback) throws AddressFormatException, InsufficientMoneyException, IllegalArgumentException {
         Transaction tx = new Transaction(params);
         tx.addOutput(amount.subtract(FeePolicy.TX_FEE), new Address(params, withdrawToAddress));
 
@@ -685,8 +620,7 @@ public class WalletFacade
                                                        String offererPubKey,
                                                        String takerPubKey,
                                                        String arbitratorPubKey,
-                                                       String tradeId) throws InsufficientMoneyException
-    {
+                                                       String tradeId) throws InsufficientMoneyException {
         log.debug("offererCreatesMSTxAndAddPayment");
         log.trace("inputs: ");
         log.trace("offererInputAmount=" + offererInputAmount.toFriendlyString());
@@ -747,8 +681,7 @@ public class WalletFacade
                                                 String takerPubKey,
                                                 String arbitratorPubKey,
                                                 String offerersPartialDepositTxAsHex,
-                                                String tradeId) throws InsufficientMoneyException
-    {
+                                                String tradeId) throws InsufficientMoneyException {
         log.debug("takerAddPaymentAndSignTx");
         log.trace("inputs: ");
         log.trace("takerInputAmount=" + takerInputAmount.toFriendlyString());
@@ -803,8 +736,7 @@ public class WalletFacade
 
         // Now we add the inputs and outputs from our temp tx and change the multiSig amount to the correct value
         tx.addInput(tempTx.getInput(0));
-        if (tempTx.getOutputs().size() == 2)
-        {
+        if (tempTx.getOutputs().size() == 2) {
             tx.addOutput(tempTx.getOutput(1));
         }
 
@@ -814,8 +746,7 @@ public class WalletFacade
 
         // Now we sign our input
         TransactionInput input = tx.getInput(1);
-        if (input == null || input.getConnectedOutput() == null)
-        {
+        if (input == null || input.getConnectedOutput() == null) {
             log.error("input or input.getConnectedOutput() is null: " + input);
         }
 
@@ -824,16 +755,11 @@ public class WalletFacade
         Sha256Hash hash = tx.hashForSignature(1, scriptPubKey, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature ecSig = sigKey.sign(hash);
         TransactionSignature txSig = new TransactionSignature(ecSig, Transaction.SigHash.ALL, false);
-        if (scriptPubKey.isSentToRawPubKey())
-        {
+        if (scriptPubKey.isSentToRawPubKey()) {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig));
-        }
-        else if (scriptPubKey.isSentToAddress())
-        {
+        } else if (scriptPubKey.isSentToAddress()) {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
-        }
-        else
-        {
+        } else {
             throw new ScriptException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
         }
 
@@ -872,8 +798,7 @@ public class WalletFacade
                                         String takersSignedScriptSigAsHex,
                                         long offererTxOutIndex,
                                         long takerTxOutIndex,
-                                        FutureCallback<Transaction> callback)
-    {
+                                        FutureCallback<Transaction> callback) {
         log.debug("offererSignAndPublishTx");
         log.trace("inputs: ");
         log.trace("offerersFirstTxAsHex=" + offerersFirstTxAsHex);
@@ -916,12 +841,10 @@ public class WalletFacade
         //TODO onResult non change output cases
         // add outputs from takers tx, they are already correct
         tx.addOutput(takersSignedTx.getOutput(0));
-        if (takersSignedTx.getOutputs().size() > 1)
-        {
+        if (takersSignedTx.getOutputs().size() > 1) {
             tx.addOutput(takersSignedTx.getOutput(1));
         }
-        if (takersSignedTx.getOutputs().size() == 3)
-        {
+        if (takersSignedTx.getOutputs().size() == 3) {
             tx.addOutput(takersSignedTx.getOutput(2));
         }
 
@@ -931,8 +854,7 @@ public class WalletFacade
 
         // sign the input
         TransactionInput input = tx.getInput(0);
-        if (input == null || input.getConnectedOutput() == null)
-        {
+        if (input == null || input.getConnectedOutput() == null) {
             log.error("input or input.getConnectedOutput() is null: " + input);
         }
 
@@ -941,16 +863,11 @@ public class WalletFacade
         Sha256Hash hash = tx.hashForSignature(0, scriptPubKey, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature ecSig = sigKey.sign(hash);
         TransactionSignature txSig = new TransactionSignature(ecSig, Transaction.SigHash.ALL, false);
-        if (scriptPubKey.isSentToRawPubKey())
-        {
+        if (scriptPubKey.isSentToRawPubKey()) {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig));
-        }
-        else if (scriptPubKey.isSentToAddress())
-        {
+        } else if (scriptPubKey.isSentToAddress()) {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
-        }
-        else
-        {
+        } else {
             throw new ScriptException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
         }
 
@@ -989,8 +906,7 @@ public class WalletFacade
     }
 
     // 4 step deposit tx: Offerer send deposit tx to taker
-    public String takerCommitDepositTx(String depositTxAsHex)
-    {
+    public String takerCommitDepositTx(String depositTxAsHex) {
         log.trace("takerCommitDepositTx");
         log.trace("inputs: ");
         log.trace("depositTxID=" + depositTxAsHex);
@@ -999,13 +915,11 @@ public class WalletFacade
         // boolean isAlreadyInWallet = wallet.maybeCommitTx(depositTx);
         //log.trace("isAlreadyInWallet=" + isAlreadyInWallet);
 
-        try
-        {
+        try {
             // Manually add the multisigContract to the wallet, overriding the isRelevant checks so we can track
             // it and check for double-spends later
             wallet.receivePending(depositTx, null, true);
-        } catch (VerificationException e)
-        {
+        } catch (VerificationException e) {
             throw new RuntimeException(e); // Cannot happen, we already called multisigContract.verify()
         }
 
@@ -1019,8 +933,7 @@ public class WalletFacade
                                                                              Coin offererPaybackAmount,
                                                                              Coin takerPaybackAmount,
                                                                              String takerAddress,
-                                                                             String tradeID) throws AddressFormatException
-    {
+                                                                             String tradeID) throws AddressFormatException {
         log.debug("offererCreatesAndSignsPayoutTx");
         log.trace("inputs: ");
         log.trace("depositTxID=" + depositTxID);
@@ -1057,8 +970,7 @@ public class WalletFacade
                                      Coin takerPaybackAmount,
                                      String offererAddress,
                                      String tradeID,
-                                     FutureCallback<Transaction> callback) throws AddressFormatException
-    {
+                                     FutureCallback<Transaction> callback) throws AddressFormatException {
         log.debug("takerSignsAndSendsTx");
         log.trace("inputs: ");
         log.trace("depositTxAsHex=" + depositTxAsHex);
@@ -1110,22 +1022,18 @@ public class WalletFacade
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void saveAddressInfoList()
-    {
+    private void saveAddressInfoList() {
         // use wallet extension?
         lock.lock();
-        try
-        {
+        try {
             persistence.write(this, "addressEntryList", addressEntryList);
-        } finally
-        {
+        } finally {
             lock.unlock();
         }
     }
 
     //TODO
-    private Script getMultiSigScript(String offererPubKey, String takerPubKey, String arbitratorPubKey)
-    {
+    private Script getMultiSigScript(String offererPubKey, String takerPubKey, String arbitratorPubKey) {
         ECKey offererKey = ECKey.fromPublicOnly(Utils.parseAsHexOrBase58(offererPubKey));
         ECKey takerKey = ECKey.fromPublicOnly(Utils.parseAsHexOrBase58(takerPubKey));
         ECKey arbitratorKey = ECKey.fromPublicOnly(Utils.parseAsHexOrBase58(arbitratorPubKey));
@@ -1135,8 +1043,7 @@ public class WalletFacade
     }
 
 
-    private Transaction createPayoutTx(String depositTxAsHex, Coin offererPaybackAmount, Coin takerPaybackAmount, String offererAddress, String takerAddress) throws AddressFormatException
-    {
+    private Transaction createPayoutTx(String depositTxAsHex, Coin offererPaybackAmount, Coin takerPaybackAmount, String offererAddress, String takerAddress) throws AddressFormatException {
         log.trace("createPayoutTx");
         log.trace("inputs: ");
         log.trace("depositTxAsHex=" + depositTxAsHex);
@@ -1155,16 +1062,11 @@ public class WalletFacade
         return tx;
     }
 
-    public static void printInputs(String tracePrefix, Transaction tx)
-    {
-        for (TransactionInput input : tx.getInputs())
-        {
-            if (input.getConnectedOutput() != null)
-            {
+    public static void printInputs(String tracePrefix, Transaction tx) {
+        for (TransactionInput input : tx.getInputs()) {
+            if (input.getConnectedOutput() != null) {
                 log.trace(tracePrefix + " input value : " + input.getConnectedOutput().getValue().toFriendlyString());
-            }
-            else
-            {
+            } else {
                 log.trace(tracePrefix + ": " + "Transaction already has inputs but we don't have the connected outputs, so we don't know the value.");
             }
         }
@@ -1175,46 +1077,37 @@ public class WalletFacade
     // Inner classes
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static interface StartupListener
-    {
+    public static interface StartupListener {
         void completed();
     }
 
-    public static interface DownloadListener
-    {
+    public static interface DownloadListener {
         void progress(double percent);
 
         void downloadComplete();
     }
 
-    private class BlockChainDownloadListener extends com.google.bitcoin.core.DownloadListener
-    {
+    private class BlockChainDownloadListener extends com.google.bitcoin.core.DownloadListener {
         @Override
-        protected void progress(double percent, int blocksSoFar, Date date)
-        {
+        protected void progress(double percent, int blocksSoFar, Date date) {
             super.progress(percent, blocksSoFar, date);
             Platform.runLater(() -> onProgressInUserThread(percent));
         }
 
         @Override
-        protected void doneDownload()
-        {
+        protected void doneDownload() {
             super.doneDownload();
             Platform.runLater(this::onDoneDownloadInUserThread);
         }
 
-        private void onProgressInUserThread(double percent)
-        {
-            for (DownloadListener downloadListener : downloadListeners)
-            {
+        private void onProgressInUserThread(double percent) {
+            for (DownloadListener downloadListener : downloadListeners) {
                 downloadListener.progress(percent);
             }
         }
 
-        private void onDoneDownloadInUserThread()
-        {
-            for (DownloadListener downloadListener : downloadListeners)
-            {
+        private void onDoneDownloadInUserThread() {
+            for (DownloadListener downloadListener : downloadListeners) {
                 downloadListener.downloadComplete();
             }
         }
