@@ -1,22 +1,39 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.gui.funds.withdrawal;
 
-import com.google.bitcoin.core.Address;
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.TransactionConfidence;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+
+import com.google.bitcoin.core.Address;
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.TransactionConfidence;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class WithdrawalListItem
-{
+public class WithdrawalListItem {
     private final StringProperty addressString = new SimpleStringProperty();
     private final BalanceListener balanceListener;
 
@@ -33,8 +50,7 @@ public class WithdrawalListItem
 
     private Coin balance;
 
-    public WithdrawalListItem(AddressEntry addressEntry, WalletFacade walletFacade)
-    {
+    public WithdrawalListItem(AddressEntry addressEntry, WalletFacade walletFacade) {
         this.addressEntry = addressEntry;
         this.walletFacade = walletFacade;
         this.addressString.set(getAddress().toString());
@@ -47,11 +63,9 @@ public class WithdrawalListItem
         progressIndicator.setPrefSize(24, 24);
         Tooltip.install(progressIndicator, tooltip);
 
-        confidenceListener = walletFacade.addConfidenceListener(new ConfidenceListener(getAddress())
-        {
+        confidenceListener = walletFacade.addConfidenceListener(new ConfidenceListener(getAddress()) {
             @Override
-            public void onTransactionConfidenceChanged(TransactionConfidence confidence)
-            {
+            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                 updateConfidence(confidence);
             }
         });
@@ -61,11 +75,9 @@ public class WithdrawalListItem
 
         // balance
         balanceLabel = new Label();
-        balanceListener = walletFacade.addBalanceListener(new BalanceListener(getAddress())
-        {
+        balanceListener = walletFacade.addBalanceListener(new BalanceListener(getAddress()) {
             @Override
-            public void onBalanceChanged(Coin balance)
-            {
+            public void onBalanceChanged(Coin balance) {
                 updateBalance(balance);
             }
         });
@@ -73,29 +85,24 @@ public class WithdrawalListItem
         updateBalance(walletFacade.getBalanceForAddress(getAddress()));
     }
 
-    public void cleanup()
-    {
+    public void cleanup() {
         walletFacade.removeConfidenceListener(confidenceListener);
         walletFacade.removeBalanceListener(balanceListener);
     }
 
-    private void updateBalance(Coin balance)
-    {
+    private void updateBalance(Coin balance) {
         this.balance = balance;
-        if (balance != null)
-        {
+        if (balance != null) {
             //TODO use BitSquareFormatter
             balanceLabel.setText(balance.toFriendlyString());
         }
     }
 
-    private void updateConfidence(TransactionConfidence confidence)
-    {
-        if (confidence != null)
-        {
-            //log.debug("Type numBroadcastPeers getDepthInBlocks " + confidence.getConfidenceType() + " / " + confidence.numBroadcastPeers() + " / " + confidence.getDepthInBlocks());
-            switch (confidence.getConfidenceType())
-            {
+    private void updateConfidence(TransactionConfidence confidence) {
+        if (confidence != null) {
+            //log.debug("Type numBroadcastPeers getDepthInBlocks " + confidence.getConfidenceType() + " / " +
+            // confidence.numBroadcastPeers() + " / " + confidence.getDepthInBlocks());
+            switch (confidence.getConfidenceType()) {
                 case UNKNOWN:
                     tooltip.setText("Unknown transaction status");
                     progressIndicator.setProgress(0);
@@ -117,10 +124,8 @@ public class WithdrawalListItem
     }
 
 
-    public final String getLabel()
-    {
-        switch (addressEntry.getAddressContext())
-        {
+    public final String getLabel() {
+        switch (addressEntry.getAddressContext()) {
             case REGISTRATION_FEE:
                 return "Registration fee";
             case TRADE:
@@ -133,37 +138,31 @@ public class WithdrawalListItem
     }
 
 
-    public final StringProperty addressStringProperty()
-    {
+    public final StringProperty addressStringProperty() {
         return this.addressString;
     }
 
-    Address getAddress()
-    {
+    Address getAddress() {
         return addressEntry.getAddress();
     }
 
 
-    public AddressEntry getAddressEntry()
-    {
+    public AddressEntry getAddressEntry() {
         return addressEntry;
     }
 
 
-    public ConfidenceProgressIndicator getProgressIndicator()
-    {
+    public ConfidenceProgressIndicator getProgressIndicator() {
         return progressIndicator;
     }
 
 
-    public Label getBalanceLabel()
-    {
+    public Label getBalanceLabel() {
         return balanceLabel;
     }
 
 
-    public Coin getBalance()
-    {
+    public Coin getBalance() {
         return balance;
     }
 }

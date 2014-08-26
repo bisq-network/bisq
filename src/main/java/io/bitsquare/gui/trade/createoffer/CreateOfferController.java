@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.gui.trade.createoffer;
 
 import io.bitsquare.BitSquare;
@@ -22,27 +39,27 @@ import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
+
 import java.net.URL;
+
 import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.UUID;
+
+import javax.inject.Inject;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Region;
-import javax.inject.Inject;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreateOfferController extends CachedViewController
-{
+public class CreateOfferController extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferController.class);
 
 
@@ -59,7 +76,9 @@ public class CreateOfferController extends CachedViewController
 
     @FXML private ValidatingTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
     @FXML private Button placeOfferButton, closeButton;
-    @FXML private TextField totalsTextField, collateralTextField, bankAccountTypeTextField, bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField, acceptedLanguagesTextField,
+    @FXML private TextField totalsTextField, collateralTextField, bankAccountTypeTextField,
+            bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField,
+            acceptedLanguagesTextField,
             feeLabel, transactionIdTextField;
     @FXML private ConfidenceProgressIndicator progressIndicator;
     @FXML private AddressTextField addressTextField;
@@ -71,8 +90,7 @@ public class CreateOfferController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    CreateOfferController(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user)
-    {
+    CreateOfferController(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user) {
         this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
 
@@ -80,14 +98,14 @@ public class CreateOfferController extends CachedViewController
 
         viewModel.collateralLabel.set("Collateral (" + BitSquareFormatter.formatCollateralPercent(collateral) + "):");
         BankAccount bankAccount = user.getCurrentBankAccount();
-        if (bankAccount != null)
-        {
+        if (bankAccount != null) {
             viewModel.bankAccountType.set(Localisation.get(bankAccount.getBankAccountType().toString()));
             viewModel.bankAccountCurrency.set(bankAccount.getCurrency().getCurrencyCode());
             viewModel.bankAccountCounty.set(bankAccount.getCountry().getName());
         }
         viewModel.acceptedCountries.set(BitSquareFormatter.countryLocalesToString(settings.getAcceptedCountries()));
-        viewModel.acceptedLanguages.set(BitSquareFormatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
+        viewModel.acceptedLanguages.set(
+                BitSquareFormatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
         viewModel.feeLabel.set(BitSquareFormatter.formatCoinWithCode(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
 
         offerId = UUID.randomUUID().toString();
@@ -99,16 +117,14 @@ public class CreateOfferController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb)
-    {
+    public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
         setupBindings();
         setupValidation();
 
         //TODO just for dev testing
-        if (BitSquare.fillFormsWithDummyData)
-        {
+        if (BitSquare.fillFormsWithDummyData) {
             amountTextField.setText("1.0");
             minAmountTextField.setText("0.1");
             priceTextField.setText("" + (int) (499 - new Random().nextDouble() * 1000 / 100));
@@ -116,8 +132,7 @@ public class CreateOfferController extends CachedViewController
 
 
         //TODO
-        if (walletFacade.getWallet() != null)
-        {
+        if (walletFacade.getWallet() != null) {
             addressEntry = walletFacade.getAddressInfoByTradeID(offerId);
             addressTextField.setAddress(addressEntry.getAddress().toString());
 
@@ -127,15 +142,13 @@ public class CreateOfferController extends CachedViewController
     }
 
     @Override
-    public void deactivate()
-    {
+    public void deactivate() {
         super.deactivate();
         ((TradeController) parentController).onCreateOfferViewRemoved();
     }
 
     @Override
-    public void activate()
-    {
+    public void activate() {
         super.activate();
     }
 
@@ -144,8 +157,7 @@ public class CreateOfferController extends CachedViewController
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setOrderBookFilter(OrderBookFilter orderBookFilter)
-    {
+    public void setOrderBookFilter(OrderBookFilter orderBookFilter) {
         direction = orderBookFilter.getDirection();
 
         viewModel.directionLabel.set(BitSquareFormatter.formatDirection(direction, false) + ":");
@@ -159,8 +171,7 @@ public class CreateOfferController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
-    public void onPlaceOffer()
-    {
+    public void onPlaceOffer() {
         amountTextField.reValidate();
         minAmountTextField.reValidate();
         volumeTextField.reValidate();
@@ -168,29 +179,28 @@ public class CreateOfferController extends CachedViewController
 
         //balanceTextField.getBalance()
 
-        if (amountTextField.getIsValid() && minAmountTextField.getIsValid() && volumeTextField.getIsValid() && amountTextField.getIsValid())
-        {
+        if (amountTextField.getIsValid() && minAmountTextField.getIsValid() && volumeTextField.getIsValid() &&
+                amountTextField.getIsValid()) {
             viewModel.isPlaceOfferButtonDisabled.set(true);
 
             tradeManager.requestPlaceOffer(offerId,
-                                           direction,
-                                           BitSquareFormatter.parseToDouble(viewModel.price.get()),
-                                           BitSquareFormatter.parseToCoin(viewModel.amount.get()),
-                                           BitSquareFormatter.parseToCoin(viewModel.minAmount.get()),
-                                           (transaction) -> {
-                                               viewModel.isOfferPlacedScreen.set(true);
-                                               viewModel.transactionId.set(transaction.getHashAsString());
-                                           },
-                                           errorMessage -> {
-                                               Popups.openErrorPopup("An error occurred", errorMessage);
-                                               viewModel.isPlaceOfferButtonDisabled.set(false);
-                                           });
+                    direction,
+                    BitSquareFormatter.parseToDouble(viewModel.price.get()),
+                    BitSquareFormatter.parseToCoin(viewModel.amount.get()),
+                    BitSquareFormatter.parseToCoin(viewModel.minAmount.get()),
+                    (transaction) -> {
+                        viewModel.isOfferPlacedScreen.set(true);
+                        viewModel.transactionId.set(transaction.getHashAsString());
+                    },
+                    errorMessage -> {
+                        Popups.openErrorPopup("An error occurred", errorMessage);
+                        viewModel.isPlaceOfferButtonDisabled.set(false);
+                    });
         }
     }
 
     @FXML
-    public void onClose()
-    {
+    public void onClose() {
         TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
     }
@@ -200,8 +210,7 @@ public class CreateOfferController extends CachedViewController
     // Private Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupBindings()
-    {
+    private void setupBindings() {
         // TODO check that entered decimal places are nto exceeded supported
 
         viewModel.amount.addListener((ov, oldValue, newValue) -> {
@@ -209,7 +218,8 @@ public class CreateOfferController extends CachedViewController
             double price = BitSquareFormatter.parseToDouble(viewModel.price.get());
             double volume = amount * price;
             viewModel.volume.set(BitSquareFormatter.formatVolume(volume));
-            viewModel.totals.set(BitSquareFormatter.formatTotalsAsBtc(viewModel.amount.get(), collateral, FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+            viewModel.totals.set(BitSquareFormatter.formatTotalsAsBtc(
+                    viewModel.amount.get(), collateral, FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
             viewModel.collateral.set(BitSquareFormatter.formatCollateralAsBtc(viewModel.amount.get(), collateral));
         });
 
@@ -223,21 +233,21 @@ public class CreateOfferController extends CachedViewController
         viewModel.volume.addListener((ov, oldValue, newValue) -> {
             double volume = BitSquareFormatter.parseToDouble(newValue);
             double price = BitSquareFormatter.parseToDouble(viewModel.price.get());
-            if (price != 0)
-            {
+            if (price != 0) {
                 double amount = volume / price;
                 viewModel.amount.set(BitSquareFormatter.formatVolume(amount));
-                viewModel.totals.set(BitSquareFormatter.formatTotalsAsBtc(viewModel.amount.get(), collateral, FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+                viewModel.totals.set(BitSquareFormatter.formatTotalsAsBtc(viewModel.amount.get(), collateral,
+                        FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
                 viewModel.collateral.set(BitSquareFormatter.formatCollateralAsBtc(viewModel.amount.get(), collateral));
             }
         });
 
         volumeTextField.focusedProperty().addListener((observableValue, oldValue, newValue) -> {
-            if (oldValue && !newValue)
-            {
-                if (!volumeTextField.getText().equals(viewModel.volume.get()))
-                {
-                    Popups.openWarningPopup("Warning", "The total volume you have entered leads to invalid fractional Bitcoin amounts.\nThe amount has been adjusted and a new total volume be calculated from it.");
+            if (oldValue && !newValue) {
+                if (!volumeTextField.getText().equals(viewModel.volume.get())) {
+                    Popups.openWarningPopup("Warning", "The total volume you have entered leads to invalid fractional" +
+                            " Bitcoin amounts.\nThe amount has been adjusted and a new total volume be calculated " +
+                            "from it.");
                     volumeTextField.setText(viewModel.volume.get());
                 }
             }
@@ -273,13 +283,12 @@ public class CreateOfferController extends CachedViewController
        */
 
         placeOfferButton.disableProperty().bind(amountTextField.isValidProperty()
-                                                               .and(minAmountTextField.isValidProperty())
-                                                               .and(volumeTextField.isValidProperty())
-                                                               .and(priceTextField.isValidProperty()).not());
+                .and(minAmountTextField.isValidProperty())
+                .and(volumeTextField.isValidProperty())
+                .and(priceTextField.isValidProperty()).not());
     }
 
-    private void setupValidation()
-    {
+    private void setupValidation() {
         BtcValidator amountValidator = new BtcValidator();
         amountTextField.setNumberValidator(amountValidator);
         amountTextField.setErrorPopupLayoutReference((Region) amountTextField.getParent());
@@ -295,11 +304,11 @@ public class CreateOfferController extends CachedViewController
         minAmountTextField.setNumberValidator(minAmountValidator);
 
         ValidationHelper.setupMinAmountInRangeOfAmountValidation(amountTextField,
-                                                                 minAmountTextField,
-                                                                 viewModel.amount,
-                                                                 viewModel.minAmount,
-                                                                 amountValidator,
-                                                                 minAmountValidator);
+                minAmountTextField,
+                viewModel.amount,
+                viewModel.minAmount,
+                amountValidator,
+                minAmountValidator);
 
         amountTextField.focusedProperty().addListener((ov, oldValue, newValue) -> {
             // only on focus out and ignore focus loss from window
@@ -322,8 +331,7 @@ public class CreateOfferController extends CachedViewController
 /**
  * Represents the visible state of the view
  */
-class ViewModel
-{
+class ViewModel {
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty minAmount = new SimpleStringProperty();
     final StringProperty price = new SimpleStringProperty();

@@ -1,6 +1,22 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.trade.protocol.createoffer;
 
-import com.google.bitcoin.core.Transaction;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.storage.Persistence;
@@ -11,8 +27,13 @@ import io.bitsquare.trade.protocol.createoffer.tasks.BroadCastOfferFeeTx;
 import io.bitsquare.trade.protocol.createoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.createoffer.tasks.PublishOfferToDHT;
 import io.bitsquare.trade.protocol.createoffer.tasks.ValidateOffer;
+
+import com.google.bitcoin.core.Transaction;
+
 import java.io.Serializable;
+
 import javax.annotation.concurrent.Immutable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,10 +44,8 @@ import org.slf4j.LoggerFactory;
 //TODO recover policy, timer
 
 @Immutable
-public class CreateOfferCoordinator
-{
-    public enum State
-    {
+public class CreateOfferCoordinator {
+    public enum State {
         INITED,
         STARTED,
         VALIDATED,
@@ -38,30 +57,27 @@ public class CreateOfferCoordinator
     /**
      * The model is not immutable but only exposed to the CreateOfferCoordinator
      */
-    static class Model implements Serializable
-    {
+    static class Model implements Serializable {
         private static final long serialVersionUID = 3027720554200858916L;
 
         private final Persistence persistence;
         private State state;
-        //TODO use tx id 
+        //TODO use tx id
         Transaction transaction;
 
-        Model(Persistence persistence)
-        {
+        Model(Persistence persistence) {
             this.persistence = persistence;
         }
 
-        public State getState()
-        {
+        public State getState() {
             return state;
         }
 
-        public void setState(State state)
-        {
+        public void setState(State state) {
             this.state = state;
 
-            //TODO will have performance issues, but could be handled inside the persistence solution (queue up save requests and exec. them on dedicated thread)
+            //TODO will have performance issues, but could be handled inside the persistence solution (queue up save
+            // requests and exec. them on dedicated thread)
             persistence.write(this, "state", state);
         }
     }
@@ -75,14 +91,15 @@ public class CreateOfferCoordinator
     private final FaultHandler faultHandler;
     private final Model model;
 
-    public CreateOfferCoordinator(Persistence persistence, Offer offer, WalletFacade walletFacade, MessageFacade messageFacade, TransactionResultHandler resultHandler, FaultHandler faultHandler)
-    {
+    public CreateOfferCoordinator(Persistence persistence, Offer offer, WalletFacade walletFacade,
+                                  MessageFacade messageFacade, TransactionResultHandler resultHandler,
+                                  FaultHandler faultHandler) {
         this(offer, walletFacade, messageFacade, resultHandler, faultHandler, new Model(persistence));
     }
 
     // for recovery from model
-    public CreateOfferCoordinator(Offer offer, WalletFacade walletFacade, MessageFacade messageFacade, TransactionResultHandler resultHandler, FaultHandler faultHandler, Model model)
-    {
+    public CreateOfferCoordinator(Offer offer, WalletFacade walletFacade, MessageFacade messageFacade,
+                                  TransactionResultHandler resultHandler, FaultHandler faultHandler, Model model) {
         this.offer = offer;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
@@ -93,53 +110,45 @@ public class CreateOfferCoordinator
         model.setState(State.INITED);
     }
 
-    public void start()
-    {
+    public void start() {
         model.setState(State.STARTED);
         ValidateOffer.run(this::onOfferValidated, this::onFailed, offer);
     }
 
-    private void onOfferValidated()
-    {
+    private void onOfferValidated() {
         model.setState(State.VALIDATED);
         CreateOfferFeeTx.run(this::onOfferFeeTxCreated, this::onFailed, walletFacade, offer.getId());
     }
 
-    private void onOfferFeeTxCreated(Transaction transaction)
-    {
+    private void onOfferFeeTxCreated(Transaction transaction) {
         model.transaction = transaction;
         model.setState(State.OFFER_FEE_TX_CREATED);
         offer.setOfferFeePaymentTxID(transaction.getHashAsString());
         BroadCastOfferFeeTx.run(this::onOfferFeeTxBroadCasted, this::onFailed, walletFacade, transaction);
     }
 
-    private void onOfferFeeTxBroadCasted()
-    {
+    private void onOfferFeeTxBroadCasted() {
         model.setState(State.OFFER_FEE_BROAD_CASTED);
         PublishOfferToDHT.run(this::onOfferPublishedToDHT, this::onFailed, messageFacade, offer);
     }
 
-    private void onOfferPublishedToDHT()
-    {
+    private void onOfferPublishedToDHT() {
         model.setState(State.OFFER_PUBLISHED_TO_DHT);
         resultHandler.onResult(model.transaction);
     }
 
-    private void onFailed(String message, Throwable throwable)
-    {
+    private void onFailed(String message, Throwable throwable) {
         //TODO recover policy, timer
         faultHandler.onFault(message, throwable);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Recovery 
+    // Recovery
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void recover()
-    {
-        switch (model.getState())
-        {
+    public void recover() {
+        switch (model.getState()) {
             case INITED:
             case STARTED:
             case VALIDATED:
@@ -148,7 +157,7 @@ public class CreateOfferCoordinator
                 start();
                 break;
             case OFFER_FEE_BROAD_CASTED:
-                // actually the only replay case here, tx publish was successful but storage to dht failed. 
+                // actually the only replay case here, tx publish was successful but storage to dht failed.
                 // Republish the offer to DHT
                 PublishOfferToDHT.run(this::onOfferPublishedToDHT, this::onFailed, messageFacade, offer);
                 break;

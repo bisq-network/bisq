@@ -1,8 +1,22 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare;
 
-import com.google.common.base.Throwables;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.di.GuiceFXMLLoader;
@@ -15,22 +29,27 @@ import io.bitsquare.storage.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;
 import io.bitsquare.util.StorageDirectory;
+
+import com.google.common.base.Throwables;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import java.io.File;
 import java.io.IOException;
+
 import java.util.Arrays;
+
 import javafx.application.Application;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
+import javafx.scene.*;
+import javafx.scene.input.*;
 import javafx.stage.Stage;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class BitSquare extends Application
-{
+public class BitSquare extends Application {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
 
     public static boolean fillFormsWithDummyData = true;
@@ -40,8 +59,7 @@ public class BitSquare extends Application
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         Profiler.init();
         Profiler.printMsgWithTime("BitSquare.main called with args " + Arrays.asList(args).toString());
         if (args != null && args.length > 0) APP_NAME = args[0];
@@ -49,25 +67,24 @@ public class BitSquare extends Application
         launch(args);
     }
 
-    public static Stage getPrimaryStage()
-    {
+    public static Stage getPrimaryStage() {
         return primaryStage;
     }
 
-    public static String getAppName()
-    {
+    public static String getAppName() {
         return APP_NAME;
     }
 
     @Override
-    public void start(Stage primaryStage) throws IOException
-    {
+    public void start(Stage primaryStage) throws IOException {
         Profiler.printMsgWithTime("BitSquare.start called");
         BitSquare.primaryStage = primaryStage;
 
-        Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
+        Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions
+                (Throwables.getRootCause(throwable)));
 
-        StorageDirectory.setStorageDirectory(new File(StorageDirectory.getApplicationDirectory().getCanonicalPath() + "/data"));
+        StorageDirectory.setStorageDirectory(
+                new File(StorageDirectory.getApplicationDirectory().getCanonicalPath() + "/data"));
 
         // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
         AWTSystemTray.createSystemTray(primaryStage);
@@ -94,7 +111,8 @@ public class BitSquare extends Application
 
         GuiceFXMLLoader.setInjector(injector);
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), false);
+        final GuiceFXMLLoader loader =
+                new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), false);
         final Parent view = loader.load();
         final Scene scene = new Scene(view, 1000, 750);
         scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm());
@@ -110,8 +128,7 @@ public class BitSquare extends Application
         Profiler.printMsgWithTime("BitSquare: start finished");
     }
 
-    private void setupCloseHandlers(Stage primaryStage, Scene scene)
-    {
+    private void setupCloseHandlers(Stage primaryStage, Scene scene) {
         primaryStage.setOnCloseRequest(e -> AWTSystemTray.setStageHidden());
 
         KeyCodeCombination keyCodeCombination = new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN);
@@ -121,8 +138,7 @@ public class BitSquare extends Application
     }
 
     @Override
-    public void stop() throws Exception
-    {
+    public void stop() throws Exception {
         walletFacade.shutDown();
         messageFacade.shutDown();
 

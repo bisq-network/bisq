@@ -1,14 +1,23 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.di;
 
 
-import com.google.bitcoin.core.NetworkParameters;
-import com.google.bitcoin.params.MainNetParams;
-import com.google.bitcoin.params.RegTestParams;
-import com.google.bitcoin.params.TestNet3Params;
-import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
@@ -23,14 +32,23 @@ import io.bitsquare.storage.Persistence;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.user.User;
+
+import com.google.bitcoin.core.NetworkParameters;
+import com.google.bitcoin.params.MainNetParams;
+import com.google.bitcoin.params.RegTestParams;
+import com.google.bitcoin.params.TestNet3Params;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
+
 import javax.inject.Inject;
 
-public class BitSquareModule extends AbstractModule
-{
+public class BitSquareModule extends AbstractModule {
 
     @Override
-    protected void configure()
-    {
+    protected void configure() {
         bind(User.class).asEagerSingleton();
         bind(OrderBook.class).asEagerSingleton();
         bind(Persistence.class).asEagerSingleton();
@@ -58,28 +76,26 @@ public class BitSquareModule extends AbstractModule
 
         // bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(new Boolean(true));
         bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(new Boolean(false));
-        bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(Names.named("defaultSeedNode")).toInstance(SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST);
-        // bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(Names.named("defaultSeedNode")).toInstance(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN);
+        bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(
+                Names.named("defaultSeedNode")).toInstance(SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST);
+        // bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(Names.named("defaultSeedNode"))
+        // .toInstance(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN);
     }
 }
 
-class NetworkParametersProvider implements Provider<NetworkParameters>
-{
+class NetworkParametersProvider implements Provider<NetworkParameters> {
     private final String networkType;
 
     @Inject
-    public NetworkParametersProvider(@Named("networkType") String networkType)
-    {
+    public NetworkParametersProvider(@Named("networkType") String networkType) {
         this.networkType = networkType;
     }
 
 
-    public NetworkParameters get()
-    {
+    public NetworkParameters get() {
         NetworkParameters result = null;
 
-        switch (networkType)
-        {
+        switch (networkType) {
             case WalletFacade.MAIN_NET:
                 result = MainNetParams.get();
                 break;

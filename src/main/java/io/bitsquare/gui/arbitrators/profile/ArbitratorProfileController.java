@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.gui.arbitrators.profile;
 
 import io.bitsquare.gui.CachedViewController;
@@ -7,16 +24,17 @@ import io.bitsquare.gui.util.BitSquareFormatter;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Persistence;
 import io.bitsquare.user.Arbitrator;
+
 import java.net.URL;
+
 import java.util.ResourceBundle;
-import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+
 import javax.inject.Inject;
 
-public class ArbitratorProfileController extends CachedViewController
-{
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+
+public class ArbitratorProfileController extends CachedViewController {
 
     private final Settings settings;
 
@@ -25,7 +43,8 @@ public class ArbitratorProfileController extends CachedViewController
 
 
     @FXML private Label nameLabel;
-    @FXML private TextField nameTextField, languagesTextField, reputationTextField, maxTradeVolumeTextField, passiveServiceFeeTextField, arbitrationFeeTextField, methodsTextField,
+    @FXML private TextField nameTextField, languagesTextField, reputationTextField, maxTradeVolumeTextField,
+            passiveServiceFeeTextField, arbitrationFeeTextField, methodsTextField,
             idVerificationsTextField, webPageTextField;
     @FXML private TextArea descriptionTextArea;
 
@@ -35,8 +54,7 @@ public class ArbitratorProfileController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorProfileController(Settings settings, Persistence persistence)
-    {
+    public ArbitratorProfileController(Settings settings, Persistence persistence) {
         this.settings = settings;
         this.persistence = persistence;
 
@@ -50,26 +68,22 @@ public class ArbitratorProfileController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb)
-    {
+    public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
     }
 
     @Override
-    public void terminate()
-    {
+    public void terminate() {
         super.terminate();
     }
 
     @Override
-    public void deactivate()
-    {
+    public void deactivate() {
         super.deactivate();
     }
 
     @Override
-    public void activate()
-    {
+    public void activate() {
         super.activate();
     }
 
@@ -79,14 +93,12 @@ public class ArbitratorProfileController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setParentController(ViewController parentController)
-    {
+    public void setParentController(ViewController parentController) {
         super.setParentController(parentController);
     }
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
-    {
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
         return null;
     }
 
@@ -95,13 +107,10 @@ public class ArbitratorProfileController extends CachedViewController
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void applyArbitrator(Arbitrator arbitrator)
-    {
-        if (arbitrator != null)
-        {
+    public void applyArbitrator(Arbitrator arbitrator) {
+        if (arbitrator != null) {
             String name = "";
-            switch (arbitrator.getIdType())
-            {
+            switch (arbitrator.getIdType()) {
                 case REAL_LIFE_ID:
                     name = "Name:";
                     break;
@@ -118,10 +127,13 @@ public class ArbitratorProfileController extends CachedViewController
             languagesTextField.setText(BitSquareFormatter.languageLocalesToString(arbitrator.getLanguages()));
             reputationTextField.setText(arbitrator.getReputation().toString());
             maxTradeVolumeTextField.setText(String.valueOf(arbitrator.getMaxTradeVolume()) + " BTC");
-            passiveServiceFeeTextField.setText(String.valueOf(arbitrator.getPassiveServiceFee()) + " % (Min. " + String.valueOf(arbitrator.getMinPassiveServiceFee()) + " BTC)");
-            arbitrationFeeTextField.setText(String.valueOf(arbitrator.getArbitrationFee()) + " % (Min. " + String.valueOf(arbitrator.getMinArbitrationFee()) + " BTC)");
+            passiveServiceFeeTextField.setText(String.valueOf(arbitrator.getPassiveServiceFee()) + " % (Min. " +
+                    String.valueOf(arbitrator.getMinPassiveServiceFee()) + " BTC)");
+            arbitrationFeeTextField.setText(String.valueOf(arbitrator.getArbitrationFee()) + " % (Min. " + String
+                    .valueOf(arbitrator.getMinArbitrationFee()) + " BTC)");
             methodsTextField.setText(BitSquareFormatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
-            idVerificationsTextField.setText(BitSquareFormatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));
+            idVerificationsTextField.setText(
+                    BitSquareFormatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));
             webPageTextField.setText(arbitrator.getWebUrl());
             descriptionTextArea.setText(arbitrator.getDescription());
         }

@@ -1,0 +1,9 @@
+<component name="CopyrightManager">
+  <copyright>
+    <option name="notice" value="This file is part of Bitsquare.&#10;&#10;Bitsquare is free software: you can redistribute it and/or modify it&#10;under the terms of the GNU Affero General Public License as published by&#10;the Free Software Foundation, either version 3 of the License, or (at&#10;your option) any later version.&#10;&#10;Bitsquare is distributed in the hope that it will be useful, but WITHOUT&#10;ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or&#10;FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public&#10;License for more details.&#10;&#10;You should have received a copy of the GNU Affero General Public License&#10;along with Bitsquare. If not, see &lt;http://www.gnu.org/licenses/&gt;." />
+    <option name="keyword" value="GNU Affero General Public License" />
+    <option name="allowReplaceKeyword" value="" />
+    <option name="myName" value="Bitsquare Affero GPLv3" />
+    <option name="myLocal" value="true" />
+  </copyright>
+</component>

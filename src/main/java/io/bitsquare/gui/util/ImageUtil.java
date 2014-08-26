@@ -1,10 +1,25 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.gui.util;
 
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.image.*;
 
-public class ImageUtil
-{
+public class ImageUtil {
     public static final String SPLASH_LOGO = "/images/logo_200_270.png";
     public static final String SPLASH_LABEL = "/images/bitsquare_logo_label_300_69.png";
 
@@ -33,14 +48,12 @@ public class ImageUtil
     public static final String REMOVE = "/images/removeOffer.png";
 
 
-    public static Image getIconImage(String iconName)
-    {
+    public static Image getIconImage(String iconName) {
         return new Image(ImageUtil.class.getResourceAsStream(iconName));
     }
 
 
-    public static ImageView getIconImageView(String iconName)
-    {
+    public static ImageView getIconImageView(String iconName) {
         return new ImageView(new Image(ImageUtil.class.getResourceAsStream(iconName)));
     }
 }

@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.gui.util;
 
 import org.slf4j.Logger;
@@ -6,12 +23,12 @@ import org.slf4j.LoggerFactory;
 /**
  * NumberValidator for validating basic number values.
  * Localisation not supported at the moment
- * The decimal mark can be either "." or ",". Thousand separators are not supported yet, but might be added alter with Local support.
- * <p>
+ * The decimal mark can be either "." or ",". Thousand separators are not supported yet,
+ * but might be added alter with Local support.
+ * <p/>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
-public abstract class NumberValidator
-{
+public abstract class NumberValidator {
     private static final Logger log = LoggerFactory.getLogger(NumberValidator.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -25,42 +42,35 @@ public abstract class NumberValidator
     // Protected methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected ValidationResult validateIfNotEmpty(String input)
-    {
+    protected ValidationResult validateIfNotEmpty(String input) {
         if (input == null || input.length() == 0)
             return new ValidationResult(false, "Empty input is not allowed.", ErrorType.EMPTY_INPUT);
         else
             return new ValidationResult(true);
     }
 
-    protected String cleanInput(String input)
-    {
+    protected String cleanInput(String input) {
         return input.replace(",", ".").trim();
     }
 
-    protected ValidationResult validateIfNumber(String input)
-    {
-        try
-        {
+    protected ValidationResult validateIfNumber(String input) {
+        try {
             //noinspection ResultOfMethodCallIgnored
             Double.parseDouble(input);
             return new ValidationResult(true);
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             return new ValidationResult(false, "Input is not a valid number.", ErrorType.NOT_A_NUMBER);
         }
     }
 
-    protected ValidationResult validateIfNotZero(String input)
-    {
+    protected ValidationResult validateIfNotZero(String input) {
         if (Double.parseDouble(input) == 0)
             return new ValidationResult(false, "Input of 0 is not allowed.", ErrorType.ZERO_NUMBER);
         else
             return new ValidationResult(true);
     }
 
-    protected ValidationResult validateIfNotNegative(String input)
-    {
+    protected ValidationResult validateIfNotNegative(String input) {
         if (Double.parseDouble(input) < 0)
             return new ValidationResult(false, "A negative value is not allowed.", ErrorType.NEGATIVE_NUMBER);
         else
@@ -72,14 +82,14 @@ public abstract class NumberValidator
     // ErrorType
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum ErrorType
-    {
+    public enum ErrorType {
         EMPTY_INPUT,
         NOT_A_NUMBER,
         ZERO_NUMBER,
         NEGATIVE_NUMBER,
         FRACTIONAL_SATOSHI,
-        EXCEEDS_MAX_FIAT_VALUE, UNDERCUT_MIN_FIAT_VALUE, AMOUNT_LESS_THAN_MIN_AMOUNT, MIN_AMOUNT_LARGER_THAN_MIN_AMOUNT, EXCEEDS_MAX_BTC_VALUE
+        EXCEEDS_MAX_FIAT_VALUE, UNDERCUT_MIN_FIAT_VALUE, AMOUNT_LESS_THAN_MIN_AMOUNT,
+        MIN_AMOUNT_LARGER_THAN_MIN_AMOUNT, EXCEEDS_MAX_BTC_VALUE
     }
 
 
@@ -87,26 +97,22 @@ public abstract class NumberValidator
     // ValidationResult
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static class ValidationResult
-    {
+    public static class ValidationResult {
         public final boolean isValid;
         public final String errorMessage;
         public final ErrorType errorType;
 
-        public ValidationResult(boolean isValid, String errorMessage, ErrorType errorType)
-        {
+        public ValidationResult(boolean isValid, String errorMessage, ErrorType errorType) {
             this.isValid = isValid;
             this.errorMessage = errorMessage;
             this.errorType = errorType;
         }
 
-        ValidationResult(boolean isValid)
-        {
+        ValidationResult(boolean isValid) {
             this(isValid, null, null);
         }
 
-        public ValidationResult and(ValidationResult next)
-        {
+        public ValidationResult and(ValidationResult next) {
             if (this.isValid)
                 return next;
             else
@@ -114,8 +120,7 @@ public abstract class NumberValidator
         }
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return "ValidationResult{" +
                     "isValid=" + isValid +
                     ", errorMessage='" + errorMessage + '\'' +

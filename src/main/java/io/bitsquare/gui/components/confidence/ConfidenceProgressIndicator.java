@@ -1,4 +1,21 @@
 /*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*
  * Copyright (c) 2010, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -26,14 +43,14 @@
 package io.bitsquare.gui.components.confidence;
 
 import io.bitsquare.gui.components.confidence.skin.ConfidenceProgressIndicatorSkin;
+
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.DoublePropertyBase;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.css.PseudoClass;
 import javafx.css.StyleableProperty;
-import javafx.scene.control.Control;
-import javafx.scene.control.Skin;
+import javafx.scene.control.*;
 
 
 /**
@@ -43,30 +60,29 @@ import javafx.scene.control.Skin;
  * <p>
  * ProgressIndicator sets focusTraversable to false.
  * </p>
- * <p>
- * <p>
+ * <p/>
+ * <p/>
  * This first example creates a ProgressIndicator with an indeterminate value :
  * <pre><code>
  * import javafx.scene.control.ProgressIndicator;
  * ProgressIndicator p1 = new ProgressIndicator();
  * </code></pre>
- * <p>
- * <p>
+ * <p/>
+ * <p/>
  * This next example creates a ProgressIndicator which is 25% complete :
  * <pre><code>
  * import javafx.scene.control.ProgressIndicator;
  * ProgressIndicator p2 = new ProgressIndicator();
  * p2.setProgress(0.25F);
  * </code></pre>
- * <p>
+ * <p/>
  * Implementation of ProgressIndicator According to JavaFX UI Control API Specification
  *
  * @since JavaFX 2.0
  */
 
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
-public class ConfidenceProgressIndicator extends Control
-{
+public class ConfidenceProgressIndicator extends Control {
 
     /**
      * Value for progress indicating that the progress is indeterminate.
@@ -82,7 +98,7 @@ public class ConfidenceProgressIndicator extends Control
      **************************************************************************/
     /**
      * Initialize the style class to 'progress-indicator'.
-     * <p>
+     * <p/>
      * This is the selector class from which CSS can be used to style
      * this control.
      */
@@ -120,8 +136,7 @@ public class ConfidenceProgressIndicator extends Control
     /**
      * Creates a new indeterminate ProgressIndicator.
      */
-    public ConfidenceProgressIndicator()
-    {
+    public ConfidenceProgressIndicator() {
         this(INDETERMINATE_PROGRESS);
     }
 
@@ -129,8 +144,7 @@ public class ConfidenceProgressIndicator extends Control
      * Creates a new ProgressIndicator with the given progress value.
      */
     @SuppressWarnings("unchecked")
-    public ConfidenceProgressIndicator(double progress)
-    {
+    public ConfidenceProgressIndicator(double progress) {
         // focusTraversable is styleable through css. Calling setFocusTraversable
         // makes it look to css like the user set the value and css will not
         // override. Initializing focusTraversable by calling applyStyle with null
@@ -145,30 +159,23 @@ public class ConfidenceProgressIndicator extends Control
         pseudoClassStateChanged(PSEUDO_CLASS_DETERMINATE, c != 0);
     }
 
-    public final boolean isIndeterminate()
-    {
+    public final boolean isIndeterminate() {
         return indeterminate == null || indeterminate.get();
     }
 
-    private void setIndeterminate(boolean value)
-    {
+    private void setIndeterminate(boolean value) {
         indeterminatePropertyImpl().set(value);
     }
 
-    public final ReadOnlyBooleanProperty indeterminateProperty()
-    {
+    public final ReadOnlyBooleanProperty indeterminateProperty() {
         return indeterminatePropertyImpl().getReadOnlyProperty();
     }
 
-    private ReadOnlyBooleanWrapper indeterminatePropertyImpl()
-    {
-        if (indeterminate == null)
-        {
-            indeterminate = new ReadOnlyBooleanWrapper(true)
-            {
+    private ReadOnlyBooleanWrapper indeterminatePropertyImpl() {
+        if (indeterminate == null) {
+            indeterminate = new ReadOnlyBooleanWrapper(true) {
                 @Override
-                protected void invalidated()
-                {
+                protected void invalidated() {
                     final boolean active = get();
                     pseudoClassStateChanged(PSEUDO_CLASS_INDETERMINATE, active);
                     pseudoClassStateChanged(PSEUDO_CLASS_DETERMINATE, !active);
@@ -176,15 +183,13 @@ public class ConfidenceProgressIndicator extends Control
 
 
                 @Override
-                public Object getBean()
-                {
+                public Object getBean() {
                     return ConfidenceProgressIndicator.this;
                 }
 
 
                 @Override
-                public String getName()
-                {
+                public String getName() {
                     return "indeterminate";
                 }
             };
@@ -200,8 +205,7 @@ public class ConfidenceProgressIndicator extends Control
      * ************************************************************************
      */
 
-    public final double getProgress()
-    {
+    public final double getProgress() {
         return progress == null ? INDETERMINATE_PROGRESS : progress.get();
     }
 
@@ -213,34 +217,27 @@ public class ConfidenceProgressIndicator extends Control
      * ************************************************************************
      */
 
-    public final void setProgress(double value)
-    {
+    public final void setProgress(double value) {
         progressProperty().set(value);
     }
 
-    public final DoubleProperty progressProperty()
-    {
-        if (progress == null)
-        {
-            progress = new DoublePropertyBase(-1.0)
-            {
+    public final DoubleProperty progressProperty() {
+        if (progress == null) {
+            progress = new DoublePropertyBase(-1.0) {
                 @Override
-                protected void invalidated()
-                {
+                protected void invalidated() {
                     setIndeterminate(getProgress() < 0.0);
                 }
 
 
                 @Override
-                public Object getBean()
-                {
+                public Object getBean() {
                     return ConfidenceProgressIndicator.this;
                 }
 
 
                 @Override
-                public String getName()
-                {
+                public String getName() {
                     return "progress";
                 }
             };
@@ -253,8 +250,7 @@ public class ConfidenceProgressIndicator extends Control
      */
 
     @Override
-    protected Skin<?> createDefaultSkin()
-    {
+    protected Skin<?> createDefaultSkin() {
         return new ConfidenceProgressIndicatorSkin(this);
     }
 
@@ -267,8 +263,7 @@ public class ConfidenceProgressIndicator extends Control
     @Deprecated
     @Override
     @SuppressWarnings("deprecation")
-    protected /*do not make final*/ Boolean impl_cssGetFocusTraversableInitialValue()
-    {
+    protected /*do not make final*/ Boolean impl_cssGetFocusTraversableInitialValue() {
         return Boolean.FALSE;
     }
 

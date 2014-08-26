@@ -103,15 +103,18 @@
     </path>
 
     <path id="library.maven:_ch.qos.logback:logback-classic:1.1.2.classpath">
-        <pathelement location="${path.variable.maven_repository}/ch/qos/logback/logback-classic/1.1.2/logback-classic-1.1.2.jar"/>
+        <pathelement
+                location="${path.variable.maven_repository}/ch/qos/logback/logback-classic/1.1.2/logback-classic-1.1.2.jar"/>
     </path>
 
     <path id="library.maven:_ch.qos.logback:logback-core:1.1.2.classpath">
-        <pathelement location="${path.variable.maven_repository}/ch/qos/logback/logback-core/1.1.2/logback-core-1.1.2.jar"/>
+        <pathelement
+                location="${path.variable.maven_repository}/ch/qos/logback/logback-core/1.1.2/logback-core-1.1.2.jar"/>
     </path>
 
     <path id="library.maven:_com.google.code.findbugs:jsr305:2.0.3.classpath">
-        <pathelement location="${path.variable.maven_repository}/com/google/code/findbugs/jsr305/2.0.3/jsr305-2.0.3.jar"/>
+        <pathelement
+                location="${path.variable.maven_repository}/com/google/code/findbugs/jsr305/2.0.3/jsr305-2.0.3.jar"/>
     </path>
 
     <path id="library.maven:_com.google.code.gson:gson:2.2.4.classpath">
@@ -127,7 +130,8 @@
     </path>
 
     <path id="library.maven:_com.google.protobuf:protobuf-java:2.5.0.classpath">
-        <pathelement location="${path.variable.maven_repository}/com/google/protobuf/protobuf-java/2.5.0/protobuf-java-2.5.0.jar"/>
+        <pathelement
+                location="${path.variable.maven_repository}/com/google/protobuf/protobuf-java/2.5.0/protobuf-java-2.5.0.jar"/>
     </path>
 
     <path id="library.maven:_com.google.zxing:core:2.0.classpath">
@@ -147,7 +151,8 @@
     </path>
 
     <path id="library.maven:_com.madgag:sc-light-jdk15on:1.47.0.2.classpath">
-        <pathelement location="${path.variable.maven_repository}/com/madgag/sc-light-jdk15on/1.47.0.2/sc-light-jdk15on-1.47.0.2.jar"/>
+        <pathelement
+                location="${path.variable.maven_repository}/com/madgag/sc-light-jdk15on/1.47.0.2/sc-light-jdk15on-1.47.0.2.jar"/>
     </path>
 
     <path id="library.maven:_de.jensd:fontawesomefx:8.0.0.classpath">
@@ -175,7 +180,8 @@
     </path>
 
     <path id="library.maven:_net.jcip:jcip-annotations:1.0.classpath">
-        <pathelement location="${path.variable.maven_repository}/net/jcip/jcip-annotations/1.0/jcip-annotations-1.0.jar"/>
+        <pathelement
+                location="${path.variable.maven_repository}/net/jcip/jcip-annotations/1.0/jcip-annotations-1.0.jar"/>
     </path>
 
     <path id="library.maven:_net.tomp2p:tomp2p:4.4.classpath">
@@ -207,7 +213,8 @@
     </path>
     <target name="register.custom.compilers">
         <taskdef name="javac2" classname="com.intellij.ant.Javac2" classpathref="javac2.classpath"/>
-        <taskdef name="instrumentIdeaExtensions" classname="com.intellij.ant.InstrumentIdeaExtensions" classpathref="javac2.classpath"/>
+        <taskdef name="instrumentIdeaExtensions" classname="com.intellij.ant.InstrumentIdeaExtensions"
+                 classpathref="javac2.classpath"/>
     </target>
 
     <!-- Modules -->
@@ -368,11 +375,14 @@
     </path>
 
 
-    <target name="compile.module.bitsquare" depends="compile.module.bitsquare.production,compile.module.bitsquare.tests" description="Compile module bitsquare"/>
+    <target name="compile.module.bitsquare" depends="compile.module.bitsquare.production,compile.module.bitsquare.tests"
+            description="Compile module bitsquare"/>
 
-    <target name="compile.module.bitsquare.production" depends="register.custom.compilers" description="Compile module bitsquare; production classes">
+    <target name="compile.module.bitsquare.production" depends="register.custom.compilers"
+            description="Compile module bitsquare; production classes">
         <mkdir dir="${bitsquare.output.dir}"/>
-        <javac2 destdir="${bitsquare.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.bitsquare}/javac">
+        <javac2 destdir="${bitsquare.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}"
+                memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.bitsquare}/javac">
             <compilerarg line="${compiler.args.bitsquare}"/>
             <bootclasspath refid="bitsquare.module.bootclasspath"/>
             <classpath refid="bitsquare.module.production.classpath"/>
@@ -392,9 +402,12 @@
         </copy>
     </target>
 
-    <target name="compile.module.bitsquare.tests" depends="register.custom.compilers,compile.module.bitsquare.production" description="compile module bitsquare; test classes" unless="skip.tests">
+    <target name="compile.module.bitsquare.tests"
+            depends="register.custom.compilers,compile.module.bitsquare.production"
+            description="compile module bitsquare; test classes" unless="skip.tests">
         <mkdir dir="${bitsquare.testoutput.dir}"/>
-        <javac2 destdir="${bitsquare.testoutput.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true"
+        <javac2 destdir="${bitsquare.testoutput.dir}" debug="${compiler.debug}"
+                nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true"
                 executable="${module.jdk.bin.bitsquare}/javac">
             <compilerarg line="${compiler.args.bitsquare}"/>
             <bootclasspath refid="bitsquare.module.bootclasspath"/>
@@ -429,14 +442,16 @@
         <property name="artifact.output.bitsquare" value="${basedir}/out/artifacts/bitsquare"/>
         <mkdir dir="${artifacts.temp.dir}"/>
         <property name="artifact.temp.output.bitsquare" value="${artifacts.temp.dir}/bitsquare.jar"/>
-        <taskdef resource="com/sun/javafx/tools/ant/antlib.xml" uri="javafx:com.sun.javafx.tools.ant" classpath="${jdk.home.1.8}/lib/ant-javafx.jar"/>
+        <taskdef resource="com/sun/javafx/tools/ant/antlib.xml" uri="javafx:com.sun.javafx.tools.ant"
+                 classpath="${jdk.home.1.8}/lib/ant-javafx.jar"/>
     </target>
 
     <target name="clean.artifact.bitsquare" description="clean bitsquare artifact output">
         <delete dir="${artifact.output.bitsquare}"/>
     </target>
 
-    <target name="artifact.bitsquare" depends="init.artifacts, compile.module.bitsquare" description="Build &#39;bitsquare&#39; artifact" xmlns:fx="javafx:com.sun.javafx.tools.ant">
+    <target name="artifact.bitsquare" depends="init.artifacts, compile.module.bitsquare"
+            description="Build &#39;bitsquare&#39; artifact" xmlns:fx="javafx:com.sun.javafx.tools.ant">
         <mkdir dir="${artifact.output.bitsquare}"/>
         <copy todir="${artifact.temp.output.bitsquare}">
             <fileset dir="${bitsquare.output.dir}"/>
@@ -456,7 +471,8 @@
                 <attribute name="" value=""/>
             </manifest>
         </fx:jar>
-        <fx:deploy width="800" height="600" updatemode="background" outdir="${artifact.temp.output.bitsquare}/deploy" outfile="bitsquare" nativeBundles="all">
+        <fx:deploy width="800" height="600" updatemode="background" outdir="${artifact.temp.output.bitsquare}/deploy"
+                   outfile="bitsquare" nativeBundles="all">
             <fx:application refid="bitsquare_id"/>
             <fx:info title="BitSquare" vendor="bitsquare.io" description="P2P Fiat-Bitcoin exchange"/>
             <fx:resources>

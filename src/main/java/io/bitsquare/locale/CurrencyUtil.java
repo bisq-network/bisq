@@ -1,13 +1,33 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.locale;
 
 import java.text.NumberFormat;
-import java.util.*;
 
-public class CurrencyUtil
-{
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
-    public static List<Currency> getAllCurrencies()
-    {
+public class CurrencyUtil {
+
+    public static List<Currency> getAllCurrencies() {
         final ArrayList<Currency> mainCurrencies = new ArrayList<>();
         mainCurrencies.add(Currency.getInstance("USD"));
         mainCurrencies.add(Currency.getInstance("EUR"));
@@ -37,8 +57,7 @@ public class CurrencyUtil
     }
 
 
-    public static Currency getDefaultCurrency()
-    {
+    public static Currency getDefaultCurrency() {
         return NumberFormat.getNumberInstance(Locale.getDefault()).getCurrency();
     }
 }

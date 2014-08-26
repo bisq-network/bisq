@@ -1,7 +1,22 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.gui.settings;
 
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Utils;
 import io.bitsquare.BitSquare;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
@@ -12,7 +27,12 @@ import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.locale.*;
+import io.bitsquare.locale.Country;
+import io.bitsquare.locale.CountryUtil;
+import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.locale.Localisation;
+import io.bitsquare.locale.Region;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Persistence;
@@ -20,30 +40,41 @@ import io.bitsquare.user.Arbitrator;
 import io.bitsquare.user.Reputation;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
+
+import com.google.bitcoin.core.ECKey;
+import com.google.bitcoin.core.Utils;
+
 import java.io.IOException;
+
 import java.net.URL;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.ResourceBundle;
+
+import javax.inject.Inject;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.*;
 import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
+import javafx.scene.image.*;
+import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-import javax.inject.Inject;
+
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 
 // TODO separate in 2 view/controllers
-public class SettingsController extends CachedViewController
-{
+public class SettingsController extends CachedViewController {
     private final User user;
     private final Settings settings;
     private final Persistence persistence;
@@ -60,7 +91,8 @@ public class SettingsController extends CachedViewController
     @FXML private ComboBox<Locale> languageComboBox;
     @FXML private ComboBox<Region> regionComboBox, bankAccountRegionComboBox;
     @FXML private ComboBox<Country> countryComboBox, bankAccountCountryComboBox;
-    @FXML private TextField bankAccountTitleTextField, bankAccountHolderNameTextField, bankAccountPrimaryIDTextField, bankAccountSecondaryIDTextField;
+    @FXML private TextField bankAccountTitleTextField, bankAccountHolderNameTextField, bankAccountPrimaryIDTextField,
+            bankAccountSecondaryIDTextField;
     @FXML private Button saveBankAccountButton, addBankAccountButton;
     @FXML private ComboBox<BankAccount> bankAccountComboBox;
     @FXML private ComboBox<BankAccountType> bankAccountTypesComboBox;
@@ -72,29 +104,25 @@ public class SettingsController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SettingsController(User user, Settings settings, Persistence persistence, MessageFacade messageFacade)
-    {
+    public SettingsController(User user, Settings settings, Persistence persistence, MessageFacade messageFacade) {
         this.user = user;
         this.settings = settings;
         this.persistence = persistence;
         this.messageFacade = messageFacade;
 
         Settings persistedSettings = (Settings) persistence.read(settings);
-        if (persistedSettings != null)
-        {
+        if (persistedSettings != null) {
             settings.applyPersistedSettings(persistedSettings);
             languageList = FXCollections.observableArrayList(settings.getAcceptedLanguageLocales());
             countryList = FXCollections.observableArrayList(settings.getAcceptedCountries());
             arbitratorList = FXCollections.observableArrayList(settings.getAcceptedArbitrators());
         }
-        else
-        {
+        else {
             languageList = FXCollections.observableArrayList(new ArrayList<>());
             countryList = FXCollections.observableArrayList(new ArrayList<>());
             arbitratorList = FXCollections.observableArrayList(new ArrayList<>());
 
-            if (Locale.getDefault() != null)
-            {
+            if (Locale.getDefault() != null) {
                 addLanguage(LanguageUtil.getDefaultLanguageLocale());
                 addCountry(CountryUtil.getDefaultCountry());
             }
@@ -109,8 +137,7 @@ public class SettingsController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb)
-    {
+    public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
         setupGeneralSettingsScreen();
@@ -119,14 +146,12 @@ public class SettingsController extends CachedViewController
     }
 
     @Override
-    public void deactivate()
-    {
+    public void deactivate() {
         super.deactivate();
     }
 
     @Override
-    public void activate()
-    {
+    public void activate() {
         super.activate();
     }
 
@@ -136,13 +161,11 @@ public class SettingsController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem)
-    {
+    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
         // TODO
         // caching causes exception
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
-        try
-        {
+        try {
             final Node view = loader.load();
             childController = loader.getController();
             childController.setParentController(this);
@@ -167,8 +190,7 @@ public class SettingsController extends CachedViewController
             stage.show();
 
             return childController;
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
@@ -179,8 +201,7 @@ public class SettingsController extends CachedViewController
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void updateArbitrators()
-    {
+    void updateArbitrators() {
         arbitratorList = FXCollections.observableArrayList(settings.getAcceptedArbitrators());
         initArbitrators();
     }
@@ -192,41 +213,35 @@ public class SettingsController extends CachedViewController
 
     // General Settings
     @FXML
-    public void onAddLanguage()
-    {
+    public void onAddLanguage() {
         addLanguage(languageComboBox.getSelectionModel().getSelectedItem());
         languageComboBox.getSelectionModel().clearSelection();
     }
 
     @FXML
-    public void onSelectRegion()
-    {
+    public void onSelectRegion() {
         countryComboBox.setVisible(true);
         Region selectedRegion = regionComboBox.getSelectionModel().getSelectedItem();
         countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllCountriesFor(selectedRegion)));
     }
 
     @FXML
-    public void onAddCountry()
-    {
+    public void onAddCountry() {
         addCountry(countryComboBox.getSelectionModel().getSelectedItem());
         countryComboBox.getSelectionModel().clearSelection();
     }
 
     @FXML
-    public void onOpenArbitratorScreen()
-    {
+    public void onOpenArbitratorScreen() {
         loadViewAndGetChildController(NavigationItem.ARBITRATOR_OVERVIEW);
     }
 
 
     // Bank Account Settings
     @FXML
-    public void selectBankAccount()
-    {
+    public void selectBankAccount() {
         BankAccount bankAccount = bankAccountComboBox.getSelectionModel().getSelectedItem();
-        if (bankAccount != null && bankAccount != user.getCurrentBankAccount())
-        {
+        if (bankAccount != null && bankAccount != user.getCurrentBankAccount()) {
             user.setCurrentBankAccount(bankAccount);
             persistence.write(user);
             fillWithCurrentBankAccount();
@@ -234,11 +249,9 @@ public class SettingsController extends CachedViewController
     }
 
     @FXML
-    public void selectBankAccountType()
-    {
+    public void selectBankAccountType() {
         BankAccountType bankAccountType = bankAccountTypesComboBox.getSelectionModel().getSelectedItem();
-        if (bankAccountType != null)
-        {
+        if (bankAccountType != null) {
             bankAccountTitleTextField.setText("");
             bankAccountPrimaryIDTextField.setText("");
             bankAccountPrimaryIDTextField.setPromptText(bankAccountType.getPrimaryId());
@@ -248,29 +261,26 @@ public class SettingsController extends CachedViewController
     }
 
     @FXML
-    public void onSelectBankAccountRegion()
-    {
+    public void onSelectBankAccountRegion() {
         bankAccountCountryComboBox.setVisible(true);
         Region selectedBankAccountRegion = bankAccountRegionComboBox.getSelectionModel().getSelectedItem();
-        bankAccountCountryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllCountriesFor(selectedBankAccountRegion)));
+        bankAccountCountryComboBox.setItems(
+                FXCollections.observableArrayList(CountryUtil.getAllCountriesFor(selectedBankAccountRegion)));
     }
 
     @FXML
-    public void onAddBankAccount()
-    {
+    public void onAddBankAccount() {
         saveBankAccount();
         resetBankAccountInput();
     }
 
     @FXML
-    public void onRemoveBankAccount()
-    {
+    public void onRemoveBankAccount() {
         removeBankAccount();
     }
 
     @FXML
-    void onSaveBankAccount()
-    {
+    void onSaveBankAccount() {
         saveBankAccount();
     }
 
@@ -279,23 +289,18 @@ public class SettingsController extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // General Settings
-    private void setupGeneralSettingsScreen()
-    {
+    private void setupGeneralSettingsScreen() {
         initLanguage();
         initCountry();
         initArbitrators();
     }
 
-    private void initLanguage()
-    {
-        languagesListView.setCellFactory(new Callback<ListView<Locale>, ListCell<Locale>>()
-        {
+    private void initLanguage() {
+        languagesListView.setCellFactory(new Callback<ListView<Locale>, ListCell<Locale>>() {
 
             @Override
-            public ListCell<Locale> call(ListView<Locale> list)
-            {
-                return new ListCell<Locale>()
-                {
+            public ListCell<Locale> call(ListView<Locale> list) {
+                return new ListCell<Locale>() {
                     final HBox hBox = new HBox();
                     final Label label = new Label();
                     final Button removeButton = new Button();
@@ -315,17 +320,14 @@ public class SettingsController extends CachedViewController
                     }
 
                     @Override
-                    public void updateItem(final Locale item, boolean empty)
-                    {
+                    public void updateItem(final Locale item, boolean empty) {
                         super.updateItem(item, empty);
-                        if (item != null && !empty)
-                        {
+                        if (item != null && !empty) {
                             label.setText(item.getDisplayName());
                             removeButton.setOnAction(actionEvent -> removeLanguage(item));
                             setGraphic(hBox);
                         }
-                        else
-                        {
+                        else {
                             setGraphic(null);
                         }
                     }
@@ -335,50 +337,40 @@ public class SettingsController extends CachedViewController
         languagesListView.setItems(languageList);
 
         languageComboBox.setItems(FXCollections.observableArrayList(LanguageUtil.getAllLanguageLocales()));
-        languageComboBox.setConverter(new StringConverter<Locale>()
-        {
+        languageComboBox.setConverter(new StringConverter<Locale>() {
             @Override
-            public String toString(Locale locale)
-            {
+            public String toString(Locale locale) {
                 return locale.getDisplayLanguage();
             }
 
 
             @Override
-            public Locale fromString(String s)
-            {
+            public Locale fromString(String s) {
                 return null;
             }
         });
     }
 
-    private void initCountry()
-    {
+    private void initCountry() {
         regionComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllRegions()));
-        regionComboBox.setConverter(new StringConverter<Region>()
-        {
+        regionComboBox.setConverter(new StringConverter<Region>() {
             @Override
-            public String toString(Region region)
-            {
+            public String toString(Region region) {
                 return region.getName();
             }
 
 
             @Override
-            public Region fromString(String s)
-            {
+            public Region fromString(String s) {
                 return null;
             }
         });
 
-        countriesListView.setCellFactory(new Callback<ListView<Country>, ListCell<Country>>()
-        {
+        countriesListView.setCellFactory(new Callback<ListView<Country>, ListCell<Country>>() {
 
             @Override
-            public ListCell<Country> call(ListView<Country> list)
-            {
-                return new ListCell<Country>()
-                {
+            public ListCell<Country> call(ListView<Country> list) {
+                return new ListCell<Country>() {
                     final HBox hBox = new HBox();
                     final Label label = new Label();
                     final Button removeButton = new Button();
@@ -399,17 +391,14 @@ public class SettingsController extends CachedViewController
 
 
                     @Override
-                    public void updateItem(final Country item, boolean empty)
-                    {
+                    public void updateItem(final Country item, boolean empty) {
                         super.updateItem(item, empty);
-                        if (item != null && !empty)
-                        {
+                        if (item != null && !empty) {
                             label.setText(item.getName());
                             removeButton.setOnAction(actionEvent -> removeCountry(item));
                             setGraphic(hBox);
                         }
-                        else
-                        {
+                        else {
                             setGraphic(null);
                         }
                     }
@@ -418,35 +407,28 @@ public class SettingsController extends CachedViewController
         });
         countriesListView.setItems(countryList);
 
-        countryComboBox.setConverter(new StringConverter<Country>()
-        {
+        countryComboBox.setConverter(new StringConverter<Country>() {
 
             @Override
-            public String toString(Country country)
-            {
+            public String toString(Country country) {
                 return country.getName();
             }
 
 
             @Override
-            public Country fromString(String s)
-            {
+            public Country fromString(String s) {
                 return null;
             }
         });
     }
 
 
-    private void initArbitrators()
-    {
-        arbitratorsListView.setCellFactory(new Callback<ListView<Arbitrator>, ListCell<Arbitrator>>()
-        {
+    private void initArbitrators() {
+        arbitratorsListView.setCellFactory(new Callback<ListView<Arbitrator>, ListCell<Arbitrator>>() {
 
             @Override
-            public ListCell<Arbitrator> call(ListView<Arbitrator> list)
-            {
-                return new ListCell<Arbitrator>()
-                {
+            public ListCell<Arbitrator> call(ListView<Arbitrator> list) {
+                return new ListCell<Arbitrator>() {
                     final HBox hBox = new HBox();
                     final Label label = new Label();
                     final Button removeButton = new Button();
@@ -467,17 +449,14 @@ public class SettingsController extends CachedViewController
 
 
                     @Override
-                    public void updateItem(final Arbitrator item, boolean empty)
-                    {
+                    public void updateItem(final Arbitrator item, boolean empty) {
                         super.updateItem(item, empty);
-                        if (item != null && !empty)
-                        {
+                        if (item != null && !empty) {
                             label.setText(item.getName());
                             removeButton.setOnAction(actionEvent -> removeArbitrator(item));
                             setGraphic(hBox);
                         }
-                        else
-                        {
+                        else {
                             setGraphic(null);
                         }
                     }
@@ -487,63 +466,52 @@ public class SettingsController extends CachedViewController
         arbitratorsListView.setItems(arbitratorList);
     }
 
-    private void addLanguage(Locale locale)
-    {
-        if (locale != null && !languageList.contains(locale))
-        {
+    private void addLanguage(Locale locale) {
+        if (locale != null && !languageList.contains(locale)) {
             languageList.add(locale);
             settings.addAcceptedLanguageLocale(locale);
         }
     }
 
-    private void removeLanguage(Locale locale)
-    {
+    private void removeLanguage(Locale locale) {
         languageList.remove(locale);
         settings.removeAcceptedLanguageLocale(locale);
         saveSettings();
     }
 
-    private void addCountry(Country country)
-    {
-        if (!countryList.contains(country) && country != null)
-        {
+    private void addCountry(Country country) {
+        if (!countryList.contains(country) && country != null) {
             countryList.add(country);
             settings.addAcceptedCountry(country);
             saveSettings();
         }
     }
 
-    private void removeCountry(Country country)
-    {
+    private void removeCountry(Country country) {
         countryList.remove(country);
         settings.removeAcceptedCountry(country);
         saveSettings();
     }
 
-    private void removeArbitrator(Arbitrator arbitrator)
-    {
+    private void removeArbitrator(Arbitrator arbitrator) {
         arbitratorList.remove(arbitrator);
         settings.removeAcceptedArbitrator(arbitrator);
         saveSettings();
     }
 
-    private void saveSettings()
-    {
+    private void saveSettings() {
         persistence.write(settings);
     }
 
-    private void saveUser()
-    {
+    private void saveUser() {
         persistence.write(user);
     }
 
 
     // Bank Account Settings
-    private void fillWithCurrentBankAccount()
-    {
+    private void fillWithCurrentBankAccount() {
         BankAccount currentBankAccount = user.getCurrentBankAccount();
-        if (currentBankAccount != null)
-        {
+        if (currentBankAccount != null) {
             bankAccountTitleTextField.setText(currentBankAccount.getAccountTitle());
             bankAccountHolderNameTextField.setText(currentBankAccount.getAccountHolderName());
             bankAccountPrimaryIDTextField.setText(currentBankAccount.getAccountPrimaryID());
@@ -551,14 +519,12 @@ public class SettingsController extends CachedViewController
             bankAccountSecondaryIDTextField.setText(currentBankAccount.getAccountSecondaryID());
             bankAccountSecondaryIDTextField.setPromptText(currentBankAccount.getBankAccountType().getSecondaryId());
         }
-        else
-        {
+        else {
             resetBankAccountInput();
         }
     }
 
-    private void initBankAccountScreen()
-    {
+    private void initBankAccountScreen() {
         initBankAccountComboBox();
         initBankAccountTypesComboBox();
         initBankAccountCurrencyComboBox();
@@ -567,13 +533,13 @@ public class SettingsController extends CachedViewController
         fillWithCurrentBankAccount();
 
         //TODO
-        if (BitSquare.fillFormsWithDummyData)
-        {
+        if (BitSquare.fillFormsWithDummyData) {
             bankAccountTypesComboBox.getSelectionModel().selectFirst();
             bankAccountCurrencyComboBox.getSelectionModel().selectFirst();
             bankAccountRegionComboBox.getSelectionModel().select(3);
 
-            Optional<Country> country = bankAccountCountryComboBox.getItems().stream().filter(e -> e.getCode().equals(CountryUtil.getDefaultCountry().getCode())).findFirst();
+            Optional<Country> country = bankAccountCountryComboBox.getItems().stream().filter(e ->
+                    e.getCode().equals(CountryUtil.getDefaultCountry().getCode())).findFirst();
             if (country.isPresent())
                 bankAccountCountryComboBox.getSelectionModel().select(country.get());
 
@@ -587,8 +553,7 @@ public class SettingsController extends CachedViewController
         }
     }
 
-    private void resetBankAccountInput()
-    {
+    private void resetBankAccountInput() {
         bankAccountTitleTextField.setText("");
         bankAccountHolderNameTextField.setText("");
         bankAccountPrimaryIDTextField.setText("");
@@ -600,136 +565,111 @@ public class SettingsController extends CachedViewController
         bankAccountCurrencyComboBox.getSelectionModel().clearSelection();
     }
 
-    private void initBankAccountComboBox()
-    {
-        if (user.getBankAccounts().isEmpty())
-        {
+    private void initBankAccountComboBox() {
+        if (user.getBankAccounts().isEmpty()) {
             bankAccountComboBox.setPromptText("No bank account available");
             bankAccountComboBox.setDisable(true);
         }
-        else
-        {
+        else {
             bankAccountComboBox.setPromptText("Select bank account");
             bankAccountComboBox.setDisable(false);
             bankAccountComboBox.setItems(FXCollections.observableArrayList(user.getBankAccounts()));
-            bankAccountComboBox.setConverter(new StringConverter<BankAccount>()
-            {
+            bankAccountComboBox.setConverter(new StringConverter<BankAccount>() {
                 @Override
-                public String toString(BankAccount bankAccount)
-                {
+                public String toString(BankAccount bankAccount) {
                     return bankAccount.getAccountTitle();
                 }
 
                 @Override
-                public BankAccount fromString(String s)
-                {
+                public BankAccount fromString(String s) {
                     return null;
                 }
             });
 
             BankAccount currentBankAccount = user.getCurrentBankAccount();
-            if (currentBankAccount != null)
-            {
+            if (currentBankAccount != null) {
                 int index = bankAccountComboBox.getItems().indexOf(currentBankAccount);
                 bankAccountComboBox.getSelectionModel().select(index);
             }
         }
     }
 
-    private void initBankAccountTypesComboBox()
-    {
+    private void initBankAccountTypesComboBox() {
         bankAccountTypesComboBox.setItems(FXCollections.observableArrayList(BankAccountType.getAllBankAccountTypes()));
-        bankAccountTypesComboBox.setConverter(new StringConverter<BankAccountType>()
-        {
+        bankAccountTypesComboBox.setConverter(new StringConverter<BankAccountType>() {
             @Override
-            public String toString(BankAccountType bankAccountTypeInfo)
-            {
+            public String toString(BankAccountType bankAccountTypeInfo) {
                 return Localisation.get(bankAccountTypeInfo.toString());
             }
 
             @Override
-            public BankAccountType fromString(String s)
-            {
+            public BankAccountType fromString(String s) {
                 return null;
             }
         });
 
         BankAccount currentBankAccount = user.getCurrentBankAccount();
-        if (currentBankAccount != null)
-        {
+        if (currentBankAccount != null) {
             int index = bankAccountTypesComboBox.getItems().indexOf(currentBankAccount.getBankAccountType());
             bankAccountTypesComboBox.getSelectionModel().select(index);
         }
     }
 
-    private void initBankAccountCurrencyComboBox()
-    {
+    private void initBankAccountCurrencyComboBox() {
         bankAccountCurrencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllCurrencies()));
-        bankAccountCurrencyComboBox.setConverter(new StringConverter<Currency>()
-        {
+        bankAccountCurrencyComboBox.setConverter(new StringConverter<Currency>() {
 
             @Override
-            public String toString(Currency currency)
-            {
+            public String toString(Currency currency) {
                 return currency.getCurrencyCode() + " (" + currency.getDisplayName() + ")";
             }
 
 
             @Override
-            public Currency fromString(String s)
-            {
+            public Currency fromString(String s) {
                 return null;
             }
         });
 
         BankAccount currentBankAccount = user.getCurrentBankAccount();
-        if (currentBankAccount != null)
-        {
+        if (currentBankAccount != null) {
             Currency currentCurrency = currentBankAccount.getCurrency();
             int index = bankAccountCurrencyComboBox.getItems().indexOf(currentCurrency);
             bankAccountCurrencyComboBox.getSelectionModel().select(index);
         }
     }
 
-    private void initBankAccountCountryComboBox()
-    {
+    private void initBankAccountCountryComboBox() {
         bankAccountRegionComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllRegions()));
-        bankAccountRegionComboBox.setConverter(new StringConverter<Region>()
-        {
+        bankAccountRegionComboBox.setConverter(new StringConverter<Region>() {
             @Override
-            public String toString(Region region)
-            {
+            public String toString(Region region) {
                 return region.getName();
             }
 
 
             @Override
-            public Region fromString(String s)
-            {
+            public Region fromString(String s) {
                 return null;
             }
         });
 
-        bankAccountCountryComboBox.setConverter(new StringConverter<Country>()
-        {
+        bankAccountCountryComboBox.setConverter(new StringConverter<Country>() {
 
             @Override
-            public String toString(Country country)
-            {
+            public String toString(Country country) {
                 return country.getName();
             }
 
 
             @Override
-            public Country fromString(String s)
-            {
+            public Country fromString(String s) {
                 return null;
             }
         });
 
         BankAccount currentBankAccount = user.getCurrentBankAccount();
-        if (currentBankAccount != null)
-        {
+        if (currentBankAccount != null) {
             Country currentCountry = currentBankAccount.getCountry();
             Region currentRegion = currentCountry.getRegion();
             int regionIndex = bankAccountRegionComboBox.getItems().indexOf(currentRegion);
@@ -741,39 +681,36 @@ public class SettingsController extends CachedViewController
         }
     }
 
-    private void saveBankAccount()
-    {
-        if (verifyBankAccountData())
-        {
+    private void saveBankAccount() {
+        if (verifyBankAccountData()) {
             BankAccount bankAccount = new BankAccount(bankAccountTypesComboBox.getSelectionModel().getSelectedItem(),
-                                                      bankAccountCurrencyComboBox.getSelectionModel().getSelectedItem(),
-                                                      bankAccountCountryComboBox.getSelectionModel().getSelectedItem(),
-                                                      bankAccountTitleTextField.getText(),
-                                                      bankAccountHolderNameTextField.getText(),
-                                                      bankAccountPrimaryIDTextField.getText(),
-                                                      bankAccountSecondaryIDTextField.getText());
+                    bankAccountCurrencyComboBox.getSelectionModel().getSelectedItem(),
+                    bankAccountCountryComboBox.getSelectionModel().getSelectedItem(),
+                    bankAccountTitleTextField.getText(),
+                    bankAccountHolderNameTextField.getText(),
+                    bankAccountPrimaryIDTextField.getText(),
+                    bankAccountSecondaryIDTextField.getText());
             user.addBankAccount(bankAccount);
 
             saveUser();
 
-            if (!settings.getAcceptedCountries().contains(bankAccount.getCountry()))
-            {
+            if (!settings.getAcceptedCountries().contains(bankAccount.getCountry())) {
                 List<Action> actions = new ArrayList<>();
                 actions.add(Dialog.Actions.YES);
                 actions.add(Dialog.Actions.NO);
 
                 Action response = Popups.openConfirmPopup("Warning",
-                                                          "The country of your bank account is not included in the accepted countries in the general settings.\n\nDo you want to add it automatically?",
-                                                          null,
-                                                          actions);
+                        "The country of your bank account is not included in the accepted countries in the general " +
+                                "settings.\n\nDo you want to add it automatically?",
+                        null,
+                        actions);
                 if (response == Dialog.Actions.YES)
                     addCountry(bankAccount.getCountry());
             }
         }
     }
 
-    private void removeBankAccount()
-    {
+    private void removeBankAccount() {
         user.removeCurrentBankAccount();
 
         saveUser();
@@ -781,22 +718,21 @@ public class SettingsController extends CachedViewController
         fillWithCurrentBankAccount();
     }
 
-    private boolean verifyBankAccountData()
-    {
-        try
-        {
-            BitSquareValidator.textFieldsNotEmptyWithReset(bankAccountTitleTextField, bankAccountHolderNameTextField, bankAccountPrimaryIDTextField, bankAccountSecondaryIDTextField);
+    private boolean verifyBankAccountData() {
+        try {
+            BitSquareValidator.textFieldsNotEmptyWithReset(
+                    bankAccountTitleTextField, bankAccountHolderNameTextField,
+                    bankAccountPrimaryIDTextField, bankAccountSecondaryIDTextField);
 
             BankAccountType bankAccountTypeInfo = bankAccountTypesComboBox.getSelectionModel().getSelectedItem();
             BitSquareValidator.textFieldBankAccountPrimaryIDIsValid(bankAccountPrimaryIDTextField, bankAccountTypeInfo);
-            BitSquareValidator.textFieldBankAccountSecondaryIDIsValid(bankAccountSecondaryIDTextField, bankAccountTypeInfo);
+            BitSquareValidator.textFieldBankAccountSecondaryIDIsValid(bankAccountSecondaryIDTextField,
+                    bankAccountTypeInfo);
 
-            return bankAccountTypesComboBox.getSelectionModel().getSelectedItem() != null && bankAccountCountryComboBox.getSelectionModel()
-                                                                                                                       .getSelectedItem() != null && bankAccountCurrencyComboBox.getSelectionModel()
-                                                                                                                                                                                .getSelectedItem() !=
-                    null;
-        } catch (BitSquareValidator.ValidationException e)
-        {
+            return bankAccountTypesComboBox.getSelectionModel().getSelectedItem() != null &&
+                    bankAccountCountryComboBox.getSelectionModel().getSelectedItem() != null &&
+                    bankAccountCurrencyComboBox.getSelectionModel().getSelectedItem() != null;
+        } catch (BitSquareValidator.ValidationException e) {
             return false;
         }
     }
@@ -806,10 +742,8 @@ public class SettingsController extends CachedViewController
     // Arbitrators
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void addMockArbitrator()
-    {
-        if (settings.getAcceptedArbitrators().isEmpty())
-        {
+    private void addMockArbitrator() {
+        if (settings.getAcceptedArbitrators().isEmpty()) {
             String pubKeyAsHex = Utils.HEX.encode(new ECKey().getPubKey());
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
             List<Locale> languages = new ArrayList<>();
@@ -821,20 +755,20 @@ public class SettingsController extends CachedViewController
             idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
 
             Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
-                                                   messagePubKeyAsHex,
-                                                   "Manfred Karrer",
-                                                   Arbitrator.ID_TYPE.REAL_LIFE_ID,
-                                                   languages,
-                                                   new Reputation(),
-                                                   1,
-                                                   0.01,
-                                                   0.001,
-                                                   10,
-                                                   0.1,
-                                                   arbitrationMethods,
-                                                   idVerifications,
-                                                   "http://bitsquare.io/",
-                                                   "Bla bla...");
+                    messagePubKeyAsHex,
+                    "Manfred Karrer",
+                    Arbitrator.ID_TYPE.REAL_LIFE_ID,
+                    languages,
+                    new Reputation(),
+                    1,
+                    0.01,
+                    0.001,
+                    10,
+                    0.1,
+                    arbitrationMethods,
+                    idVerifications,
+                    "http://bitsquare.io/",
+                    "Bla bla...");
 
             arbitratorList.add(arbitrator);
             settings.addAcceptedArbitrator(arbitrator);
@@ -843,7 +777,6 @@ public class SettingsController extends CachedViewController
             messageFacade.addArbitrator(arbitrator);
         }
     }
-
 
 }
 

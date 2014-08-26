@@ -1,13 +1,34 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.gui.components;
 
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.storage.Persistence;
+
 import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.List;
-import javafx.scene.Node;
-import javafx.scene.control.TabPane;
+
+import javafx.scene.*;
+import javafx.scene.control.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,8 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 
 //TODO remove manual caching as its done now in loader
-public class CachingTabPane extends TabPane
-{
+public class CachingTabPane extends TabPane {
     private static final Logger log = LoggerFactory.getLogger(CachingTabPane.class);
 
     private final List<TabInfo> tabInfoList = new ArrayList<>();
@@ -31,10 +51,8 @@ public class CachingTabPane extends TabPane
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(ViewController parentController, Persistence persistence, String... tabContentFXMLUrls)
-    {
-        if (tabContentFXMLUrls.length == 0)
-        {
+    public void initialize(ViewController parentController, Persistence persistence, String... tabContentFXMLUrls) {
+        if (tabContentFXMLUrls.length == 0) {
             throw new IllegalArgumentException("No tabContentFXMLUrls defined");
         }
 
@@ -55,12 +73,9 @@ public class CachingTabPane extends TabPane
         getSelectionModel().select(selectedTabIndex);
     }
 
-    public ViewController loadViewAndGetChildController(String fxmlView)
-    {
-        for (int i = 0; i < tabInfoList.size(); i++)
-        {
-            if (tabInfoList.get(i).url.equals(fxmlView))
-            {
+    public ViewController loadViewAndGetChildController(String fxmlView) {
+        for (int i = 0; i < tabInfoList.size(); i++) {
+            if (tabInfoList.get(i).url.equals(fxmlView)) {
                 // selection will cause loadView() call
                 getSelectionModel().select(i);
                 return currentController();
@@ -69,8 +84,7 @@ public class CachingTabPane extends TabPane
         throw new IllegalArgumentException("fxmlView not defined in tabContentFXMLUrlMap.");
     }
 
-    public void setSelectedTabIndex(int selectedTabIndex)
-    {
+    public void setSelectedTabIndex(int selectedTabIndex) {
         getSelectionModel().select(selectedTabIndex);
     }
 
@@ -79,19 +93,16 @@ public class CachingTabPane extends TabPane
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void loadView()
-    {
+    private void loadView() {
         selectedTabIndex = getSelectionModel().getSelectedIndex();
         TabInfo selectedTabInfo = tabInfoList.get(selectedTabIndex);
 
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(selectedTabInfo.url));
-        try
-        {
+        try {
             Node view = loader.load();
             selectedTabInfo.controller = loader.getController();
             getSelectionModel().getSelectedItem().setContent(view);
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             log.error(e.getMessage());
         }
 
@@ -100,19 +111,16 @@ public class CachingTabPane extends TabPane
         persistence.write(parentController, "selectedTabIndex", selectedTabIndex);
     }
 
-    private ViewController currentController()
-    {
+    private ViewController currentController() {
         return tabInfoList.get(selectedTabIndex).controller;
     }
 }
 
-class TabInfo
-{
+class TabInfo {
     ViewController controller;
     final String url;
 
-    TabInfo(String url)
-    {
+    TabInfo(String url) {
         this.url = url;
     }
 }

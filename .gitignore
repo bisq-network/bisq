@@ -4,10 +4,12 @@
 /bin
 /out
 .idea
+!.idea/copyright/Bitsquare_Affero_GPLv3.xml
+!.idea/copyright/profiles_settings.xml
+!.idea/codeStyleSettings.xml
 bitsquare.iml
 *.spvchain
 *.wallet
 *.ser
-*.wallet
-
 *.log
+*.sw[op]

@@ -1,19 +1,36 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.gui.components;
 
 import io.bitsquare.gui.util.NumberValidator;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.effect.BlurType;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.effect.Effect;
-import javafx.scene.layout.Region;
-import javafx.scene.paint.Color;
+import javafx.scene.control.*;
+import javafx.scene.effect.*;
+import javafx.scene.layout.*;
+import javafx.scene.paint.*;
 import javafx.stage.Window;
+
 import org.controlsfx.control.PopOver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,11 +38,10 @@ import org.slf4j.LoggerFactory;
  * TextField with validation support. Validation is executed on the Validator object.
  * In case of a invalid result we display a error message with a PopOver.
  * The position is derived from the textField or if set from the errorPopupLayoutReference object.
- * <p>
+ * <p/>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
-public class ValidatingTextField extends TextField
-{
+public class ValidatingTextField extends TextField {
     private static final Logger log = LoggerFactory.getLogger(ValidatingTextField.class);
     private static PopOver popOver;
 
@@ -42,8 +58,7 @@ public class ValidatingTextField extends TextField
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static void hidePopover()
-    {
+    public static void hidePopover() {
         if (popOver != null)
             popOver.hide();
     }
@@ -53,8 +68,7 @@ public class ValidatingTextField extends TextField
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ValidatingTextField()
-    {
+    public ValidatingTextField() {
         super();
 
         setupListeners();
@@ -65,8 +79,7 @@ public class ValidatingTextField extends TextField
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void reValidate()
-    {
+    public void reValidate() {
         validate(getText());
     }
 
@@ -75,16 +88,14 @@ public class ValidatingTextField extends TextField
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setNumberValidator(NumberValidator numberValidator)
-    {
+    public void setNumberValidator(NumberValidator numberValidator) {
         this.numberValidator = numberValidator;
     }
 
     /**
      * @param errorPopupLayoutReference The node used as reference for positioning
      */
-    public void setErrorPopupLayoutReference(Region errorPopupLayoutReference)
-    {
+    public void setErrorPopupLayoutReference(Region errorPopupLayoutReference) {
         this.errorPopupLayoutReference = errorPopupLayoutReference;
     }
 
@@ -93,13 +104,11 @@ public class ValidatingTextField extends TextField
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean getIsValid()
-    {
+    public boolean getIsValid() {
         return isValid.get();
     }
 
-    public BooleanProperty isValidProperty()
-    {
+    public BooleanProperty isValidProperty() {
         return isValid;
     }
 
@@ -108,8 +117,7 @@ public class ValidatingTextField extends TextField
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupListeners()
-    {
+    private void setupListeners() {
         sceneProperty().addListener((ov, oldValue, newValue) -> {
             // we got removed from the scene
             // lets hide an open popup
@@ -118,8 +126,7 @@ public class ValidatingTextField extends TextField
         });
 
         textProperty().addListener((ov, oldValue, newValue) -> {
-            if (numberValidator != null)
-            {
+            if (numberValidator != null) {
                 if (!validateOnFocusOut)
                     validate(newValue);
                 else
@@ -128,34 +135,29 @@ public class ValidatingTextField extends TextField
         });
 
         focusedProperty().addListener((ov, oldValue, newValue) -> {
-            if (validateOnFocusOut && needsValidationOnFocusOut && !newValue && getScene() != null && getScene().getWindow().isFocused())
+            if (validateOnFocusOut && needsValidationOnFocusOut &&
+                    !newValue && getScene() != null && getScene().getWindow().isFocused())
                 validate(getText());
         });
 
         isValid.addListener((ov, oldValue, newValue) -> applyEffect(newValue));
     }
 
-    private void validate(String input)
-    {
-        if (input != null)
-        {
+    private void validate(String input) {
+        if (input != null) {
             NumberValidator.ValidationResult validationResult = numberValidator.validate(input);
             isValid.set(validationResult.isValid);
             applyErrorMessage(validationResult);
         }
     }
 
-    private void applyErrorMessage(NumberValidator.ValidationResult validationResult)
-    {
-        if (validationResult.isValid)
-        {
-            if (popOver != null)
-            {
+    private void applyErrorMessage(NumberValidator.ValidationResult validationResult) {
+        if (validationResult.isValid) {
+            if (popOver != null) {
                 popOver.hide();
             }
         }
-        else
-        {
+        else {
             if (popOver == null)
                 createErrorPopOver(validationResult.errorMessage);
             else
@@ -165,23 +167,19 @@ public class ValidatingTextField extends TextField
         }
     }
 
-    private void applyEffect(boolean isValid)
-    {
+    private void applyEffect(boolean isValid) {
         setEffect(isValid ? null : invalidEffect);
     }
 
-    private Point2D getErrorPopupPosition()
-    {
+    private Point2D getErrorPopupPosition() {
         Window window = getScene().getWindow();
         Point2D point;
         double x;
-        if (errorPopupLayoutReference == null)
-        {
+        if (errorPopupLayoutReference == null) {
             point = localToScene(0, 0);
             x = point.getX() + window.getX() + getWidth() + 20;
         }
-        else
-        {
+        else {
             point = errorPopupLayoutReference.localToScene(0, 0);
             x = point.getX() + window.getX() + errorPopupLayoutReference.getWidth() + 20;
         }
@@ -189,13 +187,11 @@ public class ValidatingTextField extends TextField
         return new Point2D(x, y);
     }
 
-    private static void setErrorMessage(String errorMessage)
-    {
+    private static void setErrorMessage(String errorMessage) {
         ((Label) popOver.getContentNode()).setText(errorMessage);
     }
 
-    private static void createErrorPopOver(String errorMessage)
-    {
+    private static void createErrorPopOver(String errorMessage) {
         Label errorLabel = new Label(errorMessage);
         errorLabel.setId("validation-error");
         errorLabel.setPadding(new Insets(0, 10, 0, 10));

@@ -1,18 +1,42 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.gui.util;
 
-import com.google.bitcoin.core.*;
-import com.google.bitcoin.script.Script;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.ECKey;
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.TransactionConfidence;
+import com.google.bitcoin.core.Wallet;
+import com.google.bitcoin.core.WalletEventListener;
+import com.google.bitcoin.script.Script;
+
 import java.util.List;
 import java.util.Set;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+
+import javafx.scene.control.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("CanBeFinal")
-public class ConfidenceDisplay
-{
+public class ConfidenceDisplay {
     private static final Logger log = LoggerFactory.getLogger(ConfidenceDisplay.class);
 
     private WalletEventListener walletEventListener;
@@ -27,8 +51,8 @@ public class ConfidenceDisplay
 
     private ConfidenceProgressIndicator progressIndicator;
 
-    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, TextField balanceTextField, ConfidenceProgressIndicator progressIndicator)
-    {
+    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, TextField balanceTextField,
+                             ConfidenceProgressIndicator progressIndicator) {
         this.wallet = wallet;
         this.confirmationLabel = confirmationLabel;
         this.balanceTextField = balanceTextField;
@@ -40,57 +64,49 @@ public class ConfidenceDisplay
         progressIndicator.setProgress(0);
 
         updateBalance(wallet.getBalance());
-        walletEventListener = new WalletEventListener()
-        {
+        walletEventListener = new WalletEventListener() {
             @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance)
-            {
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
                 updateBalance(newBalance);
                 // log.debug("onCoinsReceived  " + newBalance);
             }
 
             @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance)
-            {
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
                 updateBalance(newBalance);
             }
 
             @Override
-            public void onReorganize(Wallet wallet)
-            {
+            public void onReorganize(Wallet wallet) {
 
             }
 
             @Override
-            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
-            {
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
                 updateConfidence(tx);
                 // log.debug("onTransactionConfidenceChanged tx " + tx.getHashAsString());
             }
 
             @Override
-            public void onWalletChanged(Wallet wallet)
-            {
+            public void onWalletChanged(Wallet wallet) {
 
             }
 
             @Override
-            public void onScriptsAdded(Wallet wallet, List<Script> scripts)
-            {
+            public void onScriptsAdded(Wallet wallet, List<Script> scripts) {
 
             }
 
             @Override
-            public void onKeysAdded(List<ECKey> keys)
-            {
+            public void onKeysAdded(List<ECKey> keys) {
 
             }
         };
         wallet.addEventListener(walletEventListener);
     }
 
-    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, final Transaction transaction, ConfidenceProgressIndicator progressIndicator)
-    {
+    public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, final Transaction transaction,
+                             ConfidenceProgressIndicator progressIndicator) {
         this.wallet = wallet;
         this.confirmationLabel = confirmationLabel;
         this.transaction = transaction;
@@ -103,118 +119,96 @@ public class ConfidenceDisplay
         updateBalance(wallet.getBalance());
         updateConfidence(transaction);
 
-        walletEventListener = new WalletEventListener()
-        {
+        walletEventListener = new WalletEventListener() {
             @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance)
-            {
-                if (tx.getHashAsString().equals(transaction.getHashAsString()))
-                {
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                if (tx.getHashAsString().equals(transaction.getHashAsString())) {
                     updateBalance(newBalance);
                 }
                 // log.debug("onCoinsReceived " + newBalance);
             }
 
             @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance)
-            {
-                if (tx.getHashAsString().equals(transaction.getHashAsString()))
-                {
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                if (tx.getHashAsString().equals(transaction.getHashAsString())) {
                     updateBalance(newBalance);
                 }
             }
 
             @Override
-            public void onReorganize(Wallet wallet)
-            {
+            public void onReorganize(Wallet wallet) {
 
             }
 
             @Override
-            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx)
-            {
-                if (tx.getHashAsString().equals(transaction.getHashAsString()))
-                {
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                if (tx.getHashAsString().equals(transaction.getHashAsString())) {
                     updateConfidence(transaction);
                 }
                 // log.debug("onTransactionConfidenceChanged newTransaction " + newTransaction.getHashAsString());
             }
 
             @Override
-            public void onWalletChanged(Wallet wallet)
-            {
+            public void onWalletChanged(Wallet wallet) {
 
             }
 
             @Override
-            public void onScriptsAdded(Wallet wallet, List<Script> scripts)
-            {
+            public void onScriptsAdded(Wallet wallet, List<Script> scripts) {
 
             }
 
             @Override
-            public void onKeysAdded(List<ECKey> keys)
-            {
+            public void onKeysAdded(List<ECKey> keys) {
 
             }
         };
         wallet.addEventListener(walletEventListener);
     }
 
-    public void destroy()
-    {
+    public void destroy() {
         wallet.removeEventListener(walletEventListener);
         progressIndicator.setProgress(0);
         confirmationLabel.setText("");
-        if (balanceTextField != null)
-        {
+        if (balanceTextField != null) {
             balanceTextField.setText("");
         }
     }
 
-    private void updateBalance(Coin balance)
-    {
-        if (balance.compareTo(Coin.ZERO) > 0)
-        {
+    private void updateBalance(Coin balance) {
+        if (balance.compareTo(Coin.ZERO) > 0) {
             confirmationLabel.setVisible(true);
             progressIndicator.setVisible(true);
             progressIndicator.setProgress(-1);
 
             Set<Transaction> transactions = wallet.getTransactions(false);
             Transaction latestTransaction = null;
-            for (Transaction transaction : transactions)
-            {
-                if (latestTransaction != null)
-                {
-                    if (transaction.getUpdateTime().compareTo(latestTransaction.getUpdateTime()) > 0)
-                    {
+            for (Transaction transaction : transactions) {
+                if (latestTransaction != null) {
+                    if (transaction.getUpdateTime().compareTo(latestTransaction.getUpdateTime()) > 0) {
                         latestTransaction = transaction;
                     }
                 }
-                else
-                {
+                else {
                     latestTransaction = transaction;
                 }
             }
-            if (latestTransaction != null && (transaction == null || latestTransaction.getHashAsString().equals(transaction.getHashAsString())))
-            {
+            if (latestTransaction != null && (transaction == null ||
+                    latestTransaction.getHashAsString().equals(transaction.getHashAsString()))) {
                 updateConfidence(latestTransaction);
             }
         }
 
-        if (balanceTextField != null)
-        {
+        if (balanceTextField != null) {
             //TODO
             balanceTextField.setText(balance.toFriendlyString());
         }
     }
 
-    private void updateConfidence(Transaction tx)
-    {
+    private void updateConfidence(Transaction tx) {
         TransactionConfidence confidence = tx.getConfidence();
         double progressIndicatorSize = 50;
-        switch (confidence.getConfidenceType())
-        {
+        switch (confidence.getConfidenceType()) {
             case UNKNOWN:
                 confirmationLabel.setText("");
                 progressIndicator.setProgress(0);

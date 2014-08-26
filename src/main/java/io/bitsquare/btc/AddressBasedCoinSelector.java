@@ -1,12 +1,42 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.btc;
 
-import com.google.bitcoin.core.*;
+import com.google.bitcoin.core.Address;
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.NetworkParameters;
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.TransactionConfidence;
+import com.google.bitcoin.core.TransactionOutput;
 import com.google.bitcoin.params.RegTestParams;
 import com.google.bitcoin.wallet.CoinSelection;
 import com.google.bitcoin.wallet.DefaultCoinSelector;
+
 import com.google.common.annotations.VisibleForTesting;
+
 import java.math.BigInteger;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,8 +45,7 @@ import org.slf4j.LoggerFactory;
  * possible. This means that the transaction is the most likely to get confirmed. Note that this means we may end up
  * "spending" more priority than would be required to get the transaction we are creating confirmed.
  */
-public class AddressBasedCoinSelector extends DefaultCoinSelector
-{
+public class AddressBasedCoinSelector extends DefaultCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(AddressBasedCoinSelector.class);
     private final NetworkParameters params;
     private final AddressEntry addressEntry;
@@ -31,8 +60,7 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
         this(params, addressInfo, false);
     }   */
 
-    public AddressBasedCoinSelector(NetworkParameters params, AddressEntry addressEntry, boolean includePending)
-    {
+    public AddressBasedCoinSelector(NetworkParameters params, AddressEntry addressEntry, boolean includePending) {
         this.params = params;
         this.addressEntry = addressEntry;
         this.includePending = includePending;
@@ -40,13 +68,10 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
 
     @SuppressWarnings("WeakerAccess")
     @VisibleForTesting
-    static void sortOutputs(ArrayList<TransactionOutput> outputs)
-    {
-        Collections.sort(outputs, new Comparator<TransactionOutput>()
-        {
+    static void sortOutputs(ArrayList<TransactionOutput> outputs) {
+        Collections.sort(outputs, new Comparator<TransactionOutput>() {
             @Override
-            public int compare(TransactionOutput a, TransactionOutput b)
-            {
+            public int compare(TransactionOutput a, TransactionOutput b) {
                 int depth1 = 0;
                 int depth2 = 0;
                 TransactionConfidence conf1 = a.getParentTransaction().getConfidence();
@@ -72,19 +97,18 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
         });
     }
 
-    private static boolean isInBlockChainOrPending(Transaction tx)
-    {
+    private static boolean isInBlockChainOrPending(Transaction tx) {
         // Pick chain-included transactions and transactions that are pending.
         TransactionConfidence confidence = tx.getConfidence();
         TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
-        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) || type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
+        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) || type.equals(TransactionConfidence
+                .ConfidenceType.PENDING) &&
                 // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
                 // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
                 (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
     }
 
-    private static boolean isInBlockChain(Transaction tx)
-    {
+    private static boolean isInBlockChain(Transaction tx) {
         // Only pick chain-included transactions.
         TransactionConfidence confidence = tx.getConfidence();
         TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
@@ -94,26 +118,21 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
     /**
      * Sub-classes can override this to just customize whether transactions are usable, but keep age sorting.
      */
-    protected boolean shouldSelect(Transaction tx)
-    {
-        if (includePending)
-        {
+    protected boolean shouldSelect(Transaction tx) {
+        if (includePending) {
             return isInBlockChainOrPending(tx);
         }
-        else
-        {
+        else {
             return isInBlockChain(tx);
         }
     }
 
     @SuppressWarnings("WeakerAccess")
-    protected boolean matchesRequiredAddress(TransactionOutput transactionOutput)
-    {
-        if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH())
-        {
+    protected boolean matchesRequiredAddress(TransactionOutput transactionOutput) {
+        if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH
+                ()) {
             Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-            if (addressEntry != null && addressOutput.equals(addressEntry.getAddress()))
-            {
+            if (addressEntry != null && addressOutput.equals(addressEntry.getAddress())) {
                 return true;
             }
         }
@@ -121,8 +140,7 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
     }
 
     @Override
-    public CoinSelection select(Coin target, List<TransactionOutput> candidates)
-    {
+    public CoinSelection select(Coin target, List<TransactionOutput> candidates) {
         long targetAsLong = target.longValue();
         HashSet<TransactionOutput> selected = new HashSet<>();
         // Sort the inputs by age*value so we get the highest "coindays" spent.
@@ -130,23 +148,19 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
         ArrayList<TransactionOutput> sortedOutputs = new ArrayList<>(candidates);
         // When calculating the wallet balance, we may be asked to select all possible coins, if so, avoid sorting
         // them in order to improve performance.
-        if (!target.equals(NetworkParameters.MAX_MONEY))
-        {
+        if (!target.equals(NetworkParameters.MAX_MONEY)) {
             sortOutputs(sortedOutputs);
         }
         // Now iterate over the sorted outputs until we have got as close to the target as possible or a little
         // bit over (excessive value will be change).
         long total = 0;
-        for (TransactionOutput output : sortedOutputs)
-        {
-            if (total >= targetAsLong)
-            {
+        for (TransactionOutput output : sortedOutputs) {
+            if (total >= targetAsLong) {
                 break;
             }
             // Only pick chain-included transactions, or transactions that are ours and pending.
             // Only select outputs from our defined address(es)
-            if (!shouldSelect(output.getParentTransaction()) || !matchesRequiredAddress(output))
-            {
+            if (!shouldSelect(output.getParentTransaction()) || !matchesRequiredAddress(output)) {
                 continue;
             }
 
@@ -168,7 +182,8 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector
                 type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
                         confidence.getSource().equals(TransactionConfidence.Source.SELF) &&
                         // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
-                        // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
+                        // TODO: The value 1 below dates from a time when transactions we broadcast *to* were
+                        // counted, set to 0
                         (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
     }
      */

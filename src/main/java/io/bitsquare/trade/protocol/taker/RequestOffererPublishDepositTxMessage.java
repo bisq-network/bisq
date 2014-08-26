@@ -1,12 +1,30 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.trade.protocol.taker;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.trade.protocol.TradeMessage;
+
 import java.io.Serializable;
+
 import java.security.PublicKey;
 
-public class RequestOffererPublishDepositTxMessage implements Serializable, TradeMessage
-{
+public class RequestOffererPublishDepositTxMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = 2179683654379803071L;
     private final String tradeId;
     private BankAccount bankAccount;
@@ -34,8 +52,7 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
                                                  String takerContractSignature,
                                                  String takerPayoutAddress,
                                                  long takerTxOutIndex,
-                                                 long offererTxOutIndex)
-    {
+                                                 long offererTxOutIndex) {
 
         this.tradeId = tradeId;
         this.bankAccount = bankAccount;
@@ -53,63 +70,51 @@ public class RequestOffererPublishDepositTxMessage implements Serializable, Trad
 
 
     @Override
-    public String getTradeId()
-    {
+    public String getTradeId() {
         return tradeId;
     }
 
-    public long getOffererTxOutIndex()
-    {
+    public long getOffererTxOutIndex() {
         return offererTxOutIndex;
     }
 
-    public BankAccount getTakerBankAccount()
-    {
+    public BankAccount getTakerBankAccount() {
         return bankAccount;
     }
 
-    public String getTakerAccountId()
-    {
+    public String getTakerAccountId() {
         return accountID;
     }
 
-    public PublicKey getTakerMessagePublicKey()
-    {
+    public PublicKey getTakerMessagePublicKey() {
         return takerMessagePublicKey;
     }
 
-    public String getSignedTakerDepositTxAsHex()
-    {
+    public String getSignedTakerDepositTxAsHex() {
         return signedTakerDepositTxAsHex;
     }
 
-    public String getTxScriptSigAsHex()
-    {
+    public String getTxScriptSigAsHex() {
         return txScriptSigAsHex;
     }
 
-    public String getTxConnOutAsHex()
-    {
+    public String getTxConnOutAsHex() {
         return txConnOutAsHex;
     }
 
-    public String getTakerContractAsJson()
-    {
+    public String getTakerContractAsJson() {
         return contractAsJson;
     }
 
-    public String getTakerContractSignature()
-    {
+    public String getTakerContractSignature() {
         return takerContractSignature;
     }
 
-    public String getTakerPayoutAddress()
-    {
+    public String getTakerPayoutAddress() {
         return takerPayoutAddress;
     }
 
-    public long getTakerTxOutIndex()
-    {
+    public long getTakerTxOutIndex() {
         return takerTxOutIndex;
     }
 

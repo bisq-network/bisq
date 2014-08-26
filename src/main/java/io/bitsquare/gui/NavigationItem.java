@@ -1,9 +1,25 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.gui;
 
 import io.bitsquare.gui.util.ImageUtil;
 
-public enum NavigationItem
-{
+public enum NavigationItem {
     MAIN("/io/bitsquare/gui/MainView.fxml"),
     HOME("/io/bitsquare/gui/home/HomeView.fxml", ImageUtil.HOME, ImageUtil.HOME_ACTIVE),
     BUY("/io/bitsquare/gui/trade/BuyView.fxml", ImageUtil.NAV_BUY, ImageUtil.NAV_BUY_ACTIVE),
@@ -34,30 +50,25 @@ public enum NavigationItem
     private String icon;
     private String activeIcon;
 
-    NavigationItem(String fxmlUrl, String icon, String activeIcon)
-    {
+    NavigationItem(String fxmlUrl, String icon, String activeIcon) {
         this.fxmlUrl = fxmlUrl;
         this.icon = icon;
         this.activeIcon = activeIcon;
     }
 
-    NavigationItem(String fxmlUrl)
-    {
+    NavigationItem(String fxmlUrl) {
         this.fxmlUrl = fxmlUrl;
     }
 
-    public String getFxmlUrl()
-    {
+    public String getFxmlUrl() {
         return fxmlUrl;
     }
 
-    public String getIcon()
-    {
+    public String getIcon() {
         return icon;
     }
 
-    public String getActiveIcon()
-    {
+    public String getActiveIcon() {
         return activeIcon;
     }
 }

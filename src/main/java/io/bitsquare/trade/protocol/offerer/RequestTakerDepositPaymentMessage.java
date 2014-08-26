@@ -1,11 +1,28 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.trade.protocol.offerer;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.trade.protocol.TradeMessage;
+
 import java.io.Serializable;
 
-public class RequestTakerDepositPaymentMessage implements Serializable, TradeMessage
-{
+public class RequestTakerDepositPaymentMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = -3988720410493712913L;
 
     private final String tradeId;
@@ -15,8 +32,9 @@ public class RequestTakerDepositPaymentMessage implements Serializable, TradeMes
     private String preparedOffererDepositTxAsHex;
     private long offererTxOutIndex;
 
-    public RequestTakerDepositPaymentMessage(String tradeId, BankAccount bankAccount, String accountID, String offererPubKey, String preparedOffererDepositTxAsHex, long offererTxOutIndex)
-    {
+    public RequestTakerDepositPaymentMessage(String tradeId, BankAccount bankAccount, String accountID,
+                                             String offererPubKey, String preparedOffererDepositTxAsHex,
+                                             long offererTxOutIndex) {
         this.tradeId = tradeId;
         this.bankAccount = bankAccount;
         this.accountID = accountID;
@@ -26,33 +44,27 @@ public class RequestTakerDepositPaymentMessage implements Serializable, TradeMes
     }
 
     @Override
-    public String getTradeId()
-    {
+    public String getTradeId() {
         return tradeId;
     }
 
-    public BankAccount getBankAccount()
-    {
+    public BankAccount getBankAccount() {
         return bankAccount;
     }
 
-    public String getAccountId()
-    {
+    public String getAccountId() {
         return accountID;
     }
 
-    public String getOffererPubKey()
-    {
+    public String getOffererPubKey() {
         return offererPubKey;
     }
 
-    public String getPreparedOffererDepositTxAsHex()
-    {
+    public String getPreparedOffererDepositTxAsHex() {
         return preparedOffererDepositTxAsHex;
     }
 
-    public long getOffererTxOutIndex()
-    {
+    public long getOffererTxOutIndex() {
         return offererTxOutIndex;
     }
 }

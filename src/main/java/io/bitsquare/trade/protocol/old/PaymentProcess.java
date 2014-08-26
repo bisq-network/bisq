@@ -1,16 +1,34 @@
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.bitsquare.trade.protocol.old;
 
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
+
 import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 //TODO not used but let it for reference until all use cases are impl.
 @SuppressWarnings({"WeakerAccess", "EmptyMethod"})
-public class PaymentProcess
-{
+public class PaymentProcess {
     private static final Logger log = LoggerFactory.getLogger(PaymentProcess.class);
     protected String offererDepositPubKey;
     protected String offererPayoutAddress;
@@ -24,131 +42,101 @@ public class PaymentProcess
     protected String takerOutputPayment;
     protected String multiSigAddress;
 
-    public PaymentProcess()
-    {
+    public PaymentProcess() {
     }
 
     @Inject
-    public void setMessageService(MessageFacade messageService)
-    {
+    public void setMessageService(MessageFacade messageService) {
     }
 
     @Inject
-    public void setWallet(WalletFacade wallet)
-    {
+    public void setWallet(WalletFacade wallet) {
     }
 
     @Inject
-    public void setBtcServices(BlockChainFacade bitcoinServices)
-    {
+    public void setBtcServices(BlockChainFacade bitcoinServices) {
     }
 
 
-    public void executeStep0()
-    {
+    public void executeStep0() {
     }
 
-    public void executeStep1()
-    {
+    public void executeStep1() {
     }
 
-    public void executeStep2()
-    {
+    public void executeStep2() {
     }
 
-    public void executeStep3()
-    {
+    public void executeStep3() {
     }
 
 
-    protected void createDepositTx()
-    {
+    protected void createDepositTx() {
         //wallet.getInputs(offererTotalInputPayment);
         //bitcoinServices.createTx(taker);
     }
 
-    protected void payPaymentAndCollateral()
-    {
+    protected void payPaymentAndCollateral() {
     }
 
-    protected void signDepositTx()
-    {
+    protected void signDepositTx() {
     }
 
-    protected void sendDataDepositTx()
-    {
+    protected void sendDataDepositTx() {
     }
 
-    protected void onMessageFiatTxInited()
-    {
+    protected void onMessageFiatTxInited() {
     }
 
-    protected void onUserInputFiatReceived()
-    {
+    protected void onUserInputFiatReceived() {
     }
 
-    protected void onDataPayoutTx()
-    {
+    protected void onDataPayoutTx() {
     }
 
-    protected void onMessageDepositTxPublished()
-    {
+    protected void onMessageDepositTxPublished() {
     }
 
-    protected void signPayoutTx()
-    {
+    protected void signPayoutTx() {
     }
 
-    protected void publishPayoutTx()
-    {
+    protected void publishPayoutTx() {
     }
 
-    protected void sendMessagePayoutTxPublished()
-    {
+    protected void sendMessagePayoutTxPublished() {
     }
 
-    protected void onBlockChainConfirmation()
-    {
+    protected void onBlockChainConfirmation() {
     }
 
-    protected void done()
-    {
+    protected void done() {
     }
 
-    protected void onDataDepositTx()
-    {
+    protected void onDataDepositTx() {
     }
 
-    protected void payCollateral()
-    {
+    protected void payCollateral() {
     }
 
-    protected void publishDepositTx()
-    {
+    protected void publishDepositTx() {
     }
 
-    protected void sendMessageDepositTxPublished()
-    {
+    protected void sendMessageDepositTxPublished() {
     }
 
-    protected void payFiat()
-    {
+    protected void payFiat() {
     }
 
-    protected void sendMessageFiatTxInited()
-    {
+    protected void sendMessageFiatTxInited() {
     }
 
-    protected void createPayoutTx()
-    {
+    protected void createPayoutTx() {
     }
 
-    protected void sendDataPayoutTx()
-    {
+    protected void sendDataPayoutTx() {
     }
 
-    protected void onMessagePayoutTxPublished()
-    {
+    protected void onMessagePayoutTxPublished() {
     }
 
     /*
