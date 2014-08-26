@@ -69,7 +69,8 @@ public class GuiceFXMLLoader {
             item = cachedGUIItems.get(url);
             log.debug("loaded from cache " + url);
             return (T) cachedGUIItems.get(url).view;
-        } else {
+        }
+        else {
             log.debug("load from disc " + url);
             T result = loader.load();
             item = new Item(result, loader.getController());

@@ -103,7 +103,8 @@ public class BitSquareValidator {
             textField.setEffect(invalidEffect);
             textField.setStyle(invalidStyle);
             throw new ValidationException();
-        } else {
+        }
+        else {
             double val = Double.parseDouble(input);
             if (val <= 0) {
                 textField.setEffect(invalidEffect);

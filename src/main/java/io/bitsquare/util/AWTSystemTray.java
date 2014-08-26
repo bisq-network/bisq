@@ -65,7 +65,8 @@ public class AWTSystemTray {
                     showGuiItem.setLabel("Open exchange window");
                     Platform.runLater(stage::hide);
                     isStageVisible = false;
-                } else {
+                }
+                else {
                     showGuiItem.setLabel("Close exchange window");
                     Platform.runLater(stage::show);
                     isStageVisible = true;
@@ -82,7 +83,8 @@ public class AWTSystemTray {
             } catch (AWTException e) {
                 log.error("TrayIcon could not be added.");
             }
-        } else {
+        }
+        else {
             log.error("SystemTray is not supported");
         }
     }

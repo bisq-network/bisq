@@ -236,7 +236,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                 if (spinner != null) {
                     if (getSkinnable().impl_isTreeVisible() && getSkinnable().getScene() != null) {
                         spinner.indeterminateTimeline.play();
-                    } else {
+                    }
+                    else {
                         spinner.indeterminateTimeline.pause();
                         getChildren().remove(spinner);
                         spinner = null;
@@ -258,7 +259,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                         spinner = null;
                         timelineNulled = true;
                     }
-                } else {
+                }
+                else {
                     if (getSkinnable().getScene() != null && getSkinnable().isIndeterminate()) {
                         timelineNulled = false;
                         spinner = new IndeterminateSpinner(
@@ -301,7 +303,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
             if (getSkinnable().impl_isTreeVisible()) {
                 spinner.indeterminateTimeline.play();
             }
-        } else {
+        }
+        else {
             // clean up after spinner
             if (spinner != null) {
                 spinner.indeterminateTimeline.stop();
@@ -329,7 +332,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
         if (spinner != null && getSkinnable().isIndeterminate()) {
             spinner.layoutChildren();
             spinner.resizeRelocate(0, 0, w, h);
-        } else if (determinateIndicator != null) {
+        }
+        else if (determinateIndicator != null) {
             determinateIndicator.layoutChildren();
             determinateIndicator.resizeRelocate(0, 0, w, h);
         }
@@ -433,7 +437,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                 progress.setStyle("-fx-background-color: rgba(" + ((int) (255 * c.getRed())) + "," +
                         "" + ((int) (255 * c.getGreen())) + "," + ((int) (255 * c.getBlue())) + "," +
                         "" + c.getOpacity() + ");");
-            } else {
+            }
+            else {
                 progress.setStyle(null);
             }
         }
@@ -651,7 +656,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
             if (indeterminateTimeline != null) {
                 if (pause) {
                     indeterminateTimeline.pause();
-                } else {
+                }
+                else {
                     indeterminateTimeline.play();
                 }
             }
@@ -690,7 +696,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                     region.setStyle("-fx-background-color: rgba(" + ((int) (255 * c.getRed())) + "," +
                             "" + ((int) (255 * c.getGreen())) + "," + ((int) (255 * c.getBlue())) + "," +
                             "" + c.getOpacity() + ");");
-                } else {
+                }
+                else {
                     region.setStyle(null);
                 }
                 pathsG.getChildren().add(region);
@@ -719,7 +726,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                 InvalidationListener treeVisibilityListener = valueModel -> {
                     if (piSkin.skin.getSkinnable().impl_isTreeVisible()) {
                         piSkin.pauseIndicator(false);
-                    } else {
+                    }
+                    else {
                         piSkin.pauseIndicator(true);
                     }
                 };
@@ -734,7 +742,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                         Region region = (Region) child;
                         if (region.getShape() != null) {
                             w = Math.max(w, region.getShape().getLayoutBounds().getMaxX());
-                        } else {
+                        }
+                        else {
                             w = Math.max(w, region.prefWidth(height));
                         }
                     }
@@ -750,7 +759,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                         Region region = (Region) child;
                         if (region.getShape() != null) {
                             h = Math.max(h, region.getShape().getLayoutBounds().getMaxY());
-                        } else {
+                        }
+                        else {
                             h = Math.max(h, region.prefHeight(width));
                         }
                     }
@@ -768,7 +778,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                         region.resize(region.getShape().getLayoutBounds().getMaxX(),
                                 region.getShape().getLayoutBounds().getMaxY());
                         region.getTransforms().setAll(new Scale(scale, scale, 0, 0));
-                    } else {
+                    }
+                    else {
                         region.autosize();
                     }
                 });

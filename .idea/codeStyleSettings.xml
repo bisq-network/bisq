@@ -9,6 +9,7 @@
           <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
         </XML>
         <codeStyleSettings language="JAVA">
+          <option name="ELSE_ON_NEW_LINE" value="true" />
           <option name="WRAP_LONG_LINES" value="true" />
           <option name="FIELD_ANNOTATION_WRAP" value="0" />
         </codeStyleSettings>

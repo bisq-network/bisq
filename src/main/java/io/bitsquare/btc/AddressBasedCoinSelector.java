@@ -110,7 +110,8 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector {
     protected boolean shouldSelect(Transaction tx) {
         if (includePending) {
             return isInBlockChainOrPending(tx);
-        } else {
+        }
+        else {
             return isInBlockChain(tx);
         }
     }

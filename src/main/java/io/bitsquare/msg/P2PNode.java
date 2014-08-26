@@ -214,7 +214,8 @@ public class P2PNode {
             public void operationComplete(BaseFuture future) throws Exception {
                 if (futureDirect.isSuccess()) {
                     log.debug("sendMessage completed");
-                } else {
+                }
+                else {
                     log.error("sendData failed with Reason " + futureDirect.failedReason());
                 }
             }
@@ -248,7 +249,8 @@ public class P2PNode {
                                 if (future.isSuccess()) {
                                     storedPeerAddress = peerDHT.peerAddress();
                                     log.debug("storedPeerAddress = " + storedPeerAddress);
-                                } else {
+                                }
+                                else {
                                     log.error("");
                                 }
                             }
@@ -258,7 +260,8 @@ public class P2PNode {
                                 log.error(t.toString());
                             }
                         });
-                    } else {
+                    }
+                    else {
                         log.error("peerDHT is null");
                     }
                 } catch (IOException | ClassNotFoundException e) {
@@ -325,7 +328,8 @@ public class P2PNode {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } else {
+        }
+        else {
             storage = new StorageMemory();
         }
     }

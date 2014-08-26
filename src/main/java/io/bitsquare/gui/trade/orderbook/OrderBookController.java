@@ -226,7 +226,8 @@ public class OrderBookController extends CachedViewController {
             ViewController nextController = parentController.loadViewAndGetChildController(NavigationItem.CREATE_OFFER);
             if (nextController != null)
                 ((CreateOfferController) nextController).setOrderBookFilter(orderBookFilter);
-        } else {
+        }
+        else {
             showRegistrationDialog();
         }
     }
@@ -253,7 +254,8 @@ public class OrderBookController extends CachedViewController {
                 if (walletFacade.isRegistrationFeeBalanceSufficient()) {
                     if (walletFacade.isRegistrationFeeConfirmed()) {
                         selectedIndex = 2;
-                    } else {
+                    }
+                    else {
                         Action response = Popups.openErrorPopup("Registration fee not confirmed yet",
                                 "The registration fee transaction has not been confirmed yet in the blockchain. " +
                                         "Please wait until it has at least 1 confirmation.");
@@ -261,7 +263,8 @@ public class OrderBookController extends CachedViewController {
                             MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.FUNDS);
                         }
                     }
-                } else {
+                }
+                else {
                     Action response = Popups.openErrorPopup("Missing registration fee",
                             "You have not funded the full registration fee of " + BitSquareFormatter
                                     .formatCoinWithCode(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
@@ -269,10 +272,12 @@ public class OrderBookController extends CachedViewController {
                         MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.FUNDS);
                     }
                 }
-            } else {
+            }
+            else {
                 selectedIndex = 1;
             }
-        } else {
+        }
+        else {
             selectedIndex = 0;
         }
 
@@ -295,9 +300,11 @@ public class OrderBookController extends CachedViewController {
                     selectedIndex);
             if (registrationMissingAction == settingsCommandLink) {
                 MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.SETTINGS);
-            } else if (registrationMissingAction == depositFeeCommandLink) {
+            }
+            else if (registrationMissingAction == depositFeeCommandLink) {
                 MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.FUNDS);
-            } else if (registrationMissingAction == sendRegistrationCommandLink) {
+            }
+            else if (registrationMissingAction == sendRegistrationCommandLink) {
                 payRegistrationFee();
             }
         }
@@ -338,14 +345,16 @@ public class OrderBookController extends CachedViewController {
             Coin requestedAmount;
             if (!"".equals(amount.getText())) {
                 requestedAmount = BitSquareFormatter.parseToCoin(amount.getText());
-            } else {
+            }
+            else {
                 requestedAmount = offer.getAmount();
             }
 
             if (takerOfferController != null) {
                 takerOfferController.initWithData(offer, requestedAmount);
             }
-        } else {
+        }
+        else {
             showRegistrationDialog();
         }
     }
@@ -370,7 +379,8 @@ public class OrderBookController extends CachedViewController {
         pollingTimer = Utilities.setInterval(1000, (animationTimer) -> {
             if (user.getCurrentBankAccount() != null) {
                 messageFacade.getDirtyFlag(user.getCurrentBankAccount().getCurrency());
-            } else {
+            }
+            else {
                 messageFacade.getDirtyFlag(CurrencyUtil.getDefaultCurrency());
             }
             return null;
@@ -414,11 +424,13 @@ public class OrderBookController extends CachedViewController {
                                         icon = ImageUtil.getIconImage(ImageUtil.REMOVE);
                                         title = "Remove";
                                         button.setOnAction(event -> removeOffer(orderBookListItem.getOffer()));
-                                    } else {
+                                    }
+                                    else {
                                         if (offer.getDirection() == Direction.SELL) {
                                             icon = buyIcon;
                                             title = BitSquareFormatter.formatDirection(Direction.BUY, true);
-                                        } else {
+                                        }
+                                        else {
                                             icon = sellIcon;
                                             title = BitSquareFormatter.formatDirection(Direction.SELL, true);
                                         }
@@ -431,7 +443,8 @@ public class OrderBookController extends CachedViewController {
                                     iconView.setImage(icon);
                                     button.setText(title);
                                     setGraphic(button);
-                                } else {
+                                }
+                                else {
                                     setGraphic(null);
                                 }
                             }
@@ -497,7 +510,8 @@ public class OrderBookController extends CachedViewController {
                                 if (orderBookListItem != null) {
                                     BankAccountType bankAccountType = orderBookListItem.getOffer().getBankAccountType();
                                     setText(Localisation.get(bankAccountType.toString()));
-                                } else {
+                                }
+                                else {
                                     setText("");
                                 }
                             }

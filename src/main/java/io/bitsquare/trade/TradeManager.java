@@ -97,14 +97,16 @@ public class TradeManager {
         Object offersObject = persistence.read(this, "offers");
         if (offersObject instanceof HashMap) {
             offers = (Map<String, Offer>) offersObject;
-        } else {
+        }
+        else {
             offers = new HashMap<>();
         }
 
         Object tradesObject = persistence.read(this, "trades");
         if (tradesObject instanceof HashMap) {
             trades = (Map<String, Trade>) tradesObject;
-        } else {
+        }
+        else {
             trades = new HashMap<>();
         }
 
@@ -164,7 +166,8 @@ public class TradeManager {
         if (createOfferCoordinatorMap.containsKey(offer.getId())) {
             errorMessageHandler.onFault("A createOfferCoordinator for the offer with the id " + offer.getId() + " " +
                     "already exists.");
-        } else {
+        }
+        else {
             CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(persistence,
                     offer,
                     walletFacade,
@@ -332,14 +335,16 @@ public class TradeManager {
 
             if (!offererAsBuyerProtocolMap.containsKey(trade.getId())) {
                 offererAsBuyerProtocolMap.put(trade.getId(), protocolForOffererAsBuyer);
-            } else {
+            }
+            else {
                 // We don't store the protocol in case we have already a pending offer. The protocol is only
                 // temporary used to reply with a reject message.
                 log.trace("offererAsBuyerProtocol not stored as offer is already pending.");
             }
 
             protocolForOffererAsBuyer.start();
-        } else {
+        }
+        else {
             log.warn("Incoming offer take request does not match with any saved offer. We ignore that request.");
         }
     }
@@ -365,22 +370,29 @@ public class TradeManager {
         if (tradeMessage instanceof RequestTakeOfferMessage) {
             createOffererAsBuyerProtocol(tradeId, sender);
             takeOfferRequestListeners.stream().forEach(e -> e.onTakeOfferRequested(tradeId, sender));
-        } else if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
+        }
+        else if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
             takerAsSellerProtocolMap.get(tradeId).onRespondToTakeOfferRequestMessage(
                     (RespondToTakeOfferRequestMessage) tradeMessage);
-        } else if (tradeMessage instanceof TakeOfferFeePayedMessage) {
+        }
+        else if (tradeMessage instanceof TakeOfferFeePayedMessage) {
             offererAsBuyerProtocolMap.get(tradeId).onTakeOfferFeePayedMessage((TakeOfferFeePayedMessage) tradeMessage);
-        } else if (tradeMessage instanceof RequestTakerDepositPaymentMessage) {
+        }
+        else if (tradeMessage instanceof RequestTakerDepositPaymentMessage) {
             takerAsSellerProtocolMap.get(tradeId).onRequestTakerDepositPaymentMessage(
                     (RequestTakerDepositPaymentMessage) tradeMessage);
-        } else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
+        }
+        else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
             offererAsBuyerProtocolMap.get(tradeId).onRequestOffererPublishDepositTxMessage(
                     (RequestOffererPublishDepositTxMessage) tradeMessage);
-        } else if (tradeMessage instanceof DepositTxPublishedMessage) {
+        }
+        else if (tradeMessage instanceof DepositTxPublishedMessage) {
             takerAsSellerProtocolMap.get(tradeId).onDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
-        } else if (tradeMessage instanceof BankTransferInitedMessage) {
+        }
+        else if (tradeMessage instanceof BankTransferInitedMessage) {
             takerAsSellerProtocolMap.get(tradeId).onBankTransferInitedMessage((BankTransferInitedMessage) tradeMessage);
-        } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
+        }
+        else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             offererAsBuyerProtocolMap.get(tradeId).onPayoutTxPublishedMessage((PayoutTxPublishedMessage) tradeMessage);
         }
     }
@@ -436,7 +448,8 @@ public class TradeManager {
     public Trade getTrade(String tradeId) {
         if (trades.containsKey(tradeId)) {
             return trades.get(trades);
-        } else {
+        }
+        else {
             return null;
         }
     }

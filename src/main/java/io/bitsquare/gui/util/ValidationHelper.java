@@ -91,17 +91,20 @@ public class ValidationHelper {
                         "Amount cannot be smaller than minimum amount.",
                         NumberValidator.ErrorType.AMOUNT_LESS_THAN_MIN_AMOUNT));
                 amountTextField.reValidate();
-            } else {
+            }
+            else {
                 amountValidator.overrideResult(null);
                 minAmountTextField.reValidate();
             }
-        } else if (currentTextField == minAmountTextField) {
+        }
+        else if (currentTextField == minAmountTextField) {
             if (Double.parseDouble(minAmountCleaned) > Double.parseDouble(amountCleaned)) {
                 minAmountValidator.overrideResult(new NumberValidator.ValidationResult(false,
                         "Minimum amount cannot be larger than amount.",
                         NumberValidator.ErrorType.MIN_AMOUNT_LARGER_THAN_MIN_AMOUNT));
                 minAmountTextField.reValidate();
-            } else {
+            }
+            else {
                 minAmountValidator.overrideResult(null);
                 amountTextField.reValidate();
             }

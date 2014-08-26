@@ -156,7 +156,8 @@ public class ValidatingTextField extends TextField {
             if (popOver != null) {
                 popOver.hide();
             }
-        } else {
+        }
+        else {
             if (popOver == null)
                 createErrorPopOver(validationResult.errorMessage);
             else
@@ -177,7 +178,8 @@ public class ValidatingTextField extends TextField {
         if (errorPopupLayoutReference == null) {
             point = localToScene(0, 0);
             x = point.getX() + window.getX() + getWidth() + 20;
-        } else {
+        }
+        else {
             point = errorPopupLayoutReference.localToScene(0, 0);
             x = point.getX() + window.getX() + errorPopupLayoutReference.getWidth() + 20;
         }

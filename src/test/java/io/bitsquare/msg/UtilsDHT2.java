@@ -134,7 +134,8 @@ public class UtilsDHT2 {
                     .externalBindings(bindings).peerMap(peerMap).start().addAutomaticFuture(automaticFuture);
             peers[0] = new PeerBuilderDHT(master).start();
 
-        } else {
+        }
+        else {
             Number160 peerId = new Number160(rnd);
             PeerMap peerMap = new PeerMap(new PeerMapConfiguration(peerId));
             master = new PeerBuilder(peerId).enableMaintenance(maintenance).externalBindings(bindings)
@@ -151,7 +152,8 @@ public class UtilsDHT2 {
                         .enableMaintenance(maintenance).enableMaintenance(maintenance).peerMap(peerMap)
                         .externalBindings(bindings).start().addAutomaticFuture(automaticFuture);
                 peers[i] = new PeerBuilderDHT(peer).start();
-            } else {
+            }
+            else {
                 Number160 peerId = new Number160(rnd);
                 PeerMap peerMap = new PeerMap(new PeerMapConfiguration(peerId).peerNoVerification());
                 Peer peer = new PeerBuilder(peerId).enableMaintenance(maintenance)
@@ -239,7 +241,8 @@ public class UtilsDHT2 {
         for (int i = 0; i < nr; i++) {
             if (i == 0) {
                 peers[0] = new PeerBuilder(new Number160(rnd)).ports(port).start();
-            } else {
+            }
+            else {
                 peers[i] = new PeerBuilder(new Number160(rnd)).masterPeer(peers[0]).start();
             }
         }

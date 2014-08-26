@@ -185,7 +185,8 @@ public class ProtocolForTakerAsSeller {
         if (message.isTakeOfferRequestAccepted()) {
             state = State.PayTakeOfferFee;
             PayTakeOfferFee.run(this::onResultPayTakeOfferFee, this::onFault, walletFacade, tradeId);
-        } else {
+        }
+        else {
             listener.onTakeOfferRequestRejected(trade);
             // exit case
         }

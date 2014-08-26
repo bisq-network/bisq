@@ -43,7 +43,8 @@ public class BroadCastOfferFeeTx {
                         } catch (Exception e) {
                             faultHandler.onFault("Offer fee payment failed.", e);
                         }
-                    } else {
+                    }
+                    else {
                         faultHandler.onFault("Offer fee payment failed.",
                                 new Exception("Offer fee payment failed. Transaction = null."));
                     }

@@ -61,12 +61,14 @@ public class TransactionsListItem {
                         address =
                                 transactionOutput.getScriptPubKey().getToAddress(walletFacade.getWallet().getParams());
                         addressString = address.toString();
-                    } else {
+                    }
+                    else {
                         addressString = "No sent to address script used.";
                     }
                 }
             }
-        } else if (valueSentFromMe.isZero()) {
+        }
+        else if (valueSentFromMe.isZero()) {
             //TODO use BitSquareFormatter
             amount.set(valueSentToMe.toFriendlyString());
             type.set("Received with");
@@ -78,12 +80,14 @@ public class TransactionsListItem {
                         address =
                                 transactionOutput.getScriptPubKey().getToAddress(walletFacade.getWallet().getParams());
                         addressString = address.toString();
-                    } else {
+                    }
+                    else {
                         addressString = "No sent to address script used.";
                     }
                 }
             }
-        } else {
+        }
+        else {
             //TODO use BitSquareFormatter
             amount.set(valueSentToMe.subtract(valueSentFromMe).toFriendlyString());
 
@@ -96,7 +100,8 @@ public class TransactionsListItem {
                         address = transactionOutput.getScriptPubKey().getToAddress(walletFacade.getWallet().getParams
                                 ());
                         addressString = address.toString();
-                    } else {
+                    }
+                    else {
                         addressString = "No sent to address script used.";
                     }
                 }
@@ -104,7 +109,8 @@ public class TransactionsListItem {
 
             if (outgoing) {
                 type.set("Sent to");
-            } else {
+            }
+            else {
                 type.set("Internal (TX Fee)");
                 addressString = "Internal swap between addresses.";
             }

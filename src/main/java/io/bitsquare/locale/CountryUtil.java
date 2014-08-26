@@ -137,7 +137,8 @@ public class CountryUtil {
     private static String getRegionCode(String countryCode) {
         if (!countryCode.isEmpty() && countryCodeList.contains(countryCode)) {
             return regionCodeList.get(countryCodeList.indexOf(countryCode));
-        } else {
+        }
+        else {
             return "Undefined";
         }
     }

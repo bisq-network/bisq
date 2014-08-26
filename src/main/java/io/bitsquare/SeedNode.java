@@ -155,7 +155,8 @@ public class SeedNode extends Thread {
                     public void operationComplete(BaseFuture future) throws Exception {
                         if (future.isSuccess()) {
                             log.debug("peer online (TCP):" + peerAddress);
-                        } else {
+                        }
+                        else {
                             log.debug("offline " + peerAddress);
                         }
                     }
@@ -172,7 +173,8 @@ public class SeedNode extends Thread {
                     public void operationComplete(BaseFuture future) throws Exception {
                         if (future.isSuccess()) {
                             log.debug("peer online (UDP):" + peerAddress);
-                        } else {
+                        }
+                        else {
                             log.debug("offline " + peerAddress);
                         }
                     }

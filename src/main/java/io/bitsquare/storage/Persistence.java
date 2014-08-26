@@ -70,7 +70,8 @@ public class Persistence {
                 } finally {
                     lock.unlock();
                 }
-            } else {
+            }
+            else {
                 rootMap = map;
             }
         } finally {
@@ -144,7 +145,8 @@ public class Persistence {
             if (rootMap.containsKey(key)) {
                 // log.trace("Read object with key = " + key + " / value = " + rootMap.get(key));
                 return rootMap.get(key);
-            } else {
+            }
+            else {
                 final Map<String, Serializable> map = readRootMap();
                 if (map != null) {
                     rootMap = map;
@@ -152,7 +154,8 @@ public class Persistence {
                 if (rootMap.containsKey(key)) {
                     // log.trace("Read object with key = " + key + " / value = " + rootMap.get(key));
                     return rootMap.get(key);
-                } else {
+                }
+                else {
                     log.info("Object with key = " + key + " not found.");
                     return null;
                 }
@@ -174,11 +177,13 @@ public class Persistence {
             if (object == null) {
                 log.error("readRootMap returned null object.");
                 return null;
-            } else {
+            }
+            else {
                 if (object instanceof Map) {
                     //noinspection unchecked
                     return (Map<String, Serializable>) object;
-                } else {
+                }
+                else {
                     log.error("Object is not type of Map<String, Serializable>");
                     return null;
                 }

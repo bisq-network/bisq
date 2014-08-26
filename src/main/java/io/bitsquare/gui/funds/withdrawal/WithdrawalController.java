@@ -114,7 +114,8 @@ public class WithdrawalController extends CachedViewController {
                     amountTextField.setText(newValue.getBalance().toPlainString());
                     withdrawFromTextField.setText(newValue.getAddressEntry().getAddressString());
                     changeAddressTextField.setText(newValue.getAddressEntry().getAddressString());
-                } else {
+                }
+                else {
                     withdrawFromTextField.setText("");
                     withdrawFromTextField.setPromptText("No fund to withdrawal on that address.");
                     amountTextField.setText("");
@@ -186,7 +187,8 @@ public class WithdrawalController extends CachedViewController {
                     }
                 }
 
-            } else {
+            }
+            else {
                 Popups.openErrorPopup("Insufficient amount",
                         "The amount to transfer is lower the the transaction fee and the min. possible tx value.");
             }
@@ -232,7 +234,8 @@ public class WithdrawalController extends CachedViewController {
                                         ().getOfferId()));
                             }
                             setGraphic(hyperlink);
-                        } else {
+                        }
+                        else {
                             setGraphic(null);
                             setId(null);
                         }
@@ -289,7 +292,8 @@ public class WithdrawalController extends CachedViewController {
                                         clipboard.setContent(content);
                                     });
 
-                                } else {
+                                }
+                                else {
                                     setGraphic(null);
                                 }
                             }
@@ -314,7 +318,8 @@ public class WithdrawalController extends CachedViewController {
 
                                 if (item != null && !empty) {
                                     setGraphic(item.getProgressIndicator());
-                                } else {
+                                }
+                                else {
                                     setGraphic(null);
                                 }
                             }

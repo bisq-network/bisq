@@ -143,7 +143,8 @@ public class ValidatedTextField extends TextField {
                     if (t1) {
                         //                        setStyle("-fx-font-weight: bold; -fx-text-fill: red;");
                         setEffect(invalidEffect);
-                    } else {
+                    }
+                    else {
                         //                        setStyle("-fx-font-weight: normal; -fx-text-fill: inherit;");
                         setEffect(null);
                     }

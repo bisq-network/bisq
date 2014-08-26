@@ -133,7 +133,8 @@ public class Popups {
                 Action response = Popups.openErrorPopup("Application already running",
                         "This application is already running and cannot be started twice.", "");
                 if (response == Dialog.Actions.OK) Platform.exit();
-            } else {
+            }
+            else {
                 Action response = Popups.openExceptionPopup(throwable, "Exception", "",
                         "A critical error has occurred.\nPlease copy the exception details and send a bug report to " +
                                 "bugs@bitsquare.io.");

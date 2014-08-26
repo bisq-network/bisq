@@ -155,16 +155,20 @@ public class TakerOfferController extends CachedViewController {
         // TODO more validation (fee payment, blacklist,...)
         if (amountTextField.isInvalid()) {
             Popups.openErrorPopup("Invalid input", "The requested amount you entered is not a valid amount.");
-        } else if (BitSquareValidator.tradeAmountOutOfRange(amount, offer)) {
+        }
+        else if (BitSquareValidator.tradeAmountOutOfRange(amount, offer)) {
             Popups.openErrorPopup(
                     "Invalid input", "The requested amount you entered is outside of the range of the offered amount.");
-        } else if (addressEntry == null ||
+        }
+        else if (addressEntry == null ||
                 getTotal().compareTo(walletFacade.getBalanceForAddress(addressEntry.getAddress())) > 0) {
             Popups.openErrorPopup("Insufficient money", "You don't have enough funds for that trade.");
-        } else if (tradeManager.isOfferAlreadyInTrades(offer)) {
+        }
+        else if (tradeManager.isOfferAlreadyInTrades(offer)) {
             Popups.openErrorPopup("Offer previously accepted",
                     "You have that offer already taken. Open the offer section to find that trade.");
-        } else {
+        }
+        else {
             takeOfferButton.setDisable(true);
             amountTextField.setEditable(false);
             tradeManager.takeOffer(amount, offer, new ProtocolForTakerAsSellerListener() {

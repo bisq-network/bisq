@@ -119,7 +119,8 @@ public class ArbitratorRegistrationController extends CachedViewController {
         if (persistedArbitrator != null) {
             arbitrator.applyPersistedArbitrator(persistedArbitrator);
             applyArbitrator();
-        } else {
+        }
+        else {
             languageList.add(LanguageUtil.getDefaultLanguageLocale());
             languagesTextField.setText(BitSquareFormatter.languageLocalesToString(languageList));
         }
@@ -322,7 +323,8 @@ public class ArbitratorRegistrationController extends CachedViewController {
 
             if (isEditMode) {
                 close();
-            } else {
+            }
+            else {
                 setupPayCollateralScreen();
                 accordion.setExpandedPane(payCollateralTitledPane);
             }

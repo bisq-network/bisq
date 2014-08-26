@@ -73,7 +73,8 @@ class UTF8Control extends ResourceBundle.Control {
                     stream = connection.getInputStream();
                 }
             }
-        } else {
+        }
+        else {
             stream = loader.getResourceAsStream(resourceName);
         }
         if (stream != null) {

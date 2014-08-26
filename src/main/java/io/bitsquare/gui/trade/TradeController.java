@@ -102,7 +102,8 @@ public class TradeController extends CachedViewController {
             orderBookController = orderBookLoader.getController();
             orderBookController.setParentController(this);
             return orderBookController;
-        } else if (navigationItem == NavigationItem.CREATE_OFFER) {
+        }
+        else if (navigationItem == NavigationItem.CREATE_OFFER) {
             checkArgument(createOfferController == null);
 
             // CreateOffer and TakeOffer must not be cached by GuiceFXMLLoader as we cannot use a view multiple times
@@ -121,7 +122,8 @@ public class TradeController extends CachedViewController {
                 log.error(e.getMessage());
             }
             return null;
-        } else if (navigationItem == NavigationItem.TAKE_OFFER) {
+        }
+        else if (navigationItem == NavigationItem.TAKE_OFFER) {
             checkArgument(takerOfferController == null);
 
             // CreateOffer and TakeOffer must not be cached by GuiceFXMLLoader as we cannot use a view multiple times
@@ -140,7 +142,8 @@ public class TradeController extends CachedViewController {
                 log.error(e.getMessage());
             }
             return null;
-        } else {
+        }
+        else {
             log.error("navigationItem not supported: " + navigationItem);
             return null;
         }

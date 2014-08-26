@@ -140,7 +140,8 @@ public class DepositController extends CachedViewController {
                                         log.info("Show trade details " + item.getAddressEntry().getOfferId()));
                             }
                             setGraphic(hyperlink);
-                        } else {
+                        }
+                        else {
                             setGraphic(null);
                             setId(null);
                         }
@@ -164,7 +165,8 @@ public class DepositController extends CachedViewController {
 
                                 if (item != null && !empty) {
                                     setGraphic(item.getBalanceLabel());
-                                } else {
+                                }
+                                else {
                                     setGraphic(null);
                                 }
                             }
@@ -202,7 +204,8 @@ public class DepositController extends CachedViewController {
                                         clipboard.setContent(content);
                                     });
 
-                                } else {
+                                }
+                                else {
                                     setGraphic(null);
                                 }
                             }
@@ -227,7 +230,8 @@ public class DepositController extends CachedViewController {
 
                         if (item != null && !empty) {
                             setGraphic(item.getProgressIndicator());
-                        } else {
+                        }
+                        else {
                             setGraphic(null);
                         }
                     }

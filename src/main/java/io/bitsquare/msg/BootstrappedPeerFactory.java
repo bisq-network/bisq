@@ -200,7 +200,8 @@ public class BootstrappedPeerFactory {
                     settableFuture.set(peerDHT);
 
                     persistence.write(ref, "lastSuccessfulBootstrap", "default");
-                } else {
+                }
+                else {
                     log.warn("Discover has failed. Reason: " + futureDiscover.failedReason());
                     log.warn("We are probably behind a NAT and not reachable to other peers. We try port forwarding " +
                             "as next step.");
@@ -235,7 +236,8 @@ public class BootstrappedPeerFactory {
                     settableFuture.set(peerDHT);
 
                     persistence.write(ref, "lastSuccessfulBootstrap", "portForwarding");
-                } else {
+                }
+                else {
                     log.warn("Port forwarding has failed. Reason: " + futureNAT.failedReason());
                     log.warn("We try to use a relay as next step.");
 
@@ -269,7 +271,8 @@ public class BootstrappedPeerFactory {
                     log.debug("Bootstrap was successful. bootstrapTo  = " + futureBootstrap.bootstrapTo());
 
                     setupRelay(peerDHT, nodeBehindNat, getBootstrapAddress());
-                } else {
+                }
+                else {
                     log.error("Bootstrap failed. Reason:" + futureBootstrap.failedReason());
                     settableFuture.setException(new Exception(futureBootstrap.failedReason()));
                 }
@@ -293,7 +296,8 @@ public class BootstrappedPeerFactory {
                     futureRelay.relays().forEach(e -> log.debug("remotePeer = " + e.remotePeer()));
 
                     findNeighbors2(peerDHT, nodeBehindNat, bootstrapAddress);
-                } else {
+                }
+                else {
                     log.error("setupRelay failed. Reason: " + futureRelay.failedReason());
                     log.error("Bootstrap failed. We give up...");
                     settableFuture.setException(new Exception(futureRelay.failedReason()));
@@ -326,7 +330,8 @@ public class BootstrappedPeerFactory {
                     settableFuture.set(peerDHT);
 
                     persistence.write(ref, "lastSuccessfulBootstrap", "relay");
-                } else {
+                }
+                else {
                     log.error("Bootstrap 2 failed. Reason:" + futureBootstrap2.failedReason());
                     log.error("We give up...");
                     settableFuture.setException(new Exception(futureBootstrap2.failedReason()));

@@ -136,7 +136,8 @@ public class OfferController extends CachedViewController {
                                     Tooltip.install(hyperlink, tooltip);
                                     hyperlink.setOnAction(event -> openOfferDetails(item));
                                     setGraphic(hyperlink);
-                                } else {
+                                }
+                                else {
                                     setGraphic(null);
                                     setId(null);
                                 }
@@ -170,7 +171,8 @@ public class OfferController extends CachedViewController {
                                 if (offerListItem != null) {
                                     button.setOnAction(event -> removeOffer(offerListItem));
                                     setGraphic(button);
-                                } else {
+                                }
+                                else {
                                     setGraphic(null);
                                 }
                             }

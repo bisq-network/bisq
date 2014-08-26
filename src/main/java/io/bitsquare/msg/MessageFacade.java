@@ -141,7 +141,8 @@ public class MessageFacade implements MessageBroker {
                     if (baseFuture.isSuccess() && futureGet.data() != null) {
                         final PeerAddress peerAddress = (PeerAddress) futureGet.data().object();
                         Platform.runLater(() -> listener.onResult(peerAddress));
-                    } else {
+                    }
+                    else {
                         Platform.runLater(() -> listener.onFailed());
                     }
                 }
@@ -180,7 +181,8 @@ public class MessageFacade implements MessageBroker {
                             log.trace("Add offer to DHT was successful. Stored data: [key: " + locationKey + ", " +
                                     "value: " + data + "]");
                         });
-                    } else {
+                    }
+                    else {
                         Platform.runLater(() -> {
                             addOfferListener.onFailed("Add offer to DHT failed.",
                                     new Exception("Add offer to DHT failed. Reason: " + future.failedReason()));
@@ -221,7 +223,8 @@ public class MessageFacade implements MessageBroker {
                     if (future.isSuccess()) {
                         log.trace("Remove offer from DHT was successful. Stored data: [key: " + locationKey + ", " +
                                 "value: " + data + "]");
-                    } else {
+                    }
+                    else {
                         log.error("Remove offer from DHT failed. Reason: " + future.failedReason());
                     }
                 }
@@ -247,7 +250,8 @@ public class MessageFacade implements MessageBroker {
                 if (baseFuture.isSuccess()) {
                     //log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey + ",
                     // values: " + futureGet.dataMap() + "]");
-                } else {
+                }
+                else {
                     log.error("Get offers from DHT failed with reason:" + baseFuture.failedReason());
                 }
             }
@@ -267,7 +271,8 @@ public class MessageFacade implements MessageBroker {
             public void operationComplete(BaseFuture future) throws Exception {
                 if (futureDirect.isSuccess()) {
                     Platform.runLater(() -> listener.onResult());
-                } else {
+                }
+                else {
                     Platform.runLater(() -> listener.onFailed());
                 }
             }
@@ -298,7 +303,8 @@ public class MessageFacade implements MessageBroker {
                     if (addFuture.isSuccess()) {
                         log.trace("Add arbitrator to DHT was successful. Stored data: [key: " + locationKey + ", " +
                                 "values: " + arbitratorData + "]");
-                    } else {
+                    }
+                    else {
                         log.error("Add arbitrator to DHT failed with reason:" + addFuture.failedReason());
                     }
                 }
@@ -322,7 +328,8 @@ public class MessageFacade implements MessageBroker {
                 if (removeFuture.isSuccess()) {
                     log.trace("Remove arbitrator from DHT was successful. Stored data: [key: " + locationKey + ", " +
                             "values: " + arbitratorData + "]");
-                } else {
+                }
+                else {
                     log.error("Remove arbitrators from DHT failed with reason:" + removeFuture.failedReason());
                 }
             }
@@ -340,7 +347,8 @@ public class MessageFacade implements MessageBroker {
                 if (baseFuture.isSuccess()) {
                     log.trace("Get arbitrators from DHT was successful. Stored data: [key: " + locationKey + ", " +
                             "values: " + futureGet.dataMap() + "]");
-                } else {
+                }
+                else {
                     log.error("Get arbitrators from DHT failed with reason:" + baseFuture.failedReason());
                 }
             }
@@ -432,7 +440,8 @@ public class MessageFacade implements MessageBroker {
         }
         if (lastTimeStamp > 0) {
             lastTimeStamp = timeStamp;
-        } else {
+        }
+        else {
             lastTimeStamp++;
         }
     }

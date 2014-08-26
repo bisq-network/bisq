@@ -129,7 +129,8 @@ public class WalletFacade {
         // or progress widget to keep the user engaged whilst we initialise, but we don't.
         if (params == RegTestParams.get()) {
             walletAppKit.connectToLocalHost();   // You should run a regtest mode bitcoind locally.
-        } else if (params == MainNetParams.get()) {
+        }
+        else if (params == MainNetParams.get()) {
             // Checkpoints are block headers that ship inside our app: for a new user, we pick the last header
             // in the checkpoints file and then download the rest from the network. It makes things much faster.
             // Checkpoint files are made using the BuildCheckpoints tool and usually we have to download the
@@ -205,7 +206,8 @@ public class WalletFacade {
             }
             addressEntryList = persistedAddressEntryList;
             registrationAddressEntry = addressEntryList.get(0);
-        } else {
+        }
+        else {
             lock.lock();
             DeterministicKey registrationKey = wallet.currentReceiveKey();
             registrationAddressEntry = new AddressEntry(registrationKey, params,
@@ -782,9 +784,11 @@ public class WalletFacade {
         TransactionSignature txSig = new TransactionSignature(ecSig, Transaction.SigHash.ALL, false);
         if (scriptPubKey.isSentToRawPubKey()) {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig));
-        } else if (scriptPubKey.isSentToAddress()) {
+        }
+        else if (scriptPubKey.isSentToAddress()) {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
-        } else {
+        }
+        else {
             throw new ScriptException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
         }
 
@@ -896,9 +900,11 @@ public class WalletFacade {
         TransactionSignature txSig = new TransactionSignature(ecSig, Transaction.SigHash.ALL, false);
         if (scriptPubKey.isSentToRawPubKey()) {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig));
-        } else if (scriptPubKey.isSentToAddress()) {
+        }
+        else if (scriptPubKey.isSentToAddress()) {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
-        } else {
+        }
+        else {
             throw new ScriptException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
         }
 
@@ -1102,7 +1108,8 @@ public class WalletFacade {
         for (TransactionInput input : tx.getInputs()) {
             if (input.getConnectedOutput() != null) {
                 log.trace(tracePrefix + " input value : " + input.getConnectedOutput().getValue().toFriendlyString());
-            } else {
+            }
+            else {
                 log.trace(tracePrefix + ": " + "Transaction already has inputs but we don't have the connected " +
                         "outputs, so we don't know the value.");
             }

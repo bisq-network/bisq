@@ -64,7 +64,8 @@ public class User implements Serializable {
             messageKeyPair = persistedUser.getMessageKeyPair();
             accountID = persistedUser.getAccountId();
             setCurrentBankAccount(persistedUser.getCurrentBankAccount());
-        } else {
+        }
+        else {
             // First time
             bankAccounts = new ArrayList<>();
             messageKeyPair = DSAKeyUtil.generateKeyPair();  // DSAKeyUtil.getKeyPair() runs in same thread now

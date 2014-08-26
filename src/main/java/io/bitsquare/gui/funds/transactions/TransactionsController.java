@@ -130,7 +130,8 @@ public class TransactionsController extends CachedViewController {
                                     hyperlink.setOnAction(event -> log.info("Show trade details " + item
                                             .getAddressString()));
                                     setGraphic(hyperlink);
-                                } else {
+                                }
+                                else {
                                     setGraphic(null);
                                     setId(null);
                                 }
@@ -157,7 +158,8 @@ public class TransactionsController extends CachedViewController {
 
                                 if (item != null && !empty) {
                                     setGraphic(item.getProgressIndicator());
-                                } else {
+                                }
+                                else {
                                     setGraphic(null);
                                 }
                             }

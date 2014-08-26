@@ -105,7 +105,8 @@ public class SettingsController extends CachedViewController {
             languageList = FXCollections.observableArrayList(settings.getAcceptedLanguageLocales());
             countryList = FXCollections.observableArrayList(settings.getAcceptedCountries());
             arbitratorList = FXCollections.observableArrayList(settings.getAcceptedArbitrators());
-        } else {
+        }
+        else {
             languageList = FXCollections.observableArrayList(new ArrayList<>());
             countryList = FXCollections.observableArrayList(new ArrayList<>());
             arbitratorList = FXCollections.observableArrayList(new ArrayList<>());
@@ -314,7 +315,8 @@ public class SettingsController extends CachedViewController {
                             label.setText(item.getDisplayName());
                             removeButton.setOnAction(actionEvent -> removeLanguage(item));
                             setGraphic(hBox);
-                        } else {
+                        }
+                        else {
                             setGraphic(null);
                         }
                     }
@@ -384,7 +386,8 @@ public class SettingsController extends CachedViewController {
                             label.setText(item.getName());
                             removeButton.setOnAction(actionEvent -> removeCountry(item));
                             setGraphic(hBox);
-                        } else {
+                        }
+                        else {
                             setGraphic(null);
                         }
                     }
@@ -441,7 +444,8 @@ public class SettingsController extends CachedViewController {
                             label.setText(item.getName());
                             removeButton.setOnAction(actionEvent -> removeArbitrator(item));
                             setGraphic(hBox);
-                        } else {
+                        }
+                        else {
                             setGraphic(null);
                         }
                     }
@@ -503,7 +507,8 @@ public class SettingsController extends CachedViewController {
             bankAccountPrimaryIDTextField.setPromptText(currentBankAccount.getBankAccountType().getPrimaryId());
             bankAccountSecondaryIDTextField.setText(currentBankAccount.getAccountSecondaryID());
             bankAccountSecondaryIDTextField.setPromptText(currentBankAccount.getBankAccountType().getSecondaryId());
-        } else {
+        }
+        else {
             resetBankAccountInput();
         }
     }
@@ -553,7 +558,8 @@ public class SettingsController extends CachedViewController {
         if (user.getBankAccounts().isEmpty()) {
             bankAccountComboBox.setPromptText("No bank account available");
             bankAccountComboBox.setDisable(true);
-        } else {
+        }
+        else {
             bankAccountComboBox.setPromptText("Select bank account");
             bankAccountComboBox.setDisable(false);
             bankAccountComboBox.setItems(FXCollections.observableArrayList(user.getBankAccounts()));

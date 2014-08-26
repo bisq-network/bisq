@@ -93,7 +93,8 @@ public class OrderBook implements OrderBookListener {
     public void loadOffers() {
         if (user.getCurrentBankAccount() != null) {
             messageFacade.getOffers(user.getCurrentBankAccount().getCurrency().getCurrencyCode());
-        } else {
+        }
+        else {
             messageFacade.getOffers(CurrencyUtil.getDefaultCurrency().getCurrencyCode());
         }
     }
@@ -135,7 +136,8 @@ public class OrderBook implements OrderBookListener {
             if (orderBookFilter.getPrice() > 0) {
                 if (offer.getDirection() == Direction.SELL) {
                     priceResult = orderBookFilter.getPrice() >= offer.getPrice();
-                } else {
+                }
+                else {
                     priceResult = orderBookFilter.getPrice() <= offer.getPrice();
                 }
             }
@@ -216,7 +218,8 @@ public class OrderBook implements OrderBookListener {
                     e.printStackTrace();
                 }
             }
-        } else {
+        }
+        else {
             allOffers.clear();
         }
     }
@@ -233,7 +236,8 @@ public class OrderBook implements OrderBookListener {
             } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
-        } else {
+        }
+        else {
             log.warn("onOfferRemoved failed");
         }
     }

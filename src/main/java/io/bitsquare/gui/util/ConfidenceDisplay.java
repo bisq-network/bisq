@@ -182,7 +182,8 @@ public class ConfidenceDisplay {
                     if (transaction.getUpdateTime().compareTo(latestTransaction.getUpdateTime()) > 0) {
                         latestTransaction = transaction;
                     }
-                } else {
+                }
+                else {
                     latestTransaction = transaction;
                 }
             }

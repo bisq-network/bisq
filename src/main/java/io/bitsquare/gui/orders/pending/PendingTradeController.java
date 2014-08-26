@@ -232,14 +232,16 @@ public class PendingTradeController extends CachedViewController {
         if (transaction == null) {
             trade.depositTxChangedProperty().addListener((observableValue, aBoolean, aBoolean2) ->
                     updateTx(trade.getDepositTransaction()));
-        } else {
+        }
+        else {
             updateTx(trade.getDepositTransaction());
         }
 
         // back details
         if (trade.getContract() != null) {
             setBankData(trade);
-        } else {
+        }
+        else {
             trade.contractChangedProperty().addListener((observableValue, aBoolean, aBoolean2) -> setBankData(trade));
         }
 
@@ -385,7 +387,8 @@ public class PendingTradeController extends CachedViewController {
                                     BankAccountType bankAccountType = tradesTableItem.getTrade().getOffer()
                                             .getBankAccountType();
                                     setText(Localisation.get(bankAccountType.toString()));
-                                } else {
+                                }
+                                else {
                                     setText("");
                                 }
                             }
@@ -422,7 +425,8 @@ public class PendingTradeController extends CachedViewController {
                                     if (offer.getDirection() == Direction.SELL) {
                                         icon = buyIcon;
                                         title = BitSquareFormatter.formatDirection(Direction.BUY, true);
-                                    } else {
+                                    }
+                                    else {
                                         icon = sellIcon;
                                         title = BitSquareFormatter.formatDirection(Direction.SELL, true);
                                     }
@@ -430,7 +434,8 @@ public class PendingTradeController extends CachedViewController {
                                     iconView.setImage(icon);
                                     button.setText(title);
                                     setGraphic(button);
-                                } else {
+                                }
+                                else {
                                     setGraphic(null);
                                 }
                             }
@@ -456,7 +461,8 @@ public class PendingTradeController extends CachedViewController {
                                 if (tradesTableItem != null) {
                                     button.setOnAction(event -> showTradeDetails(tradesTableItem));
                                     setGraphic(button);
-                                } else {
+                                }
+                                else {
                                     setGraphic(null);
                                 }
                             }

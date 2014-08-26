@@ -84,7 +84,8 @@ public class FileUtil {
             if (!tempFile.renameTo(canonical)) {
                 throw new IOException("Failed to rename " + tempFile + " to " + canonical);
             }
-        } else if (!tempFile.renameTo(file)) {
+        }
+        else if (!tempFile.renameTo(file)) {
             throw new IOException("Failed to rename " + tempFile + " to " + file);
         }
 

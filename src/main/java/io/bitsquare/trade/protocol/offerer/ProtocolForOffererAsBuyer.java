@@ -170,7 +170,8 @@ public class ProtocolForOffererAsBuyer {
             messageFacade.removeOffer(offer);
             listener.onOfferAccepted(offer);
             listener.onWaitingForPeerResponse(state);
-        } else {
+        }
+        else {
             log.info("Finish here as we have already the offer accepted.");
         }
     }

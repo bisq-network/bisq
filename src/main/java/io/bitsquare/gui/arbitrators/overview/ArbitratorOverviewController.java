@@ -160,7 +160,8 @@ public class ArbitratorOverviewController extends CachedViewController implement
                     e.printStackTrace();
                 }
             }
-        } else {
+        }
+        else {
             allArbitrators.clear();
         }
 

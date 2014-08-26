@@ -107,7 +107,8 @@ public class Arbitrator implements Serializable {
     public int hashCode() {
         if (id != null) {
             return Objects.hashCode(id);
-        } else {
+        }
+        else {
             return 0;
         }
     }
