@@ -33,17 +33,17 @@ public class RequestTakeOffer {
         log.trace("Run task");
         messageFacade.sendTradeMessage(peerAddress, new RequestTakeOfferMessage(tradeId),
                 new OutgoingTradeMessageListener() {
-            @Override
-            public void onResult() {
-                log.trace("RequestTakeOfferMessage successfully arrived at peer");
-                resultHandler.onResult();
-            }
+                    @Override
+                    public void onResult() {
+                        log.trace("RequestTakeOfferMessage successfully arrived at peer");
+                        resultHandler.onResult();
+                    }
 
-            @Override
-            public void onFailed() {
-                log.error("RequestTakeOfferMessage  did not arrive at peer");
-                exceptionHandler.onError(new Exception("RequestTakeOfferMessage did not arrive at peer"));
-            }
-        });
+                    @Override
+                    public void onFailed() {
+                        log.error("RequestTakeOfferMessage  did not arrive at peer");
+                        exceptionHandler.onError(new Exception("RequestTakeOfferMessage did not arrive at peer"));
+                    }
+                });
     }
 }

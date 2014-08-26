@@ -147,8 +147,8 @@ public class AddressTextField extends AnchorPane {
 
     private String getBitcoinURI() {
         Coin d = BitSquareFormatter.parseToCoin(amountToPay);
-        return BitcoinURI.convertToBitcoinURI(address, BitSquareFormatter.parseToCoin(amountToPay),
-                BitSquare.getAppName(), null);
+        return BitcoinURI.convertToBitcoinURI(
+                address, BitSquareFormatter.parseToCoin(amountToPay), BitSquare.getAppName(), null);
     }
 
 

@@ -161,8 +161,8 @@ public class P2PNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // The data and the domain are protected by that key pair.
-    public FuturePut putDomainProtectedData(Number160 locationKey, Data data) throws IOException,
-            ClassNotFoundException {
+    public FuturePut putDomainProtectedData(Number160 locationKey, Data data)
+            throws IOException, ClassNotFoundException {
         data.protectEntry(keyPair);
         final Number160 ownerKeyHash = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
         return peerDHT.put(locationKey).data(data).keyPair(keyPair).domainKey(ownerKeyHash).protectDomain().start();
@@ -174,8 +174,8 @@ public class P2PNode {
     }
 
     // Not public readable. Only users with the public key of the peer who stored the data can read that data
-    public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey) throws IOException,
-            ClassNotFoundException {
+    public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey)
+            throws IOException, ClassNotFoundException {
         final Number160 ownerKeyHash = Utils.makeSHAHash(publicKey.getEncoded());
         return peerDHT.get(locationKey).domainKey(ownerKeyHash).start();
     }

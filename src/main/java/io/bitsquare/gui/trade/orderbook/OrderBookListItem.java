@@ -34,10 +34,10 @@ public class OrderBookListItem {
     public OrderBookListItem(Offer offer) {
         this.offer = offer;
         this.price.set(BitSquareFormatter.formatPrice(offer.getPrice()));
-        this.amount.set(BitSquareFormatter.formatCoin(offer.getAmount()) + " (" + BitSquareFormatter.formatCoin(offer
-                .getMinAmount()) + ")");
-        this.volume.set(BitSquareFormatter.formatVolumeWithMinVolume(offer.getOfferVolume(),
-                offer.getMinOfferVolume()));
+        this.amount.set(BitSquareFormatter.formatCoin(
+                offer.getAmount()) + " (" + BitSquareFormatter.formatCoin(offer.getMinAmount()) + ")");
+        this.volume.set(BitSquareFormatter.formatVolumeWithMinVolume(
+                offer.getOfferVolume(), offer.getMinOfferVolume()));
     }
 
 

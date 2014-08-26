@@ -42,8 +42,7 @@ import org.slf4j.LoggerFactory;
  * Well known node which is reachable for all peers for bootstrapping.
  * There will be several SeedNodes running on several servers.
  * <p/>
- * TODO: Alternative bootstrap methods will follow later (save locally list of known nodes reported form other peers,
- * ...)
+ * TODO: Alternative bootstrap methods will follow later (save locally list of known nodes reported form other peers...)
  */
 public class SeedNode extends Thread {
     private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
@@ -109,8 +108,8 @@ public class SeedNode extends Thread {
     public Peer startupPeer() {
         Peer peer = null;
         try {
-            peer = new PeerBuilder(Number160.createHash(seedNodeAddress.getId())).ports(seedNodeAddress.getPort())
-                    .start();
+            peer = new PeerBuilder(
+                    Number160.createHash(seedNodeAddress.getId())).ports(seedNodeAddress.getPort()).start();
 
             // Need to add all features the clients will use (otherwise msg type is UNKNOWN_ID)
             new PeerBuilderDHT(peer).start();

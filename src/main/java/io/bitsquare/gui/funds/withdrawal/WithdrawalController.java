@@ -107,8 +107,8 @@ public class WithdrawalController extends CachedViewController {
 
         tableView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
             if (newValue != null) {
-                BitSquareValidator.resetTextFields(withdrawFromTextField, withdrawToTextField, amountTextField,
-                        changeAddressTextField);
+                BitSquareValidator.resetTextFields(
+                        withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField);
 
                 if (Coin.ZERO.compareTo(newValue.getBalance()) <= 0) {
                     amountTextField.setText(newValue.getBalance().toPlainString());
@@ -125,8 +125,8 @@ public class WithdrawalController extends CachedViewController {
 
         List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
         addressList = FXCollections.observableArrayList();
-        addressList.addAll(addressEntryList.stream().map(anAddressEntryList -> new WithdrawalListItem
-                (anAddressEntryList, walletFacade)).collect(Collectors.toList()));
+        addressList.addAll(addressEntryList.stream().map(anAddressEntryList ->
+                new WithdrawalListItem(anAddressEntryList, walletFacade)).collect(Collectors.toList()));
 
         tableView.setItems(addressList);
     }
@@ -139,8 +139,8 @@ public class WithdrawalController extends CachedViewController {
     @FXML
     public void onWithdraw() {
         try {
-            BitSquareValidator.textFieldsNotEmpty(amountTextField, withdrawFromTextField, withdrawToTextField,
-                    changeAddressTextField);
+            BitSquareValidator.textFieldsNotEmpty(
+                    amountTextField, withdrawFromTextField, withdrawToTextField, changeAddressTextField);
             BitSquareValidator.textFieldsHasDoubleValueWithReset(amountTextField);
 
             Coin amount = BitSquareFormatter.parseToCoin(amountTextField.getText());
@@ -148,8 +148,8 @@ public class WithdrawalController extends CachedViewController {
                 FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
                     @Override
                     public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
-                        BitSquareValidator.resetTextFields(withdrawFromTextField, withdrawToTextField,
-                                amountTextField, changeAddressTextField);
+                        BitSquareValidator.resetTextFields(
+                                withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField);
                         if (transaction != null) {
                             log.info("onWithdraw onSuccess txid:" + transaction.getHashAsString());
                         }
@@ -161,22 +161,23 @@ public class WithdrawalController extends CachedViewController {
                     }
                 };
 
-                Action response = Popups.openConfirmPopup("Withdrawal request", "Confirm your request",
-                        "Your withdrawal request:\n\n" +
-                        "Amount: " + amountTextField.getText() + " BTC\n" +
-                        "Sending address: " + withdrawFromTextField.getText() + "\n" +
-                        "Receiving address: " + withdrawToTextField.getText() + "\n" +
-                        "Transaction fee: " + BitSquareFormatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
-                        "You receive in total: " + BitSquareFormatter.formatCoinWithCode(amount.subtract(FeePolicy
-                                .TX_FEE)) + " BTC\n\n" +
-                        "Are you sure you withdraw that amount?");
+                Action response = Popups.openConfirmPopup(
+                        "Withdrawal request", "Confirm your request",
+                        "Your withdrawal request:\n\n" + "Amount: " + amountTextField.getText() + " BTC\n" + "Sending" +
+                                " address: " + withdrawFromTextField.getText() + "\n" + "Receiving address: " +
+                                withdrawToTextField.getText() + "\n" + "Transaction fee: " +
+                                BitSquareFormatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
+                                "You receive in total: " +
+                                BitSquareFormatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
+                                "Are you sure you withdraw that amount?");
                 if (response == Dialog.Actions.OK) {
                     try {
-                        walletFacade.sendFunds(withdrawFromTextField.getText(), withdrawToTextField.getText(),
+                        walletFacade.sendFunds(
+                                withdrawFromTextField.getText(), withdrawToTextField.getText(),
                                 changeAddressTextField.getText(), amount, callback);
                     } catch (AddressFormatException e) {
-                        Popups.openErrorPopup("Address invalid", "The address is not correct. Please check the " +
-                                "address format.");
+                        Popups.openErrorPopup("Address invalid",
+                                "The address is not correct. Please check the address format.");
 
                     } catch (InsufficientMoneyException e) {
                         Popups.openInsufficientMoneyPopup();
@@ -186,8 +187,8 @@ public class WithdrawalController extends CachedViewController {
                 }
 
             } else {
-                Popups.openErrorPopup("Insufficient amount", "The amount to transfer is lower the the transaction fee" +
-                        " and the min. possible tx value.");
+                Popups.openErrorPopup("Insufficient amount",
+                        "The amount to transfer is lower the the transaction fee and the min. possible tx value.");
             }
 
         } catch (BitSquareValidator.ValidationException e) {
@@ -243,83 +244,83 @@ public class WithdrawalController extends CachedViewController {
 
     private void setBalanceColumnCellFactory() {
         balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        balanceColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String,
-                WithdrawalListItem>>() {
+        balanceColumn.setCellFactory(
+                new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>() {
 
-            @Override
-            public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column) {
-                return new TableCell<String, WithdrawalListItem>() {
                     @Override
-                    public void updateItem(final WithdrawalListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-                        setGraphic((item != null && !empty) ? item.getBalanceLabel() : null);
+                    public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column) {
+                        return new TableCell<String, WithdrawalListItem>() {
+                            @Override
+                            public void updateItem(final WithdrawalListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setGraphic((item != null && !empty) ? item.getBalanceLabel() : null);
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
     private void setCopyColumnCellFactory() {
         copyColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        copyColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String,
-                WithdrawalListItem>>() {
-
-            @Override
-            public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column) {
-                return new TableCell<String, WithdrawalListItem>() {
-                    final Label copyIcon = new Label();
-
-                    {
-                        copyIcon.getStyleClass().add("copy-icon");
-                        AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
-                        Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
-                    }
+        copyColumn.setCellFactory(
+                new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>() {
 
                     @Override
-                    public void updateItem(final WithdrawalListItem item, boolean empty) {
-                        super.updateItem(item, empty);
+                    public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column) {
+                        return new TableCell<String, WithdrawalListItem>() {
+                            final Label copyIcon = new Label();
 
-                        if (item != null && !empty) {
-                            setGraphic(copyIcon);
-                            copyIcon.setOnMouseClicked(e -> {
-                                Clipboard clipboard = Clipboard.getSystemClipboard();
-                                ClipboardContent content = new ClipboardContent();
-                                content.putString(item.addressStringProperty().get());
-                                clipboard.setContent(content);
-                            });
+                            {
+                                copyIcon.getStyleClass().add("copy-icon");
+                                AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
+                                Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
+                            }
 
-                        } else {
-                            setGraphic(null);
-                        }
+                            @Override
+                            public void updateItem(final WithdrawalListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    setGraphic(copyIcon);
+                                    copyIcon.setOnMouseClicked(e -> {
+                                        Clipboard clipboard = Clipboard.getSystemClipboard();
+                                        ClipboardContent content = new ClipboardContent();
+                                        content.putString(item.addressStringProperty().get());
+                                        clipboard.setContent(content);
+                                    });
+
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
     private void setConfidenceColumnCellFactory() {
-        confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue
-                ()));
-        confidenceColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String,
-                WithdrawalListItem>>() {
-
-            @Override
-            public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column) {
-                return new TableCell<String, WithdrawalListItem>() {
+        confidenceColumn.setCellValueFactory((addressListItem) ->
+                new ReadOnlyObjectWrapper(addressListItem.getValue()));
+        confidenceColumn.setCellFactory(
+                new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>() {
 
                     @Override
-                    public void updateItem(final WithdrawalListItem item, boolean empty) {
-                        super.updateItem(item, empty);
+                    public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column) {
+                        return new TableCell<String, WithdrawalListItem>() {
 
-                        if (item != null && !empty) {
-                            setGraphic(item.getProgressIndicator());
-                        } else {
-                            setGraphic(null);
-                        }
+                            @Override
+                            public void updateItem(final WithdrawalListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    setGraphic(item.getProgressIndicator());
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
 }

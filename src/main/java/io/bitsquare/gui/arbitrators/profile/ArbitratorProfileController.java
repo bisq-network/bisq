@@ -133,8 +133,8 @@ public class ArbitratorProfileController extends CachedViewController {
             arbitrationFeeTextField.setText(String.valueOf(arbitrator.getArbitrationFee()) + " % (Min. " + String
                     .valueOf(arbitrator.getMinArbitrationFee()) + " BTC)");
             methodsTextField.setText(BitSquareFormatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
-            idVerificationsTextField.setText(BitSquareFormatter.arbitrationIDVerificationsToString(arbitrator
-                    .getIdVerifications()));
+            idVerificationsTextField.setText(
+                    BitSquareFormatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));
             webPageTextField.setText(arbitrator.getWebUrl());
             descriptionTextArea.setText(arbitrator.getDescription());
         }

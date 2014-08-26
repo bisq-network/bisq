@@ -55,8 +55,8 @@ public class PayDeposit {
             resultHandler.onResult(signedTakerDepositTx);
         } catch (InsufficientMoneyException e) {
             log.error("Pay deposit faultHandler.onFault due InsufficientMoneyException " + e);
-            exceptionHandler.onError(new Exception("Pay deposit faultHandler.onFault due InsufficientMoneyException "
-                    + e));
+            exceptionHandler.onError(
+                    new Exception("Pay deposit faultHandler.onFault due InsufficientMoneyException " + e));
         }
     }
 

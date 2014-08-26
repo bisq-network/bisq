@@ -172,8 +172,8 @@ public class MessageFacade implements MessageBroker {
                     if (future.isSuccess()) {
                         Platform.runLater(() -> {
                             addOfferListener.onComplete();
-                            orderBookListeners.stream().forEach(listener -> listener.onOfferAdded(data,
-                                    future.isSuccess()));
+                            orderBookListeners.stream().forEach(listener ->
+                                    listener.onOfferAdded(data, future.isSuccess()));
 
                             // TODO will be removed when we don't use polling anymore
                             setDirty(locationKey);
@@ -214,8 +214,8 @@ public class MessageFacade implements MessageBroker {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
                     Platform.runLater(() -> {
-                        orderBookListeners.stream().forEach(orderBookListener -> orderBookListener.onOfferRemoved
-                                (data, future.isSuccess()));
+                        orderBookListeners.stream().forEach(orderBookListener ->
+                                orderBookListener.onOfferRemoved(data, future.isSuccess()));
                         setDirty(locationKey);
                     });
                     if (future.isSuccess()) {
@@ -293,8 +293,8 @@ public class MessageFacade implements MessageBroker {
             addFuture.addListener(new BaseFutureAdapter<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    Platform.runLater(() -> arbitratorListeners.stream().forEach(listener -> listener
-                            .onArbitratorAdded(arbitratorData, addFuture.isSuccess())));
+                    Platform.runLater(() -> arbitratorListeners.stream().forEach(listener ->
+                            listener.onArbitratorAdded(arbitratorData, addFuture.isSuccess())));
                     if (addFuture.isSuccess()) {
                         log.trace("Add arbitrator to DHT was successful. Stored data: [key: " + locationKey + ", " +
                                 "values: " + arbitratorData + "]");
@@ -317,8 +317,8 @@ public class MessageFacade implements MessageBroker {
         removeFuture.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
-                Platform.runLater(() -> arbitratorListeners.stream().forEach(listener -> listener.onArbitratorRemoved
-                        (arbitratorData, removeFuture.isSuccess())));
+                Platform.runLater(() -> arbitratorListeners.stream().forEach(listener ->
+                        listener.onArbitratorRemoved(arbitratorData, removeFuture.isSuccess())));
                 if (removeFuture.isSuccess()) {
                     log.trace("Remove arbitrator from DHT was successful. Stored data: [key: " + locationKey + ", " +
                             "values: " + arbitratorData + "]");
@@ -472,8 +472,8 @@ public class MessageFacade implements MessageBroker {
     public void handleMessage(Object message, PeerAddress peerAddress) {
         if (message instanceof TradeMessage) {
             log.error("####################");
-            Platform.runLater(() -> incomingTradeMessageListeners.stream().forEach(e -> e.onMessage((TradeMessage)
-                    message, peerAddress)));
+            Platform.runLater(() -> incomingTradeMessageListeners.stream().forEach(e ->
+                    e.onMessage((TradeMessage) message, peerAddress)));
         }
     }
 }

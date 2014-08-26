@@ -53,6 +53,8 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static io.bitsquare.msg.SeedNodeAddress.StaticSeedNodeAddresses;
+
 /**
  * Creates a DHT peer and bootstrap to a seed node
  */
@@ -73,8 +75,8 @@ public class BootstrappedPeerFactory {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BootstrappedPeerFactory(Persistence persistence, @Named("defaultSeedNode") SeedNodeAddress
-            .StaticSeedNodeAddresses defaultStaticSeedNodeAddresses) {
+    public BootstrappedPeerFactory(Persistence persistence,
+                                   @Named("defaultSeedNode") StaticSeedNodeAddresses defaultStaticSeedNodeAddresses) {
         this.persistence = persistence;
         this.seedNodeAddress = new SeedNodeAddress(defaultStaticSeedNodeAddresses);
     }
@@ -154,8 +156,8 @@ public class BootstrappedPeerFactory {
                     bootstrapWithRelay(peerDHT, nodeBehindNat);
                     break;
                 case "startPortForwarding":
-                    FutureDiscover futureDiscover = peerDHT.peer().discover().peerAddress(getBootstrapAddress())
-                            .start();
+                    FutureDiscover futureDiscover =
+                            peerDHT.peer().discover().peerAddress(getBootstrapAddress()).start();
                     bootstrapWithPortForwarding(peerDHT, futureDiscover);
                     break;
                 case "default":
@@ -227,8 +229,8 @@ public class BootstrappedPeerFactory {
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
                     // Port forwarding has succeed
-                    log.debug("Port forwarding was successful. My address visible to the outside is " + futureNAT
-                            .peerAddress());
+                    log.debug("Port forwarding was successful. My address visible to the outside is " +
+                            futureNAT.peerAddress());
                     requestBootstrapPeerMap();
                     settableFuture.set(peerDHT);
 

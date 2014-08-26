@@ -332,8 +332,8 @@ public class OrderBookController extends CachedViewController {
 
     private void takeOffer(Offer offer) {
         if (isRegistered()) {
-            TakerOfferController takerOfferController = (TakerOfferController) parentController
-                    .loadViewAndGetChildController(NavigationItem.TAKE_OFFER);
+            TakerOfferController takerOfferController =
+                    (TakerOfferController) parentController.loadViewAndGetChildController(NavigationItem.TAKE_OFFER);
 
             Coin requestedAmount;
             if (!"".equals(amount.getText())) {
@@ -357,8 +357,8 @@ public class OrderBookController extends CachedViewController {
     private void applyOffers() {
         orderBook.applyFilter(orderBookFilter);
 
-        priceColumn.setSortType((orderBookFilter.getDirection() == Direction.BUY) ? TableColumn.SortType.ASCENDING :
-                TableColumn.SortType.DESCENDING);
+        priceColumn.setSortType((orderBookFilter.getDirection() == Direction.BUY) ?
+                TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
         orderBookTable.sort();
 
         if (orderBookTable.getItems() != null) {
@@ -386,120 +386,124 @@ public class OrderBookController extends CachedViewController {
 
     private void setDirectionColumnCellFactory() {
         directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
-        directionColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String,
-                OrderBookListItem>>() {
-
-            @Override
-            public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn) {
-                return new TableCell<String, OrderBookListItem>() {
-                    final ImageView iconView = new ImageView();
-                    final Button button = new Button();
-
-                    {
-                        button.setGraphic(iconView);
-                        button.setMinWidth(70);
-                    }
+        directionColumn.setCellFactory(
+                new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>() {
 
                     @Override
-                    public void updateItem(final OrderBookListItem orderBookListItem, boolean empty) {
-                        super.updateItem(orderBookListItem, empty);
+                    public TableCell<String, OrderBookListItem> call(
+                            TableColumn<String, OrderBookListItem> directionColumn) {
+                        return new TableCell<String, OrderBookListItem>() {
+                            final ImageView iconView = new ImageView();
+                            final Button button = new Button();
 
-                        if (orderBookListItem != null) {
-                            String title;
-                            Image icon;
-                            Offer offer = orderBookListItem.getOffer();
-
-                            if (offer.getMessagePublicKey().equals(user.getMessagePublicKey())) {
-                                icon = ImageUtil.getIconImage(ImageUtil.REMOVE);
-                                title = "Remove";
-                                button.setOnAction(event -> removeOffer(orderBookListItem.getOffer()));
-                            } else {
-                                if (offer.getDirection() == Direction.SELL) {
-                                    icon = buyIcon;
-                                    title = BitSquareFormatter.formatDirection(Direction.BUY, true);
-                                } else {
-                                    icon = sellIcon;
-                                    title = BitSquareFormatter.formatDirection(Direction.SELL, true);
-                                }
-
-                                button.setDefaultButton(getIndex() == 0);
-                                button.setOnAction(event -> takeOffer(orderBookListItem.getOffer()));
+                            {
+                                button.setGraphic(iconView);
+                                button.setMinWidth(70);
                             }
 
+                            @Override
+                            public void updateItem(final OrderBookListItem orderBookListItem, boolean empty) {
+                                super.updateItem(orderBookListItem, empty);
 
-                            iconView.setImage(icon);
-                            button.setText(title);
-                            setGraphic(button);
-                        } else {
-                            setGraphic(null);
-                        }
+                                if (orderBookListItem != null) {
+                                    String title;
+                                    Image icon;
+                                    Offer offer = orderBookListItem.getOffer();
+
+                                    if (offer.getMessagePublicKey().equals(user.getMessagePublicKey())) {
+                                        icon = ImageUtil.getIconImage(ImageUtil.REMOVE);
+                                        title = "Remove";
+                                        button.setOnAction(event -> removeOffer(orderBookListItem.getOffer()));
+                                    } else {
+                                        if (offer.getDirection() == Direction.SELL) {
+                                            icon = buyIcon;
+                                            title = BitSquareFormatter.formatDirection(Direction.BUY, true);
+                                        } else {
+                                            icon = sellIcon;
+                                            title = BitSquareFormatter.formatDirection(Direction.SELL, true);
+                                        }
+
+                                        button.setDefaultButton(getIndex() == 0);
+                                        button.setOnAction(event -> takeOffer(orderBookListItem.getOffer()));
+                                    }
+
+
+                                    iconView.setImage(icon);
+                                    button.setText(title);
+                                    setGraphic(button);
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
     private void setCountryColumnCellFactory() {
         countryColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
-        countryColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String,
-                OrderBookListItem>>() {
-
-            @Override
-            public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn) {
-                return new TableCell<String, OrderBookListItem>() {
-                    final HBox hBox = new HBox();
-
-                    {
-                        hBox.setSpacing(3);
-                        hBox.setAlignment(Pos.CENTER);
-                        setGraphic(hBox);
-                    }
+        countryColumn.setCellFactory(
+                new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>() {
 
                     @Override
-                    public void updateItem(final OrderBookListItem orderBookListItem, boolean empty) {
-                        super.updateItem(orderBookListItem, empty);
+                    public TableCell<String, OrderBookListItem> call(
+                            TableColumn<String, OrderBookListItem> directionColumn) {
+                        return new TableCell<String, OrderBookListItem>() {
+                            final HBox hBox = new HBox();
 
-                        hBox.getChildren().clear();
-                        if (orderBookListItem != null) {
-                            Country country = orderBookListItem.getOffer().getBankAccountCountry();
-                            try {
-                                hBox.getChildren().add(ImageUtil.getIconImageView("/images/countries/" + country
-                                        .getCode().toLowerCase() + ".png"));
-
-                            } catch (Exception e) {
-                                log.warn("Country icon not found: " + "/images/countries/" + country.getCode()
-                                        .toLowerCase() + ".png country name: " + country.getName());
+                            {
+                                hBox.setSpacing(3);
+                                hBox.setAlignment(Pos.CENTER);
+                                setGraphic(hBox);
                             }
-                            Tooltip.install(this, new Tooltip(country.getName()));
-                        }
+
+                            @Override
+                            public void updateItem(final OrderBookListItem orderBookListItem, boolean empty) {
+                                super.updateItem(orderBookListItem, empty);
+
+                                hBox.getChildren().clear();
+                                if (orderBookListItem != null) {
+                                    Country country = orderBookListItem.getOffer().getBankAccountCountry();
+                                    try {
+                                        hBox.getChildren().add(ImageUtil.getIconImageView(
+                                                "/images/countries/" + country.getCode().toLowerCase() + ".png"));
+
+                                    } catch (Exception e) {
+                                        log.warn("Country icon not found: /images/countries/" +
+                                                country.getCode().toLowerCase() + ".png country name: " +
+                                                country.getName());
+                                    }
+                                    Tooltip.install(this, new Tooltip(country.getName()));
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
     private void setBankAccountTypeColumnCellFactory() {
         bankAccountTypeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
-        bankAccountTypeColumn.setCellFactory(new Callback<TableColumn<String, OrderBookListItem>, TableCell<String,
-                OrderBookListItem>>() {
+        bankAccountTypeColumn.setCellFactory(
+                new Callback<TableColumn<String, OrderBookListItem>, TableCell<String, OrderBookListItem>>() {
 
-            @Override
-            public TableCell<String, OrderBookListItem> call(TableColumn<String, OrderBookListItem> directionColumn) {
-                return new TableCell<String, OrderBookListItem>() {
                     @Override
-                    public void updateItem(final OrderBookListItem orderBookListItem, boolean empty) {
-                        super.updateItem(orderBookListItem, empty);
+                    public TableCell<String, OrderBookListItem> call(
+                            TableColumn<String, OrderBookListItem> directionColumn) {
+                        return new TableCell<String, OrderBookListItem>() {
+                            @Override
+                            public void updateItem(final OrderBookListItem orderBookListItem, boolean empty) {
+                                super.updateItem(orderBookListItem, empty);
 
-                        if (orderBookListItem != null) {
-                            BankAccountType bankAccountType = orderBookListItem.getOffer().getBankAccountType();
-                            setText(Localisation.get(bankAccountType.toString()));
-                        } else {
-                            setText("");
-                        }
+                                if (orderBookListItem != null) {
+                                    BankAccountType bankAccountType = orderBookListItem.getOffer().getBankAccountType();
+                                    setText(Localisation.get(bankAccountType.toString()));
+                                } else {
+                                    setText("");
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
 

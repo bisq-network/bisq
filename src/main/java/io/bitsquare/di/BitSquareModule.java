@@ -74,8 +74,8 @@ public class BitSquareModule extends AbstractModule {
 
         // bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(new Boolean(true));
         bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(new Boolean(false));
-        bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(Names.named("defaultSeedNode")).toInstance
-                (SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST);
+        bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(
+                Names.named("defaultSeedNode")).toInstance(SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST);
         // bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(Names.named("defaultSeedNode"))
         // .toInstance(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN);
     }

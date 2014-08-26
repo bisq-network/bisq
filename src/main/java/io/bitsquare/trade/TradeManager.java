@@ -214,8 +214,8 @@ public class TradeManager {
         Trade trade = createTrade(offer);
         trade.setTradeAmount(amount);
 
-        ProtocolForTakerAsSeller protocolForTakerAsSeller = new ProtocolForTakerAsSeller(trade, listener,
-                messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
+        ProtocolForTakerAsSeller protocolForTakerAsSeller = new ProtocolForTakerAsSeller(
+                trade, listener, messageFacade, walletFacade, blockChainFacade, cryptoFacade, user);
         takerAsSellerProtocolMap.put(trade.getId(), protocolForTakerAsSeller);
         protocolForTakerAsSeller.start();
 

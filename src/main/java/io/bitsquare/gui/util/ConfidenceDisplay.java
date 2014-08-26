@@ -186,8 +186,8 @@ public class ConfidenceDisplay {
                     latestTransaction = transaction;
                 }
             }
-            if (latestTransaction != null && (transaction == null || latestTransaction.getHashAsString().equals
-                    (transaction.getHashAsString()))) {
+            if (latestTransaction != null && (transaction == null ||
+                    latestTransaction.getHashAsString().equals(transaction.getHashAsString()))) {
                 updateConfidence(latestTransaction);
             }
         }

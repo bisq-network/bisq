@@ -138,8 +138,8 @@ public class ArbitratorRegistrationController extends CachedViewController {
             }
         });
 
-        idTypeComboBox.setItems(FXCollections.observableArrayList(new ArrayList<>(EnumSet.allOf(Arbitrator.ID_TYPE
-                .class))));
+        idTypeComboBox.setItems(FXCollections.observableArrayList(
+                new ArrayList<>(EnumSet.allOf(Arbitrator.ID_TYPE.class))));
         idTypeComboBox.setConverter(new StringConverter<Arbitrator.ID_TYPE>() {
 
             @Override
@@ -170,8 +170,8 @@ public class ArbitratorRegistrationController extends CachedViewController {
             }
         });
 
-        idVerificationsComboBox.setItems(FXCollections.observableArrayList(new ArrayList<>(EnumSet.allOf(Arbitrator
-                .ID_VERIFICATION.class))));
+        idVerificationsComboBox.setItems(
+                FXCollections.observableArrayList(new ArrayList<>(EnumSet.allOf(Arbitrator.ID_VERIFICATION.class))));
         idVerificationsComboBox.setConverter(new StringConverter<Arbitrator.ID_VERIFICATION>() {
 
             @Override
@@ -300,8 +300,8 @@ public class ArbitratorRegistrationController extends CachedViewController {
         if (idVerification != null) {
             if (!idVerificationList.contains(idVerification)) {
                 idVerificationList.add(idVerification);
-                idVerificationsTextField.setText(BitSquareFormatter.arbitrationIDVerificationsToString
-                        (idVerificationList));
+                idVerificationsTextField.setText(
+                        BitSquareFormatter.arbitrationIDVerificationsToString(idVerificationList));
             }
         }
 
@@ -342,19 +342,16 @@ public class ArbitratorRegistrationController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setupPayCollateralScreen() {
-        infoLabel.setText("You need to pay 10 x the max. trading volume as collateral.\n\n" +
-                "That payment will be locked into a MultiSig fund and be refunded when you leave the arbitration pool" +
-                ".\n" +
-                "In case of fraud (collusion, not fulfilling the min. dispute quality requirements) you will lose " +
-                "your collateral.\n" +
+        infoLabel.setText("You need to pay 10 x the max. trading volume as collateral.\n\nThat payment will be " +
+                "locked into a MultiSig fund and be refunded when you leave the arbitration pool.\nIn case of fraud " +
+                "(collusion, not fulfilling the min. dispute quality requirements) you will lose your collateral.\n" +
                 "If you have a negative feedback from your clients you will lose a part of the collateral,\n" +
                 "depending on the overall relation of negative to positive ratings you received after a dispute " +
-                "resolution.\n\n" +
-                "Please pay in " + arbitrator.getMaxTradeVolume() * 10 + " BTC");
+                "resolution.\n\nPlease pay in " + arbitrator.getMaxTradeVolume() * 10 + " BTC");
 
 
-        String collateralAddress = walletFacade.getRegistrationAddressEntry() != null ? walletFacade
-                .getRegistrationAddressEntry().toString() : "";
+        String collateralAddress = walletFacade.getRegistrationAddressEntry() != null ?
+                walletFacade.getRegistrationAddressEntry().toString() : "";
         collateralAddressTextField.setText(collateralAddress);
 
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
@@ -365,8 +362,8 @@ public class ArbitratorRegistrationController extends CachedViewController {
             clipboard.setContent(content);
         });
 
-        confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, balanceTextField,
-                progressIndicator);
+        confidenceDisplay = new ConfidenceDisplay(
+                walletFacade.getWallet(), confirmationLabel, balanceTextField, progressIndicator);
         paymentDoneButton.setDisable(walletFacade.getArbitratorDepositBalance().isZero());
         log.debug("getArbitratorDepositBalance " + walletFacade.getArbitratorDepositBalance());
         walletFacade.getWallet().addEventListener(new WalletEventListener() {
@@ -432,8 +429,8 @@ public class ArbitratorRegistrationController extends CachedViewController {
             arbitrationFeeTextField.setText(String.valueOf(arbitrator.getArbitrationFee()));
             minArbitrationFeeTextField.setText(String.valueOf(arbitrator.getMinArbitrationFee()));
             methodsTextField.setText(BitSquareFormatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
-            idVerificationsTextField.setText(BitSquareFormatter.arbitrationIDVerificationsToString(arbitrator
-                    .getIdVerifications()));
+            idVerificationsTextField.setText(
+                    BitSquareFormatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));
             webPageTextField.setText(arbitrator.getWebUrl());
             descriptionTextArea.setText(arbitrator.getDescription());
 
@@ -447,13 +444,11 @@ public class ArbitratorRegistrationController extends CachedViewController {
 
     private Arbitrator getEditedArbitrator() {
         try {
-            BitSquareValidator.textFieldsNotEmptyWithReset(nameTextField, idTypeTextField, languagesTextField,
-                    methodsTextField, idVerificationsTextField);
-            BitSquareValidator.textFieldsHasDoubleValueWithReset(maxTradeVolumeTextField,
-                    passiveServiceFeeTextField,
-                    minPassiveServiceFeeTextField,
-                    arbitrationFeeTextField,
-                    minArbitrationFeeTextField);
+            BitSquareValidator.textFieldsNotEmptyWithReset(
+                    nameTextField, idTypeTextField, languagesTextField, methodsTextField, idVerificationsTextField);
+            BitSquareValidator.textFieldsHasDoubleValueWithReset(
+                    maxTradeVolumeTextField, passiveServiceFeeTextField, minPassiveServiceFeeTextField,
+                    arbitrationFeeTextField, minArbitrationFeeTextField);
 
             String pubKeyAsHex = walletFacade.getArbitratorDepositAddressEntry().getPubKeyAsHexString();
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());

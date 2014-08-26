@@ -38,7 +38,11 @@ public class Popups {
     }
 
     public static void openInformationPopup(String title, String message, String masthead) {
-        Dialogs.create().owner(BitSquare.getPrimaryStage()).title(title).message(message).masthead(masthead)
+        Dialogs.create()
+                .owner(BitSquare.getPrimaryStage())
+                .title(title)
+                .message(message)
+                .masthead(masthead)
                 .showInformation();
     }
 
@@ -55,8 +59,13 @@ public class Popups {
     }
 
     public static Action openConfirmPopup(String title, String message, String masthead, List<Action> actions) {
-        return Dialogs.create().owner(BitSquare.getPrimaryStage()).title(title).message(message).masthead(masthead)
-                .actions(actions).showConfirm();
+        return Dialogs.create()
+                .owner(BitSquare.getPrimaryStage())
+                .title(title)
+                .message(message)
+                .masthead(masthead)
+                .actions(actions)
+                .showConfirm();
     }
 
     // Warning
@@ -69,7 +78,11 @@ public class Popups {
     }
 
     public static void openWarningPopup(String title, String message, String masthead) {
-        Dialogs.create().owner(BitSquare.getPrimaryStage()).title(title).message(message).masthead(masthead)
+        Dialogs.create()
+                .owner(BitSquare.getPrimaryStage())
+                .title(title)
+                .message(message)
+                .masthead(masthead)
                 .showWarning();
     }
 
@@ -83,7 +96,11 @@ public class Popups {
     }
 
     public static Action openErrorPopup(String title, String message, String masthead) {
-        return Dialogs.create().owner(BitSquare.getPrimaryStage()).title(title).message(message).masthead(masthead)
+        return Dialogs.create()
+                .owner(BitSquare.getPrimaryStage())
+                .title(title)
+                .message(message)
+                .masthead(masthead)
                 .showError();
     }
 
@@ -97,7 +114,11 @@ public class Popups {
     }
 
     public static Action openExceptionPopup(Throwable throwable, String title, String message, String masthead) {
-        return Dialogs.create().owner(BitSquare.getPrimaryStage()).title(title).message(message).masthead(masthead)
+        return Dialogs.create()
+                .owner(BitSquare.getPrimaryStage())
+                .title(title)
+                .message(message)
+                .masthead(masthead)
                 .showException(throwable);
     }
 
@@ -132,7 +153,11 @@ public class Popups {
 
     public static Action openRegistrationMissingPopup(String title, String message, String masthead,
                                                       List<Dialogs.CommandLink> commandLinks, int selectedIndex) {
-        return Dialogs.create().owner(BitSquare.getPrimaryStage()).title(title).message(message).masthead(masthead)
+        return Dialogs.create()
+                .owner(BitSquare.getPrimaryStage())
+                .title(title)
+                .message(message)
+                .masthead(masthead)
                 .showCommandLinks(commandLinks.get(selectedIndex), commandLinks);
     }
 }

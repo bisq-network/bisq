@@ -227,7 +227,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
             public void invalidated(Observable valueModel) {
                 if (getSkinnable().isIndeterminate() && timelineNulled && spinner == null) {
                     timelineNulled = false;
-                    spinner = new IndeterminateSpinner(getSkinnable(), ConfidenceProgressIndicatorSkin.this,
+                    spinner = new IndeterminateSpinner(
+                            getSkinnable(), ConfidenceProgressIndicatorSkin.this,
                             spinEnabled.get(), progressColor.get());
                     getChildren().add(spinner);
                 }
@@ -260,7 +261,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                 } else {
                     if (getSkinnable().getScene() != null && getSkinnable().isIndeterminate()) {
                         timelineNulled = false;
-                        spinner = new IndeterminateSpinner(getSkinnable(), ConfidenceProgressIndicatorSkin.this,
+                        spinner = new IndeterminateSpinner(
+                                getSkinnable(), ConfidenceProgressIndicatorSkin.this,
                                 spinEnabled.get(), progressColor.get());
                         getChildren().add(spinner);
                         if (getSkinnable().impl_isTreeVisible()) {
@@ -306,8 +308,8 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
                 spinner = null;
             }
             // create determinateIndicator
-            determinateIndicator = new ConfidenceProgressIndicatorSkin.DeterminateIndicator(control, this,
-                    progressColor.get());
+            determinateIndicator =
+                    new ConfidenceProgressIndicatorSkin.DeterminateIndicator(control, this, progressColor.get());
             getChildren().clear();
             getChildren().add(determinateIndicator);
         }
@@ -781,72 +783,70 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
     private static class StyleableProperties {
         public static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
 
-        private static final CssMetaData<ConfidenceProgressIndicator, Paint> PROGRESS_COLOR = new
-                CssMetaData<ConfidenceProgressIndicator, Paint>("-fx-progress-color",
-                PaintConverter.getInstance(),
-                null) {
+        private static final CssMetaData<ConfidenceProgressIndicator, Paint> PROGRESS_COLOR =
+                new CssMetaData<ConfidenceProgressIndicator, Paint>(
+                        "-fx-progress-color", PaintConverter.getInstance(), null) {
 
-            @Override
-            public boolean isSettable(ConfidenceProgressIndicator n) {
-                final ConfidenceProgressIndicatorSkin skin = (ConfidenceProgressIndicatorSkin) n.getSkin();
-                return skin.progressColor == null || !skin.progressColor.isBound();
-            }
-
-
-            @Override
-            public StyleableProperty<Paint> getStyleableProperty(ConfidenceProgressIndicator n) {
-                final ConfidenceProgressIndicatorSkin skin = (ConfidenceProgressIndicatorSkin) n.getSkin();
-                return (StyleableProperty<Paint>) skin.progressColor;
-            }
-        };
+                    @Override
+                    public boolean isSettable(ConfidenceProgressIndicator n) {
+                        final ConfidenceProgressIndicatorSkin skin = (ConfidenceProgressIndicatorSkin) n.getSkin();
+                        return skin.progressColor == null || !skin.progressColor.isBound();
+                    }
 
 
-        private static final CssMetaData<ConfidenceProgressIndicator, Number> INDETERMINATE_SEGMENT_COUNT = new
-                CssMetaData<ConfidenceProgressIndicator, Number>("-fx-indeterminate-segment-count",
-                SizeConverter.getInstance(),
-                8) {
-
-            @Override
-            public void set(ConfidenceProgressIndicator node, Number value, StyleOrigin origin) {
-                super.set(node, value.intValue(), origin);
-            }
-
-            @Override
-            public boolean isSettable(ConfidenceProgressIndicator n) {
-                final ConfidenceProgressIndicatorSkin skin = (ConfidenceProgressIndicatorSkin) n.getSkin();
-                return skin.indeterminateSegmentCount == null || !skin.indeterminateSegmentCount.isBound();
-            }
+                    @Override
+                    public StyleableProperty<Paint> getStyleableProperty(ConfidenceProgressIndicator n) {
+                        final ConfidenceProgressIndicatorSkin skin = (ConfidenceProgressIndicatorSkin) n.getSkin();
+                        return (StyleableProperty<Paint>) skin.progressColor;
+                    }
+                };
 
 
-            @Override
-            public StyleableProperty<Number> getStyleableProperty(ConfidenceProgressIndicator n) {
-                final ConfidenceProgressIndicatorSkin skin = (ConfidenceProgressIndicatorSkin) n.getSkin();
-                return (StyleableProperty<Number>) skin.indeterminateSegmentCount;
-            }
-        };
+        private static final CssMetaData<ConfidenceProgressIndicator, Number> INDETERMINATE_SEGMENT_COUNT =
+                new CssMetaData<ConfidenceProgressIndicator, Number>(
+                        "-fx-indeterminate-segment-count", SizeConverter.getInstance(), 8) {
+
+                    @Override
+                    public void set(ConfidenceProgressIndicator node, Number value, StyleOrigin origin) {
+                        super.set(node, value.intValue(), origin);
+                    }
+
+                    @Override
+                    public boolean isSettable(ConfidenceProgressIndicator n) {
+                        final ConfidenceProgressIndicatorSkin skin = (ConfidenceProgressIndicatorSkin) n.getSkin();
+                        return skin.indeterminateSegmentCount == null || !skin.indeterminateSegmentCount.isBound();
+                    }
+
+
+                    @Override
+                    public StyleableProperty<Number> getStyleableProperty(ConfidenceProgressIndicator n) {
+                        final ConfidenceProgressIndicatorSkin skin = (ConfidenceProgressIndicatorSkin) n.getSkin();
+                        return (StyleableProperty<Number>) skin.indeterminateSegmentCount;
+                    }
+                };
 
         private static final CssMetaData<ConfidenceProgressIndicator, Boolean> SPIN_ENABLED = new
                 CssMetaData<ConfidenceProgressIndicator, Boolean>("-fx-spin-enabled",
-                BooleanConverter.getInstance(),
-                Boolean.FALSE) {
+                        BooleanConverter.getInstance(),
+                        Boolean.FALSE) {
 
-            @Override
-            public boolean isSettable(ConfidenceProgressIndicator node) {
-                final ConfidenceProgressIndicatorSkin skin = (ConfidenceProgressIndicatorSkin) node.getSkin();
-                return skin.spinEnabled == null || !skin.spinEnabled.isBound();
-            }
+                    @Override
+                    public boolean isSettable(ConfidenceProgressIndicator node) {
+                        final ConfidenceProgressIndicatorSkin skin = (ConfidenceProgressIndicatorSkin) node.getSkin();
+                        return skin.spinEnabled == null || !skin.spinEnabled.isBound();
+                    }
 
 
-            @Override
-            public StyleableProperty<Boolean> getStyleableProperty(ConfidenceProgressIndicator node) {
-                final ConfidenceProgressIndicatorSkin skin = (ConfidenceProgressIndicatorSkin) node.getSkin();
-                return (StyleableProperty<Boolean>) skin.spinEnabled;
-            }
-        };
+                    @Override
+                    public StyleableProperty<Boolean> getStyleableProperty(ConfidenceProgressIndicator node) {
+                        final ConfidenceProgressIndicatorSkin skin = (ConfidenceProgressIndicatorSkin) node.getSkin();
+                        return (StyleableProperty<Boolean>) skin.spinEnabled;
+                    }
+                };
 
         static {
-            final List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(SkinBase.getClassCssMetaData
-                    ());
+            final List<CssMetaData<? extends Styleable, ?>> styleables =
+                    new ArrayList<>(SkinBase.getClassCssMetaData());
             styleables.add(PROGRESS_COLOR);
             styleables.add(INDETERMINATE_SEGMENT_COUNT);
             styleables.add(SPIN_ENABLED);

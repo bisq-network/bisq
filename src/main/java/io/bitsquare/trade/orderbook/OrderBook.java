@@ -118,8 +118,8 @@ public class OrderBook implements OrderBookListener {
             boolean countryResult = countryInList(offer.getBankAccountCountry(), settings.getAcceptedCountries());
 
             // One of the supported languages from the settings must match one of the offer languages (n to n)
-            boolean languageResult = languagesInList(settings.getAcceptedLanguageLocales(),
-                    offer.getAcceptedLanguageLocales());
+            boolean languageResult =
+                    languagesInList(settings.getAcceptedLanguageLocales(), offer.getAcceptedLanguageLocales());
 
             // Apply applyFilter only if there is a valid value set
             // The requested amount must be lower or equal then the offer amount

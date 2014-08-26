@@ -93,8 +93,8 @@ public class DepositController extends CachedViewController {
 
         List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
         addressList = FXCollections.observableArrayList();
-        addressList.addAll(addressEntryList.stream().map(anAddressEntryList -> new DepositListItem
-                (anAddressEntryList, walletFacade)).collect(Collectors.toList()));
+        addressList.addAll(addressEntryList.stream().map(anAddressEntryList ->
+                new DepositListItem(anAddressEntryList, walletFacade)).collect(Collectors.toList()));
 
         tableView.setItems(addressList);
     }
@@ -136,8 +136,8 @@ public class DepositController extends CachedViewController {
                                 Tooltip tooltip = new Tooltip(item.getAddressEntry().getOfferId());
                                 Tooltip.install(hyperlink, tooltip);
 
-                                hyperlink.setOnAction(event -> log.info("Show trade details " + item.getAddressEntry
-                                        ().getOfferId()));
+                                hyperlink.setOnAction(event ->
+                                        log.info("Show trade details " + item.getAddressEntry().getOfferId()));
                             }
                             setGraphic(hyperlink);
                         } else {
@@ -152,63 +152,63 @@ public class DepositController extends CachedViewController {
 
     private void setBalanceColumnCellFactory() {
         balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        balanceColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String,
-                DepositListItem>>() {
+        balanceColumn.setCellFactory(
+                new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>() {
 
-            @Override
-            public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
-                return new TableCell<String, DepositListItem>() {
                     @Override
-                    public void updateItem(final DepositListItem item, boolean empty) {
-                        super.updateItem(item, empty);
+                    public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
+                        return new TableCell<String, DepositListItem>() {
+                            @Override
+                            public void updateItem(final DepositListItem item, boolean empty) {
+                                super.updateItem(item, empty);
 
-                        if (item != null && !empty) {
-                            setGraphic(item.getBalanceLabel());
-                        } else {
-                            setGraphic(null);
-                        }
+                                if (item != null && !empty) {
+                                    setGraphic(item.getBalanceLabel());
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
     private void setCopyColumnCellFactory() {
         copyColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        copyColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String,
-                DepositListItem>>() {
-
-            @Override
-            public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
-                return new TableCell<String, DepositListItem>() {
-                    final Label copyIcon = new Label();
-
-                    {
-                        copyIcon.getStyleClass().add("copy-icon");
-                        AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
-                        Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
-                    }
+        copyColumn.setCellFactory(
+                new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>() {
 
                     @Override
-                    public void updateItem(final DepositListItem item, boolean empty) {
-                        super.updateItem(item, empty);
+                    public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
+                        return new TableCell<String, DepositListItem>() {
+                            final Label copyIcon = new Label();
 
-                        if (item != null && !empty) {
-                            setGraphic(copyIcon);
-                            copyIcon.setOnMouseClicked(e -> {
-                                Clipboard clipboard = Clipboard.getSystemClipboard();
-                                ClipboardContent content = new ClipboardContent();
-                                content.putString(item.addressStringProperty().get());
-                                clipboard.setContent(content);
-                            });
+                            {
+                                copyIcon.getStyleClass().add("copy-icon");
+                                AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
+                                Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
+                            }
 
-                        } else {
-                            setGraphic(null);
-                        }
+                            @Override
+                            public void updateItem(final DepositListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    setGraphic(copyIcon);
+                                    copyIcon.setOnMouseClicked(e -> {
+                                        Clipboard clipboard = Clipboard.getSystemClipboard();
+                                        ClipboardContent content = new ClipboardContent();
+                                        content.putString(item.addressStringProperty().get());
+                                        clipboard.setContent(content);
+                                    });
+
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
     private void setConfidenceColumnCellFactory() {

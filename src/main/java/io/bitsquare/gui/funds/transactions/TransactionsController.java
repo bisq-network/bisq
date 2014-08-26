@@ -88,8 +88,8 @@ public class TransactionsController extends CachedViewController {
 
         List<Transaction> transactions = walletFacade.getWallet().getRecentTransactions(10000, true);
         transactionsListItems = FXCollections.observableArrayList();
-        transactionsListItems.addAll(transactions.stream().map(transaction -> new TransactionsListItem(transaction,
-                walletFacade)).collect(Collectors.toList()));
+        transactionsListItems.addAll(transactions.stream().map(transaction ->
+                new TransactionsListItem(transaction, walletFacade)).collect(Collectors.toList()));
 
         tableView.setItems(transactionsListItems);
     }
@@ -111,56 +111,59 @@ public class TransactionsController extends CachedViewController {
 
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        addressColumn.setCellFactory(new Callback<TableColumn<String, TransactionsListItem>, TableCell<String,
-                TransactionsListItem>>() {
-
-            @Override
-            public TableCell<String, TransactionsListItem> call(TableColumn<String, TransactionsListItem> column) {
-                return new TableCell<String, TransactionsListItem>() {
-                    Hyperlink hyperlink;
+        addressColumn.setCellFactory(
+                new Callback<TableColumn<String, TransactionsListItem>, TableCell<String, TransactionsListItem>>() {
 
                     @Override
-                    public void updateItem(final TransactionsListItem item, boolean empty) {
-                        super.updateItem(item, empty);
+                    public TableCell<String, TransactionsListItem> call(TableColumn<String,
+                            TransactionsListItem> column) {
+                        return new TableCell<String, TransactionsListItem>() {
+                            Hyperlink hyperlink;
 
-                        if (item != null && !empty) {
-                            hyperlink = new Hyperlink(item.getAddressString());
-                            hyperlink.setId("id-link");
-                            hyperlink.setOnAction(event -> log.info("Show trade details " + item.getAddressString()));
-                            setGraphic(hyperlink);
-                        } else {
-                            setGraphic(null);
-                            setId(null);
-                        }
+                            @Override
+                            public void updateItem(final TransactionsListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    hyperlink = new Hyperlink(item.getAddressString());
+                                    hyperlink.setId("id-link");
+                                    hyperlink.setOnAction(event -> log.info("Show trade details " + item
+                                            .getAddressString()));
+                                    setGraphic(hyperlink);
+                                } else {
+                                    setGraphic(null);
+                                    setId(null);
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
     private void setConfidenceColumnCellFactory() {
-        confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue
-                ()));
-        confidenceColumn.setCellFactory(new Callback<TableColumn<String, TransactionsListItem>, TableCell<String,
-                TransactionsListItem>>() {
-
-            @Override
-            public TableCell<String, TransactionsListItem> call(TableColumn<String, TransactionsListItem> column) {
-                return new TableCell<String, TransactionsListItem>() {
+        confidenceColumn.setCellValueFactory((addressListItem) ->
+                new ReadOnlyObjectWrapper(addressListItem.getValue()));
+        confidenceColumn.setCellFactory(
+                new Callback<TableColumn<String, TransactionsListItem>, TableCell<String, TransactionsListItem>>() {
 
                     @Override
-                    public void updateItem(final TransactionsListItem item, boolean empty) {
-                        super.updateItem(item, empty);
+                    public TableCell<String, TransactionsListItem> call(TableColumn<String,
+                            TransactionsListItem> column) {
+                        return new TableCell<String, TransactionsListItem>() {
 
-                        if (item != null && !empty) {
-                            setGraphic(item.getProgressIndicator());
-                        } else {
-                            setGraphic(null);
-                        }
+                            @Override
+                            public void updateItem(final TransactionsListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    setGraphic(item.getProgressIndicator());
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
 }

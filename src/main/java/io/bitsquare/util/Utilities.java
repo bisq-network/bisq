@@ -35,14 +35,14 @@ public class Utilities {
     private static long lastTimeStamp = System.currentTimeMillis();
 
     public static String objectToJson(Object object) {
-        Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).setPrettyPrinting()
-                .create();
+        Gson gson =
+                new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).setPrettyPrinting().create();
         return gson.toJson(object);
     }
 
     public static <T> T jsonToObject(String jsonString, Class<T> classOfT) {
-        Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).setPrettyPrinting()
-                .create();
+        Gson gson =
+                new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).setPrettyPrinting().create();
         return gson.fromJson(jsonString, classOfT);
     }
 

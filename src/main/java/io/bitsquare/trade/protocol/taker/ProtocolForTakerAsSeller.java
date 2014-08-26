@@ -318,8 +318,8 @@ public class ProtocolForTakerAsSeller {
         log.debug("onBankTransferInitedMessage called " + step++);
         log.debug("state " + state);
         // validate
-        checkState(state.ordinal() >= State.SendSignedTakerDepositTxAsHex.ordinal() && state.ordinal() < State
-                .SignAndPublishPayoutTx.ordinal());
+        checkState(state.ordinal() >= State.SendSignedTakerDepositTxAsHex.ordinal() &&
+                state.ordinal() < State.SignAndPublishPayoutTx.ordinal());
         checkArgument(tradeId.equals(message.getTradeId()));
         String depositTxAsHex = nonEmptyStringOf(message.getDepositTxAsHex());
         String offererSignatureR = nonEmptyStringOf(message.getOffererSignatureR());

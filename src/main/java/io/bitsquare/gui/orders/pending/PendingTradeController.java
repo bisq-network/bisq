@@ -72,23 +72,17 @@ public class PendingTradeController extends CachedViewController {
     private Image sellIcon = ImageUtil.getIconImage(ImageUtil.SELL);
     private ConfidenceDisplay confidenceDisplay;
 
-    @FXML
-    private TableView openTradesTable;
-    @FXML
-    private TableColumn<String, PendingTradesListItem> directionColumn, countryColumn, bankAccountTypeColumn,
+    @FXML private TableView openTradesTable;
+    @FXML private TableColumn<String, PendingTradesListItem> directionColumn, countryColumn, bankAccountTypeColumn,
             priceColumn, amountColumn, volumeColumn, statusColumn, selectColumn;
-    @FXML
-    private ConfidenceProgressIndicator progressIndicator;
-    @FXML
-    private Label txTitleLabel, txHeaderLabel, confirmationLabel, txIDCopyIcon, holderNameCopyIcon,
+    @FXML private ConfidenceProgressIndicator progressIndicator;
+    @FXML private Label txTitleLabel, txHeaderLabel, confirmationLabel, txIDCopyIcon, holderNameCopyIcon,
             primaryBankAccountIDCopyIcon, secondaryBankAccountIDCopyIcon, bankAccountDetailsHeaderLabel,
             bankAccountTypeTitleLabel, holderNameTitleLabel, primaryBankAccountIDTitleLabel,
             secondaryBankAccountIDTitleLabel;
-    @FXML
-    private TextField txTextField, bankAccountTypeTextField, holderNameTextField, primaryBankAccountIDTextField,
+    @FXML private TextField txTextField, bankAccountTypeTextField, holderNameTextField, primaryBankAccountIDTextField,
             secondaryBankAccountIDTextField;
-    @FXML
-    private Button bankTransferInitedButton;
+    @FXML private Button bankTransferInitedButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -136,8 +130,7 @@ public class PendingTradeController extends CachedViewController {
         openTradesTable.setItems(tradeItems);
         openTradesTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        openTradesTable.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue,
-                                                                                newValue) -> {
+        openTradesTable.getSelectionModel().selectedItemProperty().addListener((obsValue, oldValue, newValue) -> {
             if (newValue instanceof PendingTradesListItem) {
                 showTradeDetails((PendingTradesListItem) newValue);
             }
@@ -153,10 +146,9 @@ public class PendingTradeController extends CachedViewController {
         initCopyIcons();
 
         // select
-        Optional<PendingTradesListItem> currentTradeItemOptional = tradeItems.stream()
-                .filter((e) -> tradeManager.getPendingTrade() != null && e.getTrade().getId().equals(tradeManager
-                        .getPendingTrade().getId()))
-                .findFirst();
+        Optional<PendingTradesListItem> currentTradeItemOptional = tradeItems.stream().filter((e) ->
+                tradeManager.getPendingTrade() != null &&
+                        e.getTrade().getId().equals(tradeManager.getPendingTrade().getId())).findFirst();
         if (currentTradeItemOptional.isPresent()) {
             openTradesTable.getSelectionModel().select(currentTradeItemOptional.get());
         }
@@ -193,8 +185,8 @@ public class PendingTradeController extends CachedViewController {
     private void updateTx(Transaction transaction) {
         txTextField.setText(transaction.getHashAsString());
 
-        confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, transaction,
-                progressIndicator);
+        confidenceDisplay =
+                new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, transaction, progressIndicator);
 
         int depthInBlocks = transaction.getConfidence().getDepthInBlocks();
         bankTransferInitedButton.setDisable(depthInBlocks == 0);
@@ -238,8 +230,8 @@ public class PendingTradeController extends CachedViewController {
         currentTrade = trade;
         Transaction transaction = trade.getDepositTransaction();
         if (transaction == null) {
-            trade.depositTxChangedProperty().addListener((observableValue, aBoolean,
-                                                          aBoolean2) -> updateTx(trade.getDepositTransaction()));
+            trade.depositTxChangedProperty().addListener((observableValue, aBoolean, aBoolean2) ->
+                    updateTx(trade.getDepositTransaction()));
         } else {
             updateTx(trade.getDepositTransaction());
         }
@@ -260,8 +252,8 @@ public class PendingTradeController extends CachedViewController {
             Transaction transaction = trade.getPayoutTransaction();
 
             confidenceDisplay.destroy();
-            confidenceDisplay = new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, transaction,
-                    progressIndicator);
+            confidenceDisplay =
+                    new ConfidenceDisplay(walletFacade.getWallet(), confirmationLabel, transaction, progressIndicator);
 
             txTextField.setText(transaction.getHashAsString());
 
@@ -276,8 +268,8 @@ public class PendingTradeController extends CachedViewController {
 
             bankAccountTypeTextField.setText(BitSquareFormatter.formatCoinWithCode(trade.getTradeAmount()));
             holderNameTextField.setText(BitSquareFormatter.formatVolume(trade.getTradeVolume()));
-            primaryBankAccountIDTextField.setText(BitSquareFormatter.formatCoinWithCode(FeePolicy.CREATE_OFFER_FEE
-                    .add(FeePolicy.TX_FEE)));
+            primaryBankAccountIDTextField.setText(
+                    BitSquareFormatter.formatCoinWithCode(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
             secondaryBankAccountIDTextField.setText(BitSquareFormatter.formatCoinWithCode(trade.getCollateralAmount()));
 
             holderNameCopyIcon.setVisible(false);
@@ -339,137 +331,138 @@ public class PendingTradeController extends CachedViewController {
 
     private void setCountryColumnCellFactory() {
         countryColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
-        countryColumn.setCellFactory(new Callback<TableColumn<String, PendingTradesListItem>, TableCell<String,
-                PendingTradesListItem>>() {
-            @Override
-            public TableCell<String, PendingTradesListItem> call(TableColumn<String,
-                    PendingTradesListItem> directionColumn) {
-                return new TableCell<String, PendingTradesListItem>() {
-                    final HBox hBox = new HBox();
-
-                    {
-                        hBox.setSpacing(3);
-                        hBox.setAlignment(Pos.CENTER);
-                        setGraphic(hBox);
-                    }
-
+        countryColumn.setCellFactory(
+                new Callback<TableColumn<String, PendingTradesListItem>, TableCell<String, PendingTradesListItem>>() {
                     @Override
-                    public void updateItem(final PendingTradesListItem tradesTableItem, boolean empty) {
-                        super.updateItem(tradesTableItem, empty);
+                    public TableCell<String, PendingTradesListItem> call(
+                            TableColumn<String, PendingTradesListItem> directionColumn) {
+                        return new TableCell<String, PendingTradesListItem>() {
+                            final HBox hBox = new HBox();
 
-                        hBox.getChildren().clear();
-                        if (tradesTableItem != null) {
-                            Country country = tradesTableItem.getTrade().getOffer().getBankAccountCountry();
-                            try {
-                                hBox.getChildren().add(ImageUtil.getIconImageView("/images/countries/" + country
-                                        .getCode().toLowerCase() + ".png"));
-
-                            } catch (Exception e) {
-                                log.warn("Country icon not found: " + "/images/countries/" + country.getCode()
-                                        .toLowerCase() + ".png country name: " + country.getName());
+                            {
+                                hBox.setSpacing(3);
+                                hBox.setAlignment(Pos.CENTER);
+                                setGraphic(hBox);
                             }
-                            Tooltip.install(this, new Tooltip(country.getName()));
-                        }
+
+                            @Override
+                            public void updateItem(final PendingTradesListItem tradesTableItem, boolean empty) {
+                                super.updateItem(tradesTableItem, empty);
+
+                                hBox.getChildren().clear();
+                                if (tradesTableItem != null) {
+                                    Country country = tradesTableItem.getTrade().getOffer().getBankAccountCountry();
+                                    try {
+                                        hBox.getChildren().add(ImageUtil.getIconImageView(
+                                                "/images/countries/" + country.getCode().toLowerCase() + ".png"));
+
+                                    } catch (Exception e) {
+                                        log.warn("Country icon not found: /images/countries/" +
+                                                country.getCode().toLowerCase() + ".png country name: " +
+                                                country.getName());
+                                    }
+                                    Tooltip.install(this, new Tooltip(country.getName()));
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
     private void setBankAccountTypeColumnCellFactory() {
         bankAccountTypeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
-        bankAccountTypeColumn.setCellFactory(new Callback<TableColumn<String, PendingTradesListItem>,
-                TableCell<String, PendingTradesListItem>>() {
-            @Override
-            public TableCell<String, PendingTradesListItem> call(TableColumn<String,
-                    PendingTradesListItem> directionColumn) {
-                return new TableCell<String, PendingTradesListItem>() {
+        bankAccountTypeColumn.setCellFactory(
+                new Callback<TableColumn<String, PendingTradesListItem>, TableCell<String, PendingTradesListItem>>() {
                     @Override
-                    public void updateItem(final PendingTradesListItem tradesTableItem, boolean empty) {
-                        super.updateItem(tradesTableItem, empty);
+                    public TableCell<String, PendingTradesListItem> call(
+                            TableColumn<String, PendingTradesListItem> directionColumn) {
+                        return new TableCell<String, PendingTradesListItem>() {
+                            @Override
+                            public void updateItem(final PendingTradesListItem tradesTableItem, boolean empty) {
+                                super.updateItem(tradesTableItem, empty);
 
-                        if (tradesTableItem != null) {
-                            BankAccountType bankAccountType = tradesTableItem.getTrade().getOffer()
-                                    .getBankAccountType();
-                            setText(Localisation.get(bankAccountType.toString()));
-                        } else {
-                            setText("");
-                        }
+                                if (tradesTableItem != null) {
+                                    BankAccountType bankAccountType = tradesTableItem.getTrade().getOffer()
+                                            .getBankAccountType();
+                                    setText(Localisation.get(bankAccountType.toString()));
+                                } else {
+                                    setText("");
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
     private void setDirectionColumnCellFactory() {
         directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
-        directionColumn.setCellFactory(new Callback<TableColumn<String, PendingTradesListItem>, TableCell<String,
-                PendingTradesListItem>>() {
-            @Override
-            public TableCell<String, PendingTradesListItem> call(TableColumn<String,
-                    PendingTradesListItem> directionColumn) {
-                return new TableCell<String, PendingTradesListItem>() {
-                    final ImageView iconView = new ImageView();
-                    final Button button = new Button();
-
-                    {
-                        button.setGraphic(iconView);
-                        button.setMinWidth(70);
-                    }
-
+        directionColumn.setCellFactory(
+                new Callback<TableColumn<String, PendingTradesListItem>, TableCell<String, PendingTradesListItem>>() {
                     @Override
-                    public void updateItem(final PendingTradesListItem tradesTableItem, boolean empty) {
-                        super.updateItem(tradesTableItem, empty);
+                    public TableCell<String, PendingTradesListItem> call(
+                            TableColumn<String, PendingTradesListItem> directionColumn) {
+                        return new TableCell<String, PendingTradesListItem>() {
+                            final ImageView iconView = new ImageView();
+                            final Button button = new Button();
 
-                        if (tradesTableItem != null) {
-                            String title;
-                            Image icon;
-                            Offer offer = tradesTableItem.getTrade().getOffer();
-
-                            if (offer.getDirection() == Direction.SELL) {
-                                icon = buyIcon;
-                                title = BitSquareFormatter.formatDirection(Direction.BUY, true);
-                            } else {
-                                icon = sellIcon;
-                                title = BitSquareFormatter.formatDirection(Direction.SELL, true);
+                            {
+                                button.setGraphic(iconView);
+                                button.setMinWidth(70);
                             }
-                            button.setDisable(true);
-                            iconView.setImage(icon);
-                            button.setText(title);
-                            setGraphic(button);
-                        } else {
-                            setGraphic(null);
-                        }
+
+                            @Override
+                            public void updateItem(final PendingTradesListItem tradesTableItem, boolean empty) {
+                                super.updateItem(tradesTableItem, empty);
+
+                                if (tradesTableItem != null) {
+                                    String title;
+                                    Image icon;
+                                    Offer offer = tradesTableItem.getTrade().getOffer();
+
+                                    if (offer.getDirection() == Direction.SELL) {
+                                        icon = buyIcon;
+                                        title = BitSquareFormatter.formatDirection(Direction.BUY, true);
+                                    } else {
+                                        icon = sellIcon;
+                                        title = BitSquareFormatter.formatDirection(Direction.SELL, true);
+                                    }
+                                    button.setDisable(true);
+                                    iconView.setImage(icon);
+                                    button.setText(title);
+                                    setGraphic(button);
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
     private void setSelectColumnCellFactory() {
         selectColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
-        selectColumn.setCellFactory(new Callback<TableColumn<String, PendingTradesListItem>, TableCell<String,
-                PendingTradesListItem>>() {
-            @Override
-            public TableCell<String, PendingTradesListItem> call(TableColumn<String,
-                    PendingTradesListItem> directionColumn) {
-                return new TableCell<String, PendingTradesListItem>() {
-                    final Button button = new Button("Select");
-
+        selectColumn.setCellFactory(
+                new Callback<TableColumn<String, PendingTradesListItem>, TableCell<String, PendingTradesListItem>>() {
                     @Override
-                    public void updateItem(final PendingTradesListItem tradesTableItem, boolean empty) {
-                        super.updateItem(tradesTableItem, empty);
+                    public TableCell<String, PendingTradesListItem> call(
+                            TableColumn<String, PendingTradesListItem> directionColumn) {
+                        return new TableCell<String, PendingTradesListItem>() {
+                            final Button button = new Button("Select");
 
-                        if (tradesTableItem != null) {
-                            button.setOnAction(event -> showTradeDetails(tradesTableItem));
-                            setGraphic(button);
-                        } else {
-                            setGraphic(null);
-                        }
+                            @Override
+                            public void updateItem(final PendingTradesListItem tradesTableItem, boolean empty) {
+                                super.updateItem(tradesTableItem, empty);
+
+                                if (tradesTableItem != null) {
+                                    button.setOnAction(event -> showTradeDetails(tradesTableItem));
+                                    setGraphic(button);
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
 }

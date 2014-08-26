@@ -35,8 +35,9 @@ public class HandleTakeOfferRequest {
         if (!takeOfferRequestAccepted) {
             log.info("Received take offer request but the offer not marked as open anymore.");
         }
-        messageFacade.sendTradeMessage(peerAddress, new RespondToTakeOfferRequestMessage(tradeId,
-                takeOfferRequestAccepted), new OutgoingTradeMessageListener() {
+        RespondToTakeOfferRequestMessage tradeMessage =
+                new RespondToTakeOfferRequestMessage(tradeId, takeOfferRequestAccepted);
+        messageFacade.sendTradeMessage(peerAddress, tradeMessage, new OutgoingTradeMessageListener() {
             @Override
             public void onResult() {
                 log.trace("RespondToTakeOfferRequestMessage successfully arrived at peer");

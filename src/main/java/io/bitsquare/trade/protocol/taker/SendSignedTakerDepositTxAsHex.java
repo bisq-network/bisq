@@ -76,8 +76,8 @@ public class SendSignedTakerDepositTxAsHex {
             @Override
             public void onFailed() {
                 log.error("RequestOffererDepositPublicationMessage  did not arrive at peer");
-                exceptionHandler.onError(new Exception("RequestOffererDepositPublicationMessage did not arrive at " +
-                        "peer"));
+                exceptionHandler.onError(
+                        new Exception("RequestOffererDepositPublicationMessage did not arrive at peer"));
             }
         });
     }

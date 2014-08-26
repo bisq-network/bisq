@@ -171,7 +171,7 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector {
                         confidence.getSource().equals(TransactionConfidence.Source.SELF) &&
                         // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
                         // TODO: The value 1 below dates from a time when transactions we broadcast *to* were
-                        counted, set to 0
+                        // counted, set to 0
                         (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
     }
      */

@@ -252,8 +252,8 @@ public class SettingsController extends CachedViewController {
     public void onSelectBankAccountRegion() {
         bankAccountCountryComboBox.setVisible(true);
         Region selectedBankAccountRegion = bankAccountRegionComboBox.getSelectionModel().getSelectedItem();
-        bankAccountCountryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllCountriesFor
-                (selectedBankAccountRegion)));
+        bankAccountCountryComboBox.setItems(
+                FXCollections.observableArrayList(CountryUtil.getAllCountriesFor(selectedBankAccountRegion)));
     }
 
     @FXML
@@ -522,8 +522,8 @@ public class SettingsController extends CachedViewController {
             bankAccountCurrencyComboBox.getSelectionModel().selectFirst();
             bankAccountRegionComboBox.getSelectionModel().select(3);
 
-            Optional<Country> country = bankAccountCountryComboBox.getItems().stream().filter(e -> e.getCode().equals
-                    (CountryUtil.getDefaultCountry().getCode())).findFirst();
+            Optional<Country> country = bankAccountCountryComboBox.getItems().stream().filter(e ->
+                    e.getCode().equals(CountryUtil.getDefaultCountry().getCode())).findFirst();
             if (country.isPresent())
                 bankAccountCountryComboBox.getSelectionModel().select(country.get());
 
@@ -703,7 +703,8 @@ public class SettingsController extends CachedViewController {
 
     private boolean verifyBankAccountData() {
         try {
-            BitSquareValidator.textFieldsNotEmptyWithReset(bankAccountTitleTextField, bankAccountHolderNameTextField,
+            BitSquareValidator.textFieldsNotEmptyWithReset(
+                    bankAccountTitleTextField, bankAccountHolderNameTextField,
                     bankAccountPrimaryIDTextField, bankAccountSecondaryIDTextField);
 
             BankAccountType bankAccountTypeInfo = bankAccountTypesComboBox.getSelectionModel().getSelectedItem();
@@ -712,10 +713,8 @@ public class SettingsController extends CachedViewController {
                     bankAccountTypeInfo);
 
             return bankAccountTypesComboBox.getSelectionModel().getSelectedItem() != null &&
-                    bankAccountCountryComboBox.getSelectionModel()
-                    .getSelectedItem() != null && bankAccountCurrencyComboBox.getSelectionModel()
-                    .getSelectedItem() !=
-                    null;
+                    bankAccountCountryComboBox.getSelectionModel().getSelectedItem() != null &&
+                    bankAccountCurrencyComboBox.getSelectionModel().getSelectedItem() != null;
         } catch (BitSquareValidator.ValidationException e) {
             return false;
         }
@@ -761,7 +760,6 @@ public class SettingsController extends CachedViewController {
             messageFacade.addArbitrator(arbitrator);
         }
     }
-
 
 }
 

@@ -73,8 +73,8 @@ public class TradeController extends CachedViewController {
 
         // TODO find better solution
         // Textfield focus out triggers validation, use runLater as quick fix...
-        ((TabPane) root).getSelectionModel().selectedIndexProperty().addListener((observableValue) -> Platform
-                .runLater(() -> ValidatingTextField.hidePopover()));
+        ((TabPane) root).getSelectionModel().selectedIndexProperty().addListener((observableValue) ->
+                Platform.runLater(() -> ValidatingTextField.hidePopover()));
     }
 
 
@@ -88,8 +88,8 @@ public class TradeController extends CachedViewController {
         if (navigationItem == NavigationItem.ORDER_BOOK) {
             checkArgument(orderBookLoader == null);
             // Orderbook must not be cached by GuiceFXMLLoader as we use 2 instances for sell and buy screens.
-            orderBookLoader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.ORDER_BOOK.getFxmlUrl()),
-                    false);
+            orderBookLoader =
+                    new GuiceFXMLLoader(getClass().getResource(NavigationItem.ORDER_BOOK.getFxmlUrl()), false);
             try {
                 final Parent view = orderBookLoader.load();
                 final Tab tab = new Tab("Orderbook");

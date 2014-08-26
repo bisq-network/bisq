@@ -82,8 +82,8 @@ public class BitSquare extends Application {
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions
                 (Throwables.getRootCause(throwable)));
 
-        StorageDirectory.setStorageDirectory(new File(StorageDirectory.getApplicationDirectory().getCanonicalPath() +
-                "/data"));
+        StorageDirectory.setStorageDirectory(
+                new File(StorageDirectory.getApplicationDirectory().getCanonicalPath() + "/data"));
 
         // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
         AWTSystemTray.createSystemTray(primaryStage);
@@ -110,8 +110,8 @@ public class BitSquare extends Application {
 
         GuiceFXMLLoader.setInjector(injector);
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()),
-                false);
+        final GuiceFXMLLoader loader =
+                new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), false);
         final Parent view = loader.load();
         final Scene scene = new Scene(view, 1000, 750);
         scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm());

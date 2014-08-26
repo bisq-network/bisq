@@ -200,8 +200,8 @@ public class WalletFacade {
         List<AddressEntry> persistedAddressEntryList = (List<AddressEntry>) serializable;
         if (serializable instanceof List) {
             for (AddressEntry persistedAddressEntry : persistedAddressEntryList) {
-                persistedAddressEntry.setDeterministicKey((DeterministicKey) wallet.findKeyFromPubHash
-                        (persistedAddressEntry.getPubKeyHash()));
+                persistedAddressEntry.setDeterministicKey(
+                        (DeterministicKey) wallet.findKeyFromPubHash(persistedAddressEntry.getPubKeyHash()));
             }
             addressEntryList = persistedAddressEntryList;
             registrationAddressEntry = addressEntryList.get(0);
@@ -279,8 +279,8 @@ public class WalletFacade {
     }
 
     public AddressEntry getAddressInfoByTradeID(String offerId) {
-        Optional<AddressEntry> addressEntry = getAddressEntryList().stream().filter(e -> offerId.equals(e.getOfferId
-                ())).findFirst();
+        Optional<AddressEntry> addressEntry = getAddressEntryList().stream().filter(e ->
+                offerId.equals(e.getOfferId())).findFirst();
 
         if (addressEntry.isPresent())
             return addressEntry.get();
@@ -318,8 +318,8 @@ public class WalletFacade {
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
         Set<Transaction> transactions = wallet.getTransactions(true);
         if (transactions != null) {
-            transactionConfidenceList.addAll(transactions.stream().map(tx -> getTransactionConfidence(tx,
-                    address)).collect(Collectors.toList()));
+            transactionConfidenceList.addAll(transactions.stream().map(tx ->
+                    getTransactionConfidence(tx, address)).collect(Collectors.toList()));
             /*  same as:
              for (Transaction tx : transactions)
             {
@@ -345,8 +345,8 @@ public class WalletFacade {
         List<TransactionOutput> mergedOutputs = getOutputsWithConnectedOutputs(tx);
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
 
-        mergedOutputs.stream().filter(e -> e.getScriptPubKey().isSentToAddress() || e.getScriptPubKey().isSentToP2SH
-                ()).forEach(transactionOutput -> {
+        mergedOutputs.stream().filter(e -> e.getScriptPubKey().isSentToAddress() ||
+                e.getScriptPubKey().isSentToP2SH()).forEach(transactionOutput -> {
             Address outputAddress = transactionOutput.getScriptPubKey().getToAddress(params);
             if (address.equals(outputAddress)) {
                 transactionConfidenceList.add(tx.getConfidence());
@@ -356,8 +356,8 @@ public class WalletFacade {
         same as:
         for (TransactionOutput transactionOutput : mergedOutputs)
         {
-            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey()
-            .isSentToP2SH())
+            if (transactionOutput.getScriptPubKey().isSentToAddress() ||
+                    transactionOutput.getScriptPubKey().isSentToP2SH())
             {
                 Address outputAddress = transactionOutput.getScriptPubKey().getToAddress(params);
                 if (address.equals(outputAddress))
@@ -398,8 +398,8 @@ public class WalletFacade {
                 if (transactionConfidence == null ||
                         confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.PENDING) ||
                         (confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING) &&
-                                transactionConfidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType
-                                        .BUILDING) &&
+                                transactionConfidence.getConfidenceType().equals(
+                                        TransactionConfidence.ConfidenceType.BUILDING) &&
                                 confidence.getDepthInBlocks() < transactionConfidence.getDepthInBlocks())) {
                     transactionConfidence = confidence;
                 }
@@ -415,8 +415,8 @@ public class WalletFacade {
         if (getRegistrationAddressEntry() != null) {
             transactionConfidence = getConfidenceForAddress(getRegistrationAddressEntry().getAddress());
         }
-        return transactionConfidence != null && transactionConfidence.getConfidenceType().equals
-                (TransactionConfidence.ConfidenceType.BUILDING);
+        return transactionConfidence != null &&
+                transactionConfidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING);
     }
 
 
@@ -507,12 +507,13 @@ public class WalletFacade {
 
         Transaction tx = new Transaction(params);
 
-        byte[] data = cryptoFacade.getEmbeddedAccountRegistrationData(getRegistrationAddressEntry().getKey(),
-                stringifiedBankAccounts);
+        byte[] data = cryptoFacade.getEmbeddedAccountRegistrationData(
+                getRegistrationAddressEntry().getKey(), stringifiedBankAccounts);
         tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 
-        Coin fee = FeePolicy.ACCOUNT_REGISTRATION_FEE.subtract(Transaction.MIN_NONDUST_OUTPUT).subtract(FeePolicy
-                .TX_FEE);
+        Coin fee = FeePolicy.ACCOUNT_REGISTRATION_FEE
+                .subtract(Transaction.MIN_NONDUST_OUTPUT)
+                .subtract(FeePolicy.TX_FEE);
         log.trace("fee: " + fee.toFriendlyString());
         tx.addOutput(fee, feePolicy.getAddressForRegistrationFee());
 
@@ -842,16 +843,14 @@ public class WalletFacade {
         log.trace("offerersFirstTx = " + offerersFirstTx);
 
         // add input
-        Transaction offerersFirstTxConnOut = wallet.getTransaction(offerersFirstTx.getInput(0).getOutpoint().getHash
-                ());    // pass that around!
-        TransactionOutPoint offerersFirstTxOutPoint = new TransactionOutPoint(params, offererTxOutIndex,
-                offerersFirstTxConnOut);
+        Transaction offerersFirstTxConnOut = wallet.getTransaction(offerersFirstTx.getInput(0).getOutpoint().getHash());
+        TransactionOutPoint offerersFirstTxOutPoint =
+                new TransactionOutPoint(params, offererTxOutIndex, offerersFirstTxConnOut);
         //TransactionInput offerersFirstTxInput = new TransactionInput(params, tx,
         // offerersFirstTx.getInput(0).getScriptBytes(), offerersFirstTxOutPoint);   // pass that around!
         // getScriptBytes =
         // empty bytes array
-        TransactionInput offerersFirstTxInput = new TransactionInput(params, tx, new byte[]{},
-                offerersFirstTxOutPoint);   // pass that around!  getScriptBytes = empty bytes array
+        TransactionInput offerersFirstTxInput = new TransactionInput(params, tx, new byte[]{}, offerersFirstTxOutPoint);
         offerersFirstTxInput.setParent(tx);
         tx.addInput(offerersFirstTxInput);
 
@@ -863,10 +862,10 @@ public class WalletFacade {
 
         // add input
         Transaction takersSignedTxConnOut = new Transaction(params, Utils.parseAsHexOrBase58(takersSignedConnOutAsHex));
-        TransactionOutPoint takersSignedTxOutPoint = new TransactionOutPoint(params, takerTxOutIndex,
-                takersSignedTxConnOut);
-        TransactionInput takersSignedTxInput = new TransactionInput(params, tx,
-                Utils.parseAsHexOrBase58(takersSignedScriptSigAsHex), takersSignedTxOutPoint);
+        TransactionOutPoint takersSignedTxOutPoint =
+                new TransactionOutPoint(params, takerTxOutIndex, takersSignedTxConnOut);
+        TransactionInput takersSignedTxInput = new TransactionInput(
+                params, tx, Utils.parseAsHexOrBase58(takersSignedScriptSigAsHex), takersSignedTxOutPoint);
         takersSignedTxInput.setParent(tx);
         tx.addInput(takersSignedTxInput);
 
@@ -965,8 +964,8 @@ public class WalletFacade {
                                                                              Coin offererPaybackAmount,
                                                                              Coin takerPaybackAmount,
                                                                              String takerAddress,
-                                                                             String tradeID) throws
-            AddressFormatException {
+                                                                             String tradeID)
+            throws AddressFormatException {
         log.debug("offererCreatesAndSignsPayoutTx");
         log.trace("inputs: ");
         log.trace("depositTxID=" + depositTxID);
@@ -1028,8 +1027,8 @@ public class WalletFacade {
         ECKey.ECDSASignature takerSignature = getAddressInfoByTradeID(tradeID).getKey().sign(sigHash);
         TransactionSignature takerTxSig = new TransactionSignature(takerSignature, Transaction.SigHash.ALL, false);
 
-        ECKey.ECDSASignature offererSignature = new ECKey.ECDSASignature(new BigInteger(offererSignatureR),
-                new BigInteger(offererSignatureS));
+        ECKey.ECDSASignature offererSignature =
+                new ECKey.ECDSASignature(new BigInteger(offererSignatureR), new BigInteger(offererSignatureS));
         TransactionSignature offererTxSig = new TransactionSignature(offererSignature, Transaction.SigHash.ALL, false);
 
         Script inputScript = ScriptBuilder.createMultiSigInputScript(ImmutableList.of(offererTxSig, takerTxSig));

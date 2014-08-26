@@ -33,8 +33,9 @@ public class SendDepositTxIdToTaker {
     public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, PeerAddress peerAddress,
                            MessageFacade messageFacade, String tradeId, Transaction depositTransaction) {
         log.trace("Run task");
-        DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(tradeId,
-                Utils.HEX.encode(depositTransaction.bitcoinSerialize()));
+        DepositTxPublishedMessage tradeMessage =
+                new DepositTxPublishedMessage(tradeId, Utils.HEX.encode(depositTransaction.bitcoinSerialize()));
+
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, new OutgoingTradeMessageListener() {
             @Override
             public void onResult() {

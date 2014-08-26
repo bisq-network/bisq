@@ -56,10 +56,10 @@ public class TransactionsListItem {
                 if (!transactionOutput.isMine(walletFacade.getWallet())) {
                     type.set("Sent to");
 
-                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey()
-                            .isPayToScriptHash()) {
-                        address = transactionOutput.getScriptPubKey().getToAddress(walletFacade.getWallet().getParams
-                                ());
+                    if (transactionOutput.getScriptPubKey().isSentToAddress() ||
+                            transactionOutput.getScriptPubKey().isPayToScriptHash()) {
+                        address =
+                                transactionOutput.getScriptPubKey().getToAddress(walletFacade.getWallet().getParams());
                         addressString = address.toString();
                     } else {
                         addressString = "No sent to address script used.";
@@ -73,10 +73,10 @@ public class TransactionsListItem {
 
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                 if (transactionOutput.isMine(walletFacade.getWallet())) {
-                    if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey()
-                            .isPayToScriptHash()) {
-                        address = transactionOutput.getScriptPubKey().getToAddress(walletFacade.getWallet().getParams
-                                ());
+                    if (transactionOutput.getScriptPubKey().isSentToAddress() ||
+                            transactionOutput.getScriptPubKey().isPayToScriptHash()) {
+                        address =
+                                transactionOutput.getScriptPubKey().getToAddress(walletFacade.getWallet().getParams());
                         addressString = address.toString();
                     } else {
                         addressString = "No sent to address script used.";

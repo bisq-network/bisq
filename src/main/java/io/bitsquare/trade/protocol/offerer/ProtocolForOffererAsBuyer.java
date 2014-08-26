@@ -354,8 +354,8 @@ public class ProtocolForOffererAsBuyer {
         log.debug("state " + state);
 
         // validation
-        checkState(state.ordinal() >= State.SignAndPublishDepositTx.ordinal() && state.ordinal() <= State
-                .onResultSetupListenerForBlockChainConfirmation.ordinal());
+        checkState(state.ordinal() >= State.SignAndPublishDepositTx.ordinal() &&
+                state.ordinal() <= State.onResultSetupListenerForBlockChainConfirmation.ordinal());
 
         state = State.onUIEventBankTransferInited;
 
@@ -422,6 +422,5 @@ public class ProtocolForOffererAsBuyer {
     private void onFault(Throwable throwable) {
         listener.onFault(throwable, state);
     }
-
 
 }

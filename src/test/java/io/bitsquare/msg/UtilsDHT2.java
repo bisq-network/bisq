@@ -1,21 +1,4 @@
 /*
- * This file is part of Bitsquare.
- *
- * Bitsquare is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or (at
- * your option) any later version.
- *
- * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
- * License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
- */
-
-/*
  * Copyright 2012 Thomas Bocek
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -90,9 +73,8 @@ public class UtilsDHT2 {
         return createAddress(new Number160(id), "127.0.0.1", 8005, 8006, false, false);
     }
 
-    public static PeerAddress createAddress(Number160 idSender, String inetSender, int tcpPortSender,
-                                            int udpPortSender, boolean firewallUDP,
-                                            boolean firewallTCP) throws UnknownHostException {
+    public static PeerAddress createAddress(Number160 idSender, String inetSender, int tcpPortSender, int udpPortSender,
+                                            boolean firewallUDP, boolean firewallTCP) throws UnknownHostException {
         InetAddress inetSend = InetAddress.getByName(inetSender);
         PeerSocketAddress peerSocketAddress = new PeerSocketAddress(inetSend, tcpPortSender, udpPortSender);
         PeerAddress n1 = new PeerAddress(idSender, peerSocketAddress, firewallTCP, firewallUDP, false,
@@ -102,10 +84,8 @@ public class UtilsDHT2 {
 
     public static Message createDummyMessage(Number160 idSender, String inetSender, int tcpPortSendor,
                                              int udpPortSender, Number160 idRecipien, String inetRecipient,
-                                             int tcpPortRecipient,
-                                             int udpPortRecipient, byte command, Type type, boolean firewallUDP,
-                                             boolean firewallTCP)
-            throws UnknownHostException {
+                                             int tcpPortRecipient, int udpPortRecipient, byte command, Type type,
+                                             boolean firewallUDP, boolean firewallTCP) throws UnknownHostException {
         Message message = new Message();
         PeerAddress n1 = createAddress(idSender, inetSender, tcpPortSendor, udpPortSender, firewallUDP,
                 firewallTCP);

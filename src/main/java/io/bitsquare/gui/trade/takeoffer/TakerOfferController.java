@@ -56,22 +56,16 @@ public class TakerOfferController extends CachedViewController {
     private String tradeId;
     private String depositTxId;
 
-    @FXML
-    private Accordion accordion;
-    @FXML
-    private TitledPane takeOfferTitledPane, waitBankTxTitledPane, summaryTitledPane;
-    @FXML
-    private ValidatedTextField amountTextField;
-    @FXML
-    private TextField priceTextField, volumeTextField, collateralTextField, feeTextField, totalTextField,
+    @FXML private Accordion accordion;
+    @FXML private TitledPane takeOfferTitledPane, waitBankTxTitledPane, summaryTitledPane;
+    @FXML private ValidatedTextField amountTextField;
+    @FXML private TextField priceTextField, volumeTextField, collateralTextField, feeTextField, totalTextField,
             bankAccountTypeTextField, countryTextField, arbitratorsTextField,
             supportedLanguagesTextField, supportedCountriesTextField, depositTxIdTextField, summaryPaidTextField,
             summaryReceivedTextField, summaryFeesTextField, summaryCollateralTextField,
             summaryDepositTxIdTextField, summaryPayoutTxIdTextField;
-    @FXML
-    private Label infoLabel, headLineLabel, collateralLabel;
-    @FXML
-    private Button takeOfferButton, receivedFiatButton;
+    @FXML private Label infoLabel, headLineLabel, collateralLabel;
+    @FXML private Button takeOfferButton, receivedFiatButton;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -122,8 +116,8 @@ public class TakerOfferController extends CachedViewController {
 
     public void applyData() {
         amountTextField.setText(requestedAmount.toPlainString());
-        amountTextField.setPromptText(BitSquareFormatter.formatCoinWithCode(offer.getMinAmount()) + " - " +
-                BitSquareFormatter.formatCoinWithCode(offer.getAmount()));
+        amountTextField.setPromptText(BitSquareFormatter.formatCoinWithCode(
+                offer.getMinAmount()) + " - " + BitSquareFormatter.formatCoinWithCode(offer.getAmount()));
         priceTextField.setText(BitSquareFormatter.formatPrice(offer.getPrice()));
         applyVolume();
         collateralLabel.setText("Collateral (" + getCollateralAsPercent() + "):");
@@ -138,8 +132,8 @@ public class TakerOfferController extends CachedViewController {
         //todo list
         // arbitratorsTextField.setText(offer.getArbitrator().getName());
 
-        supportedLanguagesTextField.setText(BitSquareFormatter.languageLocalesToString(offer
-                .getAcceptedLanguageLocales()));
+        supportedLanguagesTextField.setText(BitSquareFormatter.languageLocalesToString(
+                offer.getAcceptedLanguageLocales()));
         supportedCountriesTextField.setText(BitSquareFormatter.countryLocalesToString(offer.getAcceptedCountries()));
 
         amountTextField.textProperty().addListener(e -> {
@@ -162,14 +156,14 @@ public class TakerOfferController extends CachedViewController {
         if (amountTextField.isInvalid()) {
             Popups.openErrorPopup("Invalid input", "The requested amount you entered is not a valid amount.");
         } else if (BitSquareValidator.tradeAmountOutOfRange(amount, offer)) {
-            Popups.openErrorPopup("Invalid input", "The requested amount you entered is outside of the range of the " +
-                    "offered amount.");
-        } else if (addressEntry == null || getTotal().compareTo(walletFacade.getBalanceForAddress(addressEntry
-                .getAddress())) > 0) {
+            Popups.openErrorPopup(
+                    "Invalid input", "The requested amount you entered is outside of the range of the offered amount.");
+        } else if (addressEntry == null ||
+                getTotal().compareTo(walletFacade.getBalanceForAddress(addressEntry.getAddress())) > 0) {
             Popups.openErrorPopup("Insufficient money", "You don't have enough funds for that trade.");
         } else if (tradeManager.isOfferAlreadyInTrades(offer)) {
-            Popups.openErrorPopup("Offer previously accepted", "You have that offer already taken. Open the offer " +
-                    "section to find that trade.");
+            Popups.openErrorPopup("Offer previously accepted",
+                    "You have that offer already taken. Open the offer section to find that trade.");
         } else {
             takeOfferButton.setDisable(true);
             amountTextField.setEditable(false);
@@ -198,10 +192,10 @@ public class TakerOfferController extends CachedViewController {
 
                     summaryPaidTextField.setText(BitSquareFormatter.formatCoinWithCode(trade.getTradeAmount()));
                     summaryReceivedTextField.setText(BitSquareFormatter.formatVolume(trade.getTradeVolume()));
-                    summaryFeesTextField.setText(BitSquareFormatter.formatCoinWithCode(FeePolicy.TAKE_OFFER_FEE.add
-                            (FeePolicy.TX_FEE)));
-                    summaryCollateralTextField.setText(BitSquareFormatter.formatCoinWithCode(trade
-                            .getCollateralAmount()));
+                    summaryFeesTextField.setText(BitSquareFormatter.formatCoinWithCode(
+                            FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+                    summaryCollateralTextField.setText(BitSquareFormatter.formatCoinWithCode(
+                            trade.getCollateralAmount()));
                     summaryDepositTxIdTextField.setText(depositTxId);
                     summaryPayoutTxIdTextField.setText(payoutTxId);
                 }
@@ -209,8 +203,8 @@ public class TakerOfferController extends CachedViewController {
                 @Override
                 public void onFault(Throwable throwable, ProtocolForTakerAsSeller.State state) {
                     log.error("Error while executing trade process at state: " + state + " / " + throwable);
-                    Popups.openErrorPopup("Error while executing trade process", "Error while executing trade process" +
-                            " at state: " + state + " / " + throwable);
+                    Popups.openErrorPopup("Error while executing trade process",
+                            "Error while executing trade process at state: " + state + " / " + throwable);
                 }
 
                 @Override

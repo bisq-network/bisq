@@ -48,8 +48,8 @@ public class SendSignedPayoutTx {
             Coin offererPaybackAmount = tradeAmount.add(collateral);
             Coin takerPaybackAmount = collateral;
 
-            Pair<ECKey.ECDSASignature, String> result = walletFacade.offererCreatesAndSignsPayoutTx
-                    (depositTransactionId, offererPaybackAmount, takerPaybackAmount, takerPayoutAddress, tradeId);
+            Pair<ECKey.ECDSASignature, String> result = walletFacade.offererCreatesAndSignsPayoutTx(
+                    depositTransactionId, offererPaybackAmount, takerPaybackAmount, takerPayoutAddress, tradeId);
 
             ECKey.ECDSASignature offererSignature = result.getKey();
             String offererSignatureR = offererSignature.r.toString();

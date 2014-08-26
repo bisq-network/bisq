@@ -107,8 +107,8 @@ public class CreateOfferController extends CachedViewController {
             viewModel.bankAccountCounty.set(bankAccount.getCountry().getName());
         }
         viewModel.acceptedCountries.set(BitSquareFormatter.countryLocalesToString(settings.getAcceptedCountries()));
-        viewModel.acceptedLanguages.set(BitSquareFormatter.languageLocalesToString(settings
-                .getAcceptedLanguageLocales()));
+        viewModel.acceptedLanguages.set(
+                BitSquareFormatter.languageLocalesToString(settings.getAcceptedLanguageLocales()));
         viewModel.feeLabel.set(BitSquareFormatter.formatCoinWithCode(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
 
         offerId = UUID.randomUUID().toString();
@@ -221,8 +221,8 @@ public class CreateOfferController extends CachedViewController {
             double price = BitSquareFormatter.parseToDouble(viewModel.price.get());
             double volume = amount * price;
             viewModel.volume.set(BitSquareFormatter.formatVolume(volume));
-            viewModel.totals.set(BitSquareFormatter.formatTotalsAsBtc(viewModel.amount.get(), collateral,
-                    FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+            viewModel.totals.set(BitSquareFormatter.formatTotalsAsBtc(
+                    viewModel.amount.get(), collateral, FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
             viewModel.collateral.set(BitSquareFormatter.formatCollateralAsBtc(viewModel.amount.get(), collateral));
         });
 

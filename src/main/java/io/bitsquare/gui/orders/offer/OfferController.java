@@ -117,66 +117,66 @@ public class OfferController extends CachedViewController {
 
     private void setOfferIdColumnColumnCellFactory() {
         offerIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper(offerListItem.getValue()));
-        offerIdColumn.setCellFactory(new Callback<TableColumn<String, OfferListItem>, TableCell<String,
-                OfferListItem>>() {
-
-            @Override
-            public TableCell<String, OfferListItem> call(TableColumn<String, OfferListItem> column) {
-                return new TableCell<String, OfferListItem>() {
-                    Hyperlink hyperlink;
+        offerIdColumn.setCellFactory(
+                new Callback<TableColumn<String, OfferListItem>, TableCell<String, OfferListItem>>() {
 
                     @Override
-                    public void updateItem(final OfferListItem item, boolean empty) {
-                        super.updateItem(item, empty);
+                    public TableCell<String, OfferListItem> call(TableColumn<String, OfferListItem> column) {
+                        return new TableCell<String, OfferListItem>() {
+                            Hyperlink hyperlink;
 
-                        if (item != null && !empty) {
-                            hyperlink = new Hyperlink(item.getOfferId());
-                            //hyperlink.getStyleClass().setAll("aaa");
-                            Tooltip tooltip = new Tooltip(item.getOfferId());
-                            Tooltip.install(hyperlink, tooltip);
-                            hyperlink.setOnAction(event -> openOfferDetails(item));
-                            setGraphic(hyperlink);
-                        } else {
-                            setGraphic(null);
-                            setId(null);
-                        }
+                            @Override
+                            public void updateItem(final OfferListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    hyperlink = new Hyperlink(item.getOfferId());
+                                    //hyperlink.getStyleClass().setAll("aaa");
+                                    Tooltip tooltip = new Tooltip(item.getOfferId());
+                                    Tooltip.install(hyperlink, tooltip);
+                                    hyperlink.setOnAction(event -> openOfferDetails(item));
+                                    setGraphic(hyperlink);
+                                } else {
+                                    setGraphic(null);
+                                    setId(null);
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 
     private void setRemoveColumnCellFactory() {
         removeColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper(offerListItem.getValue()));
-        removeColumn.setCellFactory(new Callback<TableColumn<String, OfferListItem>, TableCell<String,
-                OfferListItem>>() {
-
-            @Override
-            public TableCell<String, OfferListItem> call(TableColumn<String, OfferListItem> directionColumn) {
-                return new TableCell<String, OfferListItem>() {
-                    final ImageView iconView = ImageUtil.getIconImageView(ImageUtil.REMOVE);
-                    final Button button = new Button();
-
-                    {
-                        button.setText("Remove");
-                        button.setGraphic(iconView);
-                        button.setMinWidth(70);
-                    }
+        removeColumn.setCellFactory(
+                new Callback<TableColumn<String, OfferListItem>, TableCell<String, OfferListItem>>() {
 
                     @Override
-                    public void updateItem(final OfferListItem offerListItem, boolean empty) {
-                        super.updateItem(offerListItem, empty);
+                    public TableCell<String, OfferListItem> call(TableColumn<String, OfferListItem> directionColumn) {
+                        return new TableCell<String, OfferListItem>() {
+                            final ImageView iconView = ImageUtil.getIconImageView(ImageUtil.REMOVE);
+                            final Button button = new Button();
 
-                        if (offerListItem != null) {
-                            button.setOnAction(event -> removeOffer(offerListItem));
-                            setGraphic(button);
-                        } else {
-                            setGraphic(null);
-                        }
+                            {
+                                button.setText("Remove");
+                                button.setGraphic(iconView);
+                                button.setMinWidth(70);
+                            }
+
+                            @Override
+                            public void updateItem(final OfferListItem offerListItem, boolean empty) {
+                                super.updateItem(offerListItem, empty);
+
+                                if (offerListItem != null) {
+                                    button.setOnAction(event -> removeOffer(offerListItem));
+                                    setGraphic(button);
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
                     }
-                };
-            }
-        });
+                });
     }
 }
 

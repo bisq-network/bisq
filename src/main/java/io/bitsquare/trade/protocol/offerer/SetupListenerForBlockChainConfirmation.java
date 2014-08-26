@@ -40,8 +40,8 @@ public class SetupListenerForBlockChainConfirmation {
                 if (reason == ChangeReason.SEEN_PEERS) {
                     listener.onDepositTxConfirmedUpdate(tx.getConfidence());
                 }
-                if (reason == ChangeReason.TYPE && tx.getConfidence().getConfidenceType() == TransactionConfidence
-                        .ConfidenceType.BUILDING) {
+                if (reason == ChangeReason.TYPE &&
+                        tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
                     listener.onDepositTxConfirmedInBlockchain();
                     depositTransaction.getConfidence().removeEventListener(this);
                     log.trace("Tx is in blockchain");

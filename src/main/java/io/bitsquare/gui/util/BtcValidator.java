@@ -78,8 +78,10 @@ public class BtcValidator extends NumberValidator {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
         if (satoshis.scale() > 0)
-            return new ValidationResult(false, "Input results in a Bitcoin value with a fraction of the smallest unit" +
-                    " (Satoshi).", ErrorType.FRACTIONAL_SATOSHI);
+            return new ValidationResult(
+                    false,
+                    "Input results in a Bitcoin value with a fraction of the smallest unit (Satoshi).",
+                    ErrorType.FRACTIONAL_SATOSHI);
         else
             return new ValidationResult(true);
     }
@@ -88,7 +90,9 @@ public class BtcValidator extends NumberValidator {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
         if (satoshis.longValue() > NetworkParameters.MAX_MONEY.longValue())
-            return new ValidationResult(false, "Input larger as maximum possible Bitcoin value is not allowed.",
+            return new ValidationResult(
+                    false,
+                    "Input larger as maximum possible Bitcoin value is not allowed.",
                     ErrorType.EXCEEDS_MAX_BTC_VALUE);
         else
             return new ValidationResult(true);

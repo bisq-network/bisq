@@ -57,12 +57,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Holds the splash screen and the application views.
- * It builds up all the views and initializes the facades.
- * We use a sequence of Platform.runLater cascaded calls to make the startup more smooth,
- * otherwise the rendering is frozen for too long.
- * Pre-loading of views is not implemented yet, and after a quick test it seemed that it does not give much
- * improvements.
+ * Holds the splash screen and the application views. It builds up all the views and initializes the facades.
+ * We use a sequence of Platform.runLater cascaded calls to make the startup more smooth, otherwise the rendering is
+ * frozen for too long. Pre-loading of views is not implemented yet, and after a quick test it seemed that it does not
+ * give much improvements.
  */
 public class MainController extends ViewController {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
@@ -282,11 +280,9 @@ public class MainController extends ViewController {
 
         user.getBankAccountsSizeProperty().addListener((observableValue, oldValue, newValue) -> {
             if ((int) newValue == 2)
-                viewBuilder.rightNavPane.getChildren().add(1, accountComboBoxHolder);// accountComboBoxHolder
-                // .setVisible(true);
+                viewBuilder.rightNavPane.getChildren().add(1, accountComboBoxHolder);
             else if ((int) newValue < 2)
-                viewBuilder.rightNavPane.getChildren().remove(accountComboBoxHolder);//accountComboBoxHolder
-                // .setVisible(false);
+                viewBuilder.rightNavPane.getChildren().remove(accountComboBoxHolder);
         });
 
         settingsButton = addNavButton(viewBuilder.rightNavPane, "Settings", NavigationItem.SETTINGS);
@@ -387,8 +383,8 @@ public class MainController extends ViewController {
     }
 
     private void addAccountComboBox(Pane parent) {
-        final ComboBox<BankAccount> accountComboBox = new ComboBox<>(FXCollections.observableArrayList(user
-                .getBankAccounts()));
+        final ComboBox<BankAccount> accountComboBox =
+                new ComboBox<>(FXCollections.observableArrayList(user.getBankAccounts()));
         accountComboBox.setId("nav-account-combo-box");
         accountComboBox.setLayoutY(12);
         if (user.getCurrentBankAccount() != null)
@@ -406,8 +402,8 @@ public class MainController extends ViewController {
             }
         });
 
-        user.getSelectedBankAccountIndexProperty().addListener(observable -> accountComboBox.getSelectionModel()
-                .select(user.getCurrentBankAccount()));
+        user.getSelectedBankAccountIndexProperty().addListener(observable ->
+                accountComboBox.getSelectionModel().select(user.getCurrentBankAccount()));
         user.getBankAccountsSizeProperty().addListener(observable -> {
             accountComboBox.setItems(FXCollections.observableArrayList(user.getBankAccounts()));
             // need to delay it a bit otherwise it will not be set

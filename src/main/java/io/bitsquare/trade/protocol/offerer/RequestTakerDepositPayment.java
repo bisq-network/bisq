@@ -40,8 +40,8 @@ public class RequestTakerDepositPayment {
                            String preparedOffererDepositTxAsHex,
                            long offererTxOutIndex) {
         log.trace("Run task");
-        RequestTakerDepositPaymentMessage tradeMessage = new RequestTakerDepositPaymentMessage(tradeId, bankAccount,
-                accountId, offererPubKey, preparedOffererDepositTxAsHex, offererTxOutIndex);
+        RequestTakerDepositPaymentMessage tradeMessage = new RequestTakerDepositPaymentMessage(
+                tradeId, bankAccount, accountId, offererPubKey, preparedOffererDepositTxAsHex, offererTxOutIndex);
         messageFacade.sendTradeMessage(peerAddress, tradeMessage, new OutgoingTradeMessageListener() {
             @Override
             public void onResult() {
