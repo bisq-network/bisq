@@ -65,6 +65,10 @@ public class BSFormatter {
         BSFormatter.currencyCode = currencyCode;
     }
 
+    /**
+     * Note that setting the locale does not set the currency as it might be independent.
+     * @param locale
+     */
     public static void setLocale(Locale locale) {
         BSFormatter.locale = locale;
     }

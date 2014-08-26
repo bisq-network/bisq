@@ -33,8 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
-//TODO: Fiat to Fiat comparision fails even value is the same -> investigate equals method in fiat and report bug if 
-// there is any
 public class CreateOfferPresenterTest {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferPresenterTest.class);
 
@@ -43,7 +41,8 @@ public class CreateOfferPresenterTest {
         CreateOfferModel model = new CreateOfferModel(null, null, null, null);
 
         BSFormatter.setLocale(Locale.US);
-
+        BSFormatter.setFiatCurrencyCode("USD");
+        
         CreateOfferPresenter presenter = new CreateOfferPresenter(model);
         presenter.onViewInitialized();
 
@@ -52,37 +51,37 @@ public class CreateOfferPresenterTest {
         presenter.amount.set("1");
         assertEquals("500.00", presenter.volume.get());
         assertEquals(Coin.COIN, model.amountAsCoin);
-        assertEquals(Fiat.valueOf("EUR", 500 * 10000).getValue(), model.priceAsFiat.getValue());
-        assertEquals(Fiat.valueOf("EUR", 500 * 10000).getValue(), model.tradeVolumeAsFiat.getValue());
+        assertEquals(Fiat.valueOf("USD", 500 * 10000), model.priceAsFiat);
+        assertEquals(Fiat.valueOf("USD", 500 * 10000), model.tradeVolumeAsFiat);
         assertEquals(Coin.parseCoin("0.1011"), model.totalToPayAsCoin.get());
 
         presenter.price.set("500");
         presenter.volume.set("500");
         assertEquals("1.00", presenter.amount.get());
         assertEquals(Coin.COIN, model.amountAsCoin);
-        assertEquals(Fiat.valueOf("EUR", 500 * 10000).getValue(), model.priceAsFiat.getValue());
-        assertEquals(Fiat.valueOf("EUR", 500 * 10000).getValue(), model.tradeVolumeAsFiat.getValue());
+        assertEquals(Fiat.valueOf("USD", 500 * 10000), model.priceAsFiat);
+        assertEquals(Fiat.valueOf("USD", 500 * 10000), model.tradeVolumeAsFiat);
 
         presenter.price.set("300");
         presenter.volume.set("1000");
         assertEquals("3.3333", presenter.amount.get());
         assertEquals(Coin.parseCoin("3.3333"), model.amountAsCoin);
-        assertEquals(Fiat.valueOf("EUR", 300 * 10000).getValue(), model.priceAsFiat.getValue());
-        assertEquals(Fiat.valueOf("EUR", 9999900).getValue(), model.tradeVolumeAsFiat.getValue());
+        assertEquals(Fiat.valueOf("USD", 300 * 10000), model.priceAsFiat);
+        assertEquals(Fiat.valueOf("USD", 9999900), model.tradeVolumeAsFiat);
 
         presenter.price.set("300");
         presenter.amount.set("3.3333");
         assertEquals("999.99", presenter.volume.get());
         assertEquals(Coin.parseCoin("3.3333"), model.amountAsCoin);
-        assertEquals(Fiat.valueOf("EUR", 300 * 10000).getValue(), model.priceAsFiat.getValue());
-        assertEquals(Fiat.valueOf("EUR", 9999900).getValue(), model.tradeVolumeAsFiat.getValue());
+        assertEquals(Fiat.valueOf("USD", 300 * 10000), model.priceAsFiat);
+        assertEquals(Fiat.valueOf("USD", 9999900), model.tradeVolumeAsFiat);
 
         presenter.price.set("300");
         presenter.amount.set("3.33333333");
         assertEquals("999.99", presenter.volume.get());
         assertEquals(Coin.parseCoin("3.3333"), model.amountAsCoin);
-        assertEquals(Fiat.valueOf("EUR", 300 * 10000).getValue(), model.priceAsFiat.getValue());
-        assertEquals(Fiat.valueOf("EUR", 9999900).getValue(), model.tradeVolumeAsFiat.getValue());
+        assertEquals(Fiat.valueOf("USD", 300 * 10000), model.priceAsFiat);
+        assertEquals(Fiat.valueOf("USD", 9999900), model.tradeVolumeAsFiat);
 
 
         model.collateralAsLong.set(100);
@@ -99,8 +98,8 @@ public class CreateOfferPresenterTest {
         assertEquals("Wire", presenter.bankAccountType.get());
 
 
-        model.bankAccountCurrency.set("EUR");
-        assertEquals("EUR", presenter.bankAccountCurrency.get());
+        model.bankAccountCurrency.set("USD");
+        assertEquals("USD", presenter.bankAccountCurrency.get());
 
         model.bankAccountCurrency.set("USD");
         assertEquals("USD", presenter.bankAccountCurrency.get());
