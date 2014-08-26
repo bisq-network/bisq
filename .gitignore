@@ -13,3 +13,4 @@ bitsquare.iml
 *.ser
 *.log
 *.sw[op]
+.DS_Store
