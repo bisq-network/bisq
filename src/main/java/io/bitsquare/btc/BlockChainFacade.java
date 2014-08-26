@@ -22,7 +22,7 @@ import io.bitsquare.bank.BankAccount;
 import javax.inject.Inject;
 
 /**
- * That facade delivers blockchain functionality from the bitcoinJ library
+ * A facade delivers blockchain functionality from the BitcoinJ library.
  */
 @SuppressWarnings({"SameReturnValue", "UnusedParameters"})
 public class BlockChainFacade {
