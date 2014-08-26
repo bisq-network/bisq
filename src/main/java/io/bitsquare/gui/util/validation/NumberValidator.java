@@ -28,26 +28,13 @@ import org.slf4j.LoggerFactory;
  * <p/>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
-public abstract class NumberValidator {
+public abstract class NumberValidator  extends InputValidator {
     private static final Logger log = LoggerFactory.getLogger(NumberValidator.class);
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Abstract methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    abstract public ValidationResult validate(String input);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected methods
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected ValidationResult validateIfNotEmpty(String input) {
-        if (input == null || input.length() == 0)
-            return new ValidationResult(false, "Empty input is not allowed.", ErrorType.EMPTY_INPUT);
-        else
-            return new ValidationResult(true);
-    }
 
     protected String cleanInput(String input) {
         return input.replace(",", ".").trim();
@@ -74,57 +61,5 @@ public abstract class NumberValidator {
             return new ValidationResult(false, "A negative value is not allowed.", ErrorType.NEGATIVE_NUMBER);
         else
             return new ValidationResult(true);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // ErrorType
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public enum ErrorType {
-        EMPTY_INPUT,
-        NOT_A_NUMBER,
-        ZERO_NUMBER,
-        NEGATIVE_NUMBER,
-        FRACTIONAL_SATOSHI,
-        EXCEEDS_MAX_FIAT_VALUE, UNDERCUT_MIN_FIAT_VALUE, AMOUNT_LESS_THAN_MIN_AMOUNT,
-        MIN_AMOUNT_LARGER_THAN_MIN_AMOUNT, EXCEEDS_MAX_BTC_VALUE
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // ValidationResult
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static class ValidationResult {
-        public final boolean isValid;
-        public final String errorMessage;
-        public final ErrorType errorType;
-
-        public ValidationResult(boolean isValid, String errorMessage, ErrorType errorType) {
-            this.isValid = isValid;
-            this.errorMessage = errorMessage;
-            this.errorType = errorType;
-        }
-
-        ValidationResult(boolean isValid) {
-            this(isValid, null, null);
-        }
-
-        public ValidationResult and(ValidationResult next) {
-            if (this.isValid)
-                return next;
-            else
-                return this;
-        }
-
-        @Override
-        public String toString() {
-            return "ValidationResult{" +
-                    "isValid=" + isValid +
-                    ", errorMessage='" + errorMessage + '\'' +
-                    ", errorType=" + errorType +
-                    '}';
-        }
     }
 }

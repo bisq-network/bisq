@@ -111,7 +111,7 @@
                    focusTraversable="false"/>
 
         <Label GridPane.rowIndex="11" text="Offer Fee + transaction fee:"/>
-        <TextField GridPane.rowIndex="11" fx:id="feeLabel" editable="false" focusTraversable="false"
+        <TextField GridPane.rowIndex="11" fx:id="totalFeesTextField" editable="false" focusTraversable="false"
                    GridPane.columnIndex="1"/>
 
 
@@ -163,7 +163,7 @@
         <Label fx:id="confirmationLabel" text="Checking confirmations..." visible="false" GridPane.columnIndex="3"
                GridPane.rowIndex="14"/>
 
-
+        
         <columnConstraints>
             <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>
             <ColumnConstraints hgrow="ALWAYS" minWidth="400"/>

@@ -29,6 +29,10 @@ import java.io.IOException;
 
 import java.net.URI;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -51,44 +55,52 @@ import org.slf4j.LoggerFactory;
 public class AddressTextField extends AnchorPane {
     private static final Logger log = LoggerFactory.getLogger(AddressTextField.class);
 
-    private final Label copyIcon;
-    private final Label addressLabel;
-    private final Label qrCode;
-    private String address;
-    private Coin amountToPay;
-    private String paymentLabel;
+    private final StringProperty address = new SimpleStringProperty();
+    private final StringProperty paymentLabel = new SimpleStringProperty();
+    public final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public AddressTextField() {
-        addressLabel = new Label();
+        Label addressLabel = new Label();
         addressLabel.setFocusTraversable(false);
         addressLabel.setId("address-label");
+        addressLabel.textProperty().bind(address);
+        addressLabel.setOnMouseClicked(mouseEvent -> {
+            try {
+                if (address != null)
+                    Desktop.getDesktop().browse(URI.create(getBitcoinURI()));
+            } catch (IOException e) {
+                log.warn(e.getMessage());
+                Popups.openWarningPopup("Information", "Opening a system Bitcoin wallet application has failed. " +
+                        "Perhaps you don't have one installed?");
+            }
+        });
 
-        copyIcon = new Label();
+        Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
-        copyIcon.setId("copy-icon");
+        copyIcon.getStyleClass().add("copy-icon");
         Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> {
-            if (address != null && address.length() > 0) {
+            if (address.get() != null && address.get().length() > 0) {
                 Clipboard clipboard = Clipboard.getSystemClipboard();
                 ClipboardContent content = new ClipboardContent();
-                content.putString(address);
+                content.putString(address.get());
                 clipboard.setContent(content);
             }
         });
 
-
-        qrCode = new Label();
-        qrCode.setId("qr-code-icon");
+        Label qrCode = new Label();
+        qrCode.getStyleClass().add("copy-icon");
         qrCode.setLayoutY(3);
         AwesomeDude.setIcon(qrCode, AwesomeIcon.QRCODE);
         Tooltip.install(qrCode, new Tooltip("Show QR code for this address"));
         qrCode.setOnMouseClicked(e -> {
-            if (address != null && address.length() > 0) {
+            if (address.get() != null && address.get().length() > 0) {
                 final byte[] imageBytes = QRCode
                         .from(getBitcoinURI())
                         .withSize(300, 220)
@@ -119,16 +131,6 @@ public class AddressTextField extends AnchorPane {
         AnchorPane.setLeftAnchor(addressLabel, 0.0);
 
         getChildren().addAll(addressLabel, copyIcon, qrCode);
-
-        addressLabel.setOnMouseClicked(mouseEvent -> {
-            try {
-                if (address != null)
-                    Desktop.getDesktop().browse(URI.create(getBitcoinURI()));
-            } catch (IOException e) {
-                log.warn(e.getMessage());
-                Popups.openWarningPopup("Opening wallet app failed", "Perhaps you don't have one installed?");
-            }
-        });
     }
 
 
@@ -137,16 +139,39 @@ public class AddressTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setAddress(String address) {
-        this.address = address;
-        addressLabel.setText(address);
+        this.address.set(address);
     }
 
-    public void setAmountToPay(Coin amountToPay) {
-        this.amountToPay = amountToPay;
+    public String getAddress() {
+        return address.get();
+    }
+
+    public StringProperty addressProperty() {
+        return address;
+    }
+
+    public Coin getAmountAsCoin() {
+        return amountAsCoin.get();
+    }
+
+    public ObjectProperty<Coin> amountAsCoinProperty() {
+        return amountAsCoin;
+    }
+
+    public void setAmountAsCoin(Coin amountAsCoin) {
+        this.amountAsCoin.set(amountAsCoin);
+    }
+
+    public String getPaymentLabel() {
+        return paymentLabel.get();
+    }
+
+    public StringProperty paymentLabelProperty() {
+        return paymentLabel;
     }
 
     public void setPaymentLabel(String paymentLabel) {
-        this.paymentLabel = paymentLabel;
+        this.paymentLabel.set(paymentLabel);
     }
 
 
@@ -155,7 +180,7 @@ public class AddressTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private String getBitcoinURI() {
-        return BitcoinURI.convertToBitcoinURI(address, amountToPay, paymentLabel, null);
+        return address.get() != null ? BitcoinURI.convertToBitcoinURI(address.get(), amountAsCoin.get(),
+                paymentLabel.get(), null) : "";
     }
-
 }

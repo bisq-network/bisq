@@ -54,10 +54,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * Data model:
  * Does not know the Presenter and View (CodeBehind)
- * Use Guice for DI
- * <p/>
+ * Use Guice for DI to get domain objects
+ * <p>
  * - Holds domain data
- * - Use Properties for bindable data
+ * - Apply business logic (no view related, that is done in presenter)
  */
 class CreateOfferModel {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferModel.class);
@@ -67,37 +67,33 @@ class CreateOfferModel {
     private final Settings settings;
     private final User user;
 
-    String getOfferId() {
-        return offerId;
-    }
-
     private final String offerId;
-
-    final Coin totalFeesAsCoin;
-
-
     private Direction direction = null;
 
+    final Coin totalFeesAsCoin;
     Coin amountAsCoin;
     Coin minAmountAsCoin;
     Coin collateralAsCoin;
     Fiat priceAsFiat;
     Fiat tradeVolumeAsFiat;
-
     AddressEntry addressEntry;
 
-    final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
-    final LongProperty collateralAsLong = new SimpleLongProperty();
-    final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty(false);
-    final BooleanProperty requestPlaceOfferFailed = new SimpleBooleanProperty(false);
     final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
     final StringProperty transactionId = new SimpleStringProperty();
-
     final StringProperty bankAccountCurrency = new SimpleStringProperty();
     final StringProperty bankAccountCounty = new SimpleStringProperty();
     final StringProperty bankAccountType = new SimpleStringProperty();
+
+    final LongProperty collateralAsLong = new SimpleLongProperty();
+   
+    final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty();
+    final BooleanProperty requestPlaceOfferFailed = new SimpleBooleanProperty();
+   
+    final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
+
     ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();
     ObservableList<Locale> acceptedLanguages = FXCollections.observableArrayList();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -110,8 +106,12 @@ class CreateOfferModel {
         this.settings = settings;
         this.user = user;
 
+        // static data
         offerId = UUID.randomUUID().toString();
         totalFeesAsCoin = FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE);
+
+
+        //TODO just for unit testing, use mockito?
         if (walletFacade != null && walletFacade.getWallet() != null)
             addressEntry = walletFacade.getAddressInfoByTradeID(offerId);
     }
@@ -122,6 +122,7 @@ class CreateOfferModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void activate() {
+        // dynamic data, might be changing when switching screen and returning (edit settings)
         collateralAsLong.set(settings.getCollateral());
 
         BankAccount bankAccount = user.getCurrentBankAccount();
@@ -134,10 +135,13 @@ class CreateOfferModel {
         acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
     }
 
+    void deactivate() {
+    }
+
     void placeOffer() {
         tradeManager.requestPlaceOffer(offerId,
                 direction,
-                priceAsFiat.value,
+                priceAsFiat,
                 amountAsCoin,
                 minAmountAsCoin,
                 (transaction) -> {
@@ -161,10 +165,17 @@ class CreateOfferModel {
     }
 
     void setDirection(Direction direction) {
-        // direction must not be changed once it is initially set
+        // direction can not be changed once it is initially set
         checkArgument(this.direction == null);
         this.direction = direction;
     }
 
+    public WalletFacade getWalletFacade() {
+        return walletFacade;
+    }
+
+    String getOfferId() {
+        return offerId;
+    }
 
 }

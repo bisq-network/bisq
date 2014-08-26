@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.gui.util.validation.NumberValidator;
+import io.bitsquare.gui.util.validation.InputValidator;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * TextField with validation support. Validation is executed on the Validator object.
  * In case of a invalid result we display a error message with a PopOver.
  * The position is derived from the textField or if set from the errorPopupLayoutReference object.
- * <p/>
+ * <p>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
 public class ValidatingTextField extends TextField {
@@ -48,7 +48,7 @@ public class ValidatingTextField extends TextField {
     private Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
 
     private final BooleanProperty isValid = new SimpleBooleanProperty(true);
-    private NumberValidator numberValidator;
+    private InputValidator validator;
     private boolean validateOnFocusOut = true;
     private boolean needsValidationOnFocusOut;
     private Region errorPopupLayoutReference;
@@ -88,8 +88,8 @@ public class ValidatingTextField extends TextField {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setNumberValidator(NumberValidator numberValidator) {
-        this.numberValidator = numberValidator;
+    public void setValidator(InputValidator validator) {
+        this.validator = validator;
     }
 
     /**
@@ -126,7 +126,7 @@ public class ValidatingTextField extends TextField {
         });
 
         textProperty().addListener((ov, oldValue, newValue) -> {
-            if (numberValidator != null) {
+            if (validator != null) {
                 if (!validateOnFocusOut)
                     validate(newValue);
                 else
@@ -144,14 +144,14 @@ public class ValidatingTextField extends TextField {
     }
 
     private void validate(String input) {
-        if (input != null) {
-            NumberValidator.ValidationResult validationResult = numberValidator.validate(input);
+        if (input != null && validator != null) {
+            InputValidator.ValidationResult validationResult = validator.validate(input);
             isValid.set(validationResult.isValid);
             applyErrorMessage(validationResult);
         }
     }
 
-    private void applyErrorMessage(NumberValidator.ValidationResult validationResult) {
+    private void applyErrorMessage(InputValidator.ValidationResult validationResult) {
         if (validationResult.isValid) {
             if (popOver != null) {
                 popOver.hide();

@@ -17,13 +17,10 @@
 
 package io.bitsquare.trade.protocol.createoffer.tasks;
 
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
-
-import com.google.bitcoin.core.Coin;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -62,8 +59,8 @@ public class ValidateOffer {
             checkArgument(offer.getPrice() > 0);
 
             // TODO check balance
-            Coin collateralAsCoin = offer.getAmount().divide((long) (1d / offer.getCollateral()));
-            Coin totalsToFund = collateralAsCoin.add(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE));
+           // Coin collateralAsCoin = offer.getAmount().divide((long) (1d / offer.getCollateral()));
+           // Coin totalsToFund = collateralAsCoin.add(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE));
             // getAddressInfoByTradeID(offerId)
             // TODO when offer is flattened continue here...
 

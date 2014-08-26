@@ -34,44 +34,45 @@ import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Code behind (FXML Controller is part of View, not a classical controller from MVC):
- * <p/>
+ * Code behind (FXML Controller is part of View, not a classical MVC controller):
+ * <p>
  * Creates Presenter and passes Model from DI to Presenter. Does not hold a reference to Model
- * <p/>
+ * <p>
  * - Setup binding from Presenter to View elements (also bidirectional - Inputs). Binding are only to presenters
  * properties, not logical bindings or cross-view element bindings.
  * - Listen to UI events (Action) from View and call method in Presenter.
  * - Is entry node for hierarchical view graphs. Passes method calls to Presenter. Calls methods on sub views.
  * - Handle lifecycle and self removal from scene graph.
  * - Non declarative (dynamic) view definitions (if it gets larger, then user a ViewBuilder)
- * <p/>
+ * - Has no logic and no state, only view elements and a presenter reference!
+ * <p>
  * View:
  * - Mostly declared in FXML. Dynamic parts are declared in Controller. If more view elements need to be defined in
  * code then use ViewBuilder.
- * <p/>
+ * <p>
  * Optional ViewBuilder:
  * - Replacement for FXML view definitions.
+ * 
+ * Note: Don't assign the root node as it is defined in the base class!
+ * 
  */
 public class CreateOfferCodeBehind extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferCodeBehind.class);
 
     private final CreateOfferPresenter presenter;
 
-    @FXML private AnchorPane rootContainer;
     @FXML private Label buyLabel, confirmationLabel, txTitleLabel, collateralLabel;
-
     @FXML private ValidatingTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
     @FXML private Button placeOfferButton, closeButton;
     @FXML private TextField totalToPayTextField, collateralTextField, bankAccountTypeTextField,
             bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField,
             acceptedLanguagesTextField,
-            feeLabel, transactionIdTextField;
+            totalFeesTextField, transactionIdTextField;
     @FXML private ConfidenceProgressIndicator progressIndicator;
     @FXML private AddressTextField addressTextField;
     @FXML private BalanceTextField balanceTextField;
@@ -94,31 +95,30 @@ public class CreateOfferCodeBehind extends CachedViewController {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
+
         presenter.onViewInitialized();
+
+        balanceTextField.setup(presenter.getWalletFacade(), presenter.address.get());
     }
 
     @Override
     public void deactivate() {
         super.deactivate();
+
         presenter.deactivate();
+
         ((TradeController) parentController).onCreateOfferViewRemoved();
     }
 
     @Override
     public void activate() {
         super.activate();
+
         presenter.activate();
 
         setupBindings();
         setupListeners();
         setupTextFieldValidators();
-
-
-        //addressTextField.setAddress(addressEntry.getAddress().toString());
-        //addressTextField.setPaymentLabel("Bitsquare trade (" + offerId + ")");
-
-        // balanceTextField.setAddress(addressEntry.getAddress());
-        //TODO  balanceTextField.setWalletFacade(walletFacade);
     }
 
 
@@ -129,6 +129,7 @@ public class CreateOfferCodeBehind extends CachedViewController {
     public void setOrderBookFilter(OrderBookFilter orderBookFilter) {
         presenter.setOrderBookFilter(orderBookFilter);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers
@@ -143,7 +144,7 @@ public class CreateOfferCodeBehind extends CachedViewController {
     public void onClose() {
         presenter.close();
 
-        TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
+        TabPane tabPane = ((TabPane) (root.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
     }
 
@@ -154,7 +155,7 @@ public class CreateOfferCodeBehind extends CachedViewController {
 
     private void setupListeners() {
         volumeTextField.focusedProperty().addListener((observableValue, oldValue,
-                                                       newValue) -> presenter.checkVolumeOnFocusOut(oldValue,
+                                                       newValue) -> presenter.validateVolumeOnFocusOut(oldValue,
                 newValue, volumeTextField.getText()));
         amountTextField.focusedProperty().addListener((observableValue, oldValue,
                                                        newValue) -> presenter.onFocusOutAmountTextField(oldValue,
@@ -163,7 +164,7 @@ public class CreateOfferCodeBehind extends CachedViewController {
                                                       newValue) -> presenter.onFocusOutPriceTextField(oldValue,
                 newValue));
 
-        presenter.validateInput.addListener((o, oldValue, newValue) -> {
+        presenter.needsInputValidation.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 amountTextField.reValidate();
                 minAmountTextField.reValidate();
@@ -179,6 +180,12 @@ public class CreateOfferCodeBehind extends CachedViewController {
                 volumeTextField.setText(presenter.volume.get());
             }
         });
+        presenter.requestPlaceOfferFailed.addListener((o, oldValue, newValue) -> {
+            if (newValue) {
+                Popups.openErrorPopup("Error", "An error occurred when placing the offer.\n" +
+                        presenter.requestPlaceOfferErrorMessage);
+            }
+        });
     }
 
     private void setupBindings() {
@@ -192,17 +199,22 @@ public class CreateOfferCodeBehind extends CachedViewController {
         collateralTextField.textProperty().bind(presenter.collateral);
         totalToPayTextField.textProperty().bind(presenter.totalToPay);
 
+        addressTextField.amountAsCoinProperty().bind(presenter.totalToPayAsCoin);
+        addressTextField.paymentLabelProperty().bind(presenter.paymentLabel);
+        addressTextField.addressProperty().bind(presenter.addressAsString);
+
         bankAccountTypeTextField.textProperty().bind(presenter.bankAccountType);
         bankAccountCurrencyTextField.textProperty().bind(presenter.bankAccountCurrency);
         bankAccountCountyTextField.textProperty().bind(presenter.bankAccountCounty);
 
         acceptedCountriesTextField.textProperty().bind(presenter.acceptedCountries);
         acceptedLanguagesTextField.textProperty().bind(presenter.acceptedLanguages);
-        feeLabel.textProperty().bind(presenter.totalFeesLabel);
+        totalFeesTextField.textProperty().bind(presenter.totalFees);
         transactionIdTextField.textProperty().bind(presenter.transactionId);
 
-        placeOfferButton.visibleProperty().bind(presenter.placeOfferButtonVisible);
-        closeButton.visibleProperty().bind(presenter.isOfferPlacedScreen);
+        placeOfferButton.visibleProperty().bind(presenter.isPlaceOfferButtonVisible);
+        placeOfferButton.disableProperty().bind(presenter.isPlaceOfferButtonDisabled);
+        closeButton.visibleProperty().bind(presenter.isCloseButtonVisible);
 
         //TODO
        /* progressIndicator.visibleProperty().bind(viewModel.isOfferPlacedScreen);
@@ -240,57 +252,5 @@ public class CreateOfferCodeBehind extends CachedViewController {
                                                                  amountValidator,
                                                                  minAmountValidator);*/
     }
-  /*
-    private void setVolume()
-    {
-        amountAsCoin = parseToCoin(presenter.amount.get());
-        priceAsFiat = parseToFiat(presenter.price.get());
-
-        if (priceAsFiat != null && amountAsCoin != null)
-        {
-            tradeVolumeAsFiat = new ExchangeRate(priceAsFiat).coinToFiat(amountAsCoin);
-            presenter.volume.set(formatFiat(tradeVolumeAsFiat));
-        }
-    }
-
-  private void setAmount()
-    {
-        tradeVolumeAsFiat = parseToFiat(presenter.volume.get());
-        priceAsFiat = parseToFiat(presenter.price.get());
-
-        if (tradeVolumeAsFiat != null && priceAsFiat != null && !priceAsFiat.isZero())
-        {
-            amountAsCoin = new ExchangeRate(priceAsFiat).fiatToCoin(tradeVolumeAsFiat);
-
-            // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
-            amountAsCoin = parseToCoin(formatBtc(amountAsCoin));
-
-            presenter.amount.set(formatBtc(amountAsCoin));
-            setTotalToPay();
-            setCollateral();
-        }
-    }
-
-    private void setTotalToPay()
-    {
-        setCollateral();
-
-        totalFeesAsCoin = FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE);
-
-        if (collateralAsCoin != null)
-        {
-            totalToPayAsCoin = collateralAsCoin.add(totalFeesAsCoin);
-            presenter.totalToPay.set(formatBtcWithCode(totalToPayAsCoin));
-        }
-    }
-
-    private void setCollateral()
-    {
-        if (amountAsCoin != null)
-        {
-            collateralAsCoin = amountAsCoin.multiply(collateralAsLong).divide(1000);
-            presenter.collateral.set(BSFormatter.formatBtcWithCode(collateralAsCoin));
-        }
-    }*/
 }
 

@@ -342,10 +342,12 @@ public class WalletFacade {
 
     public TransactionConfidence getConfidenceForAddress(Address address) {
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
-        Set<Transaction> transactions = wallet.getTransactions(true);
-        if (transactions != null) {
-            transactionConfidenceList.addAll(transactions.stream().map(tx ->
-                    getTransactionConfidence(tx, address)).collect(Collectors.toList()));
+        if (wallet != null) {
+            Set<Transaction> transactions = wallet.getTransactions(true);
+            if (transactions != null) {
+                transactionConfidenceList.addAll(transactions.stream().map(tx ->
+                        getTransactionConfidence(tx, address)).collect(Collectors.toList()));
+            }
         }
         return getMostRecentConfidence(transactionConfidenceList);
     }
@@ -430,7 +432,7 @@ public class WalletFacade {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Coin getBalanceForAddress(Address address) {
-        return getBalance(wallet.calculateAllSpendCandidates(true), address);
+        return wallet != null ? getBalance(wallet.calculateAllSpendCandidates(true), address) : Coin.ZERO;
     }
 
     private Coin getBalance(LinkedList<TransactionOutput> transactionOutputs, Address address) {

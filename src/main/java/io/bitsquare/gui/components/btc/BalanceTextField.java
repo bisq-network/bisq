@@ -21,6 +21,7 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.Coin;
@@ -36,13 +37,8 @@ public class BalanceTextField extends AnchorPane {
     private static final Logger log = LoggerFactory.getLogger(BalanceTextField.class);
 
     private final TextField balanceTextField;
-    private Address address;
     private final Tooltip progressIndicatorTooltip;
     private final ConfidenceProgressIndicator progressIndicator;
-    private WalletFacade walletFacade;
-    private ConfidenceListener confidenceListener;
-    private BalanceListener balanceListener;
-    private Coin balance;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -72,18 +68,8 @@ public class BalanceTextField extends AnchorPane {
         getChildren().addAll(balanceTextField, progressIndicator);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setAddress(Address address) {
-        this.address = address;
-    }
-
-    public void setWalletFacade(WalletFacade walletFacade) {
-        this.walletFacade = walletFacade;
-        confidenceListener = walletFacade.addConfidenceListener(new ConfidenceListener(address) {
+    public void setup(WalletFacade walletFacade, Address address) {
+        walletFacade.addConfidenceListener(new ConfidenceListener(address) {
             @Override
             public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                 updateConfidence(confidence);
@@ -91,29 +77,13 @@ public class BalanceTextField extends AnchorPane {
         });
         updateConfidence(walletFacade.getConfidenceForAddress(address));
 
-
-        balanceListener = walletFacade.addBalanceListener(new BalanceListener(address) {
+        walletFacade.addBalanceListener(new BalanceListener(address) {
             @Override
             public void onBalanceChanged(Coin balance) {
                 updateBalance(balance);
             }
         });
         updateBalance(walletFacade.getBalanceForAddress(address));
-    }
-
-    // TODO not called yet...
-    public void cleanup() {
-        walletFacade.removeConfidenceListener(confidenceListener);
-        walletFacade.removeBalanceListener(balanceListener);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public Coin getBalance() {
-        return balance;
     }
 
 
@@ -152,11 +122,7 @@ public class BalanceTextField extends AnchorPane {
     }
 
     private void updateBalance(Coin balance) {
-        this.balance = balance;
-        if (balance != null) {
-            //TODO use BSFormatter
-            balanceTextField.setText(balance.toFriendlyString());
-        }
+        balanceTextField.setText(BSFormatter.formatBtc(balance));
     }
 
 }

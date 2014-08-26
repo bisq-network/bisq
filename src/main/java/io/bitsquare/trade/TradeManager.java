@@ -23,12 +23,12 @@ import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.TakeOfferRequestListener;
-import io.bitsquare.settings.Settings;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.handlers.ErrorMessageHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.createoffer.CreateOfferCoordinator;
+import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocol;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocolListener;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
@@ -47,6 +47,7 @@ import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.TransactionConfidence;
 import com.google.bitcoin.core.Utils;
+import com.google.bitcoin.utils.Fiat;
 
 import java.io.IOException;
 
@@ -68,7 +69,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The domain for the trading 
+ * The domain for the trading
  * TODO: Too messy, need to be improved a lot....
  */
 public class TradeManager {
@@ -160,16 +161,17 @@ public class TradeManager {
 
     public void requestPlaceOffer(String id,
                                   Direction direction,
-                                  double price,
+                                  Fiat price,
                                   Coin amount,
                                   Coin minAmount,
                                   TransactionResultHandler resultHandler,
                                   ErrorMessageHandler errorMessageHandler) {
 
+        // TODO price.value -> use Fiat in Offer for price
         Offer offer = new Offer(id,
                 user.getMessagePublicKey(),
                 direction,
-                price,
+                price.value,
                 amount,
                 minAmount,
                 user.getCurrentBankAccount().getBankAccountType(),
