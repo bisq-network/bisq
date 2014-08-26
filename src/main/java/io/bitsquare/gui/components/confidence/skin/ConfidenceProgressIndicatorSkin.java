@@ -1,21 +1,4 @@
 /*
- * This file is part of Bitsquare.
- *
- * Bitsquare is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or (at
- * your option) any later version.
- *
- * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
- * License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
- */
-
-/*
  * Copyright (c) 2010, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -92,17 +75,6 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
      * *
      * ************************************************************************
      */
-
-    //private static final String DONE = ControlResources.getString("ProgressIndicator.doneString");
-
-    /**
-     * doneText is just used to know the size of done as that is the biggest text we need to allow for
-     */
-   /* private static final Text doneText = new Text(DONE);
-    static {
-        doneText.getStyleClass().add("text");
-    }  */
-
 
     private IndeterminateSpinner spinner;
     /**
@@ -399,10 +371,6 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
 
             getChildren().clear();
 
-          /*  text = new Text((control.getProgress() >= 1) ? (DONE) : ("" + intProgress + "%"));
-            text.setTextOrigin(VPos.TOP);
-            text.getStyleClass().setAll("text", "percentage"); */
-
             // The circular background for the progress pie piece
             indicator = new StackPane();
             indicator.setScaleShape(false);
@@ -519,17 +487,6 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
             tick.setLayoutY(centerY - squareBoxHalfWidth);
             tick.resize(squareBoxHalfWidth + squareBoxHalfWidth, squareBoxHalfWidth + squareBoxHalfWidth);
             tick.setVisible(control.getProgress() >= 1);
-
-            // if the % text can't fit anywhere in the bounds then don't display it
-          /*  double textWidth = text.getLayoutBounds().getWidth();
-            double textHeight = text.getLayoutBounds().getHeight();
-            if (control.getWidth() >= textWidth && control.getHeight() >= textHeight) {
-                if (!text.isVisible()) text.setVisible(true);
-                text.setLayoutY(snapPosition(centerY + radius + textGap));
-                text.setLayoutX(snapPosition(centerX - (textWidth/2)));
-            } else {
-                if (text.isVisible()) text.setVisible(false);
-            } */
         }
 
         @Override

@@ -73,32 +73,6 @@ public class P2PNode {
     private Thread bootstrapToLocalhostThread;
     private Thread bootstrapToServerThread;
 
-    // just for lightweight client test
-   /* public static void main(String[] args)
-    {
-        P2PNode p2pNode = new P2PNode(DSAKeyUtil.generateKeyPair(), false, SeedNodeAddress.StaticSeedNodeAddresses
-        .DIGITAL_OCEAN,
-                                      (message, peerAddress) -> log.debug("handleMessage: message= " + message + "/
-                                      peerAddress=" + peerAddress));
-        p2pNode.start(new FutureCallback<PeerDHT>()
-        {
-            @Override
-            public void onSuccess(@Nullable PeerDHT result)
-            {
-                log.debug("p2pNode.start success result = " + result);
-            }
-
-            @Override
-            public void onFailure(Throwable t)
-            {
-                log.error(t.toString());
-            }
-        });
-        for (; ; )
-        {
-        }
-    }*/
-
     private KeyPair keyPair;
     private final Boolean useDiskStorage;
     private final SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses;

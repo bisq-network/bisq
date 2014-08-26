@@ -310,12 +310,6 @@ public class MainController extends ViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void loadViewFromNavButton(NavigationItem navigationItem) {
-
-       /* if (childController instanceof CachedViewController)
-            ((CachedViewController) childController).deactivate();
-        else if (childController != null)
-            childController.terminate();*/
-
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
             final Node view = loader.load();

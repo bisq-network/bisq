@@ -153,35 +153,6 @@ public class OrderBook implements OrderBookListener {
             boolean result = currencyResult && countryResult && languageResult && amountResult && directionResult &&
                     priceResult && arbitratorResult;
 
-                /*
-            log.debug("result = " + result +
-                    ", currencyResult = " + currencyResult +
-                    ", countryResult = " + countryResult +
-                    ", languageResult = " + languageResult +
-                    ", amountResult = " + amountResult +
-                    ", directionResult = " + directionResult +
-                    ", priceResult = " + priceResult +
-                    ", arbitratorResult = " + arbitratorResult
-            );*/
- /*
-            log.debug("currentBankAccount.getCurrency() = " + currentBankAccount.getCurrency() +
-                    ", offer.getCurrency() = " + offer.getCurrency());
-            log.debug("offer.getCountryLocale() = " + offer.getBankAccountCountryLocale() +
-                    ", settings.getAcceptedCountries() = " + settings.getAcceptedCountries().toString());
-            log.debug("settings.getAcceptedLanguageLocales() = " + settings.getAcceptedLanguageLocales() +
-                    ", offer.getAcceptedLanguageLocales() = " + offer.getAcceptedLanguageLocales());
-            log.debug("currentBankAccount.getBankAccountType().getType() = " + currentBankAccount.getBankAccountType
-            ().getType() +
-                    ", offer.getBankAccountTypeEnum() = " + offer.getBankAccountTypeEnum());
-            log.debug("orderBookFilter.getAmount() = " + orderBookFilter.getAmount() +
-                    ", offer.getAmount() = " + offer.getAmount());
-            log.debug("orderBookFilter.getDirection() = " + orderBookFilter.getDirection() +
-                    ", offer.getDirection() = " + offer.getDirection());
-            log.debug("orderBookFilter.getPrice() = " + orderBookFilter.getPrice() +
-                    ", offer.getPrice() = " + offer.getPrice());
-            log.debug("offer.getArbitrator() = " + offer.getArbitrator() +
-                    ", settings.getAcceptedArbitrators() = " + settings.getAcceptedArbitrators());
-                     */
             return result;
         });
     }

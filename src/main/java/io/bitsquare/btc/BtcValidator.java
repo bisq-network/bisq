@@ -35,16 +35,4 @@ public class BtcValidator {
         return amount != null && amount.compareTo(FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT)) > 0;
     }
 
-   /* public boolean isAddressValid(String addressString)
-    {
-        try
-        {
-            new Address(BtcValidator.params, addressString);
-            return true;
-        } catch (AddressFormatException e)
-        {
-            return false;
-        }
-    } */
-
 }

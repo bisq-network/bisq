@@ -36,44 +36,6 @@ public class FileUtil {
         return File.createTempFile("temp_" + prefix, null, StorageDirectory.getStorageDirectory());
     }
 
-    /*
-    public static String getApplicationFileName()
-    {
-        File executionRoot = new File(StorageDirectory.class.getProtectionDomain().getCodeSource().getLocation()
-        .getFile());
-        try
-        {
-            log.trace("getApplicationFileName " + executionRoot.getCanonicalPath());
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-        // check if it is packed into a mac app  (e.g.: "/Users/mk/Desktop/bitsquare.app/Contents/Java/bitsquare.jar")
-        try
-        {
-            if (executionRoot.getCanonicalPath().endsWith(".app/Contents/Java/bitsquare.jar") && System.getProperty
-            ("os.name").startsWith("Mac"))
-            {
-                File appFile = executionRoot.getParentFile().getParentFile().getParentFile();
-                try
-                {
-                    int lastSlash = appFile.getCanonicalPath().lastIndexOf("/") + 1;
-                    return appFile.getCanonicalPath().substring(lastSlash).replace(".app", "");
-                } catch (IOException e)
-                {
-                    e.printStackTrace();
-                }
-            }
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-
-        // fallback use AppName
-        return BitSquare.getAppName();
-    }
-*/
-
     public static void writeTempFileToFile(File tempFile, File file) throws IOException {
         if (Utils.isWindows()) {
             // Work around an issue on Windows whereby you can't rename over existing files.
