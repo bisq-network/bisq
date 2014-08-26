@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.trade.orderbook;
 
-import io.bitsquare.gui.util.BitSquareFormatter;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Offer;
 
 import javafx.beans.property.SimpleStringProperty;
@@ -34,10 +34,10 @@ public class OrderBookListItem {
 
     public OrderBookListItem(Offer offer) {
         this.offer = offer;
-        this.price.set(BitSquareFormatter.formatPrice(offer.getPrice()));
-        this.amount.set(BitSquareFormatter.formatCoin(
-                offer.getAmount()) + " (" + BitSquareFormatter.formatCoin(offer.getMinAmount()) + ")");
-        this.volume.set(BitSquareFormatter.formatVolumeWithMinVolume(
+        this.price.set(BSFormatter.formatPrice(offer.getPrice()));
+        this.amount.set(BSFormatter.formatCoin(
+                offer.getAmount()) + " (" + BSFormatter.formatCoin(offer.getMinAmount()) + ")");
+        this.volume.set(BSFormatter.formatVolumeWithMinVolume(
                 offer.getOfferVolume(), offer.getMinOfferVolume()));
     }
 

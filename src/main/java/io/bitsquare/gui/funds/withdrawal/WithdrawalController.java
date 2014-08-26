@@ -23,7 +23,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.util.BitSquareFormatter;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.BitSquareValidator;
 
 import com.google.bitcoin.core.AddressFormatException;
@@ -131,7 +131,7 @@ public class WithdrawalController extends CachedViewController {
         List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
         addressList = FXCollections.observableArrayList();
         addressList.addAll(addressEntryList.stream().map(anAddressEntryList ->
-                new WithdrawalListItem(anAddressEntryList, walletFacade)).collect(Collectors.toList()));
+                                                                 new WithdrawalListItem(anAddressEntryList, walletFacade)).collect(Collectors.toList()));
 
         tableView.setItems(addressList);
     }
@@ -148,7 +148,7 @@ public class WithdrawalController extends CachedViewController {
                     amountTextField, withdrawFromTextField, withdrawToTextField, changeAddressTextField);
             BitSquareValidator.textFieldsHasDoubleValueWithReset(amountTextField);
 
-            Coin amount = BitSquareFormatter.parseToCoin(amountTextField.getText());
+            Coin amount = BSFormatter.parseToCoin(amountTextField.getText());
             if (BtcValidator.isMinSpendableAmount(amount)) {
                 FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
                     @Override
@@ -171,9 +171,9 @@ public class WithdrawalController extends CachedViewController {
                         "Your withdrawal request:\n\n" + "Amount: " + amountTextField.getText() + " BTC\n" + "Sending" +
                                 " address: " + withdrawFromTextField.getText() + "\n" + "Receiving address: " +
                                 withdrawToTextField.getText() + "\n" + "Transaction fee: " +
-                                BitSquareFormatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
+                                BSFormatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
                                 "You receive in total: " +
-                                BitSquareFormatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
+                                BSFormatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
                                 "Are you sure you withdraw that amount?");
                 if (response == Dialog.Actions.OK) {
                     try {
@@ -182,7 +182,7 @@ public class WithdrawalController extends CachedViewController {
                                 changeAddressTextField.getText(), amount, callback);
                     } catch (AddressFormatException e) {
                         Popups.openErrorPopup("Address invalid",
-                                "The address is not correct. Please check the address format.");
+                                              "The address is not correct. Please check the address format.");
 
                     } catch (InsufficientMoneyException e) {
                         Popups.openInsufficientMoneyPopup();
@@ -194,7 +194,7 @@ public class WithdrawalController extends CachedViewController {
             }
             else {
                 Popups.openErrorPopup("Insufficient amount",
-                        "The amount to transfer is lower the the transaction fee and the min. possible tx value.");
+                                      "The amount to transfer is lower the the transaction fee and the min. possible tx value.");
             }
 
         } catch (BitSquareValidator.ValidationException e) {
@@ -308,7 +308,7 @@ public class WithdrawalController extends CachedViewController {
 
     private void setConfidenceColumnCellFactory() {
         confidenceColumn.setCellValueFactory((addressListItem) ->
-                new ReadOnlyObjectWrapper(addressListItem.getValue()));
+                                                     new ReadOnlyObjectWrapper(addressListItem.getValue()));
         confidenceColumn.setCellFactory(
                 new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>() {
 

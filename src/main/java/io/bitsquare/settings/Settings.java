@@ -31,11 +31,11 @@ import java.util.Locale;
 public class Settings implements Serializable {
     private static final long serialVersionUID = 7995048077355006861L;
 
-
     private List<Locale> acceptedLanguageLocales = new ArrayList<>();
     private List<Country> acceptedCountryLocales = new ArrayList<>();
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
-    private double collateral = 0.01;
+
+    private long collateral = 100; // is 1/1000 so 100 is a multiplier of 0,1 or 10% of the amount
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -91,9 +91,8 @@ public class Settings implements Serializable {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
+    // Setters/Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     public List<Arbitrator> getAcceptedArbitrators() {
         return acceptedArbitrators;
@@ -123,8 +122,11 @@ public class Settings implements Serializable {
         return !candidates.isEmpty() ? candidates.get((int) (Math.random() * candidates.size())) : null;
     }
 
+    public void setCollateral(long collateral) {
+        this.collateral = collateral;
+    }
 
-    public double getCollateral() {
+    public long getCollateral() {
         return collateral;
     }
 

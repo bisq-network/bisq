@@ -22,7 +22,7 @@ import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.ValidatingTextField;
-import io.bitsquare.gui.trade.createoffer.CreateOfferController;
+import io.bitsquare.gui.trade.createoffer.CreateOfferCodeBehind;
 import io.bitsquare.gui.trade.orderbook.OrderBookController;
 import io.bitsquare.gui.trade.takeoffer.TakerOfferController;
 import io.bitsquare.trade.Direction;
@@ -46,7 +46,7 @@ public class TradeController extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(TradeController.class);
 
     protected OrderBookController orderBookController;
-    protected CreateOfferController createOfferController;
+    protected CreateOfferCodeBehind createOfferCodeBehind;
     protected TakerOfferController takerOfferController;
     protected GuiceFXMLLoader orderBookLoader;
 
@@ -76,7 +76,7 @@ public class TradeController extends CachedViewController {
         // TODO find better solution
         // Textfield focus out triggers validation, use runLater as quick fix...
         ((TabPane) root).getSelectionModel().selectedIndexProperty().addListener((observableValue) ->
-                Platform.runLater(() -> ValidatingTextField.hidePopover()));
+                                                                                         Platform.runLater(() -> ValidatingTextField.hidePopover()));
     }
 
 
@@ -106,20 +106,20 @@ public class TradeController extends CachedViewController {
             return orderBookController;
         }
         else if (navigationItem == NavigationItem.CREATE_OFFER) {
-            checkArgument(createOfferController == null);
+            checkArgument(createOfferCodeBehind == null);
 
             // CreateOffer and TakeOffer must not be cached by GuiceFXMLLoader as we cannot use a view multiple times
             // in different graphs
             GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
             try {
                 final Parent view = loader.load();
-                createOfferController = loader.getController();
-                createOfferController.setParentController(this);
+                createOfferCodeBehind = loader.getController();
+                createOfferCodeBehind.setParentController(this);
                 final Tab tab = new Tab("Create offer");
                 tab.setContent(view);
                 tabPane.getTabs().add(tab);
                 tabPane.getSelectionModel().select(tabPane.getTabs().size() - 1);
-                return createOfferController;
+                return createOfferCodeBehind;
             } catch (IOException e) {
                 log.error(e.getMessage());
             }
@@ -157,7 +157,7 @@ public class TradeController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onCreateOfferViewRemoved() {
-        createOfferController = null;
+        createOfferCodeBehind = null;
 
         orderBookController.onCreateOfferViewRemoved();
     }

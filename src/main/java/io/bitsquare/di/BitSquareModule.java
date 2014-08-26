@@ -22,7 +22,7 @@ import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
-import io.bitsquare.gui.util.BitSquareFormatter;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.msg.BootstrappedPeerFactory;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.P2PNode;
@@ -64,7 +64,7 @@ public class BitSquareModule extends AbstractModule {
         bind(BootstrappedPeerFactory.class).asEagerSingleton();
 
         bind(TradeManager.class).asEagerSingleton();
-        bind(BitSquareFormatter.class).asEagerSingleton();
+        bind(BSFormatter.class).asEagerSingleton();
 
 
         //bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.MAIN_NET);

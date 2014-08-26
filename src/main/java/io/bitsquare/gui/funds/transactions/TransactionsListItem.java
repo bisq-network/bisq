@@ -20,7 +20,7 @@ package io.bitsquare.gui.funds.transactions;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
-import io.bitsquare.gui.util.BitSquareFormatter;
+import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.Coin;
@@ -56,7 +56,7 @@ public class TransactionsListItem {
         Coin valueSentFromMe = transaction.getValueSentFromMe(walletFacade.getWallet());
         Address address = null;
         if (valueSentToMe.isZero()) {
-            //TODO use BitSquareFormatter
+            //TODO use BSFormatter
             amount.set("-" + valueSentFromMe.toFriendlyString());
 
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
@@ -76,7 +76,7 @@ public class TransactionsListItem {
             }
         }
         else if (valueSentFromMe.isZero()) {
-            //TODO use BitSquareFormatter
+            //TODO use BSFormatter
             amount.set(valueSentToMe.toFriendlyString());
             type.set("Received with");
 
@@ -95,7 +95,7 @@ public class TransactionsListItem {
             }
         }
         else {
-            //TODO use BitSquareFormatter
+            //TODO use BSFormatter
             amount.set(valueSentToMe.subtract(valueSentFromMe).toFriendlyString());
 
             boolean outgoing = false;
@@ -123,7 +123,7 @@ public class TransactionsListItem {
             }
         }
 
-        date.set(BitSquareFormatter.formatDateTime(transaction.getUpdateTime()));
+        date.set(BSFormatter.formatDateTime(transaction.getUpdateTime()));
 
         // confidence
         progressIndicator = new ConfidenceProgressIndicator();

@@ -25,7 +25,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.trade.createoffer.CreateOfferController"
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.trade.createoffer.CreateOfferCodeBehind"
             prefHeight="500" prefWidth="800" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0"
             AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
             xmlns:fx="http://javafx.com/fxml">
@@ -74,7 +74,7 @@
         </Pane>
 
         <Label GridPane.rowIndex="4" text="Funds needed for that trade:"/>
-        <TextField GridPane.rowIndex="4" GridPane.columnIndex="1" fx:id="totalsTextField" editable="false"
+        <TextField GridPane.rowIndex="4" GridPane.columnIndex="1" fx:id="totalToPayTextField" editable="false"
                    focusTraversable="false"/>
 
         <Label GridPane.rowIndex="5" text="BTC address for funding:"/>

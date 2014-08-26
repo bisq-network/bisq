@@ -23,7 +23,7 @@ import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.arbitrators.profile.ArbitratorProfileController;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
-import io.bitsquare.gui.util.BitSquareFormatter;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.gui.util.ConfidenceDisplay;
 import io.bitsquare.locale.LanguageUtil;
@@ -132,7 +132,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
         }
         else {
             languageList.add(LanguageUtil.getDefaultLanguageLocale());
-            languagesTextField.setText(BitSquareFormatter.languageLocalesToString(languageList));
+            languagesTextField.setText(BSFormatter.languageLocalesToString(languageList));
         }
 
         languageComboBox.setItems(FXCollections.observableArrayList(LanguageUtil.getAllLanguageLocales()));
@@ -166,7 +166,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
         });
 
         methodsComboBox.setItems(FXCollections.observableArrayList(new ArrayList<>(EnumSet.allOf(Arbitrator.METHOD
-                .class))));
+                                                                                                         .class))));
         methodsComboBox.setConverter(new StringConverter<Arbitrator.METHOD>() {
 
             @Override
@@ -277,7 +277,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
         Locale item = languageComboBox.getSelectionModel().getSelectedItem();
         if (!languageList.contains(item) && item != null) {
             languageList.add(item);
-            languagesTextField.setText(BitSquareFormatter.languageLocalesToString(languageList));
+            languagesTextField.setText(BSFormatter.languageLocalesToString(languageList));
             languageComboBox.getSelectionModel().clearSelection();
         }
     }
@@ -293,7 +293,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
         Arbitrator.METHOD item = methodsComboBox.getSelectionModel().getSelectedItem();
         if (!methodList.contains(item) && item != null) {
             methodList.add(item);
-            methodsTextField.setText(BitSquareFormatter.arbitrationMethodsToString(methodList));
+            methodsTextField.setText(BSFormatter.arbitrationMethodsToString(methodList));
             methodsComboBox.getSelectionModel().clearSelection();
         }
     }
@@ -312,7 +312,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
             if (!idVerificationList.contains(idVerification)) {
                 idVerificationList.add(idVerification);
                 idVerificationsTextField.setText(
-                        BitSquareFormatter.arbitrationIDVerificationsToString(idVerificationList));
+                        BSFormatter.arbitrationIDVerificationsToString(idVerificationList));
             }
         }
 
@@ -355,11 +355,11 @@ public class ArbitratorRegistrationController extends CachedViewController {
 
     private void setupPayCollateralScreen() {
         infoLabel.setText("You need to pay 10 x the max. trading volume as collateral.\n\nThat payment will be " +
-                "locked into a MultiSig fund and be refunded when you leave the arbitration pool.\nIn case of fraud " +
-                "(collusion, not fulfilling the min. dispute quality requirements) you will lose your collateral.\n" +
-                "If you have a negative feedback from your clients you will lose a part of the collateral,\n" +
-                "depending on the overall relation of negative to positive ratings you received after a dispute " +
-                "resolution.\n\nPlease pay in " + arbitrator.getMaxTradeVolume() * 10 + " BTC");
+                                  "locked into a MultiSig fund and be refunded when you leave the arbitration pool.\nIn case of fraud " +
+                                  "(collusion, not fulfilling the min. dispute quality requirements) you will lose your collateral.\n" +
+                                  "If you have a negative feedback from your clients you will lose a part of the collateral,\n" +
+                                  "depending on the overall relation of negative to positive ratings you received after a dispute " +
+                                  "resolution.\n\nPlease pay in " + arbitrator.getMaxTradeVolume() * 10 + " BTC");
 
 
         String collateralAddress = walletFacade.getRegistrationAddressEntry() != null ?
@@ -434,15 +434,15 @@ public class ArbitratorRegistrationController extends CachedViewController {
 
             nameTextField.setText(arbitrator.getName());
             idTypeTextField.setText(Localisation.get(arbitrator.getIdType().toString()));
-            languagesTextField.setText(BitSquareFormatter.languageLocalesToString(arbitrator.getLanguages()));
+            languagesTextField.setText(BSFormatter.languageLocalesToString(arbitrator.getLanguages()));
             maxTradeVolumeTextField.setText(String.valueOf(arbitrator.getMaxTradeVolume()));
             passiveServiceFeeTextField.setText(String.valueOf(arbitrator.getPassiveServiceFee()));
             minPassiveServiceFeeTextField.setText(String.valueOf(arbitrator.getMinPassiveServiceFee()));
             arbitrationFeeTextField.setText(String.valueOf(arbitrator.getArbitrationFee()));
             minArbitrationFeeTextField.setText(String.valueOf(arbitrator.getMinArbitrationFee()));
-            methodsTextField.setText(BitSquareFormatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
+            methodsTextField.setText(BSFormatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
             idVerificationsTextField.setText(
-                    BitSquareFormatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));
+                    BSFormatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));
             webPageTextField.setText(arbitrator.getWebUrl());
             descriptionTextArea.setText(arbitrator.getDescription());
 
@@ -466,30 +466,30 @@ public class ArbitratorRegistrationController extends CachedViewController {
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
             String name = nameTextField.getText();
 
-            double maxTradeVolume = BitSquareFormatter.parseToDouble(maxTradeVolumeTextField.getText());
-            double passiveServiceFee = BitSquareFormatter.parseToDouble(passiveServiceFeeTextField.getText());
-            double minPassiveServiceFee = BitSquareFormatter.parseToDouble(minPassiveServiceFeeTextField.getText());
-            double arbitrationFee = BitSquareFormatter.parseToDouble(arbitrationFeeTextField.getText());
-            double minArbitrationFee = BitSquareFormatter.parseToDouble(minArbitrationFeeTextField.getText());
+            double maxTradeVolume = BSFormatter.parseToDouble(maxTradeVolumeTextField.getText());
+            double passiveServiceFee = BSFormatter.parseToDouble(passiveServiceFeeTextField.getText());
+            double minPassiveServiceFee = BSFormatter.parseToDouble(minPassiveServiceFeeTextField.getText());
+            double arbitrationFee = BSFormatter.parseToDouble(arbitrationFeeTextField.getText());
+            double minArbitrationFee = BSFormatter.parseToDouble(minArbitrationFeeTextField.getText());
 
             String webUrl = webPageTextField.getText();
             String description = descriptionTextArea.getText();
 
             return new Arbitrator(pubKeyAsHex,
-                    messagePubKeyAsHex,
-                    name,
-                    idType,
-                    languageList,
-                    new Reputation(),
-                    maxTradeVolume,
-                    passiveServiceFee,
-                    minPassiveServiceFee,
-                    arbitrationFee,
-                    minArbitrationFee,
-                    methodList,
-                    idVerificationList,
-                    webUrl,
-                    description);
+                                  messagePubKeyAsHex,
+                                  name,
+                                  idType,
+                                  languageList,
+                                  new Reputation(),
+                                  maxTradeVolume,
+                                  passiveServiceFee,
+                                  minPassiveServiceFee,
+                                  arbitrationFee,
+                                  minArbitrationFee,
+                                  methodList,
+                                  idVerificationList,
+                                  webUrl,
+                                  description);
         } catch (BitSquareValidator.ValidationException e) {
             return null;
         }

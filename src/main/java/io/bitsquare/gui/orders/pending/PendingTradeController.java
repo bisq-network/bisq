@@ -23,7 +23,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
-import io.bitsquare.gui.util.BitSquareFormatter;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ConfidenceDisplay;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.Country;
@@ -157,8 +157,8 @@ public class PendingTradeController extends CachedViewController {
 
         // select
         Optional<PendingTradesListItem> currentTradeItemOptional = tradeItems.stream().filter((e) ->
-                tradeManager.getPendingTrade() != null &&
-                        e.getTrade().getId().equals(tradeManager.getPendingTrade().getId())).findFirst();
+                                                                                                      tradeManager.getPendingTrade() != null &&
+                                                                                                              e.getTrade().getId().equals(tradeManager.getPendingTrade().getId())).findFirst();
         if (currentTradeItemOptional.isPresent()) {
             openTradesTable.getSelectionModel().select(currentTradeItemOptional.get());
         }
@@ -241,7 +241,7 @@ public class PendingTradeController extends CachedViewController {
         Transaction transaction = trade.getDepositTransaction();
         if (transaction == null) {
             trade.depositTxChangedProperty().addListener((observableValue, aBoolean, aBoolean2) ->
-                    updateTx(trade.getDepositTransaction()));
+                                                                 updateTx(trade.getDepositTransaction()));
         }
         else {
             updateTx(trade.getDepositTransaction());
@@ -278,11 +278,11 @@ public class PendingTradeController extends CachedViewController {
             primaryBankAccountIDTitleLabel.setText("Total fees (offer fee + tx fee):");
             secondaryBankAccountIDTitleLabel.setText("Refunded collateral:");
 
-            bankAccountTypeTextField.setText(BitSquareFormatter.formatCoinWithCode(trade.getTradeAmount()));
-            holderNameTextField.setText(BitSquareFormatter.formatVolume(trade.getTradeVolume()));
+            bankAccountTypeTextField.setText(BSFormatter.formatCoinWithCode(trade.getTradeAmount()));
+            holderNameTextField.setText(BSFormatter.formatVolume(trade.getTradeVolume()));
             primaryBankAccountIDTextField.setText(
-                    BitSquareFormatter.formatCoinWithCode(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
-            secondaryBankAccountIDTextField.setText(BitSquareFormatter.formatCoinWithCode(trade.getCollateralAmount()));
+                    BSFormatter.formatCoinWithCode(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
+            secondaryBankAccountIDTextField.setText(BSFormatter.formatCoinWithCode(trade.getCollateralAmount()));
 
             holderNameCopyIcon.setVisible(false);
             primaryBankAccountIDCopyIcon.setVisible(false);
@@ -370,8 +370,8 @@ public class PendingTradeController extends CachedViewController {
 
                                     } catch (Exception e) {
                                         log.warn("Country icon not found: /images/countries/" +
-                                                country.getCode().toLowerCase() + ".png country name: " +
-                                                country.getName());
+                                                         country.getCode().toLowerCase() + ".png country name: " +
+                                                         country.getName());
                                     }
                                     Tooltip.install(this, new Tooltip(country.getName()));
                                 }
@@ -395,7 +395,7 @@ public class PendingTradeController extends CachedViewController {
 
                                 if (tradesTableItem != null) {
                                     BankAccountType bankAccountType = tradesTableItem.getTrade().getOffer()
-                                            .getBankAccountType();
+                                                                                     .getBankAccountType();
                                     setText(Localisation.get(bankAccountType.toString()));
                                 }
                                 else {
@@ -434,11 +434,11 @@ public class PendingTradeController extends CachedViewController {
 
                                     if (offer.getDirection() == Direction.SELL) {
                                         icon = buyIcon;
-                                        title = BitSquareFormatter.formatDirection(Direction.BUY, true);
+                                        title = BSFormatter.formatDirection(Direction.BUY, true);
                                     }
                                     else {
                                         icon = sellIcon;
-                                        title = BitSquareFormatter.formatDirection(Direction.SELL, true);
+                                        title = BSFormatter.formatDirection(Direction.SELL, true);
                                     }
                                     button.setDisable(true);
                                     iconView.setImage(icon);

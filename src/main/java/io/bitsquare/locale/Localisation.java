@@ -44,6 +44,9 @@ public class Localisation {
 
 
     public static String get(String key) {
+        if (key == null)
+            return "";
+        
         try {
             return Localisation.getResourceBundle().getString(key);
         } catch (MissingResourceException e) {

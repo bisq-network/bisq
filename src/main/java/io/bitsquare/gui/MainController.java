@@ -23,7 +23,7 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.orders.OrdersController;
-import io.bitsquare.gui.util.BitSquareFormatter;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
@@ -365,11 +365,11 @@ public class MainController extends ViewController {
         balanceTextField.setEditable(false);
         balanceTextField.setPrefWidth(110);
         balanceTextField.setId("nav-balance-label");
-        balanceTextField.setText(BitSquareFormatter.formatCoinWithCode(walletFacade.getWalletBalance()));
+        balanceTextField.setText(BSFormatter.formatCoinWithCode(walletFacade.getWalletBalance()));
         walletFacade.addBalanceListener(new BalanceListener() {
             @Override
             public void onBalanceChanged(Coin balance) {
-                balanceTextField.setText(BitSquareFormatter.formatCoinWithCode(walletFacade.getWalletBalance()));
+                balanceTextField.setText(BSFormatter.formatCoinWithCode(walletFacade.getWalletBalance()));
             }
         });
 
@@ -406,7 +406,7 @@ public class MainController extends ViewController {
         });
 
         user.getSelectedBankAccountIndexProperty().addListener(observable ->
-                accountComboBox.getSelectionModel().select(user.getCurrentBankAccount()));
+                                                                       accountComboBox.getSelectionModel().select(user.getCurrentBankAccount()));
         user.getBankAccountsSizeProperty().addListener(observable -> {
             accountComboBox.setItems(FXCollections.observableArrayList(user.getBankAccounts()));
             // need to delay it a bit otherwise it will not be set

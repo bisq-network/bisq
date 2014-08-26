@@ -26,19 +26,19 @@ public class BitSquareConverterTest {
     @Test
     public void testStringToDouble() {
 
-        assertEquals(1, BitSquareFormatter.parseToDouble("1"), 0);
-        assertEquals(0.1, BitSquareFormatter.parseToDouble("0.1"), 0);
-        assertEquals(0.1, BitSquareFormatter.parseToDouble("0,1"), 0);
-        assertEquals(1, BitSquareFormatter.parseToDouble("1.0"), 0);
-        assertEquals(1, BitSquareFormatter.parseToDouble("1,0"), 0);
+        assertEquals(1, BSFormatter.parseToDouble("1"), 0);
+        assertEquals(0.1, BSFormatter.parseToDouble("0.1"), 0);
+        assertEquals(0.1, BSFormatter.parseToDouble("0,1"), 0);
+        assertEquals(1, BSFormatter.parseToDouble("1.0"), 0);
+        assertEquals(1, BSFormatter.parseToDouble("1,0"), 0);
 
-        assertEquals(0, BitSquareFormatter.parseToDouble("1,000.2"), 0);
-        assertEquals(0, BitSquareFormatter.parseToDouble("1,000.2"), 0);
-        assertEquals(0, BitSquareFormatter.parseToDouble(null), 0);
-        assertEquals(0, BitSquareFormatter.parseToDouble(""), 0);
-        assertEquals(0, BitSquareFormatter.parseToDouble(""), 0);
-        assertEquals(0, BitSquareFormatter.parseToDouble("."), 0);
-        assertEquals(0, BitSquareFormatter.parseToDouble(","), 0);
-        assertEquals(0, BitSquareFormatter.parseToDouble("a"), 0);
+        assertEquals(0, BSFormatter.parseToDouble("1,000.2"), 0);
+        assertEquals(0, BSFormatter.parseToDouble("1,000.2"), 0);
+        assertEquals(0, BSFormatter.parseToDouble(null), 0);
+        assertEquals(0, BSFormatter.parseToDouble(""), 0);
+        assertEquals(0, BSFormatter.parseToDouble(""), 0);
+        assertEquals(0, BSFormatter.parseToDouble("."), 0);
+        assertEquals(0, BSFormatter.parseToDouble(","), 0);
+        assertEquals(0, BSFormatter.parseToDouble("a"), 0);
     }
 }

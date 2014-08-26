@@ -93,7 +93,7 @@ public class WithdrawalListItem {
     private void updateBalance(Coin balance) {
         this.balance = balance;
         if (balance != null) {
-            //TODO use BitSquareFormatter
+            //TODO use BSFormatter
             balanceLabel.setText(balance.toFriendlyString());
         }
     }

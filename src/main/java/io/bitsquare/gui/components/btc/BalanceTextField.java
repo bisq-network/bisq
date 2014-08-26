@@ -154,7 +154,7 @@ public class BalanceTextField extends AnchorPane {
     private void updateBalance(Coin balance) {
         this.balance = balance;
         if (balance != null) {
-            //TODO use BitSquareFormatter
+            //TODO use BSFormatter
             balanceTextField.setText(balance.toFriendlyString());
         }
     }

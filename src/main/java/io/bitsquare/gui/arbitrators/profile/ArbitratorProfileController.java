@@ -20,7 +20,7 @@ package io.bitsquare.gui.arbitrators.profile;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
-import io.bitsquare.gui.util.BitSquareFormatter;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.storage.Persistence;
 import io.bitsquare.user.Arbitrator;
@@ -124,16 +124,16 @@ public class ArbitratorProfileController extends CachedViewController {
             nameLabel.setText(name);
 
             nameTextField.setText(arbitrator.getName());
-            languagesTextField.setText(BitSquareFormatter.languageLocalesToString(arbitrator.getLanguages()));
+            languagesTextField.setText(BSFormatter.languageLocalesToString(arbitrator.getLanguages()));
             reputationTextField.setText(arbitrator.getReputation().toString());
             maxTradeVolumeTextField.setText(String.valueOf(arbitrator.getMaxTradeVolume()) + " BTC");
             passiveServiceFeeTextField.setText(String.valueOf(arbitrator.getPassiveServiceFee()) + " % (Min. " +
-                    String.valueOf(arbitrator.getMinPassiveServiceFee()) + " BTC)");
+                                                       String.valueOf(arbitrator.getMinPassiveServiceFee()) + " BTC)");
             arbitrationFeeTextField.setText(String.valueOf(arbitrator.getArbitrationFee()) + " % (Min. " + String
                     .valueOf(arbitrator.getMinArbitrationFee()) + " BTC)");
-            methodsTextField.setText(BitSquareFormatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
+            methodsTextField.setText(BSFormatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
             idVerificationsTextField.setText(
-                    BitSquareFormatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));
+                    BSFormatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));
             webPageTextField.setText(arbitrator.getWebUrl());
             descriptionTextArea.setText(arbitrator.getDescription());
         }

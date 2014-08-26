@@ -1,0 +1,148 @@
+package io.bitsquare.gui.trade.createoffer;
+
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.utils.Fiat;
+import com.google.inject.Inject;
+import io.bitsquare.bank.BankAccount;
+import io.bitsquare.btc.AddressEntry;
+import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.locale.Country;
+import io.bitsquare.settings.Settings;
+import io.bitsquare.trade.Direction;
+import io.bitsquare.trade.TradeManager;
+import io.bitsquare.user.User;
+import java.util.Locale;
+import java.util.UUID;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static com.google.common.base.Preconditions.checkArgument;
+
+/**
+ * Model:
+ * Does not know the Presenter and View (CodeBehind)
+ * Use Guice for DI
+ * <p>
+ * - Holds domain data
+ * - Use Properties for bindable data
+ */
+class CreateOfferModel
+{
+    private static final Logger log = LoggerFactory.getLogger(CreateOfferModel.class);
+
+    private final TradeManager tradeManager;
+    private final WalletFacade walletFacade;
+    private final Settings settings;
+    private final User user;
+
+    String getOfferId()
+    {
+        return offerId;
+    }
+
+    private final String offerId;
+
+    final Coin totalFeesAsCoin;
+
+
+    private Direction direction = null;
+
+    Coin amountAsCoin;
+    Coin minAmountAsCoin;
+    Coin collateralAsCoin;
+    Fiat priceAsFiat;
+    Fiat tradeVolumeAsFiat;
+
+    AddressEntry addressEntry;
+
+    final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
+    final LongProperty collateralAsLong = new SimpleLongProperty();
+    final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty(false);
+    final BooleanProperty requestPlaceOfferFailed = new SimpleBooleanProperty(false);
+    final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
+    final StringProperty transactionId = new SimpleStringProperty();
+
+    final StringProperty bankAccountCurrency = new SimpleStringProperty();
+    final StringProperty bankAccountCounty = new SimpleStringProperty();
+    final StringProperty bankAccountType = new SimpleStringProperty();
+    ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();
+    ObservableList<Locale> acceptedLanguages = FXCollections.observableArrayList();
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Inject
+    CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user)
+    {
+        this.tradeManager = tradeManager;
+        this.walletFacade = walletFacade;
+        this.settings = settings;
+        this.user = user;
+
+        offerId = UUID.randomUUID().toString();
+        totalFeesAsCoin = FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE);
+        if (walletFacade != null && walletFacade.getWallet() != null) addressEntry = walletFacade.getAddressInfoByTradeID(offerId);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    void activate()
+    {
+        collateralAsLong.set(settings.getCollateral());
+
+        BankAccount bankAccount = user.getCurrentBankAccount();
+        if (bankAccount != null)
+        {
+            bankAccountType.set(bankAccount.getBankAccountType().toString());
+            bankAccountCurrency.set(bankAccount.getCurrency().getCurrencyCode());
+            bankAccountCounty.set(bankAccount.getCountry().getName());
+        }
+        acceptedCountries.setAll(settings.getAcceptedCountries());
+        acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
+    }
+
+    void placeOffer()
+    {
+        tradeManager.requestPlaceOffer(offerId,
+                                       direction,
+                                       priceAsFiat.value,
+                                       amountAsCoin,
+                                       minAmountAsCoin,
+                                       (transaction) -> {
+                                           requestPlaceOfferSuccess.set(true);
+                                           transactionId.set(transaction.getHashAsString());
+                                       },
+                                       (errorMessage) -> {
+                                           requestPlaceOfferFailed.set(true);
+                                           requestPlaceOfferErrorMessage.set(errorMessage);
+                                       }
+                                      );
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setter/Getter
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    Direction getDirection()
+    {
+        return direction;
+    }
+
+    void setDirection(Direction direction)
+    {
+        // direction must not be changed once it is initially set
+        checkArgument(this.direction == null);
+        this.direction = direction;
+    }
+
+
+}

@@ -18,6 +18,7 @@
 package io.bitsquare.user;
 
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.util.DSAKeyUtil;
 
 import java.io.Serializable;
@@ -26,7 +27,9 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.List;
+import java.util.Locale;
 
 import javax.annotation.Nullable;
 
@@ -74,6 +77,7 @@ public class User implements Serializable {
         }
 
         bankAccountsSizeProperty.set(bankAccounts.size());
+        BSFormatter.setFiatCurrencyCode(Currency.getInstance(Locale.getDefault()).getCurrencyCode());
     }
 
     public void addBankAccount(BankAccount bankAccount) {
@@ -110,6 +114,9 @@ public class User implements Serializable {
 
     public void setCurrentBankAccount(@Nullable BankAccount bankAccount) {
         currentBankAccount = bankAccount;
+
+        BSFormatter.setFiatCurrencyCode(currentBankAccount.getCurrency().getCurrencyCode());
+
         int index = -1;
         for (index = 0; index < bankAccounts.size(); index++) {
             if (currentBankAccount != null && currentBankAccount.equals(bankAccounts.get(index)))

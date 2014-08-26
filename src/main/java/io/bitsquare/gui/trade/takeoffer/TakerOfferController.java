@@ -24,7 +24,7 @@ import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.ValidatedTextField;
 import io.bitsquare.gui.trade.TradeController;
-import io.bitsquare.gui.util.BitSquareFormatter;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
@@ -118,14 +118,14 @@ public class TakerOfferController extends CachedViewController {
 
     public void applyData() {
         amountTextField.setText(requestedAmount.toPlainString());
-        amountTextField.setPromptText(BitSquareFormatter.formatCoinWithCode(
-                offer.getMinAmount()) + " - " + BitSquareFormatter.formatCoinWithCode(offer.getAmount()));
-        priceTextField.setText(BitSquareFormatter.formatPrice(offer.getPrice()));
+        amountTextField.setPromptText(BSFormatter.formatCoinWithCode(
+                offer.getMinAmount()) + " - " + BSFormatter.formatCoinWithCode(offer.getAmount()));
+        priceTextField.setText(BSFormatter.formatPrice(offer.getPrice()));
         applyVolume();
         collateralLabel.setText("Collateral (" + getCollateralAsPercent() + "):");
         applyCollateral();
         applyTotal();
-        feeTextField.setText(BitSquareFormatter.formatCoinWithCode(getFee()));
+        feeTextField.setText(BSFormatter.formatCoinWithCode(getFee()));
         totalTextField.setText(getFormattedTotal());
 
         bankAccountTypeTextField.setText(offer.getBankAccountType().toString());
@@ -134,9 +134,9 @@ public class TakerOfferController extends CachedViewController {
         //todo list
         // arbitratorsTextField.setText(offer.getArbitrator().getName());
 
-        supportedLanguagesTextField.setText(BitSquareFormatter.languageLocalesToString(
+        supportedLanguagesTextField.setText(BSFormatter.languageLocalesToString(
                 offer.getAcceptedLanguageLocales()));
-        supportedCountriesTextField.setText(BitSquareFormatter.countryLocalesToString(offer.getAcceptedCountries()));
+        supportedCountriesTextField.setText(BSFormatter.countryLocalesToString(offer.getAcceptedCountries()));
 
         amountTextField.textProperty().addListener(e -> {
             applyVolume();
@@ -153,7 +153,7 @@ public class TakerOfferController extends CachedViewController {
     @FXML
     public void onTakeOffer() {
         AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(offer.getId());
-        Coin amount = BitSquareFormatter.parseToCoin(getAmountString());
+        Coin amount = BSFormatter.parseToCoin(getAmountString());
         // TODO more validation (fee payment, blacklist,...)
         if (amountTextField.isInvalid()) {
             Popups.openErrorPopup("Invalid input", "The requested amount you entered is not a valid amount.");
@@ -168,7 +168,7 @@ public class TakerOfferController extends CachedViewController {
         }
         else if (tradeManager.isOfferAlreadyInTrades(offer)) {
             Popups.openErrorPopup("Offer previously accepted",
-                    "You have that offer already taken. Open the offer section to find that trade.");
+                                  "You have that offer already taken. Open the offer section to find that trade.");
         }
         else {
             takeOfferButton.setDisable(true);
@@ -179,8 +179,8 @@ public class TakerOfferController extends CachedViewController {
                     setDepositTxId(depositTxId);
                     accordion.setExpandedPane(waitBankTxTitledPane);
                     infoLabel.setText("Deposit transaction published by offerer.\n" +
-                            "As soon as the offerer starts the \n" +
-                            "Bank transfer, you will get informed.");
+                                              "As soon as the offerer starts the \n" +
+                                              "Bank transfer, you will get informed.");
                     depositTxIdTextField.setText(depositTxId);
                 }
 
@@ -196,11 +196,11 @@ public class TakerOfferController extends CachedViewController {
                 public void onPayoutTxPublished(Trade trade, String payoutTxId) {
                     accordion.setExpandedPane(summaryTitledPane);
 
-                    summaryPaidTextField.setText(BitSquareFormatter.formatCoinWithCode(trade.getTradeAmount()));
-                    summaryReceivedTextField.setText(BitSquareFormatter.formatVolume(trade.getTradeVolume()));
-                    summaryFeesTextField.setText(BitSquareFormatter.formatCoinWithCode(
+                    summaryPaidTextField.setText(BSFormatter.formatCoinWithCode(trade.getTradeAmount()));
+                    summaryReceivedTextField.setText(BSFormatter.formatVolume(trade.getTradeVolume()));
+                    summaryFeesTextField.setText(BSFormatter.formatCoinWithCode(
                             FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)));
-                    summaryCollateralTextField.setText(BitSquareFormatter.formatCoinWithCode(
+                    summaryCollateralTextField.setText(BSFormatter.formatCoinWithCode(
                             trade.getCollateralAmount()));
                     summaryDepositTxIdTextField.setText(depositTxId);
                     summaryPayoutTxIdTextField.setText(payoutTxId);
@@ -210,7 +210,7 @@ public class TakerOfferController extends CachedViewController {
                 public void onFault(Throwable throwable, ProtocolForTakerAsSeller.State state) {
                     log.error("Error while executing trade process at state: " + state + " / " + throwable);
                     Popups.openErrorPopup("Error while executing trade process",
-                            "Error while executing trade process at state: " + state + " / " + throwable);
+                                          "Error while executing trade process at state: " + state + " / " + throwable);
                 }
 
                 @Override
@@ -227,8 +227,8 @@ public class TakerOfferController extends CachedViewController {
                 public void onTakeOfferRequestRejected(Trade trade) {
                     log.error("Take offer request rejected");
                     Popups.openErrorPopup("Take offer request rejected",
-                            "Your take offer request has been rejected. It might be that the offerer got another " +
-                                    "request shortly before your request arrived.");
+                                          "Your take offer request has been rejected. It might be that the offerer got another " +
+                                                  "request shortly before your request arrived.");
                 }
             });
         }
@@ -265,21 +265,21 @@ public class TakerOfferController extends CachedViewController {
 
     //  formatted
     private String getFormattedVolume() {
-        return BitSquareFormatter.formatVolume(getVolume());
+        return BSFormatter.formatVolume(getVolume());
     }
 
     private String getFormattedTotal() {
-        return BitSquareFormatter.formatCoinWithCode(getTotal());
+        return BSFormatter.formatCoinWithCode(getTotal());
     }
 
 
     //  values
     private double getAmountAsDouble() {
-        return BitSquareFormatter.parseToDouble(getAmountString());
+        return BSFormatter.parseToDouble(getAmountString());
     }
 
     private Coin getAmountInSatoshis() {
-        return BitSquareFormatter.parseToCoin(getAmountString());
+        return BSFormatter.parseToCoin(getAmountString());
     }
 
     private String getAmountString() {
@@ -304,21 +304,21 @@ public class TakerOfferController extends CachedViewController {
     }
 
     private Coin getCollateralAsCoin() {
-        Coin amountAsCoin = BitSquareFormatter.parseToCoin(getAmountString());
+        Coin amountAsCoin = BSFormatter.parseToCoin(getAmountString());
         return amountAsCoin.divide((long) (1d / offer.getCollateral()));
     }
 
     private String getFormattedCollateralAsBtc() {
-        Coin amountAsCoin = BitSquareFormatter.parseToCoin(getAmountString());
+        Coin amountAsCoin = BSFormatter.parseToCoin(getAmountString());
         Coin collateralAsCoin = amountAsCoin.divide((long) (1d / getCollateral()));
-        return BitSquareFormatter.formatCoin(collateralAsCoin);
+        return BSFormatter.formatCoin(collateralAsCoin);
     }
 
     private String getCollateralAsPercent() {
-        return BitSquareFormatter.formatCollateralPercent(getCollateral());
+        return BSFormatter.formatCollateralPercent(getCollateral());
     }
 
-    private double getCollateral() {
+    private long getCollateral() {
         // TODO
         return offer.getCollateral();
     }

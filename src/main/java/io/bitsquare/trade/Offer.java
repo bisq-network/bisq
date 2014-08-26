@@ -53,7 +53,7 @@ public class Offer implements Serializable {
     private final BankAccountType bankAccountType;
     private final Country bankAccountCountry;
 
-    private final double collateral;
+    private final long collateral;
     private final List<Country> acceptedCountries;
     private final List<Locale> acceptedLanguageLocales;
     private final String bankAccountUID;
@@ -76,7 +76,7 @@ public class Offer implements Serializable {
                  Country bankAccountCountry,
                  String bankAccountUID,
                  Arbitrator arbitrator,
-                 double collateral,
+                 long collateral,
                  List<Country> acceptedCountries,
                  List<Locale> acceptedLanguageLocales) {
         this.id = id;
@@ -178,7 +178,7 @@ public class Offer implements Serializable {
         return arbitrator;
     }
 
-    public double getCollateral() {
+    public long getCollateral() {
         return collateral;
     }
 
