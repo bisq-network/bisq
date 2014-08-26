@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Well known node which is reachable for all peers for bootstrapping.
  * There will be several SeedNodes running on several servers.
- * <p>
+ * <p/>
  * TODO: Alternative bootstrap methods will follow later (save locally list of known nodes reported form other peers...)
  */
 public class SeedNode extends Thread {

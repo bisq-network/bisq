@@ -43,11 +43,11 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 /**
  * Presenter:
  * Knows Model, does not know the View (CodeBehind)
- * <p>
+ * <p/>
  * - Holds data and state of the View (formatted)
- * - Receive view input from Controller. Validates input, apply business logic, format to Presenter properties and 
+ * - Receive view input from Controller. Validates input, apply business logic, format to Presenter properties and
  * convert input to Model.
- * - Listen to updates from Model, apply business logic and format it to Presenter properties. Model update handling 
+ * - Listen to updates from Model, apply business logic and format it to Presenter properties. Model update handling
  * can be done via Binding.
  */
 class CreateOfferPresenter {
@@ -102,7 +102,7 @@ class CreateOfferPresenter {
 
         collateralLabel.bind(Bindings.createStringBinding(() -> "Collateral (" + BSFormatter.formatCollateralPercent
                 (model.collateralAsLong.get()) + "):", model.collateralAsLong));
-        bankAccountType.bind(Bindings.createStringBinding(() -> Localisation.get(model.bankAccountType.get()), 
+        bankAccountType.bind(Bindings.createStringBinding(() -> Localisation.get(model.bankAccountType.get()),
                 model.bankAccountType));
         bankAccountCurrency.bind(model.bankAccountCurrency);
         bankAccountCounty.bind(model.bankAccountCounty);
@@ -166,7 +166,7 @@ class CreateOfferPresenter {
             placeOfferButtonVisible.set(true);
 
         }
-        
+
     /*
     {
                                                isOfferPlacedScreen.set(true);
@@ -185,7 +185,7 @@ class CreateOfferPresenter {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // 
+    //
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean inputValid() {
@@ -249,7 +249,7 @@ class CreateOfferPresenter {
 
         if (model.collateralAsCoin != null) {
             model.totalToPayAsCoin.set(model.collateralAsCoin.add(model.totalFeesAsCoin));
-            totalToPay.bind(createStringBinding(() -> formatBtcWithCode(model.totalToPayAsCoin.get()), 
+            totalToPay.bind(createStringBinding(() -> formatBtcWithCode(model.totalToPayAsCoin.get()),
                     model.totalToPayAsCoin));
         }
     }

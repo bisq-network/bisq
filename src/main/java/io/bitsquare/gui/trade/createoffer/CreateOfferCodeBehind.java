@@ -41,20 +41,20 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Code behind (FXML Controller is part of View, not a classical controller from MVC):
- * <p>
+ * <p/>
  * Creates Presenter and passes Model from DI to Presenter. Does not hold a reference to Model
- * <p>
+ * <p/>
  * - Setup binding from Presenter to View elements (also bidirectional - Inputs). Binding are only to presenters
  * properties, not logical bindings or cross-view element bindings.
  * - Listen to UI events (Action) from View and call method in Presenter.
  * - Is entry node for hierarchical view graphs. Passes method calls to Presenter. Calls methods on sub views.
  * - Handle lifecycle and self removal from scene graph.
  * - Non declarative (dynamic) view definitions (if it gets larger, then user a ViewBuilder)
- * <p>
+ * <p/>
  * View:
  * - Mostly declared in FXML. Dynamic parts are declared in Controller. If more view elements need to be defined in
  * code then use ViewBuilder.
- * <p>
+ * <p/>
  * Optional ViewBuilder:
  * - Replacement for FXML view definitions.
  */
@@ -211,7 +211,7 @@ public class CreateOfferCodeBehind extends CachedViewController {
         transactionIdTextField.visibleProperty().bind(viewModel.isOfferPlacedScreen);
        */
 
-        // TODO 
+        // TODO
        /* placeOfferButton.disableProperty().bind(amountTextField.isValidProperty()
                                                                .and(minAmountTextField.isValidProperty())
                                                                .and(volumeTextField.isValidProperty())
@@ -294,4 +294,3 @@ public class CreateOfferCodeBehind extends CachedViewController {
     }*/
 }
 
-   
