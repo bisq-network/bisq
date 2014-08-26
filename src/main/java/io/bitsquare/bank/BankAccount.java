@@ -35,11 +35,17 @@ public class BankAccount implements Serializable {
     private final String accountSecondaryID; // like BIC
     private final String accountHolderName;
     private final Country country;     // where bank is registered
+
     // The main currency if account support multiple currencies.
     // The user can create multiple bank accounts with same bank account but other currency if his bank account
     // support that.
     private final Currency currency;
     private final String accountTitle;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BankAccount(BankAccountType bankAccountType, Currency currency, Country country, String accountTitle,
                        String accountHolderName, String accountPrimaryID, String accountSecondaryID) {
@@ -52,18 +58,10 @@ public class BankAccount implements Serializable {
         this.accountSecondaryID = accountSecondaryID;
     }
 
-    public int hashCode() {
-        return Objects.hashCode(accountTitle);
-    }
 
-    public boolean equals(Object obj) {
-        if (!(obj instanceof BankAccount)) return false;
-        if (obj == this) return true;
-
-        final BankAccount other = (BankAccount) obj;
-        return accountTitle.equals(other.getUid());
-    }
-
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters/Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getAccountPrimaryID() {
         return accountPrimaryID;
@@ -96,6 +94,25 @@ public class BankAccount implements Serializable {
 
     public String getAccountTitle() {
         return accountTitle;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(accountTitle);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof BankAccount)) return false;
+        if (obj == this) return true;
+
+        final BankAccount other = (BankAccount) obj;
+        return accountTitle.equals(other.getUid());
     }
 
     @Override

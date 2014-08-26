@@ -157,8 +157,8 @@ public class PendingTradeController extends CachedViewController {
 
         // select
         Optional<PendingTradesListItem> currentTradeItemOptional = tradeItems.stream().filter((e) ->
-                                                                                                      tradeManager.getPendingTrade() != null &&
-                                                                                                              e.getTrade().getId().equals(tradeManager.getPendingTrade().getId())).findFirst();
+                tradeManager.getPendingTrade() != null &&
+                        e.getTrade().getId().equals(tradeManager.getPendingTrade().getId())).findFirst();
         if (currentTradeItemOptional.isPresent()) {
             openTradesTable.getSelectionModel().select(currentTradeItemOptional.get());
         }
@@ -241,7 +241,7 @@ public class PendingTradeController extends CachedViewController {
         Transaction transaction = trade.getDepositTransaction();
         if (transaction == null) {
             trade.depositTxChangedProperty().addListener((observableValue, aBoolean, aBoolean2) ->
-                                                                 updateTx(trade.getDepositTransaction()));
+                    updateTx(trade.getDepositTransaction()));
         }
         else {
             updateTx(trade.getDepositTransaction());
@@ -370,8 +370,8 @@ public class PendingTradeController extends CachedViewController {
 
                                     } catch (Exception e) {
                                         log.warn("Country icon not found: /images/countries/" +
-                                                         country.getCode().toLowerCase() + ".png country name: " +
-                                                         country.getName());
+                                                country.getCode().toLowerCase() + ".png country name: " +
+                                                country.getName());
                                     }
                                     Tooltip.install(this, new Tooltip(country.getName()));
                                 }
@@ -395,7 +395,7 @@ public class PendingTradeController extends CachedViewController {
 
                                 if (tradesTableItem != null) {
                                     BankAccountType bankAccountType = tradesTableItem.getTrade().getOffer()
-                                                                                     .getBankAccountType();
+                                            .getBankAccountType();
                                     setText(Localisation.get(bankAccountType.toString()));
                                 }
                                 else {

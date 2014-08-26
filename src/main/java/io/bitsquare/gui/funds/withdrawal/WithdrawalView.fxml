@@ -19,9 +19,8 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.control.cell.*?>
 <?import javafx.scene.layout.*?>
-
 <VBox fx:id="root" fx:controller="io.bitsquare.gui.funds.withdrawal.WithdrawalController"
       spacing="10" xmlns:fx="http://javafx.com/fxml">
     <padding>

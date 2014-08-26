@@ -400,7 +400,7 @@ public class MainController extends ViewController {
         });
 
         user.getSelectedBankAccountIndexProperty().addListener(observable ->
-                                                                       accountComboBox.getSelectionModel().select(user.getCurrentBankAccount()));
+                accountComboBox.getSelectionModel().select(user.getCurrentBankAccount()));
         user.getBankAccountsSizeProperty().addListener(observable -> {
             accountComboBox.setItems(FXCollections.observableArrayList(user.getBankAccounts()));
             // need to delay it a bit otherwise it will not be set

@@ -168,7 +168,7 @@ public class TakerOfferController extends CachedViewController {
         }
         else if (tradeManager.isOfferAlreadyInTrades(offer)) {
             Popups.openErrorPopup("Offer previously accepted",
-                                  "You have that offer already taken. Open the offer section to find that trade.");
+                    "You have that offer already taken. Open the offer section to find that trade.");
         }
         else {
             takeOfferButton.setDisable(true);
@@ -179,8 +179,8 @@ public class TakerOfferController extends CachedViewController {
                     setDepositTxId(depositTxId);
                     accordion.setExpandedPane(waitBankTxTitledPane);
                     infoLabel.setText("Deposit transaction published by offerer.\n" +
-                                              "As soon as the offerer starts the \n" +
-                                              "Bank transfer, you will get informed.");
+                            "As soon as the offerer starts the \n" +
+                            "Bank transfer, you will get informed.");
                     depositTxIdTextField.setText(depositTxId);
                 }
 
@@ -210,7 +210,7 @@ public class TakerOfferController extends CachedViewController {
                 public void onFault(Throwable throwable, ProtocolForTakerAsSeller.State state) {
                     log.error("Error while executing trade process at state: " + state + " / " + throwable);
                     Popups.openErrorPopup("Error while executing trade process",
-                                          "Error while executing trade process at state: " + state + " / " + throwable);
+                            "Error while executing trade process at state: " + state + " / " + throwable);
                 }
 
                 @Override
@@ -227,8 +227,8 @@ public class TakerOfferController extends CachedViewController {
                 public void onTakeOfferRequestRejected(Trade trade) {
                     log.error("Take offer request rejected");
                     Popups.openErrorPopup("Take offer request rejected",
-                                          "Your take offer request has been rejected. It might be that the offerer got another " +
-                                                  "request shortly before your request arrived.");
+                            "Your take offer request has been rejected. It might be that the offerer got another " +
+                                    "request shortly before your request arrived.");
                 }
             });
         }

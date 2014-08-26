@@ -17,9 +17,8 @@
   -->
 
 <?import io.bitsquare.gui.components.CachingTabPane?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.layout.AnchorPane?>
-
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <CachingTabPane fx:id="root" fx:controller="io.bitsquare.gui.funds.FundsController"
                 AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
                 AnchorPane.topAnchor="0.0"

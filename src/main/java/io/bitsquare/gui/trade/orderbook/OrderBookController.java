@@ -261,8 +261,8 @@ public class OrderBookController extends CachedViewController {
                     }
                     else {
                         Action response = Popups.openErrorPopup("Registration fee not confirmed yet",
-                                                                "The registration fee transaction has not been confirmed yet in the blockchain. " +
-                                                                        "Please wait until it has at least 1 confirmation.");
+                                "The registration fee transaction has not been confirmed yet in the blockchain. " +
+                                        "Please wait until it has at least 1 confirmation.");
                         if (response == Dialog.Actions.OK) {
                             MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.FUNDS);
                         }
@@ -270,8 +270,8 @@ public class OrderBookController extends CachedViewController {
                 }
                 else {
                     Action response = Popups.openErrorPopup("Missing registration fee",
-                                                            "You have not funded the full registration fee of " + BSFormatter
-                                                                    .formatCoinWithCode(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
+                            "You have not funded the full registration fee of " + BSFormatter
+                                    .formatCoinWithCode(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
                     if (response == Dialog.Actions.OK) {
                         MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.FUNDS);
                     }
@@ -287,21 +287,21 @@ public class OrderBookController extends CachedViewController {
 
         if (selectedIndex >= 0) {
             Dialogs.CommandLink settingsCommandLink = new Dialogs.CommandLink("Open settings",
-                                                                              "You need to configure your settings before you can actively trade.");
+                    "You need to configure your settings before you can actively trade.");
             Dialogs.CommandLink depositFeeCommandLink = new Dialogs.CommandLink("Deposit funds",
-                                                                                "You need to pay the registration fee before you can actively trade. That is needed as prevention" +
-                                                                                        " against fraud.");
+                    "You need to pay the registration fee before you can actively trade. That is needed as prevention" +
+                            " against fraud.");
             Dialogs.CommandLink sendRegistrationCommandLink = new Dialogs.CommandLink("Publish registration",
-                                                                                      "When settings are configured and the fee deposit is done your registration transaction will be " +
-                                                                                              "published to "
-                                                                                              + "the Bitcoin \nnetwork.");
+                    "When settings are configured and the fee deposit is done your registration transaction will be " +
+                            "published to "
+                            + "the Bitcoin \nnetwork.");
             List<Dialogs.CommandLink> commandLinks = Arrays.asList(settingsCommandLink, depositFeeCommandLink,
-                                                                   sendRegistrationCommandLink);
+                    sendRegistrationCommandLink);
             Action registrationMissingAction = Popups.openRegistrationMissingPopup("Not registered yet",
-                                                                                   "Please follow these steps:",
-                                                                                   "You need to register before you can place an offer.",
-                                                                                   commandLinks,
-                                                                                   selectedIndex);
+                    "Please follow these steps:",
+                    "You need to register before you can place an offer.",
+                    commandLinks,
+                    selectedIndex);
             if (registrationMissingAction == settingsCommandLink) {
                 MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.SETTINGS);
             }
@@ -371,7 +371,7 @@ public class OrderBookController extends CachedViewController {
         orderBook.applyFilter(orderBookFilter);
 
         priceColumn.setSortType((orderBookFilter.getDirection() == Direction.BUY) ?
-                                        TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
+                TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
         orderBookTable.sort();
 
         if (orderBookTable.getItems() != null) {
@@ -487,8 +487,8 @@ public class OrderBookController extends CachedViewController {
 
                                     } catch (Exception e) {
                                         log.warn("Country icon not found: /images/countries/" +
-                                                         country.getCode().toLowerCase() + ".png country name: " +
-                                                         country.getName());
+                                                country.getCode().toLowerCase() + ".png country name: " +
+                                                country.getName());
                                     }
                                     Tooltip.install(this, new Tooltip(country.getName()));
                                 }

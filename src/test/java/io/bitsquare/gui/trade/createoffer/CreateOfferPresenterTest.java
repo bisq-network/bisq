@@ -33,13 +33,11 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
-public class CreateOfferPresenterTest
-{
+public class CreateOfferPresenterTest {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferPresenterTest.class);
 
     @Test
-    public void testBindings()
-    {
+    public void testBindings() {
         CreateOfferModel model = new CreateOfferModel(null, null, null, null);
 
         BSFormatter.setLocale(Locale.US);
@@ -54,7 +52,7 @@ public class CreateOfferPresenterTest
         assertEquals(Coin.COIN, model.amountAsCoin);
         assertEquals(Fiat.valueOf("EUR", 500 * 10000), model.priceAsFiat);
         assertEquals(Fiat.valueOf("EUR", 500 * 10000), model.tradeVolumeAsFiat);
-        assertEquals(Coin.parseCoin("0.1011"), model.totalToPayAsCoin);
+        assertEquals(Coin.parseCoin("0.1011"), model.totalToPayAsCoin.get());
 
         presenter.price.set("500");
         presenter.volume.set("500");

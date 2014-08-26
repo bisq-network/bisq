@@ -34,6 +34,8 @@ public class FeePolicy {
     public static final Coin CREATE_OFFER_FEE = Coin.MILLICOIN; // 0.001
     public static final Coin TAKE_OFFER_FEE = CREATE_OFFER_FEE;
     private static final Logger log = LoggerFactory.getLogger(FeePolicy.class);
+
+    // those are just dummy yet. trading fees will go probably to arbiters
     private static final String registrationFeeAddress = "mvkDXt4QmN4Nq9dRUsRigBCaovde9nLkZR";
     private static final String createOfferFeeAddress = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";
     private static final String takeOfferFeeAddress = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";

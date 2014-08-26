@@ -131,7 +131,7 @@ public class WithdrawalController extends CachedViewController {
         List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
         addressList = FXCollections.observableArrayList();
         addressList.addAll(addressEntryList.stream().map(anAddressEntryList ->
-                                                                 new WithdrawalListItem(anAddressEntryList, walletFacade)).collect(Collectors.toList()));
+                new WithdrawalListItem(anAddressEntryList, walletFacade)).collect(Collectors.toList()));
 
         tableView.setItems(addressList);
     }
@@ -182,7 +182,7 @@ public class WithdrawalController extends CachedViewController {
                                 changeAddressTextField.getText(), amount, callback);
                     } catch (AddressFormatException e) {
                         Popups.openErrorPopup("Address invalid",
-                                              "The address is not correct. Please check the address format.");
+                                "The address is not correct. Please check the address format.");
 
                     } catch (InsufficientMoneyException e) {
                         Popups.openInsufficientMoneyPopup();
@@ -194,7 +194,7 @@ public class WithdrawalController extends CachedViewController {
             }
             else {
                 Popups.openErrorPopup("Insufficient amount",
-                                      "The amount to transfer is lower the the transaction fee and the min. possible tx value.");
+                        "The amount to transfer is lower the the transaction fee and the min. possible tx value.");
             }
 
         } catch (BitSquareValidator.ValidationException e) {
@@ -308,7 +308,7 @@ public class WithdrawalController extends CachedViewController {
 
     private void setConfidenceColumnCellFactory() {
         confidenceColumn.setCellValueFactory((addressListItem) ->
-                                                     new ReadOnlyObjectWrapper(addressListItem.getValue()));
+                new ReadOnlyObjectWrapper(addressListItem.getValue()));
         confidenceColumn.setCellFactory(
                 new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>() {
 

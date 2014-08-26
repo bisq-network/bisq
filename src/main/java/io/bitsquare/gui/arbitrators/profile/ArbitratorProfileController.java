@@ -128,7 +128,7 @@ public class ArbitratorProfileController extends CachedViewController {
             reputationTextField.setText(arbitrator.getReputation().toString());
             maxTradeVolumeTextField.setText(String.valueOf(arbitrator.getMaxTradeVolume()) + " BTC");
             passiveServiceFeeTextField.setText(String.valueOf(arbitrator.getPassiveServiceFee()) + " % (Min. " +
-                                                       String.valueOf(arbitrator.getMinPassiveServiceFee()) + " BTC)");
+                    String.valueOf(arbitrator.getMinPassiveServiceFee()) + " BTC)");
             arbitrationFeeTextField.setText(String.valueOf(arbitrator.getArbitrationFee()) + " % (Min. " + String
                     .valueOf(arbitrator.getMinArbitrationFee()) + " BTC)");
             methodsTextField.setText(BSFormatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));

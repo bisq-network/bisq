@@ -32,6 +32,5 @@ public class ConfidenceListener {
     }
 
     public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-
     }
 }

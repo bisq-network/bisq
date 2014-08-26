@@ -59,8 +59,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * - Holds domain data
  * - Use Properties for bindable data
  */
-class CreateOfferModel
-{
+class CreateOfferModel {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferModel.class);
 
     private final TradeManager tradeManager;
@@ -68,8 +67,7 @@ class CreateOfferModel
     private final Settings settings;
     private final User user;
 
-    String getOfferId()
-    {
+    String getOfferId() {
         return offerId;
     }
 
@@ -106,8 +104,7 @@ class CreateOfferModel
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user)
-    {
+    CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user) {
         this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
         this.settings = settings;
@@ -115,7 +112,8 @@ class CreateOfferModel
 
         offerId = UUID.randomUUID().toString();
         totalFeesAsCoin = FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE);
-        if (walletFacade != null && walletFacade.getWallet() != null) addressEntry = walletFacade.getAddressInfoByTradeID(offerId);
+        if (walletFacade != null && walletFacade.getWallet() != null)
+            addressEntry = walletFacade.getAddressInfoByTradeID(offerId);
     }
 
 
@@ -123,13 +121,11 @@ class CreateOfferModel
     // Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void activate()
-    {
+    void activate() {
         collateralAsLong.set(settings.getCollateral());
 
         BankAccount bankAccount = user.getCurrentBankAccount();
-        if (bankAccount != null)
-        {
+        if (bankAccount != null) {
             bankAccountType.set(bankAccount.getBankAccountType().toString());
             bankAccountCurrency.set(bankAccount.getCurrency().getCurrencyCode());
             bankAccountCounty.set(bankAccount.getCountry().getName());
@@ -138,22 +134,21 @@ class CreateOfferModel
         acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
     }
 
-    void placeOffer()
-    {
+    void placeOffer() {
         tradeManager.requestPlaceOffer(offerId,
-                                       direction,
-                                       priceAsFiat.value,
-                                       amountAsCoin,
-                                       minAmountAsCoin,
-                                       (transaction) -> {
-                                           requestPlaceOfferSuccess.set(true);
-                                           transactionId.set(transaction.getHashAsString());
-                                       },
-                                       (errorMessage) -> {
-                                           requestPlaceOfferFailed.set(true);
-                                           requestPlaceOfferErrorMessage.set(errorMessage);
-                                       }
-                                      );
+                direction,
+                priceAsFiat.value,
+                amountAsCoin,
+                minAmountAsCoin,
+                (transaction) -> {
+                    requestPlaceOfferSuccess.set(true);
+                    transactionId.set(transaction.getHashAsString());
+                },
+                (errorMessage) -> {
+                    requestPlaceOfferFailed.set(true);
+                    requestPlaceOfferErrorMessage.set(errorMessage);
+                }
+        );
     }
 
 
@@ -161,13 +156,11 @@ class CreateOfferModel
     // Setter/Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    Direction getDirection()
-    {
+    Direction getDirection() {
         return direction;
     }
 
-    void setDirection(Direction direction)
-    {
+    void setDirection(Direction direction) {
         // direction must not be changed once it is initially set
         checkArgument(this.direction == null);
         this.direction = direction;

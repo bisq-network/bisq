@@ -39,27 +39,26 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//TODO check DI
-
 /**
  * Code behind (FXML Controller is part of View, not a classical controller from MVC):
  * <p>
  * Creates Presenter and passes Model from DI to Presenter. Does not hold a reference to Model
  * <p>
- * - Setup binding from Presenter to View elements (also bidirectional - Inputs). Binding are only to presenters properties, not logical bindings or cross-view element bindings.
+ * - Setup binding from Presenter to View elements (also bidirectional - Inputs). Binding are only to presenters
+ * properties, not logical bindings or cross-view element bindings.
  * - Listen to UI events (Action) from View and call method in Presenter.
  * - Is entry node for hierarchical view graphs. Passes method calls to Presenter. Calls methods on sub views.
  * - Handle lifecycle and self removal from scene graph.
  * - Non declarative (dynamic) view definitions (if it gets larger, then user a ViewBuilder)
  * <p>
  * View:
- * - Mostly declared in FXML. Dynamic parts are declared in Controller. If more view elements need to be defined in code then use ViewBuilder.
+ * - Mostly declared in FXML. Dynamic parts are declared in Controller. If more view elements need to be defined in
+ * code then use ViewBuilder.
  * <p>
  * Optional ViewBuilder:
  * - Replacement for FXML view definitions.
  */
-public class CreateOfferCodeBehind extends CachedViewController
-{
+public class CreateOfferCodeBehind extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferCodeBehind.class);
 
     private final CreateOfferPresenter presenter;
@@ -69,7 +68,9 @@ public class CreateOfferCodeBehind extends CachedViewController
 
     @FXML private ValidatingTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
     @FXML private Button placeOfferButton, closeButton;
-    @FXML private TextField totalToPayTextField, collateralTextField, bankAccountTypeTextField, bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField, acceptedLanguagesTextField,
+    @FXML private TextField totalToPayTextField, collateralTextField, bankAccountTypeTextField,
+            bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField,
+            acceptedLanguagesTextField,
             feeLabel, transactionIdTextField;
     @FXML private ConfidenceProgressIndicator progressIndicator;
     @FXML private AddressTextField addressTextField;
@@ -81,8 +82,7 @@ public class CreateOfferCodeBehind extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public CreateOfferCodeBehind(CreateOfferModel model)
-    {
+    public CreateOfferCodeBehind(CreateOfferModel model) {
         presenter = new CreateOfferPresenter(model);
     }
 
@@ -92,23 +92,20 @@ public class CreateOfferCodeBehind extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb)
-    {
+    public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
         presenter.onViewInitialized();
     }
 
     @Override
-    public void deactivate()
-    {
+    public void deactivate() {
         super.deactivate();
         presenter.deactivate();
         ((TradeController) parentController).onCreateOfferViewRemoved();
     }
 
     @Override
-    public void activate()
-    {
+    public void activate() {
         super.activate();
         presenter.activate();
 
@@ -129,8 +126,7 @@ public class CreateOfferCodeBehind extends CachedViewController
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setOrderBookFilter(OrderBookFilter orderBookFilter)
-    {
+    public void setOrderBookFilter(OrderBookFilter orderBookFilter) {
         presenter.setOrderBookFilter(orderBookFilter);
     }
 
@@ -139,14 +135,12 @@ public class CreateOfferCodeBehind extends CachedViewController
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
-    public void onPlaceOffer()
-    {
+    public void onPlaceOffer() {
         presenter.placeOffer();
     }
 
     @FXML
-    public void onClose()
-    {
+    public void onClose() {
         presenter.close();
 
         TabPane tabPane = ((TabPane) (rootContainer.getParent().getParent()));
@@ -158,15 +152,19 @@ public class CreateOfferCodeBehind extends CachedViewController
     // Private Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupListeners()
-    {
-        volumeTextField.focusedProperty().addListener((observableValue, oldValue, newValue) -> presenter.checkVolumeOnFocusOut(oldValue, newValue, volumeTextField.getText()));
-        amountTextField.focusedProperty().addListener((observableValue, oldValue, newValue) -> presenter.onFocusOutAmountTextField(oldValue, newValue));
-        priceTextField.focusedProperty().addListener((observableValue, oldValue, newValue) -> presenter.onFocusOutPriceTextField(oldValue, newValue));
+    private void setupListeners() {
+        volumeTextField.focusedProperty().addListener((observableValue, oldValue,
+                                                       newValue) -> presenter.checkVolumeOnFocusOut(oldValue,
+                newValue, volumeTextField.getText()));
+        amountTextField.focusedProperty().addListener((observableValue, oldValue,
+                                                       newValue) -> presenter.onFocusOutAmountTextField(oldValue,
+                newValue));
+        priceTextField.focusedProperty().addListener((observableValue, oldValue,
+                                                      newValue) -> presenter.onFocusOutPriceTextField(oldValue,
+                newValue));
 
         presenter.validateInput.addListener((o, oldValue, newValue) -> {
-            if (newValue)
-            {
+            if (newValue) {
                 amountTextField.reValidate();
                 minAmountTextField.reValidate();
                 volumeTextField.reValidate();
@@ -175,16 +173,15 @@ public class CreateOfferCodeBehind extends CachedViewController
         });
 
         presenter.showVolumeAdjustedWarning.addListener((o, oldValue, newValue) -> {
-            if (newValue)
-            {
-                Popups.openWarningPopup("Warning", "The total volume you have entered leads to invalid fractional Bitcoin amounts.\nThe amount has been adjusted and a new total volume be calculated from it.");
+            if (newValue) {
+                Popups.openWarningPopup("Warning", "The total volume you have entered leads to invalid fractional " +
+                        "Bitcoin amounts.\nThe amount has been adjusted and a new total volume be calculated from it.");
                 volumeTextField.setText(presenter.volume.get());
             }
         });
     }
 
-    private void setupBindings()
-    {
+    private void setupBindings() {
         buyLabel.textProperty().bind(presenter.directionLabel);
         amountTextField.textProperty().bindBidirectional(presenter.amount);
         priceTextField.textProperty().bindBidirectional(presenter.price);
@@ -221,8 +218,7 @@ public class CreateOfferCodeBehind extends CachedViewController
                                                                .and(priceTextField.isValidProperty()).not());*/
     }
 
-    private void setupTextFieldValidators()
-    {
+    private void setupTextFieldValidators() {
        /* BtcValidator amountValidator = new BtcValidator();
         amountTextField.setNumberValidator(amountValidator);
         amountTextField.setErrorPopupLayoutReference((Region) amountTextField.getParent());

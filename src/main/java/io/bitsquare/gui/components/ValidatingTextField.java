@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * TextField with validation support. Validation is executed on the Validator object.
  * In case of a invalid result we display a error message with a PopOver.
  * The position is derived from the textField or if set from the errorPopupLayoutReference object.
- * <p/>
+ * <p>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
 public class ValidatingTextField extends TextField {

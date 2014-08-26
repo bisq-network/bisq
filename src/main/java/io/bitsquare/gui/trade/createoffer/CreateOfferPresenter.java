@@ -45,11 +45,12 @@ import static javafx.beans.binding.Bindings.createStringBinding;
  * Knows Model, does not know the View (CodeBehind)
  * <p>
  * - Holds data and state of the View (formatted)
- * - Receive view input from Controller. Validates input, apply business logic, format to Presenter properties and convert input to Model.
- * - Listen to updates from Model, apply business logic and format it to Presenter properties. Model update handling can be done via Binding.
+ * - Receive view input from Controller. Validates input, apply business logic, format to Presenter properties and 
+ * convert input to Model.
+ * - Listen to updates from Model, apply business logic and format it to Presenter properties. Model update handling 
+ * can be done via Binding.
  */
-class CreateOfferPresenter
-{
+class CreateOfferPresenter {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferPresenter.class);
 
     private CreateOfferModel model;
@@ -83,8 +84,7 @@ class CreateOfferPresenter
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    CreateOfferPresenter(CreateOfferModel model)
-    {
+    CreateOfferPresenter(CreateOfferModel model) {
         this.model = model;
     }
 
@@ -93,35 +93,35 @@ class CreateOfferPresenter
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void onViewInitialized()
-    {
+    void onViewInitialized() {
         totalFeesLabel.set(BSFormatter.formatBtc(model.totalFeesAsCoin));
         paymentLabel.set("Bitsquare trade (" + model.getOfferId() + ")");
-       // address.set(model.addressEntry.getAddress().toString());
+        // address.set(model.addressEntry.getAddress().toString());
 
         setupInputListeners();
 
-        collateralLabel.bind(Bindings.createStringBinding(() -> "Collateral (" + BSFormatter.formatCollateralPercent(model.collateralAsLong.get()) + "):", model.collateralAsLong));
-        bankAccountType.bind(Bindings.createStringBinding(() -> Localisation.get(model.bankAccountType.get()), model.bankAccountType));
+        collateralLabel.bind(Bindings.createStringBinding(() -> "Collateral (" + BSFormatter.formatCollateralPercent
+                (model.collateralAsLong.get()) + "):", model.collateralAsLong));
+        bankAccountType.bind(Bindings.createStringBinding(() -> Localisation.get(model.bankAccountType.get()), 
+                model.bankAccountType));
         bankAccountCurrency.bind(model.bankAccountCurrency);
         bankAccountCounty.bind(model.bankAccountCounty);
         totalToPayAsCoin.bind(model.totalToPayAsCoin);
-        
-        model.acceptedCountries.addListener((Observable o) -> acceptedCountries.set(BSFormatter.countryLocalesToString(model.acceptedCountries)));
-        model.acceptedLanguages.addListener((Observable o) -> acceptedLanguages.set(BSFormatter.languageLocalesToString(model.acceptedLanguages)));
+
+        model.acceptedCountries.addListener((Observable o) -> acceptedCountries.set(BSFormatter
+                .countryLocalesToString(model.acceptedCountries)));
+        model.acceptedLanguages.addListener((Observable o) -> acceptedLanguages.set(BSFormatter
+                .languageLocalesToString(model.acceptedLanguages)));
 
     }
 
-    void deactivate()
-    {
+    void deactivate() {
     }
 
-    void activate()
-    {
+    void activate() {
         model.activate();
 
 
-       
         // totalToPay.addListener((ov) -> addressTextField.setAmountToPay(model.totalToPayAsCoin));
     }
 
@@ -130,8 +130,7 @@ class CreateOfferPresenter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    void setOrderBookFilter(OrderBookFilter orderBookFilter)
-    {
+    void setOrderBookFilter(OrderBookFilter orderBookFilter) {
         // model
         model.setDirection(orderBookFilter.getDirection());
         model.amountAsCoin = orderBookFilter.getAmount();
@@ -151,8 +150,7 @@ class CreateOfferPresenter
     // View Events
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void placeOffer()
-    {
+    void placeOffer() {
         model.amountAsCoin = parseToCoin(amount.get());
         model.minAmountAsCoin = parseToCoin(minAmount.get());
         model.priceAsFiat = parseToFiat(price.get());
@@ -162,8 +160,7 @@ class CreateOfferPresenter
 
         //balanceTextField.getBalance()
 
-        if (inputValid())
-        {
+        if (inputValid()) {
             model.placeOffer();
             isPlaceOfferButtonDisabled.set(true);
             placeOfferButtonVisible.set(true);
@@ -183,8 +180,7 @@ class CreateOfferPresenter
     }
 
 
-    void close()
-    {
+    void close() {
 
     }
 
@@ -192,14 +188,12 @@ class CreateOfferPresenter
     // 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean inputValid()
-    {
+    private boolean inputValid() {
         //TODO
         return true;
     }
 
-    void setupInputListeners()
-    {
+    void setupInputListeners() {
 
         // bindBidirectional for amount, price, volume and minAmount
         amount.addListener(ov -> {
@@ -225,25 +219,21 @@ class CreateOfferPresenter
     }
 
 
-    private void setVolume()
-    {
+    private void setVolume() {
         model.amountAsCoin = parseToCoin(amount.get());
         model.priceAsFiat = parseToFiat(price.get());
 
-        if (model.priceAsFiat != null && model.amountAsCoin != null && !model.amountAsCoin.isZero())
-        {
+        if (model.priceAsFiat != null && model.amountAsCoin != null && !model.amountAsCoin.isZero()) {
             model.tradeVolumeAsFiat = new ExchangeRate(model.priceAsFiat).coinToFiat(model.amountAsCoin);
             volume.set(formatFiat(model.tradeVolumeAsFiat));
         }
     }
 
-    private void setAmount()
-    {
+    private void setAmount() {
         model.tradeVolumeAsFiat = parseToFiat(volume.get());
         model.priceAsFiat = parseToFiat(price.get());
 
-        if (model.tradeVolumeAsFiat != null && model.priceAsFiat != null && !model.priceAsFiat.isZero())
-        {
+        if (model.tradeVolumeAsFiat != null && model.priceAsFiat != null && !model.priceAsFiat.isZero()) {
             model.amountAsCoin = new ExchangeRate(model.priceAsFiat).fiatToCoin(model.tradeVolumeAsFiat);
 
             // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
@@ -254,31 +244,26 @@ class CreateOfferPresenter
         }
     }
 
-    private void setTotalToPay()
-    {
+    private void setTotalToPay() {
         setCollateral();
 
-        if (model.collateralAsCoin != null)
-        {
+        if (model.collateralAsCoin != null) {
             model.totalToPayAsCoin.set(model.collateralAsCoin.add(model.totalFeesAsCoin));
-            totalToPay.bind(createStringBinding(() -> formatBtcWithCode(model.totalToPayAsCoin.get()), model.totalToPayAsCoin));
+            totalToPay.bind(createStringBinding(() -> formatBtcWithCode(model.totalToPayAsCoin.get()), 
+                    model.totalToPayAsCoin));
         }
     }
 
-    private void setCollateral()
-    {
-        if (model.amountAsCoin != null)
-        {
+    private void setCollateral() {
+        if (model.amountAsCoin != null) {
             model.collateralAsCoin = model.amountAsCoin.multiply(model.collateralAsLong.get()).divide(1000);
             collateral.set(BSFormatter.formatBtcWithCode(model.collateralAsCoin));
         }
     }
 
     // We adjust the volume if fractional coins result from volume/price division on focus out
-    void checkVolumeOnFocusOut(Boolean oldValue, Boolean newValue, String volumeTextFieldText)
-    {
-        if (oldValue && !newValue)
-        {
+    void checkVolumeOnFocusOut(Boolean oldValue, Boolean newValue, String volumeTextFieldText) {
+        if (oldValue && !newValue) {
             setVolume();
             if (!formatFiat(parseToFiat(volumeTextFieldText)).equals(volume.get()))
                 showVolumeAdjustedWarning.set(true);
@@ -291,15 +276,13 @@ class CreateOfferPresenter
             amountTextField.reValidate();*/
     }
 
-    void onFocusOutAmountTextField(Boolean oldValue, Boolean newValue)
-    {
+    void onFocusOutAmountTextField(Boolean oldValue, Boolean newValue) {
         // only on focus out and ignore focus loss from window
        /* if (!newValue && amountTextField.getScene() != null && amountTextField.getScene().getWindow().isFocused())
             volumeTextField.reValidate();*/
     }
 
-    void onFocusOutPriceTextField(Boolean oldValue, Boolean newValue)
-    {
+    void onFocusOutPriceTextField(Boolean oldValue, Boolean newValue) {
         // only on focus out and ignore focus loss from window
       /*  if (!newValue && priceTextField.getScene() != null && priceTextField.getScene().getWindow().isFocused())
             volumeTextField.reValidate();*/

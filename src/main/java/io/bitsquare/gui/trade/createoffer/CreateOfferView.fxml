@@ -20,11 +20,11 @@
 <?import io.bitsquare.gui.components.btc.AddressTextField?>
 <?import io.bitsquare.gui.components.btc.BalanceTextField?>
 <?import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator?>
-<?import io.bitsquare.gui.components.*?>
-<?import javafx.geometry.*?>
+<?import io.bitsquare.gui.components.ValidatingTextField?>
+<?import io.bitsquare.gui.components.VSpacer?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
 <AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.trade.createoffer.CreateOfferCodeBehind"
             prefHeight="500" prefWidth="800" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0"
             AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"

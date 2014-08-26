@@ -24,6 +24,10 @@ import com.google.bitcoin.crypto.DeterministicKey;
 
 import java.io.Serializable;
 
+/**
+ * Is a minimalistic wallet abstraction used to separate transactions between different activities like:
+ * Registration, trade and arbiter deposit.
+ */
 public class AddressEntry implements Serializable {
     private static final long serialVersionUID = 5501603992599920416L;
     private transient DeterministicKey key;

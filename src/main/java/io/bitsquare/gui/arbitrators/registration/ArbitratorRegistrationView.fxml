@@ -20,7 +20,6 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
 <AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.arbitrators.registration.ArbitratorRegistrationController"
             prefHeight="600" prefWidth="800" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="10.0"
             AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"

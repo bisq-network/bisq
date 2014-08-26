@@ -166,7 +166,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
         });
 
         methodsComboBox.setItems(FXCollections.observableArrayList(new ArrayList<>(EnumSet.allOf(Arbitrator.METHOD
-                                                                                                         .class))));
+                .class))));
         methodsComboBox.setConverter(new StringConverter<Arbitrator.METHOD>() {
 
             @Override
@@ -355,11 +355,11 @@ public class ArbitratorRegistrationController extends CachedViewController {
 
     private void setupPayCollateralScreen() {
         infoLabel.setText("You need to pay 10 x the max. trading volume as collateral.\n\nThat payment will be " +
-                                  "locked into a MultiSig fund and be refunded when you leave the arbitration pool.\nIn case of fraud " +
-                                  "(collusion, not fulfilling the min. dispute quality requirements) you will lose your collateral.\n" +
-                                  "If you have a negative feedback from your clients you will lose a part of the collateral,\n" +
-                                  "depending on the overall relation of negative to positive ratings you received after a dispute " +
-                                  "resolution.\n\nPlease pay in " + arbitrator.getMaxTradeVolume() * 10 + " BTC");
+                "locked into a MultiSig fund and be refunded when you leave the arbitration pool.\nIn case of fraud " +
+                "(collusion, not fulfilling the min. dispute quality requirements) you will lose your collateral.\n" +
+                "If you have a negative feedback from your clients you will lose a part of the collateral,\n" +
+                "depending on the overall relation of negative to positive ratings you received after a dispute " +
+                "resolution.\n\nPlease pay in " + arbitrator.getMaxTradeVolume() * 10 + " BTC");
 
 
         String collateralAddress = walletFacade.getRegistrationAddressEntry() != null ?
@@ -476,20 +476,20 @@ public class ArbitratorRegistrationController extends CachedViewController {
             String description = descriptionTextArea.getText();
 
             return new Arbitrator(pubKeyAsHex,
-                                  messagePubKeyAsHex,
-                                  name,
-                                  idType,
-                                  languageList,
-                                  new Reputation(),
-                                  maxTradeVolume,
-                                  passiveServiceFee,
-                                  minPassiveServiceFee,
-                                  arbitrationFee,
-                                  minArbitrationFee,
-                                  methodList,
-                                  idVerificationList,
-                                  webUrl,
-                                  description);
+                    messagePubKeyAsHex,
+                    name,
+                    idType,
+                    languageList,
+                    new Reputation(),
+                    maxTradeVolume,
+                    passiveServiceFee,
+                    minPassiveServiceFee,
+                    arbitrationFee,
+                    minArbitrationFee,
+                    methodList,
+                    idVerificationList,
+                    webUrl,
+                    description);
         } catch (BitSquareValidator.ValidationException e) {
             return null;
         }

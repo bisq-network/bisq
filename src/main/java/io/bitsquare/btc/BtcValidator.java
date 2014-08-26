@@ -23,6 +23,7 @@ import com.google.bitcoin.core.Transaction;
 
 import javax.inject.Inject;
 
+// TODO will be probably removed 
 public class BtcValidator {
     private static NetworkParameters params;
 

@@ -18,11 +18,10 @@
   -->
 
 <?import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator?>
-<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.control.cell.*?>
 <?import javafx.scene.layout.*?>
-
 <VBox fx:id="root" fx:controller="io.bitsquare.gui.orders.pending.PendingTradeController"
       spacing="10" AnchorPane.bottomAnchor="0"
       AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
