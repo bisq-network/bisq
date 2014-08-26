@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Guice support for fxml controllers
- * Support caching. Speed up switches between UI screens.
+ * Support caching to speed up switches between UI screens.
  */
 public class GuiceFXMLLoader {
     private static final Logger log = LoggerFactory.getLogger(GuiceFXMLLoader.class);
