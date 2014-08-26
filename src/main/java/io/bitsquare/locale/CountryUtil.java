@@ -120,16 +120,6 @@ public class CountryUtil {
         Set<Locale> allLocalesAsSet =
                 allLocales.stream().filter(locale -> !"".equals(locale.getCountry())).map(locale ->
                         new Locale("", locale.getCountry(), "")).collect(Collectors.toSet());
-        /*
-        same as:
-        Set<Locale> allLocalesAsSet = new HashSet<>();
-        for (Locale locale : allLocales)
-        {
-            if (!locale.getCountry().equals(""))
-            {
-                allLocalesAsSet.add(new Locale("", locale.getCountry(), ""));
-            }
-        }  */
 
         allLocales = new ArrayList<>();
         allLocales.addAll(allLocalesAsSet);

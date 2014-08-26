@@ -377,16 +377,6 @@ public class MessageFacade implements MessageBroker {
         orderBookListeners.remove(listener);
     }
 
-   /* public void addPingPeerListener(PingPeerListener listener)
-    {
-        pingPeerListeners.add(listener);
-    }
-
-    public void removePingPeerListener(PingPeerListener listener)
-    {
-        pingPeerListeners.remove(listener);
-    }    */
-
     public void addArbitratorListener(ArbitratorListener listener) {
         arbitratorListeners.add(listener);
     }

@@ -55,11 +55,6 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    /*public AddressBasedCoinSelector(NetworkParameters params, AddressInfo addressInfo)
-    {
-        this(params, addressInfo, false);
-    }   */
-
     public AddressBasedCoinSelector(NetworkParameters params, AddressEntry addressEntry, boolean includePending) {
         this.params = params;
         this.addressEntry = addressEntry;
@@ -172,19 +167,4 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector {
         return new CoinSelection(Coin.valueOf(total), selected);
     }
 
-    /*
-      public static boolean isSelectable(Transaction tx)
-    {
-        // Only pick chain-included transactions, or transactions that are ours and pending.
-        TransactionConfidence confidence = tx.getConfidence();
-        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
-        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
-                type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
-                        confidence.getSource().equals(TransactionConfidence.Source.SELF) &&
-                        // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
-                        // TODO: The value 1 below dates from a time when transactions we broadcast *to* were
-                        // counted, set to 0
-                        (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
-    }
-     */
 }

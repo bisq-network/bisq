@@ -182,8 +182,6 @@ public class WalletFacade {
         if (params == RegTestParams.get()) {
             walletAppKit.peerGroup().setMinBroadcastConnections(1);
         }
-       /* else
-            walletAppKit.peerGroup().setMinBroadcastConnections(2);  */
 
         walletEventListener = new WalletEventListener() {
             @Override
@@ -348,12 +346,6 @@ public class WalletFacade {
         if (transactions != null) {
             transactionConfidenceList.addAll(transactions.stream().map(tx ->
                     getTransactionConfidence(tx, address)).collect(Collectors.toList()));
-            /*  same as:
-             for (Transaction tx : transactions)
-            {
-                transactionConfidenceList.add(getTransactionConfidence(tx, address));
-            }
-             */
         }
         return getMostRecentConfidence(transactionConfidenceList);
     }
@@ -380,21 +372,6 @@ public class WalletFacade {
                 transactionConfidenceList.add(tx.getConfidence());
             }
         });
-        /*
-        same as:
-        for (TransactionOutput transactionOutput : mergedOutputs)
-        {
-            if (transactionOutput.getScriptPubKey().isSentToAddress() ||
-                    transactionOutput.getScriptPubKey().isSentToP2SH())
-            {
-                Address outputAddress = transactionOutput.getScriptPubKey().getToAddress(params);
-                if (address.equals(outputAddress))
-                {
-                    transactionConfidenceList.add(tx.getConfidence());
-                }
-            }
-        }
-         */
         return getMostRecentConfidence(transactionConfidenceList);
     }
 
@@ -502,20 +479,6 @@ public class WalletFacade {
         return getRegistrationBalance().compareTo(FeePolicy.ACCOUNT_REGISTRATION_FEE) >= 0;
     }
 
-  /*  public boolean isUnusedTradeAddressBalanceAboveCreationFee()
-    {
-        AddressEntry unUsedAddressEntry = getUnusedTradeAddressInfo();
-        Coin unUsedAddressInfoBalance = getBalanceForAddress(unUsedAddressEntry.getAddress());
-        return unUsedAddressInfoBalance.compareTo(FeePolicy.CREATE_OFFER_FEE) > 0;
-    }
-
-    public boolean isUnusedTradeAddressBalanceAboveTakeOfferFee()
-    {
-        AddressEntry unUsedAddressEntry = getUnusedTradeAddressInfo();
-        Coin unUsedAddressInfoBalance = getBalanceForAddress(unUsedAddressEntry.getAddress());
-        return unUsedAddressInfoBalance.compareTo(FeePolicy.TAKE_OFFER_FEE) > 0;
-    }*/
-
     //TODO
     public int getNumOfPeersSeenTx(String txID) {
         // TODO check from blockchain
@@ -553,21 +516,7 @@ public class WalletFacade {
         sendRequest.coinSelector = new AddressBasedCoinSelector(params, getRegistrationAddressEntry(), false);
         sendRequest.changeAddress = getRegistrationAddressEntry().getAddress();
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        //Object k = getRegistrationAddressInfo().getKey();
         Futures.addCallback(sendResult.broadcastComplete, callback);
-        /*Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>(){
-            @Override
-            public void onSuccess(@Nullable Transaction result)
-            {
-                Object k = getRegistrationAddressInfo().getKey();
-            }
-
-            @Override
-            public void onFailure(Throwable t)
-            {
-
-            }
-        }); */
 
         log.debug("Registration transaction: " + tx);
         printInputs("payRegistrationFee", tx);
@@ -579,7 +528,6 @@ public class WalletFacade {
         Coin fee = FeePolicy.CREATE_OFFER_FEE.subtract(FeePolicy.TX_FEE);
         log.trace("fee: " + fee.toFriendlyString());
         tx.addOutput(fee, feePolicy.getAddressForCreateOfferFee());
-        // printInputs("payCreateOfferFee", tx);
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         sendRequest.shuffleOutputs = false;
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to

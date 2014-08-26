@@ -48,12 +48,6 @@ public class BitSquareFormatter {
         return coin != null ? coin.toPlainString() : "";
     }
 
-
-   /* public static String formatCoinToWithSymbol(Coin coin)
-    {
-        return "฿ " + coin.toPlainString();
-    } */
-
     public static String formatCoinWithCode(Coin coin) {
         return coin != null ? coin.toFriendlyString() : "";
     }

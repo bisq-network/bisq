@@ -54,27 +54,11 @@ public class VerifyAndSignContract {
                 bankAccount, peersBankAccount, messagePublicKey, takerMessagePublicKey);
 
         String contractAsJson = Utilities.objectToJson(contract);
-        // log.trace("Offerer contract created: " + contract);
-        // log.trace("Offerers contractAsJson: " + contractAsJson);
-        // log.trace("Takers contractAsJson: " + sharedModel.peersContractAsJson);
 
-        //TODO PublicKey cause problems, need to be changed to hex
-        /*if (contractAsJson.equals(peersContractAsJson))
-        {*/
         log.trace("The 2 contracts as json does match");
         String signature = cryptoFacade.signContract(registrationKey, contractAsJson);
         //log.trace("signature: " + signature);
         resultHandler.onResult(contract, contractAsJson, signature);
-       /* }
-        else
-        {
-            // TODO use diff output as feedback ?
-            log.error("Contracts are not matching.");
-            log.error("Offerers contractAsJson: " + contractAsJson);
-            log.error("Takers contractAsJson: " + peersContractAsJson);
-
-            faultHandler.onFault(new Exception("Contracts are not matching"));
-        }*/
     }
 
     public interface ResultHandler {

@@ -93,17 +93,6 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
      * ************************************************************************
      */
 
-    //private static final String DONE = ControlResources.getString("ProgressIndicator.doneString");
-
-    /**
-     * doneText is just used to know the size of done as that is the biggest text we need to allow for
-     */
-   /* private static final Text doneText = new Text(DONE);
-    static {
-        doneText.getStyleClass().add("text");
-    }  */
-
-
     private IndeterminateSpinner spinner;
     /**
      * The number of segments in the spinner.
@@ -399,10 +388,6 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
 
             getChildren().clear();
 
-          /*  text = new Text((control.getProgress() >= 1) ? (DONE) : ("" + intProgress + "%"));
-            text.setTextOrigin(VPos.TOP);
-            text.getStyleClass().setAll("text", "percentage"); */
-
             // The circular background for the progress pie piece
             indicator = new StackPane();
             indicator.setScaleShape(false);
@@ -519,17 +504,6 @@ public class ConfidenceProgressIndicatorSkin extends BehaviorSkinBase<Confidence
             tick.setLayoutY(centerY - squareBoxHalfWidth);
             tick.resize(squareBoxHalfWidth + squareBoxHalfWidth, squareBoxHalfWidth + squareBoxHalfWidth);
             tick.setVisible(control.getProgress() >= 1);
-
-            // if the % text can't fit anywhere in the bounds then don't display it
-          /*  double textWidth = text.getLayoutBounds().getWidth();
-            double textHeight = text.getLayoutBounds().getHeight();
-            if (control.getWidth() >= textWidth && control.getHeight() >= textHeight) {
-                if (!text.isVisible()) text.setVisible(true);
-                text.setLayoutY(snapPosition(centerY + radius + textGap));
-                text.setLayoutX(snapPosition(centerX - (textWidth/2)));
-            } else {
-                if (text.isVisible()) text.setVisible(false);
-            } */
         }
 
         @Override

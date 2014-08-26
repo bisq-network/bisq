@@ -39,14 +39,6 @@ public class BlockChainFacade {
     //TODO
     public boolean verifyAccountRegistration() {
         return true;
-
-        // tx id 76982adc582657b2eb68f3e43341596a68aadc4ef6b9590e88e93387d4d5d1f9
-        // address: mjbxLbuVpU1cNXLJbrJZyirYwweoRPVVTj
-            /*
-        if (findAddressInBlockChain(address) && isFeePayed(address))
-            return getDataForTxWithAddress(address) != null;
-        else
-            return true;  */
     }
 
     private boolean findAddressInBlockChain(String address) {

@@ -114,11 +114,7 @@ public class Settings implements Serializable {
         List<Arbitrator> candidates = new ArrayList<>();
         //noinspection Convert2streamapi
         for (Arbitrator arbitrator : acceptedArbitrators) {
-            /*if (arbitrator.getArbitrationFeePercent() >= collateral &&
-                    arbitrator.getMinArbitrationAmount().compareTo(amount) < 0)
-            {   */
             candidates.add(arbitrator);
-            // }
         }
         return !candidates.isEmpty() ? candidates.get((int) (Math.random() * candidates.size())) : null;
     }

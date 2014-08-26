@@ -275,13 +275,6 @@ public class CreateOfferController extends CachedViewController {
         placeOfferButton.visibleProperty().bind(viewModel.isOfferPlacedScreen.not());
         closeButton.visibleProperty().bind(viewModel.isOfferPlacedScreen);
 
-        //TODO
-       /* progressIndicator.visibleProperty().bind(viewModel.isOfferPlacedScreen);
-        confirmationLabel.visibleProperty().bind(viewModel.isOfferPlacedScreen);
-        txTitleLabel.visibleProperty().bind(viewModel.isOfferPlacedScreen);
-        transactionIdTextField.visibleProperty().bind(viewModel.isOfferPlacedScreen);
-       */
-
         placeOfferButton.disableProperty().bind(amountTextField.isValidProperty()
                 .and(minAmountTextField.isValidProperty())
                 .and(volumeTextField.isValidProperty())

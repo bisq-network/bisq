@@ -117,16 +117,6 @@ public class BootstrappedPeerFactory {
                 @Override
                 public void peerInserted(PeerAddress peerAddress, boolean verified) {
                     log.debug("Peer inserted: peerAddress=" + peerAddress + ", verified=" + verified);
-
-                  /*  NavigableSet<PeerAddress> closePeers = peer.peerBean().peerMap().closePeers(2);
-                    log.debug("closePeers size  = " + closePeers.size());
-                    log.debug("closePeers  = " + closePeers);
-                    closePeers.forEach(e -> log.debug("forEach: " + e.toString()));
-
-                    List<PeerAddress> allPeers = peer.peerBean().peerMap().all();
-                    log.debug("allPeers size  = " + allPeers.size());
-                    log.debug("allPeers  = " + allPeers);
-                    allPeers.forEach(e -> log.debug("forEach: " + e.toString()));*/
                 }
 
                 @Override
@@ -136,7 +126,6 @@ public class BootstrappedPeerFactory {
 
                 @Override
                 public void peerUpdated(PeerAddress peerAddress, PeerStatatistic peerStatistics) {
-                    // log.debug("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
                 }
             });
 
@@ -358,17 +347,5 @@ public class BootstrappedPeerFactory {
     // The seed node should only be used if no other known peers are available
     private void requestBootstrapPeerMap() {
         log.debug("getBootstrapPeerMap");
-
-      /*  NavigableSet<PeerAddress> closePeers = peer.peerBean().peerMap().closePeers(2);
-        log.debug("closePeers size  = " + closePeers.size());
-        log.debug("closePeers  = " + closePeers);
-        closePeers.forEach(e -> log.debug("forEach: " + e.toString()));
-
-        List<PeerAddress> allPeers = peer.peerBean().peerMap().all();
-        log.debug("allPeers size  = " + allPeers.size());
-        log.debug("allPeers  = " + allPeers);
-        allPeers.forEach(e -> log.debug("forEach: " + e.toString())); */
     }
-
-
 }
