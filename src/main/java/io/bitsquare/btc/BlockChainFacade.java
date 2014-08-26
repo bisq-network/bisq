@@ -42,33 +42,28 @@ public class BlockChainFacade {
     }
 
     private boolean findAddressInBlockChain(String address) {
-        // TODO
-        // lookup for address in blockchain
+        // TODO lookup for address in blockchain
         return true;
     }
 
 
     private byte[] getDataForTxWithAddress(String address) {
-        // TODO
-        // return data after OP_RETURN
+        // TODO return data after OP_RETURN
         return null;
     }
 
     private boolean isFeePayed(String address) {
-        // TODO
-        // check if fee is payed
+        // TODO check if fee is paid
         return true;
     }
 
     private boolean isAccountIDBlacklisted(String accountID) {
-        // TODO
-        // check if accountID is on blacklist
+        // TODO check if accountID is on blacklist
         return false;
     }
 
     private boolean isBankAccountBlacklisted(BankAccount bankAccount) {
-        // TODO
-        // check if accountID is on blacklist
+        // TODO check if accountID is on blacklist
         return false;
     }
 }

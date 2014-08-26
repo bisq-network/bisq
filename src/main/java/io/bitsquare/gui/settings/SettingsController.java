@@ -162,8 +162,7 @@ public class SettingsController extends CachedViewController {
 
     @Override
     public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
-        // TODO
-        // caching causes exception
+        // TODO caching causes exception
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
         try {
             final Node view = loader.load();
