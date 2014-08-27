@@ -75,7 +75,7 @@ class CreateOfferModel {
     Coin minAmountAsCoin;
     Coin collateralAsCoin;
     Fiat priceAsFiat;
-    Fiat tradeVolumeAsFiat;
+    Fiat volumeAsFiat;
     AddressEntry addressEntry;
 
     final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();

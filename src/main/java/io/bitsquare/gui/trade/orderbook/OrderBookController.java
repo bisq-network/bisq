@@ -187,7 +187,7 @@ public class OrderBookController extends CachedViewController {
 
         // handlers
         amount.textProperty().addListener((observable, oldValue, newValue) -> {
-            orderBookFilter.setAmount(BSFormatter.parseToCoin(newValue));
+            orderBookFilter.setAmount(BSFormatter.parseToBtc(newValue));
             updateVolume();
         });
 
@@ -348,7 +348,7 @@ public class OrderBookController extends CachedViewController {
 
             Coin requestedAmount;
             if (!"".equals(amount.getText())) {
-                requestedAmount = BSFormatter.parseToCoin(amount.getText());
+                requestedAmount = BSFormatter.parseToBtc(amount.getText());
             }
             else {
                 requestedAmount = offer.getAmount();

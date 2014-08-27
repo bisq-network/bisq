@@ -42,17 +42,17 @@ public class CreateOfferPresenterTest {
 
         BSFormatter.setLocale(Locale.US);
         BSFormatter.setFiatCurrencyCode("USD");
-        
+
         CreateOfferPresenter presenter = new CreateOfferPresenter(model);
         presenter.onViewInitialized();
-
+       
         model.collateralAsLong.set(100);
         presenter.price.set("500");
         presenter.amount.set("1");
         assertEquals("500.00", presenter.volume.get());
         assertEquals(Coin.COIN, model.amountAsCoin);
         assertEquals(Fiat.valueOf("USD", 500 * 10000), model.priceAsFiat);
-        assertEquals(Fiat.valueOf("USD", 500 * 10000), model.tradeVolumeAsFiat);
+        assertEquals(Fiat.valueOf("USD", 500 * 10000), model.volumeAsFiat);
         assertEquals(Coin.parseCoin("0.1011"), model.totalToPayAsCoin.get());
 
         presenter.price.set("500");
@@ -60,28 +60,28 @@ public class CreateOfferPresenterTest {
         assertEquals("1.00", presenter.amount.get());
         assertEquals(Coin.COIN, model.amountAsCoin);
         assertEquals(Fiat.valueOf("USD", 500 * 10000), model.priceAsFiat);
-        assertEquals(Fiat.valueOf("USD", 500 * 10000), model.tradeVolumeAsFiat);
+        assertEquals(Fiat.valueOf("USD", 500 * 10000), model.volumeAsFiat);
 
         presenter.price.set("300");
         presenter.volume.set("1000");
         assertEquals("3.3333", presenter.amount.get());
         assertEquals(Coin.parseCoin("3.3333"), model.amountAsCoin);
         assertEquals(Fiat.valueOf("USD", 300 * 10000), model.priceAsFiat);
-        assertEquals(Fiat.valueOf("USD", 9999900), model.tradeVolumeAsFiat);
+        assertEquals(Fiat.valueOf("USD", 9999900), model.volumeAsFiat);
 
         presenter.price.set("300");
         presenter.amount.set("3.3333");
         assertEquals("999.99", presenter.volume.get());
         assertEquals(Coin.parseCoin("3.3333"), model.amountAsCoin);
         assertEquals(Fiat.valueOf("USD", 300 * 10000), model.priceAsFiat);
-        assertEquals(Fiat.valueOf("USD", 9999900), model.tradeVolumeAsFiat);
+        assertEquals(Fiat.valueOf("USD", 9999900), model.volumeAsFiat);
 
         presenter.price.set("300");
         presenter.amount.set("3.33333333");
         assertEquals("999.99", presenter.volume.get());
         assertEquals(Coin.parseCoin("3.3333"), model.amountAsCoin);
         assertEquals(Fiat.valueOf("USD", 300 * 10000), model.priceAsFiat);
-        assertEquals(Fiat.valueOf("USD", 9999900), model.tradeVolumeAsFiat);
+        assertEquals(Fiat.valueOf("USD", 9999900), model.volumeAsFiat);
 
 
         model.collateralAsLong.set(100);
@@ -116,6 +116,10 @@ public class CreateOfferPresenterTest {
 
         model.acceptedCountries.add(new Country(null, "Spain", null));
         assertEquals("Italy, Spain", presenter.acceptedCountries.get());
+
+        
+      
+
 
     }
 

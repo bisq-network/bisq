@@ -18,10 +18,14 @@
 package io.bitsquare.btc;
 
 import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.Transaction;
 
 // Lets see if we get more restriction otherwise move it to other class
 public class Restrictions {
     public static final Coin MIN_TRADE_AMOUNT = Coin.parseCoin("0.0001");
 
 
+    public static boolean isMinSpendableAmount(Coin amount) {
+        return amount != null && amount.compareTo(FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT)) > 0;
+    }
 }

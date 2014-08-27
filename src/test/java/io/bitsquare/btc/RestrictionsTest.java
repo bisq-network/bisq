@@ -24,25 +24,25 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class BtcValidatorTest {
+public class RestrictionsTest {
     @Test
     public void testIsMinSpendableAmount() {
         Coin amount = null;
-        assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
+        assertFalse("tx unfunded, pending", Restrictions.isMinSpendableAmount(amount));
 
         amount = Coin.ZERO;
-        assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
+        assertFalse("tx unfunded, pending", Restrictions.isMinSpendableAmount(amount));
 
         amount = FeePolicy.TX_FEE;
-        assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
+        assertFalse("tx unfunded, pending", Restrictions.isMinSpendableAmount(amount));
 
         amount = Transaction.MIN_NONDUST_OUTPUT;
-        assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
+        assertFalse("tx unfunded, pending", Restrictions.isMinSpendableAmount(amount));
 
         amount = FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT);
-        assertFalse("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
+        assertFalse("tx unfunded, pending", Restrictions.isMinSpendableAmount(amount));
 
         amount = FeePolicy.TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(Coin.valueOf(1));
-        assertTrue("tx unfunded, pending", BtcValidator.isMinSpendableAmount(amount));
+        assertTrue("tx unfunded, pending", Restrictions.isMinSpendableAmount(amount));
     }
 }

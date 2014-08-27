@@ -81,7 +81,9 @@ class CreateOfferPresenter {
     final BooleanProperty isPlaceOfferButtonVisible = new SimpleBooleanProperty(true);
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty();
     final BooleanProperty needsInputValidation = new SimpleBooleanProperty();
-    final BooleanProperty showVolumeAdjustedWarning = new SimpleBooleanProperty();
+    final BooleanProperty showWarningInvalidBtcFractions = new SimpleBooleanProperty();
+    final BooleanProperty showWarningInvalidFiatDecimalPlaces = new SimpleBooleanProperty();
+    final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
     final BooleanProperty requestPlaceOfferFailed = new SimpleBooleanProperty();
 
@@ -161,7 +163,7 @@ class CreateOfferPresenter {
         model.minAmountAsCoin = orderBookFilter.getAmount();
 
         // TODO use Fiat in orderBookFilter
-        model.priceAsFiat = parseToFiat(String.valueOf(orderBookFilter.getPrice()));
+        model.priceAsFiat = parseToFiatWith2Decimals(String.valueOf(orderBookFilter.getPrice()));
 
         directionLabel.set(model.getDirection() == Direction.BUY ? "Buy:" : "Sell:");
         amount.set(formatBtc(model.amountAsCoin));
@@ -175,10 +177,10 @@ class CreateOfferPresenter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void placeOffer() {
-        model.amountAsCoin = parseToCoin(amount.get());
-        model.minAmountAsCoin = parseToCoin(minAmount.get());
-        model.priceAsFiat = parseToFiat(price.get());
-        model.minAmountAsCoin = parseToCoin(minAmount.get());
+        model.amountAsCoin = parseToBtcWith4Decimals(amount.get());
+        model.minAmountAsCoin = parseToBtcWith4Decimals(minAmount.get());
+        model.priceAsFiat = parseToFiatWith2Decimals(price.get());
+        model.minAmountAsCoin = parseToBtcWith4Decimals(minAmount.get());
 
         needsInputValidation.set(true);
 
@@ -200,53 +202,64 @@ class CreateOfferPresenter {
 
         // bindBidirectional for amount, price, volume and minAmount
         amount.addListener(ov -> {
-            model.amountAsCoin = parseToCoin(amount.get());
+            model.amountAsCoin = parseToBtcWith4Decimals(amount.get());
             calculateVolume();
             calculateTotalToPay();
             calculateCollateral();
         });
 
         price.addListener(ov -> {
-            model.priceAsFiat = parseToFiat(price.get());
+            model.priceAsFiat = parseToFiatWith2Decimals(price.get());
             calculateVolume();
             calculateTotalToPay();
             calculateCollateral();
         });
 
         volume.addListener(ov -> {
-            model.tradeVolumeAsFiat = parseToFiat(volume.get());
+            model.volumeAsFiat = parseToFiatWith2Decimals(volume.get());
             calculateAmount();
             calculateTotalToPay();
             calculateCollateral();
         });
     }
 
+    void onFocusOutAmountTextField(Boolean oldValue, Boolean newValue) {
 
-    // We adjust the volume if fractional coins result from volume/price division on focus out
-    void validateVolumeOnFocusOut(Boolean oldValue, Boolean newValue, String volumeTextFieldText) {
         if (oldValue && !newValue) {
+            showWarningInvalidBtcDecimalPlaces.set(!hasBtcValidDecimals(amount.get()));
+            model.amountAsCoin = parseToBtcWith4Decimals(amount.get());
+            amount.set(formatBtc(model.amountAsCoin));
             calculateVolume();
-            if (!formatFiat(parseToFiat(volumeTextFieldText)).equals(volume.get()))
-                showVolumeAdjustedWarning.set(true);
         }
-
-
-        //
-        // only on focus out and ignore focus loss from window
-       /* if (!newValue && volumeTextField.getScene() != null && volumeTextField.getScene().getWindow().isFocused())
-            amountTextField.reValidate();*/
     }
 
-    void onFocusOutAmountTextField(Boolean oldValue, Boolean newValue) {
-        // only on focus out and ignore focus loss from window
-       /* if (!newValue && amountTextField.getScene() != null && amountTextField.getScene().getWindow().isFocused())
-            volumeTextField.reValidate();*/
+    void onFocusOutMinAmountTextField(Boolean oldValue, Boolean newValue) {
+
+        if (oldValue && !newValue) {
+            showWarningInvalidBtcDecimalPlaces.set(!hasBtcValidDecimals(minAmount.get()));
+            model.minAmountAsCoin = parseToBtcWith4Decimals(minAmount.get());
+            minAmount.set(formatBtc(model.minAmountAsCoin));
+        }
+    }
+
+     void onFocusOutVolumeTextField(Boolean oldValue, Boolean newValue, String volumeTextFieldText) {
+        if (oldValue && !newValue) {
+            showWarningInvalidFiatDecimalPlaces.set(!hasFiatValidDecimals(volume.get()));
+            model.volumeAsFiat = parseToFiatWith2Decimals(volume.get());
+            volume.set(formatFiat(model.volumeAsFiat));
+            calculateAmount();
+
+            showWarningInvalidBtcFractions.set(!formatFiat(parseToFiatWith2Decimals(volumeTextFieldText)).equals
+                    (volume.get()));
+        }
     }
 
     void onFocusOutPriceTextField(Boolean oldValue, Boolean newValue) {
-        // only on focus out and ignore focus loss from window
-      /*  if (!newValue && priceTextField.getScene() != null && priceTextField.getScene().getWindow().isFocused())
-            volumeTextField.reValidate();*/
+        if (oldValue && !newValue) {
+            showWarningInvalidFiatDecimalPlaces.set(!hasFiatValidDecimals(price.get()));
+            model.priceAsFiat = parseToFiatWith2Decimals(price.get());
+            price.set(formatFiat(model.priceAsFiat));
+        }
     }
 
 
@@ -269,24 +282,24 @@ class CreateOfferPresenter {
     }
 
     private void calculateVolume() {
-        model.amountAsCoin = parseToCoin(amount.get());
-        model.priceAsFiat = parseToFiat(price.get());
+        model.amountAsCoin = parseToBtcWith4Decimals(amount.get());
+        model.priceAsFiat = parseToFiatWith2Decimals(price.get());
 
         if (model.priceAsFiat != null && model.amountAsCoin != null && !model.amountAsCoin.isZero()) {
-            model.tradeVolumeAsFiat = new ExchangeRate(model.priceAsFiat).coinToFiat(model.amountAsCoin);
-            volume.set(formatFiat(model.tradeVolumeAsFiat));
+            model.volumeAsFiat = new ExchangeRate(model.priceAsFiat).coinToFiat(model.amountAsCoin);
+            volume.set(formatFiat(model.volumeAsFiat));
         }
     }
 
     private void calculateAmount() {
-        model.tradeVolumeAsFiat = parseToFiat(volume.get());
-        model.priceAsFiat = parseToFiat(price.get());
+        model.volumeAsFiat = parseToFiatWith2Decimals(volume.get());
+        model.priceAsFiat = parseToFiatWith2Decimals(price.get());
 
-        if (model.tradeVolumeAsFiat != null && model.priceAsFiat != null && !model.priceAsFiat.isZero()) {
-            model.amountAsCoin = new ExchangeRate(model.priceAsFiat).fiatToCoin(model.tradeVolumeAsFiat);
+        if (model.volumeAsFiat != null && model.priceAsFiat != null && !model.priceAsFiat.isZero()) {
+            model.amountAsCoin = new ExchangeRate(model.priceAsFiat).fiatToCoin(model.volumeAsFiat);
 
             // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
-            model.amountAsCoin = applyFormatRules(model.amountAsCoin);
+            model.amountAsCoin = reduceto4Dezimals(model.amountAsCoin);
             amount.set(formatBtc(model.amountAsCoin));
             calculateTotalToPay();
             calculateCollateral();

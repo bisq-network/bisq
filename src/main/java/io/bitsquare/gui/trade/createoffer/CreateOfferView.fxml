@@ -48,11 +48,11 @@
 
         <Label GridPane.rowIndex="1" fx:id="buyLabel"/>
         <HBox GridPane.rowIndex="1" GridPane.columnIndex="1" spacing="5" GridPane.hgrow="NEVER" alignment="CENTER_LEFT">
-            <ValidatingTextField fx:id="amountTextField" prefWidth="70.0" alignment="CENTER_RIGHT"/>
-            <Label text="BTC for:"/>
-            <ValidatingTextField fx:id="priceTextField" prefWidth="70.0" alignment="CENTER_RIGHT"/>
+            <ValidatingTextField fx:id="amountTextField" prefWidth="100.0" alignment="CENTER_RIGHT"/>
+            <Label text="BTC @"/>
+            <ValidatingTextField fx:id="priceTextField" prefWidth="100.0" alignment="CENTER_RIGHT"/>
             <Label text="EUR ="/>
-            <ValidatingTextField fx:id="volumeTextField" prefWidth="70.0" alignment="CENTER_RIGHT"/>
+            <ValidatingTextField fx:id="volumeTextField" prefWidth="100.0" alignment="CENTER_RIGHT"/>
             <Label text="EUR in total"/>
         </HBox>
 

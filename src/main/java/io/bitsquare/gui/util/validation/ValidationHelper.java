@@ -34,6 +34,8 @@ public class ValidationHelper {
 
     /**
      * Handles validation between minAmount and amount fields
+     * Min amount must not be larger as amount.
+     * Handles focus out events to display always the error popup from the field where the focus out happened.
      */
     public static void setupMinAmountInRangeOfAmountValidation(ValidatingTextField amountTextField,
                                                                ValidatingTextField minAmountTextField,

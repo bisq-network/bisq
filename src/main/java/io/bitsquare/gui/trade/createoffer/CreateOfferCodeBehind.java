@@ -24,6 +24,9 @@ import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.trade.TradeController;
+import io.bitsquare.gui.util.validation.BtcValidator;
+import io.bitsquare.gui.util.validation.FiatValidator;
+import io.bitsquare.gui.util.validation.ValidationHelper;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 
 import java.net.URL;
@@ -34,6 +37,7 @@ import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,9 +61,8 @@ import org.slf4j.LoggerFactory;
  * <p>
  * Optional ViewBuilder:
  * - Replacement for FXML view definitions.
- * 
+ * <p>
  * Note: Don't assign the root node as it is defined in the base class!
- * 
  */
 public class CreateOfferCodeBehind extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferCodeBehind.class);
@@ -154,15 +157,25 @@ public class CreateOfferCodeBehind extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setupListeners() {
-        volumeTextField.focusedProperty().addListener((observableValue, oldValue,
-                                                       newValue) -> presenter.validateVolumeOnFocusOut(oldValue,
-                newValue, volumeTextField.getText()));
-        amountTextField.focusedProperty().addListener((observableValue, oldValue,
-                                                       newValue) -> presenter.onFocusOutAmountTextField(oldValue,
-                newValue));
-        priceTextField.focusedProperty().addListener((observableValue, oldValue,
-                                                      newValue) -> presenter.onFocusOutPriceTextField(oldValue,
-                newValue));
+        volumeTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
+            presenter.onFocusOutVolumeTextField(oldValue, newValue, volumeTextField.getText());
+            volumeTextField.setText(presenter.volume.get());
+        });
+
+        amountTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
+            presenter.onFocusOutAmountTextField(oldValue, newValue);
+            amountTextField.setText(presenter.amount.get());
+        });
+
+        priceTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
+            presenter.onFocusOutPriceTextField(oldValue, newValue);
+            priceTextField.setText(presenter.price.get());
+        });
+
+        minAmountTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
+            presenter.onFocusOutMinAmountTextField(oldValue, newValue);
+            minAmountTextField.setText(presenter.minAmount.get());
+        });
 
         presenter.needsInputValidation.addListener((o, oldValue, newValue) -> {
             if (newValue) {
@@ -173,17 +186,36 @@ public class CreateOfferCodeBehind extends CachedViewController {
             }
         });
 
-        presenter.showVolumeAdjustedWarning.addListener((o, oldValue, newValue) -> {
+        presenter.showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
+            if (newValue) {
+                Popups.openWarningPopup("Warning", "The amount you have entered exceeds the number of allowed decimal" +
+                        " places.\nThe amount has been adjusted to 4 decimal places.");
+                presenter.showWarningInvalidBtcDecimalPlaces.set(false);
+            }
+        });
+
+        presenter.showWarningInvalidFiatDecimalPlaces.addListener((o, oldValue, newValue) -> {
+            if (newValue) {
+                Popups.openWarningPopup("Warning", "The amount you have entered exceeds the number of allowed decimal" +
+                        " places.\nThe amount has been adjusted to 2 decimal places.");
+                presenter.showWarningInvalidFiatDecimalPlaces.set(false);
+            }
+        });
+
+        presenter.showWarningInvalidBtcFractions.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 Popups.openWarningPopup("Warning", "The total volume you have entered leads to invalid fractional " +
                         "Bitcoin amounts.\nThe amount has been adjusted and a new total volume be calculated from it.");
+                presenter.showWarningInvalidBtcFractions.set(false);
                 volumeTextField.setText(presenter.volume.get());
             }
         });
+
         presenter.requestPlaceOfferFailed.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 Popups.openErrorPopup("Error", "An error occurred when placing the offer.\n" +
                         presenter.requestPlaceOfferErrorMessage);
+                presenter.requestPlaceOfferFailed.set(false);
             }
         });
     }
@@ -231,26 +263,27 @@ public class CreateOfferCodeBehind extends CachedViewController {
     }
 
     private void setupTextFieldValidators() {
-       /* BtcValidator amountValidator = new BtcValidator();
-        amountTextField.setNumberValidator(amountValidator);
-        amountTextField.setErrorPopupLayoutReference((Region) amountTextField.getParent());
+        Region referenceNode = (Region) amountTextField.getParent();
+        
+        BtcValidator amountValidator = new BtcValidator();
+        amountTextField.setValidator(amountValidator);
+        amountTextField.setErrorPopupLayoutReference(referenceNode);
 
-        priceTextField.setNumberValidator(new FiatValidator());
-        priceTextField.setErrorPopupLayoutReference((Region) amountTextField.getParent());
+        priceTextField.setValidator(new FiatValidator());
+        priceTextField.setErrorPopupLayoutReference(referenceNode);
 
-        BtcValidator volumeValidator = new BtcValidator();
-        volumeTextField.setNumberValidator(volumeValidator);
-        volumeTextField.setErrorPopupLayoutReference((Region) volumeTextField.getParent());
+        volumeTextField.setValidator(new FiatValidator());
+        volumeTextField.setErrorPopupLayoutReference(referenceNode);
 
         BtcValidator minAmountValidator = new BtcValidator();
-        minAmountTextField.setNumberValidator(minAmountValidator);
+        minAmountTextField.setValidator(minAmountValidator);
 
         ValidationHelper.setupMinAmountInRangeOfAmountValidation(amountTextField,
-                                                                 minAmountTextField,
-                                                                 presenter.amount,
-                                                                 presenter.minAmount,
-                                                                 amountValidator,
-                                                                 minAmountValidator);*/
+                minAmountTextField,
+                presenter.amount,
+                presenter.minAmount,
+                amountValidator,
+                minAmountValidator);
     }
 }
 

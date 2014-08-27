@@ -153,7 +153,7 @@ public class TakeOfferController extends CachedViewController {
     @FXML
     public void onTakeOffer() {
         AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(offer.getId());
-        Coin amount = BSFormatter.parseToCoin(getAmountString());
+        Coin amount = BSFormatter.parseToBtc(getAmountString());
         // TODO more validation (fee payment, blacklist,...)
         if (amountTextField.isInvalid()) {
             Popups.openErrorPopup("Invalid input", "The requested amount you entered is not a valid amount.");
@@ -279,7 +279,7 @@ public class TakeOfferController extends CachedViewController {
     }
 
     private Coin getAmountInSatoshis() {
-        return BSFormatter.parseToCoin(getAmountString());
+        return BSFormatter.parseToBtc(getAmountString());
     }
 
     private String getAmountString() {
@@ -304,12 +304,12 @@ public class TakeOfferController extends CachedViewController {
     }
 
     private Coin getCollateralAsCoin() {
-        Coin amountAsCoin = BSFormatter.parseToCoin(getAmountString());
+        Coin amountAsCoin = BSFormatter.parseToBtc(getAmountString());
         return amountAsCoin.divide((long) (1d / offer.getCollateral()));
     }
 
     private String getFormattedCollateralAsBtc() {
-        Coin amountAsCoin = BSFormatter.parseToCoin(getAmountString());
+        Coin amountAsCoin = BSFormatter.parseToBtc(getAmountString());
         Coin collateralAsCoin = amountAsCoin.divide((long) (1d / getCollateral()));
         return BSFormatter.formatCoin(collateralAsCoin);
     }

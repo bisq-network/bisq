@@ -17,14 +17,16 @@
 
 package io.bitsquare.gui.util;
 
+import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
-import io.bitsquare.arbitrator.Arbitrator;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.utils.CoinFormat;
 import com.google.bitcoin.utils.Fiat;
+
+import java.math.BigDecimal;
 
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -67,6 +69,7 @@ public class BSFormatter {
 
     /**
      * Note that setting the locale does not set the currency as it might be independent.
+     *
      * @param locale
      */
     public static void setLocale(Locale locale) {
@@ -96,7 +99,7 @@ public class BSFormatter {
         }
     }
 
-    public static Coin parseToCoin(String input) {
+    public static Coin parseToBtc(String input) {
         try {
             input = input.replace(",", ".");
             Double.parseDouble(input); // test if valid double
@@ -108,13 +111,37 @@ public class BSFormatter {
     }
 
     /**
+     * Converts to a coin with max. 4 decimal places. Last place gets rounded.
+     * 0.01234 -> 0.0123
+     * 0.01235 -> 0.0124
+     *
+     * @param input
+     * @return
+     */
+    public static Coin parseToBtcWith4Decimals(String input) {
+        try {
+            input = input.replace(",", ".");
+            Double.parseDouble(input); // test if valid double
+            return parseToBtc(new BigDecimal(input).setScale(4, BigDecimal.ROUND_HALF_UP).toString());
+        } catch (Throwable t) {
+            log.warn("Exception at parseCoinTo4Decimals: " + t.toString());
+            return Coin.ZERO;
+        }
+
+    }
+
+    public static boolean hasBtcValidDecimals(String input) {
+        return parseToBtc(input).equals(parseToBtcWith4Decimals(input));
+    }
+
+    /**
      * Transform a coin with the properties defined in the format (used to reduce decimal places)
      *
      * @param coin The coin which should be transformed
      * @return The transformed coin
      */
-    public static Coin applyFormatRules(Coin coin) {
-        return parseToCoin(formatBtc(coin));
+    public static Coin reduceto4Dezimals(Coin coin) {
+        return parseToBtc(formatBtc(coin));
     }
 
 
@@ -150,7 +177,29 @@ public class BSFormatter {
         }
     }
 
+    /**
+     * Converts to a fiat with max. 2 decimal places. Last place gets rounded.
+     * 0.234 -> 0.23
+     * 0.235 -> 0.24
+     *
+     * @param input
+     * @return
+     */
+    public static Fiat parseToFiatWith2Decimals(String input) {
+        try {
+            input = input.replace(",", ".");
+            Double.parseDouble(input); // test if valid double
+            return parseToFiat(new BigDecimal(input).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
+        } catch (Throwable t) {
+            log.warn("Exception at parseCoinTo4Decimals: " + t.toString());
+            return Fiat.valueOf(currencyCode, 0);
+        }
 
+    }
+
+    public static boolean hasFiatValidDecimals(String input) {
+        return parseToFiat(input).equals(parseToFiatWith2Decimals(input));
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Other
     ///////////////////////////////////////////////////////////////////////////////////////////

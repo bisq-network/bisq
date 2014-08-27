@@ -17,8 +17,9 @@
 
 package io.bitsquare;
 
-import io.bitsquare.btc.BtcValidatorTest;
+import io.bitsquare.btc.RestrictionsTest;
 import io.bitsquare.gui.trade.createoffer.CreateOfferPresenterTest;
+import io.bitsquare.gui.util.BSFormatterTest;
 import io.bitsquare.gui.util.BitSquareConverterTest;
 import io.bitsquare.gui.util.BitSquareNumberValidatorTest;
 import io.bitsquare.gui.util.FiatValidatorTest;
@@ -29,13 +30,14 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        BtcValidatorTest.class,
+        RestrictionsTest.class,
         BitSquareConverterTest.class,
         BitSquareNumberValidatorTest.class,
         P2PNodeTest.class,
         FiatValidatorTest.class,
-        BtcValidatorTest.class,
-        CreateOfferPresenterTest.class
+        RestrictionsTest.class,
+        CreateOfferPresenterTest.class,
+        BSFormatterTest.class
 })
 
 public class BitSquareTestSuite {

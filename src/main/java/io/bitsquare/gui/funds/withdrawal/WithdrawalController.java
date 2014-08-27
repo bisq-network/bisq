@@ -18,8 +18,8 @@
 package io.bitsquare.gui.funds.withdrawal;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.BtcValidator;
 import io.bitsquare.btc.FeePolicy;
+import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.components.Popups;
@@ -148,8 +148,8 @@ public class WithdrawalController extends CachedViewController {
                     amountTextField, withdrawFromTextField, withdrawToTextField, changeAddressTextField);
             BitSquareValidator.textFieldsHasDoubleValueWithReset(amountTextField);
 
-            Coin amount = BSFormatter.parseToCoin(amountTextField.getText());
-            if (BtcValidator.isMinSpendableAmount(amount)) {
+            Coin amount = BSFormatter.parseToBtc(amountTextField.getText());
+            if (Restrictions.isMinSpendableAmount(amount)) {
                 FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
                     @Override
                     public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
