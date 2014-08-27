@@ -1,5 +1,5 @@
 # Bitsquare
-![Bitsquare Logo](http://bitsquare.io/images/logo.png)
+![Bitsquare Logo](http://bitsquare.io/images/logo_with_title_border_240_240.png)
 
 ## About Bitsquare
 Bitsquare is a **P2P Fiat-BTC Exchange**.   
