@@ -70,7 +70,6 @@ public class ValidatingTextField extends TextField {
 
     public ValidatingTextField() {
         super();
-
         setupListeners();
     }
 

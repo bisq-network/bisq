@@ -52,7 +52,6 @@ public class BSFormatterTest {
         assertFalse(hasBtcValidDecimals("0.0001222312312312313"));
     }
 
-
     @Test
     public void testParseToFiatWith2Decimals() {
 

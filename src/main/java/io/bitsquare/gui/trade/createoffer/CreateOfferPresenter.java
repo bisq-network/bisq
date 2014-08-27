@@ -203,21 +203,18 @@ class CreateOfferPresenter {
         // bindBidirectional for amount, price, volume and minAmount
         amount.addListener(ov -> {
             model.amountAsCoin = parseToBtcWith4Decimals(amount.get());
-            calculateVolume();
             calculateTotalToPay();
             calculateCollateral();
         });
 
         price.addListener(ov -> {
             model.priceAsFiat = parseToFiatWith2Decimals(price.get());
-            calculateVolume();
             calculateTotalToPay();
             calculateCollateral();
         });
 
         volume.addListener(ov -> {
             model.volumeAsFiat = parseToFiatWith2Decimals(volume.get());
-            calculateAmount();
             calculateTotalToPay();
             calculateCollateral();
         });
@@ -259,6 +256,7 @@ class CreateOfferPresenter {
             showWarningInvalidFiatDecimalPlaces.set(!hasFiatValidDecimals(price.get()));
             model.priceAsFiat = parseToFiatWith2Decimals(price.get());
             price.set(formatFiat(model.priceAsFiat));
+            calculateVolume();
         }
     }
 
