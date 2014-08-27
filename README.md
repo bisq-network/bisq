@@ -60,6 +60,14 @@ Please don't use main net with real money, as the software is under heavy develo
 
 ## Resources:
 * [Web](http://bitsquare.io)
-* [Development mailing list](https://groups.google.com/forum/#!forum/bitsquare)
+* [Overview](http://bitsquare.io/images/overview.png)
 * [Videos](https://www.youtube.com/playlist?list=PLXvC3iNe_di9bL1A5xyAKI2PzNg8jU092)
 * [White paper](https://docs.google.com/document/d/1d3EiWZdaM89-P6MVhS53unXv2-pDpSFsN3W4kCGXKgY/edit)
+
+
+## Communication channels:
+* [Mailing list](https://groups.google.com/forum/#!forum/bitsquare)
+* [IRC](https://webchat.freenode.net/?channels=bitsquare.io)
+* [Bitcoin forum](https://bitcointalk.org/index.php?topic=647457)
+* [Twitter](https://twitter.com/Bitsquare_io)
+* [Email](mailto:team@bitsquare.io)
