@@ -20,11 +20,10 @@ package io.bitsquare.gui.util;
 import javafx.scene.image.*;
 
 public class ImageUtil {
-    public static final String SPLASH_LOGO = "/images/logo_200_270.png";
-    public static final String SPLASH_LABEL = "/images/bitsquare_logo_label_300_69.png";
+    public static final String SPLASH_LOGO = "/images/logo_600_600.png";
 
-    public static final String SYS_TRAY = "/images/systemTrayIcon.png";
-    public static final String SYS_TRAY_ALERT = "/images/systemTrayAlertIcon.png";
+    public static final String SYS_TRAY = "/images/system_tray_icon_44_32.png";
+    public static final String SYS_TRAY_ALERT = "/images/system_tray_notify_icon_44_32.png";
 
     public static final String HOME = "/images/nav/home.png";
     public static final String HOME_ACTIVE = "/images/nav/home_active.png";

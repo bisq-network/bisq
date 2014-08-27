@@ -513,12 +513,8 @@ class ViewBuilder {
         splashVBox.setSpacing(10);
 
         ImageView logo = ImageUtil.getIconImageView(ImageUtil.SPLASH_LOGO);
-        logo.setFitWidth(270);
-        logo.setFitHeight(200);
-
-        ImageView titleLabel = ImageUtil.getIconImageView(ImageUtil.SPLASH_LABEL);
-        titleLabel.setFitWidth(300);
-        titleLabel.setFitHeight(79);
+        logo.setFitWidth(300);
+        logo.setFitHeight(300);
 
         Label subTitle = new Label("The P2P Fiat-Bitcoin Exchange");
         subTitle.setAlignment(Pos.CENTER);
@@ -528,7 +524,7 @@ class ViewBuilder {
         loadingLabel.setAlignment(Pos.CENTER);
         loadingLabel.setPadding(new Insets(80, 0, 0, 0));
 
-        splashVBox.getChildren().addAll(logo, titleLabel, subTitle, loadingLabel);
+        splashVBox.getChildren().addAll(logo, subTitle, loadingLabel);
         return splashVBox;
     }
 
