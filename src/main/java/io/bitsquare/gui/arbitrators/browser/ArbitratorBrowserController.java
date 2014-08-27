@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.arbitrators.browser;
 
+import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
@@ -25,9 +26,8 @@ import io.bitsquare.gui.arbitrators.profile.ArbitratorProfileController;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.ArbitratorListener;
-import io.bitsquare.settings.Settings;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.settings.Settings;
 
 import java.io.IOException;
 
@@ -53,7 +53,7 @@ import net.tomp2p.storage.Data;
  * TODO remove tomp2p dependencies
  * import net.tomp2p.peers.Number160;
  * import net.tomp2p.storage.Data;
- * 
+ * <p>
  * Arbitration is not much developed yet
  */
 public class ArbitratorBrowserController extends CachedViewController implements ArbitratorListener {

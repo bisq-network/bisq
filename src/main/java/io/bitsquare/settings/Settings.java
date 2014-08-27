@@ -17,8 +17,8 @@
 
 package io.bitsquare.settings;
 
-import io.bitsquare.locale.Country;
 import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.locale.Country;
 
 import com.google.bitcoin.core.Coin;
 

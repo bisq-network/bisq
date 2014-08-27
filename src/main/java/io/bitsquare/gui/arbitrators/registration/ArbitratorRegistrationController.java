@@ -17,21 +17,21 @@
 
 package io.bitsquare.gui.arbitrators.registration;
 
+import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.arbitrators.profile.ArbitratorProfileController;
+import io.bitsquare.gui.components.ConfidenceDisplay;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.BitSquareValidator;
-import io.bitsquare.gui.components.ConfidenceDisplay;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 

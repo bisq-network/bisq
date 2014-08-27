@@ -45,22 +45,22 @@ import javafx.scene.control.*;
  * <p>
  * ProgressIndicator sets focusTraversable to false.
  * </p>
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * This first example creates a ProgressIndicator with an indeterminate value :
  * <pre><code>
  * import javafx.scene.control.ProgressIndicator;
  * ProgressIndicator p1 = new ProgressIndicator();
  * </code></pre>
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * This next example creates a ProgressIndicator which is 25% complete :
  * <pre><code>
  * import javafx.scene.control.ProgressIndicator;
  * ProgressIndicator p2 = new ProgressIndicator();
  * p2.setProgress(0.25F);
  * </code></pre>
- * <p/>
+ * <p>
  * Implementation of ProgressIndicator According to JavaFX UI Control API Specification
  *
  * @since JavaFX 2.0
@@ -83,7 +83,7 @@ public class ConfidenceProgressIndicator extends Control {
      **************************************************************************/
     /**
      * Initialize the style class to 'progress-indicator'.
-     * <p/>
+     * <p>
      * This is the selector class from which CSS can be used to style
      * this control.
      */

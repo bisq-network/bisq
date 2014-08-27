@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * Localisation not supported at the moment
  * The decimal mark can be either "." or ",". Thousand separators are not supported yet,
  * but might be added alter with Local support.
- * <p/>
+ * <p>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
 public abstract class InputValidator {

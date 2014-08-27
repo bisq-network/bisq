@@ -59,8 +59,8 @@ public class ValidateOffer {
             checkArgument(offer.getPrice() > 0);
 
             // TODO check balance
-           // Coin collateralAsCoin = offer.getAmount().divide((long) (1d / offer.getCollateral()));
-           // Coin totalsToFund = collateralAsCoin.add(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE));
+            // Coin collateralAsCoin = offer.getAmount().divide((long) (1d / offer.getCollateral()));
+            // Coin totalsToFund = collateralAsCoin.add(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE));
             // getAddressInfoByTradeID(offerId)
             // TODO when offer is flattened continue here...
 

@@ -35,7 +35,7 @@ public class CountryUtil {
             "MY", "NI", "NL", "NO", "NZ", "OM", "PA", "PE", "PH", "PL", "PR", "PT", "PY", "QA", "RO", "RS", "RU",
             "SA", "SD", "SE", "SG", "SI", "SK", "SV", "SY", "TH", "TN", "TR", "TW", "UA", "US", "UY", "VE", "VN",
             "YE", "ZA"};
-    
+
     private static final List<String> countryCodeList = Arrays.asList(countryCodes);
     private static final String[] regionCodes = new String[]{"AS", "EU", "SA", "EU", "OC", "EU", "EU", "EU", "AS",
             "SA", "SA", "EU", "NA", "EU", "SA", "AS", "SA", "NA", "EU", "NA", "AS", "EU", "EU", "EU", "NA", "AF",

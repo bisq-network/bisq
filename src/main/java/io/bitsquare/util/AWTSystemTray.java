@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * There is no JavaFX support yet, so we need to use AWT. 
+ * There is no JavaFX support yet, so we need to use AWT.
  * TODO research more
  */
 public class AWTSystemTray {

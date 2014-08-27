@@ -17,13 +17,13 @@
 
 package io.bitsquare.gui.arbitrators.profile;
 
+import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.settings.Settings;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.settings.Settings;
 
 import java.net.URL;
 

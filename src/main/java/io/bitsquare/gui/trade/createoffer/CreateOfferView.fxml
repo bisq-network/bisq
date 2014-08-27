@@ -163,7 +163,7 @@
         <Label fx:id="confirmationLabel" text="Checking confirmations..." visible="false" GridPane.columnIndex="3"
                GridPane.rowIndex="14"/>
 
-        
+
         <columnConstraints>
             <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>
             <ColumnConstraints hgrow="ALWAYS" minWidth="400"/>

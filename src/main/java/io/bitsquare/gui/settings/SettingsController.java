@@ -18,6 +18,8 @@
 package io.bitsquare.gui.settings;
 
 import io.bitsquare.BitSquare;
+import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.di.GuiceFXMLLoader;
@@ -34,10 +36,8 @@ import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.Localisation;
 import io.bitsquare.locale.Region;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.settings.Settings;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.arbitrator.Reputation;
+import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 

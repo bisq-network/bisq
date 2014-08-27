@@ -242,7 +242,7 @@ class CreateOfferPresenter {
         }
     }
 
-     void onFocusOutVolumeTextField(Boolean oldValue, Boolean newValue, String volumeTextFieldText) {
+    void onFocusOutVolumeTextField(Boolean oldValue, Boolean newValue, String volumeTextFieldText) {
         if (oldValue && !newValue) {
             showWarningInvalidFiatDecimalPlaces.set(!hasFiatValidDecimals(volume.get()));
             model.volumeAsFiat = parseToFiatWith2Decimals(volume.get());

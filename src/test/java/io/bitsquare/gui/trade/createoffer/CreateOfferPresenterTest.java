@@ -45,7 +45,7 @@ public class CreateOfferPresenterTest {
 
         CreateOfferPresenter presenter = new CreateOfferPresenter(model);
         presenter.onViewInitialized();
-       
+
         model.collateralAsLong.set(100);
         presenter.price.set("500");
         presenter.amount.set("1");
@@ -116,9 +116,6 @@ public class CreateOfferPresenterTest {
 
         model.acceptedCountries.add(new Country(null, "Spain", null));
         assertEquals("Italy, Spain", presenter.acceptedCountries.get());
-
-        
-      
 
 
     }

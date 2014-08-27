@@ -17,9 +17,9 @@
 
 package io.bitsquare.trade;
 
+import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.locale.Country;
-import io.bitsquare.arbitrator.Arbitrator;
 
 import com.google.bitcoin.core.Coin;
 

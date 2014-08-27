@@ -17,6 +17,7 @@
 
 package io.bitsquare.msg;
 
+import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.msg.listeners.GetPeerAddressListener;
@@ -25,7 +26,6 @@ import io.bitsquare.msg.listeners.OrderBookListener;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
-import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.user.User;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
  * It is the translating domain specific functionality to the messaging layer.
  * The TomP2P library codebase shall not be used outside that facade.
  * That way we limit the dependency of the TomP2P library only to that class (and it's sub components).
- * <p/>
+ * <p>
  * TODO: improve callbacks that Platform.runLater is not necessary. We call usually that methods form teh UI thread.
  */
 public class MessageFacade implements MessageBroker {

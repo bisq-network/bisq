@@ -85,10 +85,10 @@ class CreateOfferModel {
     final StringProperty bankAccountType = new SimpleStringProperty();
 
     final LongProperty collateralAsLong = new SimpleLongProperty();
-   
+
     final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty();
     final BooleanProperty requestPlaceOfferFailed = new SimpleBooleanProperty();
-   
+
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
 
     ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();

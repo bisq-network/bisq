@@ -264,7 +264,7 @@ public class CreateOfferCodeBehind extends CachedViewController {
 
     private void setupTextFieldValidators() {
         Region referenceNode = (Region) amountTextField.getParent();
-        
+
         BtcValidator amountValidator = new BtcValidator();
         amountTextField.setValidator(amountValidator);
         amountTextField.setErrorPopupLayoutReference(referenceNode);

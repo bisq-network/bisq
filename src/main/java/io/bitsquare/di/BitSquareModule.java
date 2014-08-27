@@ -66,7 +66,7 @@ public class BitSquareModule extends AbstractModule {
         bind(TradeManager.class).asEagerSingleton();
         bind(BSFormatter.class).asEagerSingleton();
 
-        
+
         //bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.MAIN_NET);
         // how to use reg test see description in the readme file
         bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.REG_TEST_NET);
@@ -76,7 +76,7 @@ public class BitSquareModule extends AbstractModule {
         // we will probably later disc storage instead of memory storage for TomP2P
         // bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(new Boolean(true));
         bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(new Boolean(false));
-       
+
         // might be better in a config file?
         bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(
                 Names.named("defaultSeedNode")).toInstance(SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST);

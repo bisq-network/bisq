@@ -60,9 +60,9 @@ import static io.bitsquare.util.Validator.*;
 /**
  * Responsible for the correct execution of the sequence of tasks, message passing to the peer and message processing
  * from the peer.
- * <p/>
+ * <p>
  * This class handles the role of the offerer as the Bitcoin buyer.
- * <p/>
+ * <p>
  * It uses sub tasks to not pollute the main class too much with all the async result/fault handling.
  * Any data from incoming messages need to be validated before further processing.
  */
