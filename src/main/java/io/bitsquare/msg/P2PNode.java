@@ -17,9 +17,6 @@
 
 package io.bitsquare.msg;
 
-import io.bitsquare.BitSquare;
-import io.bitsquare.util.AppDirectoryUtil;
-
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -61,6 +58,8 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import lighthouse.files.AppDirectory;
+
 /**
  * The fully bootstrapped P2PNode which is responsible himself for his availability in the messaging system. It saves
  * for instance the IP address periodically.
@@ -70,12 +69,8 @@ import org.slf4j.LoggerFactory;
 public class P2PNode {
     private static final Logger log = LoggerFactory.getLogger(P2PNode.class);
 
-    private Thread bootstrapToLocalhostThread;
-    private Thread bootstrapToServerThread;
-
     private KeyPair keyPair;
     private final Boolean useDiskStorage;
-    private final SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses;
     private MessageBroker messageBroker;
 
     private PeerAddress storedPeerAddress;
@@ -90,11 +85,9 @@ public class P2PNode {
 
     @Inject
     public P2PNode(BootstrappedPeerFactory bootstrappedPeerFactory,
-                   @Named("useDiskStorage") Boolean useDiskStorage,
-                   @Named("defaultSeedNode") SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses) {
+                   @Named("useDiskStorage") Boolean useDiskStorage) {
         this.bootstrappedPeerFactory = bootstrappedPeerFactory;
         this.useDiskStorage = useDiskStorage;
-        this.defaultStaticSeedNodeAddresses = defaultStaticSeedNodeAddresses;
     }
 
     // for unit testing
@@ -105,7 +98,6 @@ public class P2PNode {
         messageBroker = (message, peerAddress) -> {
         };
         useDiskStorage = false;
-        defaultStaticSeedNodeAddresses = SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST;
     }
 
 
@@ -300,20 +292,13 @@ public class P2PNode {
 
     private void useDiscStorage(boolean useDiscStorage) {
         if (useDiscStorage) {
-            try {
-
-                File path = new File(AppDirectoryUtil.getStorageDirectory().getCanonicalPath() + "/" + BitSquare
-                        .getAppName() + "_tomP2P");
-                if (!path.exists()) {
-                    boolean created = path.mkdir();
-                    if (!created)
-                        throw new RuntimeException("Could not create the directory '" + path + "'");
-                }
-                storage = new StorageDisk(Number160.ZERO, path, new DSASignatureFactory());
-
-            } catch (IOException e) {
-                e.printStackTrace();
+            File path = new File(AppDirectory.dir().toFile() + "/tomP2P");
+            if (!path.exists()) {
+                boolean created = path.mkdir();
+                if (!created)
+                    throw new RuntimeException("Could not create the directory '" + path + "'");
             }
+            storage = new StorageDisk(Number160.ZERO, path, new DSASignatureFactory());
         }
         else {
             storage = new StorageMemory();

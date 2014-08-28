@@ -22,7 +22,7 @@ import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.ValidatingTextField;
-import io.bitsquare.gui.trade.createoffer.CreateOfferCodeBehind;
+import io.bitsquare.gui.trade.createoffer.CreateOfferCB;
 import io.bitsquare.gui.trade.orderbook.OrderBookController;
 import io.bitsquare.gui.trade.takeoffer.TakeOfferController;
 import io.bitsquare.trade.Direction;
@@ -46,7 +46,7 @@ public class TradeController extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(TradeController.class);
 
     protected OrderBookController orderBookController;
-    protected CreateOfferCodeBehind createOfferCodeBehind;
+    protected CreateOfferCB createOfferCodeBehind;
     protected TakeOfferController takeOfferController;
     protected GuiceFXMLLoader orderBookLoader;
 
@@ -76,7 +76,7 @@ public class TradeController extends CachedViewController {
         // TODO find better solution
         // Textfield focus out triggers validation, use runLater as quick fix...
         ((TabPane) root).getSelectionModel().selectedIndexProperty().addListener((observableValue) ->
-                Platform.runLater(() -> ValidatingTextField.hidePopover()));
+                Platform.runLater(ValidatingTextField::hidePopover));
     }
 
 

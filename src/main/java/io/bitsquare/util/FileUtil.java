@@ -25,15 +25,17 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import lighthouse.files.AppDirectory;
+
 public class FileUtil {
     private static final Logger log = LoggerFactory.getLogger(FileUtil.class);
 
     public static File getFile(String name, String suffix) {
-        return new File(AppDirectoryUtil.getStorageDirectory(), name + "." + suffix);
+        return new File(AppDirectory.dir().toFile(), name + "." + suffix);
     }
 
     public static File getTempFile(String prefix) throws IOException {
-        return File.createTempFile("temp_" + prefix, null, AppDirectoryUtil.getStorageDirectory());
+        return File.createTempFile("temp_" + prefix, null, AppDirectory.dir().toFile());
     }
 
     public static void writeTempFileToFile(File tempFile, File file) throws IOException {

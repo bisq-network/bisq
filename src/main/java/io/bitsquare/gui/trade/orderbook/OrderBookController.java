@@ -25,7 +25,7 @@ import io.bitsquare.gui.MainController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.trade.createoffer.CreateOfferCodeBehind;
+import io.bitsquare.gui.trade.createoffer.CreateOfferCB;
 import io.bitsquare.gui.trade.takeoffer.TakeOfferController;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
@@ -229,7 +229,7 @@ public class OrderBookController extends CachedViewController {
             createOfferButton.setDisable(true);
             ViewController nextController = parentController.loadViewAndGetChildController(NavigationItem.CREATE_OFFER);
             if (nextController != null)
-                ((CreateOfferCodeBehind) nextController).setOrderBookFilter(orderBookFilter);
+                ((CreateOfferCB) nextController).setOrderBookFilter(orderBookFilter);
         }
         else {
             showRegistrationDialog();

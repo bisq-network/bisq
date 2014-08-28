@@ -70,6 +70,7 @@ public class BSFormatter {
 
     static {
         //useMilliBitFormat(true);
+        setLocale(Locale.US);
     }
 
 

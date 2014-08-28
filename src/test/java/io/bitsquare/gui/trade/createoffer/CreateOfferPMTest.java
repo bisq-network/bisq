@@ -33,8 +33,8 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
-public class CreateOfferPresenterTest {
-    private static final Logger log = LoggerFactory.getLogger(CreateOfferPresenterTest.class);
+public class CreateOfferPMTest {
+    private static final Logger log = LoggerFactory.getLogger(CreateOfferPMTest.class);
 
     @Test
     public void testBindings() {
@@ -43,7 +43,7 @@ public class CreateOfferPresenterTest {
         BSFormatter.setLocale(Locale.US);
         BSFormatter.setFiatCurrencyCode("USD");
 
-        CreateOfferPresenter presenter = new CreateOfferPresenter(model);
+        CreateOfferPM presenter = new CreateOfferPM(model);
         presenter.onViewInitialized();
 
         model.collateralAsLong.set(100);

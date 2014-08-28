@@ -22,7 +22,6 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.util.AppDirectoryUtil;
 
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.AddressFormatException;
@@ -77,6 +76,8 @@ import javafx.util.Pair;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import lighthouse.files.AppDirectory;
 
 import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
 
@@ -139,7 +140,7 @@ public class WalletFacade {
         Threading.USER_THREAD = Platform::runLater;
 
         // If seed is non-null it means we are restoring from backup.
-        walletAppKit = new WalletAppKit(params, AppDirectoryUtil.getStorageDirectory(), WALLET_PREFIX) {
+        walletAppKit = new WalletAppKit(params, AppDirectory.dir().toFile(), WALLET_PREFIX) {
             @Override
             protected void onSetupCompleted() {
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it
@@ -223,8 +224,8 @@ public class WalletFacade {
         wallet.addEventListener(walletEventListener);
 
         Serializable serializable = persistence.read(this, "addressEntryList");
-        List<AddressEntry> persistedAddressEntryList = (List<AddressEntry>) serializable;
         if (serializable instanceof List) {
+            List<AddressEntry> persistedAddressEntryList = (List<AddressEntry>) serializable;
             for (AddressEntry persistedAddressEntry : persistedAddressEntryList) {
                 persistedAddressEntry.setDeterministicKey(
                         (DeterministicKey) wallet.findKeyFromPubHash(persistedAddressEntry.getPubKeyHash()));

@@ -28,14 +28,12 @@ import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;
-import io.bitsquare.util.AppDirectoryUtil;
 
 import com.google.common.base.Throwables;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import java.io.File;
 import java.io.IOException;
 
 import java.util.Arrays;
@@ -47,6 +45,8 @@ import javafx.stage.Stage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import lighthouse.files.AppDirectory;
 
 public class BitSquare extends Application {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
@@ -61,7 +61,7 @@ public class BitSquare extends Application {
     public static void main(String[] args) {
         Profiler.init();
         Profiler.printMsgWithTime("BitSquare.main called with args " + Arrays.asList(args).toString());
-        if (args != null && args.length > 0) APP_NAME = args[0];
+        if (args.length > 0) APP_NAME = APP_NAME + "_" + args[0];
 
         launch(args);
     }
@@ -82,8 +82,7 @@ public class BitSquare extends Application {
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions
                 (Throwables.getRootCause(throwable)));
 
-        AppDirectoryUtil.setStorageDirectory(
-                new File(AppDirectoryUtil.getApplicationDirectory().getCanonicalPath() + "/data"));
+        AppDirectory.initAppDir(APP_NAME);
 
         // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
         AWTSystemTray.createSystemTray(primaryStage);
