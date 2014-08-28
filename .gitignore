@@ -1,6 +1,5 @@
 /docs
 /log
-/target
 /bin
 /out
 .idea
@@ -14,3 +13,5 @@ bitsquare.iml
 *.log
 *.sw[op]
 .DS_Store
+.gradle
+build

@@ -23,6 +23,7 @@ import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
 
 import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.utils.BtcFormat;
 import com.google.bitcoin.utils.CoinFormat;
 import com.google.bitcoin.utils.Fiat;
 
@@ -42,8 +43,20 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.*;
 
 //TODO a lot of old trash... need to cleanup...
+
+/**
+ * Central point for formatting and input parsing.
+ * <p>
+ * Note that we never use for text input values any coin or currency symbol or code.
+ * BtcFormat does not support
+ */
 public class BSFormatter {
     private static final Logger log = LoggerFactory.getLogger(BSFormatter.class);
+
+    private static Locale locale = Locale.getDefault();
+    private static boolean useMilliBit;
+    private static String code = "BTC";
+    private static int scale = 3;
 
     // format is like: 1,00 or 1,0010  never more then 4 decimals 
     private static CoinFormat coinFormat = CoinFormat.BTC.repeatOptionalDecimals(2, 1);
@@ -52,28 +65,40 @@ public class BSFormatter {
     private static CoinFormat fiatFormat = CoinFormat.FIAT.repeatOptionalDecimals(0, 0);
 
     private static String currencyCode = Currency.getInstance(Locale.getDefault()).getCurrencyCode();
-    private static Locale locale = Locale.getDefault();
+
+    private static BtcFormat btcFormat = getBtcFormat();
+
+    static {
+        //useMilliBitFormat(true);
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Config
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static void useMilliBitFormat() {
-        coinFormat = CoinFormat.MBTC.repeatOptionalDecimals(2, 1);
-    }
 
-    public static void setFiatCurrencyCode(String currencyCode) {
-        BSFormatter.currencyCode = currencyCode;
+    public static void useMilliBitFormat(boolean useMilliBit) {
+        BSFormatter.useMilliBit = useMilliBit;
+        code = useMilliBit ? "mBTC" : "BTC";
+        btcFormat = getBtcFormat();
+        scale = useMilliBit ? 0 : 3;
     }
 
     /**
      * Note that setting the locale does not set the currency as it might be independent.
-     *
-     * @param locale
      */
     public static void setLocale(Locale locale) {
         BSFormatter.locale = locale;
+        btcFormat = getBtcFormat();
+    }
+
+    private static BtcFormat getBtcFormat() {
+        return BtcFormat.getInstance(useMilliBit ? BtcFormat.MILLICOIN_SCALE : BtcFormat.COIN_SCALE, locale, 2, 2);
+    }
+
+    public static void setFiatCurrencyCode(String currencyCode) {
+        BSFormatter.currencyCode = currencyCode;
     }
 
 
@@ -81,31 +106,31 @@ public class BSFormatter {
     // BTC
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static String formatBtc(Coin coin) {
+    public static String formatCoin(Coin coin) {
         try {
-            return coinFormat.noCode().format(coin).toString();
+            return btcFormat.format(coin);
         } catch (Throwable t) {
             log.warn("Exception at formatBtc: " + t.toString());
             return "";
         }
     }
 
-    public static String formatBtcWithCode(Coin coin) {
+    public static String formatCoinWithCode(Coin coin) {
         try {
-            return coinFormat.postfixCode().format(coin).toString();
+            // we don't use the code feature from btcFormat as it does automatic switching between mBTC and BTC and 
+            // pre and post fixing
+            return btcFormat.format(coin) + " " + code;
         } catch (Throwable t) {
             log.warn("Exception at formatBtcWithCode: " + t.toString());
             return "";
         }
     }
 
-    public static Coin parseToBtc(String input) {
+    public static Coin parseToCoin(String input) {
         try {
-            input = input.replace(",", ".");
-            Double.parseDouble(input); // test if valid double
-            return Coin.parseCoin(input);
+            return btcFormat.parse(input);
         } catch (Throwable t) {
-            log.warn("Exception at parseToCoin: " + t.toString());
+            log.warn("Exception at parseToBtc: " + t.toString());
             return Coin.ZERO;
         }
     }
@@ -118,20 +143,18 @@ public class BSFormatter {
      * @param input
      * @return
      */
-    public static Coin parseToBtcWith4Decimals(String input) {
+    public static Coin parseToCoinWith4Decimals(String input) {
         try {
-            input = input.replace(",", ".");
-            Double.parseDouble(input); // test if valid double
-            return parseToBtc(new BigDecimal(input).setScale(4, BigDecimal.ROUND_HALF_UP).toString());
+            return Coin.valueOf(new BigDecimal(parseToCoin(input).value).setScale(-scale - 1,
+                    BigDecimal.ROUND_HALF_UP).setScale(scale + 1).toBigInteger().longValue());
         } catch (Throwable t) {
-            log.warn("Exception at parseCoinTo4Decimals: " + t.toString());
+            log.warn("Exception at parseToCoinWith4Decimals: " + t.toString());
             return Coin.ZERO;
         }
-
     }
 
     public static boolean hasBtcValidDecimals(String input) {
-        return parseToBtc(input).equals(parseToBtcWith4Decimals(input));
+        return parseToCoin(input).equals(parseToCoinWith4Decimals(input));
     }
 
     /**
@@ -141,7 +164,7 @@ public class BSFormatter {
      * @return The transformed coin
      */
     public static Coin reduceto4Dezimals(Coin coin) {
-        return parseToBtc(formatBtc(coin));
+        return parseToCoin(formatCoin(coin));
     }
 
 
@@ -323,7 +346,7 @@ public class BSFormatter {
     public static String formatVolumeWithMinVolume(double volume, double minVolume) {
         return formatDouble(volume) + " (" + formatDouble(minVolume) + ")";
     }
-
+/*
     @Deprecated
     public static String formatCoin(Coin coin) {
         return coin != null ? coin.toPlainString() : "";
@@ -333,5 +356,5 @@ public class BSFormatter {
     @Deprecated
     public static String formatCoinWithCode(Coin coin) {
         return coin != null ? coin.toFriendlyString() : "";
-    }
+    }*/
 }
