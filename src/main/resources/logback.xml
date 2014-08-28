@@ -14,12 +14,12 @@
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <root level="WARN">
         <appender-ref ref="CONSOLE_APPENDER"/>
         <appender-ref ref="FILE"/>
     </root>
 
-    <logger name="io.bitsquare" level="TRACE"/>
+    <logger name="io.bitsquare" level="WARN"/>
 
     <logger name="com.google.bitcoin" level="WARN"/>
     <logger name="net.tomp2p" level="WARN"/>
