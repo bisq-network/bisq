@@ -122,7 +122,7 @@ public class BalanceTextField extends AnchorPane {
     }
 
     private void updateBalance(Coin balance) {
-        balanceTextField.setText(BSFormatter.formatBtc(balance));
+        balanceTextField.setText(BSFormatter.formatCoin(balance));
     }
 
 }

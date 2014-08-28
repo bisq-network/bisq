@@ -26,7 +26,7 @@ import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.createoffer.tasks.BroadCastOfferFeeTx;
 import io.bitsquare.trade.protocol.createoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.createoffer.tasks.PublishOfferToDHT;
-import io.bitsquare.trade.protocol.createoffer.tasks.ValidateOffer;
+import io.bitsquare.trade.protocol.createoffer.tasks.VerifyOffer;
 
 import com.google.bitcoin.core.Transaction;
 
@@ -112,7 +112,7 @@ public class CreateOfferCoordinator {
 
     public void start() {
         model.setState(State.STARTED);
-        ValidateOffer.run(this::onOfferValidated, this::onFailed, offer);
+        VerifyOffer.run(this::onOfferValidated, this::onFailed, offer);
     }
 
     private void onOfferValidated() {

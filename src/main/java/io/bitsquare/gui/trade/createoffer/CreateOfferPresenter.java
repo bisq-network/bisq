@@ -105,7 +105,7 @@ class CreateOfferPresenter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void onViewInitialized() {
-        totalFees.set(BSFormatter.formatBtc(model.totalFeesAsCoin));
+        totalFees.set(BSFormatter.formatCoin(model.totalFeesAsCoin));
         paymentLabel.set("Bitsquare trade (" + model.getOfferId() + ")");
 
         if (model.addressEntry != null) {
@@ -166,8 +166,8 @@ class CreateOfferPresenter {
         model.priceAsFiat = parseToFiatWith2Decimals(String.valueOf(orderBookFilter.getPrice()));
 
         directionLabel.set(model.getDirection() == Direction.BUY ? "Buy:" : "Sell:");
-        amount.set(formatBtc(model.amountAsCoin));
-        minAmount.set(formatBtc(model.minAmountAsCoin));
+        amount.set(formatCoin(model.amountAsCoin));
+        minAmount.set(formatCoin(model.minAmountAsCoin));
         price.set(formatFiat(model.priceAsFiat));
     }
 
@@ -177,10 +177,10 @@ class CreateOfferPresenter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void placeOffer() {
-        model.amountAsCoin = parseToBtcWith4Decimals(amount.get());
-        model.minAmountAsCoin = parseToBtcWith4Decimals(minAmount.get());
+        model.amountAsCoin = parseToCoinWith4Decimals(amount.get());
+        model.minAmountAsCoin = parseToCoinWith4Decimals(minAmount.get());
         model.priceAsFiat = parseToFiatWith2Decimals(price.get());
-        model.minAmountAsCoin = parseToBtcWith4Decimals(minAmount.get());
+        model.minAmountAsCoin = parseToCoinWith4Decimals(minAmount.get());
 
         needsInputValidation.set(true);
 
@@ -202,19 +202,23 @@ class CreateOfferPresenter {
 
         // bindBidirectional for amount, price, volume and minAmount
         amount.addListener(ov -> {
-            model.amountAsCoin = parseToBtcWith4Decimals(amount.get());
+            model.amountAsCoin = parseToCoinWith4Decimals(amount.get());
+            calculateVolume();
             calculateTotalToPay();
             calculateCollateral();
+            
         });
 
         price.addListener(ov -> {
             model.priceAsFiat = parseToFiatWith2Decimals(price.get());
+            calculateVolume();
             calculateTotalToPay();
             calculateCollateral();
         });
 
         volume.addListener(ov -> {
             model.volumeAsFiat = parseToFiatWith2Decimals(volume.get());
+            calculateAmount();
             calculateTotalToPay();
             calculateCollateral();
         });
@@ -224,8 +228,8 @@ class CreateOfferPresenter {
 
         if (oldValue && !newValue) {
             showWarningInvalidBtcDecimalPlaces.set(!hasBtcValidDecimals(amount.get()));
-            model.amountAsCoin = parseToBtcWith4Decimals(amount.get());
-            amount.set(formatBtc(model.amountAsCoin));
+            model.amountAsCoin = parseToCoinWith4Decimals(amount.get());
+            amount.set(formatCoin(model.amountAsCoin));
             calculateVolume();
         }
     }
@@ -234,8 +238,8 @@ class CreateOfferPresenter {
 
         if (oldValue && !newValue) {
             showWarningInvalidBtcDecimalPlaces.set(!hasBtcValidDecimals(minAmount.get()));
-            model.minAmountAsCoin = parseToBtcWith4Decimals(minAmount.get());
-            minAmount.set(formatBtc(model.minAmountAsCoin));
+            model.minAmountAsCoin = parseToCoinWith4Decimals(minAmount.get());
+            minAmount.set(formatCoin(model.minAmountAsCoin));
         }
     }
 
@@ -280,7 +284,7 @@ class CreateOfferPresenter {
     }
 
     private void calculateVolume() {
-        model.amountAsCoin = parseToBtcWith4Decimals(amount.get());
+        model.amountAsCoin = parseToCoinWith4Decimals(amount.get());
         model.priceAsFiat = parseToFiatWith2Decimals(price.get());
 
         if (model.priceAsFiat != null && model.amountAsCoin != null && !model.amountAsCoin.isZero()) {
@@ -298,7 +302,7 @@ class CreateOfferPresenter {
 
             // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
             model.amountAsCoin = reduceto4Dezimals(model.amountAsCoin);
-            amount.set(formatBtc(model.amountAsCoin));
+            amount.set(formatCoin(model.amountAsCoin));
             calculateTotalToPay();
             calculateCollateral();
         }
@@ -309,7 +313,7 @@ class CreateOfferPresenter {
 
         if (model.collateralAsCoin != null) {
             model.totalToPayAsCoin.set(model.collateralAsCoin.add(model.totalFeesAsCoin));
-            totalToPay.bind(createStringBinding(() -> formatBtcWithCode(model.totalToPayAsCoin.get()),
+            totalToPay.bind(createStringBinding(() -> formatCoinWithCode(model.totalToPayAsCoin.get()),
                     model.totalToPayAsCoin));
         }
     }
@@ -317,7 +321,7 @@ class CreateOfferPresenter {
     private void calculateCollateral() {
         if (model.amountAsCoin != null) {
             model.collateralAsCoin = model.amountAsCoin.multiply(model.collateralAsLong.get()).divide(1000);
-            collateral.set(BSFormatter.formatBtcWithCode(model.collateralAsCoin));
+            collateral.set(BSFormatter.formatCoinWithCode(model.collateralAsCoin));
         }
     }
 }

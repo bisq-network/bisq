@@ -148,7 +148,7 @@ public class WithdrawalController extends CachedViewController {
                     amountTextField, withdrawFromTextField, withdrawToTextField, changeAddressTextField);
             BitSquareValidator.textFieldsHasDoubleValueWithReset(amountTextField);
 
-            Coin amount = BSFormatter.parseToBtc(amountTextField.getText());
+            Coin amount = BSFormatter.parseToCoin(amountTextField.getText());
             if (Restrictions.isMinSpendableAmount(amount)) {
                 FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
                     @Override
