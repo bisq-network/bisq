@@ -1,11 +1,26 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.rholder:gradle-one-jar:1.0.4'
+    }
+}
+
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin: 'gradle-one-jar'
 
 version = '0.1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 mainClassName = 'io.bitsquare.BitSquare'
 
 sourceSets.main.resources.srcDirs += 'src/main/java'
+
+task executableJar(type: OneJar) {
+    mainClass = project.mainClassName
+    archiveName = 'bitsquare.jar'
+}
 
 repositories {
     jcenter()
