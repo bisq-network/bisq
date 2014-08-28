@@ -52,12 +52,9 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * Data model:
- * Does not know the Presenter and View (CodeBehind)
- * Use Guice for DI to get domain objects
- * <p>
- * - Holds domain data
- * - Apply business logic (no view related, that is done in presenter)
+ * Domain for that UI element. 
+ * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
+ * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
 class CreateOfferModel {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferModel.class);

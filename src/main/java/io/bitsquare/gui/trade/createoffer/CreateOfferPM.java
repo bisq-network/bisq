@@ -42,17 +42,6 @@ import org.slf4j.LoggerFactory;
 import static io.bitsquare.gui.util.BSFormatter.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-/**
- * Presentation model:
- * Knows Model, does not know the View (CodeBehind)
- * <p>
- * - Holds data and state of the View (formatting,...)
- * - Receive user input via method calls from CodeBehind.
- * - Validates input, applies business logic and converts input to Model.
- * - Format model data to properties used for binding from the view (The view setup the bindings).
- * - Listen to updates from Model via Bindings (The PM setup the bindings to the model).
- * - Can be used for unit testing
- */
 class CreateOfferPM {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferPM.class);
 

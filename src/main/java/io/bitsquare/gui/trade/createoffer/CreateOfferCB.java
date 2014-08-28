@@ -42,31 +42,6 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Code behind (We don't call it controller as controller is associated with the classical MVC controller):
- * <p>
- * - Knows the presentation model, does not know the model
- * - Has no logic and no state
- * <p>
- * - Creates presentation model and passes model from Guice injection to the presenter. Does not hold any reference to the model.
- *   //TODO is there a better way for DI of model?
- * - Setup binding from presenter to view elements (also bidirectional - used for input data). Binding are only to plain
- *   presenter properties. There are no logical bindings or cross-view element bindings.
- * - Listens to UI events (Actions) from view and calls method in presentation model.
- * - Is entry node for view graph and responsible for navigation and creation of new views. 
- * - Passes application API method calls to Presenter. Calls application methods on sub views.
- * - Handle lifecycle and self removal from scene graph.
- * - Can contain non-declarative (dynamic) view definitions (if it gets larger, then use a dedicated ViewBuilder)
- * <p>
- * View:
- * - Typically declared in FXML. Dynamic parts are declared in Controller. If more view elements need to be defined in
- * code then use a ViewBuilder.
- * <p>
- * ViewBuilder (optional):
- * - Additionally or instead of FXML view. If no FXML then controller setup need to be handles by ViewBuilder.
- * <p>
- * Note: Don't assign the root node as it is defined in the base class!
- */
 public class CreateOfferCB extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferCB.class);
 
@@ -88,6 +63,7 @@ public class CreateOfferCB extends CachedViewController {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    //TODO find a better solution, handle at base class?
     @Inject
     public CreateOfferCB(CreateOfferModel model) {
         pm = new CreateOfferPM(model);
