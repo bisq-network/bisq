@@ -1,7 +1,9 @@
 apply plugin: 'java'
+apply plugin: 'application'
 
 version = '0.1.0-SNAPSHOT'
 sourceCompatibility = 1.8
+mainClassName = 'io.bitsquare.BitSquare'
 
 sourceSets.main.resources.srcDirs += 'src/main/java'
 
