@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <configuration>
-    <!--
-     -->
     <appender name="CONSOLE_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg %xEx%n</pattern>
@@ -31,24 +28,21 @@
     <logger name="io.netty.channel" level="WARN"/>
     <logger name="io.netty.buffer" level="WARN"/>
 
-   
-       <logger name="io.bitsquare.gui.ViewController" level="OFF"/>
-       <logger name="io.bitsquare.gui.CachedViewController" level="OFF"/>
-       <logger name="io.bitsquare.gui.util.Profiler" level="OFF"/>
-    <!--
-   
-        <logger name="com.google.bitcoin.core.Wallet" level="OFF"/>
-        <logger name="com.google.bitcoin.core.MemoryPool" level="OFF"/>
-        <logger name="com.google.bitcoin.net.discovery.DnsDiscovery" level="OFF"/>
-   
-        <logger name="com.google.bitcoin.core.DownloadListener" level="OFF"/>
-        <logger name="com.google.bitcoin.core.TransactionOutput" level="OFF"/>
-        <logger name="com.google.bitcoin.core.BitcoinSerializer" level="OFF"/>
-        <logger name="com.google.bitcoin.core.Peer" level="OFF"/>
-        <logger name="com.google.bitcoin.core.PeerGroup" level="OFF"/>
-        <logger name="com.google.bitcoin.core.PeerSocketHandler" level="OFF"/>
-        <logger name="com.google.bitcoin.net.NioClientManager" level="OFF"/>
-        <logger name="com.google.bitcoin.net.ConnectionHandler" level="OFF"/>
-           -->
+    <logger name="io.bitsquare.gui.ViewController" level="OFF"/>
+    <logger name="io.bitsquare.gui.CachedViewController" level="OFF"/>
+    <logger name="io.bitsquare.gui.util.Profiler" level="OFF"/>
 
+    <!--
+    <logger name="com.google.bitcoin.core.Wallet" level="OFF"/>
+    <logger name="com.google.bitcoin.core.MemoryPool" level="OFF"/>
+    <logger name="com.google.bitcoin.net.discovery.DnsDiscovery" level="OFF"/>
+    <logger name="com.google.bitcoin.core.DownloadListener" level="OFF"/>
+    <logger name="com.google.bitcoin.core.TransactionOutput" level="OFF"/>
+    <logger name="com.google.bitcoin.core.BitcoinSerializer" level="OFF"/>
+    <logger name="com.google.bitcoin.core.Peer" level="OFF"/>
+    <logger name="com.google.bitcoin.core.PeerGroup" level="OFF"/>
+    <logger name="com.google.bitcoin.core.PeerSocketHandler" level="OFF"/>
+    <logger name="com.google.bitcoin.net.NioClientManager" level="OFF"/>
+    <logger name="com.google.bitcoin.net.ConnectionHandler" level="OFF"/>
+    -->
 </configuration>
