@@ -43,10 +43,13 @@ public class CodeBehind<T extends PresentationModel> implements Initializable {
         root.sceneProperty().addListener((ov, oldValue, newValue) -> {
             // we got removed from the scene
             // lets terminate
-            if (oldValue != null && newValue == null) terminate();
+            if (oldValue != null && newValue == null)
+                terminate();
+
         });
 
         presentationModel.initialized();
+        presentationModel.activate();
     }
 
     /**
@@ -55,8 +58,10 @@ public class CodeBehind<T extends PresentationModel> implements Initializable {
      */
     public void terminate() {
         log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
-        if (childController != null) childController.terminate();
+        if (childController != null)
+            childController.terminate();
 
+        presentationModel.deactivate();
         presentationModel.terminate();
     }
 

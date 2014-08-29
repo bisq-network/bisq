@@ -74,7 +74,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
 
     final BooleanProperty isCloseButtonVisible = new SimpleBooleanProperty();
     final BooleanProperty isPlaceOfferButtonVisible = new SimpleBooleanProperty(true);
-    final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty();
+    final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty showWarningAdjustedVolume = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidFiatDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
@@ -206,7 +206,6 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     }
 
     void onFocusOutMinAmountTextField(Boolean oldValue, Boolean newValue, String userInput) {
-
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(minAmount.get());
             minAmountValidationResult.set(result);
@@ -287,6 +286,12 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
                 model.calculateTotalToPay();
                 model.calculateCollateral();
             }
+            validateInput();
+        });
+
+        minAmount.addListener((ov, oldValue, newValue) -> {
+            setMinAmountToModel();
+            validateInput();
         });
 
         price.addListener((ov, oldValue, newValue) -> {
@@ -296,6 +301,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
                 model.calculateTotalToPay();
                 model.calculateCollateral();
             }
+            validateInput();
         });
 
         volume.addListener((ov, oldValue, newValue) -> {
@@ -306,6 +312,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
                 model.calculateTotalToPay();
                 model.calculateCollateral();
             }
+            validateInput();
         });
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
@@ -313,6 +320,13 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         model.minAmountAsCoin.addListener((ov, oldValue, newValue) -> minAmount.set(formatCoin(newValue)));
         model.priceAsFiat.addListener((ov, oldValue, newValue) -> price.set(formatFiat(newValue)));
         model.volumeAsFiat.addListener((ov, oldValue, newValue) -> volume.set(formatFiat(newValue)));
+
+        model.requestPlaceOfferFailed.addListener((ov, oldValue, newValue) -> {
+            isPlaceOfferButtonDisabled.set(!newValue);
+            requestPlaceOfferFailed.set(newValue);
+        });
+        model.requestPlaceOfferSuccess.addListener((ov, oldValue, newValue) -> isPlaceOfferButtonVisible.set
+                (!newValue));
 
         // ObservableLists
         model.acceptedCountries.addListener((Observable o) -> acceptedCountries.set(BSFormatter
@@ -340,14 +354,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
 
         isCloseButtonVisible.bind(model.requestPlaceOfferSuccess);
         requestPlaceOfferErrorMessage.bind(model.requestPlaceOfferErrorMessage);
-        requestPlaceOfferFailed.bind(model.requestPlaceOfferFailed);
         showTransactionPublishedScreen.bind(model.requestPlaceOfferSuccess);
-
-        isPlaceOfferButtonDisabled.bind(Bindings.createBooleanBinding(() -> !model.requestPlaceOfferFailed.get(),
-                model.requestPlaceOfferFailed));
-
-        isPlaceOfferButtonVisible.bind(Bindings.createBooleanBinding(() -> !model.requestPlaceOfferSuccess.get(),
-                model.requestPlaceOfferSuccess));
     }
 
     private void calculateVolume() {
@@ -390,6 +397,14 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         model.volumeAsFiat.set(parseToFiatWith2Decimals(volume.get()));
     }
 
+    private void validateInput() {
+        isPlaceOfferButtonDisabled.set(!(isBtcInputValid(amount.get()).isValid &&
+                        isBtcInputValid(minAmount.get()).isValid &&
+                        isBtcInputValid(price.get()).isValid &&
+                        isBtcInputValid(volume.get()).isValid &&
+                        model.isMinAmountLessOrEqualAmount())
+        );
+    }
 
     private InputValidator.ValidationResult isBtcInputValid(String input) {
 

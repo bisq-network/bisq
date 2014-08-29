@@ -30,9 +30,10 @@ import java.io.IOException;
 
 import java.net.URL;
 
+import java.util.List;
 import java.util.ResourceBundle;
 
-import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.Initializable;
 import javafx.scene.*;
 import javafx.scene.control.*;
@@ -49,6 +50,7 @@ public class TradeController extends CachedViewController {
     protected CreateOfferCB createOfferCodeBehind;
     protected TakeOfferController takeOfferController;
     protected GuiceFXMLLoader orderBookLoader;
+    private Node createOfferView;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -77,8 +79,24 @@ public class TradeController extends CachedViewController {
         // Textfield focus out triggers validation, use runLater as quick fix...
 
         //TODO update to new verison
-        ((TabPane) root).getSelectionModel().selectedIndexProperty().addListener((observableValue) ->
-                Platform.runLater(InputTextField::hideErrorMessageDisplay));
+        ((TabPane) root).getSelectionModel().selectedIndexProperty().addListener((observableValue, oldValue,
+                                                                                  newValue) ->
+                {
+                    InputTextField.hideErrorMessageDisplay();
+                }
+        );
+
+        // We want to get informed when a tab get closed
+        ((TabPane) root).getTabs().addListener((ListChangeListener<Tab>) change -> {
+            change.next();
+            List<? extends Tab> removedTabs = change.getRemoved();
+            if (removedTabs.size() == 1 && createOfferView.equals(removedTabs.get(0).getContent())) {
+                if (createOfferCodeBehind != null) {
+                    createOfferCodeBehind.terminate();
+                    createOfferCodeBehind = null;
+                }
+            }
+        });
     }
 
 
@@ -114,11 +132,12 @@ public class TradeController extends CachedViewController {
             // in different graphs
             GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
             try {
-                final Parent view = loader.load();
+                createOfferView = loader.load();
                 createOfferCodeBehind = loader.getController();
+                log.debug("####### loader.getController() " + createOfferCodeBehind);
                 createOfferCodeBehind.setParentController(this);
                 final Tab tab = new Tab("Create offer");
-                tab.setContent(view);
+                tab.setContent(createOfferView);
                 tabPane.getTabs().add(tab);
                 tabPane.getSelectionModel().select(tabPane.getTabs().size() - 1);
                 return createOfferCodeBehind;
@@ -159,8 +178,6 @@ public class TradeController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onCreateOfferViewRemoved() {
-        createOfferCodeBehind = null;
-
         orderBookController.onCreateOfferViewRemoved();
     }
 

@@ -552,11 +552,9 @@ public class OrderBookController extends CachedViewController {
         volume.setText(BSFormatter.formatPrice(a * p));
     }
 
-
     public void onCreateOfferViewRemoved() {
         createOfferButton.setDisable(false);
     }
-
 
 }
 

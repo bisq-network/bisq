@@ -78,22 +78,20 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get());
     }
 
-    @Override
     public void activate() {
         super.activate();
     }
 
-    @Override
     public void deactivate() {
         super.deactivate();
-
-        //TODO check that again
-        if (parentController != null) ((TradeController) parentController).onCreateOfferViewRemoved();
     }
 
     @Override
     public void terminate() {
         super.terminate();
+
+        // Used to re-enable createOfferButton in OrderBookController
+        if (parentController != null) ((TradeController) parentController).onCreateOfferViewRemoved();
     }
 
 
@@ -174,13 +172,15 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
             }
         });
 
+
         presentationModel.requestPlaceOfferFailed.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 Popups.openErrorPopup("Error", "An error occurred when placing the offer.\n" +
-                        presentationModel.requestPlaceOfferErrorMessage);
+                        presentationModel.requestPlaceOfferErrorMessage.get());
                 presentationModel.requestPlaceOfferFailed.set(false);
             }
         });
+
     }
 
     private void setupBindings() {
