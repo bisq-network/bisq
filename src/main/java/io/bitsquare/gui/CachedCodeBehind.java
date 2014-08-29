@@ -7,11 +7,16 @@ import java.util.ResourceBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * If caching is used for loader we use the CachedViewController for turning the controller into sleep mode if not
+ * active and awake it at reactivation.
+ * * @param <T>       The PresentationModel used in that class
+ */
 public class CachedCodeBehind<T extends PresentationModel> extends CodeBehind<T> {
     private static final Logger log = LoggerFactory.getLogger(CachedCodeBehind.class);
 
-    public CachedCodeBehind(T pm) {
-        super(pm);
+    public CachedCodeBehind(T presentationModel) {
+        super(presentationModel);
     }
 
     /**
@@ -35,7 +40,7 @@ public class CachedCodeBehind<T extends PresentationModel> extends CodeBehind<T>
         });
 
         activate();
-        pm.initialized();
+        presentationModel.initialized();
     }
 
     /**
@@ -45,7 +50,7 @@ public class CachedCodeBehind<T extends PresentationModel> extends CodeBehind<T>
         log.trace("Lifecycle: activate " + this.getClass().getSimpleName());
         if (childController instanceof CachedViewController) ((CachedViewController) childController).activate();
 
-        pm.activate();
+        presentationModel.activate();
     }
 
     /**
@@ -55,7 +60,7 @@ public class CachedCodeBehind<T extends PresentationModel> extends CodeBehind<T>
         log.trace("Lifecycle: deactivate " + this.getClass().getSimpleName());
         if (childController instanceof CachedViewController) ((CachedViewController) childController).deactivate();
 
-        pm.deactivate();
+        presentationModel.deactivate();
     }
 
     /**
@@ -67,7 +72,7 @@ public class CachedCodeBehind<T extends PresentationModel> extends CodeBehind<T>
         super.terminate();
 
         deactivate();
-        pm.terminate();
+        presentationModel.terminate();
     }
 
 }

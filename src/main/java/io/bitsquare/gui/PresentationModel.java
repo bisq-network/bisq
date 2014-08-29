@@ -2,11 +2,7 @@ package io.bitsquare.gui;
 
 public class PresentationModel<T extends UIModel> {
 
-    private T model;
-
-    public T model() {
-        return (T) model;
-    }
+    protected T model;
 
     public PresentationModel(T model) {
         this.model = model;

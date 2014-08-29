@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Base class for all controllers.
  */
+// for new PM pattern use CodeBehind
+@Deprecated
 public abstract class ViewController implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(ViewController.class);
 

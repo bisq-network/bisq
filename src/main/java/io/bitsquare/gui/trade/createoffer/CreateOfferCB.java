@@ -58,10 +58,9 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    //TODO find a better solution, handle at base class?
     @Inject
-    public CreateOfferCB(CreateOfferModel model) {
-        super(new CreateOfferPM(model));
+    CreateOfferCB(CreateOfferPM presentationModel) {
+        super(presentationModel);
     }
 
 
@@ -76,7 +75,12 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         setupBindings();
         setupListeners();
         configTextFieldValidators();
-        balanceTextField.setup(pm().getWalletFacade(), pm().address.get());
+        balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get());
+    }
+
+    @Override
+    public void activate() {
+        super.activate();
     }
 
     @Override
@@ -87,13 +91,18 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         if (parentController != null) ((TradeController) parentController).onCreateOfferViewRemoved();
     }
 
+    @Override
+    public void terminate() {
+        super.terminate();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
+    // Public methods (called form other views/CB)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setOrderBookFilter(OrderBookFilter orderBookFilter) {
-        pm().setOrderBookFilter(orderBookFilter);
+        presentationModel.setOrderBookFilter(orderBookFilter);
     }
 
 
@@ -103,13 +112,11 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
 
     @FXML
     public void onPlaceOffer() {
-        pm().placeOffer();
+        presentationModel.placeOffer();
     }
 
     @FXML
     public void onClose() {
-        pm().close();
-
         TabPane tabPane = ((TabPane) (root.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
     }
@@ -120,99 +127,104 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setupListeners() {
-        volumeTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            pm().onFocusOutVolumeTextField(oldValue, newValue);
-            volumeTextField.setText(pm().volume.get());
-        });
-
+        // focus out
         amountTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            pm().onFocusOutAmountTextField(oldValue, newValue);
-            amountTextField.setText(pm().amount.get());
-        });
-
-        priceTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            pm().onFocusOutPriceTextField(oldValue, newValue);
-            priceTextField.setText(pm().price.get());
+            presentationModel.onFocusOutAmountTextField(oldValue, newValue, amountTextField.getText());
+            amountTextField.setText(presentationModel.amount.get());
         });
 
         minAmountTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            pm().onFocusOutMinAmountTextField(oldValue, newValue);
-            minAmountTextField.setText(pm().minAmount.get());
+            presentationModel.onFocusOutMinAmountTextField(oldValue, newValue, minAmountTextField.getText());
+            minAmountTextField.setText(presentationModel.minAmount.get());
         });
 
-        pm().showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
+        priceTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
+            presentationModel.onFocusOutPriceTextField(oldValue, newValue, priceTextField.getText());
+            priceTextField.setText(presentationModel.price.get());
+        });
+
+        volumeTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
+            presentationModel.onFocusOutVolumeTextField(oldValue, newValue, volumeTextField.getText());
+            volumeTextField.setText(presentationModel.volume.get());
+        });
+
+        // warnings
+        presentationModel.showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 Popups.openWarningPopup("Warning", "The amount you have entered exceeds the number of allowed decimal" +
                         " places.\nThe amount has been adjusted to 4 decimal places.");
-                pm().showWarningInvalidBtcDecimalPlaces.set(false);
+                presentationModel.showWarningInvalidBtcDecimalPlaces.set(false);
             }
         });
 
-        pm().showWarningInvalidFiatDecimalPlaces.addListener((o, oldValue, newValue) -> {
+        presentationModel.showWarningInvalidFiatDecimalPlaces.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 Popups.openWarningPopup("Warning", "The amount you have entered exceeds the number of allowed decimal" +
                         " places.\nThe amount has been adjusted to 2 decimal places.");
-                pm().showWarningInvalidFiatDecimalPlaces.set(false);
+                presentationModel.showWarningInvalidFiatDecimalPlaces.set(false);
             }
         });
 
-        pm().showWarningAdjustedVolume.addListener((o, oldValue, newValue) -> {
+        presentationModel.showWarningAdjustedVolume.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 Popups.openWarningPopup("Warning", "The total volume you have entered leads to invalid fractional " +
                         "Bitcoin amounts.\nThe amount has been adjusted and a new total volume be calculated from it.");
-                pm().showWarningAdjustedVolume.set(false);
-                volumeTextField.setText(pm().volume.get());
+                presentationModel.showWarningAdjustedVolume.set(false);
+                volumeTextField.setText(presentationModel.volume.get());
             }
         });
 
-        pm().requestPlaceOfferFailed.addListener((o, oldValue, newValue) -> {
+        presentationModel.requestPlaceOfferFailed.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 Popups.openErrorPopup("Error", "An error occurred when placing the offer.\n" +
-                        pm().requestPlaceOfferErrorMessage);
-                pm().requestPlaceOfferFailed.set(false);
+                        presentationModel.requestPlaceOfferErrorMessage);
+                presentationModel.requestPlaceOfferFailed.set(false);
             }
         });
     }
 
     private void setupBindings() {
-        buyLabel.textProperty().bind(pm().directionLabel);
-        amountTextField.textProperty().bindBidirectional(pm().amount);
-        priceTextField.textProperty().bindBidirectional(pm().price);
-        volumeTextField.textProperty().bindBidirectional(pm().volume);
+        buyLabel.textProperty().bind(presentationModel.directionLabel);
 
-        minAmountTextField.textProperty().bindBidirectional(pm().minAmount);
-        collateralLabel.textProperty().bind(pm().collateralLabel);
-        collateralTextField.textProperty().bind(pm().collateral);
-        totalToPayTextField.textProperty().bind(pm().totalToPay);
+        amountTextField.textProperty().bindBidirectional(presentationModel.amount);
+        minAmountTextField.textProperty().bindBidirectional(presentationModel.minAmount);
+        priceTextField.textProperty().bindBidirectional(presentationModel.price);
+        volumeTextField.textProperty().bindBidirectional(presentationModel.volume);
 
-        addressTextField.amountAsCoinProperty().bind(pm().totalToPayAsCoin);
-        addressTextField.paymentLabelProperty().bind(pm().paymentLabel);
-        addressTextField.addressProperty().bind(pm().addressAsString);
+        collateralLabel.textProperty().bind(presentationModel.collateralLabel);
+        collateralTextField.textProperty().bind(presentationModel.collateral);
+        totalToPayTextField.textProperty().bind(presentationModel.totalToPay);
+        totalFeesTextField.textProperty().bind(presentationModel.totalFees);
 
-        bankAccountTypeTextField.textProperty().bind(pm().bankAccountType);
-        bankAccountCurrencyTextField.textProperty().bind(pm().bankAccountCurrency);
-        bankAccountCountyTextField.textProperty().bind(pm().bankAccountCounty);
+        addressTextField.amountAsCoinProperty().bind(presentationModel.totalToPayAsCoin);
+        addressTextField.paymentLabelProperty().bind(presentationModel.paymentLabel);
+        addressTextField.addressProperty().bind(presentationModel.addressAsString);
 
-        acceptedCountriesTextField.textProperty().bind(pm().acceptedCountries);
-        acceptedLanguagesTextField.textProperty().bind(pm().acceptedLanguages);
-        totalFeesTextField.textProperty().bind(pm().totalFees);
-        transactionIdTextField.textProperty().bind(pm().transactionId);
+        bankAccountTypeTextField.textProperty().bind(presentationModel.bankAccountType);
+        bankAccountCurrencyTextField.textProperty().bind(presentationModel.bankAccountCurrency);
+        bankAccountCountyTextField.textProperty().bind(presentationModel.bankAccountCounty);
 
-        amountTextField.amountValidationResultProperty().bind(pm().amountValidationResult);
-        minAmountTextField.amountValidationResultProperty().bind(pm().minAmountValidationResult);
-        priceTextField.amountValidationResultProperty().bind(pm().priceValidationResult);
-        volumeTextField.amountValidationResultProperty().bind(pm().volumeValidationResult);
+        acceptedCountriesTextField.textProperty().bind(presentationModel.acceptedCountries);
+        acceptedLanguagesTextField.textProperty().bind(presentationModel.acceptedLanguages);
+        transactionIdTextField.textProperty().bind(presentationModel.transactionId);
 
-        placeOfferButton.visibleProperty().bind(pm().isPlaceOfferButtonVisible);
-        placeOfferButton.disableProperty().bind(pm().isPlaceOfferButtonDisabled);
-        closeButton.visibleProperty().bind(pm().isCloseButtonVisible);
+        // Validation
+        amountTextField.amountValidationResultProperty().bind(presentationModel.amountValidationResult);
+        minAmountTextField.amountValidationResultProperty().bind(presentationModel.minAmountValidationResult);
+        priceTextField.amountValidationResultProperty().bind(presentationModel.priceValidationResult);
+        volumeTextField.amountValidationResultProperty().bind(presentationModel.volumeValidationResult);
+
+        // buttons
+        placeOfferButton.visibleProperty().bind(presentationModel.isPlaceOfferButtonVisible);
+        placeOfferButton.disableProperty().bind(presentationModel.isPlaceOfferButtonDisabled);
+        closeButton.visibleProperty().bind(presentationModel.isCloseButtonVisible);
     }
 
     private void configTextFieldValidators() {
         Region referenceNode = (Region) amountTextField.getParent();
-        amountTextField.setErrorPopupLayoutReference(referenceNode);
-        priceTextField.setErrorPopupLayoutReference(referenceNode);
-        volumeTextField.setErrorPopupLayoutReference(referenceNode);
+        amountTextField.setLayoutReference(referenceNode);
+        priceTextField.setLayoutReference(referenceNode);
+        volumeTextField.setLayoutReference(referenceNode);
     }
 }
 

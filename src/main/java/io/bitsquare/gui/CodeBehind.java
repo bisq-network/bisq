@@ -11,23 +11,24 @@ import javafx.scene.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Non caching version for code behind classes using the PM pattern
+ *
+ * @param <T> The PresentationModel used in that class
+ */
 public class CodeBehind<T extends PresentationModel> implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(CodeBehind.class);
 
-    protected T pm;
+    protected T presentationModel;
     protected ViewController childController;
     protected ViewController parentController;
     @FXML protected Parent root;
 
-    public CodeBehind(T pm) {
-        this.pm = pm;
+    public CodeBehind(T presentationModel) {
+        this.presentationModel = presentationModel;
     }
 
     public CodeBehind() {
-    }
-
-    public T pm() {
-        return (T) pm;
     }
 
     /**
@@ -45,7 +46,7 @@ public class CodeBehind<T extends PresentationModel> implements Initializable {
             if (oldValue != null && newValue == null) terminate();
         });
 
-        pm.initialized();
+        presentationModel.initialized();
     }
 
     /**
@@ -56,7 +57,7 @@ public class CodeBehind<T extends PresentationModel> implements Initializable {
         log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
         if (childController != null) childController.terminate();
 
-        pm.terminate();
+        presentationModel.terminate();
     }
 
     /**

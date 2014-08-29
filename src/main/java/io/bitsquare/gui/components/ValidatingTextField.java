@@ -35,11 +35,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * TextField with validation support. Validation is executed on the Validator object.
- * In case of a invalid result we display a error message with a PopOver.
- * The position is derived from the textField or if set from the errorPopupLayoutReference object.
- * <p>
- * That class implements just what we need for the moment. It is not intended as a general purpose library class.
+ * TextField with validation support.
+ * In case the isValid property in amountValidationResultProperty get set to false we display a red border and an error
+ * message within the errorMessageDisplay placed on the right of the text field.
+ * The errorMessageDisplay gets closed when the ValidatingTextField instance gets removed from the scene graph or when
+ * hideErrorMessageDisplay() is called.
+ * There can be only 1 errorMessageDisplays at a time we use static field for it.
+ * The position is derived from the position of the textField itself or if set from the layoutReference node.
  */
 public class ValidatingTextField extends TextField {
     private static final Logger log = LoggerFactory.getLogger(ValidatingTextField.class);
@@ -49,17 +51,17 @@ public class ValidatingTextField extends TextField {
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>(new
             InputValidator.ValidationResult(true));
 
-    private static PopOver popOver;
-    private Region errorPopupLayoutReference = this;
+    private static PopOver errorMessageDisplay;
+    private Region layoutReference = this;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static void hidePopover() {
-        if (popOver != null)
-            popOver.hide();
+    public static void hideErrorMessageDisplay() {
+        if (errorMessageDisplay != null)
+            errorMessageDisplay.hide();
     }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -73,17 +75,16 @@ public class ValidatingTextField extends TextField {
                 setEffect(newValue.isValid ? null : invalidEffect);
 
                 if (newValue.isValid)
-                    hidePopover();
+                    hideErrorMessageDisplay();
                 else
                     applyErrorMessage(newValue);
             }
         });
 
         sceneProperty().addListener((ov, oldValue, newValue) -> {
-            // we got removed from the scene
-            // lets hide an open popup
+            // we got removed from the scene so hide the popup (if open)
             if (newValue == null)
-                hidePopover();
+                hideErrorMessageDisplay();
         });
 
     }
@@ -99,11 +100,11 @@ public class ValidatingTextField extends TextField {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * @param errorPopupLayoutReference The node used as reference for positioning. If not set explicitely the
-     *                                  ValidatingTextField instance is used.
+     * @param layoutReference The node used as reference for positioning. If not set explicitely the
+     *                        ValidatingTextField instance is used.
      */
-    public void setErrorPopupLayoutReference(Region errorPopupLayoutReference) {
-        this.errorPopupLayoutReference = errorPopupLayoutReference;
+    public void setLayoutReference(Region layoutReference) {
+        this.layoutReference = layoutReference;
     }
 
 
@@ -122,25 +123,26 @@ public class ValidatingTextField extends TextField {
 
     private void applyErrorMessage(InputValidator.ValidationResult validationResult) {
         if (validationResult.isValid) {
-            if (popOver != null) {
-                popOver.hide();
+            if (errorMessageDisplay != null) {
+                errorMessageDisplay.hide();
             }
         }
         else {
-            if (popOver == null)
+            if (errorMessageDisplay == null)
                 createErrorPopOver(validationResult.errorMessage);
             else
-                ((Label) popOver.getContentNode()).setText(validationResult.errorMessage);
+                ((Label) errorMessageDisplay.getContentNode()).setText(validationResult.errorMessage);
 
-            popOver.show(getScene().getWindow(), getErrorPopupPosition().getX(), getErrorPopupPosition().getY());
+            errorMessageDisplay.show(getScene().getWindow(), getErrorPopupPosition().getX(),
+                    getErrorPopupPosition().getY());
         }
     }
 
     private Point2D getErrorPopupPosition() {
         Window window = getScene().getWindow();
         Point2D point;
-        point = errorPopupLayoutReference.localToScene(0, 0);
-        double x = point.getX() + window.getX() + errorPopupLayoutReference.getWidth() + 20;
+        point = layoutReference.localToScene(0, 0);
+        double x = point.getX() + window.getX() + layoutReference.getWidth() + 20;
         double y = point.getY() + window.getY() + Math.floor(getHeight() / 2);
         return new Point2D(x, y);
     }
@@ -151,9 +153,9 @@ public class ValidatingTextField extends TextField {
         errorLabel.setId("validation-error");
         errorLabel.setPadding(new Insets(0, 10, 0, 10));
 
-        popOver = new PopOver(errorLabel);
-        popOver.setDetachable(false);
-        popOver.setArrowIndent(5);
+        ValidatingTextField.errorMessageDisplay = new PopOver(errorLabel);
+        ValidatingTextField.errorMessageDisplay.setDetachable(false);
+        ValidatingTextField.errorMessageDisplay.setArrowIndent(5);
     }
 
 }

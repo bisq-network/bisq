@@ -100,32 +100,18 @@ class CreateOfferModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user) {
+    CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user) {
         this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
         this.settings = settings;
         this.user = user;
 
-        // static data
         offerId = UUID.randomUUID().toString();
-        totalFeesAsCoin.setValue(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE));
 
-
-        //TODO just for unit testing, use mockito?
-        if (walletFacade != null && walletFacade.getWallet() != null)
-            addressEntry = walletFacade.getAddressInfoByTradeID(offerId);
-
-        collateralAsLong.setValue(settings.getCollateral());
-
-        BankAccount bankAccount = user.getCurrentBankAccount();
-        if (bankAccount != null) {
-            bankAccountType.setValue(bankAccount.getBankAccountType().toString());
-            bankAccountCurrency.setValue(bankAccount.getCurrency().getCurrencyCode());
-            bankAccountCounty.setValue(bankAccount.getCountry().getName());
-        }
-        acceptedCountries.setAll(settings.getAcceptedCountries());
-        acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
+        // Node: Don't do setup in constructor to make object creation faster
     }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -133,11 +119,29 @@ class CreateOfferModel extends UIModel {
     @Override
     public void initialized() {
         super.initialized();
+
+        // static data
+        totalFeesAsCoin.set(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE));
+
+        if (walletFacade != null && walletFacade.getWallet() != null)
+            addressEntry = walletFacade.getAddressInfoByTradeID(offerId);
     }
 
     @Override
     public void activate() {
         super.activate();
+
+        // might be changed after screen change
+        collateralAsLong.set(settings.getCollateral());
+
+        BankAccount bankAccount = user.getCurrentBankAccount();
+        if (bankAccount != null) {
+            bankAccountType.set(bankAccount.getBankAccountType().toString());
+            bankAccountCurrency.set(bankAccount.getCurrency().getCurrencyCode());
+            bankAccountCounty.set(bankAccount.getCountry().getName());
+        }
+        acceptedCountries.setAll(settings.getAcceptedCountries());
+        acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
     }
 
     @Override
@@ -150,41 +154,43 @@ class CreateOfferModel extends UIModel {
         super.terminate();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     void placeOffer() {
+        // data validation is done in the trade domain
         tradeManager.requestPlaceOffer(offerId,
                 direction,
                 priceAsFiat.get(),
                 amountAsCoin.get(),
                 minAmountAsCoin.get(),
                 (transaction) -> {
-                    requestPlaceOfferSuccess.setValue(true);
-                    transactionId.setValue(transaction.getHashAsString());
+                    requestPlaceOfferSuccess.set(true);
+                    transactionId.set(transaction.getHashAsString());
                 },
                 (errorMessage) -> {
-                    requestPlaceOfferFailed.setValue(true);
-                    requestPlaceOfferErrorMessage.setValue(errorMessage);
+                    requestPlaceOfferFailed.set(true);
+                    requestPlaceOfferErrorMessage.set(errorMessage);
                 }
         );
     }
 
     void calculateVolume() {
-        if (priceAsFiat.get() != null && amountAsCoin.get() != null /*&& !amountAsCoin.get().isZero()*/)
-            volumeAsFiat.setValue(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
+        if (priceAsFiat.get() != null && amountAsCoin.get() != null /*&& !amountAsCoin.get().isZero()*/) {
+            volumeAsFiat.set(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
+        }
     }
 
     void calculateAmount() {
 
         if (volumeAsFiat.get() != null && priceAsFiat.get() != null/* && !volumeAsFiat.get().isZero() && !priceAsFiat
                 .get().isZero()*/) {
-            amountAsCoin.setValue(new ExchangeRate(priceAsFiat.get()).fiatToCoin(volumeAsFiat.get()));
+            amountAsCoin.set(new ExchangeRate(priceAsFiat.get()).fiatToCoin(volumeAsFiat.get()));
 
             // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
-            amountAsCoin.setValue(reduceto4Dezimals(amountAsCoin.get()));
+            amountAsCoin.set(reduceto4Dezimals(amountAsCoin.get()));
             calculateTotalToPay();
             calculateCollateral();
         }
@@ -193,16 +199,15 @@ class CreateOfferModel extends UIModel {
     void calculateTotalToPay() {
         calculateCollateral();
 
-        if (collateralAsCoin.get() != null) {
-            totalToPayAsCoin.setValue(collateralAsCoin.get().add(totalFeesAsCoin.get()));
-
-        }
+        if (collateralAsCoin.get() != null)
+            totalToPayAsCoin.set(collateralAsCoin.get().add(totalFeesAsCoin.get()));
     }
 
     void calculateCollateral() {
         if (amountAsCoin.get() != null)
-            collateralAsCoin.setValue(amountAsCoin.get().multiply(collateralAsLong.get()).divide(1000));
+            collateralAsCoin.set(amountAsCoin.get().multiply(collateralAsLong.get()).divide(1000));
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Validation
@@ -213,6 +218,7 @@ class CreateOfferModel extends UIModel {
             return !minAmountAsCoin.get().isGreaterThan(amountAsCoin.get());
         return true;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter/Getter

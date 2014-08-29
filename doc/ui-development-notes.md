@@ -44,10 +44,9 @@ It is the JavaFX controller associated with the FXML view, but we don't use the 
 association with the classical MVC controller. It gets created by the JavaFX framework (FXMLLoader) and also the 
 setup with the FXML view is done by the framework.   
 
-It knows the presentation model but not the model.   
+It knows the presentation model (via Guice injection) but not the model. 
 
 #####Responsibility:  
-* Creates presentation model and passes model from Guice injection to the presenter (might be changed). 
 * Setup binding for updates from PM to view elements (also bidirectional for used for input data). 
 * Those binding are only simple bindings to plain presenter properties, no logical bindings.
 * Listens to UI events (Actions) from UI controls and calls method in presentation model.
@@ -62,7 +61,7 @@ It knows the presentation model but not the model.
 It is the abstraction/presentation of the view.      
 Can be used for unit testing.  
 
-It knows the model but it does not know the CodeBehind (View)
+It knows the model (via Guice injection) but it does not know the CodeBehind (View)
 
 #####Responsibility:
 * Holds the state of the view/CB

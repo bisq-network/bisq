@@ -78,7 +78,7 @@ public class TradeController extends CachedViewController {
 
         //TODO update to new verison
         ((TabPane) root).getSelectionModel().selectedIndexProperty().addListener((observableValue) ->
-                Platform.runLater(ValidatingTextField::hidePopover));
+                Platform.runLater(ValidatingTextField::hideErrorMessageDisplay));
     }
 
 

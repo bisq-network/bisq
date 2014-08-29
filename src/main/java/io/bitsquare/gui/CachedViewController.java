@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
  * If caching is used for loader we use the CachedViewController for turning the controller into sleep mode if not
  * active and awake it at reactivation.
  */
+// for new PM pattern use CachedCodeBehind
+@Deprecated
 public abstract class CachedViewController extends ViewController {
     private static final Logger log = LoggerFactory.getLogger(CachedViewController.class);
 
