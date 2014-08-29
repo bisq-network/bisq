@@ -59,6 +59,8 @@ public abstract class InputValidator {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static class ValidationResult {
+
+
         public final boolean isValid;
         public final String errorMessage;
 

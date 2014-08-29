@@ -28,6 +28,7 @@ import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
 import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.utils.ExchangeRate;
 import com.google.bitcoin.utils.Fiat;
 
 import com.google.inject.Inject;
@@ -50,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static io.bitsquare.gui.util.BSFormatter.reduceto4Dezimals;
 
 /**
  * Domain for that UI element.
@@ -67,12 +69,6 @@ class CreateOfferModel {
     private final String offerId;
     private Direction direction = null;
 
-    final Coin totalFeesAsCoin;
-    Coin amountAsCoin;
-    Coin minAmountAsCoin;
-    Coin collateralAsCoin;
-    Fiat priceAsFiat;
-    Fiat volumeAsFiat;
     AddressEntry addressEntry;
 
     final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
@@ -86,7 +82,13 @@ class CreateOfferModel {
     final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty();
     final BooleanProperty requestPlaceOfferFailed = new SimpleBooleanProperty();
 
+    final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
+    final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> collateralAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> totalFeesAsCoin = new SimpleObjectProperty<>();
 
     ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();
     ObservableList<Locale> acceptedLanguages = FXCollections.observableArrayList();
@@ -105,7 +107,7 @@ class CreateOfferModel {
 
         // static data
         offerId = UUID.randomUUID().toString();
-        totalFeesAsCoin = FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE);
+        totalFeesAsCoin.set(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE));
 
 
         //TODO just for unit testing, use mockito?
@@ -138,9 +140,9 @@ class CreateOfferModel {
     void placeOffer() {
         tradeManager.requestPlaceOffer(offerId,
                 direction,
-                priceAsFiat,
-                amountAsCoin,
-                minAmountAsCoin,
+                priceAsFiat.get(),
+                amountAsCoin.get(),
+                minAmountAsCoin.get(),
                 (transaction) -> {
                     requestPlaceOfferSuccess.set(true);
                     transactionId.set(transaction.getHashAsString());
@@ -152,13 +154,45 @@ class CreateOfferModel {
         );
     }
 
+    void calculateVolume() {
+        if (priceAsFiat.get() != null && amountAsCoin.get() != null /*&& !amountAsCoin.get().isZero()*/)
+            volumeAsFiat.set(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
+    }
+
+    void calculateAmount() {
+
+        if (volumeAsFiat.get() != null && priceAsFiat.get() != null/* && !volumeAsFiat.get().isZero() && !priceAsFiat
+                .get().isZero()*/) {
+            amountAsCoin.set(new ExchangeRate(priceAsFiat.get()).fiatToCoin(volumeAsFiat.get()));
+
+            // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
+            amountAsCoin.set(reduceto4Dezimals(amountAsCoin.get()));
+            calculateTotalToPay();
+            calculateCollateral();
+        }
+    }
+
+    void calculateTotalToPay() {
+        calculateCollateral();
+
+        if (collateralAsCoin.get() != null) {
+            totalToPayAsCoin.set(collateralAsCoin.get().add(totalFeesAsCoin.get()));
+
+        }
+    }
+
+    void calculateCollateral() {
+        if (amountAsCoin.get() != null)
+            collateralAsCoin.set(amountAsCoin.get().multiply(collateralAsLong.get()).divide(1000));
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Validation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     boolean isMinAmountLessOrEqualAmount() {
-        if (minAmountAsCoin != null && amountAsCoin != null)
-            return !minAmountAsCoin.isGreaterThan(amountAsCoin);
+        if (minAmountAsCoin.get() != null && amountAsCoin.get() != null)
+            return !minAmountAsCoin.get().isGreaterThan(amountAsCoin.get());
         return true;
     }
 

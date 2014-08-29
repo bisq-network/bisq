@@ -31,75 +31,35 @@ public class FiatValidatorTest {
         NumberValidator.ValidationResult validationResult;
 
 
-        // invalid cases
-        validationResult = validator.validate(null);
-        assertFalse(validationResult.isValid);
+        assertTrue(validator.validate("1").isValid);
+        assertTrue(validator.validate("1,1").isValid);
+        assertTrue(validator.validate("1.1").isValid);
+        assertTrue(validator.validate(",1").isValid);
+        assertTrue(validator.validate(".1").isValid);
+        assertTrue(validator.validate("0.01").isValid);
+        assertTrue(validator.validate("1000000.00").isValid);
+        assertTrue(validator.validate(String.valueOf(FiatValidator.MIN_FIAT_VALUE)).isValid);
+        assertTrue(validator.validate(String.valueOf(FiatValidator.MAX_FIAT_VALUE)).isValid);
 
-        validationResult = validator.validate("");
-        assertFalse(validationResult.isValid);
+        assertFalse(validator.validate(null).isValid);
+        assertFalse(validator.validate("").isValid);
+        assertFalse(validator.validate("a").isValid);
+        assertFalse(validator.validate("2a").isValid);
+        assertFalse(validator.validate("a2").isValid);
+        assertFalse(validator.validate("0").isValid);
+        assertFalse(validator.validate("-1").isValid);
+        assertFalse(validator.validate("0.0").isValid);
+        assertFalse(validator.validate("0,1,1").isValid);
+        assertFalse(validator.validate("0.1.1").isValid);
+        assertFalse(validator.validate("1,000.1").isValid);
+        assertFalse(validator.validate("1.000,1").isValid);
+        assertFalse(validator.validate("0.009").isValid);
+        assertFalse(validator.validate("1000000.01").isValid);
 
-        validationResult = validator.validate("0");
-        assertFalse(validationResult.isValid);
+        assertFalse(validator.validate(String.valueOf(FiatValidator.MIN_FIAT_VALUE - 0.0000001)).isValid);
+        assertFalse(validator.validate(String.valueOf(FiatValidator.MAX_FIAT_VALUE + 0.0000001)).isValid);
+        assertFalse(validator.validate(String.valueOf(Double.MIN_VALUE)).isValid);
+        assertFalse(validator.validate(String.valueOf(Double.MAX_VALUE)).isValid);
 
-        validationResult = validator.validate("-1");
-        assertFalse(validationResult.isValid);
-
-        validationResult = validator.validate("a");
-        assertFalse(validationResult.isValid);
-
-        validationResult = validator.validate("2a");
-        assertFalse(validationResult.isValid);
-
-        validationResult = validator.validate("a2");
-        assertFalse(validationResult.isValid);
-
-        // at the moment we dont support thousand separators, can be added later
-        validationResult = validator.validate("1,100.1");
-        assertFalse(validationResult.isValid);
-
-        // at the moment we dont support thousand separators, can be added later
-        validationResult = validator.validate("1.100,1");
-        assertFalse(validationResult.isValid);
-
-        validationResult = validator.validate("1.100.1");
-        assertFalse(validationResult.isValid);
-
-        validationResult = validator.validate("1,100,1");
-        assertFalse(validationResult.isValid);
-
-        validationResult = validator.validate(String.valueOf(FiatValidator.MIN_FIAT_VALUE - 0.0000001));
-        assertFalse(validationResult.isValid);
-
-        validationResult = validator.validate(String.valueOf(FiatValidator.MAX_FIAT_VALUE + 0.0000001));
-        assertFalse(validationResult.isValid);
-
-        validationResult = validator.validate(String.valueOf(Double.MIN_VALUE));
-        assertFalse(validationResult.isValid);
-
-        validationResult = validator.validate(String.valueOf(Double.MAX_VALUE));
-        assertFalse(validationResult.isValid);
-
-
-        // valid cases
-        validationResult = validator.validate("1");
-        assertTrue(validationResult.isValid);
-
-        validationResult = validator.validate("0,1");
-        assertTrue(validationResult.isValid);
-
-        validationResult = validator.validate("0.1");
-        assertTrue(validationResult.isValid);
-
-        validationResult = validator.validate(",1");
-        assertTrue(validationResult.isValid);
-
-        validationResult = validator.validate(".1");
-        assertTrue(validationResult.isValid);
-
-        validationResult = validator.validate(String.valueOf(FiatValidator.MIN_FIAT_VALUE));
-        assertTrue(validationResult.isValid);
-
-        validationResult = validator.validate(String.valueOf(FiatValidator.MAX_FIAT_VALUE));
-        assertTrue(validationResult.isValid);
     }
 }

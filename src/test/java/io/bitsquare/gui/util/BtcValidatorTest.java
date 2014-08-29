@@ -18,7 +18,6 @@
 package io.bitsquare.gui.util;
 
 import io.bitsquare.gui.util.validation.BtcValidator;
-import io.bitsquare.gui.util.validation.NumberValidator;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.NetworkParameters;
@@ -29,25 +28,30 @@ import static org.junit.Assert.*;
 
 public class BtcValidatorTest {
     @Test
-    public void testValidate() {
+    public void testIsValid() {
         BtcValidator validator = new BtcValidator();
-        NumberValidator.ValidationResult validationResult;
 
-        // invalid cases
-        validationResult = validator.validate("0.000000011");// minBtc is "0.00000001"
-        assertFalse(validationResult.isValid);
+        assertTrue(validator.validate("1").isValid);
+        assertTrue(validator.validate("1,1").isValid);
+        assertTrue(validator.validate("1.1").isValid);
+        assertTrue(validator.validate(",1").isValid);
+        assertTrue(validator.validate(".1").isValid);
+        assertTrue(validator.validate("0.12345678").isValid);
+        assertTrue(validator.validate(Coin.SATOSHI.toPlainString()).isValid);
+        assertTrue(validator.validate(NetworkParameters.MAX_MONEY.toPlainString()).isValid);
 
-        validationResult = validator.validate("21000001"); //maxBtc is "21000000"
-        assertFalse(validationResult.isValid);
-
-        // valid cases
-        String minBtc = Coin.SATOSHI.toPlainString(); // "0.00000001"
-        validationResult = validator.validate(minBtc);
-        assertTrue(validationResult.isValid);
-
-        String maxBtc = Coin.valueOf(NetworkParameters.MAX_MONEY.longValue()).toPlainString(); //"21000000"
-        validationResult = validator.validate(maxBtc);
-        assertTrue(validationResult.isValid);
+        assertFalse(validator.validate(null).isValid);
+        assertFalse(validator.validate("").isValid);
+        assertFalse(validator.validate("0").isValid);
+        assertFalse(validator.validate("0.0").isValid);
+        assertFalse(validator.validate("0,1,1").isValid);
+        assertFalse(validator.validate("0.1.1").isValid);
+        assertFalse(validator.validate("1,000.1").isValid);
+        assertFalse(validator.validate("1.000,1").isValid);
+        assertFalse(validator.validate("0.123456789").isValid);
+        assertFalse(validator.validate("-1").isValid);
+        assertFalse(validator.validate(String.valueOf(NetworkParameters.MAX_MONEY.longValue() + Coin.SATOSHI
+                .longValue())).isValid);
     }
 
 }
