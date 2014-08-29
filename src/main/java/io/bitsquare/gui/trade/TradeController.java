@@ -20,7 +20,7 @@ package io.bitsquare.gui.trade;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.components.ValidatingTextField;
+import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.trade.createoffer.CreateOfferCB;
 import io.bitsquare.gui.trade.orderbook.OrderBookController;
 import io.bitsquare.gui.trade.takeoffer.TakeOfferController;
@@ -78,7 +78,7 @@ public class TradeController extends CachedViewController {
 
         //TODO update to new verison
         ((TabPane) root).getSelectionModel().selectedIndexProperty().addListener((observableValue) ->
-                Platform.runLater(ValidatingTextField::hideErrorMessageDisplay));
+                Platform.runLater(InputTextField::hideErrorMessageDisplay));
     }
 
 

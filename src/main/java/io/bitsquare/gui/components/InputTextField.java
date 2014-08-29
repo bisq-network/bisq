@@ -43,8 +43,8 @@ import org.slf4j.LoggerFactory;
  * There can be only 1 errorMessageDisplays at a time we use static field for it.
  * The position is derived from the position of the textField itself or if set from the layoutReference node.
  */
-public class ValidatingTextField extends TextField {
-    private static final Logger log = LoggerFactory.getLogger(ValidatingTextField.class);
+public class InputTextField extends TextField {
+    private static final Logger log = LoggerFactory.getLogger(InputTextField.class);
 
     private Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
 
@@ -67,7 +67,7 @@ public class ValidatingTextField extends TextField {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ValidatingTextField() {
+    public InputTextField() {
         super();
 
         amountValidationResult.addListener((ov, oldValue, newValue) -> {
@@ -153,9 +153,9 @@ public class ValidatingTextField extends TextField {
         errorLabel.setId("validation-error");
         errorLabel.setPadding(new Insets(0, 10, 0, 10));
 
-        ValidatingTextField.errorMessageDisplay = new PopOver(errorLabel);
-        ValidatingTextField.errorMessageDisplay.setDetachable(false);
-        ValidatingTextField.errorMessageDisplay.setArrowIndent(5);
+        InputTextField.errorMessageDisplay = new PopOver(errorLabel);
+        InputTextField.errorMessageDisplay.setDetachable(false);
+        InputTextField.errorMessageDisplay.setArrowIndent(5);
     }
 
 }

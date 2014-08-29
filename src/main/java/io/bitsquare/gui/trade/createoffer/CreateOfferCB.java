@@ -18,8 +18,8 @@
 package io.bitsquare.gui.trade.createoffer;
 
 import io.bitsquare.gui.CachedCodeBehind;
+import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.components.ValidatingTextField;
 import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
@@ -43,7 +43,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferCB.class);
 
     @FXML private Label buyLabel, confirmationLabel, txTitleLabel, collateralLabel;
-    @FXML private ValidatingTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
+    @FXML private InputTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
     @FXML private Button placeOfferButton, closeButton;
     @FXML private TextField totalToPayTextField, collateralTextField, bankAccountTypeTextField,
             bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField,
