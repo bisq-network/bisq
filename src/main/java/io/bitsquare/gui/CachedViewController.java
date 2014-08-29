@@ -33,7 +33,7 @@ public abstract class CachedViewController extends ViewController {
 
     public CachedViewController() {
     }
-    
+
     /**
      * Get called form GUI framework when the UI is ready.
      * In caching controllers the initialize is only used for static UI setup.
