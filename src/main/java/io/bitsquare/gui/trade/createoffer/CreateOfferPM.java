@@ -282,7 +282,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         // We do volume/amount calculation during input, so user has immediate feedback
         amount.addListener((ov, oldValue, newValue) -> {
             if (isBtcInputValid(newValue).isValid) {
-                setMinAmountToModel();
+                setAmountToModel();
                 calculateVolume();
                 model.calculateTotalToPay();
                 model.calculateCollateral();

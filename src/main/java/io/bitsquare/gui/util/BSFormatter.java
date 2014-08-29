@@ -23,7 +23,6 @@ import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
 
 import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.utils.BtcFormat;
 import com.google.bitcoin.utils.CoinFormat;
 import com.google.bitcoin.utils.Fiat;
 
@@ -55,10 +54,15 @@ public class BSFormatter {
 
     private static Locale locale = Locale.getDefault();
     private static boolean useMilliBit;
-    private static String code = "BTC";
     private static int scale = 3;
 
-    // format is like: 1,00 or 1,0010  never more then 4 decimals 
+    // Format use 2 min decimal places and 2 more optional: 1.00 or 1.0010  
+    // There are not more then 4 decimals allowed.
+    // We don't support localized formatting. Format is always using "." as decimal mark and no grouping separator.
+    // Input of "," as decimal mark (like in german locale) will be replaced with ".".
+    // Input of a group separator (1,123,45) lead to an validation error.
+    // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit, 
+    // no way to remove grouping separator). It seems to be not optimal for user input formatting.
     private static CoinFormat coinFormat = CoinFormat.BTC.repeatOptionalDecimals(2, 1);
 
     // format is like: 1,00  never more then 2 decimals 
@@ -66,11 +70,9 @@ public class BSFormatter {
 
     private static String currencyCode = Currency.getInstance(Locale.getDefault()).getCurrencyCode();
 
-    private static BtcFormat btcFormat = getBtcFormat();
-
     static {
         //useMilliBitFormat(true);
-        setLocale(Locale.US);
+        // setLocale(Locale.US);
     }
 
 
@@ -81,8 +83,7 @@ public class BSFormatter {
 
     public static void useMilliBitFormat(boolean useMilliBit) {
         BSFormatter.useMilliBit = useMilliBit;
-        code = useMilliBit ? "mBTC" : "BTC";
-        btcFormat = getBtcFormat();
+        coinFormat = getCoinFormat();
         scale = useMilliBit ? 0 : 3;
     }
 
@@ -91,11 +92,13 @@ public class BSFormatter {
      */
     public static void setLocale(Locale locale) {
         BSFormatter.locale = locale;
-        btcFormat = getBtcFormat();
     }
 
-    private static BtcFormat getBtcFormat() {
-        return BtcFormat.getInstance(useMilliBit ? BtcFormat.MILLICOIN_SCALE : BtcFormat.COIN_SCALE, locale, 2, 2);
+    private static CoinFormat getCoinFormat() {
+        if (useMilliBit)
+            return CoinFormat.MBTC.repeatOptionalDecimals(2, 1);
+        else
+            return CoinFormat.BTC.repeatOptionalDecimals(2, 1);
     }
 
     public static void setFiatCurrencyCode(String currencyCode) {
@@ -109,7 +112,7 @@ public class BSFormatter {
 
     public static String formatCoin(Coin coin) {
         try {
-            return btcFormat.format(coin);
+            return coinFormat.noCode().format(coin).toString();
         } catch (Throwable t) {
             log.warn("Exception at formatBtc: " + t.toString());
             return "";
@@ -118,18 +121,19 @@ public class BSFormatter {
 
     public static String formatCoinWithCode(Coin coin) {
         try {
-            // we don't use the code feature from btcFormat as it does automatic switching between mBTC and BTC and 
+            // we don't use the code feature from coinFormat as it does automatic switching between mBTC and BTC and 
             // pre and post fixing
-            return btcFormat.format(coin) + " " + code;
+            return coinFormat.postfixCode().format(coin).toString();
         } catch (Throwable t) {
             log.warn("Exception at formatBtcWithCode: " + t.toString());
             return "";
         }
     }
 
+
     public static Coin parseToCoin(String input) {
         try {
-            return btcFormat.parse(input);
+            return coinFormat.parse(cleanedInput(input));
         } catch (Throwable t) {
             log.warn("Exception at parseToBtc: " + t.toString());
             return Coin.ZERO;
@@ -146,7 +150,7 @@ public class BSFormatter {
      */
     public static Coin parseToCoinWith4Decimals(String input) {
         try {
-            return Coin.valueOf(new BigDecimal(parseToCoin(input).value).setScale(-scale - 1,
+            return Coin.valueOf(new BigDecimal(parseToCoin(cleanedInput(input)).value).setScale(-scale - 1,
                     BigDecimal.ROUND_HALF_UP).setScale(scale + 1).toBigInteger().longValue());
         } catch (Throwable t) {
             log.warn("Exception at parseToCoinWith4Decimals: " + t.toString());
@@ -164,7 +168,7 @@ public class BSFormatter {
      * @param coin The coin which should be transformed
      * @return The transformed coin
      */
-    public static Coin reduceto4Dezimals(Coin coin) {
+    public static Coin reduceTo4Decimals(Coin coin) {
         return parseToCoin(formatCoin(coin));
     }
 
@@ -193,9 +197,7 @@ public class BSFormatter {
 
     public static Fiat parseToFiat(String input) {
         try {
-            input = input.replace(",", ".");
-            Double.parseDouble(input); // test if valid double
-            return Fiat.parseFiat(currencyCode, input);
+            return Fiat.parseFiat(currencyCode, cleanedInput(input));
         } catch (Exception e) {
             return Fiat.valueOf(currencyCode, 0);
         }
@@ -211,9 +213,7 @@ public class BSFormatter {
      */
     public static Fiat parseToFiatWith2Decimals(String input) {
         try {
-            input = input.replace(",", ".");
-            Double.parseDouble(input); // test if valid double
-            return parseToFiat(new BigDecimal(input).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
+            return parseToFiat(new BigDecimal(cleanedInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
         } catch (Throwable t) {
             log.warn("Exception at parseCoinTo4Decimals: " + t.toString());
             return Fiat.valueOf(currencyCode, 0);
@@ -358,4 +358,12 @@ public class BSFormatter {
     public static String formatCoinWithCode(Coin coin) {
         return coin != null ? coin.toFriendlyString() : "";
     }*/
+
+    private static String cleanedInput(String input) {
+        input = input.replace(",", ".");
+        // don't use String.valueOf(Double.parseDouble(input)) as return value as it gives scientific 
+        // notation (1.0E-6) which screw up coinFormat.parse
+        Double.parseDouble(input);
+        return input;
+    }
 }

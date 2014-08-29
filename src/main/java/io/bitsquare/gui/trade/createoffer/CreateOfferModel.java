@@ -52,7 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static io.bitsquare.gui.util.BSFormatter.reduceto4Dezimals;
+import static io.bitsquare.gui.util.BSFormatter.reduceTo4Decimals;
 
 /**
  * Domain for that UI element.
@@ -132,16 +132,20 @@ class CreateOfferModel extends UIModel {
         super.activate();
 
         // might be changed after screen change
-        collateralAsLong.set(settings.getCollateral());
-
-        BankAccount bankAccount = user.getCurrentBankAccount();
-        if (bankAccount != null) {
-            bankAccountType.set(bankAccount.getBankAccountType().toString());
-            bankAccountCurrency.set(bankAccount.getCurrency().getCurrencyCode());
-            bankAccountCounty.set(bankAccount.getCountry().getName());
+        if (settings != null) {
+            collateralAsLong.set(settings.getCollateral());
+            acceptedCountries.setAll(settings.getAcceptedCountries());
+            acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
         }
-        acceptedCountries.setAll(settings.getAcceptedCountries());
-        acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
+
+        if (user != null) {
+            BankAccount bankAccount = user.getCurrentBankAccount();
+            if (bankAccount != null) {
+                bankAccountType.set(bankAccount.getBankAccountType().toString());
+                bankAccountCurrency.set(bankAccount.getCurrency().getCurrencyCode());
+                bankAccountCounty.set(bankAccount.getCountry().getName());
+            }
+        }
     }
 
     @Override
@@ -178,34 +182,54 @@ class CreateOfferModel extends UIModel {
     }
 
     void calculateVolume() {
-        if (priceAsFiat.get() != null && amountAsCoin.get() != null /*&& !amountAsCoin.get().isZero()*/) {
-            volumeAsFiat.set(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
+        try {
+            if (priceAsFiat.get() != null && amountAsCoin.get() != null && !amountAsCoin.get().isZero() && !priceAsFiat
+                    .get().isZero()) {
+                volumeAsFiat.set(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
+            }
+        } catch (Throwable t) {
+            // Should be never reached
+            log.error(t.toString());
         }
     }
 
     void calculateAmount() {
+        try {
+            if (volumeAsFiat.get() != null && priceAsFiat.get() != null && !volumeAsFiat.get().isZero() && !priceAsFiat
+                    .get().isZero()) {
+                amountAsCoin.set(new ExchangeRate(priceAsFiat.get()).fiatToCoin(volumeAsFiat.get()));
 
-        if (volumeAsFiat.get() != null && priceAsFiat.get() != null/* && !volumeAsFiat.get().isZero() && !priceAsFiat
-                .get().isZero()*/) {
-            amountAsCoin.set(new ExchangeRate(priceAsFiat.get()).fiatToCoin(volumeAsFiat.get()));
-
-            // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
-            amountAsCoin.set(reduceto4Dezimals(amountAsCoin.get()));
-            calculateTotalToPay();
-            calculateCollateral();
+                // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
+                amountAsCoin.set(reduceTo4Decimals(amountAsCoin.get()));
+                calculateTotalToPay();
+                calculateCollateral();
+            }
+        } catch (Throwable t) {
+            // Should be never reached
+            log.error(t.toString());
         }
     }
 
     void calculateTotalToPay() {
         calculateCollateral();
-
-        if (collateralAsCoin.get() != null)
-            totalToPayAsCoin.set(collateralAsCoin.get().add(totalFeesAsCoin.get()));
+        try {
+            if (collateralAsCoin.get() != null)
+                totalToPayAsCoin.set(collateralAsCoin.get().add(totalFeesAsCoin.get()));
+        } catch (Throwable t) {
+            // Should be never reached
+            log.error(t.toString());
+        }
     }
 
     void calculateCollateral() {
-        if (amountAsCoin.get() != null)
-            collateralAsCoin.set(amountAsCoin.get().multiply(collateralAsLong.get()).divide(1000));
+        try {
+
+            if (amountAsCoin.get() != null)
+                collateralAsCoin.set(amountAsCoin.get().multiply(collateralAsLong.get()).divide(1000L));
+        } catch (Throwable t) {
+            // The multiply might lead to too large numbers, we don't handle it but it should not break the app
+            log.error(t.toString());
+        }
     }
 
 
