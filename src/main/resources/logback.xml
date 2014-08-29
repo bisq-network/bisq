@@ -23,7 +23,7 @@
         -->
     </root>
 
-    <logger name="io.bitsquare" level="WARN"/>
+    <logger name="io.bitsquare" level="TRACE"/>
 
     <logger name="com.google.bitcoin" level="WARN"/>
     <logger name="net.tomp2p" level="WARN"/>

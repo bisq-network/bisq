@@ -44,7 +44,7 @@ public abstract class InputValidator {
 
     protected ValidationResult validateIfNotEmpty(String input) {
         if (input == null || input.length() == 0)
-            return new ValidationResult(false, "Empty input is not allowed.", ErrorType.EMPTY_INPUT);
+            return new ValidationResult(false, "Empty input is not allowed.");
         else
             return new ValidationResult(true);
     }
@@ -55,37 +55,20 @@ public abstract class InputValidator {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // ErrorType
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public enum ErrorType {
-        EMPTY_INPUT,
-        NOT_A_NUMBER,
-        ZERO_NUMBER,
-        NEGATIVE_NUMBER,
-        FRACTIONAL_SATOSHI,
-        EXCEEDS_MAX_FIAT_VALUE, UNDERCUT_MIN_FIAT_VALUE, AMOUNT_LESS_THAN_MIN_AMOUNT,
-        MIN_AMOUNT_LARGER_THAN_MIN_AMOUNT, EXCEEDS_MAX_BTC_VALUE
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // ValidationResult
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static class ValidationResult {
         public final boolean isValid;
         public final String errorMessage;
-        public final ErrorType errorType;
 
-        public ValidationResult(boolean isValid, String errorMessage, ErrorType errorType) {
+        public ValidationResult(boolean isValid, String errorMessage) {
             this.isValid = isValid;
             this.errorMessage = errorMessage;
-            this.errorType = errorType;
         }
 
-        ValidationResult(boolean isValid) {
-            this(isValid, null, null);
+        public ValidationResult(boolean isValid) {
+            this(isValid, null);
         }
 
         public ValidationResult and(ValidationResult next) {
@@ -100,7 +83,6 @@ public abstract class InputValidator {
             return "ValidationResult{" +
                     "isValid=" + isValid +
                     ", errorMessage='" + errorMessage + '\'' +
-                    ", errorType=" + errorType +
                     '}';
         }
     }

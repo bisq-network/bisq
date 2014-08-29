@@ -75,6 +75,8 @@ public class TradeController extends CachedViewController {
 
         // TODO find better solution
         // Textfield focus out triggers validation, use runLater as quick fix...
+
+        //TODO update to new verison
         ((TabPane) root).getSelectionModel().selectedIndexProperty().addListener((observableValue) ->
                 Platform.runLater(ValidatingTextField::hidePopover));
     }

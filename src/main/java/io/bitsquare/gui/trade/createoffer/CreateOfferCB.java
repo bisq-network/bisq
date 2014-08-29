@@ -24,9 +24,6 @@ import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.trade.TradeController;
-import io.bitsquare.gui.util.validation.BtcValidator;
-import io.bitsquare.gui.util.validation.FiatValidator;
-import io.bitsquare.gui.util.validation.ValidationHelper;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 
 import java.net.URL;
@@ -78,8 +75,12 @@ public class CreateOfferCB extends CachedViewController {
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
+        //TODO handle in base class
         pm.onViewInitialized();
 
+        setupBindings();
+        setupListeners();
+        configTextFieldValidators();
         balanceTextField.setup(pm.getWalletFacade(), pm.address.get());
     }
 
@@ -87,21 +88,19 @@ public class CreateOfferCB extends CachedViewController {
     public void deactivate() {
         super.deactivate();
 
+        //TODO handle in base class
         pm.deactivate();
 
         //TODO check that again
-        ((TradeController) parentController).onCreateOfferViewRemoved();
+        if (parentController != null) ((TradeController) parentController).onCreateOfferViewRemoved();
     }
 
     @Override
     public void activate() {
         super.activate();
 
+        //TODO handle in base class
         pm.activate();
-
-        setupBindings();
-        setupListeners();
-        setupTextFieldValidators();
     }
 
 
@@ -138,7 +137,7 @@ public class CreateOfferCB extends CachedViewController {
 
     private void setupListeners() {
         volumeTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            pm.onFocusOutVolumeTextField(oldValue, newValue, volumeTextField.getText());
+            pm.onFocusOutVolumeTextField(oldValue, newValue);
             volumeTextField.setText(pm.volume.get());
         });
 
@@ -157,15 +156,6 @@ public class CreateOfferCB extends CachedViewController {
             minAmountTextField.setText(pm.minAmount.get());
         });
 
-        pm.needsInputValidation.addListener((o, oldValue, newValue) -> {
-            if (newValue) {
-                amountTextField.reValidate();
-                minAmountTextField.reValidate();
-                volumeTextField.reValidate();
-                priceTextField.reValidate();
-            }
-        });
-
         pm.showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 Popups.openWarningPopup("Warning", "The amount you have entered exceeds the number of allowed decimal" +
@@ -182,11 +172,11 @@ public class CreateOfferCB extends CachedViewController {
             }
         });
 
-        pm.showWarningInvalidBtcFractions.addListener((o, oldValue, newValue) -> {
+        pm.showWarningAdjustedVolume.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 Popups.openWarningPopup("Warning", "The total volume you have entered leads to invalid fractional " +
                         "Bitcoin amounts.\nThe amount has been adjusted and a new total volume be calculated from it.");
-                pm.showWarningInvalidBtcFractions.set(false);
+                pm.showWarningAdjustedVolume.set(false);
                 volumeTextField.setText(pm.volume.get());
             }
         });
@@ -224,46 +214,21 @@ public class CreateOfferCB extends CachedViewController {
         totalFeesTextField.textProperty().bind(pm.totalFees);
         transactionIdTextField.textProperty().bind(pm.transactionId);
 
+        amountTextField.amountValidationResultProperty().bind(pm.amountValidationResult);
+        minAmountTextField.amountValidationResultProperty().bind(pm.minAmountValidationResult);
+        priceTextField.amountValidationResultProperty().bind(pm.priceValidationResult);
+        volumeTextField.amountValidationResultProperty().bind(pm.volumeValidationResult);
+
         placeOfferButton.visibleProperty().bind(pm.isPlaceOfferButtonVisible);
         placeOfferButton.disableProperty().bind(pm.isPlaceOfferButtonDisabled);
         closeButton.visibleProperty().bind(pm.isCloseButtonVisible);
-
-        //TODO
-       /* progressIndicator.visibleProperty().bind(viewModel.isOfferPlacedScreen);
-        confirmationLabel.visibleProperty().bind(viewModel.isOfferPlacedScreen);
-        txTitleLabel.visibleProperty().bind(viewModel.isOfferPlacedScreen);
-        transactionIdTextField.visibleProperty().bind(viewModel.isOfferPlacedScreen);
-       */
-
-        // TODO
-       /* placeOfferButton.disableProperty().bind(amountTextField.isValidProperty()
-                                                               .and(minAmountTextField.isValidProperty())
-                                                               .and(volumeTextField.isValidProperty())
-                                                               .and(priceTextField.isValidProperty()).not());*/
     }
 
-    private void setupTextFieldValidators() {
+    private void configTextFieldValidators() {
         Region referenceNode = (Region) amountTextField.getParent();
-
-        BtcValidator amountValidator = new BtcValidator();
-        amountTextField.setValidator(amountValidator);
         amountTextField.setErrorPopupLayoutReference(referenceNode);
-
-        priceTextField.setValidator(new FiatValidator());
         priceTextField.setErrorPopupLayoutReference(referenceNode);
-
-        volumeTextField.setValidator(new FiatValidator());
         volumeTextField.setErrorPopupLayoutReference(referenceNode);
-
-        BtcValidator minAmountValidator = new BtcValidator();
-        minAmountTextField.setValidator(minAmountValidator);
-
-        ValidationHelper.setupMinAmountInRangeOfAmountValidation(amountTextField,
-                minAmountTextField,
-                pm.amount,
-                pm.minAmount,
-                amountValidator,
-                minAmountValidator);
     }
 }
 

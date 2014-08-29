@@ -22,10 +22,12 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 
 import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.NetworkParameters;
 import com.google.bitcoin.utils.Fiat;
 
 import java.util.Locale;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import org.slf4j.Logger;
@@ -36,15 +38,71 @@ import static org.junit.Assert.*;
 public class CreateOfferPMTest {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferPMTest.class);
 
-    @Test
-    public void testBindings() {
-        CreateOfferModel model = new CreateOfferModel(null, null, null, null);
+    private CreateOfferModel model;
+    private CreateOfferPM presenter;
+
+    @Before
+    public void setup() {
+        model = new CreateOfferModel(null, null, null, null);
 
         BSFormatter.setLocale(Locale.US);
         BSFormatter.setFiatCurrencyCode("USD");
 
-        CreateOfferPM presenter = new CreateOfferPM(model);
+        presenter = new CreateOfferPM(model);
         presenter.onViewInitialized();
+    }
+
+    @Test
+    public void testIsBtcInputValid() {
+        assertTrue(presenter.isBtcInputValid("1").isValid);
+        assertTrue(presenter.isBtcInputValid("1,1").isValid);
+        assertTrue(presenter.isBtcInputValid("1.1").isValid);
+        assertTrue(presenter.isBtcInputValid(",1").isValid);
+        assertTrue(presenter.isBtcInputValid(".1").isValid);
+        assertTrue(presenter.isBtcInputValid("0.12345678").isValid);
+        assertTrue(presenter.isBtcInputValid(Coin.SATOSHI.toPlainString()).isValid);
+        assertTrue(presenter.isBtcInputValid(NetworkParameters.MAX_MONEY.toPlainString()).isValid);
+
+        assertFalse(presenter.isBtcInputValid(null).isValid);
+        assertFalse(presenter.isBtcInputValid("").isValid);
+        assertFalse(presenter.isBtcInputValid("0").isValid);
+        assertFalse(presenter.isBtcInputValid("0.0").isValid);
+        assertFalse(presenter.isBtcInputValid("0,1,1").isValid);
+        assertFalse(presenter.isBtcInputValid("0.1.1").isValid);
+        assertFalse(presenter.isBtcInputValid("1,000.1").isValid);
+        assertFalse(presenter.isBtcInputValid("1.000,1").isValid);
+        assertFalse(presenter.isBtcInputValid("0.123456789").isValid);
+        assertFalse(presenter.isBtcInputValid("-1").isValid);
+        assertFalse(presenter.isBtcInputValid(String.valueOf(NetworkParameters.MAX_MONEY.longValue() + Coin.SATOSHI
+                .longValue())).isValid);
+    }
+
+    @Test
+    public void testIsFiatInputValid() {
+        assertTrue(presenter.isFiatInputValid("1").isValid);
+        assertTrue(presenter.isFiatInputValid("1,1").isValid);
+        assertTrue(presenter.isFiatInputValid("1.1").isValid);
+        assertTrue(presenter.isFiatInputValid(",1").isValid);
+        assertTrue(presenter.isFiatInputValid(".1").isValid);
+        assertTrue(presenter.isFiatInputValid("0.01").isValid);
+        assertTrue(presenter.isFiatInputValid("1000000.00").isValid);
+
+        assertFalse(presenter.isFiatInputValid(null).isValid);
+        assertFalse(presenter.isFiatInputValid("").isValid);
+        assertFalse(presenter.isFiatInputValid("0").isValid);
+        assertFalse(presenter.isFiatInputValid("-1").isValid);
+        assertFalse(presenter.isFiatInputValid("0.0").isValid);
+        assertFalse(presenter.isFiatInputValid("0,1,1").isValid);
+        assertFalse(presenter.isFiatInputValid("0.1.1").isValid);
+        assertFalse(presenter.isFiatInputValid("1,000.1").isValid);
+        assertFalse(presenter.isFiatInputValid("1.000,1").isValid);
+        assertFalse(presenter.isFiatInputValid("0.009").isValid);
+        assertFalse(presenter.isFiatInputValid("1000000.01").isValid);
+    }
+
+    @Test
+    public void testBindings() {
+
 
         model.collateralAsLong.set(100);
         presenter.price.set("500");

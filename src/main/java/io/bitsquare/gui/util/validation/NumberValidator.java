@@ -45,20 +45,20 @@ public abstract class NumberValidator extends InputValidator {
             Double.parseDouble(input);
             return new ValidationResult(true);
         } catch (Exception e) {
-            return new ValidationResult(false, "Input is not a valid number.", ErrorType.NOT_A_NUMBER);
+            return new ValidationResult(false, "Input is not a valid number.");
         }
     }
 
     protected ValidationResult validateIfNotZero(String input) {
         if (Double.parseDouble(input) == 0)
-            return new ValidationResult(false, "Input of 0 is not allowed.", ErrorType.ZERO_NUMBER);
+            return new ValidationResult(false, "Input of 0 is not allowed.");
         else
             return new ValidationResult(true);
     }
 
     protected ValidationResult validateIfNotNegative(String input) {
         if (Double.parseDouble(input) < 0)
-            return new ValidationResult(false, "A negative value is not allowed.", ErrorType.NEGATIVE_NUMBER);
+            return new ValidationResult(false, "A negative value is not allowed.");
         else
             return new ValidationResult(true);
     }

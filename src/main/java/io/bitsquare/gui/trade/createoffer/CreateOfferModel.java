@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * Domain for that UI element. 
+ * Domain for that UI element.
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
@@ -152,6 +152,15 @@ class CreateOfferModel {
         );
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Validation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    boolean isMinAmountLessOrEqualAmount() {
+        if (minAmountAsCoin != null && amountAsCoin != null)
+            return !minAmountAsCoin.isGreaterThan(amountAsCoin);
+        return true;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter/Getter

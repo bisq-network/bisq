@@ -19,8 +19,8 @@ package io.bitsquare.gui.components;
 
 import io.bitsquare.gui.util.validation.InputValidator;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.control.*;
@@ -43,15 +43,14 @@ import org.slf4j.LoggerFactory;
  */
 public class ValidatingTextField extends TextField {
     private static final Logger log = LoggerFactory.getLogger(ValidatingTextField.class);
-    private static PopOver popOver;
 
     private Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
 
-    private final BooleanProperty isValid = new SimpleBooleanProperty(true);
-    private InputValidator validator;
-    private boolean validateOnFocusOut = true;
-    private boolean needsValidationOnFocusOut;
-    private Region errorPopupLayoutReference;
+    final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>(new
+            InputValidator.ValidationResult(true));
+
+    private static PopOver popOver;
+    private Region errorPopupLayoutReference = this;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -62,15 +61,31 @@ public class ValidatingTextField extends TextField {
         if (popOver != null)
             popOver.hide();
     }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public ValidatingTextField() {
         super();
-        setupListeners();
+
+        amountValidationResult.addListener((ov, oldValue, newValue) -> {
+            if (newValue != null) {
+                setEffect(newValue.isValid ? null : invalidEffect);
+
+                if (newValue.isValid)
+                    hidePopover();
+                else
+                    applyErrorMessage(newValue);
+            }
+        });
+
+        sceneProperty().addListener((ov, oldValue, newValue) -> {
+            // we got removed from the scene
+            // lets hide an open popup
+            if (newValue == null)
+                hidePopover();
+        });
+
     }
 
 
@@ -78,21 +93,14 @@ public class ValidatingTextField extends TextField {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void reValidate() {
-        validate(getText());
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setValidator(InputValidator validator) {
-        this.validator = validator;
-    }
-
     /**
-     * @param errorPopupLayoutReference The node used as reference for positioning
+     * @param errorPopupLayoutReference The node used as reference for positioning. If not set explicitely the
+     *                                  ValidatingTextField instance is used.
      */
     public void setErrorPopupLayoutReference(Region errorPopupLayoutReference) {
         this.errorPopupLayoutReference = errorPopupLayoutReference;
@@ -103,52 +111,14 @@ public class ValidatingTextField extends TextField {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean getIsValid() {
-        return isValid.get();
-    }
-
-    public BooleanProperty isValidProperty() {
-        return isValid;
+    public ObjectProperty<InputValidator.ValidationResult> amountValidationResultProperty() {
+        return amountValidationResult;
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void setupListeners() {
-        sceneProperty().addListener((ov, oldValue, newValue) -> {
-            // we got removed from the scene
-            // lets hide an open popup
-            if (newValue == null)
-                hidePopover();
-        });
-
-        textProperty().addListener((ov, oldValue, newValue) -> {
-            if (validator != null) {
-                if (!validateOnFocusOut)
-                    validate(newValue);
-                else
-                    needsValidationOnFocusOut = true;
-            }
-        });
-
-        focusedProperty().addListener((ov, oldValue, newValue) -> {
-            if (validateOnFocusOut && needsValidationOnFocusOut &&
-                    !newValue && getScene() != null && getScene().getWindow().isFocused())
-                validate(getText());
-        });
-
-        isValid.addListener((ov, oldValue, newValue) -> applyEffect(newValue));
-    }
-
-    private void validate(String input) {
-        if (input != null && validator != null) {
-            InputValidator.ValidationResult validationResult = validator.validate(input);
-            isValid.set(validationResult.isValid);
-            applyErrorMessage(validationResult);
-        }
-    }
 
     private void applyErrorMessage(InputValidator.ValidationResult validationResult) {
         if (validationResult.isValid) {
@@ -160,35 +130,21 @@ public class ValidatingTextField extends TextField {
             if (popOver == null)
                 createErrorPopOver(validationResult.errorMessage);
             else
-                setErrorMessage(validationResult.errorMessage);
+                ((Label) popOver.getContentNode()).setText(validationResult.errorMessage);
 
             popOver.show(getScene().getWindow(), getErrorPopupPosition().getX(), getErrorPopupPosition().getY());
         }
     }
 
-    private void applyEffect(boolean isValid) {
-        setEffect(isValid ? null : invalidEffect);
-    }
-
     private Point2D getErrorPopupPosition() {
         Window window = getScene().getWindow();
         Point2D point;
-        double x;
-        if (errorPopupLayoutReference == null) {
-            point = localToScene(0, 0);
-            x = point.getX() + window.getX() + getWidth() + 20;
-        }
-        else {
-            point = errorPopupLayoutReference.localToScene(0, 0);
-            x = point.getX() + window.getX() + errorPopupLayoutReference.getWidth() + 20;
-        }
+        point = errorPopupLayoutReference.localToScene(0, 0);
+        double x = point.getX() + window.getX() + errorPopupLayoutReference.getWidth() + 20;
         double y = point.getY() + window.getY() + Math.floor(getHeight() / 2);
         return new Point2D(x, y);
     }
 
-    private static void setErrorMessage(String errorMessage) {
-        ((Label) popOver.getContentNode()).setText(errorMessage);
-    }
 
     private static void createErrorPopOver(String errorMessage) {
         Label errorLabel = new Label(errorMessage);
@@ -196,8 +152,8 @@ public class ValidatingTextField extends TextField {
         errorLabel.setPadding(new Insets(0, 10, 0, 10));
 
         popOver = new PopOver(errorLabel);
-        popOver.setAutoFix(true);
-        popOver.setDetachedTitle("");
+        popOver.setDetachable(false);
         popOver.setArrowIndent(5);
     }
+
 }
