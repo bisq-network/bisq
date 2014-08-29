@@ -18,6 +18,7 @@
 package io.bitsquare.gui.trade.createoffer;
 
 import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
@@ -44,10 +45,10 @@ import org.slf4j.LoggerFactory;
 import static io.bitsquare.gui.util.BSFormatter.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-class CreateOfferPM {
+class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferPM.class);
 
-    private CreateOfferModel model;
+
     private BtcValidator btcValidator = new BtcValidator();
     private FiatValidator fiatValidator = new FiatValidator();
 
@@ -86,7 +87,6 @@ class CreateOfferPM {
 
     // That is needed for the addressTextField
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
-
     final ObjectProperty<Address> address = new SimpleObjectProperty<>();
 
 
@@ -95,60 +95,60 @@ class CreateOfferPM {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     CreateOfferPM(CreateOfferModel model) {
-        this.model = model;
-    }
+        super(model);
 
+        paymentLabel.setValue("Bitsquare trade (" + model().getOfferId() + ")");
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle (called by CB)
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void onViewInitialized() {
-        // todo move to contr.
-
-        // static
-        paymentLabel.set("Bitsquare trade (" + model.getOfferId() + ")");
-
-        if (model.addressEntry != null) {
-            addressAsString.set(model.addressEntry.getAddress().toString());
-            address.set(model.addressEntry.getAddress());
+        if (model().addressEntry != null) {
+            addressAsString.setValue(model().addressEntry.getAddress().toString());
+            address.setValue(model().addressEntry.getAddress());
         }
 
         setupModelBindings();
         setupUIInputListeners();
-
-        // TODO transactionId, 
     }
 
-    void activate() {
-        //TODO handle in base class
-        model.activate();
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void initialized() {
+        super.initialized();
     }
 
-
-    void deactivate() {
-        //TODO handle in base class
-        model.deactivate();
+    @Override
+    public void activate() {
+        super.activate();
     }
 
+    @Override
+    public void deactivate() {
+        super.deactivate();
+    }
+
+    @Override
+    public void terminate() {
+        super.terminate();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API methods (called by CB)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void setOrderBookFilter(OrderBookFilter orderBookFilter) {
-        model.setDirection(orderBookFilter.getDirection());
-        directionLabel.set(model.getDirection() == Direction.BUY ? "Buy:" : "Sell:");
+        model().setDirection(orderBookFilter.getDirection());
+        directionLabel.setValue(model().getDirection() == Direction.BUY ? "Buy:" : "Sell:");
 
         if (orderBookFilter.getAmount() != null && isBtcInputValid(orderBookFilter.getAmount().toPlainString())
                 .isValid) {
-            model.amountAsCoin.set(orderBookFilter.getAmount());
-            model.minAmountAsCoin.set(orderBookFilter.getAmount());
+            model().amountAsCoin.setValue(orderBookFilter.getAmount());
+            model().minAmountAsCoin.setValue(orderBookFilter.getAmount());
         }
 
         // TODO use Fiat in orderBookFilter
         if (orderBookFilter.getPrice() != 0 && isBtcInputValid(String.valueOf(orderBookFilter.getPrice())).isValid)
-            model.priceAsFiat.set(parseToFiatWith2Decimals(String.valueOf(orderBookFilter.getPrice())));
+            model().priceAsFiat.setValue(parseToFiatWith2Decimals(String.valueOf(orderBookFilter.getPrice())));
     }
 
 
@@ -157,9 +157,9 @@ class CreateOfferPM {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void placeOffer() {
-        model.placeOffer();
-        isPlaceOfferButtonDisabled.set(true);
-        isPlaceOfferButtonVisible.set(true);
+        model().placeOffer();
+        isPlaceOfferButtonDisabled.setValue(true);
+        isPlaceOfferButtonVisible.setValue(true);
     }
 
     void close() {
@@ -175,22 +175,22 @@ class CreateOfferPM {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(amount.get());
             boolean isValid = result.isValid;
-            amountValidationResult.set(result);
+            amountValidationResult.setValue(result);
             if (isValid) {
-                showWarningInvalidBtcDecimalPlaces.set(!hasBtcValidDecimals(amount.get()));
+                showWarningInvalidBtcDecimalPlaces.setValue(!hasBtcValidDecimals(amount.get()));
                 // only allow max 4 decimal places for btc values
                 setAmountToModel();
                 // reformat input to general btc format
                 calculateVolume();
 
-                if (!model.isMinAmountLessOrEqualAmount()) {
-                    amountValidationResult.set(new InputValidator.ValidationResult(false,
+                if (!model().isMinAmountLessOrEqualAmount()) {
+                    amountValidationResult.setValue(new InputValidator.ValidationResult(false,
                             "Amount cannot be smaller than minimum amount."));
                 }
                 else {
-                    amountValidationResult.set(result);
+                    amountValidationResult.setValue(result);
                     if (minAmount.get() != null)
-                        minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
+                        minAmountValidationResult.setValue(isBtcInputValid(minAmount.get()));
                 }
             }
         }
@@ -201,19 +201,19 @@ class CreateOfferPM {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(minAmount.get());
             boolean isValid = result.isValid;
-            minAmountValidationResult.set(result);
+            minAmountValidationResult.setValue(result);
             if (isValid) {
-                showWarningInvalidBtcDecimalPlaces.set(!hasBtcValidDecimals(minAmount.get()));
+                showWarningInvalidBtcDecimalPlaces.setValue(!hasBtcValidDecimals(minAmount.get()));
                 setMinAmountToModel();
 
-                if (!model.isMinAmountLessOrEqualAmount()) {
-                    minAmountValidationResult.set(new InputValidator.ValidationResult(false,
+                if (!model().isMinAmountLessOrEqualAmount()) {
+                    minAmountValidationResult.setValue(new InputValidator.ValidationResult(false,
                             "Minimum amount cannot be larger than amount."));
                 }
                 else {
-                    minAmountValidationResult.set(result);
+                    minAmountValidationResult.setValue(result);
                     if (amount.get() != null)
-                        amountValidationResult.set(isBtcInputValid(amount.get()));
+                        amountValidationResult.setValue(isBtcInputValid(amount.get()));
                 }
             }
         }
@@ -223,9 +223,9 @@ class CreateOfferPM {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isFiatInputValid(price.get());
             boolean isValid = result.isValid;
-            priceValidationResult.set(result);
+            priceValidationResult.setValue(result);
             if (isValid) {
-                showWarningInvalidFiatDecimalPlaces.set(!hasFiatValidDecimals(price.get()));
+                showWarningInvalidFiatDecimalPlaces.setValue(!hasFiatValidDecimals(price.get()));
                 setPriceToModel();
 
                 calculateVolume();
@@ -237,17 +237,18 @@ class CreateOfferPM {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(volume.get());
             boolean isValid = result.isValid;
-            volumeValidationResult.set(result);
+            volumeValidationResult.setValue(result);
             if (isValid) {
                 String origVolume = volume.get();
-                showWarningInvalidFiatDecimalPlaces.set(!hasFiatValidDecimals(volume.get()));
+                showWarningInvalidFiatDecimalPlaces.setValue(!hasFiatValidDecimals(volume.get()));
                 setVolumeToModel();
 
                 calculateAmount();
 
                 // must be after calculateAmount (btc value has been adjusted in case the calculation leads to 
                 // invalid decimal places for the amount value
-                showWarningAdjustedVolume.set(!formatFiat(parseToFiatWith2Decimals(origVolume)).equals(volume.get()));
+                showWarningAdjustedVolume.setValue(!formatFiat(parseToFiatWith2Decimals(origVolume)).equals(volume
+                        .get()));
             }
         }
     }
@@ -258,7 +259,7 @@ class CreateOfferPM {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     WalletFacade getWalletFacade() {
-        return model.getWalletFacade();
+        return model().getWalletFacade();
     }
 
 
@@ -272,123 +273,111 @@ class CreateOfferPM {
         // We do volume/amount calculation during input
         amount.addListener((ov, oldValue, newValue) -> {
             if (isBtcInputValid(newValue).isValid) {
-                model.amountAsCoin.set(parseToCoinWith4Decimals(newValue));
+                model().amountAsCoin.setValue(parseToCoinWith4Decimals(newValue));
                 calculateVolume();
-                model.calculateTotalToPay();
-                model.calculateCollateral();
+                model().calculateTotalToPay();
+                model().calculateCollateral();
             }
         });
 
         price.addListener((ov, oldValue, newValue) -> {
             if (isFiatInputValid(newValue).isValid) {
-                model.priceAsFiat.set(parseToFiatWith2Decimals(newValue));
+                model().priceAsFiat.setValue(parseToFiatWith2Decimals(newValue));
                 calculateVolume();
-                model.calculateTotalToPay();
-                model.calculateCollateral();
+                model().calculateTotalToPay();
+                model().calculateCollateral();
             }
         });
 
         volume.addListener((ov, oldValue, newValue) -> {
             if (isFiatInputValid(newValue).isValid) {
-                model.volumeAsFiat.set(parseToFiatWith2Decimals(newValue));
+                model().volumeAsFiat.setValue(parseToFiatWith2Decimals(newValue));
                 setVolumeToModel();
                 setPriceToModel();
-                model.calculateAmount();
-                model.calculateTotalToPay();
-                model.calculateCollateral();
+                model().calculateAmount();
+                model().calculateTotalToPay();
+                model().calculateCollateral();
             }
         });
+
+        // Binding with Bindings.createObjectBinding does not work becaue of bi-directional binding in CB
+        model().amountAsCoin.addListener((ov, oldValue, newValue) -> amount.set(formatCoin(newValue)));
+        model().minAmountAsCoin.addListener((ov, oldValue, newValue) -> minAmount.set(formatCoin(newValue)));
+        model().priceAsFiat.addListener((ov, oldValue, newValue) -> price.set(formatFiat(newValue)));
+        model().volumeAsFiat.addListener((ov, oldValue, newValue) -> volume.set(formatFiat(newValue)));
     }
 
     private void setupModelBindings() {
-
-        amount.bind(Bindings.createObjectBinding(() -> formatCoin(model.amountAsCoin.get()), model.amountAsCoin));
-        minAmount.bind(Bindings.createObjectBinding(() -> formatCoin(model.minAmountAsCoin.get()),
-                model.minAmountAsCoin));
-        price.bind(Bindings.createObjectBinding(() -> formatFiat(model.priceAsFiat.get()), model.priceAsFiat));
-        volume.bind(Bindings.createObjectBinding(() -> formatFiat(model.volumeAsFiat.get()), model.volumeAsFiat));
-
-        totalToPay.bind(createStringBinding(() -> formatCoinWithCode(model.totalToPayAsCoin.get()),
-                model.totalToPayAsCoin));
-        collateral.bind(createStringBinding(() -> formatCoinWithCode(model.collateralAsCoin.get()),
-                model.collateralAsCoin));
+        totalToPay.bind(createStringBinding(() -> formatCoinWithCode(model().totalToPayAsCoin.get()),
+                model().totalToPayAsCoin));
+        collateral.bind(createStringBinding(() -> formatCoinWithCode(model().collateralAsCoin.get()),
+                model().collateralAsCoin));
 
         collateralLabel.bind(Bindings.createStringBinding(() -> "Collateral (" + BSFormatter.formatCollateralPercent
-                (model.collateralAsLong.get()) + "):", model.collateralAsLong));
-        totalToPayAsCoin.bind(model.totalToPayAsCoin);
+                (model().collateralAsLong.get()) + "):", model().collateralAsLong));
+        totalToPayAsCoin.bind(model().totalToPayAsCoin);
 
-        bankAccountType.bind(Bindings.createStringBinding(() -> Localisation.get(model.bankAccountType.get()),
-                model.bankAccountType));
-        bankAccountCurrency.bind(model.bankAccountCurrency);
-        bankAccountCounty.bind(model.bankAccountCounty);
+        bankAccountType.bind(Bindings.createStringBinding(() -> Localisation.get(model().bankAccountType.get()),
+                model().bankAccountType));
+        bankAccountCurrency.bind(model().bankAccountCurrency);
+        bankAccountCounty.bind(model().bankAccountCounty);
 
         // ObservableLists
-        model.acceptedCountries.addListener((Observable o) -> acceptedCountries.set(BSFormatter
-                .countryLocalesToString(model.acceptedCountries)));
-        model.acceptedLanguages.addListener((Observable o) -> acceptedLanguages.set(BSFormatter
-                .languageLocalesToString(model.acceptedLanguages)));
+        model().acceptedCountries.addListener((Observable o) -> acceptedCountries.setValue(BSFormatter
+                .countryLocalesToString(model().acceptedCountries)));
+        model().acceptedLanguages.addListener((Observable o) -> acceptedLanguages.setValue(BSFormatter
+                .languageLocalesToString(model().acceptedLanguages)));
 
-        isCloseButtonVisible.bind(model.requestPlaceOfferSuccess);
-        requestPlaceOfferErrorMessage.bind(model.requestPlaceOfferErrorMessage);
-        requestPlaceOfferFailed.bind(model.requestPlaceOfferFailed);
-        showTransactionPublishedScreen.bind(model.requestPlaceOfferSuccess);
+        isCloseButtonVisible.bind(model().requestPlaceOfferSuccess);
+        requestPlaceOfferErrorMessage.bind(model().requestPlaceOfferErrorMessage);
+        requestPlaceOfferFailed.bind(model().requestPlaceOfferFailed);
+        showTransactionPublishedScreen.bind(model().requestPlaceOfferSuccess);
 
+        isPlaceOfferButtonDisabled.bind(Bindings.createBooleanBinding(() -> !model().requestPlaceOfferFailed.get(),
+                model().requestPlaceOfferFailed));
 
-        amount.bind(Bindings.createObjectBinding(() -> formatCoin(model.amountAsCoin.get()), model.amountAsCoin));
-
-        isPlaceOfferButtonDisabled.bind(Bindings.createBooleanBinding(() -> !model.requestPlaceOfferFailed.get(),
-                model.requestPlaceOfferFailed));
-
-        isPlaceOfferButtonVisible.bind(Bindings.createBooleanBinding(() -> !model.requestPlaceOfferSuccess.get(),
-                model.requestPlaceOfferSuccess));
-
-       /* model.requestPlaceOfferFailed.addListener((o, oldValue, newValue) -> {
-            if (newValue) isPlaceOfferButtonDisabled.set(false);
-        });
-
-        model.requestPlaceOfferSuccess.addListener((o, oldValue, newValue) -> {
-            if (newValue) isPlaceOfferButtonVisible.set(false);
-        });*/
+        isPlaceOfferButtonVisible.bind(Bindings.createBooleanBinding(() -> !model().requestPlaceOfferSuccess.get(),
+                model().requestPlaceOfferSuccess));
     }
 
 
     private void calculateVolume() {
         setAmountToModel();
         setPriceToModel();
-        model.calculateVolume();
+        model().calculateVolume();
     }
 
     private void calculateAmount() {
         setVolumeToModel();
         setPriceToModel();
-        model.calculateAmount();
+        model().calculateAmount();
 
-        if (!model.isMinAmountLessOrEqualAmount()) {
-            amountValidationResult.set(new InputValidator.ValidationResult(false,
+        if (!model().isMinAmountLessOrEqualAmount()) {
+            amountValidationResult.setValue(new InputValidator.ValidationResult(false,
                     "Amount cannot be smaller than minimum amount."));
         }
         else {
             if (amount.get() != null)
-                amountValidationResult.set(isBtcInputValid(amount.get()));
+                amountValidationResult.setValue(isBtcInputValid(amount.get()));
             if (minAmount.get() != null)
-                minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
+                minAmountValidationResult.setValue(isBtcInputValid(minAmount.get()));
         }
     }
 
     private void setAmountToModel() {
-        model.amountAsCoin.set(parseToCoinWith4Decimals(amount.get()));
+        model().amountAsCoin.setValue(parseToCoinWith4Decimals(amount.get()));
     }
 
     private void setMinAmountToModel() {
-        model.minAmountAsCoin.set(parseToCoinWith4Decimals(minAmount.get()));
+        model().minAmountAsCoin.setValue(parseToCoinWith4Decimals(minAmount.get()));
     }
 
     private void setPriceToModel() {
-        model.priceAsFiat.set(parseToFiatWith2Decimals(price.get()));
+        model().priceAsFiat.setValue(parseToFiatWith2Decimals(price.get()));
     }
 
     private void setVolumeToModel() {
-        model.volumeAsFiat.set(parseToFiatWith2Decimals(volume.get()));
+        model().volumeAsFiat.setValue(parseToFiatWith2Decimals(volume.get()));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

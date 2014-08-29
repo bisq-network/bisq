@@ -21,6 +21,7 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.gui.UIModel;
 import io.bitsquare.locale.Country;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
@@ -58,7 +59,7 @@ import static io.bitsquare.gui.util.BSFormatter.reduceto4Dezimals;
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
-class CreateOfferModel {
+class CreateOfferModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferModel.class);
 
     private final TradeManager tradeManager;
@@ -99,7 +100,7 @@ class CreateOfferModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user) {
+    public CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user) {
         this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
         this.settings = settings;
@@ -107,35 +108,52 @@ class CreateOfferModel {
 
         // static data
         offerId = UUID.randomUUID().toString();
-        totalFeesAsCoin.set(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE));
+        totalFeesAsCoin.setValue(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE));
 
 
         //TODO just for unit testing, use mockito?
         if (walletFacade != null && walletFacade.getWallet() != null)
             addressEntry = walletFacade.getAddressInfoByTradeID(offerId);
+
+        collateralAsLong.setValue(settings.getCollateral());
+
+        BankAccount bankAccount = user.getCurrentBankAccount();
+        if (bankAccount != null) {
+            bankAccountType.setValue(bankAccount.getBankAccountType().toString());
+            bankAccountCurrency.setValue(bankAccount.getCurrency().getCurrencyCode());
+            bankAccountCounty.setValue(bankAccount.getCountry().getName());
+        }
+        acceptedCountries.setAll(settings.getAcceptedCountries());
+        acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
+    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void initialized() {
+        super.initialized();
     }
 
+    @Override
+    public void activate() {
+        super.activate();
+    }
+
+    @Override
+    public void deactivate() {
+        super.deactivate();
+    }
+
+    @Override
+    public void terminate() {
+        super.terminate();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void activate() {
-        // dynamic data, might be changing when switching screen and returning (edit settings)
-        collateralAsLong.set(settings.getCollateral());
-
-        BankAccount bankAccount = user.getCurrentBankAccount();
-        if (bankAccount != null) {
-            bankAccountType.set(bankAccount.getBankAccountType().toString());
-            bankAccountCurrency.set(bankAccount.getCurrency().getCurrencyCode());
-            bankAccountCounty.set(bankAccount.getCountry().getName());
-        }
-        acceptedCountries.setAll(settings.getAcceptedCountries());
-        acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
-    }
-
-    void deactivate() {
-    }
 
     void placeOffer() {
         tradeManager.requestPlaceOffer(offerId,
@@ -144,29 +162,29 @@ class CreateOfferModel {
                 amountAsCoin.get(),
                 minAmountAsCoin.get(),
                 (transaction) -> {
-                    requestPlaceOfferSuccess.set(true);
-                    transactionId.set(transaction.getHashAsString());
+                    requestPlaceOfferSuccess.setValue(true);
+                    transactionId.setValue(transaction.getHashAsString());
                 },
                 (errorMessage) -> {
-                    requestPlaceOfferFailed.set(true);
-                    requestPlaceOfferErrorMessage.set(errorMessage);
+                    requestPlaceOfferFailed.setValue(true);
+                    requestPlaceOfferErrorMessage.setValue(errorMessage);
                 }
         );
     }
 
     void calculateVolume() {
         if (priceAsFiat.get() != null && amountAsCoin.get() != null /*&& !amountAsCoin.get().isZero()*/)
-            volumeAsFiat.set(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
+            volumeAsFiat.setValue(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
     }
 
     void calculateAmount() {
 
         if (volumeAsFiat.get() != null && priceAsFiat.get() != null/* && !volumeAsFiat.get().isZero() && !priceAsFiat
                 .get().isZero()*/) {
-            amountAsCoin.set(new ExchangeRate(priceAsFiat.get()).fiatToCoin(volumeAsFiat.get()));
+            amountAsCoin.setValue(new ExchangeRate(priceAsFiat.get()).fiatToCoin(volumeAsFiat.get()));
 
             // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
-            amountAsCoin.set(reduceto4Dezimals(amountAsCoin.get()));
+            amountAsCoin.setValue(reduceto4Dezimals(amountAsCoin.get()));
             calculateTotalToPay();
             calculateCollateral();
         }
@@ -176,14 +194,14 @@ class CreateOfferModel {
         calculateCollateral();
 
         if (collateralAsCoin.get() != null) {
-            totalToPayAsCoin.set(collateralAsCoin.get().add(totalFeesAsCoin.get()));
+            totalToPayAsCoin.setValue(collateralAsCoin.get().add(totalFeesAsCoin.get()));
 
         }
     }
 
     void calculateCollateral() {
         if (amountAsCoin.get() != null)
-            collateralAsCoin.set(amountAsCoin.get().multiply(collateralAsLong.get()).divide(1000));
+            collateralAsCoin.setValue(amountAsCoin.get().multiply(collateralAsLong.get()).divide(1000));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
