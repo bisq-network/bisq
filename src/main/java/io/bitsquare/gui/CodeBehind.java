@@ -23,6 +23,9 @@ public class CodeBehind<T extends PresentationModel> implements Initializable {
         this.pm = pm;
     }
 
+    public CodeBehind() {
+    }
+
     public T pm() {
         return (T) pm;
     }

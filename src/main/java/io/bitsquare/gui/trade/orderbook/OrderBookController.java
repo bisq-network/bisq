@@ -64,6 +64,7 @@ import javafx.animation.AnimationTimer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
@@ -166,7 +167,7 @@ public class OrderBookController extends CachedViewController {
     }
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
         return null;
     }
 
@@ -227,7 +228,7 @@ public class OrderBookController extends CachedViewController {
     public void createOffer() {
         if (isRegistered()) {
             createOfferButton.setDisable(true);
-            ViewController nextController = parentController.loadViewAndGetChildController(NavigationItem.CREATE_OFFER);
+            Initializable nextController = parentController.loadViewAndGetChildController(NavigationItem.CREATE_OFFER);
             if (nextController != null)
                 ((CreateOfferCB) nextController).setOrderBookFilter(orderBookFilter);
         }

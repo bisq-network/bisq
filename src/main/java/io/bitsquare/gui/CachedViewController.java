@@ -31,6 +31,9 @@ import org.slf4j.LoggerFactory;
 public abstract class CachedViewController extends ViewController {
     private static final Logger log = LoggerFactory.getLogger(CachedViewController.class);
 
+    public CachedViewController() {
+    }
+    
     /**
      * Get called form GUI framework when the UI is ready.
      * In caching controllers the initialize is only used for static UI setup.

@@ -29,6 +29,8 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.fxml.Initializable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +79,7 @@ public class FundsController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
         childController = ((CachingTabPane) root).loadViewAndGetChildController(navigationItem.getFxmlUrl());
         return childController;
     }

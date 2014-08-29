@@ -19,7 +19,6 @@ package io.bitsquare.gui.orders;
 
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.CachingTabPane;
 import io.bitsquare.persistence.Persistence;
 
@@ -28,6 +27,8 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import javax.inject.Inject;
+
+import javafx.fxml.Initializable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +81,7 @@ public class OrdersController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
         childController = ((CachingTabPane) root).loadViewAndGetChildController(navigationItem.getFxmlUrl());
         return childController;
     }

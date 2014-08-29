@@ -20,7 +20,6 @@ package io.bitsquare.gui.trade;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.ValidatingTextField;
 import io.bitsquare.gui.trade.createoffer.CreateOfferCB;
 import io.bitsquare.gui.trade.orderbook.OrderBookController;
@@ -34,6 +33,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import javafx.application.Platform;
+import javafx.fxml.Initializable;
 import javafx.scene.*;
 import javafx.scene.control.*;
 
@@ -87,7 +87,7 @@ public class TradeController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
         TabPane tabPane = (TabPane) root;
         if (navigationItem == NavigationItem.ORDER_BOOK) {
             checkArgument(orderBookLoader == null);

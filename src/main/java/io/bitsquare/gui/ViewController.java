@@ -78,7 +78,7 @@ public abstract class ViewController implements Initializable {
      * @param navigationItem NavigationItem to be loaded.
      * @return The ViewController of the loaded view.
      */
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
         log.trace("Lifecycle: loadViewAndGetChildController " + this.getClass().getSimpleName() + " / navigationItem " +
                 "= " + navigationItem);
         return null;

@@ -32,6 +32,7 @@ import java.util.ResourceBundle;
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
 // Arbitration is not much developed yet
@@ -99,7 +100,7 @@ public class ArbitratorProfileController extends CachedViewController {
     }
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
         return null;
     }
 

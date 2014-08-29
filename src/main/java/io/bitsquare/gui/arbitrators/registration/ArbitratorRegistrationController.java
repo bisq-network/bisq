@@ -54,6 +54,7 @@ import javax.inject.Inject;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.stage.Stage;
@@ -224,7 +225,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
     }
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
         return null;
     }
 

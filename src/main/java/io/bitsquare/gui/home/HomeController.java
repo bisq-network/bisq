@@ -21,7 +21,6 @@ import io.bitsquare.BitSquare;
 import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.arbitrators.registration.ArbitratorRegistrationController;
 
 import java.io.IOException;
@@ -31,6 +30,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -70,7 +70,7 @@ public class HomeController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
         // don't use caching here, cause exc. -> need to investigate and is rarely called so no caching is better
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
         try {

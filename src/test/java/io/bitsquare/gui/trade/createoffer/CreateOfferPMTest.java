@@ -48,14 +48,12 @@ public class CreateOfferPMTest {
         BSFormatter.setFiatCurrencyCode("USD");
 
         presenter = new CreateOfferPM(model);
-        presenter.onViewInitialized();
+        presenter.initialized();
     }
 
 
     @Test
     public void testBindings() {
-
-
         model.collateralAsLong.set(100);
         presenter.price.set("500");
         presenter.amount.set("1");

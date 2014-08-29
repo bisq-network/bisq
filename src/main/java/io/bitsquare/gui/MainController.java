@@ -46,6 +46,7 @@ import javax.inject.Inject;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.*;
@@ -137,7 +138,7 @@ public class MainController extends ViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
         switch (navigationItem) {
             case HOME:
                 homeButton.fire();
