@@ -33,6 +33,7 @@ import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocol;
 import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocolListener;
 
 import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.utils.Fiat;
 
 import java.net.URL;
 
@@ -120,7 +121,7 @@ public class TakeOfferController extends CachedViewController {
         amountTextField.setText(requestedAmount.toPlainString());
         amountTextField.setPromptText(BSFormatter.formatCoinWithCode(
                 offer.getMinAmount()) + " - " + BSFormatter.formatCoinWithCode(offer.getAmount()));
-        priceTextField.setText(BSFormatter.formatPrice(offer.getPrice()));
+        priceTextField.setText(BSFormatter.formatFiat(offer.getPrice()));
         applyVolume();
         collateralLabel.setText("Collateral (" + getCollateralAsPercent() + "):");
         applyCollateral();
@@ -197,7 +198,7 @@ public class TakeOfferController extends CachedViewController {
                     accordion.setExpandedPane(summaryTitledPane);
 
                     summaryPaidTextField.setText(BSFormatter.formatCoinWithCode(trade.getTradeAmount()));
-                    summaryReceivedTextField.setText(BSFormatter.formatVolume(trade.getTradeVolume()));
+                    summaryReceivedTextField.setText(BSFormatter.formatFiat(trade.getTradeVolume()));
                     summaryFeesTextField.setText(BSFormatter.formatCoinWithCode(
                             FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)));
                     summaryCollateralTextField.setText(BSFormatter.formatCoinWithCode(
@@ -265,7 +266,7 @@ public class TakeOfferController extends CachedViewController {
 
     //  formatted
     private String getFormattedVolume() {
-        return BSFormatter.formatVolume(getVolume());
+        return BSFormatter.formatFiat(getVolume());
     }
 
     private String getFormattedTotal() {
@@ -291,8 +292,9 @@ public class TakeOfferController extends CachedViewController {
         }
     }
 
-    private double getVolume() {
-        return offer.getPrice() * getAmountAsDouble();
+    private Fiat getVolume() {
+        //TODO
+        return Fiat.valueOf("EUR", (long) (offer.getPrice().longValue() * getAmountAsDouble()));
     }
 
     private Coin getFee() {
@@ -305,13 +307,11 @@ public class TakeOfferController extends CachedViewController {
 
     private Coin getCollateralAsCoin() {
         Coin amountAsCoin = BSFormatter.parseToCoin(getAmountString());
-        return amountAsCoin.divide((long) (1d / offer.getCollateral()));
+        return amountAsCoin.multiply(getCollateral()).divide(1000L);
     }
 
     private String getFormattedCollateralAsBtc() {
-        Coin amountAsCoin = BSFormatter.parseToCoin(getAmountString());
-        Coin collateralAsCoin = amountAsCoin.divide((long) (1d / getCollateral()));
-        return BSFormatter.formatCoin(collateralAsCoin);
+        return BSFormatter.formatCoin(getCollateralAsCoin());
     }
 
     private String getCollateralAsPercent() {
@@ -319,7 +319,6 @@ public class TakeOfferController extends CachedViewController {
     }
 
     private long getCollateral() {
-        // TODO
         return offer.getCollateral();
     }
 

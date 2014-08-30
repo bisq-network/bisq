@@ -36,7 +36,7 @@ public class OfferListItem {
         this.offer = offer;
 
         this.date.set(BSFormatter.formatDateTime(offer.getCreationDate()));
-        this.price.set(BSFormatter.formatPrice(offer.getPrice()));
+        this.price.set(BSFormatter.formatFiat(offer.getPrice()));
 
         this.amount.set(BSFormatter.formatCoin(
                 offer.getAmount()) + " (" + BSFormatter.formatCoin(offer.getMinAmount()) + ")");

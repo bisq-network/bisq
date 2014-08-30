@@ -45,6 +45,7 @@ import io.bitsquare.util.Utilities;
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.utils.Fiat;
 
 import com.google.common.util.concurrent.FutureCallback;
 
@@ -549,7 +550,8 @@ public class OrderBookController extends CachedViewController {
     private void updateVolume() {
         double a = textInputToNumber(amount.getText(), amount.getText());
         double p = textInputToNumber(price.getText(), price.getText());
-        volume.setText(BSFormatter.formatPrice(a * p));
+        //TODO
+        volume.setText(BSFormatter.formatFiat(Fiat.valueOf("EUR", (long) (a * p))));
     }
 
     public void onCreateOfferViewRemoved() {

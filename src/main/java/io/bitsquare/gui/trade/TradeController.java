@@ -90,7 +90,7 @@ public class TradeController extends CachedViewController {
         ((TabPane) root).getTabs().addListener((ListChangeListener<Tab>) change -> {
             change.next();
             List<? extends Tab> removedTabs = change.getRemoved();
-            if (removedTabs.size() == 1 && createOfferView.equals(removedTabs.get(0).getContent())) {
+            if (removedTabs.size() == 1 && removedTabs.get(0).getContent().equals(createOfferView)) {
                 if (createOfferCodeBehind != null) {
                     createOfferCodeBehind.terminate();
                     createOfferCodeBehind = null;

@@ -167,11 +167,10 @@ public class TradeManager {
                                   TransactionResultHandler resultHandler,
                                   ErrorMessageHandler errorMessageHandler) {
 
-        // TODO price.value -> use Fiat in Offer for price
         Offer offer = new Offer(id,
                 user.getMessagePublicKey(),
                 direction,
-                price.value,
+                price,
                 amount,
                 minAmount,
                 user.getCurrentBankAccount().getBankAccountType(),
@@ -216,7 +215,7 @@ public class TradeManager {
 
     private void addOffer(Offer offer) throws IOException {
         if (offers.containsKey(offer.getId()))
-            throw new IllegalStateException("An offer with the id " + offer.getId() + " already exists. ");
+            log.error("An offer with the id " + offer.getId() + " already exists. ");
 
         offers.put(offer.getId(), offer);
         persistOffers();
@@ -224,7 +223,7 @@ public class TradeManager {
 
     public void removeOffer(Offer offer) {
         if (!offers.containsKey(offer.getId())) {
-            throw new IllegalStateException("offers does not contain the offer with the ID " + offer.getId());
+            log.error("offers does not contain the offer with the ID " + offer.getId());
         }
 
         offers.remove(offer.getId());
@@ -251,9 +250,8 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Trade createTrade(Offer offer) {
-        if (trades.containsKey(offer.getId())) {
-            throw new IllegalStateException("trades contains already an trade with the ID " + offer.getId());
-        }
+        if (trades.containsKey(offer.getId()))
+            log.error("trades contains already an trade with the ID " + offer.getId());
 
         Trade trade = new Trade(offer);
         trades.put(offer.getId(), trade);
@@ -266,9 +264,8 @@ public class TradeManager {
     }
 
     public void removeTrade(Trade trade) {
-        if (!trades.containsKey(trade.getId())) {
-            throw new IllegalStateException("trades does not contain the trade with the ID " + trade.getId());
-        }
+        if (!trades.containsKey(trade.getId()))
+            log.error("trades does not contain the trade with the ID " + trade.getId());
 
         trades.remove(trade.getId());
         saveTrades();

@@ -58,7 +58,7 @@ public class VerifyOffer {
                     "Amount is less then " + Restrictions.MIN_TRADE_AMOUNT);
             checkArgument(offer.getAmount().compareTo(offer.getMinAmount()) >= 0, "MinAmount is larger then Amount");
             checkArgument(offer.getCollateral() > 0, "Collateral is 0");
-            checkArgument(offer.getPrice() > 0, "Price is 0");
+            checkArgument(offer.getPrice().isPositive(), "Price is 0 or negative");
 
             // TODO check balance
             // Coin collateralAsCoin = offer.getAmount().divide((long) (1d / offer.getCollateral()));

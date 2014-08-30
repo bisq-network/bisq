@@ -22,6 +22,7 @@ import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.locale.Country;
 
 import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.utils.Fiat;
 
 import java.io.Serializable;
 
@@ -47,7 +48,7 @@ public class Offer implements Serializable {
 
     private final Date creationDate;
 
-    private final double price;
+    private final Fiat price;
     private final Coin amount;
     private final Coin minAmount;
     //TODO use hex string
@@ -70,7 +71,7 @@ public class Offer implements Serializable {
     public Offer(String id,
                  PublicKey messagePublicKey,
                  Direction direction,
-                 double price,
+                 Fiat price,
                  Coin amount,
                  Coin minAmount,
                  BankAccountType bankAccountType,
@@ -118,7 +119,7 @@ public class Offer implements Serializable {
         return id;
     }
 
-    public double getPrice() {
+    public Fiat getPrice() {
         return price;
     }
 
@@ -154,17 +155,18 @@ public class Offer implements Serializable {
         return acceptedLanguageLocales;
     }
 
-    public double getVolumeForCoin(Coin coin) {
+    public Fiat getVolumeForCoin(Coin coin) {
         BigDecimal amountBD = BigDecimal.valueOf(coin.longValue());
-        BigDecimal volumeBD = amountBD.multiply(BigDecimal.valueOf(price));
-        return volumeBD.divide(BigDecimal.valueOf(Coin.COIN.value)).doubleValue();
+        BigDecimal volumeBD = amountBD.multiply(BigDecimal.valueOf(price.longValue() / 10000));
+        long fiatAsDouble = volumeBD.divide(BigDecimal.valueOf(Coin.COIN.value)).longValue();
+        return Fiat.valueOf("EUR", fiatAsDouble);
     }
 
-    public double getOfferVolume() {
+    public Fiat getOfferVolume() {
         return getVolumeForCoin(amount);
     }
 
-    public double getMinOfferVolume() {
+    public Fiat getMinOfferVolume() {
         return getVolumeForCoin(minAmount);
     }
 

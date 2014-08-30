@@ -70,11 +70,6 @@ public class BSFormatter {
 
     private static String currencyCode = Currency.getInstance(Locale.getDefault()).getCurrencyCode();
 
-    static {
-        //useMilliBitFormat(true);
-        // setLocale(Locale.US);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Config
@@ -252,11 +247,11 @@ public class BSFormatter {
         return result;
     }
 
-    public static String formatDouble(double value) {
+    public static String formatDouble(Fiat value) {
         return formatDouble(value, 4);
     }
 
-    public static String formatDouble(double value, int fractionDigits) {
+    public static String formatDouble(Fiat value, int fractionDigits) {
         DecimalFormat decimalFormat = getDecimalFormat(fractionDigits);
         return decimalFormat.format(value);
     }
@@ -333,19 +328,8 @@ public class BSFormatter {
         return getDecimalFormat(1).format(collateral / 10) + " %";
     }
 
-    @Deprecated
-    public static String formatPrice(double volume) {
-        return formatDouble(volume);
-    }
-
-    @Deprecated
-    public static String formatVolume(double volume) {
-        return formatDouble(volume);
-    }
-
-    @Deprecated
-    public static String formatVolumeWithMinVolume(double volume, double minVolume) {
-        return formatDouble(volume) + " (" + formatDouble(minVolume) + ")";
+    public static String formatVolumeWithMinVolume(Fiat volume, Fiat minVolume) {
+        return formatFiat(volume) + " (" + formatFiat(minVolume) + ")";
     }
 /*
     @Deprecated

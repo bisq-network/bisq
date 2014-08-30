@@ -34,7 +34,8 @@ public class OrderBookListItem {
 
     public OrderBookListItem(Offer offer) {
         this.offer = offer;
-        this.price.set(BSFormatter.formatPrice(offer.getPrice()));
+        this.price.set(BSFormatter.formatFiat(offer.getPrice()));
+        this.price.set(BSFormatter.formatFiat(offer.getPrice()));
         this.amount.set(BSFormatter.formatCoin(
                 offer.getAmount()) + " (" + BSFormatter.formatCoin(offer.getMinAmount()) + ")");
         this.volume.set(BSFormatter.formatVolumeWithMinVolume(

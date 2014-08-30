@@ -279,7 +279,7 @@ public class PendingTradeController extends CachedViewController {
             secondaryBankAccountIDTitleLabel.setText("Refunded collateral:");
 
             bankAccountTypeTextField.setText(BSFormatter.formatCoinWithCode(trade.getTradeAmount()));
-            holderNameTextField.setText(BSFormatter.formatVolume(trade.getTradeVolume()));
+            holderNameTextField.setText(BSFormatter.formatFiat(trade.getTradeVolume()));
             primaryBankAccountIDTextField.setText(
                     BSFormatter.formatCoinWithCode(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE)));
             secondaryBankAccountIDTextField.setText(BSFormatter.formatCoinWithCode(trade.getCollateralAmount()));

@@ -25,7 +25,6 @@ import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OrderBookListener;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
@@ -137,12 +136,14 @@ public class OrderBook implements OrderBookListener {
             // Apply applyFilter only if there is a valid value set
             boolean priceResult = true;
             if (orderBookFilter.getPrice() > 0) {
-                if (offer.getDirection() == Direction.SELL) {
-                    priceResult = orderBookFilter.getPrice() >= offer.getPrice();
+                //TODO
+               /* if (offer.getDirection() == Direction.SELL) {
+                    priceResult = orderBookFilter.getPrice() //>= offer.getPrice();
                 }
                 else {
                     priceResult = orderBookFilter.getPrice() <= offer.getPrice();
-                }
+                }*/
+
             }
 
             // The arbitrator defined in the offer must match one of the accepted arbitrators defined in the settings

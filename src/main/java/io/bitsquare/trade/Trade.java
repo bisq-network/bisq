@@ -19,6 +19,7 @@ package io.bitsquare.trade;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.utils.Fiat;
 
 import java.io.Serializable;
 
@@ -57,7 +58,7 @@ public class Trade implements Serializable {
         _stateChangedProperty = new SimpleStringProperty();
     }
 
-    public double getTradeVolume() {
+    public Fiat getTradeVolume() {
         return offer.getVolumeForCoin(tradeAmount);
     }
 
@@ -173,7 +174,7 @@ public class Trade implements Serializable {
     }
 
     public Coin getCollateralAmount() {
-        return tradeAmount.divide((long) (1d / offer.getCollateral()));
+        return tradeAmount.multiply(offer.getCollateral()).divide(1000L);
     }
 
 
