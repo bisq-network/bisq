@@ -222,9 +222,8 @@ public class TradeManager {
     }
 
     public void removeOffer(Offer offer) {
-        if (!offers.containsKey(offer.getId())) {
+        if (!offers.containsKey(offer.getId())) 
             log.error("offers does not contain the offer with the ID " + offer.getId());
-        }
 
         offers.remove(offer.getId());
         persistOffers();

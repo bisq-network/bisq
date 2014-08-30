@@ -171,12 +171,13 @@ public class MessageFacade implements MessageBroker {
     public void addOffer(Offer offer, AddOfferListener addOfferListener) {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         try {
-            final Data data = new Data(offer);
+            final Data offerData = new Data(offer);
+            
             // the offer is default 30 days valid
             int defaultOfferTTL = 30 * 24 * 60 * 60 * 1000;
-            data.ttlSeconds(defaultOfferTTL);
+            offerData.ttlSeconds(defaultOfferTTL);
 
-            FuturePut futurePut = p2pNode.addProtectedData(locationKey, data);
+            FuturePut futurePut = p2pNode.addProtectedData(locationKey, offerData);
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
@@ -184,12 +185,13 @@ public class MessageFacade implements MessageBroker {
                         Platform.runLater(() -> {
                             addOfferListener.onComplete();
                             orderBookListeners.stream().forEach(listener ->
-                                    listener.onOfferAdded(data, future.isSuccess()));
+                                    listener.onOfferAdded(offerData, future.isSuccess()));
 
                             // TODO will be removed when we don't use polling anymore
                             setDirty(locationKey);
-                            log.trace("Add offer to DHT was successful. Stored data: [key: " + locationKey + ", " +
-                                    "value: " + data + "]");
+                            log.trace("Add offer to DHT was successful. Stored data: [locationKey: " + locationKey + 
+                                    ", " +
+                                    "value: " + offerData + "]");
                         });
                     }
                     else {
@@ -217,25 +219,28 @@ public class MessageFacade implements MessageBroker {
         }
     }
 
+    //TODO remove is failing, probably due Coin or Fiat class (was working before)
+    // objects are identical but returned object form network might have soem problem with serialisation?
     public void removeOffer(Offer offer) {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         try {
-            final Data data = new Data(offer);
-            FutureRemove futureRemove = p2pNode.removeFromDataMap(locationKey, data);
+            final Data offerData = new Data(offer);
+            FutureRemove futureRemove = p2pNode.removeFromDataMap(locationKey, offerData);
             futureRemove.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
                     Platform.runLater(() -> {
                         orderBookListeners.stream().forEach(orderBookListener ->
-                                orderBookListener.onOfferRemoved(data, future.isSuccess()));
+                                orderBookListener.onOfferRemoved(offerData, future.isSuccess()));
                         setDirty(locationKey);
                     });
                     if (future.isSuccess()) {
                         log.trace("Remove offer from DHT was successful. Stored data: [key: " + locationKey + ", " +
-                                "value: " + data + "]");
+                                "value: " + offerData + "]");
                     }
                     else {
-                        log.error("Remove offer from DHT failed. Reason: " + future.failedReason());
+                        log.error("Remove offer from DHT failed. locationKey: " + locationKey + ", Reason: " + future
+                                .failedReason());
                     }
                 }
 

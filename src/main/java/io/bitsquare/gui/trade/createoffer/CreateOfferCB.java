@@ -174,10 +174,9 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
 
 
         presentationModel.requestPlaceOfferFailed.addListener((o, oldValue, newValue) -> {
-            if (newValue) {
+            if (newValue && presentationModel.requestPlaceOfferErrorMessage.get() != null) {
                 Popups.openErrorPopup("Error", "An error occurred when placing the offer.\n" +
                         presentationModel.requestPlaceOfferErrorMessage.get());
-                presentationModel.requestPlaceOfferFailed.set(false);
             }
         });
 

@@ -166,9 +166,14 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void placeOffer() {
-        model.placeOffer();
+        model.requestPlaceOfferErrorMessage.set(null);
+        model.requestPlaceOfferFailed.set(false);
+        model.requestPlaceOfferSuccess.set(false);
+        
         isPlaceOfferButtonDisabled.set(true);
         isPlaceOfferButtonVisible.set(true);
+
+        model.placeOffer();
     }
 
 
