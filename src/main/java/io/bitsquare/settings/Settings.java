@@ -20,8 +20,6 @@ package io.bitsquare.settings;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.locale.Country;
 
-import com.google.bitcoin.core.Coin;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -99,23 +97,12 @@ public class Settings implements Serializable {
         return acceptedArbitrators;
     }
 
-
     public List<Locale> getAcceptedLanguageLocales() {
         return acceptedLanguageLocales;
     }
 
-
     public List<Country> getAcceptedCountries() {
         return acceptedCountryLocales;
-    }
-
-    //TODO
-    public Arbitrator getRandomArbitrator(Coin amount) {
-        List<Arbitrator> candidates = new ArrayList<>();
-        for (Arbitrator arbitrator : acceptedArbitrators) {
-            candidates.add(arbitrator);
-        }
-        return !candidates.isEmpty() ? candidates.get((int) (Math.random() * candidates.size())) : null;
     }
 
     public void setCollateral(long collateral) {

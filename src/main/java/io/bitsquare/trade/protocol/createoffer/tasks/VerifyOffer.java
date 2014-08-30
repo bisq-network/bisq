@@ -38,7 +38,7 @@ public class VerifyOffer {
             checkNotNull(offer.getAcceptedCountries(), "AcceptedCountries is null");
             checkNotNull(offer.getAcceptedLanguageLocales(), "AcceptedLanguageLocales is null");
             checkNotNull(offer.getAmount(), "Amount is null");
-            checkNotNull(offer.getArbitrator(), "Arbitrator is null");
+            checkNotNull(offer.getArbitrators(), "Arbitrator is null");
             checkNotNull(offer.getBankAccountCountry(), "BankAccountCountry is null");
             checkNotNull(offer.getBankAccountId(), "BankAccountId is null");
             checkNotNull(offer.getCollateral(), "Collateral is null");

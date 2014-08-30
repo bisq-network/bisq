@@ -128,7 +128,7 @@ public class BSFormatter {
 
     public static Coin parseToCoin(String input) {
         try {
-            return coinFormat.parse(cleanedInput(input));
+            return coinFormat.parse(cleanInput(input));
         } catch (Throwable t) {
             log.warn("Exception at parseToBtc: " + t.toString());
             return Coin.ZERO;
@@ -145,7 +145,7 @@ public class BSFormatter {
      */
     public static Coin parseToCoinWith4Decimals(String input) {
         try {
-            return Coin.valueOf(new BigDecimal(parseToCoin(cleanedInput(input)).value).setScale(-scale - 1,
+            return Coin.valueOf(new BigDecimal(parseToCoin(cleanInput(input)).value).setScale(-scale - 1,
                     BigDecimal.ROUND_HALF_UP).setScale(scale + 1).toBigInteger().longValue());
         } catch (Throwable t) {
             log.warn("Exception at parseToCoinWith4Decimals: " + t.toString());
@@ -192,7 +192,7 @@ public class BSFormatter {
 
     public static Fiat parseToFiat(String input) {
         try {
-            return Fiat.parseFiat(currencyCode, cleanedInput(input));
+            return Fiat.parseFiat(currencyCode, cleanInput(input));
         } catch (Exception e) {
             return Fiat.valueOf(currencyCode, 0);
         }
@@ -208,7 +208,7 @@ public class BSFormatter {
      */
     public static Fiat parseToFiatWith2Decimals(String input) {
         try {
-            return parseToFiat(new BigDecimal(cleanedInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
+            return parseToFiat(new BigDecimal(cleanInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
         } catch (Throwable t) {
             log.warn("Exception at parseCoinTo4Decimals: " + t.toString());
             return Fiat.valueOf(currencyCode, 0);
@@ -219,6 +219,8 @@ public class BSFormatter {
     public static boolean hasFiatValidDecimals(String input) {
         return parseToFiat(input).equals(parseToFiatWith2Decimals(input));
     }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Other
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -228,6 +230,7 @@ public class BSFormatter {
      *              " are supported. Thousands separator is not supported.
      * @return Returns a double value. Any invalid value returns Double.NEGATIVE_INFINITY.
      */
+    @Deprecated //TODO use Fiat or Btc if possible
     public static double parseToDouble(String input) {
         try {
             checkNotNull(input);
@@ -247,22 +250,6 @@ public class BSFormatter {
         return result;
     }
 
-    public static String formatDouble(Fiat value) {
-        return formatDouble(value, 4);
-    }
-
-    public static String formatDouble(Fiat value, int fractionDigits) {
-        DecimalFormat decimalFormat = getDecimalFormat(fractionDigits);
-        return decimalFormat.format(value);
-    }
-
-    public static DecimalFormat getDecimalFormat(int fractionDigits) {
-        DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(locale);
-        decimalFormat.setMinimumFractionDigits(fractionDigits);
-        decimalFormat.setMaximumFractionDigits(fractionDigits);
-        decimalFormat.setGroupingUsed(false);
-        return decimalFormat;
-    }
 
     public static String countryLocalesToString(List<Country> countries) {
         String result = "";
@@ -289,7 +276,6 @@ public class BSFormatter {
         }
         return result;
     }
-
 
     public static String arbitrationMethodsToString(List<Arbitrator.METHOD> items) {
         String result = "";
@@ -325,25 +311,18 @@ public class BSFormatter {
     }
 
     public static String formatCollateralPercent(long collateral) {
-        return getDecimalFormat(1).format(collateral / 10) + " %";
+        DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(locale);
+        decimalFormat.setMinimumFractionDigits(1);
+        decimalFormat.setMaximumFractionDigits(1);
+        decimalFormat.setGroupingUsed(false);
+        return decimalFormat.format(collateral / 10) + " %";
     }
 
     public static String formatVolumeWithMinVolume(Fiat volume, Fiat minVolume) {
         return formatFiat(volume) + " (" + formatFiat(minVolume) + ")";
     }
-/*
-    @Deprecated
-    public static String formatCoin(Coin coin) {
-        return coin != null ? coin.toPlainString() : "";
-    }
 
-
-    @Deprecated
-    public static String formatCoinWithCode(Coin coin) {
-        return coin != null ? coin.toFriendlyString() : "";
-    }*/
-
-    private static String cleanedInput(String input) {
+    private static String cleanInput(String input) {
         input = input.replace(",", ".");
         // don't use String.valueOf(Double.parseDouble(input)) as return value as it gives scientific 
         // notation (1.0E-6) which screw up coinFormat.parse

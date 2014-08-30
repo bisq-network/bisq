@@ -150,7 +150,8 @@ public class SellerTakesOfferProtocol {
         tradeId = trade.getId();
         tradeAmount = trade.getTradeAmount();
         collateral = trade.getCollateralAmount();
-        arbitratorPubKey = trade.getOffer().getArbitrator().getPubKeyAsHex();
+        //TODO use 1. for now
+        arbitratorPubKey = trade.getOffer().getArbitrators().get(0).getPubKeyAsHex();
 
         peersMessagePublicKey = offer.getMessagePublicKey();
 

@@ -156,7 +156,8 @@ public class BuyerAcceptsOfferProtocol {
         tradeId = trade.getId();
         offer = trade.getOffer();
 
-        arbitratorPubKey = offer.getArbitrator().getPubKeyAsHex();
+        //TODO use first for now
+        arbitratorPubKey = offer.getArbitrators().get(0).getPubKeyAsHex();
 
         bankAccount = user.getBankAccount(trade.getOffer().getBankAccountId());
         accountId = user.getAccountId();

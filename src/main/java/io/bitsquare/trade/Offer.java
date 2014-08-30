@@ -22,11 +22,10 @@ import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.locale.Country;
 
 import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.utils.ExchangeRate;
 import com.google.bitcoin.utils.Fiat;
 
 import java.io.Serializable;
-
-import java.math.BigDecimal;
 
 import java.security.PublicKey;
 
@@ -60,7 +59,7 @@ public class Offer implements Serializable {
     private final List<Country> acceptedCountries;
     private final List<Locale> acceptedLanguageLocales;
     private final String bankAccountUID;
-    private final Arbitrator arbitrator;
+    private final List<Arbitrator> arbitrators;
     private String offerFeePaymentTxID;
 
 
@@ -78,7 +77,7 @@ public class Offer implements Serializable {
                  Currency currency,
                  Country bankAccountCountry,
                  String bankAccountUID,
-                 Arbitrator arbitrator,
+                 List<Arbitrator> arbitrators,
                  long collateral,
                  List<Country> acceptedCountries,
                  List<Locale> acceptedLanguageLocales) {
@@ -92,7 +91,7 @@ public class Offer implements Serializable {
         this.currency = currency;
         this.bankAccountCountry = bankAccountCountry;
         this.bankAccountUID = bankAccountUID;
-        this.arbitrator = arbitrator;
+        this.arbitrators = arbitrators;
         this.collateral = collateral;
         this.acceptedCountries = acceptedCountries;
 
@@ -156,10 +155,11 @@ public class Offer implements Serializable {
     }
 
     public Fiat getVolumeForCoin(Coin coin) {
-        BigDecimal amountBD = BigDecimal.valueOf(coin.longValue());
-        BigDecimal volumeBD = amountBD.multiply(BigDecimal.valueOf(price.longValue() / 10000));
-        long fiatAsDouble = volumeBD.divide(BigDecimal.valueOf(Coin.COIN.value)).longValue();
-        return Fiat.valueOf("EUR", fiatAsDouble);
+        if (price != null && coin != null && !coin.isZero() && !price.isZero()) {
+            return new ExchangeRate(price).coinToFiat(coin);
+        }
+        else
+            return null;
     }
 
     public Fiat getOfferVolume() {
@@ -178,8 +178,8 @@ public class Offer implements Serializable {
         this.offerFeePaymentTxID = offerFeePaymentTxID;
     }
 
-    public Arbitrator getArbitrator() {
-        return arbitrator;
+    public List<Arbitrator> getArbitrators() {
+        return arbitrators;
     }
 
     public long getCollateral() {
@@ -208,7 +208,7 @@ public class Offer implements Serializable {
                 ", acceptedLanguageLocales=" + acceptedLanguageLocales +
                 ", offerFeePaymentTxID='" + offerFeePaymentTxID + '\'' +
                 ", bankAccountUID='" + bankAccountUID + '\'' +
-                ", arbitrator=" + arbitrator +
+                ", arbitrator=" + arbitrators +
                 '}';
     }
 

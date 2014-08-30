@@ -177,7 +177,7 @@ public class TradeManager {
                 user.getCurrentBankAccount().getCurrency(),
                 user.getCurrentBankAccount().getCountry(),
                 user.getCurrentBankAccount().getUid(),
-                settings.getRandomArbitrator(amount),
+                settings.getAcceptedArbitrators(),
                 settings.getCollateral(),
                 settings.getAcceptedCountries(),
                 settings.getAcceptedLanguageLocales());

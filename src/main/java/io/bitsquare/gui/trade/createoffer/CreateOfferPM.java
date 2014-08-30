@@ -155,10 +155,9 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
             model.minAmountAsCoin.set(orderBookFilter.getAmount());
         }
 
-        // TODO use Fiat in orderBookFilter
         // apply only if valid
-        if (orderBookFilter.getPrice() != 0 && isBtcInputValid(String.valueOf(orderBookFilter.getPrice())).isValid)
-            model.priceAsFiat.set(parseToFiatWith2Decimals(String.valueOf(orderBookFilter.getPrice())));
+        if (orderBookFilter.getPrice() != null && isBtcInputValid(orderBookFilter.getPrice().toPlainString()).isValid)
+            model.priceAsFiat.set(parseToFiatWith2Decimals(orderBookFilter.getPrice().toPlainString()));
     }
 
 

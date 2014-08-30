@@ -25,6 +25,7 @@ import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OrderBookListener;
 import io.bitsquare.settings.Settings;
+import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
@@ -135,20 +136,16 @@ public class OrderBook implements OrderBookListener {
 
             // Apply applyFilter only if there is a valid value set
             boolean priceResult = true;
-            if (orderBookFilter.getPrice() > 0) {
-                //TODO
-               /* if (offer.getDirection() == Direction.SELL) {
-                    priceResult = orderBookFilter.getPrice() //>= offer.getPrice();
-                }
-                else {
-                    priceResult = orderBookFilter.getPrice() <= offer.getPrice();
-                }*/
-
+            if (orderBookFilter.getPrice() != null) {
+                if (offer.getDirection() == Direction.SELL)
+                    priceResult = orderBookFilter.getPrice().compareTo(offer.getPrice()) >= 0;
+                else
+                    priceResult = orderBookFilter.getPrice().compareTo(offer.getPrice()) <= 0;
             }
 
             // The arbitrator defined in the offer must match one of the accepted arbitrators defined in the settings
             // (1 to n)
-            boolean arbitratorResult = arbitratorInList(offer.getArbitrator(), settings.getAcceptedArbitrators());
+            boolean arbitratorResult = arbitratorsInList(offer.getArbitrators(), settings.getAcceptedArbitrators());
 
             boolean result = currencyResult && countryResult && languageResult && amountResult && directionResult &&
                     priceResult && arbitratorResult;
@@ -250,15 +247,11 @@ public class OrderBook implements OrderBookListener {
         return false;
     }
 
-    private boolean arbitratorInList(Arbitrator arbitratorToMatch, List<Arbitrator> list) {
-        if (arbitratorToMatch != null) {
-            for (Arbitrator arbitrator : list) {
-                try {
-                    if (arbitrator.getId().equals(arbitratorToMatch.getId())) {
-                        return true;
-                    }
-                } catch (Exception e) {
-                    log.error(e.toString());
+    private boolean arbitratorsInList(List<Arbitrator> list1, List<Arbitrator> list2) {
+        for (Arbitrator arbitrator1 : list2) {
+            for (Arbitrator arbitrator2 : list1) {
+                if (arbitrator1.getId().equals(arbitrator2.getId())) {
+                    return true;
                 }
             }
         }

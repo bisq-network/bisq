@@ -194,7 +194,7 @@ public class OrderBookController extends CachedViewController {
         });
 
         price.textProperty().addListener((observable, oldValue, newValue) -> {
-            orderBookFilter.setPrice(textInputToNumber(oldValue, newValue));
+            orderBookFilter.setPrice(BSFormatter.parseToFiat(newValue));
             updateVolume();
         });
 
