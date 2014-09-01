@@ -26,6 +26,7 @@ import java.util.ResourceBundle;
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
@@ -33,7 +34,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreateOfferControllerUIMock {
+public class CreateOfferControllerUIMock implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferControllerUIMock.class);
 
     public VBox priceAmountMinAmountBox;
@@ -70,7 +71,7 @@ public class CreateOfferControllerUIMock {
     private CreateOfferControllerUIMock() {
     }
 
-
+    @Override
     public void initialize(URL url, ResourceBundle rb) {
 
         paymentInfoPane.setVisible(false);

@@ -150,7 +150,7 @@
                 <ImageView fx:id="priceAmountInfoIcon" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true"
                            preserveRatio="true" GridPane.rowIndex="2" GridPane.valignment="TOP">
                     <image>
-                        <Image url="@../../../../../../../../main/resources/images/info_44.png"/>
+                        <Image fx:id="infoIcon" url="@../../../../../../../../main/resources/images/info_44.png"/>
                     </image>
                     <GridPane.margin>
                         <Insets right="2.0" top="4.0"/>
@@ -220,7 +220,7 @@
                 <ImageView fx:id="paymentInfoIcon" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true"
                            preserveRatio="true" visible="true" GridPane.rowIndex="9" GridPane.valignment="TOP">
                     <image>
-                        <Image url="@../../../../../../../../main/resources/images/info_44.png"/>
+                        <fx:reference source="infoIcon"/>
                     </image>
                     <GridPane.margin>
                         <Insets right="2.0" top="4.0"/>
@@ -291,7 +291,7 @@
                 <ImageView fx:id="payFundsInfoIcon" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true"
                            preserveRatio="true" visible="true" GridPane.rowIndex="14" GridPane.valignment="TOP">
                     <image>
-                        <Image url="@../../../../../../../../main/resources/images/info_44.png"/>
+                        <fx:reference source="infoIcon"/>
                     </image>
                     <GridPane.margin>
                         <Insets right="2.0" top="4.0"/>
@@ -373,7 +373,7 @@
                 <ImageView fx:id="showDetailsInfoIcon" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true"
                            preserveRatio="true" visible="true" GridPane.rowIndex="22" GridPane.valignment="TOP">
                     <image>
-                        <Image url="@../../../../../../../../main/resources/images/info_44.png"/>
+                        <fx:reference source="infoIcon"/>
                     </image>
                     <GridPane.margin>
                         <Insets right="2.0" top="4.0"/>
