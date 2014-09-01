@@ -1,7 +1,30 @@
+/* Create offer screen */
+#input-description-label {
+    -fx-font-size: 11;
+    -fx-alignment: center;
+}
+
+#create-offer-calc-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 20;
+    -fx-padding: 15 5 0 5;
+}
+
+#currency-info-label {
+    -fx-border-radius: 0 4 4 0;
+    -fx-padding: 4 4 4 4;
+    -fx-background-color: linear-gradient(to bottom, #eee, #ddd);
+    -fx-border-color: #aaa;
+    -fx-border-style:  solid  solid solid none;
+    -fx-border-insets: 0 0 0 -2;
+}
+
+/* Splash screen */
 #splash {
     -fx-background-color: #ffffff;
 }
 
+/* Mmain UI screen */
 #logo-sub-title-label {
     -fx-font-weight: bold;
     -fx-font-size: 24;
@@ -174,14 +197,21 @@
     -fx-font-size: 14;
 }
 
-#form-group-label {
+#form-group-title {
     -fx-font-weight: bold;
     -fx-font-size: 14;
     -fx-text-fill: #111;
     -fx-background-color: #f4f4f4;
 }
 
-#form-group-border {
+#form-group-title-active {
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+    -fx-text-fill: #0096c9;
+    -fx-background-color: #f4f4f4;
+}
+
+#form-group-background {
     -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
     -fx-outer-border: linear-gradient(to bottom, #ddd, #ccc);
     -fx-background-color: -fx-shadow-highlight-color,
@@ -191,6 +221,17 @@
     -fx-background-insets: 0 0 -1 0, 0, 1, 2;
     -fx-background-radius: 3px, 3px, 2px, 1px;
 }
+#form-group-background-active {
+    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, #9bbdc9, #57acc9);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1.5, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
 
 #form-title {
     -fx-font-weight: bold;

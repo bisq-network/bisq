@@ -172,7 +172,7 @@ public class MessageFacade implements MessageBroker {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         try {
             final Data offerData = new Data(offer);
-            
+
             // the offer is default 30 days valid
             int defaultOfferTTL = 30 * 24 * 60 * 60 * 1000;
             offerData.ttlSeconds(defaultOfferTTL);
@@ -189,7 +189,7 @@ public class MessageFacade implements MessageBroker {
 
                             // TODO will be removed when we don't use polling anymore
                             setDirty(locationKey);
-                            log.trace("Add offer to DHT was successful. Stored data: [locationKey: " + locationKey + 
+                            log.trace("Add offer to DHT was successful. Stored data: [locationKey: " + locationKey +
                                     ", " +
                                     "value: " + offerData + "]");
                         });
@@ -220,7 +220,7 @@ public class MessageFacade implements MessageBroker {
     }
 
     //TODO remove is failing, probably due Coin or Fiat class (was working before)
-    // objects are identical but returned object form network might have soem problem with serialisation?
+    // objects are identical but returned object form network might have some problem with serialisation?
     public void removeOffer(Offer offer) {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         try {
