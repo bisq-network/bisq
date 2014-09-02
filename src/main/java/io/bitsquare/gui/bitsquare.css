@@ -6,7 +6,8 @@ main bg grey: dddddd
 content bg grey: f4f4f4
 
 */
-/* Create offer screen */
+
+/* Create offer */
 #input-description-label {
     -fx-font-size: 11;
     -fx-alignment: center;
@@ -27,12 +28,78 @@ content bg grey: f4f4f4
     -fx-border-insets: 0 0 0 -2;
 }
 
-/* Splash screen */
+/* Registration */
+#wizard-title-deactivated {
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+    -fx-text-fill: #ccc;
+}
+#wizard-title-active {
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+    -fx-text-fill: #000;
+}
+#wizard-title-completed {
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+    -fx-text-fill: #000;
+}
+
+#wizard-sub-title-deactivated {
+    -fx-text-fill: #ccc;
+}
+#wizard-sub-title-active {
+    -fx-text-fill: #000;
+}
+#wizard-sub-title-completed {
+    -fx-text-fill: #000;
+}
+
+#wizard-item-background-deactivated {
+    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, #ddd, #ccc);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+#wizard-item-background-active {
+    -fx-body-color: linear-gradient(to bottom, #f1f6f7, #e7f5f9);
+    -fx-outer-border: linear-gradient(to bottom, #b5e1ef, #6aa4b6);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#wizard-item-background-active:hover {
+    -fx-body-color: linear-gradient(to bottom, #d2e2e6, #dfe9eb);
+    -fx-cursor: hand;
+}
+
+#wizard-item-background-completed {
+    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, #99ba9c, #619865);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+
+
+/* Splash */
 #splash {
     -fx-background-color: #ffffff;
 }
 
-/* Mmain UI screen */
+/* Mmain UI */
 #logo-sub-title-label {
     -fx-font-weight: bold;
     -fx-font-size: 24;
