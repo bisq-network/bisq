@@ -2,8 +2,13 @@
 We use a variant of the **Presentation Model** pattern which has some similarities with the **Model View ViewModel** 
 (MVVM used in Silverlight and WPF) as we use data bindings, though there are differences in the way the view and 
 the "code behind" is organized (due to different framework features/support).  
-We don't use the term controller for the JavaFX controller it has too much association with the classical MVC 
-controller.   
+
+We don't use the term "controller" for the JavaFX controller it has too much association with the classical MVC 
+controller but instead we use the term "code behind" as it describes better that this class is just a code extension of 
+the declarative view format.  
+That interpretation is also confirmed by the Java FX reference: "A controller is a compiled class that implements the 
+"code behind" the object hierarchy defined by the document."
+ 
 
 The described pattern is only applied yet to that package:  
 io.bitsquare.gui.trade.createoffer;  
@@ -88,4 +93,6 @@ Does not know the PM and View/CB
 
 ## References:
 [Presentation Model](http://martinfowler.com/eaaDev/PresentationModel.html)  
-[Model View ViewModel - MVVM](http://msdn.microsoft.com/en-us/magazine/dd419663.aspx)
+[Model View ViewModel - MVVM](http://msdn.microsoft.com/en-us/magazine/dd419663.aspx)  
+[Java FX FXML controllers]
+(http://docs.oracle.com/javafx/2/api/javafx/fxml/doc-files/introduction_to_fxml.html#controllers)
