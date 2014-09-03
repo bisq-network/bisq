@@ -18,6 +18,7 @@ public class Help {
     private static final Logger log = LoggerFactory.getLogger(Help.class);
 
     private static Stage helpWindow;
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
@@ -32,22 +33,14 @@ public class Help {
                 helpWindow.initModality(Modality.NONE);
                 helpWindow.initOwner(BitSquare.getPrimaryStage());
                 webView = new WebView();
-                webView.getEngine().load(url.toString());
-                Scene scene = new Scene(webView, 800, 600);
-                helpWindow.setScene(scene);
-                helpWindow.onCloseRequestProperty().addListener((ov, oldValue, newValue) -> {
-                    if (oldValue != null && newValue == null)
-                        helpWindow = null;
-                    log.debug("closed");
-                });
-
-                helpWindow.show();
+                helpWindow.setScene(new Scene(webView, 800, 600));
             }
             else {
                 webView = (WebView) helpWindow.getScene().getRoot();
             }
             helpWindow.setTitle(url.toString());
             webView.getEngine().load(url.toString());
+            helpWindow.show();
         } catch (MalformedURLException e) {
             log.error(e.getMessage());
         }
