@@ -18,38 +18,79 @@
 package io.bitsquare.gui.trade.createoffer;
 
 import io.bitsquare.gui.CachedCodeBehind;
+import io.bitsquare.gui.MainController;
+import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
-import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.help.Help;
+import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.trade.TradeController;
+import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 
 import java.net.URL;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
+import javafx.geometry.VPos;
 import javafx.scene.control.*;
+import javafx.scene.image.*;
+import javafx.scene.input.*;
 import javafx.scene.layout.*;
+import javafx.scene.text.*;
+import javafx.stage.Window;
+
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
+import org.controlsfx.control.PopOver;
+import org.controlsfx.control.action.AbstractAction;
+import org.controlsfx.control.action.Action;
+import org.controlsfx.dialog.Dialog;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// TODO Implement other positioning method in InoutTextField to display it over the field instead of right side
+// priceAmountHBox is too large after redesign as to be used as layoutReference. 
+
 public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferCB.class);
 
-    @FXML private Label buyLabel, confirmationLabel, txTitleLabel, collateralLabel;
+    private boolean detailsVisible;
+    private boolean advancedScreenInited;
+
+    private ImageView expand;
+    private ImageView collapse;
+    private PopOver totalToPayInfoPopover;
+
+    @FXML private ScrollPane scrollPane;
+    @FXML private ImageView payFundsInfoIcon, showDetailsInfoIcon;
+    @FXML private TextFlow payFundsInfoTextFlow, showDetailsInfoLabel;
+    @FXML private Pane priceAmountPane, payFundsPane, showDetailsPane;
+    @FXML private Label buyLabel, priceAmountTitleLabel, addressLabel,
+            balanceLabel, payFundsTitleLabel, totalToPayLabel, totalToPayInfoIconLabel,
+            showDetailsTitleLabel, bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel,
+            acceptedCountriesLabel, acceptedCountriesLabelIcon, acceptedLanguagesLabel, acceptedLanguagesLabelIcon,
+            acceptedArbitratorsLabel, acceptedArbitratorsLabelIcon;
+    @FXML private Button showPaymentInfoScreenButton, showAdvancedSettingsButton, placeOfferButton;
+
     @FXML private InputTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
-    @FXML private Button placeOfferButton, closeButton;
-    @FXML private TextField totalToPayTextField, collateralTextField, bankAccountTypeTextField,
+    @FXML private TextField acceptedArbitratorsTextField, totalToPayTextField, bankAccountTypeTextField,
             bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField,
-            acceptedLanguagesTextField,
-            totalFeesTextField, transactionIdTextField;
-    @FXML private ConfidenceProgressIndicator progressIndicator;
+            acceptedLanguagesTextField;
     @FXML private AddressTextField addressTextField;
     @FXML private BalanceTextField balanceTextField;
 
@@ -59,7 +100,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    CreateOfferCB(CreateOfferPM presentationModel) {
+    private CreateOfferCB(CreateOfferPM presentationModel) {
         super(presentationModel);
     }
 
@@ -74,14 +115,15 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
 
         setupBindings();
         setupListeners();
-        configTextFieldValidators();
         balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get());
     }
 
+    @SuppressWarnings("EmptyMethod")
     public void activate() {
         super.activate();
     }
 
+    @SuppressWarnings("EmptyMethod")
     public void deactivate() {
         super.deactivate();
     }
@@ -90,7 +132,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     public void terminate() {
         super.terminate();
 
-        // Used to re-enable createOfferButton in OrderBookController
+        // Used to reset disable state of createOfferButton in OrderBookController
         if (parentController != null) ((TradeController) parentController).onCreateOfferViewRemoved();
     }
 
@@ -109,22 +151,91 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
-    public void onPlaceOffer() {
-        presentationModel.placeOffer();
+    private void onPlaceOffer() {
+        presentationModel.onPlaceOffer();
     }
 
     @FXML
-    public void onClose() {
+    private void onShowPayFundsScreen() {
+        priceAmountPane.setId("form-group-background");
+        priceAmountTitleLabel.setId("form-group-title");
+
+        showPaymentInfoScreenButton.setVisible(false);
+
+        payFundsPane.setVisible(true);
+        totalToPayLabel.setVisible(true);
+        totalToPayInfoIconLabel.setVisible(true);
+        totalToPayTextField.setVisible(true);
+        addressLabel.setVisible(true);
+        addressTextField.setVisible(true);
+        balanceLabel.setVisible(true);
+        balanceTextField.setVisible(true);
+        payFundsInfoIcon.setVisible(true);
+        payFundsInfoTextFlow.setVisible(true);
+        showAdvancedSettingsButton.setVisible(true);
+
+        if (expand == null) {
+            expand = ImageUtil.getIconImageView(ImageUtil.EXPAND);
+            collapse = ImageUtil.getIconImageView(ImageUtil.COLLAPSE);
+        }
+        showAdvancedSettingsButton.setGraphic(expand);
+
+        setupTotalToPayInfoIconLabel();
+
+        presentationModel.onShowPayFundsScreen();
+    }
+
+    @FXML
+    private void onToggleShowAdvancedSettings() {
+        detailsVisible = !detailsVisible;
+        if (detailsVisible) {
+            showAdvancedSettingsButton.setText("Hide advanced settings");
+            showAdvancedSettingsButton.setGraphic(collapse);
+            showDetailsScreen();
+        }
+        else {
+            showAdvancedSettingsButton.setText("Show advanced settings");
+            showAdvancedSettingsButton.setGraphic(expand);
+            hideDetailsScreen();
+        }
+    }
+
+    @FXML
+    private void onOpenGeneralHelp() {
+        Help.openWindow(HelpId.CREATE_OFFER_GENERAL);
+    }
+
+    @FXML
+    private void onOpenFundingHelp() {
+        Help.openWindow(HelpId.CREATE_OFFER_FUNDING);
+    }
+
+    @FXML
+    private void onOpenAdvancedSettingsHelp() {
+        Help.openWindow(HelpId.CREATE_OFFER_ADVANCED);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Navigation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void openSettings() {
+        MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.SETTINGS);
+    }
+
+    private void close() {
         TabPane tabPane = ((TabPane) (root.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setupListeners() {
+        scrollPane.setOnScroll(e -> InputTextField.hideErrorMessageDisplay());
+
         // focus out
         amountTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
             presentationModel.onFocusOutAmountTextField(oldValue, newValue, amountTextField.getText());
@@ -172,14 +283,46 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
             }
         });
 
-
-        presentationModel.requestPlaceOfferFailed.addListener((o, oldValue, newValue) -> {
-            if (newValue && presentationModel.requestPlaceOfferErrorMessage.get() != null) {
+        presentationModel.requestPlaceOfferErrorMessage.addListener((o, oldValue, newValue) -> {
+            if (newValue != null) {
                 Popups.openErrorPopup("Error", "An error occurred when placing the offer.\n" +
                         presentationModel.requestPlaceOfferErrorMessage.get());
             }
         });
 
+        presentationModel.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
+            if (newValue != null) {
+                // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added 
+                // our own actions.
+                List<Action> actions = new ArrayList<>();
+                actions.add(new AbstractAction("Copy transaction ID") {
+                    @Override
+                    public void handle(ActionEvent actionEvent) {
+                        Clipboard clipboard = Clipboard.getSystemClipboard();
+                        ClipboardContent content = new ClipboardContent();
+                        content.putString(presentationModel.transactionId.get());
+                        clipboard.setContent(content);
+                    }
+                });
+                actions.add(new AbstractAction("Close") {
+                    @Override
+                    public void handle(ActionEvent actionEvent) {
+                        try {
+                            close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        Dialog.Actions.CLOSE.handle(actionEvent);
+                    }
+                });
+
+                Popups.openInformationPopup("Offer published",
+                        "The Bitcoin network transaction ID for the offer payment is: " +
+                                presentationModel.transactionId.get(),
+                        "Your offer has been successfully published to the distributed orderbook.",
+                        actions);
+            }
+        });
     }
 
     private void setupBindings() {
@@ -190,10 +333,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         priceTextField.textProperty().bindBidirectional(presentationModel.price);
         volumeTextField.textProperty().bindBidirectional(presentationModel.volume);
 
-        collateralLabel.textProperty().bind(presentationModel.collateralLabel);
-        collateralTextField.textProperty().bind(presentationModel.collateral);
         totalToPayTextField.textProperty().bind(presentationModel.totalToPay);
-        totalFeesTextField.textProperty().bind(presentationModel.totalFees);
 
         addressTextField.amountAsCoinProperty().bind(presentationModel.totalToPayAsCoin);
         addressTextField.paymentLabelProperty().bind(presentationModel.paymentLabel);
@@ -205,7 +345,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
 
         acceptedCountriesTextField.textProperty().bind(presentationModel.acceptedCountries);
         acceptedLanguagesTextField.textProperty().bind(presentationModel.acceptedLanguages);
-        transactionIdTextField.textProperty().bind(presentationModel.transactionId);
+        acceptedArbitratorsTextField.textProperty().bind(presentationModel.acceptedArbitrators);
 
         // Validation
         amountTextField.amountValidationResultProperty().bind(presentationModel.amountValidationResult);
@@ -216,14 +356,129 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         // buttons
         placeOfferButton.visibleProperty().bind(presentationModel.isPlaceOfferButtonVisible);
         placeOfferButton.disableProperty().bind(presentationModel.isPlaceOfferButtonDisabled);
-        closeButton.visibleProperty().bind(presentationModel.isCloseButtonVisible);
+        //  closeButton.visibleProperty().bind(presentationModel.isCloseButtonVisible);
     }
 
-    private void configTextFieldValidators() {
-        Region referenceNode = (Region) amountTextField.getParent();
-        amountTextField.setLayoutReference(referenceNode);
-        priceTextField.setLayoutReference(referenceNode);
-        volumeTextField.setLayoutReference(referenceNode);
+    private void showDetailsScreen() {
+        payFundsPane.setId("form-group-background");
+        payFundsTitleLabel.setId("form-group-title");
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.layout();
+
+        if (!advancedScreenInited) {
+            initEditIcons();
+            advancedScreenInited = true;
+        }
+
+        toggleDetailsScreen(true);
     }
+
+    private void initEditIcons() {
+        advancedScreenInited = true;
+        acceptedCountriesLabelIcon.setId("clickable-icon");
+        AwesomeDude.setIcon(acceptedCountriesLabelIcon, AwesomeIcon.EDIT_SIGN);
+        Tooltip.install(acceptedCountriesLabelIcon, new Tooltip("Open settings for editing"));
+        acceptedCountriesLabelIcon.setOnMouseClicked(e -> openSettings());
+
+        acceptedLanguagesLabelIcon.setId("clickable-icon");
+        AwesomeDude.setIcon(acceptedLanguagesLabelIcon, AwesomeIcon.EDIT_SIGN);
+        Tooltip.install(acceptedLanguagesLabelIcon, new Tooltip("Open settings for editing"));
+        acceptedLanguagesLabelIcon.setOnMouseClicked(e -> openSettings());
+
+        acceptedArbitratorsLabelIcon.setId("clickable-icon");
+        AwesomeDude.setIcon(acceptedArbitratorsLabelIcon, AwesomeIcon.EDIT_SIGN);
+        Tooltip.install(acceptedArbitratorsLabelIcon, new Tooltip("Open settings for editing"));
+        acceptedArbitratorsLabelIcon.setOnMouseClicked(e -> openSettings());
+    }
+
+    private void hideDetailsScreen() {
+        payFundsPane.setId("form-group-background-active");
+        payFundsTitleLabel.setId("form-group-title-active");
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.layout();
+
+        toggleDetailsScreen(false);
+    }
+
+    private void toggleDetailsScreen(boolean visible) {
+        showDetailsPane.setVisible(visible);
+        showDetailsTitleLabel.setVisible(visible);
+
+        acceptedCountriesLabel.setVisible(visible);
+        acceptedCountriesLabelIcon.setVisible(visible);
+        acceptedCountriesTextField.setVisible(visible);
+        acceptedLanguagesLabel.setVisible(visible);
+        acceptedLanguagesLabelIcon.setVisible(visible);
+        acceptedLanguagesTextField.setVisible(visible);
+        acceptedArbitratorsLabel.setVisible(visible);
+        acceptedArbitratorsLabelIcon.setVisible(visible);
+        acceptedArbitratorsTextField.setVisible(visible);
+
+        bankAccountTypeLabel.setVisible(visible);
+        bankAccountTypeTextField.setVisible(visible);
+        bankAccountCurrencyLabel.setVisible(visible);
+        bankAccountCurrencyTextField.setVisible(visible);
+        bankAccountCountyLabel.setVisible(visible);
+        bankAccountCountyTextField.setVisible(visible);
+
+        showDetailsInfoIcon.setVisible(visible);
+        showDetailsInfoLabel.setVisible(visible);
+    }
+
+    private void setupTotalToPayInfoIconLabel() {
+        totalToPayInfoIconLabel.setId("clickable-icon");
+        AwesomeDude.setIcon(totalToPayInfoIconLabel, AwesomeIcon.QUESTION_SIGN);
+
+        GridPane infoGridPane = new GridPane();
+        infoGridPane.setHgap(5);
+        infoGridPane.setVgap(5);
+        infoGridPane.setPadding(new Insets(10, 10, 10, 10));
+
+        addPayInfoEntry(infoGridPane, 0, "Collateral (" + presentationModel.collateralLabel.get() + ")",
+                presentationModel.collateral.get());
+        addPayInfoEntry(infoGridPane, 1, "Offer fee:", presentationModel.offerFee.get());
+        addPayInfoEntry(infoGridPane, 2, "Bitcoin network fee:", presentationModel.networkFee.get());
+        Separator separator = new Separator();
+        separator.setOrientation(Orientation.HORIZONTAL);
+        separator.setStyle("-fx-background: #666;");
+        GridPane.setConstraints(separator, 1, 3);
+        infoGridPane.getChildren().add(separator);
+        addPayInfoEntry(infoGridPane, 4, "Total:", presentationModel.totalToPay.get());
+
+        totalToPayInfoIconLabel.setOnMouseEntered(e -> {
+            if (totalToPayInfoIconLabel.getScene() != null) {
+                totalToPayInfoPopover = new PopOver(infoGridPane);
+                totalToPayInfoPopover.setDetachable(false);
+                totalToPayInfoPopover.setArrowIndent(5);
+                totalToPayInfoPopover.show(totalToPayInfoIconLabel.getScene().getWindow(),
+                        getPopupPosition().getX(),
+                        getPopupPosition().getY());
+            }
+        });
+        totalToPayInfoIconLabel.setOnMouseExited(e -> {
+            if (totalToPayInfoPopover != null)
+                totalToPayInfoPopover.hide();
+        });
+    }
+
+    private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {
+        Label label = new Label(labelText);
+        TextField textField = new TextField(value);
+        textField.setEditable(false);
+        textField.setFocusTraversable(false);
+        textField.setId("payment-info");
+        GridPane.setConstraints(label, 0, row, 1, 1, HPos.RIGHT, VPos.CENTER);
+        GridPane.setConstraints(textField, 1, row);
+        infoGridPane.getChildren().addAll(label, textField);
+    }
+
+    private Point2D getPopupPosition() {
+        Window window = totalToPayInfoIconLabel.getScene().getWindow();
+        Point2D point = totalToPayInfoIconLabel.localToScene(0, 0);
+        double x = point.getX() + window.getX() + totalToPayInfoIconLabel.getWidth() + 20;
+        double y = point.getY() + window.getY() + Math.floor(totalToPayInfoIconLabel.getHeight() / 2);
+        return new Point2D(x, y);
+    }
+
 }
 

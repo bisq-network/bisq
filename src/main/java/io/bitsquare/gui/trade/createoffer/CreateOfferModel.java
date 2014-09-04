@@ -17,10 +17,12 @@
 
 package io.bitsquare.gui.trade.createoffer;
 
+import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.locale.Country;
 import io.bitsquare.settings.Settings;
@@ -48,6 +50,9 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +73,7 @@ class CreateOfferModel extends UIModel {
     private final User user;
 
     private final String offerId;
-    private Direction direction = null;
+    @Nullable private Direction direction = null;
 
     AddressEntry addressEntry;
 
@@ -81,7 +86,7 @@ class CreateOfferModel extends UIModel {
     final LongProperty collateralAsLong = new SimpleLongProperty();
 
     final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty();
-    final BooleanProperty requestPlaceOfferFailed = new SimpleBooleanProperty();
+    final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
 
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
@@ -89,10 +94,12 @@ class CreateOfferModel extends UIModel {
     final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> collateralAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> totalFeesAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> offerFeeAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> networkFeeAsCoin = new SimpleObjectProperty<>();
 
-    ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();
-    ObservableList<Locale> acceptedLanguages = FXCollections.observableArrayList();
+    final ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();
+    final ObservableList<Locale> acceptedLanguages = FXCollections.observableArrayList();
+    final ObservableList<Arbitrator> acceptedArbitrators = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -121,10 +128,20 @@ class CreateOfferModel extends UIModel {
         super.initialized();
 
         // static data
-        totalFeesAsCoin.set(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE));
+        offerFeeAsCoin.set(FeePolicy.CREATE_OFFER_FEE);
+        networkFeeAsCoin.set(FeePolicy.TX_FEE);
 
-        if (walletFacade != null && walletFacade.getWallet() != null)
+        if (walletFacade != null && walletFacade.getWallet() != null) {
             addressEntry = walletFacade.getAddressInfoByTradeID(offerId);
+
+            walletFacade.addBalanceListener(new BalanceListener(addressEntry.getAddress()) {
+                @Override
+                public void onBalanceChanged(@NotNull Coin balance) {
+                    updateBalance(balance);
+                }
+            });
+            updateBalance(walletFacade.getBalanceForAddress(addressEntry.getAddress()));
+        }
     }
 
     @Override
@@ -136,6 +153,7 @@ class CreateOfferModel extends UIModel {
             collateralAsLong.set(settings.getCollateral());
             acceptedCountries.setAll(settings.getAcceptedCountries());
             acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
+            acceptedArbitrators.setAll(settings.getAcceptedArbitrators());
         }
 
         if (user != null) {
@@ -148,11 +166,13 @@ class CreateOfferModel extends UIModel {
         }
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void terminate() {
         super.terminate();
@@ -171,13 +191,10 @@ class CreateOfferModel extends UIModel {
                 amountAsCoin.get(),
                 minAmountAsCoin.get(),
                 (transaction) -> {
-                    requestPlaceOfferSuccess.set(true);
                     transactionId.set(transaction.getHashAsString());
+                    requestPlaceOfferSuccess.set(true);
                 },
-                (errorMessage) -> {
-                    requestPlaceOfferFailed.set(true);
-                    requestPlaceOfferErrorMessage.set(errorMessage);
-                }
+                (errorMessage) -> requestPlaceOfferErrorMessage.set(errorMessage)
         );
     }
 
@@ -213,8 +230,9 @@ class CreateOfferModel extends UIModel {
     void calculateTotalToPay() {
         calculateCollateral();
         try {
-            if (collateralAsCoin.get() != null)
-                totalToPayAsCoin.set(collateralAsCoin.get().add(totalFeesAsCoin.get()));
+            if (collateralAsCoin.get() != null) {
+                totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(collateralAsCoin.get()));
+            }
         } catch (Throwable t) {
             // Should be never reached
             log.error(t.toString());
@@ -238,16 +256,21 @@ class CreateOfferModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     boolean isMinAmountLessOrEqualAmount() {
+        //noinspection SimplifiableIfStatement
         if (minAmountAsCoin.get() != null && amountAsCoin.get() != null)
             return !minAmountAsCoin.get().isGreaterThan(amountAsCoin.get());
         return true;
     }
 
+    private void updateBalance(@NotNull Coin balance) {
+        isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter/Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Nullable
     Direction getDirection() {
         return direction;
     }

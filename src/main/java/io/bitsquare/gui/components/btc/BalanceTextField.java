@@ -28,7 +28,9 @@ import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.TransactionConfidence;
 
 import javafx.scene.control.*;
+import javafx.scene.effect.*;
 import javafx.scene.layout.*;
+import javafx.scene.paint.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +41,9 @@ public class BalanceTextField extends AnchorPane {
     private final TextField balanceTextField;
     private final Tooltip progressIndicatorTooltip;
     private final ConfidenceProgressIndicator progressIndicator;
+
+    private final Effect fundedEffect = new DropShadow(BlurType.GAUSSIAN, Color.GREEN, 4, 0.0, 0, 0);
+    private final Effect notFundedEffect = new DropShadow(BlurType.GAUSSIAN, Color.ORANGERED, 4, 0.0, 0, 0);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -123,6 +128,10 @@ public class BalanceTextField extends AnchorPane {
 
     private void updateBalance(Coin balance) {
         balanceTextField.setText(BSFormatter.formatCoin(balance));
+        if (balance.isPositive())
+            balanceTextField.setEffect(fundedEffect);
+        else
+            balanceTextField.setEffect(notFundedEffect);
     }
 
 }

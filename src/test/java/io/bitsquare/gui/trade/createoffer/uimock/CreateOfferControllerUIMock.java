@@ -37,12 +37,10 @@ import org.slf4j.LoggerFactory;
 public class CreateOfferControllerUIMock implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferControllerUIMock.class);
 
-    public VBox priceAmountMinAmountBox;
-    public HBox priceAmountHBox;
-    public VBox priceAmountBuyIconBox;
-
 
     @FXML private GridPane gridPane;
+    @FXML private VBox priceAmountMinAmountBox, priceAmountBuyIconBox;
+    @FXML private HBox priceAmountHBox;
     @FXML private ImageView priceAmountInfoIcon, payFundsInfoIcon, paymentInfoIcon, showDetailsInfoIcon;
     @FXML private Separator totalsSeparator;
 
@@ -53,6 +51,7 @@ public class CreateOfferControllerUIMock implements Initializable {
             showDetailsTitleLabel, bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel,
             acceptedCountriesLabel, acceptedLanguagesLabel, acceptedArbitratorsLabel, showDetailsInfoLabel;
     @FXML private Button showPaymentInfoScreenButton, showPayFundsScreenButton, showDetailsButton;
+
     @FXML private TextField offerFeeTextField, networkFeeTextField, acceptedArbitratorsTextField;
     @FXML private TextField addressTextField;
     @FXML private TextField balanceTextField;
@@ -208,18 +207,6 @@ public class CreateOfferControllerUIMock implements Initializable {
 
         showDetailsInfoIcon.setVisible(true);
         showDetailsInfoLabel.setVisible(true);
-
-    }
-
-    @FXML
-    private void showAdvancedScreen() {
-
-    }
-
-
-    @FXML
-    private void showSummaryScreen() {
-
     }
 
 

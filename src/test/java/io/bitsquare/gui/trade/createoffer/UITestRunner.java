@@ -1,8 +1,24 @@
-package io.bitsquare;
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package io.bitsquare.gui.trade.createoffer;
 
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.di.GuiceFXMLLoader;
-import io.bitsquare.gui.NavigationItem;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -27,7 +43,7 @@ import org.slf4j.LoggerFactory;
 public class UITestRunner extends Application {
     private static final Logger log = LoggerFactory.getLogger(UITestRunner.class);
     private Scene scene;
-    private Parent view;
+    private Pane view;
     private Pane pane;
     private boolean devTest = true;
 
@@ -41,7 +57,7 @@ public class UITestRunner extends Application {
         GuiceFXMLLoader.setInjector(injector);
 
         pane = new StackPane();
-        scene = new Scene(pane, 1000, 750);
+        scene = new Scene(pane, 1000, 630);
         scene.getAccelerators().put(KeyCombination.valueOf("Shortcut+S"), this::loadMainWindow);
         loadMainWindow();
         primaryStage.setScene(scene);
@@ -51,10 +67,8 @@ public class UITestRunner extends Application {
     public void loadMainWindow() {
         log.debug("re load");
         pane.getChildren().removeAll();
-        GuiceFXMLLoader loader = new GuiceFXMLLoader(getUrl(NavigationItem.CREATE_OFFER.getFxmlUrl()), false);
-        // GuiceFXMLLoader loader = new GuiceFXMLLoader(getUrl("/io/bitsquare/gui/trade/createoffer/CreateOfferView
-        // .fxml"), false);
-
+        GuiceFXMLLoader loader = new GuiceFXMLLoader(
+                getUrl("/io/bitsquare/gui/trade/createoffer/CreateOfferView.fxml"), false);
         try {
             view = loader.load();
         } catch (IOException e) {
@@ -84,6 +98,4 @@ public class UITestRunner extends Application {
             return getClass().getResource(subPath);
         }
     }
-
-
 }

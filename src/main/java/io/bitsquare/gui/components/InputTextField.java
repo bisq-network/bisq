@@ -43,13 +43,16 @@ import org.slf4j.LoggerFactory;
  * There can be only 1 errorMessageDisplays at a time we use static field for it.
  * The position is derived from the position of the textField itself or if set from the layoutReference node.
  */
+//TODO There are some rare situation where it behaves buggy. Needs further investigation and improvements. Also 
+// consider replacement with controlsFX components.
 public class InputTextField extends TextField {
     private static final Logger log = LoggerFactory.getLogger(InputTextField.class);
 
-    private Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
+    private final Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
 
-    final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>(new
-            InputValidator.ValidationResult(true));
+    private final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>
+            (new
+                    InputValidator.ValidationResult(true));
 
     private static PopOver errorMessageDisplay;
     private Region layoutReference = this;
@@ -100,7 +103,7 @@ public class InputTextField extends TextField {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * @param layoutReference The node used as reference for positioning. If not set explicitely the
+     * @param layoutReference The node used as reference for positioning. If not set explicitly the
      *                        ValidatingTextField instance is used.
      */
     public void setLayoutReference(Region layoutReference) {
@@ -123,18 +126,21 @@ public class InputTextField extends TextField {
 
     private void applyErrorMessage(InputValidator.ValidationResult validationResult) {
         if (validationResult.isValid) {
-            if (errorMessageDisplay != null) {
+            if (errorMessageDisplay != null)
                 errorMessageDisplay.hide();
-            }
         }
         else {
+
             if (errorMessageDisplay == null)
                 createErrorPopOver(validationResult.errorMessage);
             else
                 ((Label) errorMessageDisplay.getContentNode()).setText(validationResult.errorMessage);
 
-            errorMessageDisplay.show(getScene().getWindow(), getErrorPopupPosition().getX(),
-                    getErrorPopupPosition().getY());
+            if (getScene() != null)
+                errorMessageDisplay.show(getScene().getWindow(), getErrorPopupPosition().getX(),
+                        getErrorPopupPosition().getY());
+
+            InputTextField.errorMessageDisplay.setDetached(false);
         }
     }
 
@@ -142,8 +148,10 @@ public class InputTextField extends TextField {
         Window window = getScene().getWindow();
         Point2D point;
         point = layoutReference.localToScene(0, 0);
-        double x = point.getX() + window.getX() + layoutReference.getWidth() + 20;
-        double y = point.getY() + window.getY() + Math.floor(getHeight() / 2);
+        double x = Math.floor(point.getX() + window.getX() + layoutReference.getWidth() + 20 - getPadding().getLeft() -
+                getPadding().getRight());
+        double y = Math.floor(point.getY() + window.getY() + getHeight() / 2 - getPadding().getTop() - getPadding()
+                .getBottom());
         return new Point2D(x, y);
     }
 
@@ -152,9 +160,11 @@ public class InputTextField extends TextField {
         Label errorLabel = new Label(errorMessage);
         errorLabel.setId("validation-error");
         errorLabel.setPadding(new Insets(0, 10, 0, 10));
+        errorLabel.setOnMouseClicked(e -> hideErrorMessageDisplay());
 
         InputTextField.errorMessageDisplay = new PopOver(errorLabel);
-        InputTextField.errorMessageDisplay.setDetachable(false);
+        InputTextField.errorMessageDisplay.setDetachable(true);
+        InputTextField.errorMessageDisplay.setDetachedTitle("Close");
         InputTextField.errorMessageDisplay.setArrowIndent(5);
     }
 

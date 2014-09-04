@@ -264,6 +264,19 @@ public class BSFormatter {
         return result;
     }
 
+    public static String arbitratorsToString(List<Arbitrator> arbitrators) {
+        String result = "";
+        int i = 0;
+        for (Arbitrator arbitrator : arbitrators) {
+            result += arbitrator.getName();
+            i++;
+            if (i < arbitrators.size()) {
+                result += ", ";
+            }
+        }
+        return result;
+    }
+
     public static String languageLocalesToString(List<Locale> languageLocales) {
         String result = "";
         int i = 0;

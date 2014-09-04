@@ -30,24 +30,37 @@ import javafx.application.Platform;
 
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
+import org.controlsfx.dialog.DialogStyle;
 import org.controlsfx.dialog.Dialogs;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Collection of controlsfx Popups
  */
 public class Popups {
+    private static final Logger log = LoggerFactory.getLogger(Popups.class);
 
     // Information
     public static void openInformationPopup(String title, String message) {
-        openInformationPopup(title, message, null);
+        openInformationPopup(title, message, null, null);
     }
 
     public static void openInformationPopup(String title, String message, String masthead) {
+        List<Action> actions = new ArrayList<>();
+        actions.add(Dialog.Actions.CLOSE);
+        openInformationPopup(title, message, masthead, actions);
+    }
+
+    public static void openInformationPopup(String title, String message, String masthead, List<Action> actions) {
         Dialogs.create()
                 .owner(BitSquare.getPrimaryStage())
                 .title(title)
                 .message(message)
                 .masthead(masthead)
+                .actions(actions)
+                .style(DialogStyle.UNDECORATED)
                 .showInformation();
     }
 

@@ -41,6 +41,8 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
+import org.jetbrains.annotations.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +52,8 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferPM.class);
 
-    private BtcValidator btcValidator = new BtcValidator();
-    private FiatValidator fiatValidator = new FiatValidator();
+    private final BtcValidator btcValidator = new BtcValidator();
+    private final FiatValidator fiatValidator = new FiatValidator();
 
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty minAmount = new SimpleStringProperty();
@@ -61,25 +63,25 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     final StringProperty totalToPay = new SimpleStringProperty();
     final StringProperty directionLabel = new SimpleStringProperty();
     final StringProperty collateralLabel = new SimpleStringProperty();
-    final StringProperty totalFees = new SimpleStringProperty();
+    final StringProperty offerFee = new SimpleStringProperty();
+    final StringProperty networkFee = new SimpleStringProperty();
     final StringProperty bankAccountType = new SimpleStringProperty();
     final StringProperty bankAccountCurrency = new SimpleStringProperty();
     final StringProperty bankAccountCounty = new SimpleStringProperty();
     final StringProperty acceptedCountries = new SimpleStringProperty();
     final StringProperty acceptedLanguages = new SimpleStringProperty();
+    final StringProperty acceptedArbitrators = new SimpleStringProperty();
     final StringProperty addressAsString = new SimpleStringProperty();
     final StringProperty paymentLabel = new SimpleStringProperty();
     final StringProperty transactionId = new SimpleStringProperty();
     final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
 
-    final BooleanProperty isCloseButtonVisible = new SimpleBooleanProperty();
-    final BooleanProperty isPlaceOfferButtonVisible = new SimpleBooleanProperty(true);
+    final BooleanProperty isPlaceOfferButtonVisible = new SimpleBooleanProperty(false);
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty showWarningAdjustedVolume = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidFiatDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
-    final BooleanProperty requestPlaceOfferFailed = new SimpleBooleanProperty();
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new SimpleObjectProperty<>();
@@ -123,16 +125,19 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         setupListeners();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void terminate() {
         super.terminate();
@@ -144,9 +149,9 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // setOrderBookFilter is a one time call
-    void setOrderBookFilter(OrderBookFilter orderBookFilter) {
+    void setOrderBookFilter(@NotNull OrderBookFilter orderBookFilter) {
         model.setDirection(orderBookFilter.getDirection());
-        directionLabel.set(model.getDirection() == Direction.BUY ? "Buy:" : "Sell:");
+        directionLabel.set(model.getDirection() == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
 
         // apply only if valid
         if (orderBookFilter.getAmount() != null && isBtcInputValid(orderBookFilter.getAmount().toPlainString())
@@ -165,13 +170,12 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     // UI actions (called by CB)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void placeOffer() {
+    void onPlaceOffer() {
         model.requestPlaceOfferErrorMessage.set(null);
-        model.requestPlaceOfferFailed.set(false);
         model.requestPlaceOfferSuccess.set(false);
-        
+
         isPlaceOfferButtonDisabled.set(true);
-        isPlaceOfferButtonVisible.set(true);
+        // isPlaceOfferButtonVisible.set(true);
 
         model.placeOffer();
     }
@@ -180,6 +184,10 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI events (called by CB)
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onShowPayFundsScreen() {
+        isPlaceOfferButtonVisible.set(true);
+    }
 
     // On focus out we do validation and apply the data to the model 
     void onFocusOutAmountTextField(Boolean oldValue, Boolean newValue, String userInput) {
@@ -318,6 +326,10 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
             }
             validateInput();
         });
+        model.isWalletFunded.addListener((ov, oldValue, newValue) -> {
+            if (newValue)
+                validateInput();
+        });
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
         model.amountAsCoin.addListener((ov, oldValue, newValue) -> amount.set(formatCoin(newValue)));
@@ -325,9 +337,9 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         model.priceAsFiat.addListener((ov, oldValue, newValue) -> price.set(formatFiat(newValue)));
         model.volumeAsFiat.addListener((ov, oldValue, newValue) -> volume.set(formatFiat(newValue)));
 
-        model.requestPlaceOfferFailed.addListener((ov, oldValue, newValue) -> {
-            isPlaceOfferButtonDisabled.set(!newValue);
-            requestPlaceOfferFailed.set(newValue);
+        model.requestPlaceOfferErrorMessage.addListener((ov, oldValue, newValue) -> {
+            if (newValue != null)
+                isPlaceOfferButtonDisabled.set(false);
         });
         model.requestPlaceOfferSuccess.addListener((ov, oldValue, newValue) -> isPlaceOfferButtonVisible.set
                 (!newValue));
@@ -337,6 +349,8 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
                 .countryLocalesToString(model.acceptedCountries)));
         model.acceptedLanguages.addListener((Observable o) -> acceptedLanguages.set(BSFormatter
                 .languageLocalesToString(model.acceptedLanguages)));
+        model.acceptedArbitrators.addListener((Observable o) -> acceptedArbitrators.set(BSFormatter
+                .arbitratorsToString(model.acceptedArbitrators)));
     }
 
     private void setupBindings() {
@@ -349,16 +363,19 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
                 (model.collateralAsLong.get()) + "):", model.collateralAsLong));
         totalToPayAsCoin.bind(model.totalToPayAsCoin);
 
-        totalFees.bind(createStringBinding(() -> formatCoinWithCode(model.totalFeesAsCoin.get()),
-                model.totalFeesAsCoin));
+        offerFee.bind(createStringBinding(() -> formatCoinWithCode(model.offerFeeAsCoin.get()),
+                model.offerFeeAsCoin));
+        networkFee.bind(createStringBinding(() -> formatCoinWithCode(model.networkFeeAsCoin.get()),
+                model.offerFeeAsCoin));
+
         bankAccountType.bind(Bindings.createStringBinding(() -> Localisation.get(model.bankAccountType.get()),
                 model.bankAccountType));
         bankAccountCurrency.bind(model.bankAccountCurrency);
         bankAccountCounty.bind(model.bankAccountCounty);
 
-        isCloseButtonVisible.bind(model.requestPlaceOfferSuccess);
         requestPlaceOfferErrorMessage.bind(model.requestPlaceOfferErrorMessage);
         showTransactionPublishedScreen.bind(model.requestPlaceOfferSuccess);
+        transactionId.bind(model.transactionId);
     }
 
     private void calculateVolume() {
@@ -406,7 +423,8 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
                         isBtcInputValid(minAmount.get()).isValid &&
                         isBtcInputValid(price.get()).isValid &&
                         isBtcInputValid(volume.get()).isValid &&
-                        model.isMinAmountLessOrEqualAmount())
+                        model.isMinAmountLessOrEqualAmount() &&
+                        model.isWalletFunded.get())
         );
     }
 

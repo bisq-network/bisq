@@ -46,6 +46,9 @@ public class ImageUtil {
     public static final String SELL = "/images/sell.png";
     public static final String REMOVE = "/images/removeOffer.png";
 
+    public static final String EXPAND = "/images/expand.png";
+    public static final String COLLAPSE = "/images/collapse.png";
+
     public static Image getIconImage(String iconName) {
         return new Image(ImageUtil.class.getResourceAsStream(iconName));
     }

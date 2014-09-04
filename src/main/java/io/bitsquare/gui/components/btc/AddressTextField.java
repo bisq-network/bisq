@@ -34,6 +34,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.*;
@@ -65,9 +66,10 @@ public class AddressTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public AddressTextField() {
-        Label addressLabel = new Label();
-        addressLabel.setFocusTraversable(false);
-        addressLabel.setId("address-label");
+
+        TextField addressLabel = new TextField();
+        addressLabel.setId("address-text-field");
+        addressLabel.setEditable(false);
         addressLabel.textProperty().bind(address);
         addressLabel.setOnMouseClicked(mouseEvent -> {
             try {
@@ -78,6 +80,11 @@ public class AddressTextField extends AnchorPane {
                 Popups.openWarningPopup("Information", "Opening a system Bitcoin wallet application has failed. " +
                         "Perhaps you don't have one installed?");
             }
+        });
+        addressLabel.focusTraversableProperty().set(focusTraversableProperty().get());
+        focusedProperty().addListener((ov, oldValue, newValue) -> {
+            addressLabel.requestFocus();
+            log.debug("foc");
         });
 
         Label copyIcon = new Label();
