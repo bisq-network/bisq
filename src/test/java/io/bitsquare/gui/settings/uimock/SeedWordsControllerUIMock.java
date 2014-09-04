@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.registration.uimock;
+package io.bitsquare.gui.settings.uimock;
 
 import java.net.URL;
 
@@ -23,7 +23,7 @@ import java.util.ResourceBundle;
 
 import javafx.fxml.Initializable;
 
-public class SetPasswordControllerUIMock implements Initializable {
+public class SeedWordsControllerUIMock implements Initializable {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

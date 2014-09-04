@@ -1,4 +1,4 @@
-package io.bitsquare.gui.registration.uimock;
+package io.bitsquare.gui.settings.uimock;
 
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.di.GuiceFXMLLoader;
@@ -23,8 +23,8 @@ import org.slf4j.LoggerFactory;
 /**
  * For testing single isolated UI screens
  */
-public class SetPasswordUIMockRunner extends Application {
-    private static final Logger log = LoggerFactory.getLogger(SetPasswordUIMockRunner.class);
+public class SeedWordsUIMockRunner extends Application {
+    private static final Logger log = LoggerFactory.getLogger(SeedWordsUIMockRunner.class);
     private Scene scene;
     private Parent view;
     private Pane pane;
@@ -51,7 +51,7 @@ public class SetPasswordUIMockRunner extends Application {
         log.debug("re load");
         pane.getChildren().removeAll();
         GuiceFXMLLoader loader = new GuiceFXMLLoader(
-                getUrl("/io/bitsquare/gui/registration/uimock/SetPasswordViewUIMock.fxml"), false);
+                getUrl("/io/bitsquare/gui/settings/uimock/SeedWordsViewUIMock.fxml"), false);
 
         try {
             view = loader.load();

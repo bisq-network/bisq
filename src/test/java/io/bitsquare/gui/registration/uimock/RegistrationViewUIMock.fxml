@@ -51,6 +51,35 @@
                             </HBox.margin>
                             <children>
 
+                                <Label AnchorPane.topAnchor="0" layoutX="40.0" layoutY="7.0" text="Backup wallet seed"
+                                       id="wizard-title-completed">
+                                </Label>
+                                <Label id="wizard-sub-title-completed" layoutX="40.0" layoutY="33.0" maxWidth="250.0"
+                                       text="Write down the seed word for your wallet."
+                                       wrapText="true" AnchorPane.bottomAnchor="0"/>
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+
+                <HBox id="wizard-item-background-completed" spacing="5" prefWidth="200.0">
+                    <children>
+                        <ImageView fitHeight="20.0" fitWidth="20.0"
+                                   pickOnBounds="true" preserveRatio="true">
+                            <HBox.margin>
+                                <Insets left="8.0" top="8.0"/>
+                            </HBox.margin>
+                            <image>
+                                <Image url="@../../../../../../../main/resources/images/tick.png"/>
+                            </image>
+
+                        </ImageView>
+                        <VBox spacing="1">
+                            <HBox.margin>
+                                <Insets top="5.0" bottom="8"/>
+                            </HBox.margin>
+                            <children>
+
                                 <Label AnchorPane.topAnchor="0" layoutX="40.0" layoutY="7.0" text="Setup password"
                                        id="wizard-title-completed">
                                 </Label>
@@ -156,12 +185,13 @@
     </left>
     <center>
         <Pane fx:id="content">
-            <fx:include source="SetPasswordViewUIMock.fxml" visible="false" prefWidth="690"/>
+            <fx:include source="../../settings/uimock/SeedWordsViewUIMock.fxml" visible="true" prefWidth="690"/>
+            <fx:include source="../../settings/uimock/SetPasswordViewUIMock.fxml" visible="false" prefWidth="690"/>
             <fx:include source="../../settings/uimock/BankAccountSettingsViewUIMock.fxml" visible="false"
                         prefWidth="690"/>
             <fx:include source="../../settings/uimock/RestrictionSettingsViewUIMock.fxml" visible="false"
                         prefWidth="690"/>
-            <fx:include source="FundRegistrationWalletViewUIMock.fxml" visible="true" prefWidth="690"/>
+            <fx:include source="FundRegistrationWalletViewUIMock.fxml" visible="false" prefWidth="690"/>
         </Pane>
     </center>
 </BorderPane>
