@@ -290,7 +290,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         presentationModel.requestPlaceOfferErrorMessage.addListener((o, oldValue, newValue) -> {
             if (newValue != null) {
                 Popups.openErrorPopup(BSResources.get("shared.error"),
-                        BSResources.get("createOffer.amountPriceBox.error.requestPlaceOfferErrorMessage",
+                        BSResources.get("createOffer.amountPriceBox.error.message",
                                 presentationModel.requestPlaceOfferErrorMessage.get()));
             }
         });

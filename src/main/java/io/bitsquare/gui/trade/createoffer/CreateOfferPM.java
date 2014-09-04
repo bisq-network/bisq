@@ -209,7 +209,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
                 // handle minAmount/amount relationship
                 if (!model.isMinAmountLessOrEqualAmount()) {
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
-                            BSResources.get("createOffer.validation.amountSmallerThanAmount")));
+                            BSResources.get("createOffer.validation.amountSmallerThanMinAmount")));
                 }
                 else {
                     amountValidationResult.set(result);
@@ -400,7 +400,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         // Amount calculation could lead to amount/minAmount invalidation
         if (!model.isMinAmountLessOrEqualAmount()) {
             amountValidationResult.set(new InputValidator.ValidationResult(false,
-                    BSResources.get("createOffer.validation.amountSmallerThanAmount")));
+                    BSResources.get("createOffer.validation.amountSmallerThanMinAmount")));
         }
         else {
             if (amount.get() != null)
