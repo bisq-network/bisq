@@ -497,8 +497,8 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     private Point2D getPopupPosition() {
         Window window = totalToPayInfoIconLabel.getScene().getWindow();
         Point2D point = totalToPayInfoIconLabel.localToScene(0, 0);
-        double x = point.getX() + window.getX() + totalToPayInfoIconLabel.getWidth() + 20;
-        double y = point.getY() + window.getY() + Math.floor(totalToPayInfoIconLabel.getHeight() / 2);
+        double x = point.getX() + window.getX() + totalToPayInfoIconLabel.getWidth() - 3;
+        double y = point.getY() + window.getY() + Math.floor(totalToPayInfoIconLabel.getHeight() / 2) - 9;
         return new Point2D(x, y);
     }
 
