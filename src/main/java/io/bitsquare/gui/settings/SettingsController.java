@@ -74,11 +74,15 @@ import javafx.util.StringConverter;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 // TODO separate in 2 view/controllers
 // TODO: change ui to dispaly a menu on the left and the content on the right
 // there will be more screens
 
 public class SettingsController extends CachedViewController {
+    private static final Logger log = LoggerFactory.getLogger(SettingsController.class);
     private final User user;
     private final Settings settings;
     private final Persistence persistence;

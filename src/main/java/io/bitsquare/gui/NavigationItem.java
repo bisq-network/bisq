@@ -28,6 +28,8 @@ public enum NavigationItem {
     FUNDS("/io/bitsquare/gui/funds/FundsView.fxml", ImageUtil.FUNDS, ImageUtil.FUNDS_ACTIVE),
     MSG("/io/bitsquare/gui/msg/MsgView.fxml", ImageUtil.MSG, ImageUtil.MSG_ACTIVE),
     SETTINGS("/io/bitsquare/gui/settings/SettingsView.fxml", ImageUtil.SETTINGS, ImageUtil.SETTINGS_ACTIVE),
+    REGISTRATION("/io/bitsquare/gui/registration/RegistrationView.fxml"),
+    SETUP("/io/bitsquare/gui/setup/SetupView.fxml"),
 
     ORDER_BOOK("/io/bitsquare/gui/trade/orderbook/OrderBookView.fxml"),
     CREATE_OFFER("/io/bitsquare/gui/trade/createoffer/CreateOfferView.fxml"),
