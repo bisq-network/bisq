@@ -36,8 +36,8 @@ import org.slf4j.LoggerFactory;
 public abstract class ViewController implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(ViewController.class);
 
-    protected ViewController childController;
-    protected ViewController parentController;
+    protected Initializable childController;
+    protected Initializable parentController;
 
     @FXML protected Parent root;
 
@@ -63,7 +63,14 @@ public abstract class ViewController implements Initializable {
      */
     public void terminate() {
         log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
-        if (childController != null) childController.terminate();
+
+        if (childController != null) {
+            if (childController instanceof ViewController)
+                ((ViewController) childController).terminate();
+            else if (childController instanceof CodeBehind)
+                ((CodeBehind) childController).terminate();
+        }
+
     }
 
     /**

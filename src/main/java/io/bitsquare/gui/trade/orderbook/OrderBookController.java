@@ -21,6 +21,7 @@ import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.CodeBehind;
 import io.bitsquare.gui.MainController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
@@ -229,7 +230,18 @@ public class OrderBookController extends CachedViewController {
     public void createOffer() {
         if (isRegistered()) {
             createOfferButton.setDisable(true);
-            Initializable nextController = parentController.loadViewAndGetChildController(NavigationItem.CREATE_OFFER);
+
+            //TODO Remove that when all UIs are converted to CodeBehind
+            Initializable nextController = null;
+            if (parentController != null) {
+                if (parentController instanceof ViewController)
+                    nextController = ((ViewController) parentController).loadViewAndGetChildController(NavigationItem
+                            .CREATE_OFFER);
+                else if (parentController instanceof CodeBehind)
+                    nextController = ((CodeBehind) parentController).loadViewAndGetChildController(NavigationItem
+                            .CREATE_OFFER);
+            }
+
             if (nextController != null)
                 ((CreateOfferCB) nextController).setOrderBookFilter(orderBookFilter);
         }
@@ -345,8 +357,19 @@ public class OrderBookController extends CachedViewController {
 
     private void takeOffer(Offer offer) {
         if (isRegistered()) {
-            TakeOfferController takeOfferController =
-                    (TakeOfferController) parentController.loadViewAndGetChildController(NavigationItem.TAKE_OFFER);
+
+            //TODO Remove that when all UIs are converted to CodeBehind
+            TakeOfferController takeOfferController = null;
+            if (parentController != null) {
+                if (parentController instanceof ViewController)
+                    takeOfferController = (TakeOfferController) ((ViewController) parentController)
+                            .loadViewAndGetChildController(NavigationItem
+                            .TAKE_OFFER);
+                else if (parentController instanceof CodeBehind)
+                    takeOfferController = (TakeOfferController) ((CodeBehind) parentController)
+                            .loadViewAndGetChildController(NavigationItem
+                            .TAKE_OFFER);
+            }
 
             Coin requestedAmount;
             if (!"".equals(amount.getText())) {

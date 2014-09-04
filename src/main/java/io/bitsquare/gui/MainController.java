@@ -200,7 +200,35 @@ public class MainController extends ViewController {
 
     private void onNavigationAdded() {
         Profiler.printMsgWithTime("MainController.onNavigationAdded");
-        Platform.runLater(this::loadContentView);
+        // Platform.runLater(this::loadContentView);
+        // TODO for dev testing
+        Platform.runLater(this::loadSetup);
+    }
+
+    //TODO for dev testing
+    private void loadSetup() {
+        Profiler.printMsgWithTime("MainController.loadSetup");
+
+        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.SETUP.getFxmlUrl()));
+        try {
+            final Node view = loader.load();
+            viewBuilder.contentPane.getChildren().setAll(view);
+            childController = loader.getController();
+
+            //TODO Remove that when all UIs are converted to CodeBehind
+            if (childController instanceof ViewController)
+                ((ViewController) childController).setParentController(this);
+            else if (childController instanceof CodeBehind)
+                ((CodeBehind) childController).setParentController(this);
+
+        } catch (IOException e) {
+            log.error("Loading view failed. FxmlUrl = " + NavigationItem.SETUP.getFxmlUrl());
+            log.error(e.getCause().toString());
+            log.error(e.getMessage());
+            log.error(e.getStackTrace().toString());
+        }
+
+        Platform.runLater(this::onContentViewLoaded);
     }
 
     private void onContentViewLoaded() {
@@ -310,15 +338,24 @@ public class MainController extends ViewController {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void loadViewFromNavButton(NavigationItem navigationItem) {
+    private void loadView(NavigationItem navigationItem) {
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
             final Node view = loader.load();
             viewBuilder.contentPane.getChildren().setAll(view);
             childController = loader.getController();
-            childController.setParentController(this);
+
+            //TODO Remove that when all UIs are converted to CodeBehind
+            if (childController instanceof ViewController)
+                ((ViewController) childController).setParentController(this);
+            else if (childController instanceof CodeBehind)
+                ((CodeBehind) childController).setParentController(this);
+            
         } catch (IOException e) {
-            log.error("Loading view failed. " + navigationItem.getFxmlUrl());
+            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
+            log.error(e.getCause().toString());
+            log.error(e.getMessage());
+            log.error(e.getStackTrace().toString());
         }
     }
 
@@ -336,7 +373,7 @@ public class MainController extends ViewController {
             prevToggleButtonIcon = ((ImageView) (toggleButton.getGraphic())).getImage();
             ((ImageView) (toggleButton.getGraphic())).setImage(ImageUtil.getIconImage(navigationItem.getActiveIcon()));
 
-            loadViewFromNavButton(navigationItem);
+            loadView(navigationItem);
 
             persistence.write(this, "selectedNavigationItem", navigationItem);
 
@@ -517,7 +554,7 @@ class ViewBuilder {
         logo.setFitWidth(300);
         logo.setFitHeight(300);
 
-        Label subTitle = new Label("The P2P Fiat-Bitcoin Exchange");
+        Label subTitle = new Label("The decentralized Bitcoin exchange");
         subTitle.setAlignment(Pos.CENTER);
         subTitle.setId("logo-sub-title-label");
 

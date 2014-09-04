@@ -18,7 +18,6 @@
 package io.bitsquare.gui.setup;
 
 import io.bitsquare.gui.CodeBehind;
-import io.bitsquare.gui.trade.TradeController;
 
 import java.net.URL;
 
@@ -29,17 +28,19 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SetupController extends CodeBehind {
+public class SetupCB extends CodeBehind {
 
-    private static final Logger log = LoggerFactory.getLogger(SetupController.class);
+    private static final Logger log = LoggerFactory.getLogger(SetupCB.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SetupController() {
+    public SetupCB(SetupPm presentationModel) {
+        super(presentationModel);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
@@ -54,9 +55,6 @@ public class SetupController extends CodeBehind {
     @Override
     public void terminate() {
         super.terminate();
-
-        // Used to reset disable state of createOfferButton in OrderBookController
-        if (parentController != null) ((TradeController) parentController).onCreateOfferViewRemoved();
     }
 
 

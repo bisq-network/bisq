@@ -17,15 +17,19 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.setup.SetupController"
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.setup.SetupCB"
             AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
             xmlns:fx="http://javafx.com/fxml">
     <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
           AnchorPane.topAnchor="0.0">
 
-        <Label id="headline-label" text="Reg"/>
+        <ImageView fitWidth="1000.0" pickOnBounds="true" preserveRatio="true">
+            <image>
+                <Image url="@/images/screenshot.png"/>
+            </image>
+        </ImageView>
 
     </VBox>
 </AnchorPane>
