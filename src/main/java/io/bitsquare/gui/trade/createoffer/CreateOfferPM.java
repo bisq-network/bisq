@@ -23,7 +23,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
-import io.bitsquare.locale.Localisation;
+import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 
@@ -116,7 +116,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         super.initialized();
 
         // static
-        paymentLabel.set(Localisation.get("createOffer.fundsBox.paymentLabel", model.getOfferId()));
+        paymentLabel.set(BSResources.get("createOffer.fundsBox.paymentLabel", model.getOfferId()));
 
         if (model.addressEntry != null) {
             addressAsString.set(model.addressEntry.getAddress().toString());
@@ -153,7 +153,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     // setOrderBookFilter is a one time call
     void setOrderBookFilter(@NotNull OrderBookFilter orderBookFilter) {
         model.setDirection(orderBookFilter.getDirection());
-        directionLabel.set(model.getDirection() == Direction.BUY ? Localisation.get("shared.buy") : Localisation.get
+        directionLabel.set(model.getDirection() == Direction.BUY ? BSResources.get("shared.buy") : BSResources.get
                 ("shared.sell"));
 
         // apply only if valid
@@ -209,7 +209,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
                 // handle minAmount/amount relationship
                 if (!model.isMinAmountLessOrEqualAmount()) {
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
-                            Localisation.get("createOffer.validation.amountSmallerThanAmount")));
+                            BSResources.get("createOffer.validation.amountSmallerThanAmount")));
                 }
                 else {
                     amountValidationResult.set(result);
@@ -231,7 +231,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
 
                 if (!model.isMinAmountLessOrEqualAmount()) {
                     minAmountValidationResult.set(new InputValidator.ValidationResult(false,
-                            Localisation.get("createOffer.validation.minAmountLargerThanAmount")));
+                            BSResources.get("createOffer.validation.minAmountLargerThanAmount")));
                 }
                 else {
                     minAmountValidationResult.set(result);
@@ -363,7 +363,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
                 model.collateralAsCoin));
 
         collateralLabel.bind(Bindings.createStringBinding(() ->
-                        Localisation.get("createOffer.fundsBox.collateral",
+                        BSResources.get("createOffer.fundsBox.collateral",
                                 BSFormatter.formatCollateralPercent(model.collateralAsLong.get())),
                 model.collateralAsLong));
         totalToPayAsCoin.bind(model.totalToPayAsCoin);
@@ -373,7 +373,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         networkFee.bind(createStringBinding(() -> formatCoinWithCode(model.networkFeeAsCoin.get()),
                 model.offerFeeAsCoin));
 
-        bankAccountType.bind(Bindings.createStringBinding(() -> Localisation.get(model.bankAccountType.get()),
+        bankAccountType.bind(Bindings.createStringBinding(() -> BSResources.get(model.bankAccountType.get()),
                 model.bankAccountType));
         bankAccountCurrency.bind(model.bankAccountCurrency);
         bankAccountCounty.bind(model.bankAccountCounty);
@@ -400,7 +400,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         // Amount calculation could lead to amount/minAmount invalidation
         if (!model.isMinAmountLessOrEqualAmount()) {
             amountValidationResult.set(new InputValidator.ValidationResult(false,
-                    Localisation.get("createOffer.validation.amountSmallerThanAmount")));
+                    BSResources.get("createOffer.validation.amountSmallerThanAmount")));
         }
         else {
             if (amount.get() != null)

@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.util.validation;
 
-import io.bitsquare.locale.Localisation;
+import io.bitsquare.locale.BSResources;
 
 import com.google.bitcoin.core.NetworkParameters;
 
@@ -80,7 +80,7 @@ public class BtcValidator extends NumberValidator {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
         if (satoshis.scale() > 0)
-            return new ValidationResult(false, Localisation.get("validation.btc.toSmall"));
+            return new ValidationResult(false, BSResources.get("validation.btc.toSmall"));
         else
             return new ValidationResult(true);
     }
@@ -89,7 +89,7 @@ public class BtcValidator extends NumberValidator {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
         if (satoshis.longValue() > NetworkParameters.MAX_MONEY.longValue())
-            return new ValidationResult(false, Localisation.get("validation.btc.toLarge"));
+            return new ValidationResult(false, BSResources.get("validation.btc.toLarge"));
         else
             return new ValidationResult(true);
     }

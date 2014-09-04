@@ -29,9 +29,9 @@ import io.bitsquare.gui.trade.createoffer.CreateOfferCB;
 import io.bitsquare.gui.trade.takeoffer.TakeOfferController;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
@@ -515,7 +515,7 @@ public class OrderBookController extends CachedViewController {
 
                                 if (orderBookListItem != null) {
                                     BankAccountType bankAccountType = orderBookListItem.getOffer().getBankAccountType();
-                                    setText(Localisation.get(bankAccountType.toString()));
+                                    setText(BSResources.get(bankAccountType.toString()));
                                 }
                                 else {
                                     setText("");

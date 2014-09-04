@@ -17,7 +17,7 @@
 
 package io.bitsquare.di;
 
-import io.bitsquare.locale.Localisation;
+import io.bitsquare.locale.BSResources;
 
 import com.google.inject.Injector;
 
@@ -60,7 +60,7 @@ public class GuiceFXMLLoader {
 
         isCached = useCaching && cachedGUIItems.containsKey(url);
         if (!isCached) {
-            loader = new FXMLLoader(url, Localisation.getResourceBundle());
+            loader = new FXMLLoader(url, BSResources.getResourceBundle());
 
             if (GuiceFXMLLoader.injector != null)
                 loader.setControllerFactory(new GuiceControllerFactory(GuiceFXMLLoader.injector));

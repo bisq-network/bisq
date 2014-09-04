@@ -26,8 +26,8 @@ import io.bitsquare.gui.components.ConfidenceDisplay;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
-import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
@@ -396,7 +396,7 @@ public class PendingTradeController extends CachedViewController {
                                 if (tradesTableItem != null) {
                                     BankAccountType bankAccountType = tradesTableItem.getTrade().getOffer()
                                             .getBankAccountType();
-                                    setText(Localisation.get(bankAccountType.toString()));
+                                    setText(BSResources.get(bankAccountType.toString()));
                                 }
                                 else {
                                     setText("");

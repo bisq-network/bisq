@@ -28,7 +28,7 @@ import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.trade.TradeController;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.locale.Localisation;
+import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 
 import java.net.URL;
@@ -193,12 +193,12 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     private void onToggleShowAdvancedSettings() {
         detailsVisible = !detailsVisible;
         if (detailsVisible) {
-            showAdvancedSettingsButton.setText(Localisation.get("createOffer.fundsBox.hideAdvanced"));
+            showAdvancedSettingsButton.setText(BSResources.get("createOffer.fundsBox.hideAdvanced"));
             showAdvancedSettingsButton.setGraphic(collapse);
             showDetailsScreen();
         }
         else {
-            showAdvancedSettingsButton.setText(Localisation.get("createOffer.fundsBox.showAdvanced"));
+            showAdvancedSettingsButton.setText(BSResources.get("createOffer.fundsBox.showAdvanced"));
             showAdvancedSettingsButton.setGraphic(expand);
             hideDetailsScreen();
         }
@@ -264,24 +264,24 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         // warnings
         presentationModel.showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                Popups.openWarningPopup(Localisation.get("shared.warning"),
-                        Localisation.get("createOffer.amountPriceBox.warning.invalidBtcDecimalPlaces"));
+                Popups.openWarningPopup(BSResources.get("shared.warning"),
+                        BSResources.get("createOffer.amountPriceBox.warning.invalidBtcDecimalPlaces"));
                 presentationModel.showWarningInvalidBtcDecimalPlaces.set(false);
             }
         });
 
         presentationModel.showWarningInvalidFiatDecimalPlaces.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                Popups.openWarningPopup(Localisation.get("shared.warning"),
-                        Localisation.get("createOffer.amountPriceBox.warning.invalidFiatDecimalPlaces"));
+                Popups.openWarningPopup(BSResources.get("shared.warning"),
+                        BSResources.get("createOffer.amountPriceBox.warning.invalidFiatDecimalPlaces"));
                 presentationModel.showWarningInvalidFiatDecimalPlaces.set(false);
             }
         });
 
         presentationModel.showWarningAdjustedVolume.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                Popups.openWarningPopup(Localisation.get("shared.warning"),
-                        Localisation.get("createOffer.amountPriceBox.warning.adjustedVolume"));
+                Popups.openWarningPopup(BSResources.get("shared.warning"),
+                        BSResources.get("createOffer.amountPriceBox.warning.adjustedVolume"));
                 presentationModel.showWarningAdjustedVolume.set(false);
                 volumeTextField.setText(presentationModel.volume.get());
             }
@@ -289,8 +289,8 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
 
         presentationModel.requestPlaceOfferErrorMessage.addListener((o, oldValue, newValue) -> {
             if (newValue != null) {
-                Popups.openErrorPopup(Localisation.get("shared.error"),
-                        Localisation.get("createOffer.amountPriceBox.error.requestPlaceOfferErrorMessage",
+                Popups.openErrorPopup(BSResources.get("shared.error"),
+                        BSResources.get("createOffer.amountPriceBox.error.requestPlaceOfferErrorMessage",
                                 presentationModel.requestPlaceOfferErrorMessage.get()));
             }
         });
@@ -300,7 +300,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
                 // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added 
                 // our own actions.
                 List<Action> actions = new ArrayList<>();
-                actions.add(new AbstractAction(Localisation.get("createOffer.success.copyTxId")) {
+                actions.add(new AbstractAction(BSResources.get("createOffer.success.copyTxId")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         Clipboard clipboard = Clipboard.getSystemClipboard();
@@ -309,7 +309,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
                         clipboard.setContent(content);
                     }
                 });
-                actions.add(new AbstractAction(Localisation.get("shared.close")) {
+                actions.add(new AbstractAction(BSResources.get("shared.close")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         try {
@@ -321,9 +321,9 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
                     }
                 });
 
-                Popups.openInformationPopup(Localisation.get("createOffer.success.title"),
-                        Localisation.get("createOffer.success.info", presentationModel.transactionId.get()),
-                        Localisation.get("createOffer.success.headline"),
+                Popups.openInformationPopup(BSResources.get("createOffer.success.title"),
+                        BSResources.get("createOffer.success.info", presentationModel.transactionId.get()),
+                        BSResources.get("createOffer.success.headline"),
                         actions);
             }
         });
@@ -338,9 +338,9 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         volumeDescriptionLabel.textProperty().bind(presentationModel.fiatCode);//Price per Bitcoin in EUR
 
         priceDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                Localisation.get("createOffer.amountPriceBox.priceDescr", presentationModel.fiatCode.get())));
+                BSResources.get("createOffer.amountPriceBox.priceDescr", presentationModel.fiatCode.get())));
         volumeDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                Localisation.get("createOffer.amountPriceBox.volumeDescr", presentationModel.fiatCode.get())));
+                BSResources.get("createOffer.amountPriceBox.volumeDescr", presentationModel.fiatCode.get())));
 
         buyLabel.textProperty().bind(presentationModel.directionLabel);
 
@@ -393,17 +393,17 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         advancedScreenInited = true;
         acceptedCountriesLabelIcon.setId("clickable-icon");
         AwesomeDude.setIcon(acceptedCountriesLabelIcon, AwesomeIcon.EDIT_SIGN);
-        Tooltip.install(acceptedCountriesLabelIcon, new Tooltip(Localisation.get("shared.openSettings")));
+        Tooltip.install(acceptedCountriesLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
         acceptedCountriesLabelIcon.setOnMouseClicked(e -> openSettings());
 
         acceptedLanguagesLabelIcon.setId("clickable-icon");
         AwesomeDude.setIcon(acceptedLanguagesLabelIcon, AwesomeIcon.EDIT_SIGN);
-        Tooltip.install(acceptedLanguagesLabelIcon, new Tooltip(Localisation.get("shared.openSettings")));
+        Tooltip.install(acceptedLanguagesLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
         acceptedLanguagesLabelIcon.setOnMouseClicked(e -> openSettings());
 
         acceptedArbitratorsLabelIcon.setId("clickable-icon");
         AwesomeDude.setIcon(acceptedArbitratorsLabelIcon, AwesomeIcon.EDIT_SIGN);
-        Tooltip.install(acceptedArbitratorsLabelIcon, new Tooltip(Localisation.get("shared.openSettings")));
+        Tooltip.install(acceptedArbitratorsLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
         acceptedArbitratorsLabelIcon.setOnMouseClicked(e -> openSettings());
     }
 
@@ -462,16 +462,16 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         addPayInfoEntry(infoGridPane, 0,
                 presentationModel.collateralLabel.get(),
                 presentationModel.collateral.get());
-        addPayInfoEntry(infoGridPane, 1, Localisation.get("createOffer.fundsBox.offerFee"),
+        addPayInfoEntry(infoGridPane, 1, BSResources.get("createOffer.fundsBox.offerFee"),
                 presentationModel.offerFee.get());
-        addPayInfoEntry(infoGridPane, 2, Localisation.get("createOffer.fundsBox.networkFee"),
+        addPayInfoEntry(infoGridPane, 2, BSResources.get("createOffer.fundsBox.networkFee"),
                 presentationModel.networkFee.get());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
         separator.setStyle("-fx-background: #666;");
         GridPane.setConstraints(separator, 1, 3);
         infoGridPane.getChildren().add(separator);
-        addPayInfoEntry(infoGridPane, 4, Localisation.get("createOffer.fundsBox.total"),
+        addPayInfoEntry(infoGridPane, 4, BSResources.get("createOffer.fundsBox.total"),
                 presentationModel.totalToPay.get());
         totalToPayInfoPopover = new PopOver(infoGridPane);
         if (totalToPayInfoIconLabel.getScene() != null) {

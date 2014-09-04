@@ -28,8 +28,8 @@ import io.bitsquare.gui.components.ConfidenceDisplay;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.BitSquareValidator;
+import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.locale.Localisation;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
@@ -156,7 +156,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
 
             @Override
             public String toString(Arbitrator.ID_TYPE item) {
-                return Localisation.get(item.toString());
+                return BSResources.get(item.toString());
             }
 
 
@@ -172,7 +172,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
 
             @Override
             public String toString(Arbitrator.METHOD item) {
-                return Localisation.get(item.toString());
+                return BSResources.get(item.toString());
             }
 
 
@@ -188,7 +188,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
 
             @Override
             public String toString(Arbitrator.ID_VERIFICATION item) {
-                return Localisation.get(item.toString());
+                return BSResources.get(item.toString());
             }
 
 
@@ -253,7 +253,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
     public void onSelectIDType() {
         idType = idTypeComboBox.getSelectionModel().getSelectedItem();
         if (idType != null) {
-            idTypeTextField.setText(Localisation.get(idType.toString()));
+            idTypeTextField.setText(BSResources.get(idType.toString()));
 
             String name = "";
             switch (idType) {
@@ -434,7 +434,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
             nameLabel.setText(name);
 
             nameTextField.setText(arbitrator.getName());
-            idTypeTextField.setText(Localisation.get(arbitrator.getIdType().toString()));
+            idTypeTextField.setText(BSResources.get(arbitrator.getIdType().toString()));
             languagesTextField.setText(BSFormatter.languageLocalesToString(arbitrator.getLanguages()));
             maxTradeVolumeTextField.setText(String.valueOf(arbitrator.getMaxTradeVolume()));
             passiveServiceFeeTextField.setText(String.valueOf(arbitrator.getPassiveServiceFee()));

@@ -18,8 +18,8 @@
 package io.bitsquare.gui.util;
 
 import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
-import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.Direction;
 
 import com.google.bitcoin.core.Coin;
@@ -294,7 +294,7 @@ public class BSFormatter {
         String result = "";
         int i = 0;
         for (Arbitrator.METHOD item : items) {
-            result += Localisation.get(item.toString());
+            result += BSResources.get(item.toString());
             i++;
             if (i < items.size()) {
                 result += ", ";
@@ -308,7 +308,7 @@ public class BSFormatter {
         String result = "";
         int i = 0;
         for (Arbitrator.ID_VERIFICATION item : items) {
-            result += Localisation.get(item.toString());
+            result += BSResources.get(item.toString());
             i++;
             if (i < items.size()) {
                 result += ", ";

@@ -34,8 +34,8 @@ import java.util.ResourceBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Localisation {
-    private static final Logger log = LoggerFactory.getLogger(Localisation.class);
+public class BSResources {
+    private static final Logger log = LoggerFactory.getLogger(BSResources.class);
 
     public static ResourceBundle getResourceBundle() {
         return ResourceBundle.getBundle("i18n.displayStrings", new UTF8Control());
@@ -46,7 +46,7 @@ public class Localisation {
             return "";
 
         try {
-            return Localisation.getResourceBundle().getString(key);
+            return BSResources.getResourceBundle().getString(key);
         } catch (MissingResourceException e) {
             log.error("MissingResourceException for key: " + key);
             return key + " is missing";
@@ -54,7 +54,7 @@ public class Localisation {
     }
 
     public static String get(String key, String... arguments) {
-        return MessageFormat.format(Localisation.get(key), arguments);
+        return MessageFormat.format(BSResources.get(key), arguments);
     }
 }
 

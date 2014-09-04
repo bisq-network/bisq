@@ -19,10 +19,10 @@ package io.bitsquare.gui.settings.uimock;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.Localisation;
 import io.bitsquare.locale.Region;
 
 import java.net.URL;
@@ -70,7 +70,7 @@ public class BankAccountSettingsControllerUIMock implements Initializable {
         bankAccountTypesComboBox.setConverter(new StringConverter<BankAccountType>() {
             @Override
             public String toString(BankAccountType bankAccountTypeInfo) {
-                return Localisation.get(bankAccountTypeInfo.toString());
+                return BSResources.get(bankAccountTypeInfo.toString());
             }
 
             @Override

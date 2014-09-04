@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.util.validation;
 
-import io.bitsquare.locale.Localisation;
+import io.bitsquare.locale.BSResources;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +65,7 @@ public class FiatValidator extends NumberValidator {
     protected ValidationResult validateIfNotExceedsMinFiatValue(String input) {
         double d = Double.parseDouble(input);
         if (d < MIN_FIAT_VALUE)
-            return new ValidationResult(false, Localisation.get("validation.fiat.toSmall"));
+            return new ValidationResult(false, BSResources.get("validation.fiat.toSmall"));
         else
             return new ValidationResult(true);
     }
@@ -73,7 +73,7 @@ public class FiatValidator extends NumberValidator {
     protected ValidationResult validateIfNotExceedsMaxFiatValue(String input) {
         double d = Double.parseDouble(input);
         if (d > MAX_FIAT_VALUE)
-            return new ValidationResult(false, Localisation.get("validation.fiat.toLarge"));
+            return new ValidationResult(false, BSResources.get("validation.fiat.toLarge"));
         else
             return new ValidationResult(true);
     }

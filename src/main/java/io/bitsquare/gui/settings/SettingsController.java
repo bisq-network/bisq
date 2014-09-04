@@ -29,11 +29,11 @@ import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.locale.Localisation;
 import io.bitsquare.locale.Region;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.persistence.Persistence;
@@ -602,7 +602,7 @@ public class SettingsController extends CachedViewController {
         bankAccountTypesComboBox.setConverter(new StringConverter<BankAccountType>() {
             @Override
             public String toString(BankAccountType bankAccountTypeInfo) {
-                return Localisation.get(bankAccountTypeInfo.toString());
+                return BSResources.get(bankAccountTypeInfo.toString());
             }
 
             @Override
