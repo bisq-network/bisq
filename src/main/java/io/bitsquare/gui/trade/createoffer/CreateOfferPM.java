@@ -75,6 +75,8 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     final StringProperty paymentLabel = new SimpleStringProperty();
     final StringProperty transactionId = new SimpleStringProperty();
     final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
+    final StringProperty btcCode = new SimpleStringProperty();
+    final StringProperty fiatCode = new SimpleStringProperty();
 
     final BooleanProperty isPlaceOfferButtonVisible = new SimpleBooleanProperty(false);
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
@@ -114,7 +116,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         super.initialized();
 
         // static
-        paymentLabel.set("Bitsquare trade (" + model.getOfferId() + ")");
+        paymentLabel.set(Localisation.get("createOffer.fundsBox.paymentLabel", model.getOfferId()));
 
         if (model.addressEntry != null) {
             addressAsString.set(model.addressEntry.getAddress().toString());
@@ -151,7 +153,8 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     // setOrderBookFilter is a one time call
     void setOrderBookFilter(@NotNull OrderBookFilter orderBookFilter) {
         model.setDirection(orderBookFilter.getDirection());
-        directionLabel.set(model.getDirection() == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
+        directionLabel.set(model.getDirection() == Direction.BUY ? Localisation.get("shared.buy") : Localisation.get
+                ("shared.sell"));
 
         // apply only if valid
         if (orderBookFilter.getAmount() != null && isBtcInputValid(orderBookFilter.getAmount().toPlainString())
@@ -206,7 +209,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
                 // handle minAmount/amount relationship
                 if (!model.isMinAmountLessOrEqualAmount()) {
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
-                            "Amount cannot be smaller than minimum amount."));
+                            Localisation.get("createOffer.validation.amountSmallerThanAmount")));
                 }
                 else {
                     amountValidationResult.set(result);
@@ -228,7 +231,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
 
                 if (!model.isMinAmountLessOrEqualAmount()) {
                     minAmountValidationResult.set(new InputValidator.ValidationResult(false,
-                            "Minimum amount cannot be larger than amount."));
+                            Localisation.get("createOffer.validation.minAmountLargerThanAmount")));
                 }
                 else {
                     minAmountValidationResult.set(result);
@@ -359,8 +362,10 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         collateral.bind(createStringBinding(() -> formatCoinWithCode(model.collateralAsCoin.get()),
                 model.collateralAsCoin));
 
-        collateralLabel.bind(Bindings.createStringBinding(() -> "Collateral (" + BSFormatter.formatCollateralPercent
-                (model.collateralAsLong.get()) + "):", model.collateralAsLong));
+        collateralLabel.bind(Bindings.createStringBinding(() ->
+                        Localisation.get("createOffer.fundsBox.collateral",
+                                BSFormatter.formatCollateralPercent(model.collateralAsLong.get())),
+                model.collateralAsLong));
         totalToPayAsCoin.bind(model.totalToPayAsCoin);
 
         offerFee.bind(createStringBinding(() -> formatCoinWithCode(model.offerFeeAsCoin.get()),
@@ -376,6 +381,9 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         requestPlaceOfferErrorMessage.bind(model.requestPlaceOfferErrorMessage);
         showTransactionPublishedScreen.bind(model.requestPlaceOfferSuccess);
         transactionId.bind(model.transactionId);
+
+        btcCode.bind(model.btcCode);
+        fiatCode.bind(model.fiatCode);
     }
 
     private void calculateVolume() {
@@ -392,7 +400,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         // Amount calculation could lead to amount/minAmount invalidation
         if (!model.isMinAmountLessOrEqualAmount()) {
             amountValidationResult.set(new InputValidator.ValidationResult(false,
-                    "Amount cannot be smaller than minimum amount."));
+                    Localisation.get("createOffer.validation.amountSmallerThanAmount")));
         }
         else {
             if (amount.get() != null)

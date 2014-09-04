@@ -75,14 +75,18 @@ public class BitSquare extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) throws IOException {
+    public void start(Stage primaryStage) {
         Profiler.printMsgWithTime("BitSquare.start called");
         BitSquare.primaryStage = primaryStage;
 
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions
                 (Throwables.getRootCause(throwable)));
 
-        AppDirectory.initAppDir(APP_NAME);
+        try {
+            AppDirectory.initAppDir(APP_NAME);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
 
         // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
         AWTSystemTray.createSystemTray(primaryStage);
@@ -111,19 +115,24 @@ public class BitSquare extends Application {
 
         final GuiceFXMLLoader loader =
                 new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), false);
-        final Parent view = loader.load();
-        final Scene scene = new Scene(view, 1000, 750);
-        scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm());
+        try {
+            final Parent view = loader.load();
 
-        setupCloseHandlers(primaryStage, scene);
+            final Scene scene = new Scene(view, 1000, 750);
+            scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm());
 
-        primaryStage.setScene(scene);
-        primaryStage.setMinWidth(750);
-        primaryStage.setMinHeight(500);
+            setupCloseHandlers(primaryStage, scene);
 
-        primaryStage.show();
+            primaryStage.setScene(scene);
+            primaryStage.setMinWidth(750);
+            primaryStage.setMinHeight(500);
 
-        Profiler.printMsgWithTime("BitSquare: start finished");
+            primaryStage.show();
+
+            Profiler.printMsgWithTime("BitSquare: start finished");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
     }
 
     private void setupCloseHandlers(Stage primaryStage, Scene scene) {

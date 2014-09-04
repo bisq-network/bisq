@@ -61,6 +61,7 @@ public class GuiceFXMLLoader {
         isCached = useCaching && cachedGUIItems.containsKey(url);
         if (!isCached) {
             loader = new FXMLLoader(url, Localisation.getResourceBundle());
+
             if (GuiceFXMLLoader.injector != null)
                 loader.setControllerFactory(new GuiceControllerFactory(GuiceFXMLLoader.injector));
         }

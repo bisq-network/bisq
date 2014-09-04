@@ -17,6 +17,8 @@
 
 package io.bitsquare.gui.util.validation;
 
+import io.bitsquare.locale.Localisation;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +46,7 @@ public abstract class InputValidator {
 
     protected ValidationResult validateIfNotEmpty(String input) {
         if (input == null || input.length() == 0)
-            return new ValidationResult(false, "Empty input is not allowed.");
+            return new ValidationResult(false, Localisation.get("validation.empty"));
         else
             return new ValidationResult(true);
     }

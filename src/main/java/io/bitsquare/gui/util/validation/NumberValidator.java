@@ -17,6 +17,8 @@
 
 package io.bitsquare.gui.util.validation;
 
+import io.bitsquare.locale.Localisation;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,20 +47,20 @@ public abstract class NumberValidator extends InputValidator {
             Double.parseDouble(input);
             return new ValidationResult(true);
         } catch (Exception e) {
-            return new ValidationResult(false, "Input is not a valid number.");
+            return new ValidationResult(false, Localisation.get("validation.NaN"));
         }
     }
 
     protected ValidationResult validateIfNotZero(String input) {
         if (Double.parseDouble(input) == 0)
-            return new ValidationResult(false, "Input of 0 is not allowed.");
+            return new ValidationResult(false, Localisation.get("validation.zero"));
         else
             return new ValidationResult(true);
     }
 
     protected ValidationResult validateIfNotNegative(String input) {
         if (Double.parseDouble(input) < 0)
-            return new ValidationResult(false, "A negative value is not allowed.");
+            return new ValidationResult(false, Localisation.get("validation.negative"));
         else
             return new ValidationResult(true);
     }

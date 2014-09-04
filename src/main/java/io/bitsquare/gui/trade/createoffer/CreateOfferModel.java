@@ -82,11 +82,14 @@ class CreateOfferModel extends UIModel {
     final StringProperty bankAccountCurrency = new SimpleStringProperty();
     final StringProperty bankAccountCounty = new SimpleStringProperty();
     final StringProperty bankAccountType = new SimpleStringProperty();
-
+    final StringProperty fiatCode = new SimpleStringProperty();
+    final StringProperty btcCode = new SimpleStringProperty();
+    
     final LongProperty collateralAsLong = new SimpleLongProperty();
 
     final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty();
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
+    final BooleanProperty useMBTC = new SimpleBooleanProperty();
 
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
@@ -154,6 +157,7 @@ class CreateOfferModel extends UIModel {
             acceptedCountries.setAll(settings.getAcceptedCountries());
             acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
             acceptedArbitrators.setAll(settings.getAcceptedArbitrators());
+            btcCode.bind(settings.btcDenominationProperty());
         }
 
         if (user != null) {
@@ -162,6 +166,8 @@ class CreateOfferModel extends UIModel {
                 bankAccountType.set(bankAccount.getBankAccountType().toString());
                 bankAccountCurrency.set(bankAccount.getCurrency().getCurrencyCode());
                 bankAccountCounty.set(bankAccount.getCountry().getName());
+
+                fiatCode.set(bankAccount.getCurrency().getCurrencyCode());
             }
         }
     }

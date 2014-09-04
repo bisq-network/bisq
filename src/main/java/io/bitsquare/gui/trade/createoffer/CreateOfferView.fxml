@@ -50,8 +50,8 @@
                     <Insets right="-10" bottom="-10" left="-10" top="-10"/>
                 </GridPane.margin>
                 <Label fx:id="priceAmountTitleLabel" id="form-group-title-active"
-                       text="Create your offer" layoutX="8" layoutY="-8">
-                    <padding>
+                       text="%createOffer.amountPriceBox.title" layoutX="8" layoutY="-8">
+                <padding>
                         <Insets left="5" right="7"/>
                     </padding>
                 </Label>
@@ -66,8 +66,9 @@
                         <Image url="@/images/buy_62_54.png"/>
                     </image>
                 </ImageView>
-                <Label fx:id="buyLabel" id="direction-icon-label" text="Buy Bitcoins" alignment="CENTER">
-                    <padding>
+                <Label fx:id="buyLabel" id="direction-icon-label" text="%createOffer.amountPriceBox.subTitle"
+                       alignment="CENTER">
+                <padding>
                         <Insets top="-5.0"/>
                     </padding>
                 </Label>
@@ -79,12 +80,14 @@
                 </GridPane.margin>
                 <VBox spacing="4">
                     <children>
-                        <Label id="input-description-label" text="Amount of Bitcoin to buy" prefWidth="170"/>
+                        <Label id="input-description-label" text="%createOffer.amountPriceBox.amountDescr"
+                               prefWidth="170"/>
                         <HBox>
                             <children>
                                 <InputTextField fx:id="amountTextField" id="text-input-with-currency-text-field"
-                                                promptText="Enter amount" prefWidth="170" alignment="CENTER_RIGHT"/>
-                                <Label id="currency-info-label" text="BTC"/>
+                                                promptText="%createOffer.amount.prompt" prefWidth="170"
+                                                alignment="CENTER_RIGHT"/>
+                                <Label fx:id="amountBtcLabel" id="currency-info-label"/>
                             </children>
                         </HBox>
                     </children>
@@ -100,12 +103,13 @@
 
                 <VBox spacing="4">
                     <children>
-                        <Label id="input-description-label" text="Price per Bitcoin in EUR" prefWidth="170"/>
+                        <Label fx:id="priceDescriptionLabel" id="input-description-label" prefWidth="170"/>
                         <HBox>
                             <children>
                                 <InputTextField fx:id="priceTextField" id="text-input-with-currency-text-field"
-                                                promptText="Enter price" prefWidth="170" alignment="CENTER_RIGHT"/>
-                                <Label id="currency-info-label" text="EUR" alignment="CENTER"/>
+                                                promptText="%createOffer.price.prompt" prefWidth="170"
+                                                alignment="CENTER_RIGHT"/>
+                                <Label fx:id="priceFiatLabel" id="currency-info-label" alignment="CENTER"/>
                             </children>
                         </HBox>
                     </children>
@@ -122,12 +126,13 @@
 
                 <VBox spacing="4">
                     <children>
-                        <Label id="input-description-label" text="Amount in EUR to spend" prefWidth="170"/>
+                        <Label fx:id="volumeDescriptionLabel" id="input-description-label" prefWidth="170"/>
                         <HBox>
                             <children>
                                 <InputTextField fx:id="volumeTextField" id="text-input-with-currency-text-field"
-                                                promptText="Trade volume" prefWidth="170" alignment="CENTER_RIGHT"/>
-                                <Label id="currency-info-label" text="EUR"/>
+                                                promptText="%createOffer.volume.prompt" prefWidth="170"
+                                                alignment="CENTER_RIGHT"/>
+                                <Label fx:id="volumeFiatLabel" id="currency-info-label"/>
                             </children>
                         </HBox>
                     </children>
@@ -138,12 +143,14 @@
                 <GridPane.margin>
                     <Insets right="10.0" top="5.0" bottom="5.0"/>
                 </GridPane.margin>
-                <Label id="input-description-label" text="Minimum amount of Bitcoin" prefWidth="170.0"/>
+                <Label id="input-description-label" text="%createOffer.amountPriceBox.minAmountDescr"
+                       prefWidth="170.0"/>
                 <HBox>
                     <children>
                         <InputTextField fx:id="minAmountTextField" id="text-input-with-currency-text-field"
-                                        promptText="Enter min. amount" alignment="CENTER_RIGHT" prefWidth="170.0"/>
-                        <Label id="currency-info-label" text="BTC"/>
+                                        promptText="%createOffer.minAmount.prompt" alignment="CENTER_RIGHT"
+                                        prefWidth="170.0"/>
+                        <Label fx:id="minAmountBtcLabel" id="currency-info-label"/>
                     </children>
                 </HBox>
             </VBox>
@@ -155,17 +162,13 @@
                 </GridPane.margin>
                 <Image fx:id="infoIcon" url="@/images/info_44.png"/>
             </ImageView>
-            <TextFlow GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="740.0">
 
-                <Label prefWidth="740.0" wrapText="true"
-                       text="With the minimum amount you can attract more potential traders with giving them more flexibility. But note that there is no automatic creation of a new offer for the remaining amount in the case that a trader takes your offer with a lower amount as defined in the amount field. Your offer will be removed from the orderbook once a trader has taken your offer.">
-                </Label>
-                <GridPane.margin>
-                    <Insets bottom="5.0"/>
-                </GridPane.margin>
-                <Hyperlink text="Read more..." id="info-link" onAction="#onOpenGeneralHelp"/>
+            <TextFlow GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="740.0">
+                <Label prefWidth="740.0" wrapText="true" text="%createOffer.amountPriceBox.info"/>
+                <Hyperlink text="%shared.readMore" id="info-link" onAction="#onOpenGeneralHelp"/>
             </TextFlow>
-            <Button fx:id="showPaymentInfoScreenButton" text="Next step" id="show-details-button"
+
+            <Button fx:id="showPaymentInfoScreenButton" text="%createOffer.amountPriceBox.next" id="show-details-button"
                     GridPane.columnIndex="1" GridPane.rowIndex="3" defaultButton="true"
                     onAction="#onShowPayFundsScreen">
                 <GridPane.margin>
@@ -183,7 +186,7 @@
                 <GridPane.margin>
                     <Insets right="-10" bottom="-10" left="-10" top="-10"/>
                 </GridPane.margin>
-                <Label fx:id="payFundsTitleLabel" text="Fund your trade wallet" id="form-group-title-active"
+                <Label fx:id="payFundsTitleLabel" text="%createOffer.fundsBox.title" id="form-group-title-active"
                        layoutX="8" layoutY="-8">
                     <padding>
                         <Insets left="5" right="7"/>
@@ -192,7 +195,7 @@
             </Pane>
 
             <HBox GridPane.rowIndex="4" spacing="4" alignment="CENTER_RIGHT">
-                <Label fx:id="totalToPayLabel" text="Funds needed for that trade:" visible="false"/>
+                <Label fx:id="totalToPayLabel" text="%createOffer.fundsBox.totalsNeeded" visible="false"/>
                 <Label fx:id="totalToPayInfoIconLabel" visible="false"/>
                 <GridPane.margin>
                     <Insets top="10.0"/>
@@ -205,12 +208,12 @@
                 </GridPane.margin>
             </TextField>
 
-            <Label fx:id="addressLabel" text="Trade wallet address:" GridPane.rowIndex="5" visible="false"/>
+            <Label fx:id="addressLabel" text="%createOffer.fundsBox.address" GridPane.rowIndex="5" visible="false"/>
             <AddressTextField fx:id="addressTextField" GridPane.columnIndex="1" GridPane.rowIndex="5"
                               focusTraversable="true" visible="false"/>
 
-            <Label fx:id="balanceLabel" text="Trade wallet balance:" GridPane.rowIndex="6" visible="false">
-                <GridPane.margin>
+            <Label fx:id="balanceLabel" text="%createOffer.fundsBox.balance" GridPane.rowIndex="6" visible="false">
+            <GridPane.margin>
                     <Insets bottom="5.0"/>
                 </GridPane.margin>
             </Label>
@@ -231,22 +234,18 @@
 
             <TextFlow fx:id="payFundsInfoTextFlow" GridPane.columnIndex="1" GridPane.rowIndex="7" prefWidth="740.0"
                       visible="false">
-                <Label prefWidth="740.0" wrapText="true"
-                       text="For every offer there is a dedicated trade wallet. You need to fund that trade wallet with the necessary BTC amount. Those funds are reserved and will be used in the case that your offer gets executed. If you cancel your offer you can withdraw your funds from that trading wallet. The only payment which will be done now when placing the offer is the offer fee payment.">
-                </Label>
-                <Hyperlink text="Read more..." id="info-link" onAction="#onOpenFundingHelp"/>
-                <GridPane.margin>
-                    <Insets bottom="5.0"/>
-                </GridPane.margin>
+                <Label prefWidth="740.0" wrapText="true" text="%createOffer.fundsBox.info"/>
+                <Hyperlink text="%shared.readMore" id="info-link" onAction="#onOpenFundingHelp"/>
             </TextFlow>
 
             <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="8">
                 <GridPane.margin>
                     <Insets bottom="20" top="20.0"/>
                 </GridPane.margin>
-                <Button fx:id="showAdvancedSettingsButton" text="Show advanced settings"
+                <Button fx:id="showAdvancedSettingsButton" text="%createOffer.fundsBox.showAdvanced"
                         onAction="#onToggleShowAdvancedSettings" visible="false"/>
-                <Button fx:id="placeOfferButton" text="Place offer" visible="false" defaultButton="true"
+                <Button fx:id="placeOfferButton" text="%createOffer.fundsBox.placeOffer" visible="false"
+                        defaultButton="true"
                         onAction="#onPlaceOffer"/>
             </HBox>
 
@@ -260,7 +259,8 @@
                 <GridPane.margin>
                     <Insets right="-10" bottom="-10" left="-10" top="-10"/>
                 </GridPane.margin>
-                <Label fx:id="showDetailsTitleLabel" text="Advanced settings" id="form-group-title-active" layoutX="8"
+                <Label fx:id="showDetailsTitleLabel" text="%createOffer.advancedBox.title" id="form-group-title-active"
+                       layoutX="8"
                        layoutY="-8">
                     <padding>
                         <Insets left="5" right="7"/>
@@ -269,7 +269,7 @@
             </Pane>
 
             <HBox GridPane.rowIndex="9" spacing="4" alignment="CENTER_RIGHT">
-                <Label fx:id="acceptedCountriesLabel" text="Accepted countries:" visible="false"/>
+                <Label fx:id="acceptedCountriesLabel" text="%createOffer.advancedBox.countries" visible="false"/>
                 <Label fx:id="acceptedCountriesLabelIcon" visible="false"/>
                 <GridPane.margin>
                     <Insets top="0.0"/>
@@ -279,29 +279,32 @@
                        editable="false" focusTraversable="false"/>
 
             <HBox GridPane.rowIndex="10" spacing="4" alignment="CENTER_RIGHT">
-                <Label fx:id="acceptedLanguagesLabel" text="Accepted languages:" visible="false"/>
+                <Label fx:id="acceptedLanguagesLabel" text="%createOffer.advancedBox.languages" visible="false"/>
                 <Label fx:id="acceptedLanguagesLabelIcon" visible="false"/>
             </HBox>
             <TextField fx:id="acceptedLanguagesTextField" GridPane.columnIndex="1" GridPane.rowIndex="10"
                        editable="false" focusTraversable="false" visible="false"/>
 
             <HBox GridPane.rowIndex="11" spacing="4" alignment="CENTER_RIGHT">
-                <Label fx:id="acceptedArbitratorsLabel" text="Accepted arbitrators:" visible="false"/>
+                <Label fx:id="acceptedArbitratorsLabel" text="%createOffer.advancedBox.arbitrators" visible="false"/>
                 <Label fx:id="acceptedArbitratorsLabelIcon" visible="false"/>
             </HBox>
             <TextField fx:id="acceptedArbitratorsTextField" GridPane.columnIndex="1" GridPane.rowIndex="11"
                        editable="false" focusTraversable="false" visible="false"/>
 
-            <Label fx:id="bankAccountTypeLabel" text="Fiat transfer type:" GridPane.rowIndex="12" visible="false"/>
+            <Label fx:id="bankAccountTypeLabel" text="%createOffer.advancedBox.txType" GridPane.rowIndex="12"
+                   visible="false"/>
             <TextField fx:id="bankAccountTypeTextField" GridPane.columnIndex="1" GridPane.rowIndex="12" editable="false"
                        focusTraversable="false" visible="false"/>
 
-            <Label fx:id="bankAccountCurrencyLabel" text="Currency:" GridPane.rowIndex="13" visible="false"/>
+            <Label fx:id="bankAccountCurrencyLabel" text="%createOffer.advancedBox.currency" GridPane.rowIndex="13"
+                   visible="false"/>
             <TextField fx:id="bankAccountCurrencyTextField" GridPane.rowIndex="13" GridPane.columnIndex="1"
                        editable="false" focusTraversable="false" visible="false"/>
 
-            <Label fx:id="bankAccountCountyLabel" text="County of Fiat account:" GridPane.rowIndex="14" visible="false">
-                <GridPane.margin>
+            <Label fx:id="bankAccountCountyLabel" text="%createOffer.advancedBox.county" GridPane.rowIndex="14"
+                   visible="false">
+            <GridPane.margin>
                     <Insets bottom="5.0"/>
                 </GridPane.margin>
             </Label>
@@ -322,13 +325,8 @@
 
             <TextFlow fx:id="showDetailsInfoLabel" GridPane.columnIndex="1" GridPane.rowIndex="15" prefWidth="740.0"
                       visible="false">
-                <Label prefWidth="740.0" wrapText="true"
-                       text="Your trading partners must fulfill your offer restrictions. You can edit the accepted countries, languages and arbitrators in the settings. The Fiat account details are used from your current selected Fiat account (if you have multiple Fiat accounts).">
-                </Label>
-                <Hyperlink text="Read more..." id="info-link" onAction="#onOpenAdvancedSettingsHelp"/>
-                <GridPane.margin>
-                    <Insets bottom="5.0"/>
-                </GridPane.margin>
+                <Label prefWidth="740.0" wrapText="true" text="%createOffer.advancedBox.info"/>
+                <Hyperlink text="%shared.readMore" id="info-link" onAction="#onOpenAdvancedSettingsHelp"/>
             </TextFlow>
 
 

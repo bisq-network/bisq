@@ -71,12 +71,12 @@ public class UITestRunner extends Application {
                 getUrl("/io/bitsquare/gui/trade/createoffer/CreateOfferView.fxml"), false);
         try {
             view = loader.load();
+            pane.getChildren().setAll(view);
+            refreshStylesheets();
         } catch (IOException e) {
             e.printStackTrace();
+            log.error(e.getStackTrace().toString());
         }
-
-        pane.getChildren().setAll(view);
-        refreshStylesheets();
     }
 
     private void refreshStylesheets() {

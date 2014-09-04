@@ -125,22 +125,17 @@ public class InputTextField extends TextField {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applyErrorMessage(InputValidator.ValidationResult validationResult) {
-        if (validationResult.isValid) {
-            if (errorMessageDisplay != null)
-                errorMessageDisplay.hide();
-        }
-        else {
+        if (errorMessageDisplay != null)
+            errorMessageDisplay.hide();
 
-            if (errorMessageDisplay == null)
-                createErrorPopOver(validationResult.errorMessage);
-            else
-                ((Label) errorMessageDisplay.getContentNode()).setText(validationResult.errorMessage);
-
+        if (!validationResult.isValid) {
+            createErrorPopOver(validationResult.errorMessage);
             if (getScene() != null)
                 errorMessageDisplay.show(getScene().getWindow(), getErrorPopupPosition().getX(),
                         getErrorPopupPosition().getY());
 
-            InputTextField.errorMessageDisplay.setDetached(false);
+            if (errorMessageDisplay != null)
+                errorMessageDisplay.setDetached(false);
         }
     }
 
@@ -162,10 +157,10 @@ public class InputTextField extends TextField {
         errorLabel.setPadding(new Insets(0, 10, 0, 10));
         errorLabel.setOnMouseClicked(e -> hideErrorMessageDisplay());
 
-        InputTextField.errorMessageDisplay = new PopOver(errorLabel);
-        InputTextField.errorMessageDisplay.setDetachable(true);
-        InputTextField.errorMessageDisplay.setDetachedTitle("Close");
-        InputTextField.errorMessageDisplay.setArrowIndent(5);
+        errorMessageDisplay = new PopOver(errorLabel);
+        errorMessageDisplay.setDetachable(true);
+        errorMessageDisplay.setDetachedTitle("Close");
+        errorMessageDisplay.setArrowIndent(5);
     }
 
 }

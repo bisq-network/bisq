@@ -20,11 +20,16 @@ package io.bitsquare.settings;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.locale.Country;
 
+import com.google.bitcoin.utils.CoinFormat;
+
 import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 public class Settings implements Serializable {
     private static final long serialVersionUID = 7995048077355006861L;
@@ -36,6 +41,7 @@ public class Settings implements Serializable {
     private long collateral = 100;  // is 1/1000 so 100 results to 100/1000 = 0,1 (or 10%) 
     // which will be used for multiplying with the amount to get the collateral size in BTC.
 
+    final StringProperty btcDenomination = new SimpleStringProperty(CoinFormat.CODE_BTC);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -113,4 +119,15 @@ public class Settings implements Serializable {
         return collateral;
     }
 
+    public String getBtcDenomination() {
+        return btcDenomination.get();
+    }
+
+    public StringProperty btcDenominationProperty() {
+        return btcDenomination;
+    }
+
+    public void setBtcDenomination(String useMBTC) {
+        this.btcDenomination.set(useMBTC);
+    }
 }

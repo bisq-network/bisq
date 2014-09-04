@@ -28,6 +28,7 @@ import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.trade.TradeController;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.locale.Localisation;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 
 import java.net.URL;
@@ -63,6 +64,8 @@ import org.controlsfx.dialog.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static javafx.beans.binding.Bindings.createStringBinding;
+
 // TODO Implement other positioning method in InoutTextField to display it over the field instead of right side
 // priceAmountHBox is too large after redesign as to be used as layoutReference. 
 
@@ -84,7 +87,8 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
             balanceLabel, payFundsTitleLabel, totalToPayLabel, totalToPayInfoIconLabel,
             showDetailsTitleLabel, bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel,
             acceptedCountriesLabel, acceptedCountriesLabelIcon, acceptedLanguagesLabel, acceptedLanguagesLabelIcon,
-            acceptedArbitratorsLabel, acceptedArbitratorsLabelIcon;
+            acceptedArbitratorsLabel, acceptedArbitratorsLabelIcon, amountBtcLabel,
+            priceFiatLabel, volumeFiatLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel;
     @FXML private Button showPaymentInfoScreenButton, showAdvancedSettingsButton, placeOfferButton;
 
     @FXML private InputTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
@@ -113,8 +117,8 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
-        setupBindings();
         setupListeners();
+        setupBindings();
         balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get());
     }
 
@@ -189,12 +193,12 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     private void onToggleShowAdvancedSettings() {
         detailsVisible = !detailsVisible;
         if (detailsVisible) {
-            showAdvancedSettingsButton.setText("Hide advanced settings");
+            showAdvancedSettingsButton.setText(Localisation.get("createOffer.fundsBox.hideAdvanced"));
             showAdvancedSettingsButton.setGraphic(collapse);
             showDetailsScreen();
         }
         else {
-            showAdvancedSettingsButton.setText("Show advanced settings");
+            showAdvancedSettingsButton.setText(Localisation.get("createOffer.fundsBox.showAdvanced"));
             showAdvancedSettingsButton.setGraphic(expand);
             hideDetailsScreen();
         }
@@ -260,24 +264,24 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         // warnings
         presentationModel.showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                Popups.openWarningPopup("Warning", "The amount you have entered exceeds the number of allowed decimal" +
-                        " places.\nThe amount has been adjusted to 4 decimal places.");
+                Popups.openWarningPopup(Localisation.get("shared.warning"),
+                        Localisation.get("createOffer.amountPriceBox.warning.invalidBtcDecimalPlaces"));
                 presentationModel.showWarningInvalidBtcDecimalPlaces.set(false);
             }
         });
 
         presentationModel.showWarningInvalidFiatDecimalPlaces.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                Popups.openWarningPopup("Warning", "The amount you have entered exceeds the number of allowed decimal" +
-                        " places.\nThe amount has been adjusted to 2 decimal places.");
+                Popups.openWarningPopup(Localisation.get("shared.warning"),
+                        Localisation.get("createOffer.amountPriceBox.warning.invalidFiatDecimalPlaces"));
                 presentationModel.showWarningInvalidFiatDecimalPlaces.set(false);
             }
         });
 
         presentationModel.showWarningAdjustedVolume.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                Popups.openWarningPopup("Warning", "The total volume you have entered leads to invalid fractional " +
-                        "Bitcoin amounts.\nThe amount has been adjusted and a new total volume be calculated from it.");
+                Popups.openWarningPopup(Localisation.get("shared.warning"),
+                        Localisation.get("createOffer.amountPriceBox.warning.adjustedVolume"));
                 presentationModel.showWarningAdjustedVolume.set(false);
                 volumeTextField.setText(presentationModel.volume.get());
             }
@@ -285,8 +289,9 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
 
         presentationModel.requestPlaceOfferErrorMessage.addListener((o, oldValue, newValue) -> {
             if (newValue != null) {
-                Popups.openErrorPopup("Error", "An error occurred when placing the offer.\n" +
-                        presentationModel.requestPlaceOfferErrorMessage.get());
+                Popups.openErrorPopup(Localisation.get("shared.error"),
+                        Localisation.get("createOffer.amountPriceBox.error.requestPlaceOfferErrorMessage",
+                                presentationModel.requestPlaceOfferErrorMessage.get()));
             }
         });
 
@@ -295,7 +300,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
                 // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added 
                 // our own actions.
                 List<Action> actions = new ArrayList<>();
-                actions.add(new AbstractAction("Copy transaction ID") {
+                actions.add(new AbstractAction(Localisation.get("createOffer.success.copyTxId")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         Clipboard clipboard = Clipboard.getSystemClipboard();
@@ -304,7 +309,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
                         clipboard.setContent(content);
                     }
                 });
-                actions.add(new AbstractAction("Close") {
+                actions.add(new AbstractAction(Localisation.get("shared.close")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         try {
@@ -316,16 +321,27 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
                     }
                 });
 
-                Popups.openInformationPopup("Offer published",
-                        "The Bitcoin network transaction ID for the offer payment is: " +
-                                presentationModel.transactionId.get(),
-                        "Your offer has been successfully published to the distributed orderbook.",
+                Popups.openInformationPopup(Localisation.get("createOffer.success.title"),
+                        Localisation.get("createOffer.success.info", presentationModel.transactionId.get()),
+                        Localisation.get("createOffer.success.headline"),
                         actions);
             }
         });
     }
 
     private void setupBindings() {
+        amountBtcLabel.textProperty().bind(presentationModel.btcCode);
+        priceFiatLabel.textProperty().bind(presentationModel.fiatCode);
+        volumeFiatLabel.textProperty().bind(presentationModel.fiatCode);
+        minAmountBtcLabel.textProperty().bind(presentationModel.btcCode);
+        priceDescriptionLabel.textProperty().bind(presentationModel.fiatCode);
+        volumeDescriptionLabel.textProperty().bind(presentationModel.fiatCode);//Price per Bitcoin in EUR
+
+        priceDescriptionLabel.textProperty().bind(createStringBinding(() ->
+                Localisation.get("createOffer.amountPriceBox.priceDescr", presentationModel.fiatCode.get())));
+        volumeDescriptionLabel.textProperty().bind(createStringBinding(() ->
+                Localisation.get("createOffer.amountPriceBox.volumeDescr", presentationModel.fiatCode.get())));
+
         buyLabel.textProperty().bind(presentationModel.directionLabel);
 
         amountTextField.textProperty().bindBidirectional(presentationModel.amount);
@@ -377,17 +393,17 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         advancedScreenInited = true;
         acceptedCountriesLabelIcon.setId("clickable-icon");
         AwesomeDude.setIcon(acceptedCountriesLabelIcon, AwesomeIcon.EDIT_SIGN);
-        Tooltip.install(acceptedCountriesLabelIcon, new Tooltip("Open settings for editing"));
+        Tooltip.install(acceptedCountriesLabelIcon, new Tooltip(Localisation.get("shared.openSettings")));
         acceptedCountriesLabelIcon.setOnMouseClicked(e -> openSettings());
 
         acceptedLanguagesLabelIcon.setId("clickable-icon");
         AwesomeDude.setIcon(acceptedLanguagesLabelIcon, AwesomeIcon.EDIT_SIGN);
-        Tooltip.install(acceptedLanguagesLabelIcon, new Tooltip("Open settings for editing"));
+        Tooltip.install(acceptedLanguagesLabelIcon, new Tooltip(Localisation.get("shared.openSettings")));
         acceptedLanguagesLabelIcon.setOnMouseClicked(e -> openSettings());
 
         acceptedArbitratorsLabelIcon.setId("clickable-icon");
         AwesomeDude.setIcon(acceptedArbitratorsLabelIcon, AwesomeIcon.EDIT_SIGN);
-        Tooltip.install(acceptedArbitratorsLabelIcon, new Tooltip("Open settings for editing"));
+        Tooltip.install(acceptedArbitratorsLabelIcon, new Tooltip(Localisation.get("shared.openSettings")));
         acceptedArbitratorsLabelIcon.setOnMouseClicked(e -> openSettings());
     }
 
@@ -429,36 +445,42 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         totalToPayInfoIconLabel.setId("clickable-icon");
         AwesomeDude.setIcon(totalToPayInfoIconLabel, AwesomeIcon.QUESTION_SIGN);
 
+        totalToPayInfoIconLabel.setOnMouseEntered(e -> createInfoPopover());
+        totalToPayInfoIconLabel.setOnMouseExited(e -> {
+            if (totalToPayInfoPopover != null)
+                totalToPayInfoPopover.hide();
+        });
+    }
+
+    // As we don't use binding here we need to recreate it on mouse over to reflect the current state
+    private void createInfoPopover() {
         GridPane infoGridPane = new GridPane();
         infoGridPane.setHgap(5);
         infoGridPane.setVgap(5);
         infoGridPane.setPadding(new Insets(10, 10, 10, 10));
 
-        addPayInfoEntry(infoGridPane, 0, "Collateral (" + presentationModel.collateralLabel.get() + ")",
+        addPayInfoEntry(infoGridPane, 0,
+                presentationModel.collateralLabel.get(),
                 presentationModel.collateral.get());
-        addPayInfoEntry(infoGridPane, 1, "Offer fee:", presentationModel.offerFee.get());
-        addPayInfoEntry(infoGridPane, 2, "Bitcoin network fee:", presentationModel.networkFee.get());
+        addPayInfoEntry(infoGridPane, 1, Localisation.get("createOffer.fundsBox.offerFee"),
+                presentationModel.offerFee.get());
+        addPayInfoEntry(infoGridPane, 2, Localisation.get("createOffer.fundsBox.networkFee"),
+                presentationModel.networkFee.get());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
         separator.setStyle("-fx-background: #666;");
         GridPane.setConstraints(separator, 1, 3);
         infoGridPane.getChildren().add(separator);
-        addPayInfoEntry(infoGridPane, 4, "Total:", presentationModel.totalToPay.get());
-
-        totalToPayInfoIconLabel.setOnMouseEntered(e -> {
-            if (totalToPayInfoIconLabel.getScene() != null) {
-                totalToPayInfoPopover = new PopOver(infoGridPane);
-                totalToPayInfoPopover.setDetachable(false);
-                totalToPayInfoPopover.setArrowIndent(5);
-                totalToPayInfoPopover.show(totalToPayInfoIconLabel.getScene().getWindow(),
-                        getPopupPosition().getX(),
-                        getPopupPosition().getY());
-            }
-        });
-        totalToPayInfoIconLabel.setOnMouseExited(e -> {
-            if (totalToPayInfoPopover != null)
-                totalToPayInfoPopover.hide();
-        });
+        addPayInfoEntry(infoGridPane, 4, Localisation.get("createOffer.fundsBox.total"),
+                presentationModel.totalToPay.get());
+        totalToPayInfoPopover = new PopOver(infoGridPane);
+        if (totalToPayInfoIconLabel.getScene() != null) {
+            totalToPayInfoPopover.setDetachable(false);
+            totalToPayInfoPopover.setArrowIndent(5);
+            totalToPayInfoPopover.show(totalToPayInfoIconLabel.getScene().getWindow(),
+                    getPopupPosition().getX(),
+                    getPopupPosition().getY());
+        }
     }
 
     private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {

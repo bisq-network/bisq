@@ -17,6 +17,8 @@
 
 package io.bitsquare.gui.util.validation;
 
+import io.bitsquare.locale.Localisation;
+
 import com.google.bitcoin.core.NetworkParameters;
 
 import java.math.BigDecimal;
@@ -78,9 +80,7 @@ public class BtcValidator extends NumberValidator {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
         if (satoshis.scale() > 0)
-            return new ValidationResult(
-                    false,
-                    "Input results in a Bitcoin value with a fraction of the smallest unit (Satoshi).");
+            return new ValidationResult(false, Localisation.get("validation.btc.toSmall"));
         else
             return new ValidationResult(true);
     }
@@ -89,9 +89,7 @@ public class BtcValidator extends NumberValidator {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
         if (satoshis.longValue() > NetworkParameters.MAX_MONEY.longValue())
-            return new ValidationResult(
-                    false,
-                    "Input larger as maximum possible Bitcoin value is not allowed.");
+            return new ValidationResult(false, Localisation.get("validation.btc.toLarge"));
         else
             return new ValidationResult(true);
     }
