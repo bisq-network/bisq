@@ -19,6 +19,7 @@ package io.bitsquare.user;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.util.DSAKeyUtil;
 
 import java.io.Serializable;
@@ -116,9 +117,11 @@ public class User implements Serializable {
     public void setCurrentBankAccount(@Nullable BankAccount bankAccount) {
         currentBankAccount = bankAccount;
 
-        if (bankAccount != null)
+        if (bankAccount != null) {
             BSFormatter.setFiatCurrencyCode(currentBankAccount.getCurrency().getCurrencyCode());
-
+            FiatValidator.setFiatCurrencyCode(currentBankAccount.getCurrency().getCurrencyCode());
+        }
+        
         int index;
         for (index = 0; index < bankAccounts.size(); index++) {
             if (currentBankAccount != null && currentBankAccount.equals(bankAccounts.get(index)))

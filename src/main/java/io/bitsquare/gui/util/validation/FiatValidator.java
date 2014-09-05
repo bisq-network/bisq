@@ -33,8 +33,13 @@ public class FiatValidator extends NumberValidator {
     //TODO Find appropriate values - depends on currencies
     public static final double MIN_FIAT_VALUE = 0.01; // usually a cent is the smallest currency unit
     public static final double MAX_FIAT_VALUE = 1000000;
+    private static String currencyCode = "Fiat";
 
 
+    public static void setFiatCurrencyCode(String currencyCode) {
+        FiatValidator.currencyCode = currencyCode;
+    }
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +70,7 @@ public class FiatValidator extends NumberValidator {
     protected ValidationResult validateIfNotExceedsMinFiatValue(String input) {
         double d = Double.parseDouble(input);
         if (d < MIN_FIAT_VALUE)
-            return new ValidationResult(false, BSResources.get("validation.fiat.toSmall"));
+            return new ValidationResult(false, BSResources.get("validation.fiat.toSmall", currencyCode));
         else
             return new ValidationResult(true);
     }
@@ -73,7 +78,7 @@ public class FiatValidator extends NumberValidator {
     protected ValidationResult validateIfNotExceedsMaxFiatValue(String input) {
         double d = Double.parseDouble(input);
         if (d > MAX_FIAT_VALUE)
-            return new ValidationResult(false, BSResources.get("validation.fiat.toLarge"));
+            return new ValidationResult(false, BSResources.get("validation.fiat.toLarge", currencyCode));
         else
             return new ValidationResult(true);
     }
