@@ -35,6 +35,7 @@ import java.util.Currency;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -252,70 +253,29 @@ public class BSFormatter {
 
 
     public static String countryLocalesToString(List<Country> countries) {
-        String result = "";
-        int i = 0;
-        for (Country country : countries) {
-            result += country.getName();
-            i++;
-            if (i < countries.size()) {
-                result += ", ";
-            }
-        }
-        return result;
+        return countries.stream().map(e -> e.getName()).collect(Collectors.joining(", "));
     }
 
     public static String arbitratorsToString(List<Arbitrator> arbitrators) {
-        String result = "";
-        int i = 0;
-        for (Arbitrator arbitrator : arbitrators) {
-            result += arbitrator.getName();
-            i++;
-            if (i < arbitrators.size()) {
-                result += ", ";
-            }
-        }
-        return result;
+        return arbitrators.stream().map(e -> e.getName()).collect(Collectors.joining(", "));
     }
 
     public static String languageLocalesToString(List<Locale> languageLocales) {
-        String result = "";
-        int i = 0;
-        for (Locale locale : languageLocales) {
-            result += locale.getDisplayLanguage();
-            i++;
-            if (i < languageLocales.size()) {
-                result += ", ";
-            }
-        }
-        return result;
+        return languageLocales.stream().map(e -> e.getDisplayLanguage()).collect(Collectors.joining(", "));
     }
 
-    public static String arbitrationMethodsToString(List<Arbitrator.METHOD> items) {
-        String result = "";
-        int i = 0;
-        for (Arbitrator.METHOD item : items) {
-            result += BSResources.get(item.toString());
-            i++;
-            if (i < items.size()) {
-                result += ", ";
-            }
-        }
-        return result;
+    public static String arbitrationMethodsToString(List<Arbitrator.METHOD> methods) {
+        return methods.stream().map(e -> BSResources.get(e.toString())).collect(Collectors.joining(", "));
     }
-
 
     public static String arbitrationIDVerificationsToString(List<Arbitrator.ID_VERIFICATION> items) {
-        String result = "";
-        int i = 0;
-        for (Arbitrator.ID_VERIFICATION item : items) {
-            result += BSResources.get(item.toString());
-            i++;
-            if (i < items.size()) {
-                result += ", ";
-            }
-        }
-        return result;
+        return items.stream().map(e -> BSResources.get(e.toString())).collect(Collectors.joining(", "));
     }
+
+    public static String mnemonicCodeToString(List<String> mnemonicCode) {
+        return mnemonicCode.stream().collect(Collectors.joining(" "));
+    }
+
 
     public static String formatDateTime(Date date) {
         DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
