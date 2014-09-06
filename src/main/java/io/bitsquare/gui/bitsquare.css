@@ -7,8 +7,16 @@ dark grey: #333333
 
 main bg grey: dddddd
 content bg grey: f4f4f4
+tab pane upper bg gradient color mid dark grey to bright grey: cfcfcf -> dddddd
 
 */
+
+/* Account */
+
+#content-pane-top {
+    -fx-background-color: linear-gradient(to bottom, #cfcfcf, #dddddd);
+}
+
 
 /* Create offer */
 #direction-icon-label {
@@ -98,11 +106,6 @@ content bg grey: f4f4f4
     -fx-background-radius: 3px, 3px, 2px, 1px;
 }
 
-#wizard-item-background-active:hover {
-    -fx-body-color: linear-gradient(to bottom, #d2e2e6, #dfe9eb);
-    -fx-cursor: hand;
-}
-
 #wizard-item-background-completed {
     -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
     -fx-outer-border: linear-gradient(to bottom, #99ba9c, #619865);
@@ -121,13 +124,13 @@ content bg grey: f4f4f4
     -fx-background-color: #ffffff;
 }
 
-/* Mmain UI */
+/* Main UI */
 #logo-sub-title-label {
     -fx-font-weight: bold;
     -fx-font-size: 24;
 }
 
-#main-view {
+#base-content-container {
     -fx-background-color: #dddddd;
 }
 
@@ -153,10 +156,19 @@ content bg grey: f4f4f4
 }
 
 /* main nav */
+
 #nav-button {
     -fx-cursor: hand;
     -fx-background-color: transparent;
-    -fx-alignment: center;
+}
+
+#nav-button .text {
+    -fx-font-size: 10; 
+}
+
+#nav-button:selected .text {
+   -fx-font-size: 11; 
+    -fx-font-weight: bold;
 }
 
 #nav-alert-button {
@@ -166,8 +178,7 @@ content bg grey: f4f4f4
 }
 
 #nav-button-label {
-    -fx-font-size: 10;
-    -fx-alignment: center;
+    -fx-font-size: 10;  
 }
 
 #nav-balance-label {

@@ -17,9 +17,15 @@
 
 package io.bitsquare.gui.util;
 
+import java.awt.*;
+
+import javafx.scene.image.Image;
 import javafx.scene.image.*;
 
 public class ImageUtil {
+
+    public static final String hiRes = Toolkit.getDefaultToolkit().getScreenResolution() >= 144 ? "_hi_res" : "";
+
     public static final String SPLASH_LOGO = "/images/logo_600_600.png";
 
     public static final String SYS_TRAY = "/images/system_tray_icon_44_32.png";
@@ -39,6 +45,8 @@ public class ImageUtil {
     public static final String MSG_ACTIVE = "/images/nav/msg_active.png";
     public static final String SETTINGS = "/images/nav/settings.png";
     public static final String SETTINGS_ACTIVE = "/images/nav/settings_active.png";
+    public static final String ACCOUNT = "/images/nav/account.png";
+    public static final String ACCOUNT_ACTIVE = "/images/nav/account_active.png";
 
     public static final String MSG_ALERT = "/images/nav/alertRound.png";
 
@@ -49,11 +57,16 @@ public class ImageUtil {
     public static final String EXPAND = "/images/expand.png";
     public static final String COLLAPSE = "/images/collapse.png";
 
+    public static final String TICK = "/images/tick.png";
+    public static final String ARROW_BLUE = "/images/arrow_blue.png";
+    public static final String ARROW_GREY = "/images/arrow_grey.png";
+
     public static Image getIconImage(String iconName) {
-        return new Image(ImageUtil.class.getResourceAsStream(iconName));
+        return new Image(ImageUtil.class.getResourceAsStream(iconName.replace("/images", "/images" + hiRes)));
     }
 
     public static ImageView getIconImageView(String iconName) {
-        return new ImageView(new Image(ImageUtil.class.getResourceAsStream(iconName)));
+        return new ImageView(new Image(ImageUtil.class.getResourceAsStream(iconName.replace("/images",
+                "/images" + hiRes))));
     }
 }

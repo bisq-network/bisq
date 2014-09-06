@@ -21,10 +21,10 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<GridPane fx:id="root" hgap="5.0" stylesheets="@../../../../../../../main/java/io/bitsquare/gui/bitsquare.css"
+<GridPane fx:id="root" hgap="5.0" stylesheets="@../../../../../../../java/io/bitsquare/gui/bitsquare.css"
           vgap="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
           AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
-          fx:controller="io.bitsquare.gui.registration.uimock.FundRegistrationWalletControllerUIMock">
+          fx:controller="io.bitsquare.gui.account.registration.uimock.FundRegistrationWalletControllerUIMock">
 
     <padding>
         <Insets bottom="20.0" left="20.0" right="20.0" top="26.0"/>

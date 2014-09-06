@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bitsquare.
+  ~
+  ~ Bitsquare is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.account.fiataccount.FiatAccountCB" hgap="5.0" vgap="5.0"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+          AnchorPane.topAnchor="0.0"
+          xmlns:fx="http://javafx.com/fxml">
+    <children>
+
+        <Pane id="form-group-background-active" GridPane.columnSpan="3" GridPane.rowSpan="4">
+            <GridPane.margin>
+                <Insets bottom="-10.0" left="-10.0" right="-10.0" top="-10.0"/>
+            </GridPane.margin>
+            <children>
+                <Label id="form-group-title-active" text="Setup password" layoutX="8" layoutY="-8">
+                    <padding>
+                        <Insets left="5" right="7"/>
+                    </padding>
+                </Label>
+            </children>
+        </Pane>
+
+
+        <Button text="I have made my backup" onAction="#onDone" GridPane.columnIndex="1" GridPane.rowIndex="2"
+                defaultButton="true">
+            <GridPane.margin>
+                <Insets bottom="10"/>
+            </GridPane.margin>
+        </Button>
+
+        <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true"
+                   GridPane.rowIndex="3" GridPane.valignment="TOP">
+            <image>
+                <Image url="@/images/info_44.png"/>
+            </image>
+            <GridPane.margin>
+                <Insets right="2.0" top="4.0"/>
+            </GridPane.margin>
+        </ImageView>
+
+        <Label GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="340.0" wrapText="true"
+               text="Protect your wallet with a strong password. You need to enter the password any time you withdraw Bitcoins from your trading wallets. You can change the password later in the settings. Open the help menu for more information.">
+        </Label>
+    </children>
+
+    <columnConstraints>
+        <ColumnConstraints halignment="RIGHT" prefWidth="200.0"/>
+        <ColumnConstraints hgrow="ALWAYS" prefWidth="410"/>
+    </columnConstraints>
+
+    <rowConstraints>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+    </rowConstraints>
+</GridPane>

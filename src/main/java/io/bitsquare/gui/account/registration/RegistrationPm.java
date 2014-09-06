@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.setup;
+package io.bitsquare.gui.account.registration;
 
 import io.bitsquare.gui.PresentationModel;
 
@@ -24,15 +24,15 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SetupPm extends PresentationModel<SetupModel> {
-    private static final Logger log = LoggerFactory.getLogger(SetupPm.class);
+public class RegistrationPM extends PresentationModel<RegistrationModel> {
+    private static final Logger log = LoggerFactory.getLogger(RegistrationPM.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SetupPm(SetupModel model) {
+    public RegistrationPM(RegistrationModel model) {
         super(model);
     }
 

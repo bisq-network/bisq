@@ -17,7 +17,7 @@
   -->
 
 <?import javafx.scene.layout.*?>
-<BorderPane fx:id="root" id="splash" fx:controller="io.bitsquare.gui.MainController"
-            prefHeight="750" prefWidth="1000" stylesheets="/io/bitsquare/gui/bitsquare.css"
-            xmlns:fx="http://javafx.com/fxml">
-</BorderPane>
+<StackPane fx:id="root" fx:controller="io.bitsquare.gui.MainController"
+           prefHeight="750" prefWidth="1000" stylesheets="/io/bitsquare/gui/bitsquare.css"
+           xmlns:fx="http://javafx.com/fxml">
+</StackPane>

@@ -120,6 +120,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         setupListeners();
         setupBindings();
         balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get());
+        volumeTextField.setPromptText(BSResources.get("createOffer.volume.prompt", presentationModel.fiatCode.get()));
     }
 
     @SuppressWarnings("EmptyMethod")

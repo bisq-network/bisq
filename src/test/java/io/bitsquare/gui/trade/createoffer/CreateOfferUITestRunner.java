@@ -1,4 +1,21 @@
-package io.bitsquare.gui.registration.uimock;
+/*
+ * This file is part of Bitsquare.
+ *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package io.bitsquare.gui.trade.createoffer;
 
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.di.GuiceFXMLLoader;
@@ -23,10 +40,10 @@ import org.slf4j.LoggerFactory;
 /**
  * For testing single isolated UI screens
  */
-public class RegistrationUIMockRunner extends Application {
-    private static final Logger log = LoggerFactory.getLogger(RegistrationUIMockRunner.class);
+public class CreateOfferUITestRunner extends Application {
+    private static final Logger log = LoggerFactory.getLogger(CreateOfferUITestRunner.class);
     private Scene scene;
-    private Parent view;
+    private Pane view;
     private Pane pane;
     private boolean devTest = true;
 
@@ -40,7 +57,7 @@ public class RegistrationUIMockRunner extends Application {
         GuiceFXMLLoader.setInjector(injector);
 
         pane = new StackPane();
-        scene = new Scene(pane, 1000, 660);
+        scene = new Scene(pane, 1000, 630);
         scene.getAccelerators().put(KeyCombination.valueOf("Shortcut+S"), this::loadMainWindow);
         loadMainWindow();
         primaryStage.setScene(scene);
@@ -51,17 +68,15 @@ public class RegistrationUIMockRunner extends Application {
         log.debug("re load");
         pane.getChildren().removeAll();
         GuiceFXMLLoader loader = new GuiceFXMLLoader(
-                getUrl("/io/bitsquare/gui/registration/uimock/RegistrationViewUIMock.fxml"), false);
-
+                getUrl("/io/bitsquare/gui/trade/createoffer/CreateOfferView.fxml"), false);
         try {
             view = loader.load();
+            pane.getChildren().setAll(view);
+            refreshStylesheets();
         } catch (IOException e) {
-            log.error(e.getMessage());
             e.printStackTrace();
+            log.error(e.getStackTrace().toString());
         }
-
-        pane.getChildren().setAll(view);
-        refreshStylesheets();
     }
 
     private void refreshStylesheets() {
@@ -73,7 +88,7 @@ public class RegistrationUIMockRunner extends Application {
         if (devTest) {
             try {
                 // load from file system location to make a reload possible. makes dev process easier with hot reload
-                return new URL("file:///Users/mk/Documents/_intellij/bitsquare/src/test/java" + subPath);
+                return new URL("file:///Users/mk/Documents/_intellij/bitsquare/src/main/java" + subPath);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
                 return null;
@@ -83,6 +98,4 @@ public class RegistrationUIMockRunner extends Application {
             return getClass().getResource(subPath);
         }
     }
-
-
 }

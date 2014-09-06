@@ -36,14 +36,14 @@
 
                         <Label text="Take offer:" id="form-header-text"/>
 
-                        <Label text="Amount:" GridPane.rowIndex="1"/>
+                        <Label text="Amount in BTC:" GridPane.rowIndex="1"/>
                         <ValidatedTextField fx:id="amountTextField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
                         <Label text="Price (EUR/BTC):" GridPane.rowIndex="2"/>
                         <TextField fx:id="priceTextField" editable="false" focusTraversable="false"
                                    GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-                        <Label text="Volume (EUR):" GridPane.rowIndex="3"/>
+                        <Label text="Amount in EUR:" GridPane.rowIndex="3"/>
                         <TextField fx:id="volumeTextField" editable="false" focusTraversable="false"
                                    GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 

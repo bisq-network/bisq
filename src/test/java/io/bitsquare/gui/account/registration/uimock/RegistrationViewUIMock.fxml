@@ -22,9 +22,9 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <BorderPane fx:id="root" prefHeight="660.0" prefWidth="1000.0" style="-fx-background-color: f4f4f4;"
-            stylesheets="@../../../../../../../main/java/io/bitsquare/gui/bitsquare.css"
+            stylesheets="@../../../../../../../../main/java/io/bitsquare/gui/bitsquare.css"
             xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="io.bitsquare.gui.registration.uimock.RegistrationControllerUIMock">
+            fx:controller="io.bitsquare.gui.account.registration.uimock.RegistrationControllerUIMock">
     <left>
 
         <VBox spacing="5" prefWidth="300.0" BorderPane.alignment="CENTER">
@@ -41,7 +41,7 @@
                                 <Insets left="8.0" top="8.0"/>
                             </HBox.margin>
                             <image>
-                                <Image url="@../../../../../../../main/resources/images/tick.png"/>
+                                <Image url="@../../../../../../../../main/resources/images/tick.png"/>
                             </image>
 
                         </ImageView>
@@ -70,7 +70,7 @@
                                 <Insets left="8.0" top="8.0"/>
                             </HBox.margin>
                             <image>
-                                <Image url="@../../../../../../../main/resources/images/tick.png"/>
+                                <Image url="@../../../../../../../../main/resources/images/tick.png"/>
                             </image>
 
                         </ImageView>
@@ -99,7 +99,7 @@
                                 <Insets left="8.0" top="8.0"/>
                             </HBox.margin>
                             <image>
-                                <Image url="@../../../../../../../main/resources/images/tick.png"/>
+                                <Image url="@../../../../../../../../main/resources/images/tick.png"/>
                             </image>
 
                         </ImageView>
@@ -128,7 +128,7 @@
                                 <Insets left="8.0" top="8.0"/>
                             </HBox.margin>
                             <image>
-                                <Image url="@../../../../../../../main/resources/images/arrow_blue.png"/>
+                                <Image url="@../../../../../../../../main/resources/images/arrow_blue.png"/>
                             </image>
 
                         </ImageView>
@@ -158,7 +158,7 @@
                                 <Insets left="8.0" top="8.0"/>
                             </HBox.margin>
                             <image>
-                                <Image url="@../../../../../../../main/resources/images/arrow_grey.png"/>
+                                <Image url="@../../../../../../../../main/resources/images/arrow_grey.png"/>
                             </image>
 
                         </ImageView>
@@ -185,11 +185,11 @@
     </left>
     <center>
         <Pane fx:id="content">
-            <fx:include source="../../settings/uimock/SeedWordsViewUIMock.fxml" visible="true" prefWidth="690"/>
-            <fx:include source="../../settings/uimock/SetPasswordViewUIMock.fxml" visible="false" prefWidth="690"/>
-            <fx:include source="../../settings/uimock/BankAccountSettingsViewUIMock.fxml" visible="false"
+            <fx:include source="../../../settings/uimock/SeedWordsViewUIMock.fxml" visible="true" prefWidth="690"/>
+            <fx:include source="../../../settings/uimock/SetPasswordViewUIMock.fxml" visible="false" prefWidth="690"/>
+            <fx:include source="../../../settings/uimock/BankAccountSettingsViewUIMock.fxml" visible="false"
                         prefWidth="690"/>
-            <fx:include source="../../settings/uimock/RestrictionSettingsViewUIMock.fxml" visible="false"
+            <fx:include source="../../../settings/uimock/RestrictionSettingsViewUIMock.fxml" visible="false"
                         prefWidth="690"/>
             <fx:include source="FundRegistrationWalletViewUIMock.fxml" visible="false" prefWidth="690"/>
         </Pane>

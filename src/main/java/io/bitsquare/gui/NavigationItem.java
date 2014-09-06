@@ -28,8 +28,8 @@ public enum NavigationItem {
     FUNDS("/io/bitsquare/gui/funds/FundsView.fxml", ImageUtil.FUNDS, ImageUtil.FUNDS_ACTIVE),
     MSG("/io/bitsquare/gui/msg/MsgView.fxml", ImageUtil.MSG, ImageUtil.MSG_ACTIVE),
     SETTINGS("/io/bitsquare/gui/settings/SettingsView.fxml", ImageUtil.SETTINGS, ImageUtil.SETTINGS_ACTIVE),
-    REGISTRATION("/io/bitsquare/gui/registration/RegistrationView.fxml"),
-    SETUP("/io/bitsquare/gui/setup/SetupView.fxml"),
+    ACCOUNT("/io/bitsquare/gui/account/AccountView.fxml", ImageUtil.ACCOUNT, ImageUtil.ACCOUNT_ACTIVE),
+    SETUP("/io/bitsquare/gui/account/setup/SetupView.fxml"),
 
     ORDER_BOOK("/io/bitsquare/gui/trade/orderbook/OrderBookView.fxml"),
     CREATE_OFFER("/io/bitsquare/gui/trade/createoffer/CreateOfferView.fxml"),
@@ -43,6 +43,13 @@ public enum NavigationItem {
     DEPOSIT("/io/bitsquare/gui/funds/deposit/DepositView.fxml"),
     WITHDRAWAL("/io/bitsquare/gui/funds/withdrawal/WithdrawalView.fxml"),
     TRANSACTIONS("/io/bitsquare/gui/funds/transactions/TransactionsView.fxml"),
+
+    SEED_WORDS("/io/bitsquare/gui/account/seedwords/SeedWordsView.fxml"),
+    PASSWORD("/io/bitsquare/gui/account/password/PasswordView.fxml"),
+    RESTRICTIONS("/io/bitsquare/gui/account/restrictions/RestrictionsView.fxml"),
+    REGISTRATION("/io/bitsquare/gui/account/registration/RegistrationView.fxml"),
+    FIAT_ACCOUNT("/io/bitsquare/gui/account/fiataccount/FiatAccountView.fxml"),
+
 
     ARBITRATOR_PROFILE("/io/bitsquare/gui/arbitrators/profile/ArbitratorProfileView.fxml"),
     ARBITRATOR_BROWSER("/io/bitsquare/gui/arbitrators/browser/ArbitratorBrowserView.fxml"),

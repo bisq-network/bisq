@@ -34,7 +34,7 @@
 
     <logger name="io.bitsquare.gui.ViewController" level="OFF"/>
     <logger name="io.bitsquare.gui.CachedViewController" level="OFF"/>
-    <logger name="io.bitsquare.gui.util.Profiler" level="OFF"/>
+    <logger name="io.bitsquare.gui.util.Profiler" level="TRACE"/>
 
     <!--
     <logger name="com.google.bitcoin.core.Wallet" level="OFF"/>

@@ -181,7 +181,7 @@ public class TakeOfferController extends CachedViewController {
                     accordion.setExpandedPane(waitBankTxTitledPane);
                     infoLabel.setText("Deposit transaction published by offerer.\n" +
                             "As soon as the offerer starts the \n" +
-                            "Bank transfer, you will get informed.");
+                            "Bank transfer, you will be informed.");
                     depositTxIdTextField.setText(depositTxId);
                 }
 

@@ -51,7 +51,7 @@
                 </GridPane.margin>
                 <Label fx:id="priceAmountTitleLabel" id="form-group-title-active"
                        text="%createOffer.amountPriceBox.title" layoutX="8" layoutY="-8">
-                <padding>
+                    <padding>
                         <Insets left="5" right="7"/>
                     </padding>
                 </Label>
@@ -68,7 +68,7 @@
                 </ImageView>
                 <Label fx:id="buyLabel" id="direction-icon-label" text="%createOffer.amountPriceBox.subTitle"
                        alignment="CENTER">
-                <padding>
+                    <padding>
                         <Insets top="-5.0"/>
                     </padding>
                 </Label>
@@ -130,8 +130,7 @@
                         <HBox>
                             <children>
                                 <InputTextField fx:id="volumeTextField" id="text-input-with-currency-text-field"
-                                                promptText="%createOffer.volume.prompt" prefWidth="170"
-                                                alignment="CENTER_RIGHT"/>
+                                                prefWidth="170" alignment="CENTER_RIGHT"/>
                                 <Label fx:id="volumeFiatLabel" id="currency-info-label"/>
                             </children>
                         </HBox>
@@ -213,7 +212,7 @@
                               focusTraversable="true" visible="false"/>
 
             <Label fx:id="balanceLabel" text="%createOffer.fundsBox.balance" GridPane.rowIndex="6" visible="false">
-            <GridPane.margin>
+                <GridPane.margin>
                     <Insets bottom="5.0"/>
                 </GridPane.margin>
             </Label>
@@ -304,7 +303,7 @@
 
             <Label fx:id="bankAccountCountyLabel" text="%createOffer.advancedBox.county" GridPane.rowIndex="14"
                    visible="false">
-            <GridPane.margin>
+                <GridPane.margin>
                     <Insets bottom="5.0"/>
                 </GridPane.margin>
             </Label>

@@ -15,25 +15,32 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.registration.uimock;
+package io.bitsquare.gui.account.seedwords;
 
-import java.net.URL;
+import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.gui.UIModel;
 
-import java.util.ResourceBundle;
+import com.google.inject.Inject;
 
-import javafx.fxml.Initializable;
+import java.util.List;
 
-public class FundRegistrationWalletControllerUIMock implements Initializable {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class SeedWordsModel extends UIModel {
+    private static final Logger log = LoggerFactory.getLogger(SeedWordsModel.class);
+
+    List<String> mnemonicCode;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
+    // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    @Inject
+    public SeedWordsModel(WalletFacade walletFacade) {
+        if (walletFacade != null && walletFacade.getWallet() != null)
+            mnemonicCode = walletFacade.getWallet().getKeyChainSeed().getMnemonicCode();
     }
 
-
 }
-

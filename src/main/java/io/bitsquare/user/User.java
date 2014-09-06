@@ -121,7 +121,7 @@ public class User implements Serializable {
             BSFormatter.setFiatCurrencyCode(currentBankAccount.getCurrency().getCurrencyCode());
             FiatValidator.setFiatCurrencyCode(currentBankAccount.getCurrency().getCurrencyCode());
         }
-        
+
         int index;
         for (index = 0; index < bankAccounts.size(); index++) {
             if (currentBankAccount != null && currentBankAccount.equals(bankAccounts.get(index)))

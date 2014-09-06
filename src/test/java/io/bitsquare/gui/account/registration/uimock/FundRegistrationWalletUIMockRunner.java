@@ -1,4 +1,4 @@
-package io.bitsquare.gui.registration.uimock;
+package io.bitsquare.gui.account.registration.uimock;
 
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.di.GuiceFXMLLoader;

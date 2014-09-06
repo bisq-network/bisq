@@ -75,16 +75,16 @@ public class MainController extends ViewController {
     private final MessageFacade messageFacade;
     private final TradeManager tradeManager;
     private final Persistence persistence;
-    private final ToggleGroup toggleGroup = new ToggleGroup();
     private final ViewBuilder viewBuilder;
+    private final ToggleGroup navButtonsGroup = new ToggleGroup();
 
-    private ToggleButton prevToggleButton;
-    private Image prevToggleButtonIcon;
-    private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton;
+    private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton,
+            accountButton;
     private Pane ordersButtonButtonHolder;
     private boolean messageFacadeInited;
     private boolean walletFacadeInited;
     private VBox accountComboBoxHolder;
+    private Pane setupView;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +124,7 @@ public class MainController extends ViewController {
         super.initialize(url, rb);
 
         Profiler.printMsgWithTime("MainController.initialize");
-        Platform.runLater(() -> viewBuilder.buildSplashScreen((BorderPane) root, this));
+        Platform.runLater(() -> viewBuilder.buildSplashScreen((StackPane) root, this));
     }
 
     @Override
@@ -160,6 +160,9 @@ public class MainController extends ViewController {
                 break;
             case BUY:
                 buyButton.fire();
+                break;
+            case ACCOUNT:
+                accountButton.fire();
                 break;
         }
         return childController;
@@ -200,40 +203,11 @@ public class MainController extends ViewController {
 
     private void onNavigationAdded() {
         Profiler.printMsgWithTime("MainController.onNavigationAdded");
-        // Platform.runLater(this::loadContentView);
-        // TODO for dev testing
-        Platform.runLater(this::loadSetup);
-    }
-
-    //TODO for dev testing
-    private void loadSetup() {
-        Profiler.printMsgWithTime("MainController.loadSetup");
-
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(NavigationItem.SETUP.getFxmlUrl()));
-        try {
-            final Node view = loader.load();
-            viewBuilder.contentPane.getChildren().setAll(view);
-            childController = loader.getController();
-
-            //TODO Remove that when all UIs are converted to CodeBehind
-            if (childController instanceof ViewController)
-                ((ViewController) childController).setParentController(this);
-            else if (childController instanceof CodeBehind)
-                ((CodeBehind) childController).setParentController(this);
-
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + NavigationItem.SETUP.getFxmlUrl());
-            log.error(e.getCause().toString());
-            log.error(e.getMessage());
-            log.error(e.getStackTrace().toString());
-        }
-
-        Platform.runLater(this::onContentViewLoaded);
+        Platform.runLater(this::loadContentView);
     }
 
     private void onContentViewLoaded() {
         Profiler.printMsgWithTime("MainController.onContentViewLoaded");
-        root.setId("main-view");
         Platform.runLater(this::fadeOutSplash);
     }
 
@@ -292,6 +266,7 @@ public class MainController extends ViewController {
 
     private void addNavigation() {
         Profiler.printMsgWithTime("MainController.addNavigation");
+
         homeButton = addNavButton(viewBuilder.leftNavPane, "Overview", NavigationItem.HOME);
         buyButton = addNavButton(viewBuilder.leftNavPane, "Buy BTC", NavigationItem.BUY);
         sellButton = addNavButton(viewBuilder.leftNavPane, "Sell BTC", NavigationItem.SELL);
@@ -318,6 +293,7 @@ public class MainController extends ViewController {
         });
 
         settingsButton = addNavButton(viewBuilder.rightNavPane, "Settings", NavigationItem.SETTINGS);
+        accountButton = addNavButton(viewBuilder.rightNavPane, "Account", NavigationItem.ACCOUNT);
 
         Platform.runLater(this::onNavigationAdded);
     }
@@ -350,7 +326,8 @@ public class MainController extends ViewController {
                 ((ViewController) childController).setParentController(this);
             else if (childController instanceof CodeBehind)
                 ((CodeBehind) childController).setParentController(this);
-            
+
+            persistence.write(this, "selectedNavigationItem", navigationItem);
         } catch (IOException e) {
             log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
             log.error(e.getCause().toString());
@@ -360,34 +337,50 @@ public class MainController extends ViewController {
     }
 
     private ToggleButton addNavButton(Pane parent, String title, NavigationItem navigationItem) {
-        final Pane pane = new Pane();
-        pane.setPrefSize(50, 50);
-        final ToggleButton toggleButton = new ToggleButton("", ImageUtil.getIconImageView(navigationItem.getIcon()));
-        toggleButton.setToggleGroup(toggleGroup);
+        //  final Pane pane = new Pane();
+        //  pane.setPrefSize(50, 50);
+
+        ImageView icon = ImageUtil.getIconImageView(navigationItem.getIcon());
+        icon.setFitWidth(32);
+        icon.setFitHeight(32);
+
+        final ToggleButton toggleButton = new ToggleButton(title, icon);
+        toggleButton.setToggleGroup(navButtonsGroup);
         toggleButton.setId("nav-button");
-        toggleButton.setPrefSize(50, 50);
-        toggleButton.setOnAction(e -> {
-            if (prevToggleButton != null) {
-                ((ImageView) (prevToggleButton.getGraphic())).setImage(prevToggleButtonIcon);
+        toggleButton.setPadding(new Insets(0, -10, -10, -10));
+        toggleButton.setMinSize(50, 50);
+        toggleButton.setMaxSize(50, 50);
+        toggleButton.setContentDisplay(ContentDisplay.TOP);
+        toggleButton.setGraphicTextGap(0);
+
+        toggleButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
+            toggleButton.setMouseTransparent(newValue);
+            toggleButton.setMinSize(50, 50);
+            toggleButton.setMaxSize(50, 50);
+            toggleButton.setGraphicTextGap(newValue ? -1 : 0);
+            if (newValue) {
+                Image activeIcon = ImageUtil.getIconImage(navigationItem.getActiveIcon());
+                ((ImageView) toggleButton.getGraphic()).setImage(activeIcon);
             }
-            prevToggleButtonIcon = ((ImageView) (toggleButton.getGraphic())).getImage();
-            ((ImageView) (toggleButton.getGraphic())).setImage(ImageUtil.getIconImage(navigationItem.getActiveIcon()));
-
-            loadView(navigationItem);
-
-            persistence.write(this, "selectedNavigationItem", navigationItem);
-
-            prevToggleButton = toggleButton;
+            else {
+                Image activeIcon = ImageUtil.getIconImage(navigationItem.getIcon());
+                ((ImageView) toggleButton.getGraphic()).setImage(activeIcon);
+            }
         });
 
-        final Label titleLabel = new Label(title);
-        titleLabel.setPrefWidth(60);
-        titleLabel.setLayoutY(40);
+        toggleButton.setOnAction(e -> loadView(navigationItem));
+
+       /* final Label titleLabel = new Label(title);
+        titleLabel.setLayoutY(35);
         titleLabel.setId("nav-button-label");
         titleLabel.setMouseTransparent(true);
-
-        pane.getChildren().setAll(toggleButton, titleLabel);
-        parent.getChildren().add(pane);
+        titleLabel.widthProperty().addListener((observableValue, number, newValue) ->
+                titleLabel.setLayoutX((50.0 - (double) newValue) / 2 - 1));
+*/
+        //   pane.getChildren().addAll(toggleButton);
+        // pane.getChildren().addAll(toggleButton, titleLabel);
+        //  parent.getChildren().add(pane);
+        parent.getChildren().add(toggleButton);
 
         return toggleButton;
     }
@@ -465,33 +458,36 @@ class ViewBuilder {
     HBox leftNavPane, rightNavPane;
     AnchorPane contentPane;
     NetworkSyncPane networkSyncPane;
-    StackPane stackPane;
+    BorderPane baseContentContainer;
     AnchorPane contentScreen;
     VBox splashVBox;
     MenuBar menuBar;
-    BorderPane root;
+    StackPane root;
     Label loadingLabel;
     boolean showNetworkSyncPane;
 
-    void buildSplashScreen(BorderPane root, MainController controller) {
+    void buildSplashScreen(StackPane root, MainController controller) {
         Profiler.printMsgWithTime("MainController.ViewBuilder.buildSplashScreen");
+
         this.root = root;
 
-        stackPane = new StackPane();
+        baseContentContainer = new BorderPane();
+        baseContentContainer.setId("base-content-container");
         splashVBox = getSplashScreen();
-        stackPane.getChildren().add(splashVBox);
-        root.setCenter(stackPane);
 
-        menuBar = getMenuBar();
-        root.setTop(menuBar);
+        root.getChildren().addAll(baseContentContainer, splashVBox);
 
         Platform.runLater(() -> buildContentView(controller));
     }
 
     void buildContentView(MainController controller) {
         Profiler.printMsgWithTime("MainController.ViewBuilder.buildContentView");
+
+        menuBar = getMenuBar();
+        baseContentContainer.setTop(menuBar);
+
         contentScreen = getContentScreen();
-        stackPane.getChildren().add(contentScreen);
+        baseContentContainer.setCenter(contentScreen);
 
         Platform.runLater(controller::onViewInitialized);
     }
@@ -503,7 +499,7 @@ class ViewBuilder {
         leftNavPane = new HBox();
         leftNavPane.setAlignment(Pos.CENTER);
         leftNavPane.setSpacing(10);
-        AnchorPane.setLeftAnchor(leftNavPane, 0d);
+        AnchorPane.setLeftAnchor(leftNavPane, 10d);
         AnchorPane.setTopAnchor(leftNavPane, 0d);
 
         rightNavPane = new HBox();
@@ -549,6 +545,7 @@ class ViewBuilder {
         VBox splashVBox = new VBox();
         splashVBox.setAlignment(Pos.CENTER);
         splashVBox.setSpacing(10);
+        splashVBox.setId("splash");
 
         ImageView logo = ImageUtil.getIconImageView(ImageUtil.SPLASH_LOGO);
         logo.setFitWidth(300);

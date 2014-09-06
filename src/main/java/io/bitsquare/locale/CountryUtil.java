@@ -27,7 +27,12 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class CountryUtil {
+    private static final Logger log = LoggerFactory.getLogger(CountryUtil.class);
+
     private static final String[] countryCodes = new String[]{"AE", "AL", "AR", "AT", "AU", "BA", "BE", "BG", "BH",
             "BO", "BR", "BY", "CA", "CH", "CL", "CN", "CO", "CR", "CS", "CU", "CY", "CZ", "DE", "DK", "DO", "DZ",
             "EC", "EE", "EG", "ES", "FI", "FR", "GB", "GR", "GT", "HK", "HN", "HR", "HU", "ID", "IE", "IL", "IN",
@@ -38,7 +43,7 @@ public class CountryUtil {
 
     private static final List<String> countryCodeList = Arrays.asList(countryCodes);
     private static final String[] regionCodes = new String[]{"AS", "EU", "SA", "EU", "OC", "EU", "EU", "EU", "AS",
-            "SA", "SA", "EU", "NA", "EU", "SA", "AS", "SA", "NA", "EU", "NA", "AS", "EU", "EU", "EU", "NA", "AF",
+            "SA", "SA", "EU", "NA", "EU", "SA", "AS", "SA", "NA", "EU", "NA", "EU", "EU", "EU", "EU", "NA", "AF",
             "SA", "EU", "AF", "EU", "EU", "EU", "EU", "EU", "NA", "AS", "NA", "EU", "EU", "AS", "EU", "AS", "AS",
             "AS", "EU", "EU", "AS", "AS", "AS", "AS", "AS", "EU", "EU", "EU", "AF", "AF", "EU", "EU", "EU", "NA",
             "AS", "NA", "EU", "EU", "OC", "AS", "NA", "SA", "AS", "EU", "NA", "EU", "SA", "AS", "EU", "EU", "EU",
@@ -79,6 +84,22 @@ public class CountryUtil {
         return allRegions;
     }
 
+    public static List<Country> getAllEuroCountries() {
+
+        List<Country> allEuroCountries = new ArrayList<>();
+        String[] code = {"BE", "DE", "EE", "FI", "FR", "GR", "IE", "IT", "LV", "LU", "MT", "NL", "PT", "SK", "SI",
+                "ES", "AT", "CY"};
+        for (int i = 0; i < code.length; i++) {
+            Locale locale = new Locale("", code[i], "");
+            String regionCode = getRegionCode(locale.getCountry());
+            final Region region = new Region(regionCode, getRegionName(regionCode));
+            final Country country = new Country(locale.getCountry(), locale.getDisplayCountry(), region);
+            allEuroCountries.add(country);
+        }
+
+        return allEuroCountries;
+    }
+
     public static List<Country> getAllCountriesFor(Region selectedRegion) {
         return Lists.newArrayList(Collections2.filter(getAllCountries(), country ->
                 selectedRegion != null && country != null && selectedRegion.equals(country.getRegion())));
@@ -111,11 +132,14 @@ public class CountryUtil {
         return regionCode;
     }
 
+    // We use getAvailableLocales as we depend on display names (would be a bit painful with translations if handled 
+    // from a static list -or we find something ready made?). 
     private static List<Locale> getAllCountryLocales() {
         List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
-        Set<Locale> allLocalesAsSet =
-                allLocales.stream().filter(locale -> !"".equals(locale.getCountry())).map(locale ->
-                        new Locale("", locale.getCountry(), "")).collect(Collectors.toSet());
+        log.debug(allLocales.toString());
+        Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !"".equals(locale.getCountry()))
+                .map(locale -> new Locale("", locale.getCountry(), ""))
+                .collect(Collectors.toSet());
 
         allLocales = new ArrayList<>();
         allLocales.addAll(allLocalesAsSet);

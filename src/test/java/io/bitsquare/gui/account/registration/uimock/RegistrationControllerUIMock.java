@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.registration.uimock;
+package io.bitsquare.gui.account.registration.uimock;
 
 import java.net.URL;
 

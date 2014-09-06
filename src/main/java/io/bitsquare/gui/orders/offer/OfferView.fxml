@@ -40,7 +40,7 @@
                     <PropertyValueFactory property="date"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Amount (Min.)" fx:id="amountColumn" minWidth="70" sortable="false">
+            <TableColumn text="Amount in BTC (Min.)" fx:id="amountColumn" minWidth="70" sortable="false">
                 <cellValueFactory>
                     <PropertyValueFactory property="amount"/>
                 </cellValueFactory>
@@ -50,7 +50,7 @@
                     <PropertyValueFactory property="price"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Volume (Min.)" fx:id="volumeColumn" minWidth="70" sortable="false">
+            <TableColumn text="Amount in EUR (Min.)" fx:id="volumeColumn" minWidth="70" sortable="false">
                 <cellValueFactory>
                     <PropertyValueFactory property="volume"/>
                 </cellValueFactory>

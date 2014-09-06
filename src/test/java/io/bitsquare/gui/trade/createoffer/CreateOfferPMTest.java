@@ -93,10 +93,10 @@ public class CreateOfferPMTest {
 
 
         model.collateralAsLong.set(100);
-        assertEquals("Collateral (10.0 %):", presenter.collateralLabel.get());
+        assertEquals("Refundable collateral (10.0 %):", presenter.collateralLabel.get());
 
         model.collateralAsLong.set(0);
-        assertEquals("Collateral (0.0 %):", presenter.collateralLabel.get());
+        assertEquals("Refundable collateral (0.0 %):", presenter.collateralLabel.get());
 
 
         model.bankAccountType.set(BankAccountType.SEPA.toString());

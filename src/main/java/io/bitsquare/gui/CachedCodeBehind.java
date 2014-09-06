@@ -48,7 +48,7 @@ public class CachedCodeBehind<T extends PresentationModel> extends CodeBehind<T>
      */
     public void activate() {
         log.trace("Lifecycle: activate " + this.getClass().getSimpleName());
-        if (childController instanceof CachedViewController) ((CachedViewController) childController).activate();
+        if (childController instanceof CachedCodeBehind) ((CachedCodeBehind) childController).activate();
 
         presentationModel.activate();
     }
@@ -58,7 +58,7 @@ public class CachedCodeBehind<T extends PresentationModel> extends CodeBehind<T>
      */
     public void deactivate() {
         log.trace("Lifecycle: deactivate " + this.getClass().getSimpleName());
-        if (childController instanceof CachedViewController) ((CachedViewController) childController).deactivate();
+        if (childController instanceof CachedCodeBehind) ((CachedCodeBehind) childController).deactivate();
 
         presentationModel.deactivate();
     }

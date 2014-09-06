@@ -61,7 +61,7 @@
     <TableView fx:id="orderBookTable" AnchorPane.leftAnchor="10.0"
                AnchorPane.topAnchor="45.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
         <columns>
-            <TableColumn text="Amount (Min.)" fx:id="amountColumn" minWidth="120">
+            <TableColumn text="Amount in BTC (Min.)" fx:id="amountColumn" minWidth="120">
                 <cellValueFactory>
                     <PropertyValueFactory property="amount"/>
                 </cellValueFactory>
@@ -71,7 +71,7 @@
                     <PropertyValueFactory property="price"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Volume (Min.)" fx:id="volumeColumn" minWidth="130">
+            <TableColumn text="Amount in EUR (Min.)" fx:id="volumeColumn" minWidth="130">
                 <cellValueFactory>
                     <PropertyValueFactory property="volume"/>
                 </cellValueFactory>

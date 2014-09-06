@@ -51,7 +51,7 @@ public class Region implements Serializable {
     }
 
 
-    String getCode() {
+    public String getCode() {
         return code;
     }
 

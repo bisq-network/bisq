@@ -20,8 +20,10 @@ public class CodeBehind<T extends PresentationModel> implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(CodeBehind.class);
 
     protected T presentationModel;
-    protected ViewController childController;
-    protected ViewController parentController;
+    //TODO Initializable has to be changed to CodeBehind<? extends PresentationModel> when all UIs are updated
+    protected Initializable childController;
+    //TODO Initializable has to be changed to CodeBehind<? extends PresentationModel> when all UIs are updated
+    protected Initializable parentController;
     @FXML protected Parent root;
 
     public CodeBehind(T presentationModel) {
@@ -59,7 +61,7 @@ public class CodeBehind<T extends PresentationModel> implements Initializable {
     public void terminate() {
         log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
         if (childController != null)
-            childController.terminate();
+            ((CodeBehind<? extends PresentationModel>) childController).terminate();
 
         presentationModel.deactivate();
         presentationModel.terminate();
@@ -69,7 +71,7 @@ public class CodeBehind<T extends PresentationModel> implements Initializable {
      * @param parentController Controller who has created this.getClass().getSimpleName() instance (via
      *                         navigateToView/FXMLLoader).
      */
-    public void setParentController(ViewController parentController) {
+    public void setParentController(Initializable parentController) {
         log.trace("Lifecycle: setParentController " + this.getClass().getSimpleName() + " / parent = " +
                 parentController);
         this.parentController = parentController;
@@ -79,7 +81,7 @@ public class CodeBehind<T extends PresentationModel> implements Initializable {
      * @param navigationItem NavigationItem to be loaded.
      * @return The ViewController of the loaded view.
      */
-    public ViewController loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
         log.trace("Lifecycle: loadViewAndGetChildController " + this.getClass().getSimpleName() + " / navigationItem " +
                 "= " + navigationItem);
         return null;

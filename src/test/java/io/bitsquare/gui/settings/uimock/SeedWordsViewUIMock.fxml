@@ -21,8 +21,10 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<GridPane fx:id="root" hgap="5.0" stylesheets="@../../../../../../../main/java/io/bitsquare/gui/bitsquare.css"
-          vgap="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+<?import javafx.scene.text.*?>
+<GridPane fx:id="root" hgap="5.0" prefHeight="630.0" prefWidth="1000.0"
+          stylesheets="@../../../../../../../main/java/io/bitsquare/gui/bitsquare.css" vgap="5.0"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
           AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
           fx:controller="io.bitsquare.gui.settings.uimock.SeedWordsControllerUIMock">
 
@@ -32,46 +34,42 @@
 
     <children>
 
-        <Pane id="form-group-background-active" fx:id="payFundsPane" visible="true" GridPane.columnSpan="3"
-              GridPane.rowSpan="4">
+        <Pane id="form-group-background-active" fx:id="payFundsPane" GridPane.columnSpan="3" GridPane.rowSpan="4">
             <GridPane.margin>
                 <Insets bottom="-10.0" left="-10.0" right="-10.0" top="-10.0"/>
             </GridPane.margin>
             <children>
                 <Label id="form-group-title-active" fx:id="payFundsTitleLabel" layoutX="8" layoutY="-8"
-                       text="Setup password">
+                       text="Backup your wallet seed words">
                     <padding>
                         <Insets left="5" right="7"/>
                     </padding>
                 </Label>
             </children>
         </Pane>
-
-        <Label fx:id="totalToPayLabel" text="Enter password:" visible="true">
+        <Label text="Wallet seed words:" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.valignment="TOP">
             <GridPane.margin>
-                <Insets top="10.0"/>
+                <Insets top="7.0"/>
             </GridPane.margin>
         </Label>
-
-        <PasswordField promptText="Enter password:" GridPane.columnIndex="1" GridPane.columnSpan="2">
+        <TextArea prefHeight="100.0" text="essay case modify essay case modify essay case modify essay case modify"
+                  GridPane.columnIndex="1" GridPane.rowIndex="1">
             <GridPane.margin>
-                <Insets top="10.0"/>
+                <Insets/>
             </GridPane.margin>
-        </PasswordField>
+            <font>
+                <Font size="16.0"/>
+            </font>
+        </TextArea>
 
-        <Label fx:id="addressLabel" text="Repeat password:" visible="true" GridPane.rowIndex="1"/>
-        <PasswordField promptText="Repeat password" GridPane.columnIndex="1"
-                       GridPane.columnSpan="2" GridPane.rowIndex="1"/>
-
-        <Button GridPane.columnIndex="1" GridPane.rowIndex="2" defaultButton="true"
-                text="Save password" visible="true">
+        <Button defaultButton="true" text="I have made my backup" GridPane.columnIndex="1" GridPane.rowIndex="2">
             <GridPane.margin>
                 <Insets bottom="10"/>
             </GridPane.margin>
         </Button>
 
         <ImageView fx:id="payFundsInfoIcon" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true"
-                   visible="true" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                   GridPane.rowIndex="3" GridPane.valignment="TOP">
             <image>
                 <Image fx:id="infoIcon" url="@../../../../../../../main/resources/images/info_44.png"/>
             </image>
@@ -81,8 +79,8 @@
         </ImageView>
 
         <Label fx:id="payFundsInfoLabel" prefWidth="740.0"
-               text="Protect your wallet with a strong password. You need to enter the password any time you withdraw Bitcoins from your trading wallets. You can change the password later in the settings. Open the help menu for more information."
-               visible="true" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3">
+               text="You can recreate your wallet our of these words when you lose your wallet. Backup it on paper to have better protection against cycer criminals. Open the help menu for more information."
+               wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3">
             <GridPane.margin>
                 <Insets bottom="5.0"/>
             </GridPane.margin>
@@ -92,9 +90,9 @@
     </children>
 
     <columnConstraints>
-        <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="200"/>
+        <ColumnConstraints halignment="RIGHT" minWidth="200.0"/>
         <ColumnConstraints hgrow="ALWAYS"/>
-        <ColumnConstraints hgrow="NEVER" prefWidth="25.0"/>
+        <ColumnConstraints/>
     </columnConstraints>
 
     <rowConstraints>

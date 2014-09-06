@@ -134,7 +134,6 @@ public class TradeController extends CachedViewController {
             try {
                 createOfferView = loader.load();
                 createOfferCodeBehind = loader.getController();
-                log.debug("####### loader.getController() " + createOfferCodeBehind);
                 createOfferCodeBehind.setParentController(this);
                 final Tab tab = new Tab("Create offer");
                 tab.setContent(createOfferView);

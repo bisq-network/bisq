@@ -28,7 +28,7 @@
       xmlns:fx="http://javafx.com/fxml">
     <TableView id="orderbook-table" fx:id="openTradesTable" prefHeight="150.0">
         <columns>
-            <TableColumn fx:id="amountColumn" minWidth="120" text="Amount (Min.)">
+            <TableColumn fx:id="amountColumn" minWidth="120" text="Amount in BTC (Min.)">
                 <cellValueFactory>
                     <PropertyValueFactory property="amount"/>
                 </cellValueFactory>
@@ -38,7 +38,7 @@
                     <PropertyValueFactory property="price"/>
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn fx:id="volumeColumn" minWidth="130" text="Volume (Min.)">
+            <TableColumn fx:id="volumeColumn" minWidth="130" text="Amount in EUR (Min.)">
                 <cellValueFactory>
                     <PropertyValueFactory property="volume"/>
                 </cellValueFactory>

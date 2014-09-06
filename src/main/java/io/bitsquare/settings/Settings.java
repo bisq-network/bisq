@@ -41,7 +41,9 @@ public class Settings implements Serializable {
     private long collateral = 100;  // is 1/1000 so 100 results to 100/1000 = 0,1 (or 10%) 
     // which will be used for multiplying with the amount to get the collateral size in BTC.
 
-    final StringProperty btcDenomination = new SimpleStringProperty(CoinFormat.CODE_BTC);
+
+    private String btcDenominationString = CoinFormat.CODE_BTC;
+    final transient StringProperty btcDenomination = new SimpleStringProperty(CoinFormat.CODE_BTC);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -61,6 +63,7 @@ public class Settings implements Serializable {
             acceptedCountryLocales = persistedSettings.getAcceptedCountries();
             acceptedArbitrators = persistedSettings.getAcceptedArbitrators();
             collateral = persistedSettings.getCollateral();
+            setBtcDenomination(persistedSettings.getBtcDenominationString());
         }
     }
 
@@ -127,7 +130,12 @@ public class Settings implements Serializable {
         return btcDenomination;
     }
 
-    public void setBtcDenomination(String useMBTC) {
-        this.btcDenomination.set(useMBTC);
+    public void setBtcDenomination(String btcDenomination) {
+        btcDenominationString = btcDenomination;
+        this.btcDenomination.set(btcDenomination);
+    }
+
+    public String getBtcDenominationString() {
+        return btcDenominationString;
     }
 }
