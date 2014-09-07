@@ -40,7 +40,6 @@ import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Pos;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
@@ -221,19 +220,14 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> {
             @Override
             public ListCell<Locale> call(ListView<Locale> list) {
                 return new ListCell<Locale>() {
-                    final HBox hBox = new HBox();
                     final Label label = new Label();
-                    final Button removeButton = new Button();
                     final ImageView icon = ImageUtil.getIconImageView(ImageUtil.REMOVE);
+                    final Button removeButton = new Button("", icon);
+                    final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
-                        label.setPrefWidth(395);
-                        icon.setMouseTransparent(true);
-                        removeButton.setGraphic(icon);
                         removeButton.setId("icon-button");
-                        hBox.setSpacing(3);
-                        hBox.setAlignment(Pos.CENTER_LEFT);
-                        hBox.getChildren().addAll(label, removeButton);
+                        AnchorPane.setRightAnchor(removeButton, 0d);
                     }
 
                     @Override
@@ -242,7 +236,7 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> {
                         if (item != null && !empty) {
                             label.setText(item.getDisplayName());
                             removeButton.setOnAction(actionEvent -> removeLanguage(item));
-                            setGraphic(hBox);
+                            setGraphic(pane);
                         }
                         else {
                             setGraphic(null);
@@ -284,19 +278,14 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> {
             @Override
             public ListCell<Country> call(ListView<Country> list) {
                 return new ListCell<Country>() {
-                    final HBox hBox = new HBox();
                     final Label label = new Label();
-                    final Button removeButton = new Button();
                     final ImageView icon = ImageUtil.getIconImageView(ImageUtil.REMOVE);
+                    final Button removeButton = new Button("", icon);
+                    final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
-                        label.setPrefWidth(395);
-                        icon.setMouseTransparent(true);
-                        removeButton.setGraphic(icon);
                         removeButton.setId("icon-button");
-                        hBox.setSpacing(3);
-                        hBox.setAlignment(Pos.CENTER_LEFT);
-                        hBox.getChildren().addAll(label, removeButton);
+                        AnchorPane.setRightAnchor(removeButton, 0d);
                     }
 
                     @Override
@@ -305,7 +294,7 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> {
                         if (item != null && !empty) {
                             label.setText(item.getName());
                             removeButton.setOnAction(actionEvent -> removeCountry(item));
-                            setGraphic(hBox);
+                            setGraphic(pane);
                         }
                         else {
                             setGraphic(null);
@@ -333,20 +322,16 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> {
             @Override
             public ListCell<Arbitrator> call(ListView<Arbitrator> list) {
                 return new ListCell<Arbitrator>() {
-                    final HBox hBox = new HBox();
                     final Label label = new Label();
-                    final Button removeButton = new Button();
                     final ImageView icon = ImageUtil.getIconImageView(ImageUtil.REMOVE);
+                    final Button removeButton = new Button("", icon);
+                    final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
-                        label.setPrefWidth(395);
-                        icon.setMouseTransparent(true);
-                        removeButton.setGraphic(icon);
                         removeButton.setId("icon-button");
-                        hBox.setSpacing(3);
-                        hBox.setAlignment(Pos.CENTER_LEFT);
-                        hBox.getChildren().addAll(label, removeButton);
+                        AnchorPane.setRightAnchor(removeButton, 0d);
                     }
+
 
                     @Override
                     public void updateItem(final Arbitrator item, boolean empty) {
@@ -354,7 +339,7 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> {
                         if (item != null && !empty) {
                             label.setText(item.getName());
                             removeButton.setOnAction(actionEvent -> removeArbitrator(item));
-                            setGraphic(hBox);
+                            setGraphic(pane);
                         }
                         else {
                             setGraphic(null);

@@ -76,10 +76,10 @@ public class SetupCB extends CachedCodeBehind<SetupPM> {
         password = new WizardItem(this, content, "Setup password", "Protect your wallet with a password",
                 NavigationItem.PASSWORD);
         restrictions = new WizardItem(this, content, "Setup your preferences",
-                "You need to setup your preferences used for trade restrictions",
+                "Define your preferences with whom you want to trade",
                 NavigationItem.RESTRICTIONS);
-        fiatAccount = new WizardItem(this, content, " Setup Bank account",
-                "You need to add the bank account details to your trading account",
+        fiatAccount = new WizardItem(this, content, " Setup Payments account(s)",
+                "You need to add a payments account to your trading account",
                 NavigationItem.FIAT_ACCOUNT);
         registration = new WizardItem(this, root, "Register your account",
                 "Pay in the registration fee of 0.0002 BTC and store your account in the BTC block chain",

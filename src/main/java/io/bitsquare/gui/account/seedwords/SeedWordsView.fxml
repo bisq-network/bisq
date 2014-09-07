@@ -17,15 +17,17 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
+<?import io.bitsquare.gui.components.InfoDisplay?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <GridPane fx:id="root" fx:controller="io.bitsquare.gui.account.seedwords.SeedWordsCB" hgap="5.0" vgap="5.0"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
     <children>
-        <Pane id="form-group-background-active" fx:id="payFundsPane" GridPane.columnSpan="3" GridPane.rowSpan="4">
+        <Pane id="form-group-background-active" fx:id="payFundsPane" GridPane.columnSpan="2" GridPane.rowSpan="4">
             <GridPane.margin>
                 <Insets bottom="-10.0" left="-10.0" right="-10.0" top="-10.0"/>
             </GridPane.margin>
@@ -45,40 +47,25 @@
             </GridPane.margin>
         </Label>
         <TextArea fx:id="seedWordsTextArea" GridPane.columnIndex="1" GridPane.rowIndex="1" wrapText="true"
-                  prefHeight="50">
+                  prefHeight="80">
             <font>
                 <Font size="16.0"/>
             </font>
         </TextArea>
-
         <Button text="I have made my backup" onAction="#onDone" GridPane.columnIndex="1" GridPane.rowIndex="2"
                 defaultButton="true">
             <GridPane.margin>
                 <Insets bottom="5"/>
             </GridPane.margin>
         </Button>
-
-        <ImageView GridPane.rowIndex="3" GridPane.valignment="TOP" fitHeight="24.0" fitWidth="24.0"
-                   pickOnBounds="true" preserveRatio="true">
-            <image>
-                <Image fx:id="infoIcon" url="@/images/info_44.png"/>
-            </image>
-            <GridPane.margin>
-                <Insets right="2.0" top="4.0"/>
-            </GridPane.margin>
-        </ImageView>
-
-        <TextFlow GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="410.0">
-            <Label prefWidth="410.0" wrapText="true"
-                   text="You can recreate your wallet our of these words when you lose your wallet. Backup it on paper to have better protection against online theft. Open the help menu for more information."/>
-            <Hyperlink text="%shared.readMore" id="info-link" onAction="#onOpenHelp"/>
-        </TextFlow>
+        <InfoDisplay gridPane="$root" onAction="#onOpenHelp" rowIndex="3"
+                     text="You can recreate your wallet our of these words when you lose your wallet. Backup it on paper to have better protection against online theft. Open the help menu for more information."/>
 
     </children>
 
     <columnConstraints>
-        <ColumnConstraints halignment="RIGHT" prefWidth="140.0"/>
-        <ColumnConstraints hgrow="ALWAYS" prefWidth="470"/>
+        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="140.0"/>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
     </columnConstraints>
 
     <rowConstraints>

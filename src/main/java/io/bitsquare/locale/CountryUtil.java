@@ -85,7 +85,6 @@ public class CountryUtil {
     }
 
     public static List<Country> getAllEuroCountries() {
-
         List<Country> allEuroCountries = new ArrayList<>();
         String[] code = {"BE", "DE", "EE", "FI", "FR", "GR", "IE", "IT", "LV", "LU", "MT", "NL", "PT", "SK", "SI",
                 "ES", "AT", "CY"};
@@ -136,7 +135,6 @@ public class CountryUtil {
     // from a static list -or we find something ready made?). 
     private static List<Locale> getAllCountryLocales() {
         List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
-        log.debug(allLocales.toString());
         Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !"".equals(locale.getCountry()))
                 .map(locale -> new Locale("", locale.getCountry(), ""))
                 .collect(Collectors.toSet());

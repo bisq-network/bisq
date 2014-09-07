@@ -17,16 +17,32 @@
 
 package io.bitsquare.gui.account.fiataccount;
 
+import io.bitsquare.bank.BankAccount;
+import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.account.setup.SetupCB;
+import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.help.Help;
+import io.bitsquare.gui.help.HelpId;
+import io.bitsquare.gui.util.validation.InputValidator;
+import io.bitsquare.locale.Country;
+import io.bitsquare.locale.Region;
 
 import java.net.URL;
 
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
+import javafx.scene.control.*;
+
+import org.controlsfx.control.action.Action;
+import org.controlsfx.dialog.Dialog;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +50,15 @@ import org.slf4j.LoggerFactory;
 public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> {
 
     private static final Logger log = LoggerFactory.getLogger(FiatAccountCB.class);
+
+    @FXML private ComboBox<Region> regionComboBox;
+    @FXML private ComboBox<Country> countryComboBox;
+    @FXML private TextField titleTextField, holderNameTextField, primaryIDTextField, secondaryIDTextField;
+    @FXML private Button saveButton, addBankAccountButton, changeBankAccountButton, removeBankAccountButton;
+    @FXML private ComboBox<BankAccount> selectionComboBox;
+    @FXML private ComboBox<BankAccountType> typesComboBox;
+    @FXML private ComboBox<Currency> currencyComboBox;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -53,11 +78,24 @@ public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> {
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
+        typesComboBox.setItems(presentationModel.getAllTypes());
+        typesComboBox.setConverter(presentationModel.getTypesConverter());
+        selectionComboBox.setConverter(presentationModel.getSelectionConverter());
+        currencyComboBox.setItems(presentationModel.getAllCurrencies());
+        currencyComboBox.setConverter(presentationModel.getCurrencyConverter());
+        regionComboBox.setItems(presentationModel.getAllRegions());
+        regionComboBox.setConverter(presentationModel.getRegionConverter());
+        countryComboBox.setConverter(presentationModel.getCountryConverter());
     }
 
     @Override
     public void activate() {
         super.activate();
+
+        setupListeners();
+        setupBindings();
+
+        selectionComboBox.setItems(presentationModel.getAllBankAccounts());
     }
 
     @Override
@@ -72,16 +110,61 @@ public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
+
     @FXML
-    private void onDone() {
-        ((SetupCB) parentController).onCompleted(this);
+    public void onSelectAccount() {
+        presentationModel.setCurrentBankAccount(selectionComboBox.getSelectionModel().getSelectedItem());
+    }
+
+    @FXML
+    public void onSelectType() {
+        presentationModel.setType(typesComboBox.getSelectionModel().getSelectedItem());
+    }
+
+    @FXML
+    public void onSelectCurrency() {
+        presentationModel.setCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
+    }
+
+    @FXML
+    private void onSelectRegion() {
+        countryComboBox.setVisible(true);
+        Region region = regionComboBox.getSelectionModel().getSelectedItem();
+        countryComboBox.setItems(presentationModel.getAllCountriesFor(region));
+    }
+
+    @FXML
+    private void onSelectCountry() {
+        presentationModel.setCountry(countryComboBox.getSelectionModel().getSelectedItem());
+    }
+
+    @FXML
+    private void onSave() {
+        InputValidator.ValidationResult result = presentationModel.saveBankAccount();
+        if (result.isValid)
+            ((SetupCB) parentController).onCompleted(this);
+    }
+
+    @FXML
+    private void onAddAccount() {
+        log.error("onAddAccount");
+    }
+
+    @FXML
+    private void onRemoveAccount() {
+        presentationModel.removeBankAccount();
+    }
+
+    @FXML
+    private void onChangeAccount() {
+        log.error("onChangeAccount");
+    }
+
+    @FXML
+    private void onOpenHelp() {
+        Help.openWindow(HelpId.SETUP_FIAT_ACCOUNT);
     }
 
 
@@ -89,6 +172,85 @@ public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void setupListeners() {
+        presentationModel.type.addListener((ov, oldValue, newValue) -> {
+            if (newValue != null)
+                typesComboBox.getSelectionModel().select(typesComboBox.getItems().indexOf(newValue));
+            else
+                typesComboBox.getSelectionModel().clearSelection();
+        });
 
+        presentationModel.currency.addListener((ov, oldValue, newValue) -> {
+            if (newValue != null)
+                currencyComboBox.getSelectionModel().select(currencyComboBox.getItems().indexOf(newValue));
+            else
+                currencyComboBox.getSelectionModel().clearSelection();
+        });
+
+        presentationModel.getCurrentBankAccount().addListener((ov, oldValue, newValue) -> {
+            if (newValue != null)
+                selectionComboBox.getSelectionModel().select(selectionComboBox.getItems().indexOf(newValue));
+            else
+                selectionComboBox.getSelectionModel().clearSelection();
+        });
+
+        presentationModel.country.addListener((ov, oldValue, newValue) -> {
+            if (newValue != null) {
+                regionComboBox.getSelectionModel().select(regionComboBox.getItems().indexOf(newValue.getRegion()));
+                countryComboBox.getSelectionModel().select(countryComboBox.getItems().indexOf(newValue));
+            }
+            else {
+                regionComboBox.getSelectionModel().clearSelection();
+                countryComboBox.getSelectionModel().clearSelection();
+            }
+        });
+
+        presentationModel.getAllBankAccounts().addListener((ListChangeListener<BankAccount>) change -> {
+            Object a = presentationModel.getAllBankAccounts();
+            Object a2 = change.getList();
+
+            if (presentationModel.getCurrentBankAccount() != null)
+                selectionComboBox.getSelectionModel().select(selectionComboBox.getItems()
+                        .indexOf(presentationModel.getCurrentBankAccount()));
+            else
+                selectionComboBox.getSelectionModel().clearSelection();
+        });
+
+        presentationModel.countryNotInAcceptedCountriesList.addListener((ov, oldValue, newValue) -> {
+            if (newValue) {
+                List<Action> actions = new ArrayList<>();
+                actions.add(Dialog.Actions.YES);
+                actions.add(Dialog.Actions.NO);
+
+                Action response = Popups.openConfirmPopup("Warning",
+                        "The country of your bank account is not included in the accepted countries in the general " +
+                                "settings.\n\nDo you want to add it automatically?",
+                        null,
+                        actions);
+
+                if (response == Dialog.Actions.YES)
+                    presentationModel.addCountryToAcceptedCountriesList();
+            }
+        });
+    }
+
+    private void setupBindings() {
+        // input
+        titleTextField.textProperty().bindBidirectional(presentationModel.title);
+        holderNameTextField.textProperty().bindBidirectional(presentationModel.holderName);
+        primaryIDTextField.textProperty().bindBidirectional(presentationModel.primaryID);
+        secondaryIDTextField.textProperty().bindBidirectional(presentationModel.secondaryID);
+
+        primaryIDTextField.promptTextProperty().bind(presentationModel.primaryIDPrompt);
+        secondaryIDTextField.promptTextProperty().bind(presentationModel.secondaryIDPrompt);
+        selectionComboBox.promptTextProperty().bind(presentationModel.selectionPrompt);
+        selectionComboBox.disableProperty().bind(presentationModel.selectionDisable);
+
+        saveButton.disableProperty().bind(presentationModel.saveButtonDisable);
+        addBankAccountButton.disableProperty().bind(presentationModel.addBankAccountButtonDisable);
+        changeBankAccountButton.disableProperty().bind(presentationModel.changeBankAccountButtonDisable);
+        removeBankAccountButton.disableProperty().bind(presentationModel.removeBankAccountButtonDisable);
+
+    }
 }
 

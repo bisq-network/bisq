@@ -53,9 +53,9 @@ public class RestrictionsModel extends UIModel {
     private final Persistence persistence;
     private final MessageFacade messageFacade;
 
-    ObservableList<Locale> languageList;
-    ObservableList<Country> countryList;
-    ObservableList<Arbitrator> arbitratorList;
+    ObservableList<Locale> languageList = FXCollections.observableArrayList();
+    ObservableList<Country> countryList = FXCollections.observableArrayList();
+    ObservableList<Arbitrator> arbitratorList = FXCollections.observableArrayList();
 
     ObservableList<Locale> allLanguages = FXCollections.observableArrayList(LanguageUtil.getAllLanguageLocales());
     ObservableList<Region> allRegions = FXCollections.observableArrayList(CountryUtil.getAllRegions());

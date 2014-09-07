@@ -74,12 +74,12 @@ public class Transitions {
         return animation;
     }
 
-    public static Timeline blurOutAndRemove(Node node) {
-        return blurOutAndRemove(node, UI_ANIMATION_TIME);
+    public static Timeline blurAndRemove(Node node) {
+        return blurAndRemove(node, UI_ANIMATION_TIME);
     }
 
-    public static Timeline blurOutAndRemove(Node node, int duration) {
-        Timeline timeline = blurOut(node, duration);
+    public static Timeline blurAndRemove(Node node, int duration) {
+        Timeline timeline = blur(node, duration);
         timeline.setOnFinished(actionEvent -> {
             ((Pane) (node.getParent())).getChildren().remove(node);
             Profiler.printMsgWithTime("blurOutAndRemove");
@@ -87,11 +87,11 @@ public class Transitions {
         return timeline;
     }
 
-    public static void blurOut(Node node) {
-        blurOut(node, UI_ANIMATION_TIME);
+    public static void blur(Node node) {
+        blur(node, UI_ANIMATION_TIME);
     }
 
-    public static Timeline blurOut(Node node, int duration) {
+    public static Timeline blur(Node node, int duration) {
         GaussianBlur blur = new GaussianBlur(0.0);
         node.setEffect(blur);
         Timeline timeline = new Timeline();
@@ -102,7 +102,7 @@ public class Transitions {
         return timeline;
     }
 
-    public static void blurIn(Node node) {
+    public static void removeBlur(Node node) {
         GaussianBlur blur = (GaussianBlur) node.getEffect();
         Timeline durationline = new Timeline();
         KeyValue kv = new KeyValue(blur.radiusProperty(), 0.0);

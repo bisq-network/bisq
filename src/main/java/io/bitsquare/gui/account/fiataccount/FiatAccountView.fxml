@@ -18,22 +18,25 @@
   -->
 
 
+<?import io.bitsquare.gui.components.InfoDisplay?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <GridPane fx:id="root" fx:controller="io.bitsquare.gui.account.fiataccount.FiatAccountCB" hgap="5.0" vgap="5.0"
-          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-          AnchorPane.topAnchor="0.0"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
     <children>
 
-        <Pane id="form-group-background-active" GridPane.columnSpan="3" GridPane.rowSpan="4">
+        <!--
+        Setup
+        -->
+        <Pane id="form-group-background-active" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.rowSpan="8">
             <GridPane.margin>
                 <Insets bottom="-10.0" left="-10.0" right="-10.0" top="-10.0"/>
             </GridPane.margin>
             <children>
-                <Label id="form-group-title-active" text="Setup password" layoutX="8" layoutY="-8">
+                <Label id="form-group-title-active" text="Setup your payments account" layoutX="8" layoutY="-8">
                     <padding>
                         <Insets left="5" right="7"/>
                     </padding>
@@ -41,38 +44,121 @@
             </children>
         </Pane>
 
-
-        <Button text="I have made my backup" onAction="#onDone" GridPane.columnIndex="1" GridPane.rowIndex="2"
-                defaultButton="true">
+        <Label text="Payments method:" GridPane.rowIndex="0">
             <GridPane.margin>
-                <Insets bottom="10"/>
+                <Insets top="10"/>
+            </GridPane.margin>
+        </Label>
+        <ComboBox fx:id="typesComboBox" promptText="Select payments method" onAction="#onSelectType"
+                  GridPane.rowIndex="0" GridPane.columnIndex="1">
+            <GridPane.margin>
+                <Insets top="10"/>
+            </GridPane.margin>
+        </ComboBox>
+
+        <Label text="Title:" GridPane.rowIndex="1"/>
+        <TextField fx:id="titleTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+        <Label text="Holder name:" GridPane.rowIndex="2"/>
+        <TextField fx:id="holderNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+        <Label text="Primary ID:" GridPane.rowIndex="3"/>
+        <TextField fx:id="primaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+        <Label text="Secondary ID:" GridPane.rowIndex="4"/>
+        <TextField fx:id="secondaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+
+        <Label text="Currency:" GridPane.rowIndex="5"/>
+        <ComboBox fx:id="currencyComboBox" promptText="Select currency"
+                  onAction="#onSelectCurrency" GridPane.columnIndex="1"
+                  GridPane.rowIndex="5"/>
+
+        <Label text="Country of payments account:" GridPane.rowIndex="6"/>
+        <HBox GridPane.columnIndex="1" GridPane.rowIndex="6" spacing="10">
+            <children>
+                <ComboBox fx:id="regionComboBox" promptText="Select region"
+                          onAction="#onSelectRegion" prefWidth="150.0"/>
+                <ComboBox fx:id="countryComboBox" promptText="Select country" onAction="#onSelectCountry"
+                          visible="false" prefWidth="150.0"/>
+            </children>
+        </HBox>
+
+        <InfoDisplay gridPane="$root" onAction="#onOpenHelp" rowIndex="7"
+                     text="The payments account data will be saved in a encrypted form to the Bitcoin block chain and will be used in the trade process for account verification."/>
+
+        <Button fx:id="saveButton" text="Save bank account" onAction="#onSave" GridPane.columnIndex="1"
+                GridPane.rowIndex="8" defaultButton="true" disable="true">
+            <GridPane.margin>
+                <Insets top="15.0" bottom="5.0"/>
             </GridPane.margin>
         </Button>
 
-        <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true"
-                   GridPane.rowIndex="3" GridPane.valignment="TOP">
-            <image>
-                <Image url="@/images/info_44.png"/>
-            </image>
-            <GridPane.margin>
-                <Insets right="2.0" top="4.0"/>
-            </GridPane.margin>
-        </ImageView>
 
-        <Label GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="340.0" wrapText="true"
-               text="Protect your wallet with a strong password. You need to enter the password any time you withdraw Bitcoins from your trading wallets. You can change the password later in the settings. Open the help menu for more information.">
+        <!--
+        Manage
+        -->
+        <Pane id="form-group-background-active" GridPane.columnSpan="2" GridPane.rowIndex="9" GridPane.rowSpan="4">
+            <GridPane.margin>
+                <Insets bottom="-10" left="-10" right="-10" top="20"/>
+            </GridPane.margin>
+            <children>
+                <Label id="form-group-title-active" text="Manage payments accounts" layoutX="8" layoutY="-8">
+                    <padding>
+                        <Insets left="5" right="7"/>
+                    </padding>
+                </Label>
+            </children>
+            <padding>
+                <Insets top="40.0"/>
+            </padding>
+        </Pane>
+
+        <Label text="Add new account:" GridPane.rowIndex="9">
+            <GridPane.margin>
+                <Insets top="40"/>
+            </GridPane.margin>
         </Label>
+        <Button fx:id="addBankAccountButton" text="Add payments account" onAction="#onAddAccount"
+                GridPane.columnIndex="1" GridPane.rowIndex="9" disable="true">
+            <GridPane.margin>
+                <Insets top="40"/>
+            </GridPane.margin>
+        </Button>
+
+        <Label text="Select payments account:" GridPane.rowIndex="10"/>
+        <ComboBox fx:id="selectionComboBox" onAction="#onSelectAccount" GridPane.rowIndex="10"
+                  GridPane.columnIndex="1"/>
+
+        <Label text="Change selected account:" GridPane.rowIndex="11"/>
+        <Button fx:id="changeBankAccountButton" text="Change selected payments account" onAction="#onChangeAccount"
+                GridPane.columnIndex="1"
+                GridPane.rowIndex="11" disable="true"/>
+
+        <Label text="Remove selected account:" GridPane.rowIndex="12"/>
+        <Button fx:id="removeBankAccountButton" text="Remove selected payments account" onAction="#onRemoveAccount"
+                GridPane.columnIndex="1"
+                GridPane.rowIndex="12" disable="true"/>
+
     </children>
 
     <columnConstraints>
-        <ColumnConstraints halignment="RIGHT" prefWidth="200.0"/>
-        <ColumnConstraints hgrow="ALWAYS" prefWidth="410"/>
+        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
     </columnConstraints>
 
     <rowConstraints>
-        <RowConstraints/>
-        <RowConstraints/>
-        <RowConstraints/>
-        <RowConstraints/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
     </rowConstraints>
 </GridPane>

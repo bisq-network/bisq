@@ -200,7 +200,7 @@ public class TradeManager {
                             resultHandler.onResult(transactionId);
                         } catch (Exception e) {
                             //TODO retry policy
-                            errorMessageHandler.onFault("Could not save offer. Reason: " + e.getMessage());
+                            errorMessageHandler.onFault("Could not save offer. Reason: " + e.getCause().getMessage());
                             createOfferCoordinatorMap.remove(offer.getId());
                         }
                     },
@@ -222,7 +222,7 @@ public class TradeManager {
     }
 
     public void removeOffer(Offer offer) {
-        if (!offers.containsKey(offer.getId())) 
+        if (!offers.containsKey(offer.getId()))
             log.error("offers does not contain the offer with the ID " + offer.getId());
 
         offers.remove(offer.getId());

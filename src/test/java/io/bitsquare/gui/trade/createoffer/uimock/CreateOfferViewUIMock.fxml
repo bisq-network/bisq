@@ -156,11 +156,12 @@
                             </GridPane.margin>
                         </VBox>
 
-                        <ImageView fx:id="priceAmountInfoIcon" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true"
+                        <ImageView fx:id="priceAmountInfoIcon" GridPane.rowSpan="2" fitHeight="24.0" fitWidth="24.0"
+                                   pickOnBounds="true"
                                    preserveRatio="true" GridPane.rowIndex="2" GridPane.valignment="TOP">
                             <image>
                                 <Image fx:id="infoIcon"
-                                       url="@../../../../../../../../main/resources/images/info_44.png"/>
+                                       url="@../../../../../../../../main/resources/images/info.png"/>
                             </image>
                             <GridPane.margin>
                                 <Insets right="2.0" top="4.0"/>
@@ -233,7 +234,8 @@
                             </GridPane.margin>
                         </TextField>
 
-                        <ImageView fx:id="payFundsInfoIcon" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true"
+                        <ImageView fx:id="payFundsInfoIcon" GridPane.rowSpan="2" fitHeight="24.0" fitWidth="24.0"
+                                   pickOnBounds="true"
                                    preserveRatio="true" visible="true" GridPane.rowIndex="14" GridPane.valignment="TOP">
                             <image>
                                 <fx:reference source="infoIcon"/>
@@ -320,7 +322,8 @@
                                    text="Spain" visible="true" GridPane.columnIndex="1" GridPane.columnSpan="2"
                                    GridPane.rowIndex="21"/>
 
-                        <ImageView fx:id="showDetailsInfoIcon" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true"
+                        <ImageView fx:id="showDetailsInfoIcon" GridPane.rowSpan="2" fitHeight="24.0" fitWidth="24.0"
+                                   pickOnBounds="true"
                                    preserveRatio="true" visible="true" GridPane.rowIndex="22" GridPane.valignment="TOP">
                             <image>
                                 <fx:reference source="infoIcon"/>

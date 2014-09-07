@@ -54,7 +54,7 @@ public class User implements Serializable {
     private KeyPair messageKeyPair;
     private String accountID;
     // TODO make it thread safe
-    private List<BankAccount> bankAccounts;
+    private List<BankAccount> bankAccounts = new ArrayList<>();
     private BankAccount currentBankAccount;
 
     public User() {
@@ -117,17 +117,12 @@ public class User implements Serializable {
     public void setCurrentBankAccount(@Nullable BankAccount bankAccount) {
         currentBankAccount = bankAccount;
 
-        if (bankAccount != null) {
+        if (currentBankAccount != null) {
             BSFormatter.setFiatCurrencyCode(currentBankAccount.getCurrency().getCurrencyCode());
             FiatValidator.setFiatCurrencyCode(currentBankAccount.getCurrency().getCurrencyCode());
-        }
 
-        int index;
-        for (index = 0; index < bankAccounts.size(); index++) {
-            if (currentBankAccount != null && currentBankAccount.equals(bankAccounts.get(index)))
-                break;
+            selectedBankAccountIndexProperty.set(bankAccounts.indexOf(currentBankAccount));
         }
-        selectedBankAccountIndexProperty.set(index);
     }
 
 

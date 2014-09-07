@@ -170,6 +170,19 @@ public class MainController extends ViewController {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Blur effect
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void removeContentScreenBlur() {
+        Transitions.removeBlur(viewBuilder.baseContentContainer);
+    }
+
+    public void blurContentScreen() {
+        Transitions.blur(viewBuilder.baseContentContainer);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Startup Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -213,7 +226,7 @@ public class MainController extends ViewController {
 
     private void fadeOutSplash() {
         Profiler.printMsgWithTime("MainController.fadeOutSplash");
-        Transitions.blurOutAndRemove(viewBuilder.splashVBox);
+        Transitions.blurAndRemove(viewBuilder.splashVBox);
         Transitions.fadeIn(viewBuilder.menuBar);
         Transitions.fadeIn(viewBuilder.contentScreen);
     }

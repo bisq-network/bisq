@@ -25,7 +25,7 @@
 
     <VBox fx:id="leftVBox" spacing="5" prefWidth="300" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="20"
           AnchorPane.topAnchor="20"/>
-    <AnchorPane fx:id="content" AnchorPane.bottomAnchor="10" AnchorPane.leftAnchor="350"
+    <AnchorPane fx:id="content" AnchorPane.bottomAnchor="10" AnchorPane.rightAnchor="30" AnchorPane.leftAnchor="350"
                 AnchorPane.topAnchor="30" prefWidth="620"/>
 </AnchorPane>
 

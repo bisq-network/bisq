@@ -60,6 +60,7 @@ public class ImageUtil {
     public static final String TICK = "/images/tick.png";
     public static final String ARROW_BLUE = "/images/arrow_blue.png";
     public static final String ARROW_GREY = "/images/arrow_grey.png";
+    public static final String INFO = "/images/info.png";
 
     public static Image getIconImage(String iconName) {
         return new Image(ImageUtil.class.getResourceAsStream(iconName.replace("/images", "/images" + hiRes)));

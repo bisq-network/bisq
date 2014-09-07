@@ -93,10 +93,11 @@
         </HBox>
 
         <Separator orientation="HORIZONTAL" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="11"/>
-        <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true" GridPane.rowIndex="12"
+        <ImageView GridPane.rowSpan="2" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true"
+                   GridPane.rowIndex="12"
                    GridPane.valignment="TOP">
             <image>
-                <Image fx:id="infoIcon" url="@../../../../../../../main/resources/images/info_44.png"/>
+                <Image fx:id="infoIcon" url="@../../../../../../../main/resources/images/info.png"/>
             </image>
             <GridPane.margin>
                 <Insets right="2.0" top="4.0"/>

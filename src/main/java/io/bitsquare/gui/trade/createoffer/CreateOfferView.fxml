@@ -19,6 +19,7 @@
 
 <?import io.bitsquare.gui.components.btc.AddressTextField?>
 <?import io.bitsquare.gui.components.btc.BalanceTextField?>
+<?import io.bitsquare.gui.components.InfoDisplay?>
 <?import io.bitsquare.gui.components.InputTextField?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
@@ -34,7 +35,7 @@
                 AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
                 AnchorPane.bottomAnchor="0.0">
 
-        <GridPane hgap="5.0" vgap="5.0">
+        <GridPane fx:id="gridPane" hgap="5.0" vgap="5.0">
             <padding>
                 <Insets bottom="-10.0" left="25.0" top="30.0" right="25"/>
             </padding>
@@ -154,18 +155,8 @@
                 </HBox>
             </VBox>
 
-            <ImageView GridPane.rowIndex="2" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true"
-                       GridPane.valignment="TOP">
-                <GridPane.margin>
-                    <Insets right="2.0" top="4.0"/>
-                </GridPane.margin>
-                <Image fx:id="infoIcon" url="@/images/info_44.png"/>
-            </ImageView>
-
-            <TextFlow GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="740.0">
-                <Label prefWidth="740.0" wrapText="true" text="%createOffer.amountPriceBox.info"/>
-                <Hyperlink text="%shared.readMore" id="info-link" onAction="#onOpenGeneralHelp"/>
-            </TextFlow>
+            <InfoDisplay gridPane="$gridPane" onAction="#onOpenGeneralHelp" rowIndex="2"
+                         text="%createOffer.amountPriceBox.info"/>
 
             <Button fx:id="showPaymentInfoScreenButton" text="%createOffer.amountPriceBox.next" id="show-details-button"
                     GridPane.columnIndex="1" GridPane.rowIndex="3" defaultButton="true"
@@ -200,7 +191,9 @@
                     <Insets top="10.0"/>
                 </GridPane.margin>
             </HBox>
-            <TextField fx:id="totalToPayTextField" GridPane.columnIndex="1" GridPane.rowIndex="4"
+            <TextField fx:id="totalToPayTextField" promptText="%createOffer.fundsBox.totalsNeeded.prompt"
+                       GridPane.columnIndex="1"
+                       GridPane.rowIndex="4"
                        editable="false" focusTraversable="false" visible="false">
                 <GridPane.margin>
                     <Insets top="10.0"/>
@@ -223,23 +216,12 @@
                 </GridPane.margin>
             </BalanceTextField>
 
-            <ImageView fx:id="payFundsInfoIcon" GridPane.rowIndex="7" GridPane.valignment="TOP" fitHeight="24.0"
-                       fitWidth="24.0" pickOnBounds="true" preserveRatio="true" visible="false">
-                <GridPane.margin>
-                    <Insets right="2.0" top="4.0"/>
-                </GridPane.margin>
-                <fx:reference source="infoIcon"/>
-            </ImageView>
-
-            <TextFlow fx:id="payFundsInfoTextFlow" GridPane.columnIndex="1" GridPane.rowIndex="7" prefWidth="740.0"
-                      visible="false">
-                <Label prefWidth="740.0" wrapText="true" text="%createOffer.fundsBox.info"/>
-                <Hyperlink text="%shared.readMore" id="info-link" onAction="#onOpenFundingHelp"/>
-            </TextFlow>
+            <InfoDisplay fx:id="fundsBoxInfoDisplay" gridPane="$gridPane" onAction="#onOpenFundingHelp" rowIndex="7"
+                         text="%createOffer.fundsBox.info" visible="false"/>
 
             <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="8">
                 <GridPane.margin>
-                    <Insets bottom="20" top="20.0"/>
+                    <Insets bottom="30" top="15.0"/>
                 </GridPane.margin>
                 <Button fx:id="showAdvancedSettingsButton" text="%createOffer.fundsBox.showAdvanced"
                         onAction="#onToggleShowAdvancedSettings" visible="false"/>
@@ -274,7 +256,8 @@
                     <Insets top="0.0"/>
                 </GridPane.margin>
             </HBox>
-            <TextField fx:id="acceptedCountriesTextField" GridPane.columnIndex="1" GridPane.rowIndex="9" visible="false"
+            <TextField fx:id="acceptedCountriesTextField" GridPane.columnIndex="1" GridPane.rowIndex="9"
+                       visible="false"
                        editable="false" focusTraversable="false"/>
 
             <HBox GridPane.rowIndex="10" spacing="4" alignment="CENTER_RIGHT">
@@ -314,20 +297,10 @@
                 </GridPane.margin>
             </TextField>
 
-            <ImageView fx:id="showDetailsInfoIcon" GridPane.rowIndex="15" fitHeight="24.0" fitWidth="24.0"
-                       pickOnBounds="true" preserveRatio="true" visible="false" GridPane.valignment="TOP">
-                <GridPane.margin>
-                    <Insets right="2.0" top="4.0"/>
-                </GridPane.margin>
-                <fx:reference source="infoIcon"/>
-            </ImageView>
-
-            <TextFlow fx:id="showDetailsInfoLabel" GridPane.columnIndex="1" GridPane.rowIndex="15" prefWidth="740.0"
-                      visible="false">
-                <Label prefWidth="740.0" wrapText="true" text="%createOffer.advancedBox.info"/>
-                <Hyperlink text="%shared.readMore" id="info-link" onAction="#onOpenAdvancedSettingsHelp"/>
-            </TextFlow>
-
+            <InfoDisplay fx:id="advancedInfoDisplay" gridPane="$gridPane" onAction="#onOpenAdvancedSettingsHelp"
+                         rowIndex="15" visible="false"
+                         text="%createOffer.advancedBox.info">
+            </InfoDisplay>
 
             <columnConstraints>
                 <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="200"/>
@@ -351,13 +324,7 @@
                 <RowConstraints/>
                 <RowConstraints/>
                 <RowConstraints/>
-                <RowConstraints/>
-                <RowConstraints/>
-                <RowConstraints/>
-                <RowConstraints/>
-                <RowConstraints/>
-                <RowConstraints/>
-                <RowConstraints/>
+                <RowConstraints minHeight="35"/>
             </rowConstraints>
 
         </GridPane>

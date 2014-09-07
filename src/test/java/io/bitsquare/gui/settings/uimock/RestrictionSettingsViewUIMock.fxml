@@ -55,10 +55,11 @@
             </GridPane.margin>
         </ComboBox>
 
-        <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true" GridPane.rowIndex="2"
+        <ImageView GridPane.rowSpan="2" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true"
+                   GridPane.rowIndex="2"
                    GridPane.valignment="TOP">
             <image>
-                <Image fx:id="infoIcon" url="@../../../../../../../main/resources/images/info_44.png"/>
+                <Image fx:id="infoIcon" url="@../../../../../../../main/resources/images/info.png"/>
             </image>
             <GridPane.margin>
                 <Insets right="2.0" top="4.0"/>
@@ -100,7 +101,8 @@
                 <Insets bottom="10"/>
             </GridPane.margin>
         </HBox>
-        <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true" GridPane.rowIndex="6"
+        <ImageView GridPane.rowSpan="2" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true"
+                   GridPane.rowIndex="6"
                    GridPane.valignment="TOP">
             <image>
                 <fx:reference source="infoIcon"/>
@@ -138,7 +140,8 @@
         <Label text="Accepted arbitrators:" GridPane.rowIndex="8" GridPane.valignment="TOP"/>
         <ListView fx:id="arbitratorsListView" prefHeight="100.0" GridPane.columnIndex="1" GridPane.rowIndex="8"/>
         <Button text="Add arbitrator" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
-        <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true" GridPane.rowIndex="10"
+        <ImageView GridPane.rowSpan="2" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true"
+                   GridPane.rowIndex="10"
                    GridPane.valignment="TOP">
             <image>
                 <fx:reference source="infoIcon"/>

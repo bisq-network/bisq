@@ -17,6 +17,10 @@ tab pane upper bg gradient color mid dark grey to bright grey: cfcfcf -> dddddd
     -fx-background-color: linear-gradient(to bottom, #cfcfcf, #dddddd);
 }
 
+#info-icon-label {
+    -fx-font-size:16; 
+    -fx-text-fill: #333000;
+}
 
 /* Create offer */
 #direction-icon-label {
@@ -43,10 +47,6 @@ tab pane upper bg gradient color mid dark grey to bright grey: cfcfcf -> dddddd
     -fx-border-color: #aaa;
     -fx-border-style:  solid  solid solid none;
     -fx-border-insets: 0 0 0 -2;
-}
-
-#info-link {
-    -fx-padding: 0 0 0 -2;
 }
 
 #totals-separator {

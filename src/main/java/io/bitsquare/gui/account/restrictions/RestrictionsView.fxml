@@ -16,21 +16,20 @@
   ~ You should have received a copy of the GNU Affero General Public License
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
+<?import io.bitsquare.gui.components.InfoDisplay?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 <GridPane fx:id="root" fx:controller="io.bitsquare.gui.account.restrictions.RestrictionsCB" hgap="5.0" vgap="5.0"
-          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-          AnchorPane.topAnchor="0.0"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
     <children>
 
         <!-- 
         languages
          -->
-        <Pane id="form-group-background-active" GridPane.columnSpan="3" GridPane.rowSpan="3">
+        <Pane id="form-group-background-active" GridPane.columnSpan="2" GridPane.rowSpan="3">
             <GridPane.margin>
                 <Insets bottom="-10.0" left="-10.0" right="-10.0" top="-10.0"/>
             </GridPane.margin>
@@ -48,28 +47,14 @@
                 <Insets top="10"/>
             </padding>
         </Label>
-        <ListView fx:id="languagesListView" GridPane.columnIndex="1" GridPane.rowIndex="0" prefHeight="120.0"/>
+        <ListView fx:id="languagesListView" GridPane.columnIndex="1" GridPane.rowIndex="0" prefHeight="80.0"/>
         <ComboBox fx:id="languageComboBox" onAction="#onAddLanguage" promptText="Add language"
                   GridPane.columnIndex="1" GridPane.rowIndex="1"
                   prefWidth="150.0"/>
 
-        <ImageView GridPane.rowIndex="2" GridPane.valignment="TOP" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true"
-                   preserveRatio="true">
-            <image>
-                <Image fx:id="infoIcon" url="@/images/info_44.png"/>
-            </image>
-            <GridPane.margin>
-                <Insets right="2.0" top="4.0"/>
-            </GridPane.margin>
-        </ImageView>
-        <TextFlow GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="410.0">
-            <Label prefWidth="410.0" wrapText="true"
-                   text="Add languages you can support in case of arbitration."/>
-            <Hyperlink text="%shared.readMore" id="info-link" onAction="#onOpenLanguagesHelp"/>
-            <GridPane.margin>
-                <Insets top="10" bottom="5.0"/>
-            </GridPane.margin>
-        </TextFlow>
+
+        <InfoDisplay gridPane="$root" onAction="#onOpenLanguagesHelp" rowIndex="2"
+                     text="Trade with users who have at least 1 shared language."/>
 
         <!-- 
         countries
@@ -94,12 +79,13 @@
                 <Insets top="50"/>
             </GridPane.margin>
         </Label>
-        <ListView fx:id="countriesListView" GridPane.columnIndex="1" GridPane.rowIndex="3" prefHeight="120.0"
+        <ListView fx:id="countriesListView" GridPane.columnIndex="1" GridPane.rowIndex="3" prefHeight="80.0"
                 >
             <GridPane.margin>
                 <Insets top="40"/>
             </GridPane.margin>
         </ListView>
+
         <HBox GridPane.columnIndex="1" GridPane.rowIndex="4" spacing="10">
             <children>
                 <ComboBox fx:id="regionComboBox" onAction="#onSelectRegion" promptText="Select region"
@@ -110,23 +96,11 @@
                         prefWidth="150.0" visible="false"/>
             </children>
         </HBox>
-        <ImageView GridPane.rowIndex="5" GridPane.valignment="TOP" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true"
-                   preserveRatio="true">
-            <image>
-                <fx:reference source="infoIcon"/>
-            </image>
-            <GridPane.margin>
-                <Insets right="2.0" top="4.0"/>
-            </GridPane.margin>
-        </ImageView>
-        <TextFlow GridPane.columnIndex="1" GridPane.rowIndex="5" prefWidth="410.0">
-            <Label prefWidth="410.0" wrapText="true"
-                   text="Add payments account countries you accept for trades."/>
-            <Hyperlink text="%shared.readMore" id="info-link" onAction="#onOpenCountriesHelp"/>
-            <GridPane.margin>
-                <Insets top="10" bottom="5.0"/>
-            </GridPane.margin>
-        </TextFlow>
+
+
+        <InfoDisplay gridPane="$root" onAction="#onOpenCountriesHelp" rowIndex="5"
+                     text="Restrict trades with these payments account countries."/>
+
 
         <!-- 
         arbitrators
@@ -151,30 +125,18 @@
                 <Insets top="50"/>
             </GridPane.margin>
         </Label>
-        <ListView fx:id="arbitratorsListView" GridPane.columnIndex="1" GridPane.rowIndex="6" prefHeight="120.0">
+        <ListView fx:id="arbitratorsListView" GridPane.columnIndex="1" GridPane.rowIndex="6" prefHeight="80.0">
             <GridPane.margin>
                 <Insets top="40"/>
             </GridPane.margin>
         </ListView>
         <Button text="Add arbitrator" onAction="#onOpenArbitratorScreen" GridPane.columnIndex="1"
                 GridPane.rowIndex="7"/>
-        <ImageView GridPane.rowIndex="8" GridPane.valignment="TOP" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true"
-                   preserveRatio="true">
-            <image>
-                <fx:reference source="infoIcon"/>
-            </image>
-            <GridPane.margin>
-                <Insets right="2.0" top="4.0"/>
-            </GridPane.margin>
-        </ImageView>
-        <TextFlow GridPane.columnIndex="1" GridPane.rowIndex="8" prefWidth="410.0">
-            <Label prefWidth="410.0" wrapText="true"
-                   text="Select your arbitrators. You need to choose at least 3 arbitrators. The more you choose the more trading possibilities you gain."/>
-            <Hyperlink text="%shared.readMore" id="info-link" onAction="#onOpenArbitratorsHelp"/>
-            <GridPane.margin>
-                <Insets top="10" bottom="5.0"/>
-            </GridPane.margin>
-        </TextFlow>
+
+
+        <InfoDisplay gridPane="$root" onAction="#onOpenArbitratorsHelp" rowIndex="8"
+                     text="You need to choose at least 3 arbitrators."/>
+
         <Button fx:id="doneButton" text="Completed" onAction="#onDone" disable="true" GridPane.columnIndex="1"
                 GridPane.rowIndex="9"
                 defaultButton="true">
@@ -185,21 +147,21 @@
     </children>
 
     <columnConstraints>
-        <ColumnConstraints halignment="RIGHT" prefWidth="140.0"/>
-        <ColumnConstraints hgrow="ALWAYS" prefWidth="470"/>
+        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="140.0"/>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
     </columnConstraints>
 
     <rowConstraints>
         <RowConstraints vgrow="SOMETIMES"/>
-        <RowConstraints vgrow="NEVER" minHeight="30.0"/>
+        <RowConstraints vgrow="NEVER"/>
         <RowConstraints vgrow="NEVER"/>
 
         <RowConstraints vgrow="SOMETIMES"/>
-        <RowConstraints vgrow="NEVER" minHeight="30.0"/>
+        <RowConstraints vgrow="NEVER"/>
         <RowConstraints vgrow="NEVER"/>
 
         <RowConstraints vgrow="SOMETIMES"/>
-        <RowConstraints vgrow="NEVER" minHeight="30.0"/>
+        <RowConstraints vgrow="NEVER"/>
         <RowConstraints vgrow="NEVER"/>
 
         <RowConstraints vgrow="NEVER"/>

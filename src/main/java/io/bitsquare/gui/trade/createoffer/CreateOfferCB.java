@@ -20,6 +20,7 @@ package io.bitsquare.gui.trade.createoffer;
 import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.MainController;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.btc.AddressTextField;
@@ -50,7 +51,6 @@ import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
-import javafx.scene.text.*;
 import javafx.stage.Window;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -79,9 +79,8 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     private ImageView collapse;
     private PopOver totalToPayInfoPopover;
 
+    @FXML private InfoDisplay advancedInfoDisplay, fundsBoxInfoDisplay;
     @FXML private ScrollPane scrollPane;
-    @FXML private ImageView payFundsInfoIcon, showDetailsInfoIcon;
-    @FXML private TextFlow payFundsInfoTextFlow, showDetailsInfoLabel;
     @FXML private Pane priceAmountPane, payFundsPane, showDetailsPane;
     @FXML private Label buyLabel, priceAmountTitleLabel, addressLabel,
             balanceLabel, payFundsTitleLabel, totalToPayLabel, totalToPayInfoIconLabel,
@@ -175,8 +174,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         addressTextField.setVisible(true);
         balanceLabel.setVisible(true);
         balanceTextField.setVisible(true);
-        payFundsInfoIcon.setVisible(true);
-        payFundsInfoTextFlow.setVisible(true);
+        fundsBoxInfoDisplay.setVisible(true);
         showAdvancedSettingsButton.setVisible(true);
 
         if (expand == null) {
@@ -297,7 +295,9 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         });
 
         presentationModel.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
-            if (newValue != null) {
+            if (newValue) {
+                MainController.GET_INSTANCE().blurContentScreen();
+
                 // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added 
                 // our own actions.
                 List<Action> actions = new ArrayList<>();
@@ -319,6 +319,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
                             e.printStackTrace();
                         }
                         Dialog.Actions.CLOSE.handle(actionEvent);
+                        MainController.GET_INSTANCE().removeContentScreenBlur();
                     }
                 });
 
@@ -390,34 +391,25 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         toggleDetailsScreen(true);
     }
 
-    private void initEditIcons() {
-        advancedScreenInited = true;
-        acceptedCountriesLabelIcon.setId("clickable-icon");
-        AwesomeDude.setIcon(acceptedCountriesLabelIcon, AwesomeIcon.EDIT_SIGN);
-        Tooltip.install(acceptedCountriesLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
-        acceptedCountriesLabelIcon.setOnMouseClicked(e -> openSettings());
-
-        acceptedLanguagesLabelIcon.setId("clickable-icon");
-        AwesomeDude.setIcon(acceptedLanguagesLabelIcon, AwesomeIcon.EDIT_SIGN);
-        Tooltip.install(acceptedLanguagesLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
-        acceptedLanguagesLabelIcon.setOnMouseClicked(e -> openSettings());
-
-        acceptedArbitratorsLabelIcon.setId("clickable-icon");
-        AwesomeDude.setIcon(acceptedArbitratorsLabelIcon, AwesomeIcon.EDIT_SIGN);
-        Tooltip.install(acceptedArbitratorsLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
-        acceptedArbitratorsLabelIcon.setOnMouseClicked(e -> openSettings());
-    }
-
     private void hideDetailsScreen() {
         payFundsPane.setId("form-group-background-active");
         payFundsTitleLabel.setId("form-group-title-active");
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.layout();
-
         toggleDetailsScreen(false);
     }
 
     private void toggleDetailsScreen(boolean visible) {
+        scrollPane.setOnScroll(scrollEvent -> {
+            if (!visible)
+                scrollEvent.consume();
+        });
+
+        // deactivate mouse wheel scrolling if hidden
+        scrollPane.setVmax(visible ? scrollPane.getHeight() : 0);
+        scrollPane.setVvalue(visible ? scrollPane.getHeight() : 0);
+
+
         showDetailsPane.setVisible(visible);
         showDetailsTitleLabel.setVisible(visible);
 
@@ -438,8 +430,25 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         bankAccountCountyLabel.setVisible(visible);
         bankAccountCountyTextField.setVisible(visible);
 
-        showDetailsInfoIcon.setVisible(visible);
-        showDetailsInfoLabel.setVisible(visible);
+        advancedInfoDisplay.setVisible(visible);
+    }
+
+    private void initEditIcons() {
+        advancedScreenInited = true;
+        acceptedCountriesLabelIcon.setId("clickable-icon");
+        AwesomeDude.setIcon(acceptedCountriesLabelIcon, AwesomeIcon.EDIT_SIGN);
+        Tooltip.install(acceptedCountriesLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
+        acceptedCountriesLabelIcon.setOnMouseClicked(e -> openSettings());
+
+        acceptedLanguagesLabelIcon.setId("clickable-icon");
+        AwesomeDude.setIcon(acceptedLanguagesLabelIcon, AwesomeIcon.EDIT_SIGN);
+        Tooltip.install(acceptedLanguagesLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
+        acceptedLanguagesLabelIcon.setOnMouseClicked(e -> openSettings());
+
+        acceptedArbitratorsLabelIcon.setId("clickable-icon");
+        AwesomeDude.setIcon(acceptedArbitratorsLabelIcon, AwesomeIcon.EDIT_SIGN);
+        Tooltip.install(acceptedArbitratorsLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
+        acceptedArbitratorsLabelIcon.setOnMouseClicked(e -> openSettings());
     }
 
     private void setupTotalToPayInfoIconLabel() {
