@@ -20,7 +20,6 @@ package io.bitsquare.gui;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.orders.OrdersController;
 import io.bitsquare.gui.util.BSFormatter;
@@ -33,6 +32,7 @@ import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;
+import io.bitsquare.util.BSFXMLLoader;
 
 import com.google.bitcoin.core.Coin;
 
@@ -85,6 +85,7 @@ public class MainController extends ViewController {
     private Pane ordersButtonButtonHolder;
     private boolean messageFacadeInited;
     private boolean walletFacadeInited;
+    private NavigationItem previousNavigationItem;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -321,7 +322,7 @@ public class MainController extends ViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void loadView(NavigationItem navigationItem) {
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
             final Node view = loader.load();
             viewBuilder.contentPane.getChildren().setAll(view);
@@ -336,9 +337,7 @@ public class MainController extends ViewController {
             persistence.write(this, "selectedNavigationItem", navigationItem);
         } catch (IOException e) {
             log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            log.error(e.getCause().toString());
-            log.error(e.getMessage());
-            log.error(e.getStackTrace().toString());
+            e.getStackTrace();
         }
     }
 
@@ -447,6 +446,14 @@ public class MainController extends ViewController {
         vBox.setAlignment(Pos.CENTER);
         vBox.getChildren().setAll(comboBox, titleLabel);
         parent.getChildren().add(vBox);
+    }
+
+    public void setPreviousNavigationItem(NavigationItem previousNavigationItem) {
+        this.previousNavigationItem = previousNavigationItem;
+    }
+
+    public NavigationItem getPreviousNavigationItem() {
+        return previousNavigationItem;
     }
 }
 

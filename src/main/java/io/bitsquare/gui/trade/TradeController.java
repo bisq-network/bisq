@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.trade;
 
-import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.InputTextField;
@@ -25,6 +24,7 @@ import io.bitsquare.gui.trade.createoffer.CreateOfferCB;
 import io.bitsquare.gui.trade.orderbook.OrderBookController;
 import io.bitsquare.gui.trade.takeoffer.TakeOfferController;
 import io.bitsquare.trade.Direction;
+import io.bitsquare.util.BSFXMLLoader;
 
 import java.io.IOException;
 
@@ -49,7 +49,7 @@ public class TradeController extends CachedViewController {
     protected OrderBookController orderBookController;
     protected CreateOfferCB createOfferCodeBehind;
     protected TakeOfferController takeOfferController;
-    protected GuiceFXMLLoader orderBookLoader;
+    protected BSFXMLLoader orderBookLoader;
     private Node createOfferView;
 
 
@@ -111,7 +111,7 @@ public class TradeController extends CachedViewController {
             checkArgument(orderBookLoader == null);
             // Orderbook must not be cached by GuiceFXMLLoader as we use 2 instances for sell and buy screens.
             orderBookLoader =
-                    new GuiceFXMLLoader(getClass().getResource(NavigationItem.ORDER_BOOK.getFxmlUrl()), false);
+                    new BSFXMLLoader(getClass().getResource(NavigationItem.ORDER_BOOK.getFxmlUrl()), false);
             try {
                 final Parent view = orderBookLoader.load();
                 final Tab tab = new Tab("Orderbook");
@@ -130,7 +130,7 @@ public class TradeController extends CachedViewController {
 
             // CreateOffer and TakeOffer must not be cached by GuiceFXMLLoader as we cannot use a view multiple times
             // in different graphs
-            GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
+            BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
             try {
                 createOfferView = loader.load();
                 createOfferCodeBehind = loader.getController();
@@ -150,7 +150,7 @@ public class TradeController extends CachedViewController {
 
             // CreateOffer and TakeOffer must not be cached by GuiceFXMLLoader as we cannot use a view multiple times
             // in different graphs
-            GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
+            BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
             try {
                 final Parent view = loader.load();
                 takeOfferController = loader.getController();

@@ -18,7 +18,7 @@
 package io.bitsquare.gui.settings;
 
 import io.bitsquare.di.BitSquareModule;
-import io.bitsquare.di.GuiceFXMLLoader;
+import io.bitsquare.util.BSFXMLLoader;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -54,7 +54,7 @@ public class PasswordUITestRunner extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException {
         Injector injector = Guice.createInjector(new BitSquareModule());
-        GuiceFXMLLoader.setInjector(injector);
+        BSFXMLLoader.setInjector(injector);
 
         pane = new StackPane();
         scene = new Scene(pane, 1000, 630);
@@ -67,8 +67,8 @@ public class PasswordUITestRunner extends Application {
     public void loadMainWindow() {
         log.debug("re load");
         pane.getChildren().removeAll();
-        GuiceFXMLLoader loader = new GuiceFXMLLoader(
-                getUrl("/io/bitsquare/gui/account/password/PasswordView.fxml"), false);
+        BSFXMLLoader loader = new BSFXMLLoader(
+                getUrl("/io/bitsquare/gui/account/addpassword/PasswordView.fxml"), false);
         try {
             view = loader.load();
             pane.getChildren().setAll(view);

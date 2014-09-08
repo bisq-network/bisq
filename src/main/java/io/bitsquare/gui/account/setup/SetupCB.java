@@ -17,17 +17,18 @@
 
 package io.bitsquare.gui.account.setup;
 
-import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.CodeBehind;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.account.AccountCB;
+import io.bitsquare.gui.account.addpassword.PasswordCB;
 import io.bitsquare.gui.account.fiataccount.FiatAccountCB;
-import io.bitsquare.gui.account.password.PasswordCB;
 import io.bitsquare.gui.account.registration.RegistrationCB;
 import io.bitsquare.gui.account.restrictions.RestrictionsCB;
 import io.bitsquare.gui.account.seedwords.SeedWordsCB;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.util.BSFXMLLoader;
 
 import java.io.IOException;
 
@@ -74,14 +75,14 @@ public class SetupCB extends CachedCodeBehind<SetupPM> {
         seedWords = new WizardItem(this, content, "Backup wallet seed", "Write down the seed word for your wallet",
                 NavigationItem.SEED_WORDS);
         password = new WizardItem(this, content, "Setup password", "Protect your wallet with a password",
-                NavigationItem.PASSWORD);
+                NavigationItem.ADD_PASSWORD);
         restrictions = new WizardItem(this, content, "Setup your preferences",
                 "Define your preferences with whom you want to trade",
                 NavigationItem.RESTRICTIONS);
         fiatAccount = new WizardItem(this, content, " Setup Payments account(s)",
                 "You need to add a payments account to your trading account",
                 NavigationItem.FIAT_ACCOUNT);
-        registration = new WizardItem(this, root, "Register your account",
+        registration = new WizardItem(this, content, "Register your account",
                 "Pay in the registration fee of 0.0002 BTC and store your account in the BTC block chain",
                 NavigationItem.REGISTRATION);
 
@@ -110,11 +111,10 @@ public class SetupCB extends CachedCodeBehind<SetupPM> {
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     public void onCompleted(CodeBehind<? extends PresentationModel> childView) {
         if (childView instanceof SeedWordsCB) {
             seedWords.onCompleted();
-            childController = password.show(NavigationItem.PASSWORD);
+            childController = password.show(NavigationItem.ADD_PASSWORD);
         }
         else if (childView instanceof PasswordCB) {
             password.onCompleted();
@@ -131,6 +131,8 @@ public class SetupCB extends CachedCodeBehind<SetupPM> {
         else if (childView instanceof RegistrationCB) {
             registration.onCompleted();
             childController = null;
+
+            ((AccountCB) parentController).removeSetup();
         }
     }
 
@@ -233,7 +235,7 @@ class WizardItem extends HBox {
     }
 
     private void loadView(NavigationItem navigationItem) {
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
             final Pane view = loader.load();
             ((AnchorPane) content).getChildren().setAll(view);
@@ -241,9 +243,7 @@ class WizardItem extends HBox {
             childController.setParentController(parentCB);
         } catch (IOException e) {
             log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            // log.error(e.getCause().toString());
-            log.error(e.getMessage());
-            log.error(e.getStackTrace().toString());
+            e.getStackTrace();
         }
 
     }

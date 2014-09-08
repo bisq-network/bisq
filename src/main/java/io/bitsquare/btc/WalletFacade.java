@@ -234,6 +234,7 @@ public class WalletFacade {
             registrationAddressEntry = addressEntryList.get(0);
         }
         else {
+            // First time
             lock.lock();
             DeterministicKey registrationKey = wallet.currentReceiveKey();
             registrationAddressEntry = new AddressEntry(registrationKey, params,
@@ -479,7 +480,7 @@ public class WalletFacade {
     }
 
     public boolean isRegistrationFeeBalanceSufficient() {
-        return getRegistrationBalance().compareTo(FeePolicy.ACCOUNT_REGISTRATION_FEE) >= 0;
+        return getRegistrationBalance().compareTo(FeePolicy.REGISTRATION_FEE) >= 0;
     }
 
     //TODO
@@ -505,18 +506,22 @@ public class WalletFacade {
                 getRegistrationAddressEntry().getKey(), stringifiedBankAccounts);
         tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 
-        Coin fee = FeePolicy.ACCOUNT_REGISTRATION_FEE
+        // We don't take a fee at the moment
+        // 0.0000454 BTC will get extra to miners as it is lower then durst 
+       /* Coin fee = FeePolicy.REGISTRATION_FEE
                 .subtract(Transaction.MIN_NONDUST_OUTPUT)
                 .subtract(FeePolicy.TX_FEE);
         log.trace("fee: " + fee.toFriendlyString());
-        tx.addOutput(fee, feePolicy.getAddressForRegistrationFee());
+        tx.addOutput(fee, feePolicy.getAddressForRegistrationFee());*/
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         sendRequest.shuffleOutputs = false;
-        // we don't allow spending of unconfirmed tx as with fake registrations we would open up doors for spam and
-        // market manipulation with fake offers
-        // so set includePending to false
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getRegistrationAddressEntry(), false);
+
+        // We accept at the moment registration fee payment with 0 confirmations.
+        // The verification will be done at the end of the trade process again, and then a double spend would be
+        // detected and lead to arbitration.
+        // The last param (boolean includePending) is used for indicating that we accept 0 conf tx.
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getRegistrationAddressEntry(), true);
         sendRequest.changeAddress = getRegistrationAddressEntry().getAddress();
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);

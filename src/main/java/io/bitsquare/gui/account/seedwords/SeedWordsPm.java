@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 public class SeedWordsPM extends PresentationModel<SeedWordsModel> {
     private static final Logger log = LoggerFactory.getLogger(SeedWordsPM.class);
 
-    StringProperty seedWords = new SimpleStringProperty();
+    final StringProperty seedWords = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

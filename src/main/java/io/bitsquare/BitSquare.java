@@ -19,7 +19,6 @@ package io.bitsquare;
 
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.BitSquareModule;
-import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.Profiler;
@@ -28,6 +27,7 @@ import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
 import io.bitsquare.util.AWTSystemTray;
+import io.bitsquare.util.BSFXMLLoader;
 
 import com.google.common.base.Throwables;
 
@@ -111,10 +111,10 @@ public class BitSquare extends Application {
 
         primaryStage.setTitle("BitSquare (" + APP_NAME + ")");
 
-        GuiceFXMLLoader.setInjector(injector);
+        BSFXMLLoader.setInjector(injector);
 
-        final GuiceFXMLLoader loader =
-                new GuiceFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), false);
+        final BSFXMLLoader loader =
+                new BSFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), false);
         try {
             final Parent view = loader.load();
 

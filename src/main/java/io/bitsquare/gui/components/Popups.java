@@ -42,6 +42,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Collection of controlsfx Popups
+ * <p>
+ * TODO Replace it with custom views as they are graphically more flexible and the Dialogs are a bit limited from the
+ * API
  */
 public class Popups {
     private static final Logger log = LoggerFactory.getLogger(Popups.class);

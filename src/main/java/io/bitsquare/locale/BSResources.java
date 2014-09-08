@@ -49,7 +49,7 @@ public class BSResources {
             return BSResources.getResourceBundle().getString(key);
         } catch (MissingResourceException e) {
             log.error("MissingResourceException for key: " + key);
-            return key + " is missing";
+            return "# " + key;
         }
     }
 

@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.di;
+package io.bitsquare.util;
 
 import io.bitsquare.locale.BSResources;
 
@@ -36,8 +36,8 @@ import org.slf4j.LoggerFactory;
  * Guice support for fxml controllers
  * Support caching to speed up switches between UI screens.
  */
-public class GuiceFXMLLoader {
-    private static final Logger log = LoggerFactory.getLogger(GuiceFXMLLoader.class);
+public class BSFXMLLoader {
+    private static final Logger log = LoggerFactory.getLogger(BSFXMLLoader.class);
     private static Injector injector = null;
     private FXMLLoader loader;
     private final boolean isCached;
@@ -45,25 +45,25 @@ public class GuiceFXMLLoader {
     private Item item;
 
     public static void setInjector(Injector injector) {
-        GuiceFXMLLoader.injector = injector;
+        BSFXMLLoader.injector = injector;
     }
 
     // TODO maybe add more sophisticated caching strategy with removal of rarely accessed items
     private static final Map<URL, Item> cachedGUIItems = new HashMap<>();
 
-    public GuiceFXMLLoader(URL url) {
+    public BSFXMLLoader(URL url) {
         this(url, true);
     }
 
-    public GuiceFXMLLoader(URL url, boolean useCaching) {
+    public BSFXMLLoader(URL url, boolean useCaching) {
         this.url = url;
 
         isCached = useCaching && cachedGUIItems.containsKey(url);
         if (!isCached) {
             loader = new FXMLLoader(url, BSResources.getResourceBundle());
 
-            if (GuiceFXMLLoader.injector != null)
-                loader.setControllerFactory(new GuiceControllerFactory(GuiceFXMLLoader.injector));
+            if (BSFXMLLoader.injector != null)
+                loader.setControllerFactory(new GuiceControllerFactory(BSFXMLLoader.injector));
         }
     }
 

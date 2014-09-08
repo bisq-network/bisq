@@ -15,15 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.account;
+package io.bitsquare.gui.account.addpassword;
 
 import io.bitsquare.gui.CachedCodeBehind;
-import io.bitsquare.gui.CodeBehind;
-import io.bitsquare.gui.MainController;
-import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.util.BSFXMLLoader;
-
-import java.io.IOException;
+import io.bitsquare.gui.account.settings.AccountSettingsCB;
+import io.bitsquare.gui.account.setup.SetupCB;
+import io.bitsquare.gui.help.Help;
+import io.bitsquare.gui.help.HelpId;
 
 import java.net.URL;
 
@@ -31,6 +29,7 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -38,10 +37,13 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountCB extends CachedCodeBehind<AccountPM> {
+public class PasswordCB extends CachedCodeBehind<PasswordPM> {
 
-    private static final Logger log = LoggerFactory.getLogger(AccountCB.class);
-    public Tab tab;
+    private static final Logger log = LoggerFactory.getLogger(PasswordCB.class);
+
+    @FXML private HBox buttonsHBox;
+    @FXML private Button saveButton, skipButton;
+    @FXML private PasswordField oldPasswordField, passwordField, repeatedPasswordField;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +51,7 @@ public class AccountCB extends CachedCodeBehind<AccountPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AccountCB(AccountPM presentationModel) {
+    public PasswordCB(PasswordPM presentationModel) {
         super(presentationModel);
     }
 
@@ -61,22 +63,16 @@ public class AccountCB extends CachedCodeBehind<AccountPM> {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
+
+        passwordField.textProperty().bindBidirectional(presentationModel.passwordField);
+        repeatedPasswordField.textProperty().bindBidirectional(presentationModel.repeatedPasswordField);
+
+        saveButton.disableProperty().bind(presentationModel.saveButtonDisabled);
     }
 
     @Override
     public void activate() {
         super.activate();
-
-        if (childController == null) {
-            if (presentationModel.getNeedRegistration()) {
-                childController = loadView(NavigationItem.ACCOUNT_SETUP);
-                tab.setText("Account setup");
-            }
-            else {
-                childController = loadView(NavigationItem.ACCOUNT_SETTINGS);
-                tab.setText("Account settings");
-            }
-        }
     }
 
     @Override
@@ -89,42 +85,48 @@ public class AccountCB extends CachedCodeBehind<AccountPM> {
         super.terminate();
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Navigation
+    // Override from CodeBehind
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Initializable loadView(NavigationItem navigationItem) {
-        super.loadView(navigationItem);
-
-        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
-        try {
-            Pane view = loader.load();
-            tab.setContent(view);
-            Initializable childController = loader.getController();
-            ((CodeBehind) childController).setParentController(this);
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + NavigationItem.ACCOUNT_SETUP.getFxmlUrl());
-            e.getStackTrace();
+    public void setParentController(Initializable parentController) {
+        super.setParentController(parentController);
+        if (parentController instanceof AccountSettingsCB) {
+            buttonsHBox.getChildren().remove(skipButton);
         }
-        return childController;
     }
 
-    public void removeSetup() {
-        childController = null;
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-        NavigationItem previousItem = MainController.GET_INSTANCE().getPreviousNavigationItem();
-        if (previousItem == null)
-            previousItem = NavigationItem.HOME;
-
-        MainController.GET_INSTANCE().loadViewAndGetChildController(previousItem);
+    @FXML
+    private void onSaved() {
+        boolean result = presentationModel.savePassword();
+        if (result) {
+            if (parentController instanceof SetupCB)
+                ((SetupCB) parentController).onCompleted(this);
+        }
+        else {
+            log.debug(presentationModel.errorMessage); // TODO use validating TF
+        }
     }
 
+    @FXML
+    private void onOpenHelp() {
+        Help.openWindow(HelpId.SETUP_PASSWORD);
+    }
+
+    public void onSkipped() {
+        if (parentController instanceof SetupCB)
+            ((SetupCB) parentController).onCompleted(this);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
+
 
 }
 

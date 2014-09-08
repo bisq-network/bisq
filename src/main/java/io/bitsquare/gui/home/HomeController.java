@@ -18,10 +18,10 @@
 package io.bitsquare.gui.home;
 
 import io.bitsquare.BitSquare;
-import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.arbitrators.registration.ArbitratorRegistrationController;
+import io.bitsquare.util.BSFXMLLoader;
 
 import java.io.IOException;
 
@@ -72,7 +72,7 @@ public class HomeController extends CachedViewController {
     @Override
     public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
         // don't use caching here, cause exc. -> need to investigate and is rarely called so no caching is better
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
+        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
         try {
             final Parent view = loader.load();
             arbitratorRegistrationController = loader.getController();

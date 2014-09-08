@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.account.password;
+package io.bitsquare.gui.account.addpassword;
 
 import io.bitsquare.gui.UIModel;
 

@@ -240,7 +240,7 @@ public class OrderBookController extends CachedViewController {
                     nextController = ((ViewController) parentController).loadViewAndGetChildController(NavigationItem
                             .CREATE_OFFER);
                 else if (parentController instanceof CodeBehind)
-                    nextController = ((CodeBehind) parentController).loadViewAndGetChildController(NavigationItem
+                    nextController = ((CodeBehind) parentController).loadView(NavigationItem
                             .CREATE_OFFER);
             }
 
@@ -279,6 +279,9 @@ public class OrderBookController extends CachedViewController {
                 MainController.GET_INSTANCE().removeContentScreenBlur();
 
                 MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.ACCOUNT);
+                MainController.GET_INSTANCE()
+                        .setPreviousNavigationItem((orderBookFilter.getDirection() == Direction.BUY) ?
+                                NavigationItem.BUY : NavigationItem.SELL);
             }
         });
         Popups.openInfo("You need to setup your trading account before you can trade.",
@@ -324,7 +327,7 @@ public class OrderBookController extends CachedViewController {
                                     .TAKE_OFFER);
                 else if (parentController instanceof CodeBehind)
                     takeOfferController = (TakeOfferController) ((CodeBehind) parentController)
-                            .loadViewAndGetChildController(NavigationItem
+                            .loadView(NavigationItem
                                     .TAKE_OFFER);
             }
 

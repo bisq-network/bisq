@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.settings;
+package io.bitsquare.gui.account;
 
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.util.BSFXMLLoader;
@@ -40,8 +40,8 @@ import org.slf4j.LoggerFactory;
 /**
  * For testing single isolated UI screens
  */
-public class FiatAccountUITestRunner extends Application {
-    private static final Logger log = LoggerFactory.getLogger(FiatAccountUITestRunner.class);
+public class AccountSettingsUITestRunner extends Application {
+    private static final Logger log = LoggerFactory.getLogger(AccountSettingsUITestRunner.class);
     private Scene scene;
     private Pane view;
     private Pane pane;
@@ -68,7 +68,7 @@ public class FiatAccountUITestRunner extends Application {
         log.debug("re load");
         pane.getChildren().removeAll();
         BSFXMLLoader loader = new BSFXMLLoader(
-                getUrl("/io/bitsquare/gui/account/fiataccount/FiatAccountView.fxml"), false);
+                getUrl("/io/bitsquare/gui/account/settings/AccountSettingsView.fxml"), false);
         try {
             view = loader.load();
             pane.getChildren().setAll(view);

@@ -15,9 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.account.password;
+package io.bitsquare.gui.account.changepassword;
 
 import io.bitsquare.gui.CachedCodeBehind;
+import io.bitsquare.gui.account.settings.AccountSettingsCB;
 import io.bitsquare.gui.account.setup.SetupCB;
 import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
@@ -29,7 +30,9 @@ import java.util.ResourceBundle;
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +41,8 @@ public class PasswordCB extends CachedCodeBehind<PasswordPM> {
 
     private static final Logger log = LoggerFactory.getLogger(PasswordCB.class);
 
-    @FXML private Button saveButton;
+    @FXML private HBox buttonsHBox;
+    @FXML private Button saveButton, skipButton;
     @FXML private PasswordField passwordField, repeatedPasswordField;
 
 
@@ -81,6 +85,17 @@ public class PasswordCB extends CachedCodeBehind<PasswordPM> {
         super.terminate();
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Override from CodeBehind
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void setParentController(Initializable parentController) {
+        super.setParentController(parentController);
+        if (parentController instanceof AccountSettingsCB) {
+            buttonsHBox.getChildren().remove(skipButton);
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI handlers
@@ -89,10 +104,13 @@ public class PasswordCB extends CachedCodeBehind<PasswordPM> {
     @FXML
     private void onSaved() {
         boolean result = presentationModel.savePassword();
-        if (result)
-            ((SetupCB) parentController).onCompleted(this);
-        else
+        if (result) {
+            if (parentController instanceof SetupCB)
+                ((SetupCB) parentController).onCompleted(this);
+        }
+        else {
             log.debug(presentationModel.errorMessage); // TODO use validating TF
+        }
     }
 
     @FXML
@@ -101,7 +119,8 @@ public class PasswordCB extends CachedCodeBehind<PasswordPM> {
     }
 
     public void onSkipped() {
-        ((SetupCB) parentController).onCompleted(this);
+        if (parentController instanceof SetupCB)
+            ((SetupCB) parentController).onCompleted(this);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

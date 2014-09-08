@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.util.BSFXMLLoader;
 
 import java.io.IOException;
 
@@ -96,7 +96,7 @@ public class CachingTabPane extends TabPane {
         selectedTabIndex = getSelectionModel().getSelectedIndex();
         TabInfo selectedTabInfo = tabInfoList.get(selectedTabIndex);
 
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(selectedTabInfo.url));
+        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(selectedTabInfo.url));
         try {
             Node view = loader.load();
             selectedTabInfo.controller = loader.getController();

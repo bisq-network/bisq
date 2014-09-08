@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.account.password;
+package io.bitsquare.gui.account.addpassword;
 
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -34,12 +34,12 @@ import org.slf4j.LoggerFactory;
 public class PasswordPM extends PresentationModel<PasswordModel> {
     private static final Logger log = LoggerFactory.getLogger(PasswordPM.class);
 
-    private PasswordValidator passwordValidator = new PasswordValidator();
+    private final PasswordValidator passwordValidator = new PasswordValidator();
 
     String errorMessage;
-    StringProperty passwordField = new SimpleStringProperty();
-    StringProperty repeatedPasswordField = new SimpleStringProperty();
-    BooleanProperty saveButtonDisabled = new SimpleBooleanProperty(true);
+    final StringProperty passwordField = new SimpleStringProperty();
+    final StringProperty repeatedPasswordField = new SimpleStringProperty();
+    final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty(true);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor

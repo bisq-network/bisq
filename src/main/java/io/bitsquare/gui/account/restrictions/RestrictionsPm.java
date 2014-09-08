@@ -37,7 +37,7 @@ public class RestrictionsPM extends PresentationModel<RestrictionsModel> {
     private static final Logger log = LoggerFactory.getLogger(RestrictionsPM.class);
 
 
-    public BooleanProperty doneButtonDisabled = new SimpleBooleanProperty(true);
+    public final BooleanProperty doneButtonDisabled = new SimpleBooleanProperty(true);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

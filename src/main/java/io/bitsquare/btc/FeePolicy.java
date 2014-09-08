@@ -30,13 +30,22 @@ import org.slf4j.LoggerFactory;
 
 public class FeePolicy {
     public static final Coin TX_FEE = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
-    public static final Coin ACCOUNT_REGISTRATION_FEE = Coin.CENT; // 0.01
+
+    // The min. REGISTRATION_FEE calculated with Transaction.MIN_NONDUST_OUTPUT would be 0.00015460 which might lead
+    // to problems for the spending wallet.
+    // Some web wallets don't allow more then 4 decimal places (need more investigation)
+    // So we use 0.0002 as that fits also to our 4 decimal places restriction for BTC values.
+    // The remaining 0.0000454 BTC is given to miners at the moment as it is lower then dust.
+    public static final Coin REGISTRATION_FEE = TX_FEE.add(TX_FEE);
+
     public static final Coin CREATE_OFFER_FEE = Coin.MILLICOIN; // 0.001
     public static final Coin TAKE_OFFER_FEE = CREATE_OFFER_FEE;
     private static final Logger log = LoggerFactory.getLogger(FeePolicy.class);
 
     // those are just dummy yet. trading fees will go probably to arbiters
-    private static final String registrationFeeAddress = "mvkDXt4QmN4Nq9dRUsRigBCaovde9nLkZR";
+    // Not used at the moment
+    // private static final String registrationFeeAddress = "mvkDXt4QmN4Nq9dRUsRigBCaovde9nLkZR";
+
     private static final String createOfferFeeAddress = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";
     private static final String takeOfferFeeAddress = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";
 
@@ -48,15 +57,16 @@ public class FeePolicy {
     }
 
     //TODO who is receiver? other users or dev address? use donation option list?
+    // Not used at the moment
     // (dev, other users, wikileaks, tor, sub projects (bitcoinj, tomp2p,...)...)
-    public Address getAddressForRegistrationFee() {
+ /*   public Address getAddressForRegistrationFee() {
         try {
             return new Address(params, registrationFeeAddress);
         } catch (AddressFormatException e) {
             e.printStackTrace();
             return null;
         }
-    }
+    }*/
 
     //TODO get address form arbitrator list
     public Address getAddressForCreateOfferFee() {

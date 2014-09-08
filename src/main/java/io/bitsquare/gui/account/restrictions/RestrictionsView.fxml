@@ -137,7 +137,7 @@
         <InfoDisplay gridPane="$root" onAction="#onOpenArbitratorsHelp" rowIndex="8"
                      text="You need to choose at least 3 arbitrators."/>
 
-        <Button fx:id="doneButton" text="Completed" onAction="#onDone" disable="true" GridPane.columnIndex="1"
+        <Button fx:id="completedButton" text="Completed" onAction="#onCompleted" disable="true" GridPane.columnIndex="1"
                 GridPane.rowIndex="9"
                 defaultButton="true">
             <GridPane.margin>

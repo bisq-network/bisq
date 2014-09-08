@@ -18,7 +18,6 @@
 package io.bitsquare.gui.arbitrators.browser;
 
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
@@ -28,6 +27,7 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
+import io.bitsquare.util.BSFXMLLoader;
 
 import java.io.IOException;
 
@@ -123,7 +123,7 @@ public class ArbitratorBrowserController extends CachedViewController implements
 
     @Override
     public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
             final Node view = loader.load();
             arbitratorProfileController = loader.getController();

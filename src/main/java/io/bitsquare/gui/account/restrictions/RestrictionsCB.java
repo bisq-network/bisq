@@ -19,15 +19,16 @@ package io.bitsquare.gui.account.restrictions;
 
 import io.bitsquare.BitSquare;
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.di.GuiceFXMLLoader;
 import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.account.settings.AccountSettingsCB;
 import io.bitsquare.gui.account.setup.SetupCB;
 import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
+import io.bitsquare.util.BSFXMLLoader;
 
 import java.io.IOException;
 
@@ -60,7 +61,7 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> {
     @FXML private ComboBox<Locale> languageComboBox;
     @FXML private ComboBox<Region> regionComboBox;
     @FXML private ComboBox<Country> countryComboBox;
-    @FXML private Button doneButton, addAllEuroCountriesButton;
+    @FXML private Button completedButton, addAllEuroCountriesButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +86,7 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> {
         initCountry();
         initArbitrators();
 
-        doneButton.disableProperty().bind(presentationModel.doneButtonDisabled);
+        completedButton.disableProperty().bind(presentationModel.doneButtonDisabled);
     }
 
     @Override
@@ -105,6 +106,19 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> {
     @Override
     public void terminate() {
         super.terminate();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Override from CodeBehind
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void setParentController(Initializable parentController) {
+        super.setParentController(parentController);
+        if (parentController instanceof AccountSettingsCB) {
+            ((GridPane) root).getChildren().remove(completedButton);
+        }
     }
 
 
@@ -140,13 +154,14 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> {
 
     @FXML
     private void onOpenArbitratorScreen() {
-        loadViewAndGetChildController(NavigationItem.ARBITRATOR_BROWSER);
+        loadView(NavigationItem.ARBITRATOR_BROWSER);
     }
 
 
     @FXML
-    private void onDone() {
-        ((SetupCB) parentController).onCompleted(this);
+    private void onCompleted() {
+        if (parentController instanceof SetupCB)
+            ((SetupCB) parentController).onCompleted(this);
     }
 
     @FXML
@@ -170,9 +185,9 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadView(NavigationItem navigationItem) {
         // TODO caching causes exception
-        final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
+        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
         try {
             final Node view = loader.load();
             //TODO Resolve type problem...

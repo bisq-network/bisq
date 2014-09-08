@@ -84,7 +84,7 @@ class CreateOfferModel extends UIModel {
     final StringProperty bankAccountType = new SimpleStringProperty();
     final StringProperty fiatCode = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
-    
+
     final LongProperty collateralAsLong = new SimpleLongProperty();
 
     final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty();
@@ -287,7 +287,7 @@ class CreateOfferModel extends UIModel {
         this.direction = direction;
     }
 
-    public WalletFacade getWalletFacade() {
+    WalletFacade getWalletFacade() {
         return walletFacade;
     }
 

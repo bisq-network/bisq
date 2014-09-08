@@ -178,7 +178,6 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         model.requestPlaceOfferSuccess.set(false);
 
         isPlaceOfferButtonDisabled.set(true);
-        // isPlaceOfferButtonVisible.set(true);
 
         model.placeOffer();
     }

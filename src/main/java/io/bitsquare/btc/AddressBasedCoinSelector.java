@@ -128,13 +128,17 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector {
             if (addressEntry != null && addressOutput.equals(addressEntry.getAddress())) {
                 return true;
             }
+            log.warn("No match found at matchesRequiredAddress addressOutput/addressEntry " + addressOutput.toString
+                    () + "/" + addressEntry.getAddress().toString());
         }
         return false;
     }
 
     @Override
     public CoinSelection select(Coin target, List<TransactionOutput> candidates) {
+        log.debug("candidates.size: " + candidates.size());
         long targetAsLong = target.longValue();
+        log.debug("value needed: " + targetAsLong);
         HashSet<TransactionOutput> selected = new HashSet<>();
         // Sort the inputs by age*value so we get the highest "coindays" spent.
         // TODO: Consider changing the wallets internal format to track just outputs and keep them ordered.
@@ -159,6 +163,8 @@ public class AddressBasedCoinSelector extends DefaultCoinSelector {
 
             selected.add(output);
             total += output.getValue().longValue();
+
+            log.debug("adding up outputs: output/total: " + output.getValue().longValue() + "/" + total);
         }
         // Total may be lower than target here, if the given candidates were insufficient to create to requested
         // transaction.

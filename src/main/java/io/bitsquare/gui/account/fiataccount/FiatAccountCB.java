@@ -20,6 +20,7 @@ package io.bitsquare.gui.account.fiataccount;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.gui.CachedCodeBehind;
+import io.bitsquare.gui.account.settings.AccountSettingsCB;
 import io.bitsquare.gui.account.setup.SetupCB;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
@@ -40,7 +41,9 @@ import javax.inject.Inject;
 
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
 
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
@@ -54,10 +57,11 @@ public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> {
 
     private static final Logger log = LoggerFactory.getLogger(FiatAccountCB.class);
 
+    @FXML private HBox buttonsHBox;
     @FXML private ComboBox<Region> regionComboBox;
     @FXML private ComboBox<Country> countryComboBox;
     @FXML private InputTextField titleTextField, holderNameTextField, primaryIDTextField, secondaryIDTextField;
-    @FXML private Button saveButton, doneButton, removeBankAccountButton;
+    @FXML private Button saveButton, completedButton, removeBankAccountButton;
     @FXML private ComboBox<BankAccount> selectionComboBox;
     @FXML private ComboBox<BankAccountType> typesComboBox;
     @FXML private ComboBox<Currency> currencyComboBox;
@@ -118,6 +122,19 @@ public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Override from CodeBehind
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void setParentController(Initializable parentController) {
+        super.setParentController(parentController);
+        if (parentController instanceof AccountSettingsCB) {
+            buttonsHBox.getChildren().remove(completedButton);
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -160,7 +177,7 @@ public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> {
     }
 
     @FXML
-    private void onDone() {
+    private void onCompleted() {
         if (parentController != null)
             ((SetupCB) parentController).onCompleted(this);
     }
@@ -230,7 +247,8 @@ public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> {
         });
 
         presentationModel.getAllBankAccounts().addListener((ListChangeListener<BankAccount>) change ->
-                doneButton.setDisable(change.getList().isEmpty()));
+                completedButton.setDisable(presentationModel.getAllBankAccounts().isEmpty()));
+        completedButton.setDisable(presentationModel.getAllBankAccounts().isEmpty());
     }
 
     private void setupBindings() {

@@ -15,28 +15,30 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.account;
+package io.bitsquare.gui.account.changepassword;
 
 import io.bitsquare.gui.UIModel;
-import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountModel extends UIModel {
-    private static final Logger log = LoggerFactory.getLogger(AccountModel.class);
-    private User user;
+public class PasswordModel extends UIModel {
+    private static final Logger log = LoggerFactory.getLogger(PasswordModel.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AccountModel(User user) {
+    public PasswordModel() {
 
-        this.user = user;
+    }
+
+    void savePassword(String password) {
+
+        //TODO Implement password encryption for wallet
     }
 
 
@@ -54,10 +56,7 @@ public class AccountModel extends UIModel {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    boolean getNeedRegistration() {
-        return user.getAccountId() == null;
 
-    }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////

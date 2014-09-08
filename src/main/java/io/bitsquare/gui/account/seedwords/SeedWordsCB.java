@@ -18,6 +18,7 @@
 package io.bitsquare.gui.account.seedwords;
 
 import io.bitsquare.gui.CachedCodeBehind;
+import io.bitsquare.gui.account.settings.AccountSettingsCB;
 import io.bitsquare.gui.account.setup.SetupCB;
 import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
@@ -29,7 +30,9 @@ import java.util.ResourceBundle;
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +41,9 @@ public class SeedWordsCB extends CachedCodeBehind<SeedWordsPM> {
 
     private static final Logger log = LoggerFactory.getLogger(SeedWordsCB.class);
 
+    @FXML private Button completedButton;
     @FXML private TextArea seedWordsTextArea;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -78,12 +83,27 @@ public class SeedWordsCB extends CachedCodeBehind<SeedWordsPM> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Override from CodeBehind
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void setParentController(Initializable parentController) {
+        super.setParentController(parentController);
+        if (parentController instanceof AccountSettingsCB) {
+            ((GridPane) root).getChildren().remove(completedButton);
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
-    private void onDone() {
-        ((SetupCB) parentController).onCompleted(this);
+    private void onCompleted() {
+        if (parentController instanceof SetupCB)
+            if (parentController instanceof SetupCB)
+                ((SetupCB) parentController).onCompleted(this);
     }
 
     @FXML

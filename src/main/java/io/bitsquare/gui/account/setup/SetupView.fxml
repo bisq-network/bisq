@@ -20,7 +20,6 @@
 
 <?import javafx.scene.layout.*?>
 <AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.account.setup.SetupCB"
-            prefHeight="660.0" prefWidth="1000.0"
             xmlns:fx="http://javafx.com/fxml">
 
     <VBox fx:id="leftVBox" spacing="5" prefWidth="300" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="20"

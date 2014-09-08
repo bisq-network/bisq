@@ -301,7 +301,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
                 // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added 
                 // our own actions.
                 List<Action> actions = new ArrayList<>();
-                actions.add(new AbstractAction(BSResources.get("createOffer.success.copyTxId")) {
+                actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         Clipboard clipboard = Clipboard.getSystemClipboard();
