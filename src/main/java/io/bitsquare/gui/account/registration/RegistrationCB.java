@@ -156,6 +156,7 @@ public class RegistrationCB extends CachedCodeBehind<RegistrationPM> {
     public void setParentController(Initializable parentController) {
         super.setParentController(parentController);
         if (parentController instanceof AccountSettingsCB) {
+            //TODO
             // ((GridPane) root).getChildren().remove(completedButton);
         }
     }

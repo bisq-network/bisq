@@ -48,9 +48,9 @@ import org.slf4j.LoggerFactory;
 public class RegistrationModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(RegistrationModel.class);
 
-    private WalletFacade walletFacade;
-    private User user;
-    private Persistence persistence;
+    private final WalletFacade walletFacade;
+    private final User user;
+    private final Persistence persistence;
     AddressEntry addressEntry;
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     final BooleanProperty payFeeSuccess = new SimpleBooleanProperty();

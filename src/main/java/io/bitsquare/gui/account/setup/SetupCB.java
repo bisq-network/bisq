@@ -88,7 +88,7 @@ public class SetupCB extends CachedCodeBehind<SetupPM> {
 
         leftVBox.getChildren().addAll(seedWords, password, restrictions, fiatAccount, registration);
 
-        childController = seedWords.show(NavigationItem.SEED_WORDS);
+        childController = seedWords.show();
     }
 
     @Override
@@ -114,19 +114,19 @@ public class SetupCB extends CachedCodeBehind<SetupPM> {
     public void onCompleted(CodeBehind<? extends PresentationModel> childView) {
         if (childView instanceof SeedWordsCB) {
             seedWords.onCompleted();
-            childController = password.show(NavigationItem.ADD_PASSWORD);
+            childController = password.show();
         }
         else if (childView instanceof PasswordCB) {
             password.onCompleted();
-            childController = restrictions.show(NavigationItem.RESTRICTIONS);
+            childController = restrictions.show();
         }
         else if (childView instanceof RestrictionsCB) {
             restrictions.onCompleted();
-            childController = fiatAccount.show(NavigationItem.FIAT_ACCOUNT);
+            childController = fiatAccount.show();
         }
         else if (childView instanceof FiatAccountCB) {
             fiatAccount.onCompleted();
-            childController = registration.show(NavigationItem.REGISTRATION);
+            childController = registration.show();
         }
         else if (childView instanceof RegistrationCB) {
             registration.onCompleted();
@@ -161,6 +161,7 @@ class WizardItem extends HBox {
     private final Label subTitleLabel;
     private final SetupCB parentCB;
     private final Parent content;
+    private final NavigationItem navigationItem;
 
 
     private CodeBehind<? extends PresentationModel> childController;
@@ -168,6 +169,7 @@ class WizardItem extends HBox {
     WizardItem(SetupCB parentCB, Parent content, String title, String subTitle, NavigationItem navigationItem) {
         this.parentCB = parentCB;
         this.content = content;
+        this.navigationItem = navigationItem;
         setId("wizard-item-background-deactivated");
         layout();
         setSpacing(5);
@@ -202,7 +204,7 @@ class WizardItem extends HBox {
         getChildren().addAll(imageView, vBox);
     }
 
-    public CodeBehind<? extends PresentationModel> show(NavigationItem navigationItem) {
+    public CodeBehind<? extends PresentationModel> show() {
         loadView(navigationItem);
         setId("wizard-item-background-active");
         imageView.setImage(ImageUtil.getIconImage(ImageUtil.ARROW_BLUE));

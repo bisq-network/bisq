@@ -48,7 +48,6 @@ public class AccountSettingsCB extends CachedCodeBehind<AccountSettingsPM> {
     private static final Logger log = LoggerFactory.getLogger(AccountSettingsCB.class);
     public VBox leftVBox;
     public AnchorPane content;
-    private MenuItem seedWords, password, fiatAccount, restrictions, registration;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -69,15 +68,15 @@ public class AccountSettingsCB extends CachedCodeBehind<AccountSettingsPM> {
         super.initialize(url, rb);
 
         ToggleGroup toggleGroup = new ToggleGroup();
-        seedWords = new MenuItem(this, content, "Wallet seed",
+        MenuItem seedWords = new MenuItem(this, content, "Wallet seed",
                 NavigationItem.SEED_WORDS, toggleGroup);
-        password = new MenuItem(this, content, "Wallet password",
+        MenuItem password = new MenuItem(this, content, "Wallet password",
                 NavigationItem.CHANGE_PASSWORD, toggleGroup);
-        restrictions = new MenuItem(this, content, "Trading restrictions",
+        MenuItem restrictions = new MenuItem(this, content, "Trading restrictions",
                 NavigationItem.RESTRICTIONS, toggleGroup);
-        fiatAccount = new MenuItem(this, content, "Payments account(s)",
+        MenuItem fiatAccount = new MenuItem(this, content, "Payments account(s)",
                 NavigationItem.FIAT_ACCOUNT, toggleGroup);
-        registration = new MenuItem(this, content, "Renew your account",
+        MenuItem registration = new MenuItem(this, content, "Renew your account",
                 NavigationItem.REGISTRATION, toggleGroup);
 
         registration.setDisable(true);

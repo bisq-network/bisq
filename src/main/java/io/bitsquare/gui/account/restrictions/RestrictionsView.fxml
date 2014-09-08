@@ -24,127 +24,6 @@
           AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
-    <children>
-
-        <!-- 
-        languages
-         -->
-        <Pane id="form-group-background-active" GridPane.columnSpan="2" GridPane.rowSpan="3">
-            <GridPane.margin>
-                <Insets bottom="-10.0" left="-10.0" right="-10.0" top="-10.0"/>
-            </GridPane.margin>
-            <children>
-                <Label id="form-group-title-active" text="Add languages" layoutX="8" layoutY="-8">
-                    <padding>
-                        <Insets left="5" right="7"/>
-                    </padding>
-                </Label>
-            </children>
-        </Pane>
-
-        <Label text="Accepted languages:" GridPane.rowIndex="0" GridPane.valignment="TOP">
-            <padding>
-                <Insets top="10"/>
-            </padding>
-        </Label>
-        <ListView fx:id="languagesListView" GridPane.columnIndex="1" GridPane.rowIndex="0" prefHeight="80.0"/>
-        <ComboBox fx:id="languageComboBox" onAction="#onAddLanguage" promptText="Add language"
-                  GridPane.columnIndex="1" GridPane.rowIndex="1"
-                  prefWidth="150.0"/>
-
-
-        <InfoDisplay gridPane="$root" onAction="#onOpenLanguagesHelp" rowIndex="2"
-                     text="Trade with users who have at least 1 shared language."/>
-
-        <!-- 
-        countries
-        -->
-        <Pane id="form-group-background-active" GridPane.columnSpan="2" GridPane.rowIndex="3" GridPane.rowSpan="3">
-            <GridPane.margin>
-                <Insets bottom="-10" left="-10" right="-10" top="30"/>
-            </GridPane.margin>
-            <children>
-                <Label id="form-group-title-active" text="Add countries" layoutX="8" layoutY="-8">
-                    <padding>
-                        <Insets left="5" right="7"/>
-                    </padding>
-                </Label>
-            </children>
-            <padding>
-                <Insets top="50.0"/>
-            </padding>
-        </Pane>
-        <Label text="Accepted countries:" GridPane.rowIndex="3" GridPane.valignment="TOP">
-            <GridPane.margin>
-                <Insets top="50"/>
-            </GridPane.margin>
-        </Label>
-        <ListView fx:id="countriesListView" GridPane.columnIndex="1" GridPane.rowIndex="3" prefHeight="80.0"
-                >
-            <GridPane.margin>
-                <Insets top="40"/>
-            </GridPane.margin>
-        </ListView>
-
-        <HBox GridPane.columnIndex="1" GridPane.rowIndex="4" spacing="10">
-            <children>
-                <ComboBox fx:id="regionComboBox" onAction="#onSelectRegion" promptText="Select region"
-                          prefWidth="150.0"/>
-                <ComboBox fx:id="countryComboBox" onAction="#onAddCountry" promptText="Add country" visible="false"
-                          prefWidth="150.0"/>
-                <Button fx:id="addAllEuroCountriesButton" text="Add Euro countries" onAction="#onAddAllEuroCountries"
-                        prefWidth="150.0" visible="false"/>
-            </children>
-        </HBox>
-
-
-        <InfoDisplay gridPane="$root" onAction="#onOpenCountriesHelp" rowIndex="5"
-                     text="Restrict trades with these payments account countries."/>
-
-
-        <!-- 
-        arbitrators
-         -->
-        <Pane id="form-group-background-active" GridPane.columnSpan="2" GridPane.rowIndex="6" GridPane.rowSpan="3">
-            <GridPane.margin>
-                <Insets bottom="-10" left="-10" right="-10" top="30"/>
-            </GridPane.margin>
-            <children>
-                <Label id="form-group-title-active" text="Add arbitrators" layoutX="8" layoutY="-8">
-                    <padding>
-                        <Insets left="5" right="7"/>
-                    </padding>
-                </Label>
-            </children>
-            <padding>
-                <Insets top="50.0"/>
-            </padding>
-        </Pane>
-        <Label text="Accepted arbitrators:" GridPane.rowIndex="6" GridPane.valignment="TOP">
-            <GridPane.margin>
-                <Insets top="50"/>
-            </GridPane.margin>
-        </Label>
-        <ListView fx:id="arbitratorsListView" GridPane.columnIndex="1" GridPane.rowIndex="6" prefHeight="80.0">
-            <GridPane.margin>
-                <Insets top="40"/>
-            </GridPane.margin>
-        </ListView>
-        <Button text="Add arbitrator" onAction="#onOpenArbitratorScreen" GridPane.columnIndex="1"
-                GridPane.rowIndex="7"/>
-
-
-        <InfoDisplay gridPane="$root" onAction="#onOpenArbitratorsHelp" rowIndex="8"
-                     text="You need to choose at least 3 arbitrators."/>
-
-        <Button fx:id="completedButton" text="Completed" onAction="#onCompleted" disable="true" GridPane.columnIndex="1"
-                GridPane.rowIndex="9"
-                defaultButton="true">
-            <GridPane.margin>
-                <Insets top="20.0"/>
-            </GridPane.margin>
-        </Button>
-    </children>
 
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="140.0"/>
@@ -167,4 +46,115 @@
         <RowConstraints vgrow="NEVER"/>
 
     </rowConstraints>
+
+    <!-- 
+    languages
+     -->
+    <Pane id="form-group-background-active" GridPane.columnSpan="2" GridPane.rowSpan="3">
+        <GridPane.margin>
+            <Insets bottom="-10.0" left="-10.0" right="-10.0" top="-10.0"/>
+        </GridPane.margin>
+        <Label id="form-group-title-active" text="Add languages" layoutX="8" layoutY="-8">
+            <padding>
+                <Insets left="5" right="7"/>
+            </padding>
+        </Label>
+    </Pane>
+
+    <Label text="Accepted languages:" GridPane.rowIndex="0" GridPane.valignment="TOP">
+        <padding>
+            <Insets top="10"/>
+        </padding>
+    </Label>
+    <ListView fx:id="languagesListView" GridPane.columnIndex="1" GridPane.rowIndex="0" prefHeight="80.0"/>
+    <ComboBox fx:id="languageComboBox" onAction="#onAddLanguage" promptText="Add language"
+              GridPane.columnIndex="1" GridPane.rowIndex="1"
+              prefWidth="150.0"/>
+
+
+    <InfoDisplay gridPane="$root" onAction="#onOpenLanguagesHelp" rowIndex="2"
+                 text="Trade with users who have at least 1 shared language."/>
+
+    <!-- 
+    countries
+    -->
+    <Pane id="form-group-background-active" GridPane.columnSpan="2" GridPane.rowIndex="3" GridPane.rowSpan="3">
+        <GridPane.margin>
+            <Insets bottom="-10" left="-10" right="-10" top="30"/>
+        </GridPane.margin>
+        <padding>
+            <Insets top="50.0"/>
+        </padding>
+        <Label id="form-group-title-active" text="Add countries" layoutX="8" layoutY="-8">
+            <padding>
+                <Insets left="5" right="7"/>
+            </padding>
+        </Label>
+    </Pane>
+    <Label text="Accepted countries:" GridPane.rowIndex="3" GridPane.valignment="TOP">
+        <GridPane.margin>
+            <Insets top="50"/>
+        </GridPane.margin>
+    </Label>
+    <ListView fx:id="countriesListView" GridPane.columnIndex="1" GridPane.rowIndex="3" prefHeight="80.0"
+            >
+        <GridPane.margin>
+            <Insets top="40"/>
+        </GridPane.margin>
+    </ListView>
+
+    <HBox GridPane.columnIndex="1" GridPane.rowIndex="4" spacing="10">
+        <ComboBox fx:id="regionComboBox" onAction="#onSelectRegion" promptText="Select region"
+                  prefWidth="150.0"/>
+        <ComboBox fx:id="countryComboBox" onAction="#onAddCountry" promptText="Add country" visible="false"
+                  prefWidth="150.0"/>
+        <Button fx:id="addAllEuroCountriesButton" text="Add Euro countries" onAction="#onAddAllEuroCountries"
+                prefWidth="150.0" visible="false"/>
+    </HBox>
+
+
+    <InfoDisplay gridPane="$root" onAction="#onOpenCountriesHelp" rowIndex="5"
+                 text="Restrict trades with these payments account countries."/>
+
+
+    <!-- 
+    arbitrators
+     -->
+    <Pane id="form-group-background-active" GridPane.columnSpan="2" GridPane.rowIndex="6" GridPane.rowSpan="3">
+        <GridPane.margin>
+            <Insets bottom="-10" left="-10" right="-10" top="30"/>
+        </GridPane.margin>
+        <padding>
+            <Insets top="50.0"/>
+        </padding>
+        <Label id="form-group-title-active" text="Add arbitrators" layoutX="8" layoutY="-8">
+            <padding>
+                <Insets left="5" right="7"/>
+            </padding>
+        </Label>
+    </Pane>
+    <Label text="Accepted arbitrators:" GridPane.rowIndex="6" GridPane.valignment="TOP">
+        <GridPane.margin>
+            <Insets top="50"/>
+        </GridPane.margin>
+    </Label>
+    <ListView fx:id="arbitratorsListView" GridPane.columnIndex="1" GridPane.rowIndex="6" prefHeight="80.0">
+        <GridPane.margin>
+            <Insets top="40"/>
+        </GridPane.margin>
+    </ListView>
+    <Button text="Add arbitrator" onAction="#onOpenArbitratorScreen" GridPane.columnIndex="1"
+            GridPane.rowIndex="7"/>
+
+
+    <InfoDisplay gridPane="$root" onAction="#onOpenArbitratorsHelp" rowIndex="8"
+                 text="You need to choose at least 3 arbitrators."/>
+
+    <Button fx:id="completedButton" text="Completed" onAction="#onCompleted" disable="true" GridPane.columnIndex="1"
+            GridPane.rowIndex="9"
+            defaultButton="true">
+        <GridPane.margin>
+            <Insets top="20.0"/>
+        </GridPane.margin>
+    </Button>
 </GridPane>

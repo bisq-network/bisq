@@ -27,63 +27,6 @@
           AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
-    <children>
-        <Pane id="form-group-background-active" GridPane.columnSpan="2" GridPane.rowSpan="4">
-            <GridPane.margin>
-                <Insets bottom="-10.0" left="-10.0" right="-10.0" top="-10.0"/>
-            </GridPane.margin>
-            <children>
-                <Label id="form-group-title-active" text="Fund the registration fee"
-                       layoutX="8" layoutY="-8">
-                    <padding>
-                        <Insets left="5" right="7"/>
-                    </padding>
-                </Label>
-            </children>
-        </Pane>
-
-        <Label text="Registration fee:" GridPane.rowIndex="0">
-            <GridPane.margin>
-                <Insets top="10.0"/>
-            </GridPane.margin>
-        </Label>
-        <TextField fx:id="feeTextField"
-                   GridPane.columnIndex="1"
-                   GridPane.rowIndex="0"
-                   editable="false" focusTraversable="false">
-            <GridPane.margin>
-                <Insets top="10.0"/>
-            </GridPane.margin>
-        </TextField>
-
-        <Label text="Registration wallet address:" GridPane.rowIndex="1"/>
-        <AddressTextField fx:id="addressTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"
-                          focusTraversable="true"/>
-
-        <Label text="Registration wallet balance:" GridPane.rowIndex="2">
-            <GridPane.margin>
-                <Insets bottom="5.0"/>
-            </GridPane.margin>
-        </Label>
-        <BalanceTextField fx:id="balanceTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"
-                          focusTraversable="false">
-            <GridPane.margin>
-                <Insets bottom="5.0"/>
-            </GridPane.margin>
-        </BalanceTextField>
-
-        <InfoDisplay gridPane="$root" onAction="#onOpenHelp" rowIndex="3"
-                     text="You need to pay a tiny registration fee which is needed for storing your encrypted account data in the blockchain. That will be used in the trade process for account verification."/>
-
-        <Button fx:id="payButton" text="Pay registration fee" onAction="#onPayFee" GridPane.columnIndex="1"
-                GridPane.rowIndex="4"
-                defaultButton="true">
-            <GridPane.margin>
-                <Insets top="15.0"/>
-            </GridPane.margin>
-        </Button>
-
-    </children>
 
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>
@@ -97,4 +40,57 @@
         <RowConstraints vgrow="NEVER"/>
         <RowConstraints vgrow="NEVER"/>
     </rowConstraints>
+    <Pane id="form-group-background-active" GridPane.columnSpan="2" GridPane.rowSpan="4">
+        <GridPane.margin>
+            <Insets bottom="-10.0" left="-10.0" right="-10.0" top="-10.0"/>
+        </GridPane.margin>
+        <Label id="form-group-title-active" text="Fund the registration fee"
+               layoutX="8" layoutY="-8">
+            <padding>
+                <Insets left="5" right="7"/>
+            </padding>
+        </Label>
+    </Pane>
+
+    <Label text="Registration fee:" GridPane.rowIndex="0">
+        <GridPane.margin>
+            <Insets top="10.0"/>
+        </GridPane.margin>
+    </Label>
+    <TextField fx:id="feeTextField"
+               GridPane.columnIndex="1"
+               GridPane.rowIndex="0"
+               editable="false" focusTraversable="false">
+        <GridPane.margin>
+            <Insets top="10.0"/>
+        </GridPane.margin>
+    </TextField>
+
+    <Label text="Registration wallet address:" GridPane.rowIndex="1"/>
+    <AddressTextField fx:id="addressTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"
+                      focusTraversable="true"/>
+
+    <Label text="Registration wallet balance:" GridPane.rowIndex="2">
+        <GridPane.margin>
+            <Insets bottom="5.0"/>
+        </GridPane.margin>
+    </Label>
+    <BalanceTextField fx:id="balanceTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"
+                      focusTraversable="false">
+        <GridPane.margin>
+            <Insets bottom="5.0"/>
+        </GridPane.margin>
+    </BalanceTextField>
+
+    <InfoDisplay gridPane="$root" onAction="#onOpenHelp" rowIndex="3"
+                 text="You need to pay a tiny registration fee which is needed for storing your encrypted account data in the blockchain. That will be used in the trade process for account verification."/>
+
+    <Button fx:id="payButton" text="Pay registration fee" onAction="#onPayFee" GridPane.columnIndex="1"
+            GridPane.rowIndex="4"
+            defaultButton="true">
+        <GridPane.margin>
+            <Insets top="15.0"/>
+        </GridPane.margin>
+    </Button>
+
 </GridPane>

@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 public class AccountModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(AccountModel.class);
-    private User user;
+    private final User user;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor

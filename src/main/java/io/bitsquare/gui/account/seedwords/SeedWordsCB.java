@@ -102,8 +102,7 @@ public class SeedWordsCB extends CachedCodeBehind<SeedWordsPM> {
     @FXML
     private void onCompleted() {
         if (parentController instanceof SetupCB)
-            if (parentController instanceof SetupCB)
-                ((SetupCB) parentController).onCompleted(this);
+            ((SetupCB) parentController).onCompleted(this);
     }
 
     @FXML

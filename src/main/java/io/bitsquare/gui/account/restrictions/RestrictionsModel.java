@@ -160,7 +160,7 @@ public class RestrictionsModel extends UIModel {
     ObservableList<Country> getListWithAllEuroCountries() {
         // TODO use Set instead of List
         // In addAcceptedCountry there is a check to no add duplicates, so it works correctly for now
-        CountryUtil.getAllEuroCountries().stream().forEach(e -> settings.addAcceptedCountry(e));
+        CountryUtil.getAllEuroCountries().stream().forEach(settings::addAcceptedCountry);
         countryList = FXCollections.observableArrayList(settings.getAcceptedCountries());
         saveSettings();
         return countryList;
