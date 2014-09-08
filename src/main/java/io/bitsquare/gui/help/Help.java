@@ -35,7 +35,7 @@ public class Help {
     private static final Logger log = LoggerFactory.getLogger(Help.class);
 
     private static Stage helpWindow;
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
