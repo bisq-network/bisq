@@ -19,13 +19,13 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.msg.MsgController"
-            AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
-            xmlns:fx="http://javafx.com/fxml">
-    <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-          AnchorPane.topAnchor="0.0">
+<TabPane fx:id="root" fx:controller="io.bitsquare.gui.msg.MsgController"
+         AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
+         AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
+         xmlns:fx="http://javafx.com/fxml">
 
-        <Label id="headline-label" text="Message"/>
+    <Tab text="TODO" closable="false">
 
-    </VBox>
-</AnchorPane>
+    </Tab>
+
+</TabPane>

@@ -39,7 +39,6 @@ public enum NavigationItem {
     PENDING_TRADE("/io/bitsquare/gui/orders/pending/PendingTradeView.fxml"),
     CLOSED_TRADE("/io/bitsquare/gui/orders/closed/ClosedTradeView.fxml"),
 
-    DEPOSIT("/io/bitsquare/gui/funds/deposit/DepositView.fxml"),
     WITHDRAWAL("/io/bitsquare/gui/funds/withdrawal/WithdrawalView.fxml"),
     TRANSACTIONS("/io/bitsquare/gui/funds/transactions/TransactionsView.fxml"),
 

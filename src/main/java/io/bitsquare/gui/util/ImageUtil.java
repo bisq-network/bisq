@@ -17,14 +17,9 @@
 
 package io.bitsquare.gui.util;
 
-import java.awt.*;
-
-import javafx.scene.image.Image;
 import javafx.scene.image.*;
 
 public class ImageUtil {
-
-    public static final String hiRes = Toolkit.getDefaultToolkit().getScreenResolution() >= 144 ? "_hi_res" : "";
 
     public static final String SPLASH_LOGO = "/images/logo_600_600.png";
 
@@ -63,11 +58,10 @@ public class ImageUtil {
     public static final String INFO = "/images/info.png";
 
     public static Image getIconImage(String iconName) {
-        return new Image(ImageUtil.class.getResourceAsStream(iconName.replace("/images", "/images" + hiRes)));
+        return new Image(ImageUtil.class.getResourceAsStream(iconName));
     }
 
     public static ImageView getIconImageView(String iconName) {
-        return new ImageView(new Image(ImageUtil.class.getResourceAsStream(iconName.replace("/images",
-                "/images" + hiRes))));
+        return new ImageView(new Image(ImageUtil.class.getResourceAsStream(iconName)));
     }
 }

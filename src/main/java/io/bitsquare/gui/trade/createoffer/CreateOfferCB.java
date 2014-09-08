@@ -223,8 +223,8 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void openSettings() {
-        MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.SETTINGS);
+    private void openAccountSettings() {
+        MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.ACCOUNT);
     }
 
     private void close() {
@@ -438,17 +438,17 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         acceptedCountriesLabelIcon.setId("clickable-icon");
         AwesomeDude.setIcon(acceptedCountriesLabelIcon, AwesomeIcon.EDIT_SIGN);
         Tooltip.install(acceptedCountriesLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
-        acceptedCountriesLabelIcon.setOnMouseClicked(e -> openSettings());
+        acceptedCountriesLabelIcon.setOnMouseClicked(e -> openAccountSettings());
 
         acceptedLanguagesLabelIcon.setId("clickable-icon");
         AwesomeDude.setIcon(acceptedLanguagesLabelIcon, AwesomeIcon.EDIT_SIGN);
         Tooltip.install(acceptedLanguagesLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
-        acceptedLanguagesLabelIcon.setOnMouseClicked(e -> openSettings());
+        acceptedLanguagesLabelIcon.setOnMouseClicked(e -> openAccountSettings());
 
         acceptedArbitratorsLabelIcon.setId("clickable-icon");
         AwesomeDude.setIcon(acceptedArbitratorsLabelIcon, AwesomeIcon.EDIT_SIGN);
         Tooltip.install(acceptedArbitratorsLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
-        acceptedArbitratorsLabelIcon.setOnMouseClicked(e -> openSettings());
+        acceptedArbitratorsLabelIcon.setOnMouseClicked(e -> openAccountSettings());
     }
 
     private void setupTotalToPayInfoIconLabel() {

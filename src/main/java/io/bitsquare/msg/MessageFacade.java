@@ -404,7 +404,7 @@ public class MessageFacade implements MessageBroker {
     // Check dirty flag for a location key
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO just temp...
+    // TODO just temporary
     public BooleanProperty getIsDirtyProperty() {
         return isDirty;
     }

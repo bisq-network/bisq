@@ -97,6 +97,7 @@ public class PasswordCB extends CachedCodeBehind<PasswordPM> {
         }
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -114,18 +115,15 @@ public class PasswordCB extends CachedCodeBehind<PasswordPM> {
     }
 
     @FXML
-    private void onOpenHelp() {
-        Help.openWindow(HelpId.SETUP_PASSWORD);
-    }
-
-    public void onSkipped() {
+    private void onSkipped() {
         if (parentController instanceof SetupCB)
             ((SetupCB) parentController).onCompleted(this);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    @FXML
+    private void onOpenHelp() {
+        Help.openWindow(HelpId.SETUP_PASSWORD);
+    }
 
 
 }

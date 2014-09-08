@@ -19,17 +19,20 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.home.HomeController"
-            AnchorPane.bottomAnchor="30" AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10"
-            AnchorPane.topAnchor="10"
-            xmlns:fx="http://javafx.com/fxml">
+<TabPane fx:id="root" fx:controller="io.bitsquare.gui.home.HomeController"
+         AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
+         AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
+         xmlns:fx="http://javafx.com/fxml">
 
-    <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-          AnchorPane.topAnchor="0.0">
-        <Label id="headline-label" text="Overview"/>
-        <Label text="TODO"/>
+    <Tab text="TODO" closable="false">
 
-        <Button text="Register yourself as an arbitrator" onAction="#onArbitratorRegistration"/>
-        <Button text="Edit my arbitrator details" onAction="#onArbitratorEdit"/>
-    </VBox>
-</AnchorPane>
+        <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+              AnchorPane.topAnchor="0.0">
+            <Label id="headline-label" text="Overview"/>
+            <Label text="TODO"/>
+
+            <Button text="Register yourself as an arbitrator" onAction="#onArbitratorRegistration"/>
+            <Button text="Edit my arbitrator details" onAction="#onArbitratorEdit"/>
+        </VBox>
+    </Tab>
+</TabPane>

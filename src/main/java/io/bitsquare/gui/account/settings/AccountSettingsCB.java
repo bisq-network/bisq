@@ -80,7 +80,7 @@ public class AccountSettingsCB extends CachedCodeBehind<AccountSettingsPM> {
         registration = new MenuItem(this, content, "Renew your account",
                 NavigationItem.REGISTRATION, toggleGroup);
 
-        //  registration.setDisable(true);
+        registration.setDisable(true);
 
         leftVBox.getChildren().addAll(seedWords, password,
                 restrictions, fiatAccount, registration);
@@ -151,7 +151,14 @@ class MenuItem extends ToggleButton {
 
         Label icon = new Label();
         icon.setTextFill(Paint.valueOf("#999"));
-        AwesomeDude.setIcon(icon, AwesomeIcon.EDIT_SIGN);
+        if (navigationItem.equals(NavigationItem.SEED_WORDS))
+            AwesomeDude.setIcon(icon, AwesomeIcon.INFO_SIGN);
+        else if (navigationItem.equals(NavigationItem.REGISTRATION))
+            AwesomeDude.setIcon(icon, AwesomeIcon.BRIEFCASE);
+        else
+            AwesomeDude.setIcon(icon, AwesomeIcon.EDIT_SIGN);
+
+
         setGraphic(icon);
 
         setOnAction((event) -> show());
@@ -169,7 +176,7 @@ class MenuItem extends ToggleButton {
         disableProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue) {
                 setId("account-settings-item-background-disabled");
-                icon.setTextFill(Paint.valueOf("#ccc"));
+                //icon.setTextFill(Paint.valueOf("#ccc"));
             }
             else {
                 setId("account-settings-item-background-active");
