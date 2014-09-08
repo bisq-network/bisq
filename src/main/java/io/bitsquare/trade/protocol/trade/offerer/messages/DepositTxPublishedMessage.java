@@ -26,7 +26,7 @@ public class DepositTxPublishedMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = -1532231540167406581L;
     private final String tradeId;
 
-    private String depositTxAsHex;
+    private final String depositTxAsHex;
 
     public DepositTxPublishedMessage(String tradeId, String depositTxAsHex) {
         this.tradeId = tradeId;

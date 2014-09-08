@@ -45,7 +45,9 @@ import java.util.ResourceBundle;
 import javax.inject.Inject;
 
 import javafx.application.Platform;
+import javafx.beans.Observable;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -83,8 +85,6 @@ public class MainController extends ViewController {
     private Pane ordersButtonButtonHolder;
     private boolean messageFacadeInited;
     private boolean walletFacadeInited;
-    private VBox accountComboBoxHolder;
-    private Pane setupView;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -226,7 +226,7 @@ public class MainController extends ViewController {
 
     private void fadeOutSplash() {
         Profiler.printMsgWithTime("MainController.fadeOutSplash");
-        Transitions.blurAndRemove(viewBuilder.splashVBox);
+        Transitions.blur(viewBuilder.splashVBox, 700, false, true);
         Transitions.fadeIn(viewBuilder.menuBar);
         Transitions.fadeIn(viewBuilder.contentScreen);
     }
@@ -298,13 +298,6 @@ public class MainController extends ViewController {
 
         addAccountComboBox(viewBuilder.rightNavPane);
 
-        user.getBankAccountsSizeProperty().addListener((observableValue, oldValue, newValue) -> {
-            if ((int) newValue == 2)
-                viewBuilder.rightNavPane.getChildren().add(1, accountComboBoxHolder);
-            else if ((int) newValue < 2)
-                viewBuilder.rightNavPane.getChildren().remove(accountComboBoxHolder);
-        });
-
         settingsButton = addNavButton(viewBuilder.rightNavPane, "Settings", NavigationItem.SETTINGS);
         accountButton = addNavButton(viewBuilder.rightNavPane, "Account", NavigationItem.ACCOUNT);
 
@@ -350,9 +343,6 @@ public class MainController extends ViewController {
     }
 
     private ToggleButton addNavButton(Pane parent, String title, NavigationItem navigationItem) {
-        //  final Pane pane = new Pane();
-        //  pane.setPrefSize(50, 50);
-
         ImageView icon = ImageUtil.getIconImageView(navigationItem.getIcon());
         icon.setFitWidth(32);
         icon.setFitHeight(32);
@@ -382,19 +372,7 @@ public class MainController extends ViewController {
         });
 
         toggleButton.setOnAction(e -> loadView(navigationItem));
-
-       /* final Label titleLabel = new Label(title);
-        titleLabel.setLayoutY(35);
-        titleLabel.setId("nav-button-label");
-        titleLabel.setMouseTransparent(true);
-        titleLabel.widthProperty().addListener((observableValue, number, newValue) ->
-                titleLabel.setLayoutX((50.0 - (double) newValue) / 2 - 1));
-*/
-        //   pane.getChildren().addAll(toggleButton);
-        // pane.getChildren().addAll(toggleButton, titleLabel);
-        //  parent.getChildren().add(pane);
         parent.getChildren().add(toggleButton);
-
         return toggleButton;
     }
 
@@ -412,26 +390,26 @@ public class MainController extends ViewController {
         });
 
         final Label titleLabel = new Label("Balance");
-        titleLabel.prefWidthProperty().bind(balanceTextField.widthProperty());
         titleLabel.setMouseTransparent(true);
         titleLabel.setId("nav-button-label");
+        balanceTextField.widthProperty().addListener((ov, o, n) ->
+                titleLabel.setLayoutX(((double) n - titleLabel.getWidth()) / 2));
 
         final VBox vBox = new VBox();
-        vBox.setPadding(new Insets(12, 0, 0, 0));
+        vBox.setPadding(new Insets(12, 5, 0, 0));
         vBox.setSpacing(2);
         vBox.getChildren().setAll(balanceTextField, titleLabel);
+        vBox.setAlignment(Pos.CENTER);
         parent.getChildren().add(vBox);
     }
 
     private void addAccountComboBox(Pane parent) {
-        final ComboBox<BankAccount> accountComboBox =
-                new ComboBox<>(FXCollections.observableArrayList(user.getBankAccounts()));
-        accountComboBox.setId("nav-account-combo-box");
-        accountComboBox.setLayoutY(12);
-        if (user.getCurrentBankAccount() != null)
-            accountComboBox.getSelectionModel().select(user.getCurrentBankAccount());
-        accountComboBox.valueProperty().addListener((ov, oldValue, newValue) -> user.setCurrentBankAccount(newValue));
-        accountComboBox.setConverter(new StringConverter<BankAccount>() {
+        final ObservableList<BankAccount> accounts = user.getBankAccounts();
+        final ComboBox<BankAccount> comboBox =
+                new ComboBox<>(FXCollections.observableArrayList(accounts));
+        comboBox.setLayoutY(12);
+        comboBox.setVisibleRowCount(5);
+        comboBox.setConverter(new StringConverter<BankAccount>() {
             @Override
             public String toString(BankAccount bankAccount) {
                 return bankAccount.getAccountTitle();
@@ -443,26 +421,32 @@ public class MainController extends ViewController {
             }
         });
 
-        user.getSelectedBankAccountIndexProperty().addListener(observable ->
-                accountComboBox.getSelectionModel().select(user.getCurrentBankAccount()));
-        user.getBankAccountsSizeProperty().addListener(observable -> {
-            accountComboBox.setItems(FXCollections.observableArrayList(user.getBankAccounts()));
-            // need to delay it a bit otherwise it will not be set
-            Platform.runLater(() -> accountComboBox.getSelectionModel().select(user.getCurrentBankAccount()));
+        comboBox.setItems(accounts);
+        comboBox.valueProperty().addListener((ov, oldValue, newValue) -> user.setCurrentBankAccount(newValue));
+        accounts.addListener((Observable observable) -> {
+            comboBox.setPromptText((accounts.size() == 0) ? "No accounts" : "");
+            comboBox.setDisable((accounts.isEmpty()));
         });
+        comboBox.setPromptText((accounts.isEmpty()) ? "No accounts" : "");
+        comboBox.setDisable((accounts.isEmpty()));
+        user.currentBankAccountProperty().addListener((ov, oldValue, newValue) -> {
+            if (newValue != null)
+                comboBox.getSelectionModel().select(newValue);
+        });
+        comboBox.getSelectionModel().select(user.getCurrentBankAccount());
 
         final Label titleLabel = new Label("Bank account");
-        titleLabel.prefWidthProperty().bind(accountComboBox.widthProperty());
         titleLabel.setMouseTransparent(true);
         titleLabel.setId("nav-button-label");
+        comboBox.widthProperty().addListener((ov, o, n) ->
+                titleLabel.setLayoutX(((double) n - titleLabel.getWidth()) / 2));
 
-        accountComboBoxHolder = new VBox();
-        accountComboBoxHolder.setPadding(new Insets(12, 0, 0, 0));
-        accountComboBoxHolder.setSpacing(2);
-        accountComboBoxHolder.getChildren().setAll(accountComboBox, titleLabel);
-
-        if (user.getBankAccounts().size() > 1)
-            parent.getChildren().add(accountComboBoxHolder);
+        VBox vBox = new VBox();
+        vBox.setPadding(new Insets(12, 8, 0, 5));
+        vBox.setSpacing(2);
+        vBox.setAlignment(Pos.CENTER);
+        vBox.getChildren().setAll(comboBox, titleLabel);
+        parent.getChildren().add(vBox);
     }
 }
 
@@ -510,13 +494,13 @@ class ViewBuilder {
         anchorPane.setId("content-pane");
 
         leftNavPane = new HBox();
-        leftNavPane.setAlignment(Pos.CENTER);
+        // leftNavPane.setAlignment(Pos.CENTER);
         leftNavPane.setSpacing(10);
         AnchorPane.setLeftAnchor(leftNavPane, 10d);
         AnchorPane.setTopAnchor(leftNavPane, 0d);
 
         rightNavPane = new HBox();
-        rightNavPane.setAlignment(Pos.CENTER);
+        // rightNavPane.setAlignment(Pos.CENTER);
         rightNavPane.setSpacing(10);
         AnchorPane.setRightAnchor(rightNavPane, 10d);
         AnchorPane.setTopAnchor(rightNavPane, 0d);

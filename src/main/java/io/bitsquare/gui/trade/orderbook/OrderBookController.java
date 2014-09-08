@@ -18,7 +18,6 @@
 package io.bitsquare.gui.trade.orderbook;
 
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.CodeBehind;
@@ -55,7 +54,7 @@ import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -65,6 +64,7 @@ import javax.inject.Inject;
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -73,9 +73,11 @@ import javafx.scene.image.*;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
 
+import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
-import org.controlsfx.dialog.Dialogs;
+
+import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -201,7 +203,7 @@ public class OrderBookController extends CachedViewController {
 
         orderBookFilter.getDirectionChangedProperty().addListener((observable) -> applyOffers());
 
-        user.getSelectedBankAccountIndexProperty().addListener((observable) -> orderBook.loadOffers());
+        user.currentBankAccountProperty().addListener((ov) -> orderBook.loadOffers());
 
         createOfferButton.setOnAction(e -> createOffer());
 
@@ -246,7 +248,7 @@ public class OrderBookController extends CachedViewController {
                 ((CreateOfferCB) nextController).setOrderBookFilter(orderBookFilter);
         }
         else {
-            showRegistrationDialog();
+            openSetupScreen();
         }
     }
 
@@ -265,67 +267,22 @@ public class OrderBookController extends CachedViewController {
                 user.getCurrentBankAccount() != null;
     }
 
-    private void showRegistrationDialog() {
-        int selectedIndex = -1;
-        if (areSettingsValid()) {
-            if (walletFacade.isRegistrationFeeBalanceNonZero()) {
-                if (walletFacade.isRegistrationFeeBalanceSufficient()) {
-                    if (walletFacade.isRegistrationFeeConfirmed()) {
-                        selectedIndex = 2;
-                    }
-                    else {
-                        Action response = Popups.openErrorPopup("Registration fee not confirmed yet",
-                                "The registration fee transaction has not been confirmed yet in the blockchain. " +
-                                        "Please wait until it has at least 1 confirmation.");
-                        if (response == Dialog.Actions.OK) {
-                            MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.FUNDS);
-                        }
-                    }
-                }
-                else {
-                    Action response = Popups.openErrorPopup("Missing registration fee",
-                            "You have not funded the full registration fee of " + BSFormatter
-                                    .formatCoinWithCode(FeePolicy.ACCOUNT_REGISTRATION_FEE) + " BTC.");
-                    if (response == Dialog.Actions.OK) {
-                        MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.FUNDS);
-                    }
-                }
-            }
-            else {
-                selectedIndex = 1;
-            }
-        }
-        else {
-            selectedIndex = 0;
-        }
 
-        if (selectedIndex >= 0) {
-            Dialogs.CommandLink settingsCommandLink = new Dialogs.CommandLink("Open settings",
-                    "You need to configure your settings before you can actively trade.");
-            Dialogs.CommandLink depositFeeCommandLink = new Dialogs.CommandLink("Deposit funds",
-                    "You need to pay the registration fee before you can actively trade. That is needed as prevention" +
-                            " against fraud.");
-            Dialogs.CommandLink sendRegistrationCommandLink = new Dialogs.CommandLink("Publish registration",
-                    "When settings are configured and the fee deposit is done your registration transaction will be " +
-                            "published to "
-                            + "the Bitcoin \nnetwork.");
-            List<Dialogs.CommandLink> commandLinks = Arrays.asList(settingsCommandLink, depositFeeCommandLink,
-                    sendRegistrationCommandLink);
-            Action registrationMissingAction = Popups.openRegistrationMissingPopup("Not registered yet",
-                    "Please follow these steps:",
-                    "You need to register before you can place an offer.",
-                    commandLinks,
-                    selectedIndex);
-            if (registrationMissingAction == settingsCommandLink) {
-                MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.SETTINGS);
+    private void openSetupScreen() {
+
+        MainController.GET_INSTANCE().blurContentScreen();
+        List<Action> actions = new ArrayList<>();
+        actions.add(new AbstractAction(BSResources.get("shared.ok")) {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                Dialog.Actions.OK.handle(actionEvent);
+                MainController.GET_INSTANCE().removeContentScreenBlur();
+
+                MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.ACCOUNT);
             }
-            else if (registrationMissingAction == depositFeeCommandLink) {
-                MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.FUNDS);
-            }
-            else if (registrationMissingAction == sendRegistrationCommandLink) {
-                payRegistrationFee();
-            }
-        }
+        });
+        Popups.openInfo("You need to setup your trading account before you can trade.",
+                "You don't have a trading account.", actions);
     }
 
     private void payRegistrationFee() {
@@ -339,7 +296,7 @@ public class OrderBookController extends CachedViewController {
             }
 
             @Override
-            public void onFailure(Throwable t) {
+            public void onFailure(@NotNull Throwable t) {
                 log.debug("payRegistrationFee onFailure");
             }
         };
@@ -364,11 +321,11 @@ public class OrderBookController extends CachedViewController {
                 if (parentController instanceof ViewController)
                     takeOfferController = (TakeOfferController) ((ViewController) parentController)
                             .loadViewAndGetChildController(NavigationItem
-                            .TAKE_OFFER);
+                                    .TAKE_OFFER);
                 else if (parentController instanceof CodeBehind)
                     takeOfferController = (TakeOfferController) ((CodeBehind) parentController)
                             .loadViewAndGetChildController(NavigationItem
-                            .TAKE_OFFER);
+                                    .TAKE_OFFER);
             }
 
             Coin requestedAmount;
@@ -384,7 +341,7 @@ public class OrderBookController extends CachedViewController {
             }
         }
         else {
-            showRegistrationDialog();
+            openSetupScreen();
         }
     }
 

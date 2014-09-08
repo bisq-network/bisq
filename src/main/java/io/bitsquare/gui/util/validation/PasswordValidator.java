@@ -22,15 +22,7 @@ import io.bitsquare.locale.BSResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * NumberValidator for validating basic number values.
- * Localisation not supported at the moment
- * The decimal mark can be either "." or ",". Thousand separators are not supported yet,
- * but might be added alter with Local support.
- * <p>
- * That class implements just what we need for the moment. It is not intended as a general purpose library class.
- */
-public class PasswordValidator extends InputValidator {
+public final class PasswordValidator extends InputValidator {
     private static final Logger log = LoggerFactory.getLogger(PasswordValidator.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -47,10 +39,10 @@ public class PasswordValidator extends InputValidator {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected methods
+    // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected ValidationResult validateMinLength(String input) {
+    private ValidationResult validateMinLength(String input) {
         if (input.length() > 7)
             return new ValidationResult(true);
         else

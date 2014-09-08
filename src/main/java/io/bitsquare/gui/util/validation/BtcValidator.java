@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
-public class BtcValidator extends NumberValidator {
+public final class BtcValidator extends NumberValidator {
     private static final Logger log = LoggerFactory.getLogger(BtcValidator.class);
     private ValidationResult externalValidationResult;
 
@@ -73,10 +73,10 @@ public class BtcValidator extends NumberValidator {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected methods
+    // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected ValidationResult validateIfNotFractionalBtcValue(String input) {
+    private ValidationResult validateIfNotFractionalBtcValue(String input) {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
         if (satoshis.scale() > 0)
@@ -85,7 +85,7 @@ public class BtcValidator extends NumberValidator {
             return new ValidationResult(true);
     }
 
-    protected ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
+    private ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
         if (satoshis.longValue() > NetworkParameters.MAX_MONEY.longValue())

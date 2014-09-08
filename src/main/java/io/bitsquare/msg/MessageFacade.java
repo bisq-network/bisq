@@ -86,12 +86,12 @@ public class MessageFacade implements MessageBroker {
         return p2pNode;
     }
 
-    private P2PNode p2pNode;
+    private final P2PNode p2pNode;
 
     private final List<OrderBookListener> orderBookListeners = new ArrayList<>();
     private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
     private final List<IncomingTradeMessageListener> incomingTradeMessageListeners = new ArrayList<>();
-    private User user;
+    private final User user;
     private SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses;
 
 
@@ -174,7 +174,7 @@ public class MessageFacade implements MessageBroker {
             final Data offerData = new Data(offer);
 
             // the offer is default 30 days valid
-            int defaultOfferTTL = 30 * 24 * 60 * 60 * 1000;
+            int defaultOfferTTL = 30 * 24 * 60 * 60;
             offerData.ttlSeconds(defaultOfferTTL);
 
             FuturePut futurePut = p2pNode.addProtectedData(locationKey, offerData);
@@ -263,8 +263,8 @@ public class MessageFacade implements MessageBroker {
                 Platform.runLater(() -> orderBookListeners.stream().forEach(orderBookListener -> orderBookListener
                         .onOffersReceived(futureGet.dataMap(), baseFuture.isSuccess())));
                 if (baseFuture.isSuccess()) {
-                    //log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey + ",
-                    // values: " + futureGet.dataMap() + "]");
+                    log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey
+                            + ", values: " + futureGet.dataMap() + "]");
                 }
                 else {
                     log.error("Get offers from DHT failed with reason:" + baseFuture.failedReason());

@@ -47,26 +47,26 @@ import org.slf4j.LoggerFactory;
 public class FiatAccountModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(FiatAccountModel.class);
 
-    private User user;
-    private Settings settings;
-    private Persistence persistence;
+    private final User user;
+    private final Settings settings;
+    private final Persistence persistence;
 
-    StringProperty title = new SimpleStringProperty();
-    StringProperty holderName = new SimpleStringProperty();
-    StringProperty primaryID = new SimpleStringProperty();
-    StringProperty secondaryID = new SimpleStringProperty();
-    StringProperty primaryIDPrompt = new SimpleStringProperty();
-    StringProperty secondaryIDPrompt = new SimpleStringProperty();
-    BooleanProperty countryNotInAcceptedCountriesList = new SimpleBooleanProperty();
-    ObjectProperty<BankAccountType> type = new SimpleObjectProperty<>();
-    ObjectProperty<Country> country = new SimpleObjectProperty<>();
-    ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
-    ObjectProperty<BankAccount> currentBankAccount = new SimpleObjectProperty<>();
-    ObservableList<BankAccountType> allTypes = FXCollections.observableArrayList(BankAccountType
+    final StringProperty title = new SimpleStringProperty();
+    final StringProperty holderName = new SimpleStringProperty();
+    final StringProperty primaryID = new SimpleStringProperty();
+    final StringProperty secondaryID = new SimpleStringProperty();
+    final StringProperty primaryIDPrompt = new SimpleStringProperty();
+    final StringProperty secondaryIDPrompt = new SimpleStringProperty();
+    final BooleanProperty countryNotInAcceptedCountriesList = new SimpleBooleanProperty();
+    final ObjectProperty<BankAccountType> type = new SimpleObjectProperty<>();
+    final ObjectProperty<Country> country = new SimpleObjectProperty<>();
+    final ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
+    final ObjectProperty<BankAccount> currentBankAccount = new SimpleObjectProperty<>();
+    final ObservableList<BankAccountType> allTypes = FXCollections.observableArrayList(BankAccountType
             .getAllBankAccountTypes());
-    ObservableList<BankAccount> allBankAccounts = FXCollections.observableArrayList();
-    ObservableList<Currency> allCurrencies = FXCollections.observableArrayList(CurrencyUtil.getAllCurrencies());
-    ObservableList<Region> allRegions = FXCollections.observableArrayList(CountryUtil.getAllRegions());
+    final ObservableList<BankAccount> allBankAccounts = FXCollections.observableArrayList();
+    final ObservableList<Currency> allCurrencies = FXCollections.observableArrayList(CurrencyUtil.getAllCurrencies());
+    final ObservableList<Region> allRegions = FXCollections.observableArrayList(CountryUtil.getAllRegions());
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -121,16 +121,18 @@ public class FiatAccountModel extends UIModel {
                 holderName.get(),
                 primaryID.get(),
                 secondaryID.get());
-        user.addBankAccount(bankAccount);
-
+        user.setBankAccount(bankAccount);
         saveUser();
-
+        allBankAccounts.setAll(user.getBankAccounts());
         countryNotInAcceptedCountriesList.set(!settings.getAcceptedCountries().contains(country.get()));
+        reset();
     }
 
     void removeBankAccount() {
         user.removeCurrentBankAccount();
         saveUser();
+        allBankAccounts.setAll(user.getBankAccounts());
+        reset();
     }
 
     // We ask the user if he likes to add his own bank account country to the accepted country list if he has not 
@@ -138,23 +140,10 @@ public class FiatAccountModel extends UIModel {
     void addCountryToAcceptedCountriesList() {
         settings.addAcceptedCountry(country.get());
         saveSettings();
+        countryNotInAcceptedCountriesList.set(false);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
-        return FXCollections.observableArrayList(CountryUtil.getAllCountriesFor(selectedRegion));
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void setCurrentBankAccount(BankAccount bankAccount) {
+    void selectBankAccount(BankAccount bankAccount) {
         currentBankAccount.set(bankAccount);
 
         user.setCurrentBankAccount(bankAccount);
@@ -173,18 +162,23 @@ public class FiatAccountModel extends UIModel {
             currency.set(bankAccount.getCurrency());
         }
         else {
-            title.set(null);
-            holderName.set(null);
-            primaryID.set(null);
-            secondaryID.set(null);
-            primaryIDPrompt.set(null);
-            secondaryIDPrompt.set(null);
-
-            type.set(null);
-            country.set(null);
-            currency.set(null);
+            reset();
         }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
+        return FXCollections.observableArrayList(CountryUtil.getAllCountriesFor(selectedRegion));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     void setType(BankAccountType type) {
         this.type.set(type);
@@ -211,6 +205,19 @@ public class FiatAccountModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void reset() {
+        title.set(null);
+        holderName.set(null);
+        primaryID.set(null);
+        secondaryID.set(null);
+        primaryIDPrompt.set(null);
+        secondaryIDPrompt.set(null);
+
+        type.set(null);
+        country.set(null);
+        currency.set(null);
+    }
 
     private void saveUser() {
         persistence.write(user);

@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
-public class FiatValidator extends NumberValidator {
+public final class FiatValidator extends NumberValidator {
     private static final Logger log = LoggerFactory.getLogger(FiatValidator.class);
 
     //TODO Find appropriate values - depends on currencies
@@ -39,7 +39,7 @@ public class FiatValidator extends NumberValidator {
     public static void setFiatCurrencyCode(String currencyCode) {
         FiatValidator.currencyCode = currencyCode;
     }
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -64,10 +64,10 @@ public class FiatValidator extends NumberValidator {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected methods
+    // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected ValidationResult validateIfNotExceedsMinFiatValue(String input) {
+    private ValidationResult validateIfNotExceedsMinFiatValue(String input) {
         double d = Double.parseDouble(input);
         if (d < MIN_FIAT_VALUE)
             return new ValidationResult(false, BSResources.get("validation.fiat.toSmall", currencyCode));
@@ -75,7 +75,7 @@ public class FiatValidator extends NumberValidator {
             return new ValidationResult(true);
     }
 
-    protected ValidationResult validateIfNotExceedsMaxFiatValue(String input) {
+    private ValidationResult validateIfNotExceedsMaxFiatValue(String input) {
         double d = Double.parseDouble(input);
         if (d > MAX_FIAT_VALUE)
             return new ValidationResult(false, BSResources.get("validation.fiat.toLarge", currencyCode));

@@ -51,7 +51,7 @@ import lighthouse.files.AppDirectory;
 public class BitSquare extends Application {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
 
-    public static boolean fillFormsWithDummyData = true;
+    public static final boolean fillFormsWithDummyData = true;
 
     private static String APP_NAME = "Bitsquare";
     private static Stage primaryStage;

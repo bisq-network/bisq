@@ -17,23 +17,12 @@
 
 package io.bitsquare.gui.util.validation;
 
-import io.bitsquare.locale.BSResources;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * NumberValidator for validating basic number values.
- * Localisation not supported at the moment
- * The decimal mark can be either "." or ",". Thousand separators are not supported yet,
- * but might be added alter with Local support.
- * <p>
- * That class implements just what we need for the moment. It is not intended as a general purpose library class.
- */
 
-// TODO Add validation for primary and secondary IDs according to the selected type
-public class BankAccountValidator extends InputValidator {
-    private static final Logger log = LoggerFactory.getLogger(BankAccountValidator.class);
+public final class BankAccountNumberValidator extends InputValidator {
+    private static final Logger log = LoggerFactory.getLogger(BankAccountNumberValidator.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
@@ -41,22 +30,14 @@ public class BankAccountValidator extends InputValidator {
 
     @Override
     public ValidationResult validate(String input) {
-        ValidationResult result = validateIfNotEmpty(input);
-        if (result.isValid)
-            result = validateMinLength(input);
-        return result;
+        // TODO Add validation for primary and secondary IDs according to the selected type
+        return super.validate(input);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected methods
+    // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected ValidationResult validateMinLength(String input) {
-        if (input.length() > 3)
-            return new ValidationResult(true);
-        else
-            return new ValidationResult(false, BSResources.get("validation.inputTooShort"));
-    }
 
 }

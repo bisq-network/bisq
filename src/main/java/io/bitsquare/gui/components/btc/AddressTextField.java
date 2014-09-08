@@ -73,8 +73,7 @@ public class AddressTextField extends AnchorPane {
         addressLabel.textProperty().bind(address);
         addressLabel.setOnMouseClicked(mouseEvent -> {
             try {
-                if (address != null)
-                    Desktop.getDesktop().browse(URI.create(getBitcoinURI()));
+                Desktop.getDesktop().browse(URI.create(getBitcoinURI()));
             } catch (IOException e) {
                 log.warn(e.getMessage());
                 Popups.openWarningPopup("Information", "Opening a system Bitcoin wallet application has failed. " +

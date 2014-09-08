@@ -36,7 +36,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * TextField with validation support.
- * In case the isValid property in amountValidationResultProperty get set to false we display a red border and an error
+ * If validator is set it supports on focus out validation with that validator. If a more sophisticated validation is
+ * needed the validationResultProperty can be used for applying validation result done by external validation.
+ * In case the isValid property in validationResultProperty get set to false we display a red border and an error
  * message within the errorMessageDisplay placed on the right of the text field.
  * The errorMessageDisplay gets closed when the ValidatingTextField instance gets removed from the scene graph or when
  * hideErrorMessageDisplay() is called.
@@ -50,13 +52,21 @@ public class InputTextField extends TextField {
 
     private final Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
 
-    private final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>
-            (new
-                    InputValidator.ValidationResult(true));
+    private final ObjectProperty<InputValidator.ValidationResult> validationResult = new SimpleObjectProperty<>
+            (new InputValidator.ValidationResult(true));
 
     private static PopOver errorMessageDisplay;
     private Region layoutReference = this;
 
+    public InputValidator getValidator() {
+        return validator;
+    }
+
+    public void setValidator(InputValidator validator) {
+        this.validator = validator;
+    }
+
+    private InputValidator validator;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
@@ -73,7 +83,7 @@ public class InputTextField extends TextField {
     public InputTextField() {
         super();
 
-        amountValidationResult.addListener((ov, oldValue, newValue) -> {
+        validationResult.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 setEffect(newValue.isValid ? null : invalidEffect);
 
@@ -90,6 +100,10 @@ public class InputTextField extends TextField {
                 hideErrorMessageDisplay();
         });
 
+        focusedProperty().addListener((o, oldValue, newValue) -> {
+            if (oldValue && !newValue && validator != null)
+                validationResult.set(validator.validate(getText()));
+        });
     }
 
 
@@ -115,8 +129,8 @@ public class InputTextField extends TextField {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObjectProperty<InputValidator.ValidationResult> amountValidationResultProperty() {
-        return amountValidationResult;
+    public ObjectProperty<InputValidator.ValidationResult> validationResultProperty() {
+        return validationResult;
     }
 
 

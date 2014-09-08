@@ -94,12 +94,10 @@ public class SeedNode extends Thread {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void run() {
-        Peer peer = startupPeer();
-
+        startupPeer();
         for (; ; ) {
             try {
                 // ping(peer);
-
                 Thread.sleep(300);
             } catch (InterruptedException e) {
                 log.error(e.toString());

@@ -157,8 +157,8 @@ class WizardItem extends HBox {
     private final ImageView imageView;
     private final Label titleLabel;
     private final Label subTitleLabel;
-    private SetupCB parentCB;
-    private Parent content;
+    private final SetupCB parentCB;
+    private final Parent content;
 
 
     private CodeBehind<? extends PresentationModel> childController;

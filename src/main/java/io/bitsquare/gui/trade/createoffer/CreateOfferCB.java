@@ -323,8 +323,8 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
                     }
                 });
 
-                Popups.openInformationPopup(BSResources.get("createOffer.success.title"),
-                        BSResources.get("createOffer.success.info", presentationModel.transactionId.get()),
+                Popups.openInfo(BSResources.get("createOffer.success.info",
+                                presentationModel.transactionId.get()),
                         BSResources.get("createOffer.success.headline"),
                         actions);
             }
@@ -366,10 +366,10 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         acceptedArbitratorsTextField.textProperty().bind(presentationModel.acceptedArbitrators);
 
         // Validation
-        amountTextField.amountValidationResultProperty().bind(presentationModel.amountValidationResult);
-        minAmountTextField.amountValidationResultProperty().bind(presentationModel.minAmountValidationResult);
-        priceTextField.amountValidationResultProperty().bind(presentationModel.priceValidationResult);
-        volumeTextField.amountValidationResultProperty().bind(presentationModel.volumeValidationResult);
+        amountTextField.validationResultProperty().bind(presentationModel.amountValidationResult);
+        minAmountTextField.validationResultProperty().bind(presentationModel.minAmountValidationResult);
+        priceTextField.validationResultProperty().bind(presentationModel.priceValidationResult);
+        volumeTextField.validationResultProperty().bind(presentationModel.volumeValidationResult);
 
         // buttons
         placeOfferButton.visibleProperty().bind(presentationModel.isPlaceOfferButtonVisible);

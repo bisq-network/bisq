@@ -26,11 +26,11 @@ public class RequestTakerDepositPaymentMessage implements Serializable, TradeMes
     private static final long serialVersionUID = -3988720410493712913L;
 
     private final String tradeId;
-    private BankAccount bankAccount;
-    private String accountID;
-    private String offererPubKey;
-    private String preparedOffererDepositTxAsHex;
-    private long offererTxOutIndex;
+    private final BankAccount bankAccount;
+    private final String accountID;
+    private final String offererPubKey;
+    private final String preparedOffererDepositTxAsHex;
+    private final long offererTxOutIndex;
 
     public RequestTakerDepositPaymentMessage(String tradeId, BankAccount bankAccount, String accountID,
                                              String offererPubKey, String preparedOffererDepositTxAsHex,

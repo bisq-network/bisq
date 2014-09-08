@@ -39,12 +39,12 @@ import org.slf4j.LoggerFactory;
 public class ConfidenceDisplay {
     private static final Logger log = LoggerFactory.getLogger(ConfidenceDisplay.class);
 
-    private WalletEventListener walletEventListener;
-    private Wallet wallet;
-    private Label confirmationLabel;
+    private final WalletEventListener walletEventListener;
+    private final Wallet wallet;
+    private final Label confirmationLabel;
     private TextField balanceTextField;
     private Transaction transaction;
-    private ConfidenceProgressIndicator progressIndicator;
+    private final ConfidenceProgressIndicator progressIndicator;
 
     public ConfidenceDisplay(Wallet wallet, Label confirmationLabel, TextField balanceTextField,
                              ConfidenceProgressIndicator progressIndicator) {

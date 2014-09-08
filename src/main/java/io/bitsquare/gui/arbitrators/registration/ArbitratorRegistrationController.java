@@ -73,7 +73,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
     private final Persistence persistence;
     private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
-    private User user;
+    private final User user;
     private Arbitrator arbitrator = new Arbitrator();
     private ArbitratorProfileController arbitratorProfileController;
     private boolean isEditMode;

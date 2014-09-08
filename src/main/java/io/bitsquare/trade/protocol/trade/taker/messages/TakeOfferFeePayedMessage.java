@@ -27,9 +27,9 @@ public class TakeOfferFeePayedMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = -5057935061275354312L;
     private final String tradeId;
 
-    private Coin tradeAmount;
-    private String takeOfferFeeTxID;
-    private String takerPubKey;
+    private final Coin tradeAmount;
+    private final String takeOfferFeeTxID;
+    private final String takerPubKey;
 
     public TakeOfferFeePayedMessage(String tradeId, String takeOfferFeeTxID, Coin tradeAmount, String takerPubKey) {
         this.tradeId = tradeId;

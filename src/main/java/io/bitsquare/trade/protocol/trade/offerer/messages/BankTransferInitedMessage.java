@@ -27,12 +27,12 @@ public class BankTransferInitedMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = -3479634129543632523L;
     private final String tradeId;
 
-    private String depositTxAsHex;
-    private String offererSignatureR;
-    private String offererSignatureS;
-    private Coin offererPaybackAmount;
-    private Coin takerPaybackAmount;
-    private String offererPayoutAddress;
+    private final String depositTxAsHex;
+    private final String offererSignatureR;
+    private final String offererSignatureS;
+    private final Coin offererPaybackAmount;
+    private final Coin takerPaybackAmount;
+    private final String offererPayoutAddress;
 
     public BankTransferInitedMessage(String tradeId,
                                      String depositTxAsHex,

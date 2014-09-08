@@ -27,8 +27,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.control.*;
 import javafx.scene.effect.*;
 import javafx.scene.paint.*;
@@ -136,30 +134,24 @@ public class ValidatedTextField extends TextField {
     private void bind() {
         this.invalid.bind(maskCheck().or(minLengthCheck()));
 
-        this.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> ov, String t, String t1) {
-                if (textProperty().get() != null && textProperty().get().length() > maxLength.get()) {
-                    setText(t);
-                }
+        this.textProperty().addListener((ov, t, t1) -> {
+            if (textProperty().get() != null && textProperty().get().length() > maxLength.get()) {
+                setText(t);
             }
         });
 
-        this.invalid.addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> ov, Boolean t, Boolean t1) {
-                if (t ^ t1) {
-                    if (t1) {
-                        //                        setStyle("-fx-font-weight: bold; -fx-text-fill: red;");
-                        setEffect(invalidEffect);
-                    }
-                    else {
-                        //                        setStyle("-fx-font-weight: normal; -fx-text-fill: inherit;");
-                        setEffect(null);
-                    }
+        this.invalid.addListener((ov, t, t1) -> {
+            if (t ^ t1) {
+                if (t1) {
+                    //                        setStyle("-fx-font-weight: bold; -fx-text-fill: red;");
+                    setEffect(invalidEffect);
                 }
-
+                else {
+                    //                        setStyle("-fx-font-weight: normal; -fx-text-fill: inherit;");
+                    setEffect(null);
+                }
             }
+
         });
     }
 

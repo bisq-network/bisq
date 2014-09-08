@@ -61,7 +61,6 @@ public class ArbitratorBrowserController extends CachedViewController implements
     private final Settings settings;
     private final Persistence persistence;
 
-    private final MessageFacade messageFacade;
     private final List<Arbitrator> allArbitrators = new ArrayList<>();
     private Arbitrator currentArbitrator;
     private ArbitratorProfileController arbitratorProfileController;
@@ -79,7 +78,6 @@ public class ArbitratorBrowserController extends CachedViewController implements
 
         this.settings = settings;
         this.persistence = persistence;
-        this.messageFacade = messageFacade;
 
         messageFacade.addArbitratorListener(this);
         messageFacade.getArbitrators(LanguageUtil.getDefaultLanguageLocale());

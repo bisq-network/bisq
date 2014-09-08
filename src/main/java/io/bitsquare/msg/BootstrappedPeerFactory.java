@@ -73,7 +73,7 @@ public class BootstrappedPeerFactory {
     private KeyPair keyPair;
     private Storage storage;
     private final SeedNodeAddress seedNodeAddress;
-    private Persistence persistence;
+    private final Persistence persistence;
 
     private final SettableFuture<PeerDHT> settableFuture = SettableFuture.create();
 

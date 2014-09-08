@@ -73,13 +73,13 @@ import org.slf4j.LoggerFactory;
 public class PendingTradeController extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(PendingTradeController.class);
 
-    private TradeManager tradeManager;
-    private WalletFacade walletFacade;
+    private final TradeManager tradeManager;
+    private final WalletFacade walletFacade;
 
     private Trade currentTrade;
 
-    private Image buyIcon = ImageUtil.getIconImage(ImageUtil.BUY);
-    private Image sellIcon = ImageUtil.getIconImage(ImageUtil.SELL);
+    private final Image buyIcon = ImageUtil.getIconImage(ImageUtil.BUY);
+    private final Image sellIcon = ImageUtil.getIconImage(ImageUtil.SELL);
     private ConfidenceDisplay confidenceDisplay;
 
     @FXML private TableView openTradesTable;

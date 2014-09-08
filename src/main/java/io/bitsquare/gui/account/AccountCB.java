@@ -32,7 +32,6 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
-import javafx.event.ActionEvent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
@@ -46,7 +45,6 @@ public class AccountCB extends CachedCodeBehind<SetupPM> {
     public Label headLineLabel;
     public Label titleLabel;
     public Tab setupTab;
-    private Pane setupView;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -66,6 +64,7 @@ public class AccountCB extends CachedCodeBehind<SetupPM> {
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
+        loadViewAndGetChildController(NavigationItem.SETUP);
     }
 
     @Override
@@ -83,7 +82,7 @@ public class AccountCB extends CachedCodeBehind<SetupPM> {
         super.terminate();
     }
 
-    public void onRegister(ActionEvent actionEvent) {
+    public void onRegister() {
         loadViewAndGetChildController(NavigationItem.SETUP);
     }
 
@@ -98,7 +97,7 @@ public class AccountCB extends CachedCodeBehind<SetupPM> {
 
         final GuiceFXMLLoader loader = new GuiceFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
-            setupView = loader.load();
+            Pane setupView = loader.load();
             setupTab.setContent(setupView);
             childController = loader.getController();
 
@@ -111,7 +110,7 @@ public class AccountCB extends CachedCodeBehind<SetupPM> {
             log.error(e.getStackTrace().toString());
         }
 
-        return null;
+        return (CodeBehind) childController;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

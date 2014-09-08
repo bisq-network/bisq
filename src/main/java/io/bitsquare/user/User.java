@@ -34,8 +34,11 @@ import java.util.Locale;
 
 import javax.annotation.Nullable;
 
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,16 +51,24 @@ public class User implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(User.class);
     private static final long serialVersionUID = 7409078808248518638L;
 
-    transient private final IntegerProperty selectedBankAccountIndexProperty = new SimpleIntegerProperty();
-    transient private final IntegerProperty bankAccountsSizeProperty = new SimpleIntegerProperty();
-
     private KeyPair messageKeyPair;
     private String accountID;
-    // TODO make it thread safe
-    private List<BankAccount> bankAccounts = new ArrayList<>();
-    private BankAccount currentBankAccount;
+
+    // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is 
+    // only temporary
+    private List<BankAccount> _bankAccounts = new ArrayList<>();
+    private BankAccount _currentBankAccount;
+
+    private final transient ObservableList<BankAccount> bankAccounts = FXCollections.observableArrayList();
+    private final transient ObjectProperty<BankAccount> currentBankAccount = new SimpleObjectProperty<>();
 
     public User() {
+        // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is 
+        // only temporary
+        bankAccounts.addListener((ListChangeListener<BankAccount>) change ->
+                _bankAccounts = new ArrayList<>(bankAccounts));
+
+        currentBankAccount.addListener((ov) -> _currentBankAccount = currentBankAccount.get());
     }
 
 
@@ -67,35 +78,33 @@ public class User implements Serializable {
 
     public void applyPersistedUser(User persistedUser) {
         if (persistedUser != null) {
-            bankAccounts = persistedUser.getBankAccounts();
+            bankAccounts.setAll(persistedUser.getSerializedBankAccounts());
+            setCurrentBankAccount(persistedUser.getSerializedCurrentBankAccount());
             messageKeyPair = persistedUser.getMessageKeyPair();
             accountID = persistedUser.getAccountId();
-            setCurrentBankAccount(persistedUser.getCurrentBankAccount());
         }
         else {
             // First time
-            bankAccounts = new ArrayList<>();
-            messageKeyPair = DSAKeyUtil.generateKeyPair();  // DSAKeyUtil.getKeyPair() runs in same thread now
+            // TODO use separate thread. DSAKeyUtil.getKeyPair() runs in same thread now
+            messageKeyPair = DSAKeyUtil.generateKeyPair();
         }
 
-        bankAccountsSizeProperty.set(bankAccounts.size());
         BSFormatter.setFiatCurrencyCode(Currency.getInstance(Locale.getDefault()).getCurrencyCode());
     }
 
-    public void addBankAccount(BankAccount bankAccount) {
-        if (!bankAccounts.contains(bankAccount)) {
-            bankAccounts.add(bankAccount);
-            bankAccountsSizeProperty.set(bankAccounts.size());
-        }
+    public void setBankAccount(BankAccount bankAccount) {
+        // We use the account title as hashCode
+        // In case we edit an existing we replace it in the list
+        if (bankAccounts.contains(bankAccount))
+            bankAccounts.remove(bankAccount);
 
+        bankAccounts.add(bankAccount);
         setCurrentBankAccount(bankAccount);
     }
 
     public void removeCurrentBankAccount() {
-        if (currentBankAccount != null) {
-            bankAccounts.remove(currentBankAccount);
-            bankAccountsSizeProperty.set(bankAccounts.size());
-        }
+        if (currentBankAccount.get() != null)
+            bankAccounts.remove(currentBankAccount.get());
 
         if (bankAccounts.isEmpty())
             setCurrentBankAccount(null);
@@ -115,16 +124,13 @@ public class User implements Serializable {
     }
 
     public void setCurrentBankAccount(@Nullable BankAccount bankAccount) {
-        currentBankAccount = bankAccount;
+        currentBankAccount.set(bankAccount);
 
-        if (currentBankAccount != null) {
-            BSFormatter.setFiatCurrencyCode(currentBankAccount.getCurrency().getCurrencyCode());
-            FiatValidator.setFiatCurrencyCode(currentBankAccount.getCurrency().getCurrencyCode());
-
-            selectedBankAccountIndexProperty.set(bankAccounts.indexOf(currentBankAccount));
+        if (currentBankAccount.get() != null) {
+            BSFormatter.setFiatCurrencyCode(currentBankAccount.get().getCurrency().getCurrencyCode());
+            FiatValidator.setFiatCurrencyCode(currentBankAccount.get().getCurrency().getCurrencyCode());
         }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -132,6 +138,7 @@ public class User implements Serializable {
 
     // TODO just a first attempt, refine when working on the embedded data for the reg. tx
     public String getStringifiedBankAccounts() {
+        // TODO use steam API
         String bankAccountUIDs = "";
         for (int i = 0; i < bankAccounts.size(); i++) {
             BankAccount bankAccount = bankAccounts.get(i);
@@ -148,25 +155,22 @@ public class User implements Serializable {
         return accountID;
     }
 
-    public List<BankAccount> getBankAccounts() {
+    public ObservableList<BankAccount> getBankAccounts() {
         return bankAccounts;
     }
 
     public BankAccount getCurrentBankAccount() {
-        return currentBankAccount;
+        return currentBankAccount.get();
     }
 
     public BankAccount getBankAccount(String bankAccountId) {
+        // TODO use steam API
         for (final BankAccount bankAccount : bankAccounts) {
             if (bankAccount.getUid().equals(bankAccountId)) {
                 return bankAccount;
             }
         }
         return null;
-    }
-
-    public IntegerProperty getSelectedBankAccountIndexProperty() {
-        return selectedBankAccountIndexProperty;
     }
 
     public KeyPair getMessageKeyPair() {
@@ -181,7 +185,18 @@ public class User implements Serializable {
         return DSAKeyUtil.getHexStringFromPublicKey(getMessagePublicKey());
     }
 
-    public IntegerProperty getBankAccountsSizeProperty() {
-        return bankAccountsSizeProperty;
+    public ObjectProperty<BankAccount> currentBankAccountProperty() {
+        return currentBankAccount;
     }
+
+    // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is 
+    // only temporary
+    List<BankAccount> getSerializedBankAccounts() {
+        return _bankAccounts;
+    }
+
+    BankAccount getSerializedCurrentBankAccount() {
+        return _currentBankAccount;
+    }
+
 }

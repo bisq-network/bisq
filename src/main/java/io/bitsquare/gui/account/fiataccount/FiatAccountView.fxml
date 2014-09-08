@@ -19,6 +19,7 @@
 
 
 <?import io.bitsquare.gui.components.InfoDisplay?>
+<?import io.bitsquare.gui.components.InputTextField?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -57,16 +58,16 @@
         </ComboBox>
 
         <Label text="Title:" GridPane.rowIndex="1"/>
-        <TextField fx:id="titleTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+        <InputTextField fx:id="titleTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
         <Label text="Holder name:" GridPane.rowIndex="2"/>
-        <TextField fx:id="holderNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+        <InputTextField fx:id="holderNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
         <Label text="Primary ID:" GridPane.rowIndex="3"/>
-        <TextField fx:id="primaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+        <InputTextField fx:id="primaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 
         <Label text="Secondary ID:" GridPane.rowIndex="4"/>
-        <TextField fx:id="secondaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+        <InputTextField fx:id="secondaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
 
         <Label text="Currency:" GridPane.rowIndex="5"/>
         <ComboBox fx:id="currencyComboBox" promptText="Select currency"
@@ -83,16 +84,16 @@
             </children>
         </HBox>
 
-        <InfoDisplay gridPane="$root" onAction="#onOpenHelp" rowIndex="7"
+        <InfoDisplay gridPane="$root" onAction="#onOpenSetupHelp" rowIndex="7"
                      text="The payments account data will be saved in a encrypted form to the Bitcoin block chain and will be used in the trade process for account verification."/>
 
-        <Button fx:id="saveButton" text="Save bank account" onAction="#onSave" GridPane.columnIndex="1"
-                GridPane.rowIndex="8" defaultButton="true" disable="true">
+        <HBox GridPane.columnIndex="1" GridPane.rowIndex="8" spacing="10">
+            <Button fx:id="saveButton" text="Save" onAction="#onSave" defaultButton="true" disable="true"/>
+            <Button fx:id="doneButton" text="Continue to the next step" onAction="#onDone" disable="true"/>
             <GridPane.margin>
                 <Insets top="15.0" bottom="5.0"/>
             </GridPane.margin>
-        </Button>
-
+        </HBox>
 
         <!--
         Manage
@@ -113,31 +114,24 @@
             </padding>
         </Pane>
 
-        <Label text="Add new account:" GridPane.rowIndex="9">
+        <Label text="Select payments account:" GridPane.rowIndex="9">
             <GridPane.margin>
                 <Insets top="40"/>
             </GridPane.margin>
         </Label>
-        <Button fx:id="addBankAccountButton" text="Add payments account" onAction="#onAddAccount"
-                GridPane.columnIndex="1" GridPane.rowIndex="9" disable="true">
+        <ComboBox fx:id="selectionComboBox" onAction="#onSelectAccount" GridPane.rowIndex="9"
+                  GridPane.columnIndex="1">
             <GridPane.margin>
                 <Insets top="40"/>
             </GridPane.margin>
-        </Button>
+        </ComboBox>
 
-        <Label text="Select payments account:" GridPane.rowIndex="10"/>
-        <ComboBox fx:id="selectionComboBox" onAction="#onSelectAccount" GridPane.rowIndex="10"
-                  GridPane.columnIndex="1"/>
-
-        <Label text="Change selected account:" GridPane.rowIndex="11"/>
-        <Button fx:id="changeBankAccountButton" text="Change selected payments account" onAction="#onChangeAccount"
-                GridPane.columnIndex="1"
-                GridPane.rowIndex="11" disable="true"/>
-
-        <Label text="Remove selected account:" GridPane.rowIndex="12"/>
+        <Label text="Remove selected account:" GridPane.rowIndex="10"/>
         <Button fx:id="removeBankAccountButton" text="Remove selected payments account" onAction="#onRemoveAccount"
-                GridPane.columnIndex="1"
-                GridPane.rowIndex="12" disable="true"/>
+                GridPane.columnIndex="1" GridPane.rowIndex="10" disable="true"/>
+
+        <InfoDisplay gridPane="$root" onAction="#onOpenManageAccountsHelp" rowIndex="11"
+                     text="When you change your payments accounts later you need to do the renew the registration and pay the small registration fee."/>
 
     </children>
 
@@ -147,7 +141,6 @@
     </columnConstraints>
 
     <rowConstraints>
-        <RowConstraints vgrow="NEVER"/>
         <RowConstraints vgrow="NEVER"/>
         <RowConstraints vgrow="NEVER"/>
         <RowConstraints vgrow="NEVER"/>

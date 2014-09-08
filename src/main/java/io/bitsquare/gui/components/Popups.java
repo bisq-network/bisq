@@ -18,6 +18,8 @@
 package io.bitsquare.gui.components;
 
 import io.bitsquare.BitSquare;
+import io.bitsquare.gui.MainController;
+import io.bitsquare.locale.BSResources;
 
 import com.google.bitcoin.store.BlockStoreException;
 
@@ -27,7 +29,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 
+import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 import org.controlsfx.dialog.DialogStyle;
@@ -43,20 +47,31 @@ public class Popups {
     private static final Logger log = LoggerFactory.getLogger(Popups.class);
 
     // Information
-    public static void openInformationPopup(String title, String message) {
-        openInformationPopup(title, message, null, null);
+    public static void openInfo(String message) {
+        openInfo(message, null, null);
     }
 
-    public static void openInformationPopup(String title, String message, String masthead) {
+    // Supports blurring the content background
+    public static void openInfo(String message, String masthead) {
+        MainController.GET_INSTANCE().blurContentScreen();
         List<Action> actions = new ArrayList<>();
-        actions.add(Dialog.Actions.CLOSE);
-        openInformationPopup(title, message, masthead, actions);
+
+        // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added 
+        // our own actions.
+        actions.add(new AbstractAction(BSResources.get("shared.close")) {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                Dialog.Actions.CLOSE.handle(actionEvent);
+                MainController.GET_INSTANCE().removeContentScreenBlur();
+            }
+        });
+        openInfo(message, masthead, actions);
     }
 
-    public static void openInformationPopup(String title, String message, String masthead, List<Action> actions) {
+
+    public static void openInfo(String message, String masthead, List<Action> actions) {
         Dialogs.create()
                 .owner(BitSquare.getPrimaryStage())
-                .title(title)
                 .message(message)
                 .masthead(masthead)
                 .actions(actions)

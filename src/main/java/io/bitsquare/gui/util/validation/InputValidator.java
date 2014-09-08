@@ -23,10 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * BaseValidator for validating basic number values.
- * Localisation not supported at the moment
- * The decimal mark can be either "." or ",". Thousand separators are not supported yet,
- * but might be added alter with Local support.
+ * Base class for other specialized validators.
  * <p>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
@@ -51,11 +48,6 @@ public class InputValidator {
         else
             return new ValidationResult(true);
     }
-
-    protected String cleanInput(String input) {
-        return input.replace(",", ".").trim();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ValidationResult

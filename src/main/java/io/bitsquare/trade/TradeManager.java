@@ -76,7 +76,7 @@ public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
     private final User user;
-    private Settings settings;
+    private final Settings settings;
     private final Persistence persistence;
     private final MessageFacade messageFacade;
     private final BlockChainFacade blockChainFacade;
@@ -463,7 +463,7 @@ public class TradeManager {
     @Nullable
     public Trade getTrade(String tradeId) {
         if (trades.containsKey(tradeId)) {
-            return trades.get(trades);
+            return trades.get(tradeId);
         }
         else {
             return null;

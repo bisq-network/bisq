@@ -57,8 +57,8 @@ public class RestrictionsModel extends UIModel {
     ObservableList<Country> countryList = FXCollections.observableArrayList();
     ObservableList<Arbitrator> arbitratorList = FXCollections.observableArrayList();
 
-    ObservableList<Locale> allLanguages = FXCollections.observableArrayList(LanguageUtil.getAllLanguageLocales());
-    ObservableList<Region> allRegions = FXCollections.observableArrayList(CountryUtil.getAllRegions());
+    final ObservableList<Locale> allLanguages = FXCollections.observableArrayList(LanguageUtil.getAllLanguageLocales());
+    final ObservableList<Region> allRegions = FXCollections.observableArrayList(CountryUtil.getAllRegions());
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

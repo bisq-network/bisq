@@ -697,7 +697,7 @@ public class SettingsController extends CachedViewController {
                     bankAccountHolderNameTextField.getText(),
                     bankAccountPrimaryIDTextField.getText(),
                     bankAccountSecondaryIDTextField.getText());
-            user.addBankAccount(bankAccount);
+            user.setBankAccount(bankAccount);
 
             saveUser();
 

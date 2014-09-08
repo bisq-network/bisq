@@ -17,13 +17,14 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <GridPane fx:id="root" fx:controller="io.bitsquare.gui.account.registration.RegistrationCB" hgap="5.0" vgap="5.0"
           AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
     <children>
-
+        <Label text="REG"/>
 
     </children>
 

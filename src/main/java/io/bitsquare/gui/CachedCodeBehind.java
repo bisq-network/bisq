@@ -39,7 +39,6 @@ public class CachedCodeBehind<T extends PresentationModel> extends CodeBehind<T>
             else if (oldValue != null && newValue == null) deactivate();
         });
 
-        activate();
         presentationModel.initialized();
     }
 
@@ -71,7 +70,6 @@ public class CachedCodeBehind<T extends PresentationModel> extends CodeBehind<T>
         log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
         super.terminate();
 
-        deactivate();
         presentationModel.terminate();
     }
 

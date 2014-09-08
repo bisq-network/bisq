@@ -67,7 +67,7 @@ public class BSFormatter {
     private static CoinFormat coinFormat = CoinFormat.BTC.repeatOptionalDecimals(2, 1);
 
     // format is like: 1,00  never more then 2 decimals 
-    private static CoinFormat fiatFormat = CoinFormat.FIAT.repeatOptionalDecimals(0, 0);
+    private static final CoinFormat fiatFormat = CoinFormat.FIAT.repeatOptionalDecimals(0, 0);
 
     private static String currencyCode = Currency.getInstance(Locale.getDefault()).getCurrencyCode();
 

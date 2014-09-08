@@ -22,7 +22,6 @@ import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.scene.*;
 import javafx.scene.effect.*;
 import javafx.scene.layout.*;
@@ -31,15 +30,13 @@ import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.checkState;
-
 public class Transitions {
     private static final Logger log = LoggerFactory.getLogger(Transitions.class);
 
-    public static final int UI_ANIMATION_TIME = 800;
+    public static final int DURATION = 400;
 
     public static void fadeIn(Node node) {
-        fadeIn(node, UI_ANIMATION_TIME);
+        fadeIn(node, DURATION);
     }
 
     public static void fadeIn(Node node, int duration) {
@@ -50,7 +47,7 @@ public class Transitions {
     }
 
     public static Animation fadeOut(Node node) {
-        return fadeOut(node, UI_ANIMATION_TIME);
+        return fadeOut(node, DURATION);
     }
 
     public static Animation fadeOut(Node node, int duration) {
@@ -62,7 +59,7 @@ public class Transitions {
     }
 
     public static Animation fadeOutAndRemove(Node node) {
-        return fadeOutAndRemove(node, UI_ANIMATION_TIME);
+        return fadeOutAndRemove(node, DURATION);
     }
 
     public static Animation fadeOutAndRemove(Node node, int duration) {
@@ -74,45 +71,58 @@ public class Transitions {
         return animation;
     }
 
-    public static Timeline blurAndRemove(Node node) {
-        return blurAndRemove(node, UI_ANIMATION_TIME);
-    }
-
-    public static Timeline blurAndRemove(Node node, int duration) {
-        Timeline timeline = blur(node, duration);
-        timeline.setOnFinished(actionEvent -> {
-            ((Pane) (node.getParent())).getChildren().remove(node);
-            Profiler.printMsgWithTime("blurOutAndRemove");
-        });
-        return timeline;
-    }
-
     public static void blur(Node node) {
-        blur(node, UI_ANIMATION_TIME);
+        blur(node, DURATION, true, false);
     }
 
-    public static Timeline blur(Node node, int duration) {
+    public static Timeline blur(Node node, int duration, boolean useDarken, boolean removeNode) {
         GaussianBlur blur = new GaussianBlur(0.0);
-        node.setEffect(blur);
         Timeline timeline = new Timeline();
-        KeyValue kv = new KeyValue(blur.radiusProperty(), 10.0);
-        KeyFrame kf = new KeyFrame(Duration.millis(duration), kv);
-        timeline.getKeyFrames().add(kf);
+        KeyValue kv1 = new KeyValue(blur.radiusProperty(), 15.0);
+        KeyFrame kf1 = new KeyFrame(Duration.millis(duration), kv1);
+
+        if (useDarken) {
+            ColorAdjust darken = new ColorAdjust();
+            darken.setBrightness(0.0);
+            blur.setInput(darken);
+
+            KeyValue kv2 = new KeyValue(darken.brightnessProperty(), -0.3);
+            KeyFrame kf2 = new KeyFrame(Duration.millis(duration), kv2);
+            timeline.getKeyFrames().addAll(kf1, kf2);
+        }
+        else {
+            timeline.getKeyFrames().addAll(kf1);
+        }
+        node.setEffect(blur);
+        if (removeNode) timeline.setOnFinished(actionEvent -> ((Pane) (node.getParent())).getChildren().remove(node));
         timeline.play();
         return timeline;
     }
 
     public static void removeBlur(Node node) {
-        GaussianBlur blur = (GaussianBlur) node.getEffect();
-        Timeline durationline = new Timeline();
-        KeyValue kv = new KeyValue(blur.radiusProperty(), 0.0);
-        KeyFrame kf = new KeyFrame(Duration.millis(UI_ANIMATION_TIME), kv);
-        durationline.getKeyFrames().add(kf);
-        durationline.setOnFinished(actionEvent -> node.setEffect(null));
-        durationline.play();
+        removeBlur(node, DURATION, false);
     }
 
-    public static void checkGuiThread() {
-        checkState(Platform.isFxApplicationThread());
+    public static void removeBlur(Node node, int duration, boolean useDarken) {
+        GaussianBlur blur = (GaussianBlur) node.getEffect();
+        Timeline timeline = new Timeline();
+
+        KeyValue kv1 = new KeyValue(blur.radiusProperty(), 0.0);
+        KeyFrame kf1 = new KeyFrame(Duration.millis(DURATION), kv1);
+
+
+        if (useDarken) {
+            ColorAdjust darken = (ColorAdjust) blur.getInput();
+
+            KeyValue kv2 = new KeyValue(darken.brightnessProperty(), 0.0);
+            KeyFrame kf2 = new KeyFrame(Duration.millis(duration), kv2);
+            timeline.getKeyFrames().addAll(kf1, kf2);
+        }
+        else {
+            timeline.getKeyFrames().addAll(kf1);
+        }
+
+        timeline.setOnFinished(actionEvent -> node.setEffect(null));
+        timeline.play();
     }
 }

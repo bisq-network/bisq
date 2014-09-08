@@ -27,19 +27,19 @@ import java.security.PublicKey;
 public class RequestOffererPublishDepositTxMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = 2179683654379803071L;
     private final String tradeId;
-    private BankAccount bankAccount;
-    private String accountID;
-    private PublicKey takerMessagePublicKey;
-    private String signedTakerDepositTxAsHex;
-    private String txScriptSigAsHex;
-    private String txConnOutAsHex;
-    private String contractAsJson;
-    private String takerContractSignature;
-    private String takerPayoutAddress;
-    private long takerTxOutIndex;
+    private final BankAccount bankAccount;
+    private final String accountID;
+    private final PublicKey takerMessagePublicKey;
+    private final String signedTakerDepositTxAsHex;
+    private final String txScriptSigAsHex;
+    private final String txConnOutAsHex;
+    private final String contractAsJson;
+    private final String takerContractSignature;
+    private final String takerPayoutAddress;
+    private final long takerTxOutIndex;
 
 
-    private long offererTxOutIndex;
+    private final long offererTxOutIndex;
 
     public RequestOffererPublishDepositTxMessage(String tradeId,
                                                  BankAccount bankAccount,

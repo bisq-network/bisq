@@ -20,7 +20,7 @@ package io.bitsquare.gui.account.fiataccount;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.gui.PresentationModel;
-import io.bitsquare.gui.util.validation.BankAccountValidator;
+import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
@@ -46,25 +46,21 @@ import org.slf4j.LoggerFactory;
 public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
     private static final Logger log = LoggerFactory.getLogger(FiatAccountPm.class);
 
-    private BankAccountValidator bankAccountValidator = new BankAccountValidator();
+    private final BankAccountNumberValidator validator = new BankAccountNumberValidator();
 
-    StringProperty title = new SimpleStringProperty();
-    StringProperty holderName = new SimpleStringProperty();
-    StringProperty primaryID = new SimpleStringProperty();
-    StringProperty secondaryID = new SimpleStringProperty();
-    StringProperty primaryIDPrompt = new SimpleStringProperty();
-    StringProperty secondaryIDPrompt = new SimpleStringProperty();
-    StringProperty selectionPrompt = new SimpleStringProperty();
-    BooleanProperty selectionDisable = new SimpleBooleanProperty();
-    BooleanProperty saveButtonDisable = new SimpleBooleanProperty(true);
-    BooleanProperty addBankAccountButtonDisable = new SimpleBooleanProperty(true);
-    BooleanProperty changeBankAccountButtonDisable = new SimpleBooleanProperty(true);
-    BooleanProperty removeBankAccountButtonDisable = new SimpleBooleanProperty(true);
+    final StringProperty title = new SimpleStringProperty();
+    final StringProperty holderName = new SimpleStringProperty();
+    final StringProperty primaryID = new SimpleStringProperty();
+    final StringProperty secondaryID = new SimpleStringProperty();
+    final StringProperty primaryIDPrompt = new SimpleStringProperty();
+    final StringProperty secondaryIDPrompt = new SimpleStringProperty();
+    final StringProperty selectionPrompt = new SimpleStringProperty();
+    final BooleanProperty selectionDisable = new SimpleBooleanProperty();
+    final BooleanProperty saveButtonDisable = new SimpleBooleanProperty(true);
 
-    BooleanProperty countryNotInAcceptedCountriesList = new SimpleBooleanProperty();
-    ObjectProperty<BankAccountType> type = new SimpleObjectProperty<>();
-    ObjectProperty<Country> country = new SimpleObjectProperty<>();
-    ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
+    final ObjectProperty<BankAccountType> type = new SimpleObjectProperty<>();
+    final ObjectProperty<Country> country = new SimpleObjectProperty<>();
+    final ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -96,20 +92,11 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
 
         primaryIDPrompt.bind(model.primaryIDPrompt);
         secondaryIDPrompt.bind(model.secondaryIDPrompt);
-        countryNotInAcceptedCountriesList.bind(model.countryNotInAcceptedCountriesList);
 
         selectionPrompt.set("No bank account available");
         selectionDisable.set(true);
 
-        model.title.addListener((ov, oldValue, newValue) -> {
-            validateInput();
-            /*
-            InputValidator.ValidationResult result = validateInput();
-            if (result.isValid) {
-                result = bankAccountValidator.validate(newValue);
-                saveButtonDisable.set(!result.isValid);
-            }*/
-        });
+        model.title.addListener((ov, oldValue, newValue) -> validateInput());
         holderName.addListener((ov, oldValue, newValue) -> validateInput());
         primaryID.addListener((ov, oldValue, newValue) -> validateInput());
         secondaryID.addListener((ov, oldValue, newValue) -> validateInput());
@@ -118,7 +105,6 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
     @Override
     public void activate() {
         super.activate();
-
 
         model.allBankAccounts.addListener((ListChangeListener<BankAccount>) change -> {
             if (model.allBankAccounts.isEmpty()) {
@@ -151,10 +137,6 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
         InputValidator.ValidationResult result = validateInput();
         if (result.isValid) {
             model.saveBankAccount();
-
-            addBankAccountButtonDisable.set(false);
-            changeBankAccountButtonDisable.set(false);
-            removeBankAccountButtonDisable.set(false);
         }
         return result;
     }
@@ -163,16 +145,12 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
         model.removeBankAccount();
     }
 
-    void updateDoneButtonDisabled() {
-      /*  boolean isValid = model.languageList != null && model.languageList.size() > 0 &&
-                model.countryList != null && model.countryList.size() > 0 &&
-                model.arbitratorList != null && model.arbitratorList.size() > -1;
-        doneButtonDisabled.set(!isValid);*/
-    }
-
-
     void addCountryToAcceptedCountriesList() {
         model.addCountryToAcceptedCountriesList();
+    }
+
+    void selectBankAccount(BankAccount bankAccount) {
+        model.selectBankAccount(bankAccount);
     }
 
 
@@ -281,15 +259,14 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
         return model.getAllCountriesFor(selectedRegion);
     }
 
+    BooleanProperty getCountryNotInAcceptedCountriesList() {
+        return model.countryNotInAcceptedCountriesList;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void setCurrentBankAccount(BankAccount bankAccount) {
-        model.setCurrentBankAccount(bankAccount);
-        validateInput();
-    }
 
     void setType(BankAccountType type) {
         model.setType(type);
@@ -312,13 +289,13 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
 
 
     private InputValidator.ValidationResult validateInput() {
-        InputValidator.ValidationResult result = bankAccountValidator.validate(model.title.get());
+        InputValidator.ValidationResult result = validator.validate(model.title.get());
         if (result.isValid) {
-            result = bankAccountValidator.validate(model.holderName.get());
+            result = validator.validate(model.holderName.get());
             if (result.isValid) {
-                result = bankAccountValidator.validate(model.primaryID.get());
+                result = validator.validate(model.primaryID.get());
                 if (result.isValid) {
-                    result = bankAccountValidator.validate(model.secondaryID.get());
+                    result = validator.validate(model.secondaryID.get());
                     if (result.isValid) {
                         if (model.currency.get() == null)
                             result = new InputValidator.ValidationResult(false,
@@ -341,5 +318,11 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
         saveButtonDisable.set(!result.isValid);
         return result;
     }
+
+
+    public InputValidator getValidator() {
+        return validator;
+    }
+
 
 }

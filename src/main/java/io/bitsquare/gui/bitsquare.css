@@ -186,10 +186,6 @@ tab pane upper bg gradient color mid dark grey to bright grey: cfcfcf -> dddddd
     -fx-alignment: center;
 }
 
-#nav-account-combo-box .list-cell {
-    -fx-alignment: center;
-}
-
 .text-field:readonly {
     -fx-text-fill: #000000;
     -fx-background-color: #FAFAFA;
