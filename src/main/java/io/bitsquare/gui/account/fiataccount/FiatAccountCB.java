@@ -72,7 +72,7 @@ public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FiatAccountCB(FiatAccountPm presentationModel) {
+    private FiatAccountCB(FiatAccountPm presentationModel) {
         super(presentationModel);
     }
 

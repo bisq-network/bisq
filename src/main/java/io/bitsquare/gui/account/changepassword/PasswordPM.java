@@ -31,7 +31,7 @@ import javafx.beans.property.StringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PasswordPM extends PresentationModel<PasswordModel> {
+class PasswordPM extends PresentationModel<PasswordModel> {
     private static final Logger log = LoggerFactory.getLogger(PasswordPM.class);
 
     private final PasswordValidator passwordValidator = new PasswordValidator();
@@ -46,7 +46,7 @@ public class PasswordPM extends PresentationModel<PasswordModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PasswordPM(PasswordModel model) {
+    private PasswordPM(PasswordModel model) {
         super(model);
 
         passwordField.addListener((ov) -> saveButtonDisabled.set(!validate()));

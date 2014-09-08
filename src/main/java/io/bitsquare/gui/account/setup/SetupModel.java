@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SetupModel extends UIModel {
+class SetupModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(SetupModel.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -32,7 +32,7 @@ public class SetupModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SetupModel() {
+    private SetupModel() {
 
     }
 

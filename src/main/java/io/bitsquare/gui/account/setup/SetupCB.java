@@ -59,7 +59,7 @@ public class SetupCB extends CachedCodeBehind<SetupPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SetupCB(SetupPM presentationModel) {
+    private SetupCB(SetupPM presentationModel) {
         super(presentationModel);
     }
 

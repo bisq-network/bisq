@@ -49,7 +49,7 @@ public class AccountCB extends CachedCodeBehind<AccountPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AccountCB(AccountPM presentationModel) {
+    private AccountCB(AccountPM presentationModel) {
         super(presentationModel);
     }
 

@@ -33,7 +33,7 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RestrictionsPM extends PresentationModel<RestrictionsModel> {
+class RestrictionsPM extends PresentationModel<RestrictionsModel> {
     private static final Logger log = LoggerFactory.getLogger(RestrictionsPM.class);
 
 
@@ -45,7 +45,7 @@ public class RestrictionsPM extends PresentationModel<RestrictionsModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public RestrictionsPM(RestrictionsModel model) {
+    private RestrictionsPM(RestrictionsModel model) {
         super(model);
     }
 

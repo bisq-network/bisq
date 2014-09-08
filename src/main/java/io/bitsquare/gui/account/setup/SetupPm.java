@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SetupPM extends PresentationModel<SetupModel> {
+class SetupPM extends PresentationModel<SetupModel> {
     private static final Logger log = LoggerFactory.getLogger(SetupPM.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -32,7 +32,7 @@ public class SetupPM extends PresentationModel<SetupModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SetupPM(SetupModel model) {
+    private SetupPM(SetupModel model) {
         super(model);
     }
 

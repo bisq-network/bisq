@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.gui.util.BSFormatter.formatCoinWithCode;
 
-public class RegistrationPM extends PresentationModel<RegistrationModel> {
+class RegistrationPM extends PresentationModel<RegistrationModel> {
     private static final Logger log = LoggerFactory.getLogger(RegistrationPM.class);
 
     // Those are needed for the addressTextField
@@ -53,7 +53,7 @@ public class RegistrationPM extends PresentationModel<RegistrationModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public RegistrationPM(RegistrationModel model) {
+    private RegistrationPM(RegistrationModel model) {
         super(model);
     }
 

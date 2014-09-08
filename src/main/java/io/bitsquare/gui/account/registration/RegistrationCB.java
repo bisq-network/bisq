@@ -65,7 +65,7 @@ public class RegistrationCB extends CachedCodeBehind<RegistrationPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public RegistrationCB(RegistrationPM presentationModel) {
+    private RegistrationCB(RegistrationPM presentationModel) {
         super(presentationModel);
     }
 
@@ -160,7 +160,7 @@ public class RegistrationCB extends CachedCodeBehind<RegistrationPM> {
             // ((GridPane) root).getChildren().remove(completedButton);
         }
     }
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////

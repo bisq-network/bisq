@@ -25,7 +25,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountModel extends UIModel {
+class AccountModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(AccountModel.class);
     private final User user;
 
@@ -34,7 +34,7 @@ public class AccountModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AccountModel(User user) {
+    private AccountModel(User user) {
 
         this.user = user;
     }

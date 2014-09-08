@@ -63,9 +63,7 @@
                     <Insets bottom="10.0" left="10.0" right="10.0" top="20.0"/>
                 </GridPane.margin>
                 <ImageView fitHeight="54.0" fitWidth="62.0" pickOnBounds="true" preserveRatio="true">
-                    <image>
-                        <Image url="@/images/buy_62_54.png"/>
-                    </image>
+                    <Image url="@/images/buy_62_54.png"/>
                 </ImageView>
                 <Label fx:id="buyLabel" id="direction-icon-label" text="%createOffer.amountPriceBox.subTitle"
                        alignment="CENTER">
@@ -80,18 +78,14 @@
                     <Insets right="10.0" top="20.0"/>
                 </GridPane.margin>
                 <VBox spacing="4">
-                    <children>
-                        <Label id="input-description-label" text="%createOffer.amountPriceBox.amountDescr"
-                               prefWidth="170"/>
-                        <HBox>
-                            <children>
-                                <InputTextField fx:id="amountTextField" id="text-input-with-currency-text-field"
-                                                promptText="%createOffer.amount.prompt" prefWidth="170"
-                                                alignment="CENTER_RIGHT"/>
-                                <Label fx:id="amountBtcLabel" id="currency-info-label"/>
-                            </children>
-                        </HBox>
-                    </children>
+                    <Label id="input-description-label" text="%createOffer.amountPriceBox.amountDescr"
+                           prefWidth="170"/>
+                    <HBox>
+                        <InputTextField fx:id="amountTextField" id="text-input-with-currency-text-field"
+                                        promptText="%createOffer.amount.prompt" prefWidth="170"
+                                        alignment="CENTER_RIGHT"/>
+                        <Label fx:id="amountBtcLabel" id="currency-info-label"/>
+                    </HBox>
                 </VBox>
                 <Label text="x">
                     <font>
@@ -103,17 +97,13 @@
                 </Label>
 
                 <VBox spacing="4">
-                    <children>
-                        <Label fx:id="priceDescriptionLabel" id="input-description-label" prefWidth="170"/>
-                        <HBox>
-                            <children>
-                                <InputTextField fx:id="priceTextField" id="text-input-with-currency-text-field"
-                                                promptText="%createOffer.price.prompt" prefWidth="170"
-                                                alignment="CENTER_RIGHT"/>
-                                <Label fx:id="priceFiatLabel" id="currency-info-label" alignment="CENTER"/>
-                            </children>
-                        </HBox>
-                    </children>
+                    <Label fx:id="priceDescriptionLabel" id="input-description-label" prefWidth="170"/>
+                    <HBox>
+                        <InputTextField fx:id="priceTextField" id="text-input-with-currency-text-field"
+                                        promptText="%createOffer.price.prompt" prefWidth="170"
+                                        alignment="CENTER_RIGHT"/>
+                        <Label fx:id="priceFiatLabel" id="currency-info-label" alignment="CENTER"/>
+                    </HBox>
                 </VBox>
 
                 <Label text="=">
@@ -126,16 +116,12 @@
                 </Label>
 
                 <VBox spacing="4">
-                    <children>
-                        <Label fx:id="volumeDescriptionLabel" id="input-description-label" prefWidth="170"/>
-                        <HBox>
-                            <children>
-                                <InputTextField fx:id="volumeTextField" id="text-input-with-currency-text-field"
-                                                prefWidth="170" alignment="CENTER_RIGHT"/>
-                                <Label fx:id="volumeFiatLabel" id="currency-info-label"/>
-                            </children>
-                        </HBox>
-                    </children>
+                    <Label fx:id="volumeDescriptionLabel" id="input-description-label" prefWidth="170"/>
+                    <HBox>
+                        <InputTextField fx:id="volumeTextField" id="text-input-with-currency-text-field"
+                                        prefWidth="170" alignment="CENTER_RIGHT"/>
+                        <Label fx:id="volumeFiatLabel" id="currency-info-label"/>
+                    </HBox>
                 </VBox>
             </HBox>
 
@@ -146,12 +132,10 @@
                 <Label id="input-description-label" text="%createOffer.amountPriceBox.minAmountDescr"
                        prefWidth="170.0"/>
                 <HBox>
-                    <children>
-                        <InputTextField fx:id="minAmountTextField" id="text-input-with-currency-text-field"
-                                        promptText="%createOffer.minAmount.prompt" alignment="CENTER_RIGHT"
-                                        prefWidth="170.0"/>
-                        <Label fx:id="minAmountBtcLabel" id="currency-info-label"/>
-                    </children>
+                    <InputTextField fx:id="minAmountTextField" id="text-input-with-currency-text-field"
+                                    promptText="%createOffer.minAmount.prompt" alignment="CENTER_RIGHT"
+                                    prefWidth="170.0"/>
+                    <Label fx:id="minAmountBtcLabel" id="currency-info-label"/>
                 </HBox>
             </VBox>
 

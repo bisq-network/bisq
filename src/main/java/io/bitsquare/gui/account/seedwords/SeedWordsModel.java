@@ -27,7 +27,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SeedWordsModel extends UIModel {
+class SeedWordsModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(SeedWordsModel.class);
 
     List<String> mnemonicCode;
@@ -38,7 +38,7 @@ public class SeedWordsModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SeedWordsModel(WalletFacade walletFacade) {
+    private SeedWordsModel(WalletFacade walletFacade) {
         if (walletFacade != null && walletFacade.getWallet() != null)
             mnemonicCode = walletFacade.getWallet().getKeyChainSeed().getMnemonicCode();
     }

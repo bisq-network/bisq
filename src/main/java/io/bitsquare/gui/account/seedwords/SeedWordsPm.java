@@ -28,7 +28,7 @@ import javafx.beans.property.StringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SeedWordsPM extends PresentationModel<SeedWordsModel> {
+class SeedWordsPM extends PresentationModel<SeedWordsModel> {
     private static final Logger log = LoggerFactory.getLogger(SeedWordsPM.class);
 
     final StringProperty seedWords = new SimpleStringProperty();
@@ -39,7 +39,7 @@ public class SeedWordsPM extends PresentationModel<SeedWordsModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SeedWordsPM(SeedWordsModel model) {
+    private SeedWordsPM(SeedWordsModel model) {
         super(model);
     }
 

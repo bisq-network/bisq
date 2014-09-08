@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountSettingsPM extends PresentationModel<AccountSettingsModel> {
+class AccountSettingsPM extends PresentationModel<AccountSettingsModel> {
     private static final Logger log = LoggerFactory.getLogger(AccountSettingsPM.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -32,7 +32,7 @@ public class AccountSettingsPM extends PresentationModel<AccountSettingsModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AccountSettingsPM(AccountSettingsModel model) {
+    private AccountSettingsPM(AccountSettingsModel model) {
         super(model);
     }
 

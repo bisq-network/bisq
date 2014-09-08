@@ -50,7 +50,7 @@ public class SeedWordsCB extends CachedCodeBehind<SeedWordsPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SeedWordsCB(SeedWordsPM presentationModel) {
+    private SeedWordsCB(SeedWordsPM presentationModel) {
         super(presentationModel);
     }
 

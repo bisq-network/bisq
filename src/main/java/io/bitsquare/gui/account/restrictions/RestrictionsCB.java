@@ -69,7 +69,7 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public RestrictionsCB(RestrictionsPM presentationModel) {
+    private RestrictionsCB(RestrictionsPM presentationModel) {
         super(presentationModel);
     }
 

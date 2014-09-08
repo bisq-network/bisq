@@ -51,7 +51,7 @@ public class PasswordCB extends CachedCodeBehind<PasswordPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PasswordCB(PasswordPM presentationModel) {
+    private PasswordCB(PasswordPM presentationModel) {
         super(presentationModel);
     }
 

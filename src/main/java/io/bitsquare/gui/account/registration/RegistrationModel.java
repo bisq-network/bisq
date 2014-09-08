@@ -45,7 +45,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RegistrationModel extends UIModel {
+class RegistrationModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(RegistrationModel.class);
 
     private final WalletFacade walletFacade;
@@ -54,7 +54,7 @@ public class RegistrationModel extends UIModel {
     AddressEntry addressEntry;
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     final BooleanProperty payFeeSuccess = new SimpleBooleanProperty();
-    String transactionId;
+    private String transactionId;
     final StringProperty payFeeErrorMessage = new SimpleStringProperty();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -62,7 +62,7 @@ public class RegistrationModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public RegistrationModel(WalletFacade walletFacade, User user, Persistence persistence) {
+    private RegistrationModel(WalletFacade walletFacade, User user, Persistence persistence) {
 
         this.walletFacade = walletFacade;
         this.user = user;

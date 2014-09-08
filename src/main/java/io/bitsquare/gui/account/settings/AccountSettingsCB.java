@@ -54,7 +54,7 @@ public class AccountSettingsCB extends CachedCodeBehind<AccountSettingsPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AccountSettingsCB(AccountSettingsPM presentationModel) {
+    private AccountSettingsCB(AccountSettingsPM presentationModel) {
         super(presentationModel);
     }
 

@@ -200,7 +200,7 @@ class CreateOfferModel extends UIModel {
                     transactionId.set(transaction.getHashAsString());
                     requestPlaceOfferSuccess.set(true);
                 },
-                (errorMessage) -> requestPlaceOfferErrorMessage.set(errorMessage)
+                requestPlaceOfferErrorMessage::set
         );
     }
 

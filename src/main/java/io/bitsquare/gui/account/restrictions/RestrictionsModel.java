@@ -45,7 +45,7 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RestrictionsModel extends UIModel {
+class RestrictionsModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(RestrictionsModel.class);
 
     private final User user;
@@ -66,7 +66,7 @@ public class RestrictionsModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public RestrictionsModel(User user, Settings settings, Persistence persistence, MessageFacade messageFacade) {
+    private RestrictionsModel(User user, Settings settings, Persistence persistence, MessageFacade messageFacade) {
         this.user = user;
         this.settings = settings;
         this.persistence = persistence;

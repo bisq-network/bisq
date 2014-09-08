@@ -37,7 +37,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PasswordCB extends CachedCodeBehind<PasswordPM> {
+class PasswordCB extends CachedCodeBehind<PasswordPM> {
 
     private static final Logger log = LoggerFactory.getLogger(PasswordCB.class);
 
@@ -51,7 +51,7 @@ public class PasswordCB extends CachedCodeBehind<PasswordPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PasswordCB(PasswordPM presentationModel) {
+    private PasswordCB(PasswordPM presentationModel) {
         super(presentationModel);
     }
 
