@@ -20,14 +20,15 @@ package io.bitsquare.gui.trade.orderbook;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
-import io.bitsquare.gui.CodeBehind;
+import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.OverlayController;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.trade.takeoffer.TakeOfferController;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.gui.view.MainViewCB;
+import io.bitsquare.gui.view.CodeBehind;
 import io.bitsquare.gui.view.trade.CreateOfferViewCB;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
@@ -85,6 +86,8 @@ import org.slf4j.LoggerFactory;
 public class OrderBookController extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(OrderBookController.class);
 
+    private NavigationController navigationController;
+    private OverlayController overlayController;
     private final OrderBook orderBook;
     private final OrderBookFilter orderBookFilter;
     private final User user;
@@ -112,8 +115,13 @@ public class OrderBookController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private OrderBookController(OrderBook orderBook, User user, MessageFacade messageFacade,
+    private OrderBookController(NavigationController navigationController,
+                                OverlayController overlayController,
+                                OrderBook orderBook, User user,
+                                MessageFacade messageFacade,
                                 WalletFacade walletFacade, Settings settings, Persistence persistence) {
+        this.navigationController = navigationController;
+        this.overlayController = overlayController;
         this.orderBook = orderBook;
         this.user = user;
         this.messageFacade = messageFacade;
@@ -269,19 +277,14 @@ public class OrderBookController extends CachedViewController {
 
 
     private void openSetupScreen() {
-
-        MainViewCB.getInstance().blurContentScreen();
+        overlayController.blurContent();
         List<Action> actions = new ArrayList<>();
         actions.add(new AbstractAction(BSResources.get("shared.ok")) {
             @Override
             public void handle(ActionEvent actionEvent) {
                 Dialog.Actions.OK.handle(actionEvent);
-                MainViewCB.getInstance().removeContentScreenBlur();
-
-                MainViewCB.getInstance().triggerMainMenuButton(NavigationItem.ACCOUNT);
-                MainViewCB.getInstance()
-                        .setPreviousNavigationItem((orderBookFilter.getDirection() == Direction.BUY) ?
-                                NavigationItem.BUY : NavigationItem.SELL);
+                overlayController.removeBlurContent();
+                navigationController.navigationTo(NavigationItem.ACCOUNT, NavigationItem.ACCOUNT_SETUP);
             }
         });
         Popups.openInfo("You need to setup your trading account before you can trade.",

@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.view.account.content;
 
-import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.account.content.SeedWordsPM;
+import io.bitsquare.gui.view.CachedCodeBehind;
 import io.bitsquare.gui.view.account.AccountSetupViewCB;
 
 import java.net.URL;

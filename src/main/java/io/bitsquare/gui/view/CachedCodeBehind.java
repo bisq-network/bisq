@@ -1,4 +1,6 @@
-package io.bitsquare.gui;
+package io.bitsquare.gui.view;
+
+import io.bitsquare.gui.pm.PresentationModel;
 
 import java.net.URL;
 

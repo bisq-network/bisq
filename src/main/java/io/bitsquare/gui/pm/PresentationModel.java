@@ -1,4 +1,6 @@
-package io.bitsquare.gui;
+package io.bitsquare.gui.pm;
+
+import io.bitsquare.gui.model.UIModel;
 
 public class PresentationModel<T extends UIModel> {
 

@@ -18,8 +18,8 @@
 package io.bitsquare.gui.pm.account.content;
 
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.model.account.content.RegistrationModel;
+import io.bitsquare.gui.pm.PresentationModel;
 import io.bitsquare.locale.BSResources;
 
 import com.google.bitcoin.core.Address;

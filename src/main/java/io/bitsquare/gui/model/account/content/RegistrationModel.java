@@ -21,7 +21,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.model.UIModel;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 

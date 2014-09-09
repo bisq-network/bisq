@@ -23,7 +23,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.model.UIModel;
 import io.bitsquare.locale.Country;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;

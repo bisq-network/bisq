@@ -18,8 +18,8 @@
 package io.bitsquare.gui.pm.account.content;
 
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.model.account.content.RestrictionsModel;
+import io.bitsquare.gui.pm.PresentationModel;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
 

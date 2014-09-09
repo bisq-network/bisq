@@ -17,11 +17,12 @@
 
 package io.bitsquare.gui.view.account;
 
-import io.bitsquare.gui.CachedCodeBehind;
-import io.bitsquare.gui.CodeBehind;
+import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.pm.PresentationModel;
 import io.bitsquare.gui.pm.account.AccountSettingsPM;
+import io.bitsquare.gui.view.CachedCodeBehind;
+import io.bitsquare.gui.view.CodeBehind;
 import io.bitsquare.gui.view.account.content.ContextAware;
 import io.bitsquare.util.BSFXMLLoader;
 
@@ -48,6 +49,9 @@ import org.slf4j.LoggerFactory;
 public class AccountSettingsViewCB extends CachedCodeBehind<AccountSettingsPM> {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSettingsViewCB.class);
+
+    public NavigationItem subMenuNavigationItem;
+
     public VBox leftVBox;
     public AnchorPane content;
 
@@ -56,8 +60,17 @@ public class AccountSettingsViewCB extends CachedCodeBehind<AccountSettingsPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountSettingsViewCB(AccountSettingsPM presentationModel) {
+    private AccountSettingsViewCB(AccountSettingsPM presentationModel, NavigationController navigationController) {
         super(presentationModel);
+
+        navigationController.addListener(navigationItem -> {
+            if (navigationItem.length > 1) {
+                NavigationItem subMenuNavigationItem1 = navigationItem[1];
+                if (subMenuNavigationItem1.getLevel() == 2) {
+                    AccountSettingsViewCB.this.subMenuNavigationItem = subMenuNavigationItem1;
+                }
+            }
+        });
     }
 
 
@@ -86,7 +99,31 @@ public class AccountSettingsViewCB extends CachedCodeBehind<AccountSettingsPM> {
         leftVBox.getChildren().addAll(seedWords, password,
                 restrictions, fiatAccount, registration);
 
-        seedWords.fire();
+        if (subMenuNavigationItem == null)
+            subMenuNavigationItem = NavigationItem.SEED_WORDS;
+
+        loadView(subMenuNavigationItem);
+
+        switch (subMenuNavigationItem) {
+            case SEED_WORDS:
+                seedWords.setSelected(true);
+                break;
+            case CHANGE_PASSWORD:
+                password.setSelected(true);
+                break;
+            case RESTRICTIONS:
+                restrictions.setSelected(true);
+                break;
+            case FIAT_ACCOUNT:
+                fiatAccount.setSelected(true);
+                break;
+            case REGISTRATION:
+                registration.setSelected(true);
+                break;
+            default:
+                log.error(subMenuNavigationItem.getFxmlUrl() + " is no subMenuNavigationItem");
+                break;
+        }
     }
 
     @SuppressWarnings("EmptyMethod")

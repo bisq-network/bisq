@@ -1,4 +1,4 @@
-package io.bitsquare.gui;
+package io.bitsquare.gui.model;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

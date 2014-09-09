@@ -19,13 +19,13 @@ package io.bitsquare.gui.view.account.content;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.account.content.FiatAccountPm;
 import io.bitsquare.gui.util.validation.InputValidator;
+import io.bitsquare.gui.view.CachedCodeBehind;
 import io.bitsquare.gui.view.account.AccountSetupViewCB;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;

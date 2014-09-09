@@ -19,7 +19,7 @@ package io.bitsquare.gui.model.account.content;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
-import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.model.UIModel;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.LanguageUtil;

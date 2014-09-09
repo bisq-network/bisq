@@ -17,14 +17,14 @@
 
 package io.bitsquare.gui.view.account.content;
 
-import io.bitsquare.gui.CachedCodeBehind;
+import io.bitsquare.gui.OverlayController;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.account.content.RegistrationPM;
-import io.bitsquare.gui.view.MainViewCB;
+import io.bitsquare.gui.view.CachedCodeBehind;
 import io.bitsquare.gui.view.account.AccountSetupViewCB;
 import io.bitsquare.locale.BSResources;
 
@@ -52,6 +52,7 @@ public class RegistrationViewCB extends CachedCodeBehind<RegistrationPM> impleme
 
     private static final Logger log = LoggerFactory.getLogger(RegistrationViewCB.class);
 
+    private OverlayController overlayController;
 
     @FXML private TextField feeTextField;
     @FXML private AddressTextField addressTextField;
@@ -64,8 +65,9 @@ public class RegistrationViewCB extends CachedCodeBehind<RegistrationPM> impleme
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private RegistrationViewCB(RegistrationPM presentationModel) {
+    private RegistrationViewCB(RegistrationPM presentationModel, OverlayController overlayController) {
         super(presentationModel);
+        this.overlayController = overlayController;
     }
 
 
@@ -81,6 +83,10 @@ public class RegistrationViewCB extends CachedCodeBehind<RegistrationPM> impleme
         addressTextField.setAmountAsCoin(presentationModel.getFeeAsCoin());
         addressTextField.setPaymentLabel(presentationModel.getPaymentLabel());
         addressTextField.setAddress(presentationModel.getAddressAsString());
+
+        // TODO find better solution
+        addressTextField.setOverlayController(overlayController);
+        
         balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get());
 
         payButton.disableProperty().bind(presentationModel.isPayButtonDisabled);
@@ -95,7 +101,7 @@ public class RegistrationViewCB extends CachedCodeBehind<RegistrationPM> impleme
 
         presentationModel.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                MainViewCB.getInstance().blurContentScreen();
+                overlayController.blurContent();
 
                 List<Action> actions = new ArrayList<>();
                 actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {
@@ -117,7 +123,7 @@ public class RegistrationViewCB extends CachedCodeBehind<RegistrationPM> impleme
                             e.printStackTrace();
                         }
                         Dialog.Actions.CLOSE.handle(actionEvent);
-                        MainViewCB.getInstance().removeContentScreenBlur();
+                        overlayController.removeBlurContent();
                     }
                 });
 

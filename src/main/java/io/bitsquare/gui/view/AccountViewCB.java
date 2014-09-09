@@ -17,8 +17,7 @@
 
 package io.bitsquare.gui.view;
 
-import io.bitsquare.gui.CachedCodeBehind;
-import io.bitsquare.gui.CodeBehind;
+import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.pm.AccountPM;
 import io.bitsquare.gui.view.account.AccountSetupViewCB;
@@ -44,6 +43,7 @@ public class AccountViewCB extends CachedCodeBehind<AccountPM> {
     private static final Logger log = LoggerFactory.getLogger(AccountViewCB.class);
 
     public Tab tab;
+    private NavigationController navigationController;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -51,8 +51,9 @@ public class AccountViewCB extends CachedCodeBehind<AccountPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountViewCB(AccountPM presentationModel) {
+    private AccountViewCB(AccountPM presentationModel, NavigationController navigationController) {
         super(presentationModel);
+        this.navigationController = navigationController;
     }
 
 
@@ -131,11 +132,7 @@ public class AccountViewCB extends CachedCodeBehind<AccountPM> {
     private void removeSetup() {
         childController = null;
 
-        NavigationItem previousItem = MainViewCB.getInstance().getPreviousNavigationItem();
-        if (previousItem == null)
-            previousItem = NavigationItem.HOME;
-
-        MainViewCB.getInstance().triggerMainMenuButton(previousItem);
+        navigationController.navigationTo(navigationController.getPreviousMainNavigationItems());
     }
 
 }

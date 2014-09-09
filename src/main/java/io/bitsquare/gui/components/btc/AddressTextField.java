@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.components.btc;
 
+import io.bitsquare.gui.OverlayController;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.view.MainViewCB;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.uri.BitcoinURI;
@@ -60,6 +60,7 @@ public class AddressTextField extends AnchorPane {
     private final StringProperty address = new SimpleStringProperty();
     private final StringProperty paymentLabel = new SimpleStringProperty();
     public final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
+    private OverlayController overlayController;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,7 +68,6 @@ public class AddressTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public AddressTextField() {
-
         TextField addressLabel = new TextField();
         addressLabel.setId("address-text-field");
         addressLabel.setEditable(false);
@@ -124,13 +124,17 @@ public class AddressTextField extends AnchorPane {
                 PopOver popOver = new PopOver(pane);
                 popOver.setDetachedTitle("Scan QR code for this address");
                 popOver.setDetached(true);
-                popOver.setOnHiding(windowEvent -> MainViewCB.getInstance().removeContentScreenBlur());
+                popOver.setOnHiding(windowEvent -> {
+                    if (overlayController != null)
+                        overlayController.removeBlurContent();
+                });
 
                 Window window = getScene().getWindow();
                 double x = Math.round(window.getX() + (window.getWidth() - 320) / 2);
                 double y = Math.round(window.getY() + (window.getHeight() - 240) / 2);
                 popOver.show(getScene().getWindow(), x, y);
-                MainViewCB.getInstance().blurContentScreen();
+                if (overlayController != null)
+                    overlayController.blurContent();
             }
         });
 
@@ -181,6 +185,11 @@ public class AddressTextField extends AnchorPane {
 
     public void setPaymentLabel(String paymentLabel) {
         this.paymentLabel.set(paymentLabel);
+    }
+
+    // TODO find better solution
+    public void setOverlayController(OverlayController overlayController) {
+        this.overlayController = overlayController;
     }
 
 

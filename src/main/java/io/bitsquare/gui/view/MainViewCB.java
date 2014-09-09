@@ -18,11 +18,11 @@
 package io.bitsquare.gui.view;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.gui.CachedCodeBehind;
-import io.bitsquare.gui.CodeBehind;
+import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.OverlayController;
 import io.bitsquare.gui.components.NetworkSyncPane;
-import io.bitsquare.gui.orders.OrdersController;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.pm.MainPM;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Profiler;
@@ -53,33 +53,23 @@ import org.slf4j.LoggerFactory;
 
 public class MainViewCB extends CachedCodeBehind<MainPM> {
     private static final Logger log = LoggerFactory.getLogger(MainViewCB.class);
-    //TODO
-    private static MainViewCB instance;
 
-    private VBox baseOverlayContainer;
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
-    private NavigationItem previousNavigationItem;
+    private NavigationItem mainNavigationItem;
 
-    private AnchorPane contentPane;
+    private BorderPane baseApplicationContainer;
+    private VBox baseOverlayContainer;
+    private AnchorPane applicationContainer;
+    private AnchorPane contentContainer;
     private HBox leftNavPane, rightNavPane;
     private NetworkSyncPane networkSyncPane;
-    private BorderPane baseContentContainer;
-    private AnchorPane contentScreen;
     private MenuBar menuBar;
     private Label loadingLabel;
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton,
             accountButton;
     private Pane ordersButtonButtonPane;
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Static
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    //TODO
-    public static MainViewCB getInstance() {
-        return instance;
-    }
+    private NavigationController navigationController;
+    private OverlayController overlayController;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -87,11 +77,41 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MainViewCB(MainPM presentationModel) {
+    private MainViewCB(MainPM presentationModel, NavigationController navigationController,
+                       OverlayController overlayController) {
         super(presentationModel);
+        this.navigationController = navigationController;
+        this.overlayController = overlayController;
 
-        //TODO
-        MainViewCB.instance = this;
+        // just temp. ugly hack... Popups will be removed
+        Popups.setOverlayController(overlayController);
+
+        navigationController.addListener(navigationItems -> {
+            if (navigationItems != null && navigationItems.length > 0) {
+                NavigationItem navigationItem = navigationItems[0];
+                if (navigationItem.getLevel() == 1) {
+                    mainNavigationItem = navigationItem;
+                    loadView(mainNavigationItem);
+                    selectMainMenuButton(mainNavigationItem);
+                }
+            }
+            else {
+                mainNavigationItem = NavigationItem.HOME;
+                loadView(mainNavigationItem);
+                selectMainMenuButton(mainNavigationItem);
+            }
+        });
+        overlayController.addListener(new OverlayController.OverlayListener() {
+            @Override
+            public void onBlurContentRequested() {
+                Transitions.blur(baseApplicationContainer);
+            }
+
+            @Override
+            public void onRemoveBlurContentRequested() {
+                Transitions.removeBlur(baseApplicationContainer);
+            }
+        });
     }
 
 
@@ -130,34 +150,36 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
     // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Initializable triggerMainMenuButton(NavigationItem navigationItem) {
+    public void selectMainMenuButton(NavigationItem navigationItem) {
         switch (navigationItem) {
             case HOME:
-                homeButton.fire();
+                homeButton.setSelected(true);
                 break;
             case FUNDS:
-                fundsButton.fire();
+                fundsButton.setSelected(true);
                 break;
             case MSG:
-                msgButton.fire();
+                msgButton.setSelected(true);
                 break;
             case ORDERS:
-                ordersButton.fire();
+                ordersButton.setSelected(true);
                 break;
             case SETTINGS:
-                settingsButton.fire();
+                settingsButton.setSelected(true);
                 break;
             case SELL:
-                sellButton.fire();
+                sellButton.setSelected(true);
                 break;
             case BUY:
-                buyButton.fire();
+                buyButton.setSelected(true);
                 break;
             case ACCOUNT:
-                accountButton.fire();
+                accountButton.setSelected(true);
+                break;
+            default:
+                log.error(navigationItem.getFxmlUrl() + " is no main navigation item");
                 break;
         }
-        return childController;
     }
 
     @Override
@@ -167,7 +189,7 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
         final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
             final Node view = loader.load();
-            contentPane.getChildren().setAll(view);
+            contentContainer.getChildren().setAll(view);
             childController = loader.getController();
 
             if (childController instanceof CodeBehind)
@@ -182,36 +204,15 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
         return null;
     }
 
-    public void setPreviousNavigationItem(NavigationItem previousNavigationItem) {
-        this.previousNavigationItem = previousNavigationItem;
-    }
-
-    public NavigationItem getPreviousNavigationItem() {
-        return previousNavigationItem;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Blur
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void removeContentScreenBlur() {
-        Transitions.removeBlur(baseContentContainer);
-    }
-
-    public void blurContentScreen() {
-        Transitions.blur(baseContentContainer);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private Methods: Startup 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void startup() {
-        baseContentContainer = getBaseContentContainer();
+        baseApplicationContainer = getBaseApplicationContainer();
         baseOverlayContainer = getSplashScreen();
-        ((StackPane) root).getChildren().addAll(baseContentContainer, baseOverlayContainer);
+        ((StackPane) root).getChildren().addAll(baseApplicationContainer, baseOverlayContainer);
 
         onBaseContainersCreated();
     }
@@ -220,12 +221,10 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
         Profiler.printMsgWithTime("MainController.onBaseContainersCreated");
 
         menuBar = getMenuBar();
-        contentScreen = getContentScreen();
+        applicationContainer = getApplicationContainer();
 
-        addNetworkSyncPane();
-
-        baseContentContainer.setTop(menuBar);
-        baseContentContainer.setCenter(contentScreen);
+        baseApplicationContainer.setTop(menuBar);
+        baseApplicationContainer.setCenter(applicationContainer);
 
         presentationModel.backendInited.addListener((ov, oldValue, newValue) -> {
             if (newValue)
@@ -247,18 +246,15 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
             final Button alertButton = new Button("", ImageUtil.getIconImageView(ImageUtil.MSG_ALERT));
             alertButton.setId("nav-alert-button");
             alertButton.relocate(36, 19);
-            alertButton.setOnAction((e) -> {
-                ordersButton.fire();
-                //TODO
-                OrdersController.GET_INSTANCE().setSelectedTabIndex(1);
-            });
+            alertButton.setOnAction((e) ->
+                    navigationController.navigationTo(NavigationItem.ORDERS, NavigationItem.PENDING_TRADE));
             Tooltip.install(alertButton, new Tooltip("Your offer has been accepted"));
             ordersButtonButtonPane.getChildren().add(alertButton);
 
             AWTSystemTray.setAlert();
         });
 
-        triggerMainMenuButton(presentationModel.getSelectedNavigationItem());
+        navigationController.navigationTo(presentationModel.getSelectedNavigationItems());
         onContentAdded();
     }
 
@@ -272,7 +268,7 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private BorderPane getBaseContentContainer() {
+    private BorderPane getBaseApplicationContainer() {
         BorderPane borderPane = new BorderPane();
         borderPane.setId("base-content-container");
         return borderPane;
@@ -325,7 +321,7 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
         return menuBar;
     }
 
-    private AnchorPane getContentScreen() {
+    private AnchorPane getApplicationContainer() {
         AnchorPane anchorPane = new AnchorPane();
         anchorPane.setId("content-pane");
 
@@ -339,18 +335,13 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
         AnchorPane.setRightAnchor(rightNavPane, 10d);
         AnchorPane.setTopAnchor(rightNavPane, 0d);
 
-        contentPane = new AnchorPane();
-        contentPane.setId("content-pane");
-        AnchorPane.setLeftAnchor(contentPane, 0d);
-        AnchorPane.setRightAnchor(contentPane, 0d);
-        AnchorPane.setTopAnchor(contentPane, 60d);
-        AnchorPane.setBottomAnchor(contentPane, 20d);
+        contentContainer = new AnchorPane();
+        contentContainer.setId("content-pane");
+        AnchorPane.setLeftAnchor(contentContainer, 0d);
+        AnchorPane.setRightAnchor(contentContainer, 0d);
+        AnchorPane.setTopAnchor(contentContainer, 60d);
+        AnchorPane.setBottomAnchor(contentContainer, 25d);
 
-        anchorPane.getChildren().addAll(leftNavPane, rightNavPane, contentPane);
-        return anchorPane;
-    }
-
-    private void addNetworkSyncPane() {
         networkSyncPane = new NetworkSyncPane();
         networkSyncPane.setSpacing(10);
         networkSyncPane.setPrefHeight(20);
@@ -362,7 +353,8 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
                 networkSyncPane.downloadComplete();
         });
 
-        contentScreen.getChildren().addAll(networkSyncPane);
+        anchorPane.getChildren().addAll(leftNavPane, rightNavPane, contentContainer, networkSyncPane);
+        return anchorPane;
     }
 
     private void addMainNavigation() {

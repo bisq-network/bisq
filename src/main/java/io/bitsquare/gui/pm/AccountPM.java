@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.pm;
 
-import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.model.AccountModel;
 
 import com.google.inject.Inject;

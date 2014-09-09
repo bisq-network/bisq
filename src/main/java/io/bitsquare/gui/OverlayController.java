@@ -15,18 +15,20 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.pm.account;
-
-import io.bitsquare.gui.model.account.AccountSetupModel;
-import io.bitsquare.gui.pm.PresentationModel;
+package io.bitsquare.gui;
 
 import com.google.inject.Inject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountSetupPM extends PresentationModel<AccountSetupModel> {
-    private static final Logger log = LoggerFactory.getLogger(AccountSetupPM.class);
+public class OverlayController {
+    private static final Logger log = LoggerFactory.getLogger(OverlayController.class);
+
+    private List<OverlayListener> listeners = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -34,36 +36,28 @@ public class AccountSetupPM extends PresentationModel<AccountSetupModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountSetupPM(AccountSetupModel model) {
-        super(model);
+    public OverlayController() {
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void initialized() {
-        super.initialized();
+    public void blurContent() {
+        listeners.stream().forEach((e) -> e.onBlurContentRequested());
     }
 
-    @Override
-    public void activate() {
-        super.activate();
+    public void removeBlurContent() {
+        listeners.stream().forEach((e) -> e.onRemoveBlurContentRequested());
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
+    public void addListener(OverlayListener listener) {
+        listeners.add(listener);
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
+    public void removeListener(OverlayListener listener) {
+        listeners.remove(listener);
     }
 
+    public interface OverlayListener {
+        void onBlurContentRequested();
+
+        void onRemoveBlurContentRequested();
+    }
 }

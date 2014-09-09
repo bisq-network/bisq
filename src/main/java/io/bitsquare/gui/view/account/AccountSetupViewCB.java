@@ -17,12 +17,12 @@
 
 package io.bitsquare.gui.view.account;
 
-import io.bitsquare.gui.CachedCodeBehind;
-import io.bitsquare.gui.CodeBehind;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.pm.PresentationModel;
 import io.bitsquare.gui.pm.account.AccountSetupPM;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.gui.view.CachedCodeBehind;
+import io.bitsquare.gui.view.CodeBehind;
 import io.bitsquare.gui.view.account.content.ContextAware;
 import io.bitsquare.gui.view.account.content.FiatAccountViewCB;
 import io.bitsquare.gui.view.account.content.PasswordViewCB;
@@ -175,7 +175,7 @@ class WizardItem extends HBox {
     private final Parent content;
     private final NavigationItem navigationItem;
 
-    WizardItem(AccountSetupViewCB parentCB, Parent content, String title, String subTitle, 
+    WizardItem(AccountSetupViewCB parentCB, Parent content, String title, String subTitle,
                NavigationItem navigationItem) {
         this.parentCB = parentCB;
         this.content = content;

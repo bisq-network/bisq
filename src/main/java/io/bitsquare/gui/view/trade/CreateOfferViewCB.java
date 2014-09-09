@@ -17,8 +17,9 @@
 
 package io.bitsquare.gui.view.trade;
 
-import io.bitsquare.gui.CachedCodeBehind;
+import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.OverlayController;
 import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
@@ -28,7 +29,7 @@ import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.trade.CreateOfferPM;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.gui.view.MainViewCB;
+import io.bitsquare.gui.view.CachedCodeBehind;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 
@@ -73,6 +74,9 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public class CreateOfferViewCB extends CachedCodeBehind<CreateOfferPM> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferViewCB.class);
 
+    private NavigationController navigationController;
+    private OverlayController overlayController;
+
     private boolean detailsVisible;
     private boolean advancedScreenInited;
     private Callable<Void> onCloseCallable;
@@ -105,8 +109,11 @@ public class CreateOfferViewCB extends CachedCodeBehind<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferViewCB(CreateOfferPM presentationModel) {
+    private CreateOfferViewCB(CreateOfferPM presentationModel, NavigationController navigationController,
+                              OverlayController overlayController) {
         super(presentationModel);
+        this.navigationController = navigationController;
+        this.overlayController = overlayController;
     }
 
 
@@ -234,13 +241,16 @@ public class CreateOfferViewCB extends CachedCodeBehind<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void openAccountSettings() {
-        MainViewCB.getInstance().triggerMainMenuButton(NavigationItem.ACCOUNT);
+        navigationController.navigationTo(NavigationItem.ACCOUNT,
+                NavigationItem.ACCOUNT_SETTINGS,
+                NavigationItem.RESTRICTIONS);
     }
 
     private void close() {
         TabPane tabPane = ((TabPane) (root.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private Methods
@@ -306,7 +316,7 @@ public class CreateOfferViewCB extends CachedCodeBehind<CreateOfferPM> {
 
         presentationModel.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                MainViewCB.getInstance().blurContentScreen();
+                overlayController.blurContent();
 
                 // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added 
                 // our own actions.
@@ -329,7 +339,7 @@ public class CreateOfferViewCB extends CachedCodeBehind<CreateOfferPM> {
                             e.printStackTrace();
                         }
                         Dialog.Actions.CLOSE.handle(actionEvent);
-                        MainViewCB.getInstance().removeContentScreenBlur();
+                        overlayController.removeBlurContent();
                     }
                 });
 

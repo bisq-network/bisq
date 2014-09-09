@@ -18,7 +18,7 @@
 package io.bitsquare.gui.components;
 
 import io.bitsquare.BitSquare;
-import io.bitsquare.gui.view.MainViewCB;
+import io.bitsquare.gui.OverlayController;
 import io.bitsquare.locale.BSResources;
 
 import com.google.bitcoin.store.BlockStoreException;
@@ -49,6 +49,13 @@ import org.slf4j.LoggerFactory;
 public class Popups {
     private static final Logger log = LoggerFactory.getLogger(Popups.class);
 
+    // TODO just temporary, class will be removed completely
+    public static void setOverlayController(OverlayController overlayController) {
+        Popups.overlayController = overlayController;
+    }
+
+    private static OverlayController overlayController;
+    
     // Information
     public static void openInfo(String message) {
         openInfo(message, null, null);
@@ -56,7 +63,7 @@ public class Popups {
 
     // Supports blurring the content background
     public static void openInfo(String message, String masthead) {
-        MainViewCB.getInstance().blurContentScreen();
+        overlayController.blurContent();
         List<Action> actions = new ArrayList<>();
 
         // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added 
@@ -65,7 +72,7 @@ public class Popups {
             @Override
             public void handle(ActionEvent actionEvent) {
                 Dialog.Actions.CLOSE.handle(actionEvent);
-                MainViewCB.getInstance().removeContentScreenBlur();
+                overlayController.removeBlurContent();
             }
         });
         openInfo(message, masthead, actions);

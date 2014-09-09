@@ -18,8 +18,8 @@
 package io.bitsquare.gui.pm.trade;
 
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.model.trade.CreateOfferModel;
+import io.bitsquare.gui.pm.PresentationModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;

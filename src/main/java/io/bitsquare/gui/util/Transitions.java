@@ -106,25 +106,27 @@ public class Transitions {
     }
 
     public static void removeBlur(Node node, int duration, boolean useDarken) {
-        GaussianBlur blur = (GaussianBlur) node.getEffect();
-        Timeline timeline = new Timeline();
+        if (node != null) {
+            GaussianBlur blur = (GaussianBlur) node.getEffect();
+            Timeline timeline = new Timeline();
 
-        KeyValue kv1 = new KeyValue(blur.radiusProperty(), 0.0);
-        KeyFrame kf1 = new KeyFrame(Duration.millis(DURATION), kv1);
+            KeyValue kv1 = new KeyValue(blur.radiusProperty(), 0.0);
+            KeyFrame kf1 = new KeyFrame(Duration.millis(DURATION), kv1);
 
 
-        if (useDarken) {
-            ColorAdjust darken = (ColorAdjust) blur.getInput();
+            if (useDarken) {
+                ColorAdjust darken = (ColorAdjust) blur.getInput();
 
-            KeyValue kv2 = new KeyValue(darken.brightnessProperty(), 0.0);
-            KeyFrame kf2 = new KeyFrame(Duration.millis(duration), kv2);
-            timeline.getKeyFrames().addAll(kf1, kf2);
+                KeyValue kv2 = new KeyValue(darken.brightnessProperty(), 0.0);
+                KeyFrame kf2 = new KeyFrame(Duration.millis(duration), kv2);
+                timeline.getKeyFrames().addAll(kf1, kf2);
+            }
+            else {
+                timeline.getKeyFrames().addAll(kf1);
+            }
+
+            timeline.setOnFinished(actionEvent -> node.setEffect(null));
+            timeline.play();
         }
-        else {
-            timeline.getKeyFrames().addAll(kf1);
-        }
-
-        timeline.setOnFinished(actionEvent -> node.setEffect(null));
-        timeline.play();
     }
 }

@@ -19,7 +19,6 @@ package io.bitsquare.gui.pm;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.model.MainModel;
 import io.bitsquare.gui.util.BSFormatter;
 
@@ -137,8 +136,8 @@ public class MainPM extends PresentationModel<MainModel> {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public NavigationItem getSelectedNavigationItem() {
-        return model.getSelectedNavigationItem();
+    public NavigationItem[] getSelectedNavigationItems() {
+        return model.getSelectedNavigationItems();
     }
 
     public ObservableList<BankAccount> getBankAccounts() {

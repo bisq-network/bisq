@@ -21,7 +21,6 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.UIModel;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.BootstrapListener;
@@ -166,14 +165,12 @@ public class MainModel extends UIModel {
         return user.currentBankAccountProperty();
     }
 
-    public NavigationItem getSelectedNavigationItem() {
-        NavigationItem selectedNavigationItem = (NavigationItem) persistence.read(this, "selectedNavigationItem");
-        // Set default 
-        // TODO set HOME later
-        if (selectedNavigationItem == null)
-            selectedNavigationItem = NavigationItem.BUY;
+    public NavigationItem[] getSelectedNavigationItems() {
+        NavigationItem[] selectedNavigationItems = (NavigationItem[]) persistence.read(this, "selectedNavigationItems");
+        if (selectedNavigationItems == null || selectedNavigationItems.length == 0)
+            selectedNavigationItems = new NavigationItem[]{NavigationItem.BUY};
 
-        return selectedNavigationItem;
+        return selectedNavigationItems;
     }
 
 

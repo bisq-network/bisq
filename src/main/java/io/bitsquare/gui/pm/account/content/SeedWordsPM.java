@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.pm.account.content;
 
-import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.model.account.content.SeedWordsModel;
+import io.bitsquare.gui.pm.PresentationModel;
 import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.inject.Inject;

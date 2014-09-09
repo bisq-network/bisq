@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.model.account.content;
 
-import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.model.UIModel;
 
 import com.google.inject.Inject;
 

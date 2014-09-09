@@ -17,6 +17,8 @@
 
 package io.bitsquare.gui;
 
+import io.bitsquare.gui.view.CodeBehind;
+
 import java.net.URL;
 
 import java.util.ResourceBundle;

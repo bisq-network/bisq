@@ -19,12 +19,12 @@ package io.bitsquare.gui.view.account.content;
 
 import io.bitsquare.BitSquare;
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.account.content.RestrictionsPM;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.gui.view.CachedCodeBehind;
 import io.bitsquare.gui.view.account.AccountSetupViewCB;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
