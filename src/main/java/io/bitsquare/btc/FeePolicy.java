@@ -38,7 +38,7 @@ public class FeePolicy {
     // The remaining 0.0000454 BTC is given to miners at the moment as it is lower then dust.
     public static final Coin REGISTRATION_FEE = TX_FEE.add(TX_FEE);
 
-    public static final Coin CREATE_OFFER_FEE = Coin.MILLICOIN; // 0.001
+    public static final Coin CREATE_OFFER_FEE = REGISTRATION_FEE; // 0.0002
     public static final Coin TAKE_OFFER_FEE = CREATE_OFFER_FEE;
     private static final Logger log = LoggerFactory.getLogger(FeePolicy.class);
 

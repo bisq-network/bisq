@@ -68,7 +68,7 @@ public class RegistrationUITestRunner extends Application {
         log.debug("re load");
         pane.getChildren().removeAll();
         BSFXMLLoader loader = new BSFXMLLoader(
-                getUrl("/io/bitsquare/gui/account/registration/RegistrationView.fxml"), false);
+                getUrl("/io/bitsquare/gui/view/account/content/RegistrationView.fxml"), false);
         try {
             view = loader.load();
             pane.getChildren().setAll(view);

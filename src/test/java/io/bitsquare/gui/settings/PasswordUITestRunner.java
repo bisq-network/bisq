@@ -68,7 +68,7 @@ public class PasswordUITestRunner extends Application {
         log.debug("re load");
         pane.getChildren().removeAll();
         BSFXMLLoader loader = new BSFXMLLoader(
-                getUrl("/io/bitsquare/gui/account/addpassword/PasswordView.fxml"), false);
+                getUrl("/io/bitsquare/gui/view/account/content/PasswordView.fxml"), false);
         try {
             view = loader.load();
             pane.getChildren().setAll(view);

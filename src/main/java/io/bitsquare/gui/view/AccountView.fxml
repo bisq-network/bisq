@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
   ~ This file is part of Bitsquare.
   ~
@@ -16,16 +17,14 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import io.bitsquare.gui.components.CachingTabPane?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<CachingTabPane fx:id="root" fx:controller="io.bitsquare.gui.funds.FundsController"
-                AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-                AnchorPane.topAnchor="0.0"
-                xmlns:fx="http://javafx.com/fxml">
+<TabPane fx:id="root" fx:controller="io.bitsquare.gui.view.AccountCB"
+         prefHeight="630.0" prefWidth="1000.0"
+         AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
+         AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
+         xmlns:fx="http://javafx.com/fxml">
+    <Tab fx:id="tab" closable="false">
 
-    <Tab text="Deposit" closable="false"/>
-    <Tab text="Withdrawal" closable="false"/>
-    <Tab text="Transactions" closable="false"/>
-
-</CachingTabPane>
+    </Tab>
+</TabPane>

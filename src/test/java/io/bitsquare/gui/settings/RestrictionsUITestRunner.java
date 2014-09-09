@@ -68,7 +68,7 @@ public class RestrictionsUITestRunner extends Application {
         log.debug("re load");
         pane.getChildren().removeAll();
         BSFXMLLoader loader = new BSFXMLLoader(
-                getUrl("/io/bitsquare/gui/account/restrictions/RestrictionsView.fxml"), false);
+                getUrl("/io/bitsquare/gui/view/account/content/RestrictionsView.fxml"), false);
         try {
             view = loader.load();
             pane.getChildren().setAll(view);

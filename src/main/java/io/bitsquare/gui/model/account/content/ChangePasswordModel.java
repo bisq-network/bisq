@@ -15,38 +15,25 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.funds;
+package io.bitsquare.gui.model.account.content;
 
-import io.bitsquare.gui.CachedViewController;
-import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.ViewController;
-import io.bitsquare.gui.components.CachingTabPane;
-import io.bitsquare.persistence.Persistence;
+import io.bitsquare.gui.UIModel;
 
-import java.net.URL;
-
-import java.util.ResourceBundle;
-
-import javax.inject.Inject;
-
-import javafx.fxml.Initializable;
+import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FundsController extends CachedViewController {
-    private static final Logger log = LoggerFactory.getLogger(FundsController.class);
-    private final Persistence persistence;
-    private ViewController childController;
-
+public class ChangePasswordModel extends UIModel {
+    private static final Logger log = LoggerFactory.getLogger(ChangePasswordModel.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private FundsController(Persistence persistence) {
-        this.persistence = persistence;
+    private ChangePasswordModel() {
+
     }
 
 
@@ -54,18 +41,10 @@ public class FundsController extends CachedViewController {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("EmptyMethod")
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
-        ((CachingTabPane) root).initialize(
-                this, persistence, NavigationItem.DEPOSIT.getFxmlUrl(), NavigationItem.WITHDRAWAL.getFxmlUrl(),
-                NavigationItem.TRANSACTIONS.getFxmlUrl());
-    }
-
-    @Override
-    public void deactivate() {
-        super.deactivate();
+    public void initialized() {
+        super.initialized();
     }
 
     @Override
@@ -73,16 +52,27 @@ public class FundsController extends CachedViewController {
         super.activate();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Navigation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
+    @SuppressWarnings("EmptyMethod")
     @Override
-    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
-        childController = ((CachingTabPane) root).loadViewAndGetChildController(navigationItem.getFxmlUrl());
-        return childController;
+    public void deactivate() {
+        super.deactivate();
+    }
+
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void terminate() {
+        super.terminate();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @SuppressWarnings("EmptyMethod")
+    public void savePassword(String password) {
+
+        //TODO Implement password encryption for wallet
     }
 
 }
-

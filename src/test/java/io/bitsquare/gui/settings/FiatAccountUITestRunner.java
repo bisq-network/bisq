@@ -68,7 +68,7 @@ public class FiatAccountUITestRunner extends Application {
         log.debug("re load");
         pane.getChildren().removeAll();
         BSFXMLLoader loader = new BSFXMLLoader(
-                getUrl("/io/bitsquare/gui/account/fiataccount/FiatAccountView.fxml"), false);
+                getUrl("/io/bitsquare/gui/view/account/content/FiatAccountView.fxml"), false);
         try {
             view = loader.load();
             pane.getChildren().setAll(view);
