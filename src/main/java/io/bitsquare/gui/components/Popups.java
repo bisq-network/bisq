@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
  * TODO Replace it with custom views as they are graphically more flexible and the Dialogs are a bit limited from the
  * API
  */
+@Deprecated
 public class Popups {
     private static final Logger log = LoggerFactory.getLogger(Popups.class);
 
@@ -55,7 +56,7 @@ public class Popups {
     }
 
     private static OverlayController overlayController;
-    
+
     // Information
     public static void openInfo(String message) {
         openInfo(message, null, null);

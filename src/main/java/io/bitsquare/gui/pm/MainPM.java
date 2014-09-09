@@ -92,17 +92,6 @@ public class MainPM extends PresentationModel<MainModel> {
         bankAccountsComboBoxPrompt.set(model.getBankAccounts().isEmpty() ? "No accounts" : "");
     }
 
-    @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
     @SuppressWarnings("EmptyMethod")
     @Override
     public void terminate() {

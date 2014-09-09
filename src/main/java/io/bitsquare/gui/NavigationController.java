@@ -58,7 +58,7 @@ public class NavigationController {
         previousMainNavigationItems = currentNavigationItems;
         currentNavigationItems = navigationItems;
 
-        listeners.stream().forEach((e) -> e.onNavigationRequested(currentNavigationItems));
+        listeners.stream().forEach((e) -> e.onNavigationRequested(navigationItems));
     }
 
 

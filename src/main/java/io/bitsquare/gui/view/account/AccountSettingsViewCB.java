@@ -34,6 +34,7 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.*;
 import javafx.scene.control.*;
@@ -54,6 +55,8 @@ public class AccountSettingsViewCB extends CachedCodeBehind<AccountSettingsPM> {
 
     public VBox leftVBox;
     public AnchorPane content;
+    private MenuItem seedWords, password, restrictions, fiatAccount, registration;
+    private NavigationController navigationController;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -63,14 +66,7 @@ public class AccountSettingsViewCB extends CachedCodeBehind<AccountSettingsPM> {
     private AccountSettingsViewCB(AccountSettingsPM presentationModel, NavigationController navigationController) {
         super(presentationModel);
 
-        navigationController.addListener(navigationItem -> {
-            if (navigationItem.length > 1) {
-                NavigationItem subMenuNavigationItem1 = navigationItem[1];
-                if (subMenuNavigationItem1.getLevel() == 2) {
-                    AccountSettingsViewCB.this.subMenuNavigationItem = subMenuNavigationItem1;
-                }
-            }
-        });
+        this.navigationController = navigationController;
     }
 
 
@@ -83,21 +79,36 @@ public class AccountSettingsViewCB extends CachedCodeBehind<AccountSettingsPM> {
         super.initialize(url, rb);
 
         ToggleGroup toggleGroup = new ToggleGroup();
-        MenuItem seedWords = new MenuItem(this, content, "Wallet seed",
+        seedWords = new MenuItem(this, content, "Wallet seed",
                 NavigationItem.SEED_WORDS, toggleGroup);
-        MenuItem password = new MenuItem(this, content, "Wallet password",
+        password = new MenuItem(this, content, "Wallet password",
                 NavigationItem.CHANGE_PASSWORD, toggleGroup);
-        MenuItem restrictions = new MenuItem(this, content, "Trading restrictions",
+        restrictions = new MenuItem(this, content, "Trading restrictions",
                 NavigationItem.RESTRICTIONS, toggleGroup);
-        MenuItem fiatAccount = new MenuItem(this, content, "Payments account(s)",
+        fiatAccount = new MenuItem(this, content, "Payments account(s)",
                 NavigationItem.FIAT_ACCOUNT, toggleGroup);
-        MenuItem registration = new MenuItem(this, content, "Renew your account",
+        registration = new MenuItem(this, content, "Renew your account",
                 NavigationItem.REGISTRATION, toggleGroup);
 
         registration.setDisable(true);
 
         leftVBox.getChildren().addAll(seedWords, password,
                 restrictions, fiatAccount, registration);
+
+
+    }
+
+    @Override
+    public void activate() {
+        super.activate();
+
+        NavigationItem[] navigationItems = navigationController.getCurrentNavigationItems();
+        for (int i = 0; i < navigationItems.length; i++) {
+            if (navigationItems[i].getLevel() == 3) {
+                subMenuNavigationItem = navigationItems[i];
+                break;
+            }
+        }
 
         if (subMenuNavigationItem == null)
             subMenuNavigationItem = NavigationItem.SEED_WORDS;
@@ -128,12 +139,6 @@ public class AccountSettingsViewCB extends CachedCodeBehind<AccountSettingsPM> {
 
     @SuppressWarnings("EmptyMethod")
     @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
     public void deactivate() {
         super.deactivate();
     }
@@ -146,23 +151,25 @@ public class AccountSettingsViewCB extends CachedCodeBehind<AccountSettingsPM> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI handlers
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI handlers
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    @Override
+    public Initializable loadView(NavigationItem navigationItem) {
+        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        try {
+            final Pane view = loader.load();
+            content.getChildren().setAll(view);
+            childController = loader.getController();
+            ((CodeBehind<? extends PresentationModel>) childController).setParentController(this);
+            ((ContextAware) childController).useSettingsContext(true);
+            return childController;
+        } catch (IOException e) {
+            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
+            e.getStackTrace();
+        }
+        return null;
+    }
 }
 
 class MenuItem extends ToggleButton {
@@ -198,7 +205,7 @@ class MenuItem extends ToggleButton {
 
         setGraphic(icon);
 
-        setOnAction((event) -> show());
+        setOnAction((event) -> parentCB.loadView(navigationItem));
 
         selectedProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue) {
@@ -221,20 +228,6 @@ class MenuItem extends ToggleButton {
                 icon.setTextFill(Paint.valueOf("#999"));
             }
         });
-    }
-
-    void show() {
-        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
-        try {
-            final Pane view = loader.load();
-            ((AnchorPane) content).getChildren().setAll(view);
-            childController = loader.getController();
-            childController.setParentController(parentCB);
-            ((ContextAware) childController).useSettingsContext(true);
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            e.getStackTrace();
-        }
     }
 }
 

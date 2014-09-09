@@ -51,8 +51,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class MainViewCB extends CachedCodeBehind<MainPM> {
+public class MainViewCB extends CodeBehind<MainPM> {
     private static final Logger log = LoggerFactory.getLogger(MainViewCB.class);
+
+    private NavigationController navigationController;
+    private OverlayController overlayController;
 
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
     private NavigationItem mainNavigationItem;
@@ -68,8 +71,6 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton,
             accountButton;
     private Pane ordersButtonButtonPane;
-    private NavigationController navigationController;
-    private OverlayController overlayController;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -80,6 +81,7 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
     private MainViewCB(MainPM presentationModel, NavigationController navigationController,
                        OverlayController overlayController) {
         super(presentationModel);
+
         this.navigationController = navigationController;
         this.overlayController = overlayController;
 
@@ -87,20 +89,22 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
         Popups.setOverlayController(overlayController);
 
         navigationController.addListener(navigationItems -> {
-            if (navigationItems != null && navigationItems.length > 0) {
-                NavigationItem navigationItem = navigationItems[0];
-                if (navigationItem.getLevel() == 1) {
-                    mainNavigationItem = navigationItem;
-                    loadView(mainNavigationItem);
-                    selectMainMenuButton(mainNavigationItem);
+            if (navigationItems != null) {
+                for (int i = 0; i < navigationItems.length; i++) {
+                    if (navigationItems[i].getLevel() == 1) {
+                        mainNavigationItem = navigationItems[i];
+                        break;
+                    }
                 }
             }
-            else {
+
+            if (mainNavigationItem == null)
                 mainNavigationItem = NavigationItem.HOME;
-                loadView(mainNavigationItem);
-                selectMainMenuButton(mainNavigationItem);
-            }
+
+            loadView(mainNavigationItem);
+            selectMainMenuButton(mainNavigationItem);
         });
+
         overlayController.addListener(new OverlayController.OverlayListener() {
             @Override
             public void onBlurContentRequested() {
@@ -126,17 +130,6 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
 
         Profiler.printMsgWithTime("MainController.initialize");
         startup();
-    }
-
-    @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
     }
 
     @SuppressWarnings("EmptyMethod")

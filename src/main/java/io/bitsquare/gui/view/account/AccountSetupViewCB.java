@@ -41,6 +41,7 @@ import java.util.concurrent.Callable;
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.*;
 import javafx.scene.control.*;
@@ -161,6 +162,23 @@ public class AccountSetupViewCB extends CachedCodeBehind<AccountSetupPM> {
 
         this.requestCloseCallable = requestCloseCallable;
     }
+
+    @Override
+    public Initializable loadView(NavigationItem navigationItem) {
+        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        try {
+            final Pane view = loader.load();
+            content.getChildren().setAll(view);
+            childController = loader.getController();
+            ((CodeBehind<? extends PresentationModel>) childController).setParentController(this);
+            ((ContextAware) childController).useSettingsContext(false);
+            return childController;
+        } catch (IOException e) {
+            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
+            e.getStackTrace();
+        }
+        return null;
+    }
 }
 
 class WizardItem extends HBox {
@@ -215,7 +233,7 @@ class WizardItem extends HBox {
     }
 
     CodeBehind<? extends PresentationModel> show() {
-        loadView(navigationItem);
+        parentCB.loadView(navigationItem);
         setId("wizard-item-background-active");
         imageView.setImage(ImageUtil.getIconImage(ImageUtil.ARROW_BLUE));
         titleLabel.setId("wizard-title-active");
@@ -228,21 +246,6 @@ class WizardItem extends HBox {
         imageView.setImage(ImageUtil.getIconImage(ImageUtil.TICK));
         titleLabel.setId("wizard-title-completed");
         subTitleLabel.setId("wizard-sub-title-completed");
-    }
-
-    private void loadView(NavigationItem navigationItem) {
-        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
-        try {
-            final Pane view = loader.load();
-            ((AnchorPane) content).getChildren().setAll(view);
-            childController = loader.getController();
-            childController.setParentController(parentCB);
-            ((ContextAware) childController).useSettingsContext(false);
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            e.getStackTrace();
-        }
-
     }
 }
 
