@@ -25,7 +25,7 @@ import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.account.content.RestrictionsPM;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.gui.view.account.AccountSetupCB;
+import io.bitsquare.gui.view.account.AccountSetupViewCB;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
 import io.bitsquare.util.BSFXMLLoader;
@@ -53,9 +53,9 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> implements AdjustableAccountContent {
+public class RestrictionsViewCB extends CachedCodeBehind<RestrictionsPM> implements ContextAware {
 
-    private static final Logger log = LoggerFactory.getLogger(RestrictionsCB.class);
+    private static final Logger log = LoggerFactory.getLogger(RestrictionsViewCB.class);
 
     @FXML private ListView languagesListView, countriesListView, arbitratorsListView;
     @FXML private ComboBox<Locale> languageComboBox;
@@ -69,7 +69,7 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private RestrictionsCB(RestrictionsPM presentationModel) {
+    private RestrictionsViewCB(RestrictionsPM presentationModel) {
         super(presentationModel);
     }
 
@@ -116,8 +116,8 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void isSettingsMode(boolean isSettingsMode) {
-        if (isSettingsMode)
+    public void useSettingsContext(boolean useSettingsContext) {
+        if (useSettingsContext)
             ((GridPane) root).getChildren().remove(completedButton);
     }
 
@@ -160,8 +160,8 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> implements 
 
     @FXML
     private void onCompleted() {
-        if (parentController instanceof AccountSetupCB)
-            ((AccountSetupCB) parentController).onCompleted(this);
+        if (parentController instanceof AccountSetupViewCB)
+            ((AccountSetupViewCB) parentController).onCompleted(this);
     }
 
     @FXML

@@ -22,7 +22,7 @@ import io.bitsquare.gui.CodeBehind;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.pm.account.AccountSettingsPM;
-import io.bitsquare.gui.view.account.content.AdjustableAccountContent;
+import io.bitsquare.gui.view.account.content.ContextAware;
 import io.bitsquare.util.BSFXMLLoader;
 
 import java.io.IOException;
@@ -45,9 +45,9 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountSettingsCB extends CachedCodeBehind<AccountSettingsPM> {
+public class AccountSettingsViewCB extends CachedCodeBehind<AccountSettingsPM> {
 
-    private static final Logger log = LoggerFactory.getLogger(AccountSettingsCB.class);
+    private static final Logger log = LoggerFactory.getLogger(AccountSettingsViewCB.class);
     public VBox leftVBox;
     public AnchorPane content;
 
@@ -56,7 +56,7 @@ public class AccountSettingsCB extends CachedCodeBehind<AccountSettingsPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountSettingsCB(AccountSettingsPM presentationModel) {
+    private AccountSettingsViewCB(AccountSettingsPM presentationModel) {
         super(presentationModel);
     }
 
@@ -133,11 +133,11 @@ class MenuItem extends ToggleButton {
 
     private CodeBehind<? extends PresentationModel> childController;
 
-    private final AccountSettingsCB parentCB;
+    private final AccountSettingsViewCB parentCB;
     private final Parent content;
     private final NavigationItem navigationItem;
 
-    MenuItem(AccountSettingsCB parentCB, Parent content, String title, NavigationItem navigationItem,
+    MenuItem(AccountSettingsViewCB parentCB, Parent content, String title, NavigationItem navigationItem,
              ToggleGroup toggleGroup) {
         this.parentCB = parentCB;
         this.content = content;
@@ -193,7 +193,7 @@ class MenuItem extends ToggleButton {
             ((AnchorPane) content).getChildren().setAll(view);
             childController = loader.getController();
             childController.setParentController(parentCB);
-            ((AdjustableAccountContent) childController).isSettingsMode(true);
+            ((ContextAware) childController).useSettingsContext(true);
         } catch (IOException e) {
             log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
             e.getStackTrace();

@@ -21,7 +21,7 @@ import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.account.content.PasswordPM;
-import io.bitsquare.gui.view.account.AccountSetupCB;
+import io.bitsquare.gui.view.account.AccountSetupViewCB;
 
 import java.net.URL;
 
@@ -36,9 +36,9 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PasswordCB extends CachedCodeBehind<PasswordPM> implements AdjustableAccountContent {
+public class PasswordViewCB extends CachedCodeBehind<PasswordPM> implements ContextAware {
 
-    private static final Logger log = LoggerFactory.getLogger(PasswordCB.class);
+    private static final Logger log = LoggerFactory.getLogger(PasswordViewCB.class);
 
     @FXML private HBox buttonsHBox;
     @FXML private Button saveButton, skipButton;
@@ -50,7 +50,7 @@ public class PasswordCB extends CachedCodeBehind<PasswordPM> implements Adjustab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private PasswordCB(PasswordPM presentationModel) {
+    private PasswordViewCB(PasswordPM presentationModel) {
         super(presentationModel);
     }
 
@@ -93,8 +93,8 @@ public class PasswordCB extends CachedCodeBehind<PasswordPM> implements Adjustab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void isSettingsMode(boolean isSettingsMode) {
-        if (isSettingsMode)
+    public void useSettingsContext(boolean useSettingsContext) {
+        if (useSettingsContext)
             buttonsHBox.getChildren().remove(skipButton);
     }
 
@@ -107,8 +107,8 @@ public class PasswordCB extends CachedCodeBehind<PasswordPM> implements Adjustab
     private void onSaved() {
         boolean result = presentationModel.requestSavePassword();
         if (result) {
-            if (parentController instanceof AccountSetupCB)
-                ((AccountSetupCB) parentController).onCompleted(this);
+            if (parentController instanceof AccountSetupViewCB)
+                ((AccountSetupViewCB) parentController).onCompleted(this);
         }
         else {
             // TODO use validating passwordTF
@@ -118,8 +118,8 @@ public class PasswordCB extends CachedCodeBehind<PasswordPM> implements Adjustab
 
     @FXML
     private void onSkipped() {
-        if (parentController instanceof AccountSetupCB)
-            ((AccountSetupCB) parentController).onCompleted(this);
+        if (parentController instanceof AccountSetupViewCB)
+            ((AccountSetupViewCB) parentController).onCompleted(this);
     }
 
     @FXML

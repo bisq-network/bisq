@@ -17,6 +17,6 @@
 
 package io.bitsquare.gui.view.account.content;
 
-public interface AdjustableAccountContent {
-    void isSettingsMode(boolean isSettingsMode);
+public interface ContextAware {
+    void useSettingsContext(boolean useSettingsContext);
 }

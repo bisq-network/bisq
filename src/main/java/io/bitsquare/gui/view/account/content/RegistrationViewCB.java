@@ -18,14 +18,14 @@
 package io.bitsquare.gui.view.account.content;
 
 import io.bitsquare.gui.CachedCodeBehind;
-import io.bitsquare.gui.MainController;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.account.content.RegistrationPM;
-import io.bitsquare.gui.view.account.AccountSetupCB;
+import io.bitsquare.gui.view.MainViewCB;
+import io.bitsquare.gui.view.account.AccountSetupViewCB;
 import io.bitsquare.locale.BSResources;
 
 import java.net.URL;
@@ -48,9 +48,9 @@ import org.controlsfx.dialog.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RegistrationCB extends CachedCodeBehind<RegistrationPM> implements AdjustableAccountContent {
+public class RegistrationViewCB extends CachedCodeBehind<RegistrationPM> implements ContextAware {
 
-    private static final Logger log = LoggerFactory.getLogger(RegistrationCB.class);
+    private static final Logger log = LoggerFactory.getLogger(RegistrationViewCB.class);
 
 
     @FXML private TextField feeTextField;
@@ -64,7 +64,7 @@ public class RegistrationCB extends CachedCodeBehind<RegistrationPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private RegistrationCB(RegistrationPM presentationModel) {
+    private RegistrationViewCB(RegistrationPM presentationModel) {
         super(presentationModel);
     }
 
@@ -95,7 +95,7 @@ public class RegistrationCB extends CachedCodeBehind<RegistrationPM> implements 
 
         presentationModel.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                MainController.GET_INSTANCE().blurContentScreen();
+                MainViewCB.getInstance().blurContentScreen();
 
                 List<Action> actions = new ArrayList<>();
                 actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {
@@ -111,13 +111,13 @@ public class RegistrationCB extends CachedCodeBehind<RegistrationPM> implements 
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         try {
-                            if (parentController instanceof AccountSetupCB)
-                                ((AccountSetupCB) parentController).onCompleted(RegistrationCB.this);
+                            if (parentController instanceof AccountSetupViewCB)
+                                ((AccountSetupViewCB) parentController).onCompleted(RegistrationViewCB.this);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                         Dialog.Actions.CLOSE.handle(actionEvent);
-                        MainController.GET_INSTANCE().removeContentScreenBlur();
+                        MainViewCB.getInstance().removeContentScreenBlur();
                     }
                 });
 
@@ -155,8 +155,8 @@ public class RegistrationCB extends CachedCodeBehind<RegistrationPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void isSettingsMode(boolean isSettingsMode) {
-        if (isSettingsMode) {
+    public void useSettingsContext(boolean useSettingsContext) {
+        if (useSettingsContext) {
             // TODO
         }
     }

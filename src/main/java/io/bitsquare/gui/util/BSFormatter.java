@@ -291,6 +291,14 @@ public class BSFormatter {
         return decimalFormat.format(collateral / 10) + " %";
     }
 
+    public static String formatToPercent(double value) {
+        DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(locale);
+        decimalFormat.setMinimumFractionDigits(1);
+        decimalFormat.setMaximumFractionDigits(1);
+        decimalFormat.setGroupingUsed(false);
+        return decimalFormat.format(value / 100) + " %";
+    }
+
     public static String formatVolumeWithMinVolume(Fiat volume, Fiat minVolume) {
         return formatFiat(volume) + " (" + formatFiat(minVolume) + ")";
     }

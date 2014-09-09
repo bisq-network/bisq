@@ -21,14 +21,14 @@ import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.CodeBehind;
-import io.bitsquare.gui.MainController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.trade.takeoffer.TakeOfferController;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.gui.view.trade.CreateOfferCB;
+import io.bitsquare.gui.view.MainViewCB;
+import io.bitsquare.gui.view.trade.CreateOfferViewCB;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
@@ -245,7 +245,7 @@ public class OrderBookController extends CachedViewController {
             }
 
             if (nextController != null)
-                ((CreateOfferCB) nextController).setOrderBookFilter(orderBookFilter);
+                ((CreateOfferViewCB) nextController).setOrderBookFilter(orderBookFilter);
         }
         else {
             openSetupScreen();
@@ -270,16 +270,16 @@ public class OrderBookController extends CachedViewController {
 
     private void openSetupScreen() {
 
-        MainController.GET_INSTANCE().blurContentScreen();
+        MainViewCB.getInstance().blurContentScreen();
         List<Action> actions = new ArrayList<>();
         actions.add(new AbstractAction(BSResources.get("shared.ok")) {
             @Override
             public void handle(ActionEvent actionEvent) {
                 Dialog.Actions.OK.handle(actionEvent);
-                MainController.GET_INSTANCE().removeContentScreenBlur();
+                MainViewCB.getInstance().removeContentScreenBlur();
 
-                MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.ACCOUNT);
-                MainController.GET_INSTANCE()
+                MainViewCB.getInstance().triggerMainMenuButton(NavigationItem.ACCOUNT);
+                MainViewCB.getInstance()
                         .setPreviousNavigationItem((orderBookFilter.getDirection() == Direction.BUY) ?
                                 NavigationItem.BUY : NavigationItem.SELL);
             }

@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.components.btc;
 
-import io.bitsquare.gui.MainController;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.view.MainViewCB;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.uri.BitcoinURI;
@@ -124,13 +124,13 @@ public class AddressTextField extends AnchorPane {
                 PopOver popOver = new PopOver(pane);
                 popOver.setDetachedTitle("Scan QR code for this address");
                 popOver.setDetached(true);
-                popOver.setOnHiding(windowEvent -> MainController.GET_INSTANCE().removeContentScreenBlur());
+                popOver.setOnHiding(windowEvent -> MainViewCB.getInstance().removeContentScreenBlur());
 
                 Window window = getScene().getWindow();
                 double x = Math.round(window.getX() + (window.getWidth() - 320) / 2);
                 double y = Math.round(window.getY() + (window.getHeight() - 240) / 2);
                 popOver.show(getScene().getWindow(), x, y);
-                MainController.GET_INSTANCE().blurContentScreen();
+                MainViewCB.getInstance().blurContentScreen();
             }
         });
 

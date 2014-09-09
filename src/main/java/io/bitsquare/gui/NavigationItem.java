@@ -22,7 +22,7 @@ import io.bitsquare.gui.util.ImageUtil;
 public enum NavigationItem {
 
     // app
-    MAIN("/io/bitsquare/gui/MainView.fxml"),
+    MAIN("/io/bitsquare/gui/view/MainView.fxml"),
 
     // main menu screens
     HOME("/io/bitsquare/gui/home/HomeView.fxml", ImageUtil.HOME, ImageUtil.HOME_ACTIVE),

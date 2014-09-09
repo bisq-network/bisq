@@ -23,12 +23,12 @@ import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.pm.account.AccountSetupPM;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.gui.view.account.content.AdjustableAccountContent;
-import io.bitsquare.gui.view.account.content.FiatAccountCB;
-import io.bitsquare.gui.view.account.content.PasswordCB;
-import io.bitsquare.gui.view.account.content.RegistrationCB;
-import io.bitsquare.gui.view.account.content.RestrictionsCB;
-import io.bitsquare.gui.view.account.content.SeedWordsCB;
+import io.bitsquare.gui.view.account.content.ContextAware;
+import io.bitsquare.gui.view.account.content.FiatAccountViewCB;
+import io.bitsquare.gui.view.account.content.PasswordViewCB;
+import io.bitsquare.gui.view.account.content.RegistrationViewCB;
+import io.bitsquare.gui.view.account.content.RestrictionsViewCB;
+import io.bitsquare.gui.view.account.content.SeedWordsViewCB;
 import io.bitsquare.util.BSFXMLLoader;
 
 import java.io.IOException;
@@ -50,9 +50,9 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountSetupCB extends CachedCodeBehind<AccountSetupPM> {
+public class AccountSetupViewCB extends CachedCodeBehind<AccountSetupPM> {
 
-    private static final Logger log = LoggerFactory.getLogger(AccountSetupCB.class);
+    private static final Logger log = LoggerFactory.getLogger(AccountSetupViewCB.class);
 
     private WizardItem seedWords, password, fiatAccount, restrictions, registration;
     private Callable<Void> requestCloseCallable;
@@ -66,7 +66,7 @@ public class AccountSetupCB extends CachedCodeBehind<AccountSetupPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountSetupCB(AccountSetupPM presentationModel) {
+    private AccountSetupViewCB(AccountSetupPM presentationModel) {
         super(presentationModel);
     }
 
@@ -122,23 +122,23 @@ public class AccountSetupCB extends CachedCodeBehind<AccountSetupPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onCompleted(CodeBehind<? extends PresentationModel> childView) {
-        if (childView instanceof SeedWordsCB) {
+        if (childView instanceof SeedWordsViewCB) {
             seedWords.onCompleted();
             childController = password.show();
         }
-        else if (childView instanceof PasswordCB) {
+        else if (childView instanceof PasswordViewCB) {
             password.onCompleted();
             childController = restrictions.show();
         }
-        else if (childView instanceof RestrictionsCB) {
+        else if (childView instanceof RestrictionsViewCB) {
             restrictions.onCompleted();
             childController = fiatAccount.show();
         }
-        else if (childView instanceof FiatAccountCB) {
+        else if (childView instanceof FiatAccountViewCB) {
             fiatAccount.onCompleted();
             childController = registration.show();
         }
-        else if (childView instanceof RegistrationCB) {
+        else if (childView instanceof RegistrationViewCB) {
             registration.onCompleted();
             childController = null;
 
@@ -171,11 +171,12 @@ class WizardItem extends HBox {
     private final ImageView imageView;
     private final Label titleLabel;
     private final Label subTitleLabel;
-    private final AccountSetupCB parentCB;
+    private final AccountSetupViewCB parentCB;
     private final Parent content;
     private final NavigationItem navigationItem;
 
-    WizardItem(AccountSetupCB parentCB, Parent content, String title, String subTitle, NavigationItem navigationItem) {
+    WizardItem(AccountSetupViewCB parentCB, Parent content, String title, String subTitle, 
+               NavigationItem navigationItem) {
         this.parentCB = parentCB;
         this.content = content;
         this.navigationItem = navigationItem;
@@ -236,7 +237,7 @@ class WizardItem extends HBox {
             ((AnchorPane) content).getChildren().setAll(view);
             childController = loader.getController();
             childController.setParentController(parentCB);
-            ((AdjustableAccountContent) childController).isSettingsMode(false);
+            ((ContextAware) childController).useSettingsContext(false);
         } catch (IOException e) {
             log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
             e.getStackTrace();

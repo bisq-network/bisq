@@ -18,7 +18,6 @@
 package io.bitsquare.gui.view.trade;
 
 import io.bitsquare.gui.CachedCodeBehind;
-import io.bitsquare.gui.MainController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
@@ -29,6 +28,7 @@ import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.trade.CreateOfferPM;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.gui.view.MainViewCB;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
 
@@ -70,8 +70,8 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 // TODO Implement other positioning method in InoutTextField to display it over the field instead of right side
 // priceAmountHBox is too large after redesign as to be used as layoutReference. 
 
-public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
-    private static final Logger log = LoggerFactory.getLogger(CreateOfferCB.class);
+public class CreateOfferViewCB extends CachedCodeBehind<CreateOfferPM> {
+    private static final Logger log = LoggerFactory.getLogger(CreateOfferViewCB.class);
 
     private boolean detailsVisible;
     private boolean advancedScreenInited;
@@ -105,7 +105,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferCB(CreateOfferPM presentationModel) {
+    private CreateOfferViewCB(CreateOfferPM presentationModel) {
         super(presentationModel);
     }
 
@@ -234,7 +234,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void openAccountSettings() {
-        MainController.GET_INSTANCE().loadViewAndGetChildController(NavigationItem.ACCOUNT);
+        MainViewCB.getInstance().triggerMainMenuButton(NavigationItem.ACCOUNT);
     }
 
     private void close() {
@@ -306,7 +306,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
 
         presentationModel.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                MainController.GET_INSTANCE().blurContentScreen();
+                MainViewCB.getInstance().blurContentScreen();
 
                 // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added 
                 // our own actions.
@@ -329,7 +329,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
                             e.printStackTrace();
                         }
                         Dialog.Actions.CLOSE.handle(actionEvent);
-                        MainController.GET_INSTANCE().removeContentScreenBlur();
+                        MainViewCB.getInstance().removeContentScreenBlur();
                     }
                 });
 

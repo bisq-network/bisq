@@ -26,7 +26,7 @@ import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.account.content.FiatAccountPm;
 import io.bitsquare.gui.util.validation.InputValidator;
-import io.bitsquare.gui.view.account.AccountSetupCB;
+import io.bitsquare.gui.view.account.AccountSetupViewCB;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
 
@@ -52,9 +52,9 @@ import org.slf4j.LoggerFactory;
 
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
-public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> implements AdjustableAccountContent {
+public class FiatAccountViewCB extends CachedCodeBehind<FiatAccountPm> implements ContextAware {
 
-    private static final Logger log = LoggerFactory.getLogger(FiatAccountCB.class);
+    private static final Logger log = LoggerFactory.getLogger(FiatAccountViewCB.class);
 
     @FXML private HBox buttonsHBox;
     @FXML private ComboBox<Region> regionComboBox;
@@ -71,7 +71,7 @@ public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> implements Ad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private FiatAccountCB(FiatAccountPm presentationModel) {
+    private FiatAccountViewCB(FiatAccountPm presentationModel) {
         super(presentationModel);
     }
 
@@ -126,8 +126,8 @@ public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> implements Ad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void isSettingsMode(boolean isSettingsMode) {
-        if (isSettingsMode)
+    public void useSettingsContext(boolean useSettingsContext) {
+        if (useSettingsContext)
             buttonsHBox.getChildren().remove(completedButton);
     }
 
@@ -177,7 +177,7 @@ public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> implements Ad
     @FXML
     private void onCompleted() {
         if (parentController != null)
-            ((AccountSetupCB) parentController).onCompleted(this);
+            ((AccountSetupViewCB) parentController).onCompleted(this);
     }
 
     @FXML

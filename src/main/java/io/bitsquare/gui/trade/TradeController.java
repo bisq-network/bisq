@@ -22,7 +22,7 @@ import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.trade.orderbook.OrderBookController;
 import io.bitsquare.gui.trade.takeoffer.TakeOfferController;
-import io.bitsquare.gui.view.trade.CreateOfferCB;
+import io.bitsquare.gui.view.trade.CreateOfferViewCB;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.util.BSFXMLLoader;
 
@@ -47,7 +47,7 @@ public class TradeController extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(TradeController.class);
 
     protected OrderBookController orderBookController;
-    protected CreateOfferCB createOfferCodeBehind;
+    protected CreateOfferViewCB createOfferCodeBehind;
     protected TakeOfferController takeOfferController;
     protected BSFXMLLoader orderBookLoader;
     private Node createOfferView;

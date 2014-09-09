@@ -20,8 +20,8 @@ package io.bitsquare.gui.view.account.content;
 import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
-import io.bitsquare.gui.pm.account.content.SeedWordsPM;
-import io.bitsquare.gui.view.account.AccountSetupCB;
+import io.bitsquare.gui.pm.account.content.ChangePasswordPM;
+import io.bitsquare.gui.view.account.AccountSetupViewCB;
 
 import java.net.URL;
 
@@ -36,12 +36,13 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SeedWordsCB extends CachedCodeBehind<SeedWordsPM> implements AdjustableAccountContent {
+public class ChangePasswordViewCB extends CachedCodeBehind<ChangePasswordPM> implements ContextAware {
 
-    private static final Logger log = LoggerFactory.getLogger(SeedWordsCB.class);
+    private static final Logger log = LoggerFactory.getLogger(ChangePasswordViewCB.class);
 
-    @FXML private Button completedButton;
-    @FXML private TextArea seedWordsTextArea;
+    @FXML private HBox buttonsHBox;
+    @FXML private Button saveButton, skipButton;
+    @FXML private PasswordField passwordField, repeatedPasswordField;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +50,7 @@ public class SeedWordsCB extends CachedCodeBehind<SeedWordsPM> implements Adjust
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private SeedWordsCB(SeedWordsPM presentationModel) {
+    private ChangePasswordViewCB(ChangePasswordPM presentationModel) {
         super(presentationModel);
     }
 
@@ -62,7 +63,10 @@ public class SeedWordsCB extends CachedCodeBehind<SeedWordsPM> implements Adjust
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
-        seedWordsTextArea.setText(presentationModel.seedWords.get());
+        passwordField.textProperty().bindBidirectional(presentationModel.passwordField);
+        repeatedPasswordField.textProperty().bindBidirectional(presentationModel.repeatedPasswordField);
+
+        saveButton.disableProperty().bind(presentationModel.saveButtonDisabled);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -89,9 +93,9 @@ public class SeedWordsCB extends CachedCodeBehind<SeedWordsPM> implements Adjust
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void isSettingsMode(boolean isSettingsMode) {
-        if (isSettingsMode)
-            ((GridPane) root).getChildren().remove(completedButton);
+    public void useSettingsContext(boolean useSettingsContext) {
+        if (useSettingsContext)
+            buttonsHBox.getChildren().remove(skipButton);
     }
 
 
@@ -100,14 +104,27 @@ public class SeedWordsCB extends CachedCodeBehind<SeedWordsPM> implements Adjust
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
-    private void onCompleted() {
-        if (parentController instanceof AccountSetupCB)
-            ((AccountSetupCB) parentController).onCompleted(this);
+    private void onSaved() {
+        boolean result = presentationModel.requestSavePassword();
+        if (result) {
+            if (parentController instanceof AccountSetupViewCB)
+                ((AccountSetupViewCB) parentController).onCompleted(this);
+        }
+        else {
+            log.debug(presentationModel.getErrorMessage()); // TODO use validating TF
+        }
     }
 
     @FXML
     private void onOpenHelp() {
-        Help.openWindow(HelpId.SETUP_SEED_WORDS);
+        Help.openWindow(HelpId.SETUP_PASSWORD);
     }
+
+    @FXML
+    private void onSkipped() {
+        if (parentController instanceof AccountSetupViewCB)
+            ((AccountSetupViewCB) parentController).onCompleted(this);
+    }
+
 }
 

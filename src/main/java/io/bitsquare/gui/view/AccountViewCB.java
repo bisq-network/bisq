@@ -19,10 +19,9 @@ package io.bitsquare.gui.view;
 
 import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.CodeBehind;
-import io.bitsquare.gui.MainController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.pm.AccountPM;
-import io.bitsquare.gui.view.account.AccountSetupCB;
+import io.bitsquare.gui.view.account.AccountSetupViewCB;
 import io.bitsquare.util.BSFXMLLoader;
 
 import java.io.IOException;
@@ -40,9 +39,9 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountCB extends CachedCodeBehind<AccountPM> {
+public class AccountViewCB extends CachedCodeBehind<AccountPM> {
 
-    private static final Logger log = LoggerFactory.getLogger(AccountCB.class);
+    private static final Logger log = LoggerFactory.getLogger(AccountViewCB.class);
 
     public Tab tab;
 
@@ -52,7 +51,7 @@ public class AccountCB extends CachedCodeBehind<AccountPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountCB(AccountPM presentationModel) {
+    private AccountViewCB(AccountPM presentationModel) {
         super(presentationModel);
     }
 
@@ -111,8 +110,8 @@ public class AccountCB extends CachedCodeBehind<AccountPM> {
             Initializable childController = loader.getController();
             ((CodeBehind) childController).setParentController(this);
 
-            if (childController instanceof AccountSetupCB)
-                ((AccountSetupCB) childController).setRemoveCallBack(() -> {
+            if (childController instanceof AccountSetupViewCB)
+                ((AccountSetupViewCB) childController).setRemoveCallBack(() -> {
                     removeSetup();
                     return null;
                 });
@@ -132,11 +131,11 @@ public class AccountCB extends CachedCodeBehind<AccountPM> {
     private void removeSetup() {
         childController = null;
 
-        NavigationItem previousItem = MainController.GET_INSTANCE().getPreviousNavigationItem();
+        NavigationItem previousItem = MainViewCB.getInstance().getPreviousNavigationItem();
         if (previousItem == null)
             previousItem = NavigationItem.HOME;
 
-        MainController.GET_INSTANCE().loadViewAndGetChildController(previousItem);
+        MainViewCB.getInstance().triggerMainMenuButton(previousItem);
     }
 
 }

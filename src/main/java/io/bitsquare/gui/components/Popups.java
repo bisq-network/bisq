@@ -18,7 +18,7 @@
 package io.bitsquare.gui.components;
 
 import io.bitsquare.BitSquare;
-import io.bitsquare.gui.MainController;
+import io.bitsquare.gui.view.MainViewCB;
 import io.bitsquare.locale.BSResources;
 
 import com.google.bitcoin.store.BlockStoreException;
@@ -56,7 +56,7 @@ public class Popups {
 
     // Supports blurring the content background
     public static void openInfo(String message, String masthead) {
-        MainController.GET_INSTANCE().blurContentScreen();
+        MainViewCB.getInstance().blurContentScreen();
         List<Action> actions = new ArrayList<>();
 
         // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added 
@@ -65,7 +65,7 @@ public class Popups {
             @Override
             public void handle(ActionEvent actionEvent) {
                 Dialog.Actions.CLOSE.handle(actionEvent);
-                MainController.GET_INSTANCE().removeContentScreenBlur();
+                MainViewCB.getInstance().removeContentScreenBlur();
             }
         });
         openInfo(message, masthead, actions);
