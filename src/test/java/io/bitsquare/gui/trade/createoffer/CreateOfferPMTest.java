@@ -61,7 +61,6 @@ public class CreateOfferPMTest {
         assertEquals(Coin.COIN, model.amountAsCoin.get());
         assertEquals(Fiat.valueOf("USD", 500 * 10000), model.priceAsFiat.get());
         assertEquals(Fiat.valueOf("USD", 500 * 10000), model.volumeAsFiat.get());
-        assertEquals(Coin.parseCoin("0.1011"), model.totalToPayAsCoin.get());
 
         presenter.price.set("500");
         presenter.volume.set("500");
