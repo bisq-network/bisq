@@ -26,7 +26,7 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.trade.createoffer.CreateOfferCB"
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.view.trade.CreateOfferCB"
             AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0"
             AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
             xmlns:fx="http://javafx.com/fxml">

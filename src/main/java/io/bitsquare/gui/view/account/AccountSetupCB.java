@@ -24,6 +24,7 @@ import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.pm.account.AccountSetupPM;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.view.AccountCB;
+import io.bitsquare.gui.view.account.content.AdjustableAccountContent;
 import io.bitsquare.gui.view.account.content.FiatAccountCB;
 import io.bitsquare.gui.view.account.content.PasswordCB;
 import io.bitsquare.gui.view.account.content.RegistrationCB;
@@ -247,6 +248,7 @@ class WizardItem extends HBox {
             ((AnchorPane) content).getChildren().setAll(view);
             childController = loader.getController();
             childController.setParentController(parentCB);
+            ((AdjustableAccountContent) childController).isSettingsMode(false);
         } catch (IOException e) {
             log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
             e.getStackTrace();

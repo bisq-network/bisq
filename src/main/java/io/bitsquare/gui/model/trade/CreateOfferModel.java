@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.trade.createoffer;
+package io.bitsquare.gui.model.trade;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.bank.BankAccount;
@@ -64,7 +64,7 @@ import static io.bitsquare.gui.util.BSFormatter.reduceTo4Decimals;
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
-class CreateOfferModel extends UIModel {
+public class CreateOfferModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferModel.class);
 
     private final TradeManager tradeManager;
@@ -75,42 +75,43 @@ class CreateOfferModel extends UIModel {
     private final String offerId;
     @Nullable private Direction direction = null;
 
-    AddressEntry addressEntry;
+    public AddressEntry addressEntry;
 
-    final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
-    final StringProperty transactionId = new SimpleStringProperty();
-    final StringProperty bankAccountCurrency = new SimpleStringProperty();
-    final StringProperty bankAccountCounty = new SimpleStringProperty();
-    final StringProperty bankAccountType = new SimpleStringProperty();
-    final StringProperty fiatCode = new SimpleStringProperty();
-    final StringProperty btcCode = new SimpleStringProperty();
+    public final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
+    public final StringProperty transactionId = new SimpleStringProperty();
+    public final StringProperty bankAccountCurrency = new SimpleStringProperty();
+    public final StringProperty bankAccountCounty = new SimpleStringProperty();
+    public final StringProperty bankAccountType = new SimpleStringProperty();
+    public final StringProperty fiatCode = new SimpleStringProperty();
+    public final StringProperty btcCode = new SimpleStringProperty();
 
-    final LongProperty collateralAsLong = new SimpleLongProperty();
+    public final LongProperty collateralAsLong = new SimpleLongProperty();
 
-    final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty();
-    final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
-    final BooleanProperty useMBTC = new SimpleBooleanProperty();
+    public final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty();
+    public final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
+    public final BooleanProperty useMBTC = new SimpleBooleanProperty();
 
-    final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
-    final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> collateralAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> offerFeeAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> networkFeeAsCoin = new SimpleObjectProperty<>();
+    public final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
+    public final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
+    public final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
+    public final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
+    public final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
+    public final ObjectProperty<Coin> collateralAsCoin = new SimpleObjectProperty<>();
+    public final ObjectProperty<Coin> offerFeeAsCoin = new SimpleObjectProperty<>();
+    public final ObjectProperty<Coin> networkFeeAsCoin = new SimpleObjectProperty<>();
 
-    final ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();
-    final ObservableList<Locale> acceptedLanguages = FXCollections.observableArrayList();
-    final ObservableList<Arbitrator> acceptedArbitrators = FXCollections.observableArrayList();
+    public final ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();
+    public final ObservableList<Locale> acceptedLanguages = FXCollections.observableArrayList();
+    public final ObservableList<Arbitrator> acceptedArbitrators = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // non private for testing
     @Inject
-    CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user) {
+    public CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user) {
         this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
         this.settings = settings;
@@ -186,10 +187,10 @@ class CreateOfferModel extends UIModel {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Methods
+    // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void placeOffer() {
+    public void placeOffer() {
         // data validation is done in the trade domain
         tradeManager.requestPlaceOffer(offerId,
                 direction,
@@ -204,7 +205,7 @@ class CreateOfferModel extends UIModel {
         );
     }
 
-    void calculateVolume() {
+    public void calculateVolume() {
         try {
             if (priceAsFiat.get() != null && amountAsCoin.get() != null && !amountAsCoin.get().isZero() && !priceAsFiat
                     .get().isZero()) {
@@ -216,7 +217,7 @@ class CreateOfferModel extends UIModel {
         }
     }
 
-    void calculateAmount() {
+    public void calculateAmount() {
         try {
             if (volumeAsFiat.get() != null && priceAsFiat.get() != null && !volumeAsFiat.get().isZero() && !priceAsFiat
                     .get().isZero()) {
@@ -233,7 +234,7 @@ class CreateOfferModel extends UIModel {
         }
     }
 
-    void calculateTotalToPay() {
+    public void calculateTotalToPay() {
         calculateCollateral();
         try {
             if (collateralAsCoin.get() != null) {
@@ -245,7 +246,7 @@ class CreateOfferModel extends UIModel {
         }
     }
 
-    void calculateCollateral() {
+    public void calculateCollateral() {
         try {
 
             if (amountAsCoin.get() != null)
@@ -256,43 +257,44 @@ class CreateOfferModel extends UIModel {
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Validation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    boolean isMinAmountLessOrEqualAmount() {
+    public boolean isMinAmountLessOrEqualAmount() {
         //noinspection SimplifiableIfStatement
         if (minAmountAsCoin.get() != null && amountAsCoin.get() != null)
             return !minAmountAsCoin.get().isGreaterThan(amountAsCoin.get());
         return true;
     }
 
-    private void updateBalance(@NotNull Coin balance) {
-        isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter/Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Nullable
-    Direction getDirection() {
+    public Direction getDirection() {
         return direction;
     }
 
-    void setDirection(Direction direction) {
+    public void setDirection(Direction direction) {
         // direction can not be changed once it is initially set
         checkArgument(this.direction == null);
         this.direction = direction;
     }
 
-    WalletFacade getWalletFacade() {
+    public WalletFacade getWalletFacade() {
         return walletFacade;
     }
 
-    String getOfferId() {
+    public String getOfferId() {
         return offerId;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    private void updateBalance(@NotNull Coin balance) {
+        isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
+    }
 }

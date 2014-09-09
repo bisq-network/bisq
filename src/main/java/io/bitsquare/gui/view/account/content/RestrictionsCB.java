@@ -25,7 +25,6 @@ import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.account.content.RestrictionsPM;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.gui.view.account.AccountSettingsCB;
 import io.bitsquare.gui.view.account.AccountSetupCB;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
@@ -54,7 +53,7 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> {
+public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> implements AdjustableAccountContent {
 
     private static final Logger log = LoggerFactory.getLogger(RestrictionsCB.class);
 
@@ -113,15 +112,13 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Override from CodeBehind
+    // Override 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setParentController(Initializable parentController) {
-        super.setParentController(parentController);
-        if (parentController instanceof AccountSettingsCB) {
+    public void isSettingsMode(boolean isSettingsMode) {
+        if (isSettingsMode)
             ((GridPane) root).getChildren().remove(completedButton);
-        }
     }
 
 

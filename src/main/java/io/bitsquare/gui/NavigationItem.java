@@ -36,7 +36,7 @@ public enum NavigationItem {
     ORDER_BOOK("/io/bitsquare/gui/trade/orderbook/OrderBookView.fxml"),
     BUY("/io/bitsquare/gui/trade/BuyView.fxml", ImageUtil.NAV_BUY, ImageUtil.NAV_BUY_ACTIVE),
     SELL("/io/bitsquare/gui/trade/SellView.fxml", ImageUtil.NAV_SELL, ImageUtil.NAV_SELL_ACTIVE),
-    CREATE_OFFER("/io/bitsquare/gui/trade/createoffer/CreateOfferView.fxml"),
+    CREATE_OFFER("/io/bitsquare/gui/view/trade/CreateOfferView.fxml"),
     TAKE_OFFER("/io/bitsquare/gui/trade/takeoffer/TakeOfferView.fxml"),
 
     // orders

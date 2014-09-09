@@ -26,7 +26,6 @@ import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.account.content.FiatAccountPm;
 import io.bitsquare.gui.util.validation.InputValidator;
-import io.bitsquare.gui.view.account.AccountSettingsCB;
 import io.bitsquare.gui.view.account.AccountSetupCB;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
@@ -42,7 +41,6 @@ import javax.inject.Inject;
 
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
@@ -54,7 +52,7 @@ import org.slf4j.LoggerFactory;
 
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
-public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> {
+public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> implements AdjustableAccountContent {
 
     private static final Logger log = LoggerFactory.getLogger(FiatAccountCB.class);
 
@@ -124,15 +122,13 @@ public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Override from CodeBehind
+    // Override 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setParentController(Initializable parentController) {
-        super.setParentController(parentController);
-        if (parentController instanceof AccountSettingsCB) {
+    public void isSettingsMode(boolean isSettingsMode) {
+        if (isSettingsMode)
             buttonsHBox.getChildren().remove(completedButton);
-        }
     }
 
 

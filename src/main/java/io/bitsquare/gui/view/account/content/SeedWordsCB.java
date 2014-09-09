@@ -21,7 +21,6 @@ import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.account.content.SeedWordsPM;
-import io.bitsquare.gui.view.account.AccountSettingsCB;
 import io.bitsquare.gui.view.account.AccountSetupCB;
 
 import java.net.URL;
@@ -31,14 +30,13 @@ import java.util.ResourceBundle;
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SeedWordsCB extends CachedCodeBehind<SeedWordsPM> {
+public class SeedWordsCB extends CachedCodeBehind<SeedWordsPM> implements AdjustableAccountContent {
 
     private static final Logger log = LoggerFactory.getLogger(SeedWordsCB.class);
 
@@ -87,15 +85,13 @@ public class SeedWordsCB extends CachedCodeBehind<SeedWordsPM> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Override from CodeBehind
+    // Override 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setParentController(Initializable parentController) {
-        super.setParentController(parentController);
-        if (parentController instanceof AccountSettingsCB) {
+    public void isSettingsMode(boolean isSettingsMode) {
+        if (isSettingsMode)
             ((GridPane) root).getChildren().remove(completedButton);
-        }
     }
 
 

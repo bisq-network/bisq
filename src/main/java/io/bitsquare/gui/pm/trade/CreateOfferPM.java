@@ -15,10 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.trade.createoffer;
+package io.bitsquare.gui.pm.trade;
 
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.model.trade.CreateOfferModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
@@ -49,61 +50,63 @@ import org.slf4j.LoggerFactory;
 import static io.bitsquare.gui.util.BSFormatter.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-class CreateOfferPM extends PresentationModel<CreateOfferModel> {
+public class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferPM.class);
 
     private final BtcValidator btcValidator = new BtcValidator();
     private final FiatValidator fiatValidator = new FiatValidator();
 
-    final StringProperty amount = new SimpleStringProperty();
-    final StringProperty minAmount = new SimpleStringProperty();
-    final StringProperty price = new SimpleStringProperty();
-    final StringProperty volume = new SimpleStringProperty();
-    final StringProperty collateral = new SimpleStringProperty();
-    final StringProperty totalToPay = new SimpleStringProperty();
-    final StringProperty directionLabel = new SimpleStringProperty();
-    final StringProperty collateralLabel = new SimpleStringProperty();
-    final StringProperty offerFee = new SimpleStringProperty();
-    final StringProperty networkFee = new SimpleStringProperty();
-    final StringProperty bankAccountType = new SimpleStringProperty();
-    final StringProperty bankAccountCurrency = new SimpleStringProperty();
-    final StringProperty bankAccountCounty = new SimpleStringProperty();
-    final StringProperty acceptedCountries = new SimpleStringProperty();
-    final StringProperty acceptedLanguages = new SimpleStringProperty();
-    final StringProperty acceptedArbitrators = new SimpleStringProperty();
-    final StringProperty addressAsString = new SimpleStringProperty();
-    final StringProperty paymentLabel = new SimpleStringProperty();
-    final StringProperty transactionId = new SimpleStringProperty();
-    final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
-    final StringProperty btcCode = new SimpleStringProperty();
-    final StringProperty fiatCode = new SimpleStringProperty();
+    public final StringProperty amount = new SimpleStringProperty();
+    public final StringProperty minAmount = new SimpleStringProperty();
+    public final StringProperty price = new SimpleStringProperty();
+    public final StringProperty volume = new SimpleStringProperty();
+    public final StringProperty collateral = new SimpleStringProperty();
+    public final StringProperty totalToPay = new SimpleStringProperty();
+    public final StringProperty directionLabel = new SimpleStringProperty();
+    public final StringProperty collateralLabel = new SimpleStringProperty();
+    public final StringProperty offerFee = new SimpleStringProperty();
+    public final StringProperty networkFee = new SimpleStringProperty();
+    public final StringProperty bankAccountType = new SimpleStringProperty();
+    public final StringProperty bankAccountCurrency = new SimpleStringProperty();
+    public final StringProperty bankAccountCounty = new SimpleStringProperty();
+    public final StringProperty acceptedCountries = new SimpleStringProperty();
+    public final StringProperty acceptedLanguages = new SimpleStringProperty();
+    public final StringProperty acceptedArbitrators = new SimpleStringProperty();
+    public final StringProperty addressAsString = new SimpleStringProperty();
+    public final StringProperty paymentLabel = new SimpleStringProperty();
+    public final StringProperty transactionId = new SimpleStringProperty();
+    public final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
+    public final StringProperty btcCode = new SimpleStringProperty();
+    public final StringProperty fiatCode = new SimpleStringProperty();
 
-    final BooleanProperty isPlaceOfferButtonVisible = new SimpleBooleanProperty(false);
-    final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
-    final BooleanProperty showWarningAdjustedVolume = new SimpleBooleanProperty();
-    final BooleanProperty showWarningInvalidFiatDecimalPlaces = new SimpleBooleanProperty();
-    final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
-    final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
+    public final BooleanProperty isPlaceOfferButtonVisible = new SimpleBooleanProperty(false);
+    public final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
+    public final BooleanProperty showWarningAdjustedVolume = new SimpleBooleanProperty();
+    public final BooleanProperty showWarningInvalidFiatDecimalPlaces = new SimpleBooleanProperty();
+    public final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
+    public final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
 
-    final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
-    final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new SimpleObjectProperty<>();
-    final ObjectProperty<InputValidator.ValidationResult> priceValidationResult = new SimpleObjectProperty<>();
-    final ObjectProperty<InputValidator.ValidationResult> volumeValidationResult = new SimpleObjectProperty<>();
+    public final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
+    public final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new 
+            SimpleObjectProperty<>();
+    public final ObjectProperty<InputValidator.ValidationResult> priceValidationResult = new SimpleObjectProperty<>();
+    public final ObjectProperty<InputValidator.ValidationResult> volumeValidationResult = new SimpleObjectProperty<>();
 
     // Those are needed for the addressTextField
-    final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Address> address = new SimpleObjectProperty<>();
+    public final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
+    public final ObjectProperty<Address> address = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // non private for testing
     @Inject
     CreateOfferPM(CreateOfferModel model) {
         super(model);
 
-        // Node: Don't do setup in constructor to make object creation faster
+        // Note: Don't do setup in constructor to make object creation faster
     }
 
 
@@ -151,7 +154,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // setOrderBookFilter is a one time call
-    void setOrderBookFilter(@NotNull OrderBookFilter orderBookFilter) {
+    public void setOrderBookFilter(@NotNull OrderBookFilter orderBookFilter) {
         model.setDirection(orderBookFilter.getDirection());
         directionLabel.set(model.getDirection() == Direction.BUY ? BSResources.get("shared.buy") : BSResources.get
                 ("shared.sell"));
@@ -173,7 +176,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     // UI actions (called by CB)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void onPlaceOffer() {
+    public void onPlaceOffer() {
         model.requestPlaceOfferErrorMessage.set(null);
         model.requestPlaceOfferSuccess.set(false);
 
@@ -192,7 +195,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     }
 
     // On focus out we do validation and apply the data to the model 
-    void onFocusOutAmountTextField(Boolean oldValue, Boolean newValue, String userInput) {
+    public void onFocusOutAmountTextField(Boolean oldValue, Boolean newValue, String userInput) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(amount.get());
             amountValidationResult.set(result);
@@ -219,7 +222,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         }
     }
 
-    void onFocusOutMinAmountTextField(Boolean oldValue, Boolean newValue, String userInput) {
+    public void onFocusOutMinAmountTextField(Boolean oldValue, Boolean newValue, String userInput) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(minAmount.get());
             minAmountValidationResult.set(result);
@@ -241,7 +244,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         }
     }
 
-    void onFocusOutPriceTextField(Boolean oldValue, Boolean newValue, String userInput) {
+    public void onFocusOutPriceTextField(Boolean oldValue, Boolean newValue, String userInput) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isFiatInputValid(price.get());
             boolean isValid = result.isValid;
@@ -256,7 +259,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         }
     }
 
-    void onFocusOutVolumeTextField(Boolean oldValue, Boolean newValue, String userInput) {
+    public void onFocusOutVolumeTextField(Boolean oldValue, Boolean newValue, String userInput) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(volume.get());
             volumeValidationResult.set(result);
@@ -280,7 +283,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     // Getters (called by CB)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    WalletFacade getWalletFacade() {
+    public WalletFacade getWalletFacade() {
         return model.getWalletFacade();
     }
 

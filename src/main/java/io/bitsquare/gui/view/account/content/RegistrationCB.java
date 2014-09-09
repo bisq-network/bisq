@@ -25,7 +25,6 @@ import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.account.content.RegistrationPM;
-import io.bitsquare.gui.view.account.AccountSettingsCB;
 import io.bitsquare.gui.view.account.AccountSetupCB;
 import io.bitsquare.locale.BSResources;
 
@@ -39,7 +38,6 @@ import javax.inject.Inject;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
 
@@ -50,7 +48,7 @@ import org.controlsfx.dialog.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RegistrationCB extends CachedCodeBehind<RegistrationPM> {
+public class RegistrationCB extends CachedCodeBehind<RegistrationPM> implements AdjustableAccountContent {
 
     private static final Logger log = LoggerFactory.getLogger(RegistrationCB.class);
 
@@ -153,17 +151,16 @@ public class RegistrationCB extends CachedCodeBehind<RegistrationPM> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Override from CodeBehind
+    // Override 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setParentController(Initializable parentController) {
-        super.setParentController(parentController);
-        if (parentController instanceof AccountSettingsCB) {
-            //TODO
-            // ((GridPane) root).getChildren().remove(completedButton);
+    public void isSettingsMode(boolean isSettingsMode) {
+        if (isSettingsMode) {
+            // TODO
         }
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI handlers

@@ -22,6 +22,7 @@ import io.bitsquare.gui.CodeBehind;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.pm.account.AccountSettingsPM;
+import io.bitsquare.gui.view.account.content.AdjustableAccountContent;
 import io.bitsquare.util.BSFXMLLoader;
 
 import java.io.IOException;
@@ -195,6 +196,7 @@ class MenuItem extends ToggleButton {
             ((AnchorPane) content).getChildren().setAll(view);
             childController = loader.getController();
             childController.setParentController(parentCB);
+            ((AdjustableAccountContent) childController).isSettingsMode(true);
         } catch (IOException e) {
             log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
             e.getStackTrace();

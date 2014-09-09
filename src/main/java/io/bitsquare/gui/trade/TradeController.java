@@ -20,9 +20,9 @@ package io.bitsquare.gui.trade;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.InputTextField;
-import io.bitsquare.gui.trade.createoffer.CreateOfferCB;
 import io.bitsquare.gui.trade.orderbook.OrderBookController;
 import io.bitsquare.gui.trade.takeoffer.TakeOfferController;
+import io.bitsquare.gui.view.trade.CreateOfferCB;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.util.BSFXMLLoader;
 

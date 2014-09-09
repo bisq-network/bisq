@@ -15,9 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.trade.createoffer;
+package io.bitsquare.gui.pm.trade;
 
 import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.gui.model.trade.CreateOfferModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 

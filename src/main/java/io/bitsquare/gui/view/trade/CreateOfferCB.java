@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.trade.createoffer;
+package io.bitsquare.gui.view.trade;
 
 import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.MainController;
@@ -27,6 +27,7 @@ import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
+import io.bitsquare.gui.pm.trade.CreateOfferPM;
 import io.bitsquare.gui.trade.TradeController;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
