@@ -17,11 +17,11 @@
 
 package io.bitsquare.gui.util;
 
-import javafx.animation.Animation;
 import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.scene.*;
 import javafx.scene.effect.*;
 import javafx.scene.layout.*;
@@ -39,36 +39,37 @@ public class Transitions {
         fadeIn(node, DURATION);
     }
 
-    public static void fadeIn(Node node, int duration) {
-        FadeTransition ft = new FadeTransition(Duration.millis(duration), node);
-        ft.setFromValue(0.0);
-        ft.setToValue(1.0);
-        ft.play();
+    public static FadeTransition fadeIn(Node node, int duration) {
+        FadeTransition fade = new FadeTransition(Duration.millis(duration), node);
+        fade.setFromValue(node.getOpacity());
+        fade.setToValue(1.0);
+        fade.play();
+        return fade;
     }
 
-    public static Animation fadeOut(Node node) {
+    public static FadeTransition fadeOut(Node node) {
         return fadeOut(node, DURATION);
     }
 
-    public static Animation fadeOut(Node node, int duration) {
-        FadeTransition ft = new FadeTransition(Duration.millis(duration), node);
-        ft.setFromValue(node.getOpacity());
-        ft.setToValue(0.0);
-        ft.play();
-        return ft;
+    public static FadeTransition fadeOut(Node node, int duration) {
+        FadeTransition fade = new FadeTransition(Duration.millis(duration), node);
+        fade.setFromValue(node.getOpacity());
+        fade.setToValue(0.0);
+        fade.play();
+        return fade;
     }
 
-    public static Animation fadeOutAndRemove(Node node) {
+    public static FadeTransition fadeOutAndRemove(Node node) {
         return fadeOutAndRemove(node, DURATION);
     }
 
-    public static Animation fadeOutAndRemove(Node node, int duration) {
-        Animation animation = fadeOut(node, duration);
-        animation.setOnFinished(actionEvent -> {
+    public static FadeTransition fadeOutAndRemove(Node node, int duration) {
+        FadeTransition fade = fadeOut(node, duration);
+        fade.setOnFinished(actionEvent -> {
             ((Pane) (node.getParent())).getChildren().remove(node);
             Profiler.printMsgWithTime("fadeOutAndRemove");
         });
-        return animation;
+        return fade;
     }
 
     public static void blur(Node node) {
@@ -94,7 +95,8 @@ public class Transitions {
             timeline.getKeyFrames().addAll(kf1);
         }
         node.setEffect(blur);
-        if (removeNode) timeline.setOnFinished(actionEvent -> ((Pane) (node.getParent())).getChildren().remove(node));
+        if (removeNode) timeline.setOnFinished(actionEvent -> Platform.runLater(() -> ((Pane) (node.getParent()))
+                .getChildren().remove(node)));
         timeline.play();
         return timeline;
     }

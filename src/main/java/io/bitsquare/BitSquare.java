@@ -129,7 +129,6 @@ public class BitSquare extends Application {
 
             primaryStage.show();
 
-            Profiler.printMsgWithTime("BitSquare: start finished");
         } catch (IOException e) {
             log.error(e.getMessage());
         }

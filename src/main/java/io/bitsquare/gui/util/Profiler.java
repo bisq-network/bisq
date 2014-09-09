@@ -38,13 +38,16 @@ public class Profiler {
 
     public static void printMsgWithTime(String msg) {
         final long elapsed = threadStopwatch.get().elapsed(TimeUnit.MILLISECONDS);
-        log.trace("Msg: {} elapsed: {}ms / total time:[globalStopwatch: {}ms / threadStopwatch: {}ms / " +
+        log.trace("\n\nCalled by: {} \nElapsed time: {}ms \nTotal time:   {}ms\n\n",
+                msg, elapsed - last.get(), globalStopwatch.elapsed(TimeUnit.MILLISECONDS));
+       /* log.trace("Msg: {} elapsed: {}ms / total time:[globalStopwatch: {}ms / threadStopwatch: {}ms / " +
                         "currentTimeMillis: {}ms]",
                 msg,
                 elapsed - last.get(),
                 globalStopwatch.elapsed(TimeUnit.MILLISECONDS),
                 elapsed,
-                System.currentTimeMillis() - lastCurrentTimeMillis);
+                System.currentTimeMillis() - lastCurrentTimeMillis);*/
+
         lastCurrentTimeMillis = System.currentTimeMillis();
         last.set(elapsed);
     }

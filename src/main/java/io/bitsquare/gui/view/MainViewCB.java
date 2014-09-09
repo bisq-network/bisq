@@ -38,7 +38,7 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
-import javafx.application.Platform;
+import javafx.animation.Interpolator;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -50,18 +50,12 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Holds the splash screen and the application views. It builds up all the views and initializes the facades.
- * We use a sequence of Platform.runLater cascaded calls to make the startup more smooth, otherwise the rendering is
- * frozen for too long. Pre-loading of views is not implemented yet, and after a quick test it seemed that it does not
- * give much improvements.
- */
+
 public class MainViewCB extends CachedCodeBehind<MainPM> {
     private static final Logger log = LoggerFactory.getLogger(MainViewCB.class);
     //TODO
     private static MainViewCB instance;
 
-    private boolean showNetworkSyncPaneRequested;
     private VBox baseOverlayContainer;
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
     private NavigationItem previousNavigationItem;
@@ -215,39 +209,23 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void startup() {
-        buildBaseContainers();
-    }
-
-    private void buildBaseContainers() {
-        Profiler.printMsgWithTime("MainController.ViewBuilder.buildBaseContainers");
-
         baseContentContainer = getBaseContentContainer();
-        baseContentContainer.setOpacity(0);
         baseOverlayContainer = getSplashScreen();
         ((StackPane) root).getChildren().addAll(baseContentContainer, baseOverlayContainer);
 
-        Platform.runLater(this::buildContentView);
+        onBaseContainersCreated();
     }
 
-    private void buildContentView() {
-        Profiler.printMsgWithTime("MainController.ViewBuilder.buildContentView");
+    private void onBaseContainersCreated() {
+        Profiler.printMsgWithTime("MainController.onBaseContainersCreated");
 
         menuBar = getMenuBar();
         contentScreen = getContentScreen();
 
-
-        if (showNetworkSyncPaneRequested)
-            addNetworkSyncPane();
+        addNetworkSyncPane();
 
         baseContentContainer.setTop(menuBar);
         baseContentContainer.setCenter(contentScreen);
-
-        Platform.runLater(this::onBaseContainersCreated);
-    }
-
-    // We need to wait until the backend is initialized as we need it for menu items like the balance field
-    private void onBaseContainersCreated() {
-        Profiler.printMsgWithTime("MainController.onBaseContainersCreated");
 
         presentationModel.backendInited.addListener((ov, oldValue, newValue) -> {
             if (newValue)
@@ -264,12 +242,6 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
 
     private void onMainNavigationAdded() {
         Profiler.printMsgWithTime("MainController.ondMainNavigationAdded");
-        triggerMainMenuButton(presentationModel.getSelectedNavigationItem());
-        Platform.runLater(this::onContentAdded);
-    }
-
-    private void onContentAdded() {
-        Profiler.printMsgWithTime("MainController.onContentAdded");
 
         presentationModel.takeOfferRequested.addListener((ov, olaValue, newValue) -> {
             final Button alertButton = new Button("", ImageUtil.getIconImageView(ImageUtil.MSG_ALERT));
@@ -286,13 +258,13 @@ public class MainViewCB extends CachedCodeBehind<MainPM> {
             AWTSystemTray.setAlert();
         });
 
-        Platform.runLater(this::fadeOutSplash);
+        triggerMainMenuButton(presentationModel.getSelectedNavigationItem());
+        onContentAdded();
     }
 
-    private void fadeOutSplash() {
-        Profiler.printMsgWithTime("MainController.fadeOutSplash");
-        Transitions.blur(baseOverlayContainer, 700, false, true);
-        Transitions.fadeIn(baseContentContainer);
+    private void onContentAdded() {
+        Profiler.printMsgWithTime("MainController.onContentAdded");
+        Transitions.fadeOutAndRemove(baseOverlayContainer, 1500).setInterpolator(Interpolator.EASE_IN);
     }
 
 
