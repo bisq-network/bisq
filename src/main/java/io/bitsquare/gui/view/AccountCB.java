@@ -22,6 +22,7 @@ import io.bitsquare.gui.CodeBehind;
 import io.bitsquare.gui.MainController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.pm.AccountPM;
+import io.bitsquare.gui.view.account.AccountSetupCB;
 import io.bitsquare.util.BSFXMLLoader;
 
 import java.io.IOException;
@@ -42,6 +43,7 @@ import org.slf4j.LoggerFactory;
 public class AccountCB extends CachedCodeBehind<AccountPM> {
 
     private static final Logger log = LoggerFactory.getLogger(AccountCB.class);
+
     public Tab tab;
 
 
@@ -108,6 +110,13 @@ public class AccountCB extends CachedCodeBehind<AccountPM> {
             tab.setContent(view);
             Initializable childController = loader.getController();
             ((CodeBehind) childController).setParentController(this);
+
+            if (childController instanceof AccountSetupCB)
+                ((AccountSetupCB) childController).setRemoveCallBack(() -> {
+                    removeSetup();
+                    return null;
+                });
+
         } catch (IOException e) {
             log.error("Loading view failed. FxmlUrl = " + NavigationItem.ACCOUNT_SETUP.getFxmlUrl());
             e.getStackTrace();
@@ -115,7 +124,12 @@ public class AccountCB extends CachedCodeBehind<AccountPM> {
         return childController;
     }
 
-    public void removeSetup() {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void removeSetup() {
         childController = null;
 
         NavigationItem previousItem = MainController.GET_INSTANCE().getPreviousNavigationItem();
@@ -124,11 +138,6 @@ public class AccountCB extends CachedCodeBehind<AccountPM> {
 
         MainController.GET_INSTANCE().loadViewAndGetChildController(previousItem);
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
 }
 

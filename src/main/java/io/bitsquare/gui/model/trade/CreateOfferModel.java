@@ -74,6 +74,9 @@ public class CreateOfferModel extends UIModel {
 
     private final String offerId;
 
+    @Nullable private Direction direction = null;
+    private AddressEntry addressEntry;
+
     public final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
     public final StringProperty transactionId = new SimpleStringProperty();
     public final StringProperty bankAccountCurrency = new SimpleStringProperty();
@@ -100,9 +103,6 @@ public class CreateOfferModel extends UIModel {
     public final ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();
     public final ObservableList<Locale> acceptedLanguages = FXCollections.observableArrayList();
     public final ObservableList<Arbitrator> acceptedArbitrators = FXCollections.observableArrayList();
-
-    @Nullable private Direction direction = null;
-    private AddressEntry addressEntry;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

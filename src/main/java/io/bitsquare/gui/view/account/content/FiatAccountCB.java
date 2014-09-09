@@ -166,7 +166,7 @@ public class FiatAccountCB extends CachedCodeBehind<FiatAccountPm> implements Ad
 
     @FXML
     private void onSave() {
-        InputValidator.ValidationResult result = presentationModel.saveBankAccount();
+        InputValidator.ValidationResult result = presentationModel.requestSaveBankAccount();
         if (result.isValid) {
             selectionComboBox.getSelectionModel().select(null);
             Popups.openInfo("You can add more accounts or continue to the next step.",

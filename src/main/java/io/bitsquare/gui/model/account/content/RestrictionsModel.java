@@ -56,7 +56,6 @@ public class RestrictionsModel extends UIModel {
     public final ObservableList<Locale> languageList = FXCollections.observableArrayList();
     public final ObservableList<Country> countryList = FXCollections.observableArrayList();
     public final ObservableList<Arbitrator> arbitratorList = FXCollections.observableArrayList();
-
     public final ObservableList<Locale> allLanguages = FXCollections.observableArrayList(LanguageUtil
             .getAllLanguageLocales());
     public final ObservableList<Region> allRegions = FXCollections.observableArrayList(CountryUtil.getAllRegions());
@@ -185,6 +184,7 @@ public class RestrictionsModel extends UIModel {
         persistence.write(settings);
     }
 
+    // TODO Remove mock later
     private void addMockArbitrator() {
         if (settings.getAcceptedArbitrators().isEmpty() && user.getMessageKeyPair() != null) {
             String pubKeyAsHex = Utils.HEX.encode(new ECKey().getPubKey());

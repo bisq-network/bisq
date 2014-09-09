@@ -37,8 +37,7 @@ import org.slf4j.LoggerFactory;
 public class RestrictionsPM extends PresentationModel<RestrictionsModel> {
     private static final Logger log = LoggerFactory.getLogger(RestrictionsPM.class);
 
-
-    public final BooleanProperty doneButtonDisabled = new SimpleBooleanProperty(true);
+    public final BooleanProperty doneButtonDisable = new SimpleBooleanProperty(true);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +65,7 @@ public class RestrictionsPM extends PresentationModel<RestrictionsModel> {
     public void activate() {
         super.activate();
 
-        updateDoneButtonDisabled();
+        updateDoneButtonDisableState();
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -80,76 +79,80 @@ public class RestrictionsPM extends PresentationModel<RestrictionsModel> {
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onAddLanguage(Locale locale) {
+    public void addLanguage(Locale locale) {
         model.addLanguage(locale);
-        updateDoneButtonDisabled();
-    }
-
-    public ObservableList<Locale> getLanguageList() {
-        updateDoneButtonDisabled();
-        return model.languageList;
-    }
-
-    public ObservableList<Locale> getAllLanguages() {
-        updateDoneButtonDisabled();
-        return model.allLanguages;
+        updateDoneButtonDisableState();
     }
 
     public void removeLanguage(Locale locale) {
         model.removeLanguage(locale);
-        updateDoneButtonDisabled();
+        updateDoneButtonDisableState();
     }
 
-    public void onAddCountry(Country country) {
+    public void addCountry(Country country) {
         model.addCountry(country);
-        updateDoneButtonDisabled();
+        updateDoneButtonDisableState();
     }
+
+    public void removeCountry(Country country) {
+        model.removeCountry(country);
+        updateDoneButtonDisableState();
+    }
+
+    public void removeArbitrator(Arbitrator arbitrator) {
+        model.removeArbitrator(arbitrator);
+        updateDoneButtonDisableState();
+    }
+
+    public void updateArbitratorList() {
+        model.updateArbitratorList();
+        updateDoneButtonDisableState();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public ObservableList<Country> getListWithAllEuroCountries() {
-        ObservableList<Country> result = model.getListWithAllEuroCountries();
-        updateDoneButtonDisabled();
-        return result;
+        return model.getListWithAllEuroCountries();
     }
 
     public ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
         return model.getAllCountriesFor(selectedRegion);
     }
 
+    public ObservableList<Locale> getLanguageList() {
+        return model.languageList;
+    }
+
     public ObservableList<Region> getAllRegions() {
         return model.allRegions;
     }
 
+    public ObservableList<Locale> getAllLanguages() {
+        return model.allLanguages;
+    }
+
     public ObservableList<Country> getCountryList() {
-        updateDoneButtonDisabled();
         return model.countryList;
     }
 
-    public void removeCountry(Country country) {
-        model.removeCountry(country);
-        updateDoneButtonDisabled();
-    }
-
     public ObservableList<Arbitrator> getArbitratorList() {
-        updateDoneButtonDisabled();
         return model.arbitratorList;
     }
 
-    public void removeArbitrator(Arbitrator arbitrator) {
-        model.removeArbitrator(arbitrator);
-        updateDoneButtonDisabled();
-    }
 
-    public void updateArbitratorList() {
-        model.updateArbitratorList();
-        updateDoneButtonDisabled();
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     //TODO Revert size() > -1 to 0(2 later). For mock testing disabled arbitratorList test
-    public void updateDoneButtonDisabled() {
+    private void updateDoneButtonDisableState() {
         boolean isValid = model.languageList != null && model.languageList.size() > 0 &&
                 model.countryList != null && model.countryList.size() > 0 &&
                 model.arbitratorList != null && model.arbitratorList.size() > -1;
-        doneButtonDisabled.set(!isValid);
+        doneButtonDisable.set(!isValid);
     }
 
 }

@@ -33,7 +33,6 @@ public class ChangePasswordModel extends UIModel {
 
     @Inject
     private ChangePasswordModel() {
-
     }
 
 

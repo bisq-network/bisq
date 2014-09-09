@@ -51,11 +51,14 @@ public class RegistrationModel extends UIModel {
     private final WalletFacade walletFacade;
     private final User user;
     private final Persistence persistence;
-    public AddressEntry addressEntry;
+
+    private String transactionId;
+    private AddressEntry addressEntry;
+
     public final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     public final BooleanProperty payFeeSuccess = new SimpleBooleanProperty();
-    private String transactionId;
     public final StringProperty payFeeErrorMessage = new SimpleStringProperty();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -80,13 +83,13 @@ public class RegistrationModel extends UIModel {
 
         if (walletFacade != null && walletFacade.getWallet() != null) {
             addressEntry = walletFacade.getRegistrationAddressEntry();
-            walletFacade.addBalanceListener(new BalanceListener(addressEntry.getAddress()) {
+            walletFacade.addBalanceListener(new BalanceListener(getAddressEntry().getAddress()) {
                 @Override
                 public void onBalanceChanged(@NotNull Coin balance) {
                     updateBalance(balance);
                 }
             });
-            updateBalance(walletFacade.getBalanceForAddress(addressEntry.getAddress()));
+            updateBalance(walletFacade.getBalanceForAddress(getAddressEntry().getAddress()));
         }
     }
 
@@ -122,8 +125,8 @@ public class RegistrationModel extends UIModel {
                     transactionId = transaction.getHashAsString();
                     log.info("payRegistrationFee onSuccess tx id:" + transaction.getHashAsString());
 
-                    if (addressEntry != null)
-                        user.setAccountID(addressEntry.toString());
+                    if (getAddressEntry() != null)
+                        user.setAccountID(getAddressEntry().toString());
 
                     persistence.write(user.getClass().getName(), user);
                     payFeeSuccess.set(true);
@@ -160,6 +163,11 @@ public class RegistrationModel extends UIModel {
         return transactionId;
     }
 
+    public AddressEntry getAddressEntry() {
+        return addressEntry;
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -167,4 +175,5 @@ public class RegistrationModel extends UIModel {
     private void updateBalance(@NotNull Coin balance) {
         isWalletFunded.set(balance.compareTo(getFeeAsCoin()) >= 0);
     }
+
 }

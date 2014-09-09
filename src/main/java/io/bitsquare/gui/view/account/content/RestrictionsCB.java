@@ -86,7 +86,7 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> implements 
         initCountry();
         initArbitrators();
 
-        completedButton.disableProperty().bind(presentationModel.doneButtonDisabled);
+        completedButton.disableProperty().bind(presentationModel.doneButtonDisable);
     }
 
     @Override
@@ -128,7 +128,7 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> implements 
 
     @FXML
     private void onAddLanguage() {
-        presentationModel.onAddLanguage(languageComboBox.getSelectionModel().getSelectedItem());
+        presentationModel.addLanguage(languageComboBox.getSelectionModel().getSelectedItem());
         languageComboBox.getSelectionModel().clearSelection();
     }
 
@@ -143,7 +143,7 @@ public class RestrictionsCB extends CachedCodeBehind<RestrictionsPM> implements 
 
     @FXML
     private void onAddCountry() {
-        presentationModel.onAddCountry(countryComboBox.getSelectionModel().getSelectedItem());
+        presentationModel.addCountry(countryComboBox.getSelectionModel().getSelectedItem());
         countryComboBox.getSelectionModel().clearSelection();
     }
 

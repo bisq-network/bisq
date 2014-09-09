@@ -23,7 +23,6 @@ import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.pm.account.AccountSetupPM;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.gui.view.AccountCB;
 import io.bitsquare.gui.view.account.content.AdjustableAccountContent;
 import io.bitsquare.gui.view.account.content.FiatAccountCB;
 import io.bitsquare.gui.view.account.content.PasswordCB;
@@ -37,9 +36,11 @@ import java.io.IOException;
 import java.net.URL;
 
 import java.util.ResourceBundle;
+import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
+import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.*;
 import javafx.scene.control.*;
@@ -52,9 +53,13 @@ import org.slf4j.LoggerFactory;
 public class AccountSetupCB extends CachedCodeBehind<AccountSetupPM> {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSetupCB.class);
-    public VBox leftVBox;
-    public AnchorPane content;
+
     private WizardItem seedWords, password, fiatAccount, restrictions, registration;
+    private Callable<Void> requestCloseCallable;
+
+    @FXML private VBox leftVBox;
+    @FXML private AnchorPane content;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -137,7 +142,13 @@ public class AccountSetupCB extends CachedCodeBehind<AccountSetupPM> {
             registration.onCompleted();
             childController = null;
 
-            ((AccountCB) parentController).removeSetup();
+            if (requestCloseCallable != null) {
+                try {
+                    requestCloseCallable.call();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -146,20 +157,16 @@ public class AccountSetupCB extends CachedCodeBehind<AccountSetupPM> {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void setRemoveCallBack(Callable<Void> requestCloseCallable) {
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI handlers
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
+        this.requestCloseCallable = requestCloseCallable;
+    }
 }
 
 class WizardItem extends HBox {
-
     private static final Logger log = LoggerFactory.getLogger(WizardItem.class);
+
+    private CodeBehind<? extends PresentationModel> childController;
 
     private final ImageView imageView;
     private final Label titleLabel;
@@ -168,15 +175,12 @@ class WizardItem extends HBox {
     private final Parent content;
     private final NavigationItem navigationItem;
 
-
-    private CodeBehind<? extends PresentationModel> childController;
-
     WizardItem(AccountSetupCB parentCB, Parent content, String title, String subTitle, NavigationItem navigationItem) {
         this.parentCB = parentCB;
         this.content = content;
         this.navigationItem = navigationItem;
+
         setId("wizard-item-background-deactivated");
-        layout();
         setSpacing(5);
         setPrefWidth(200);
 
@@ -186,11 +190,6 @@ class WizardItem extends HBox {
         imageView.setPickOnBounds(true);
         imageView.setMouseTransparent(true);
         HBox.setMargin(imageView, new Insets(8, 0, 0, 8));
-
-        final VBox vBox = new VBox();
-        vBox.setSpacing(1);
-        HBox.setMargin(vBox, new Insets(5, 0, 8, 0));
-        vBox.setMouseTransparent(true);
 
         titleLabel = new Label(title);
         titleLabel.setId("wizard-title-deactivated");
@@ -205,11 +204,16 @@ class WizardItem extends HBox {
         subTitleLabel.setWrapText(true);
         subTitleLabel.setMouseTransparent(true);
 
+        final VBox vBox = new VBox();
+        vBox.setSpacing(1);
+        HBox.setMargin(vBox, new Insets(5, 0, 8, 0));
+        vBox.setMouseTransparent(true);
         vBox.getChildren().addAll(titleLabel, subTitleLabel);
+
         getChildren().addAll(imageView, vBox);
     }
 
-    public CodeBehind<? extends PresentationModel> show() {
+    CodeBehind<? extends PresentationModel> show() {
         loadView(navigationItem);
         setId("wizard-item-background-active");
         imageView.setImage(ImageUtil.getIconImage(ImageUtil.ARROW_BLUE));
@@ -218,27 +222,11 @@ class WizardItem extends HBox {
         return childController;
     }
 
-    public void onCompleted() {
+    void onCompleted() {
         setId("wizard-item-background-completed");
         imageView.setImage(ImageUtil.getIconImage(ImageUtil.TICK));
         titleLabel.setId("wizard-title-completed");
         subTitleLabel.setId("wizard-sub-title-completed");
-    }
-
-    public CodeBehind<? extends PresentationModel> getChildController() {
-        return childController;
-    }
-
-    public ImageView getImageView() {
-        return imageView;
-    }
-
-    public Label getTitleLabel() {
-        return titleLabel;
-    }
-
-    public Label getSubTitleLabel() {
-        return subTitleLabel;
     }
 
     private void loadView(NavigationItem navigationItem) {

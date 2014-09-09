@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public class SeedWordsModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(SeedWordsModel.class);
 
-    public List<String> mnemonicCode;
+    private List<String> mnemonicCode;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -43,4 +43,40 @@ public class SeedWordsModel extends UIModel {
             mnemonicCode = walletFacade.getWallet().getKeyChainSeed().getMnemonicCode();
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void initialized() {
+        super.initialized();
+    }
+
+    @Override
+    public void activate() {
+        super.activate();
+    }
+
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void deactivate() {
+        super.deactivate();
+    }
+
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void terminate() {
+        super.terminate();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getter
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public List<String> getMnemonicCode() {
+        return mnemonicCode;
+    }
 }

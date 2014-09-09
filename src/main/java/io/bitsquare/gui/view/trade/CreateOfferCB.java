@@ -75,6 +75,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
 
     private boolean detailsVisible;
     private boolean advancedScreenInited;
+    private Callable<Void> onCloseCallable;
 
     private ImageView expand;
     private ImageView collapse;
@@ -97,7 +98,6 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
             acceptedLanguagesTextField;
     @FXML private AddressTextField addressTextField;
     @FXML private BalanceTextField balanceTextField;
-    private Callable<Void> onCloseCallBack;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -140,13 +140,14 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
 
         // Inform parent that we gor removed.
         // Needed to reset disable state of createOfferButton in OrderBookController
-        if (onCloseCallBack != null)
+        if (onCloseCallable != null) {
             try {
-                onCloseCallBack.call();
+                onCloseCallable.call();
             } catch (Exception e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
             }
+        }
     }
 
 
@@ -522,7 +523,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     }
 
     public void setOnClose(Callable<Void> onCloseCallBack) {
-        this.onCloseCallBack = onCloseCallBack;
+        this.onCloseCallable = onCloseCallBack;
     }
 }
 

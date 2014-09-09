@@ -62,6 +62,7 @@ public class FiatAccountModel extends UIModel {
     public final ObjectProperty<Country> country = new SimpleObjectProperty<>();
     public final ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
     public final ObjectProperty<BankAccount> currentBankAccount = new SimpleObjectProperty<>();
+
     public final ObservableList<BankAccountType> allTypes = FXCollections.observableArrayList(BankAccountType
             .getAllBankAccountTypes());
     public final ObservableList<BankAccount> allBankAccounts = FXCollections.observableArrayList();

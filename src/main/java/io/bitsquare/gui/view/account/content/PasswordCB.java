@@ -105,7 +105,7 @@ public class PasswordCB extends CachedCodeBehind<PasswordPM> implements Adjustab
 
     @FXML
     private void onSaved() {
-        boolean result = presentationModel.savePassword();
+        boolean result = presentationModel.requestSavePassword();
         if (result) {
             if (parentController instanceof AccountSetupCB)
                 ((AccountSetupCB) parentController).onCompleted(this);

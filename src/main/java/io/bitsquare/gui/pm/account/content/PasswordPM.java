@@ -38,9 +38,11 @@ public class PasswordPM extends PresentationModel<PasswordModel> {
     private final PasswordValidator passwordValidator = new PasswordValidator();
 
     private String errorMessage;
+
     public final StringProperty passwordField = new SimpleStringProperty();
     public final StringProperty repeatedPasswordField = new SimpleStringProperty();
     public final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty(true);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -87,7 +89,7 @@ public class PasswordPM extends PresentationModel<PasswordModel> {
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean savePassword() {
+    public boolean requestSavePassword() {
         if (validate()) {
             model.savePassword(passwordField.get());
             return true;

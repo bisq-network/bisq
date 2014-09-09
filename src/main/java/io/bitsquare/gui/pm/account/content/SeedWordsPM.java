@@ -49,12 +49,30 @@ public class SeedWordsPM extends PresentationModel<SeedWordsModel> {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialized() {
         super.initialized();
 
-        if (model.mnemonicCode != null)
-            seedWords.set(BSFormatter.mnemonicCodeToString(model.mnemonicCode));
+        if (model.getMnemonicCode() != null)
+            seedWords.set(BSFormatter.mnemonicCodeToString(model.getMnemonicCode()));
+    }
+
+    @Override
+    public void activate() {
+        super.activate();
+    }
+
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void deactivate() {
+        super.deactivate();
+    }
+
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void terminate() {
+        super.terminate();
     }
 
 }

@@ -42,11 +42,12 @@ import static io.bitsquare.gui.util.BSFormatter.formatCoinWithCode;
 public class RegistrationPM extends PresentationModel<RegistrationModel> {
     private static final Logger log = LoggerFactory.getLogger(RegistrationPM.class);
 
-    // Those are needed for the addressTextField
-    public final ObjectProperty<Address> address = new SimpleObjectProperty<>();
     public final BooleanProperty isPayButtonDisabled = new SimpleBooleanProperty(true);
     public final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
     public final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
+
+    // That is needed for the addressTextField
+    public final ObjectProperty<Address> address = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,8 +68,8 @@ public class RegistrationPM extends PresentationModel<RegistrationModel> {
     public void initialized() {
         super.initialized();
 
-        if (model.addressEntry != null) {
-            address.set(model.addressEntry.getAddress());
+        if (model.getAddressEntry() != null) {
+            address.set(model.getAddressEntry().getAddress());
         }
 
         model.isWalletFunded.addListener((ov, oldValue, newValue) -> {
@@ -103,7 +104,7 @@ public class RegistrationPM extends PresentationModel<RegistrationModel> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI actions (called by CB)
+    // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void payFee() {
@@ -117,7 +118,7 @@ public class RegistrationPM extends PresentationModel<RegistrationModel> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters (called by CB)
+    // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public WalletFacade getWalletFacade() {
@@ -129,7 +130,7 @@ public class RegistrationPM extends PresentationModel<RegistrationModel> {
     }
 
     public String getAddressAsString() {
-        return model.addressEntry != null ? model.addressEntry.getAddress().toString() : "";
+        return model.getAddressEntry() != null ? model.getAddressEntry().getAddress().toString() : "";
     }
 
     public String getPaymentLabel() {
@@ -143,6 +144,7 @@ public class RegistrationPM extends PresentationModel<RegistrationModel> {
     public String getTransactionId() {
         return model.getTransactionId();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

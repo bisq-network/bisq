@@ -129,11 +129,10 @@ public class AccountSettingsCB extends CachedCodeBehind<AccountSettingsPM> {
 }
 
 class MenuItem extends ToggleButton {
-
     private static final Logger log = LoggerFactory.getLogger(MenuItem.class);
 
-
     private CodeBehind<? extends PresentationModel> childController;
+
     private final AccountSettingsCB parentCB;
     private final Parent content;
     private final NavigationItem navigationItem;
@@ -144,14 +143,12 @@ class MenuItem extends ToggleButton {
         this.content = content;
         this.navigationItem = navigationItem;
 
+        setToggleGroup(toggleGroup);
+        setText(title);
+        setId("account-settings-item-background-active");
         setPrefHeight(40);
         setPrefWidth(200);
         setAlignment(Pos.CENTER_LEFT);
-
-        setToggleGroup(toggleGroup);
-
-        setText(title);
-        setId("account-settings-item-background-active");
 
         Label icon = new Label();
         icon.setTextFill(Paint.valueOf("#999"));
@@ -162,10 +159,10 @@ class MenuItem extends ToggleButton {
         else
             AwesomeDude.setIcon(icon, AwesomeIcon.EDIT_SIGN);
 
-
         setGraphic(icon);
 
         setOnAction((event) -> show());
+
         selectedProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue) {
                 setId("account-settings-item-background-selected");
@@ -180,7 +177,7 @@ class MenuItem extends ToggleButton {
         disableProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue) {
                 setId("account-settings-item-background-disabled");
-                //icon.setTextFill(Paint.valueOf("#ccc"));
+                icon.setTextFill(Paint.valueOf("#ccc"));
             }
             else {
                 setId("account-settings-item-background-active");
@@ -201,11 +198,6 @@ class MenuItem extends ToggleButton {
             log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
             e.getStackTrace();
         }
-    }
-
-
-    CodeBehind<? extends PresentationModel> getChildController() {
-        return childController;
     }
 }
 

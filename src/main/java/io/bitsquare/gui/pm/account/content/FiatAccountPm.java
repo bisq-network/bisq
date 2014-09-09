@@ -58,7 +58,6 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
     public final StringProperty selectionPrompt = new SimpleStringProperty();
     public final BooleanProperty selectionDisable = new SimpleBooleanProperty();
     public final BooleanProperty saveButtonDisable = new SimpleBooleanProperty(true);
-
     public final ObjectProperty<BankAccountType> type = new SimpleObjectProperty<>();
     public final ObjectProperty<Country> country = new SimpleObjectProperty<>();
     public final ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
@@ -136,7 +135,7 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public InputValidator.ValidationResult saveBankAccount() {
+    public InputValidator.ValidationResult requestSaveBankAccount() {
         InputValidator.ValidationResult result = validateInput();
         if (result.isValid) {
             model.saveBankAccount();
@@ -258,12 +257,16 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
         return model.allRegions;
     }
 
+    public BooleanProperty getCountryNotInAcceptedCountriesList() {
+        return model.countryNotInAcceptedCountriesList;
+    }
+
     public ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
         return model.getAllCountriesFor(selectedRegion);
     }
 
-    public BooleanProperty getCountryNotInAcceptedCountriesList() {
-        return model.countryNotInAcceptedCountriesList;
+    public BankAccountNumberValidator getValidator() {
+        return validator;
     }
 
 
@@ -321,11 +324,5 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
         saveButtonDisable.set(!result.isValid);
         return result;
     }
-
-
-    public InputValidator getValidator() {
-        return validator;
-    }
-
 
 }
