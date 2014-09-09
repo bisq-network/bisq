@@ -28,7 +28,6 @@ import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.help.Help;
 import io.bitsquare.gui.help.HelpId;
 import io.bitsquare.gui.pm.trade.CreateOfferPM;
-import io.bitsquare.gui.trade.TradeController;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.orderbook.OrderBookFilter;
@@ -38,6 +37,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
@@ -97,6 +97,7 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
             acceptedLanguagesTextField;
     @FXML private AddressTextField addressTextField;
     @FXML private BalanceTextField balanceTextField;
+    private Callable<Void> onCloseCallBack;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -137,8 +138,15 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
     public void terminate() {
         super.terminate();
 
-        // Used to reset disable state of createOfferButton in OrderBookController
-        if (parentController != null) ((TradeController) parentController).onCreateOfferViewRemoved();
+        // Inform parent that we gor removed.
+        // Needed to reset disable state of createOfferButton in OrderBookController
+        if (onCloseCallBack != null)
+            try {
+                onCloseCallBack.call();
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+            }
     }
 
 
@@ -513,5 +521,8 @@ public class CreateOfferCB extends CachedCodeBehind<CreateOfferPM> {
         return new Point2D(x, y);
     }
 
+    public void setOnClose(Callable<Void> onCloseCallBack) {
+        this.onCloseCallBack = onCloseCallBack;
+    }
 }
 

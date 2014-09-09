@@ -73,9 +73,6 @@ public class CreateOfferModel extends UIModel {
     private final User user;
 
     private final String offerId;
-    @Nullable private Direction direction = null;
-
-    public AddressEntry addressEntry;
 
     public final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
     public final StringProperty transactionId = new SimpleStringProperty();
@@ -104,6 +101,9 @@ public class CreateOfferModel extends UIModel {
     public final ObservableList<Locale> acceptedLanguages = FXCollections.observableArrayList();
     public final ObservableList<Arbitrator> acceptedArbitrators = FXCollections.observableArrayList();
 
+    @Nullable private Direction direction = null;
+    private AddressEntry addressEntry;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -118,8 +118,6 @@ public class CreateOfferModel extends UIModel {
         this.user = user;
 
         offerId = UUID.randomUUID().toString();
-
-        // Node: Don't do setup in constructor to make object creation faster
     }
 
 
@@ -138,13 +136,13 @@ public class CreateOfferModel extends UIModel {
         if (walletFacade != null && walletFacade.getWallet() != null) {
             addressEntry = walletFacade.getAddressInfoByTradeID(offerId);
 
-            walletFacade.addBalanceListener(new BalanceListener(addressEntry.getAddress()) {
+            walletFacade.addBalanceListener(new BalanceListener(getAddressEntry().getAddress()) {
                 @Override
                 public void onBalanceChanged(@NotNull Coin balance) {
                     updateBalance(balance);
                 }
             });
-            updateBalance(walletFacade.getBalanceForAddress(addressEntry.getAddress()));
+            updateBalance(walletFacade.getBalanceForAddress(getAddressEntry().getAddress()));
         }
     }
 
@@ -296,5 +294,9 @@ public class CreateOfferModel extends UIModel {
 
     private void updateBalance(@NotNull Coin balance) {
         isWalletFunded.set(totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0);
+    }
+
+    public AddressEntry getAddressEntry() {
+        return addressEntry;
     }
 }

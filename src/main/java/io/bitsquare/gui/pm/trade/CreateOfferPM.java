@@ -87,7 +87,7 @@ public class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     public final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
 
     public final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
-    public final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new 
+    public final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new
             SimpleObjectProperty<>();
     public final ObjectProperty<InputValidator.ValidationResult> priceValidationResult = new SimpleObjectProperty<>();
     public final ObjectProperty<InputValidator.ValidationResult> volumeValidationResult = new SimpleObjectProperty<>();
@@ -105,8 +105,6 @@ public class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     @Inject
     CreateOfferPM(CreateOfferModel model) {
         super(model);
-
-        // Note: Don't do setup in constructor to make object creation faster
     }
 
 
@@ -121,9 +119,9 @@ public class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         // static
         paymentLabel.set(BSResources.get("createOffer.fundsBox.paymentLabel", model.getOfferId()));
 
-        if (model.addressEntry != null) {
-            addressAsString.set(model.addressEntry.getAddress().toString());
-            address.set(model.addressEntry.getAddress());
+        if (model.getAddressEntry() != null) {
+            addressAsString.set(model.getAddressEntry().getAddress().toString());
+            address.set(model.getAddressEntry().getAddress());
         }
 
         setupBindings();
