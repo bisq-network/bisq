@@ -22,8 +22,8 @@ import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
-import io.bitsquare.gui.main.account.setup.AccountSetupViewCB;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -177,7 +177,7 @@ public class FiatAccountViewCB extends CachedCodeBehind<FiatAccountPm> implement
     @FXML
     private void onCompleted() {
         if (parentController != null)
-            ((AccountSetupViewCB) parentController).onCompleted(this);
+            ((MultiStepNavigation) parentController).nextStep(this);
     }
 
     @FXML

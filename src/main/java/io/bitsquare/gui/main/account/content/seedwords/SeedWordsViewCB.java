@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.account.content.seedwords;
 
 import io.bitsquare.gui.CachedCodeBehind;
+import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
-import io.bitsquare.gui.main.account.setup.AccountSetupViewCB;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 
@@ -101,8 +101,8 @@ public class SeedWordsViewCB extends CachedCodeBehind<SeedWordsPM> implements Co
 
     @FXML
     private void onCompleted() {
-        if (parentController instanceof AccountSetupViewCB)
-            ((AccountSetupViewCB) parentController).onCompleted(this);
+        if (parentController instanceof MultiStepNavigation)
+            ((MultiStepNavigation) parentController).nextStep(this);
     }
 
     @FXML

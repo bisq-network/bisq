@@ -22,8 +22,8 @@ import io.bitsquare.gui.OverlayController;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
+import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
-import io.bitsquare.gui.main.account.setup.AccountSetupViewCB;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.locale.BSResources;
@@ -117,8 +117,8 @@ public class RegistrationViewCB extends CachedCodeBehind<RegistrationPM> impleme
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         try {
-                            if (parentController instanceof AccountSetupViewCB)
-                                ((AccountSetupViewCB) parentController).onCompleted(RegistrationViewCB.this);
+                            if (parentController instanceof MultiStepNavigation)
+                                ((MultiStepNavigation) parentController).nextStep(RegistrationViewCB.this);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

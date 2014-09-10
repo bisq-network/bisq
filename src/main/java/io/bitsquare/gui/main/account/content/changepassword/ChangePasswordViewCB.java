@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.account.content.changepassword;
 
 import io.bitsquare.gui.CachedCodeBehind;
+import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
-import io.bitsquare.gui.main.account.setup.AccountSetupViewCB;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 
@@ -107,8 +107,8 @@ public class ChangePasswordViewCB extends CachedCodeBehind<ChangePasswordPM> imp
     private void onSaved() {
         boolean result = presentationModel.requestSavePassword();
         if (result) {
-            if (parentController instanceof AccountSetupViewCB)
-                ((AccountSetupViewCB) parentController).onCompleted(this);
+            if (parentController instanceof MultiStepNavigation)
+                ((MultiStepNavigation) parentController).nextStep(this);
         }
         else {
             log.debug(presentationModel.getErrorMessage()); // TODO use validating TF
@@ -122,8 +122,8 @@ public class ChangePasswordViewCB extends CachedCodeBehind<ChangePasswordPM> imp
 
     @FXML
     private void onSkipped() {
-        if (parentController instanceof AccountSetupViewCB)
-            ((AccountSetupViewCB) parentController).onCompleted(this);
+        if (parentController instanceof MultiStepNavigation)
+            ((MultiStepNavigation) parentController).nextStep(this);
     }
 
 }

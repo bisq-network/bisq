@@ -21,8 +21,8 @@ import io.bitsquare.BitSquare;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
-import io.bitsquare.gui.main.account.setup.AccountSetupViewCB;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.ImageUtil;
@@ -160,8 +160,8 @@ public class RestrictionsViewCB extends CachedCodeBehind<RestrictionsPM> impleme
 
     @FXML
     private void onCompleted() {
-        if (parentController instanceof AccountSetupViewCB)
-            ((AccountSetupViewCB) parentController).onCompleted(this);
+        if (parentController instanceof MultiStepNavigation)
+            ((MultiStepNavigation) parentController).nextStep(this);
     }
 
     @FXML

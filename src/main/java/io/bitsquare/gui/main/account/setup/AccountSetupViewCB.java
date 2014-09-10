@@ -21,6 +21,7 @@ import io.bitsquare.gui.CachedCodeBehind;
 import io.bitsquare.gui.CodeBehind;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.account.content.fiat.FiatAccountViewCB;
 import io.bitsquare.gui.main.account.content.password.PasswordViewCB;
@@ -50,7 +51,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountSetupViewCB extends CachedCodeBehind<AccountSetupPM> {
+public class AccountSetupViewCB extends CachedCodeBehind<AccountSetupPM> implements MultiStepNavigation {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSetupViewCB.class);
 
@@ -121,7 +122,7 @@ public class AccountSetupViewCB extends CachedCodeBehind<AccountSetupPM> {
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onCompleted(CodeBehind<? extends PresentationModel> childView) {
+    public void nextStep(CodeBehind<? extends PresentationModel> childView) {
         if (childView instanceof SeedWordsViewCB) {
             seedWords.onCompleted();
             childController = password.show();
