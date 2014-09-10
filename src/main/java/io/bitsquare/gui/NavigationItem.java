@@ -62,8 +62,8 @@ public enum NavigationItem {
     TRANSACTIONS(2, "/io/bitsquare/gui/main/funds/transactions/TransactionsView.fxml"),
 
     // account
-    ACCOUNT_SETUP(2, "/io/bitsquare/gui/main/account/AccountSetupView.fxml"),
-    ACCOUNT_SETTINGS(2, "/io/bitsquare/gui/main/account/AccountSettingsView.fxml"),
+    ACCOUNT_SETUP(2, "/io/bitsquare/gui/main/account/setup/AccountSetupView.fxml"),
+    ACCOUNT_SETTINGS(2, "/io/bitsquare/gui/main/account/settings/AccountSettingsView.fxml"),
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -71,12 +71,12 @@ public enum NavigationItem {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // account content
-    SEED_WORDS(3, "/io/bitsquare/gui/main/account/content/SeedWordsView.fxml"),
-    ADD_PASSWORD(3, "/io/bitsquare/gui/main/account/content/PasswordView.fxml"),
-    CHANGE_PASSWORD(3, "/io/bitsquare/gui/main/account/content/PasswordView.fxml"),
-    RESTRICTIONS(3, "/io/bitsquare/gui/main/account/content/RestrictionsView.fxml"),
-    REGISTRATION(3, "/io/bitsquare/gui/main/account/content/RegistrationView.fxml"),
-    FIAT_ACCOUNT(3, "/io/bitsquare/gui/main/account/content/FiatAccountView.fxml"),
+    SEED_WORDS(3, "/io/bitsquare/gui/main/account/content/seedwords/SeedWordsView.fxml"),
+    ADD_PASSWORD(3, "/io/bitsquare/gui/main/account/content/password/PasswordView.fxml"),
+    CHANGE_PASSWORD(3, "/io/bitsquare/gui/main/account/content/password/PasswordView.fxml"),
+    RESTRICTIONS(3, "/io/bitsquare/gui/main/account/content/restrictions/RestrictionsView.fxml"),
+    REGISTRATION(3, "/io/bitsquare/gui/main/account/content/registration/RegistrationView.fxml"),
+    FIAT_ACCOUNT(3, "/io/bitsquare/gui/main/account/content/fiat/FiatAccountView.fxml"),
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

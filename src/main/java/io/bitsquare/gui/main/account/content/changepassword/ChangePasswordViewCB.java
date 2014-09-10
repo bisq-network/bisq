@@ -15,16 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.account;
+package io.bitsquare.gui.main.account.content.changepassword;
 
 import io.bitsquare.gui.CachedCodeBehind;
-import io.bitsquare.gui.CodeBehind;
-import io.bitsquare.gui.NavigationController;
-import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.account.setup.AccountSetupViewCB;
-import io.bitsquare.util.BSFXMLLoader;
-
-import java.io.IOException;
+import io.bitsquare.gui.main.help.Help;
+import io.bitsquare.gui.main.help.HelpId;
 
 import java.net.URL;
 
@@ -32,19 +29,20 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
-import javafx.fxml.Initializable;
+import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountViewCB extends CachedCodeBehind<AccountPM> {
+public class ChangePasswordViewCB extends CachedCodeBehind<ChangePasswordPM> implements ContextAware {
 
-    private static final Logger log = LoggerFactory.getLogger(AccountViewCB.class);
+    private static final Logger log = LoggerFactory.getLogger(ChangePasswordViewCB.class);
 
-    public Tab tab;
-    private NavigationController navigationController;
+    @FXML private HBox buttonsHBox;
+    @FXML private Button saveButton, skipButton;
+    @FXML private PasswordField passwordField, repeatedPasswordField;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -52,9 +50,8 @@ public class AccountViewCB extends CachedCodeBehind<AccountPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountViewCB(AccountPM presentationModel, NavigationController navigationController) {
+    private ChangePasswordViewCB(ChangePasswordPM presentationModel) {
         super(presentationModel);
-        this.navigationController = navigationController;
     }
 
 
@@ -62,26 +59,20 @@ public class AccountViewCB extends CachedCodeBehind<AccountPM> {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
+
+        passwordField.textProperty().bindBidirectional(presentationModel.passwordField);
+        repeatedPasswordField.textProperty().bindBidirectional(presentationModel.repeatedPasswordField);
+
+        saveButton.disableProperty().bind(presentationModel.saveButtonDisabled);
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();
-
-        if (childController == null) {
-            if (presentationModel.getNeedRegistration()) {
-                childController = loadView(NavigationItem.ACCOUNT_SETUP);
-                tab.setText("Account setup");
-            }
-            else {
-                childController = loadView(NavigationItem.ACCOUNT_SETTINGS);
-                tab.setText("Account settings");
-            }
-        }
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -98,42 +89,41 @@ public class AccountViewCB extends CachedCodeBehind<AccountPM> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Navigation
+    // Override 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Initializable loadView(NavigationItem navigationItem) {
-        super.loadView(navigationItem);
-
-        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
-        try {
-            Pane view = loader.load();
-            tab.setContent(view);
-            Initializable childController = loader.getController();
-            ((CodeBehind) childController).setParentController(this);
-
-            if (childController instanceof AccountSetupViewCB)
-                ((AccountSetupViewCB) childController).setRemoveCallBack(() -> {
-                    removeSetup();
-                    return null;
-                });
-
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + NavigationItem.ACCOUNT_SETUP.getFxmlUrl());
-            e.getStackTrace();
-        }
-        return childController;
+    public void useSettingsContext(boolean useSettingsContext) {
+        if (useSettingsContext)
+            buttonsHBox.getChildren().remove(skipButton);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void removeSetup() {
-        childController = null;
+    @FXML
+    private void onSaved() {
+        boolean result = presentationModel.requestSavePassword();
+        if (result) {
+            if (parentController instanceof AccountSetupViewCB)
+                ((AccountSetupViewCB) parentController).onCompleted(this);
+        }
+        else {
+            log.debug(presentationModel.getErrorMessage()); // TODO use validating TF
+        }
+    }
 
-        navigationController.navigationTo(navigationController.getPreviousMainNavigationItems());
+    @FXML
+    private void onOpenHelp() {
+        Help.openWindow(HelpId.SETUP_PASSWORD);
+    }
+
+    @FXML
+    private void onSkipped() {
+        if (parentController instanceof AccountSetupViewCB)
+            ((AccountSetupViewCB) parentController).onCompleted(this);
     }
 
 }
