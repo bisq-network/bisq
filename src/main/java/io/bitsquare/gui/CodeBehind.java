@@ -1,20 +1,3 @@
-/*
- * This file is part of Bitsquare.
- *
- * Bitsquare is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or (at
- * your option) any later version.
- *
- * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
- * License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
- */
-
 package io.bitsquare.gui;
 
 import java.net.URL;
@@ -29,17 +12,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Base class for all controllers.
+ * Non caching version for code behind classes using the PM pattern
+ *
+ * @param <T> The PresentationModel used in that class
  */
-// for new PM pattern use CodeBehind
-@Deprecated
-public abstract class ViewController implements Initializable {
-    private static final Logger log = LoggerFactory.getLogger(ViewController.class);
+public class CodeBehind<T extends PresentationModel> implements Initializable {
+    private static final Logger log = LoggerFactory.getLogger(CodeBehind.class);
 
+    protected T presentationModel;
+    //TODO Initializable has to be changed to CodeBehind<? extends PresentationModel> when all UIs are updated
     protected Initializable childController;
+    //TODO Initializable has to be changed to CodeBehind<? extends PresentationModel> when all UIs are updated
     protected Initializable parentController;
-
     @FXML protected Parent root;
+
+    public CodeBehind(T presentationModel) {
+        this.presentationModel = presentationModel;
+    }
+
+    public CodeBehind() {
+    }
 
     /**
      * Get called form GUI framework when the UI is ready.
@@ -53,8 +45,13 @@ public abstract class ViewController implements Initializable {
         root.sceneProperty().addListener((ov, oldValue, newValue) -> {
             // we got removed from the scene
             // lets terminate
-            if (oldValue != null && newValue == null) terminate();
+            if (oldValue != null && newValue == null)
+                terminate();
+
         });
+
+        presentationModel.initialized();
+        presentationModel.activate();
     }
 
     /**
@@ -63,21 +60,18 @@ public abstract class ViewController implements Initializable {
      */
     public void terminate() {
         log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
+        if (childController != null)
+            ((CodeBehind<? extends PresentationModel>) childController).terminate();
 
-        if (childController != null) {
-            if (childController instanceof ViewController)
-                ((ViewController) childController).terminate();
-            else if (childController instanceof CodeBehind)
-                ((CodeBehind) childController).terminate();
-        }
-
+        presentationModel.deactivate();
+        presentationModel.terminate();
     }
 
     /**
      * @param parentController Controller who has created this.getClass().getSimpleName() instance (via
      *                         navigateToView/FXMLLoader).
      */
-    public void setParentController(ViewController parentController) {
+    public void setParentController(Initializable parentController) {
         log.trace("Lifecycle: setParentController " + this.getClass().getSimpleName() + " / parent = " +
                 parentController);
         this.parentController = parentController;
@@ -87,7 +81,7 @@ public abstract class ViewController implements Initializable {
      * @param navigationItem NavigationItem to be loaded.
      * @return The ViewController of the loaded view.
      */
-    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadView(NavigationItem navigationItem) {
         log.trace("Lifecycle: loadViewAndGetChildController " + this.getClass().getSimpleName() + " / navigationItem " +
                 "= " + navigationItem);
         return null;

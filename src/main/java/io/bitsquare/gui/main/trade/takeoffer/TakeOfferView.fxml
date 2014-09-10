@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bitsquare.
+  ~
+  ~ Bitsquare is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<?import io.bitsquare.gui.components.ValidatedTextField?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.trade.takeoffer.TakeOfferController"
+            xmlns:fx="http://javafx.com/fxml">
+    <Accordion fx:id="accordion" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="10.0"
+               AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+        <panes>
+
+            <TitledPane fx:id="takeOfferTitledPane" text="Offer details">
+                <ScrollPane fitToWidth="true">
+                    <GridPane hgap="5.0" vgap="5.0">
+                        <padding>
+                            <Insets left="10" right="10" top="10" bottom="10"/>
+                        </padding>
+
+                        <Label text="Take offer:" id="form-header-text"/>
+
+                        <Label text="Amount in BTC:" GridPane.rowIndex="1"/>
+                        <ValidatedTextField fx:id="amountTextField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                        <Label text="Price (EUR/BTC):" GridPane.rowIndex="2"/>
+                        <TextField fx:id="priceTextField" editable="false" focusTraversable="false"
+                                   GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                        <Label text="Amount in EUR:" GridPane.rowIndex="3"/>
+                        <TextField fx:id="volumeTextField" editable="false" focusTraversable="false"
+                                   GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                        <Label fx:id="collateralLabel" text="Collateral:" GridPane.rowIndex="4"/>
+                        <TextField fx:id="collateralTextField" editable="false" focusTraversable="false"
+                                   GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                        <Label text="Total Fees (Offer + tx):" GridPane.rowIndex="5"/>
+                        <TextField fx:id="feeTextField" editable="false" focusTraversable="false" GridPane.rowIndex="5"
+                                   GridPane.columnIndex="1"/>
+
+                        <Label text="Total:" GridPane.rowIndex="6"/>
+                        <TextField fx:id="totalTextField" editable="false" focusTraversable="false"
+                                   GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+
+                        <Button fx:id="takeOfferButton" text="Take offer and pay" onAction="#onTakeOffer"
+                                defaultButton="true" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+
+                        <Label text="Offer details:" id="form-header-text" GridPane.rowIndex="8"/>
+
+                        <Label text="Bank account type:" GridPane.rowIndex="9"/>
+                        <TextField fx:id="bankAccountTypeTextField" editable="false" focusTraversable="false"
+                                   GridPane.rowIndex="9" GridPane.columnIndex="1"/>
+
+                        <Label text="Country:" GridPane.rowIndex="10"/>
+                        <TextField fx:id="countryTextField" editable="false" focusTraversable="false"
+                                   GridPane.rowIndex="10" GridPane.columnIndex="1"/>
+
+                        <Label text="Arbitrators:" GridPane.rowIndex="11"/>
+                        <TextField fx:id="arbitratorsTextField" editable="false" focusTraversable="false"
+                                   GridPane.rowIndex="11" GridPane.columnIndex="1"/>
+
+                        <Label text="Supported languages:" GridPane.rowIndex="12"/>
+                        <TextField fx:id="supportedLanguagesTextField" editable="false" focusTraversable="false"
+                                   GridPane.rowIndex="12" GridPane.columnIndex="1"/>
+
+                        <Label text="Supported countries:" GridPane.rowIndex="13"/>
+                        <TextField fx:id="supportedCountriesTextField" editable="false" focusTraversable="false"
+                                   GridPane.rowIndex="13" GridPane.columnIndex="1"/>
+
+
+                        <columnConstraints>
+                            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="10.0"/>
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="10.0"/>
+                        </columnConstraints>
+
+                        <rowConstraints>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                            <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                        </rowConstraints>
+
+                    </GridPane>
+                </ScrollPane>
+            </TitledPane>
+
+            <TitledPane fx:id="waitBankTxTitledPane" text="Wait for bank transfer">
+                <GridPane hgap="5.0" vgap="5.0">
+                    <padding>
+                        <Insets left="10" right="10" top="10" bottom="10"/>
+                    </padding>
+
+                    <Label fx:id="headLineLabel" text="Deposit transaction published" id="form-header-text"/>
+
+                    <Label text="Status information:" GridPane.rowIndex="1" GridPane.valignment="TOP"/>
+                    <Label fx:id="infoLabel" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.valignment="TOP"/>
+
+                    <Label text="Deposit transaction ID:" GridPane.rowIndex="2"/>
+                    <TextField fx:id="depositTxIdTextField" editable="false" focusTraversable="false"
+                               GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                    <Button fx:id="receivedFiatButton" text="I have received the money at my bank account"
+                            onAction="#onReceivedFiat" defaultButton="true" disable="true" GridPane.rowIndex="3"
+                            GridPane.columnIndex="1"/>
+
+                    <columnConstraints>
+                        <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="10.0"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0"/>
+                    </columnConstraints>
+
+                    <rowConstraints>
+                        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                    </rowConstraints>
+
+                </GridPane>
+            </TitledPane>
+
+            <TitledPane fx:id="summaryTitledPane" text="Summary">
+                <GridPane hgap="5.0" vgap="5.0">
+                    <padding>
+                        <Insets left="10" right="10" top="10" bottom="10"/>
+                    </padding>
+
+                    <Label text="Trade completed" id="form-header-text"/>
+
+                    <Label text="You have sold:" GridPane.rowIndex="2"/>
+                    <ValidatedTextField fx:id="summaryPaidTextField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                    <Label text="You have received (EUR):" GridPane.rowIndex="3"/>
+                    <TextField fx:id="summaryReceivedTextField" editable="false" focusTraversable="false"
+                               GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                    <Label text="Details" GridPane.rowIndex="4" id="form-header-text"/>
+
+                    <Label text="Total fees (take offer fee + tx fee):" GridPane.rowIndex="5"/>
+                    <TextField fx:id="summaryFeesTextField" editable="false" focusTraversable="false"
+                               GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+                    <Label text="Refunded collateral:" GridPane.rowIndex="6"/>
+                    <TextField fx:id="summaryCollateralTextField" editable="false" focusTraversable="false"
+                               GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+
+                    <Label text="Deposit transaction ID:" GridPane.rowIndex="7"/>
+                    <TextField fx:id="summaryDepositTxIdTextField" editable="false" focusTraversable="false"
+                               GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+
+                    <Label text="Payout transaction ID:" GridPane.rowIndex="8"/>
+                    <TextField fx:id="summaryPayoutTxIdTextField" editable="false" focusTraversable="false"
+                               GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+
+
+                    <Button text="Close" onAction="#onClose" defaultButton="true" GridPane.rowIndex="9"
+                            GridPane.columnIndex="1"/>
+
+                    <columnConstraints>
+                        <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="10.0"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0"/>
+                    </columnConstraints>
+
+                    <rowConstraints>
+                        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+                    </rowConstraints>
+
+                </GridPane>
+            </TitledPane>
+
+        </panes>
+    </Accordion>
+</AnchorPane>

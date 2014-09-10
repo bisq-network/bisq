@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bitsquare.
+  ~
+  ~ Bitsquare is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.home.HomeController"
+         AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
+         AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
+         xmlns:fx="http://javafx.com/fxml">
+
+    <Tab text="TODO" closable="false">
+
+        <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+              AnchorPane.topAnchor="0.0">
+            <Label id="headline-label" text="Overview"/>
+            <Label text="TODO"/>
+
+            <Button text="Register yourself as an arbitrator" onAction="#onArbitratorRegistration"/>
+            <Button text="Edit my arbitrator details" onAction="#onArbitratorEdit"/>
+        </VBox>
+    </Tab>
+</TabPane>

@@ -18,7 +18,7 @@
 package io.bitsquare;
 
 import io.bitsquare.btc.RestrictionsTest;
-import io.bitsquare.gui.pm.trade.CreateOfferPMTest;
+import io.bitsquare.gui.main.trade.createoffer.CreateOfferPMTest;
 import io.bitsquare.gui.util.BSFormatterTest;
 import io.bitsquare.gui.util.BitSquareConverterTest;
 import io.bitsquare.gui.util.BitSquareNumberValidatorTest;

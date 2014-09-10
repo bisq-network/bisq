@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bitsquare.
+  ~
+  ~ Bitsquare is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<GridPane hgap="5.0" vgap="5.0" fx:id="root"
+          fx:controller="io.bitsquare.gui.main.settings.uimock.BankAccountSettingsControllerUIMock"
+          stylesheets="@../../../../../../../main/java/io/bitsquare/gui/bitsquare.css"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+          AnchorPane.topAnchor="0.0"
+          xmlns:fx="http://javafx.com/fxml">
+
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="26.0"/>
+    </padding>
+
+    <children>
+        <Pane id="form-group-background-active" GridPane.columnSpan="2" GridPane.rowSpan="13">
+            <GridPane.margin>
+                <Insets bottom="-10" left="-10" right="-10" top="-10"/>
+            </GridPane.margin>
+            <children>
+                <Label id="form-group-title-active" layoutX="8" layoutY="-8" text="Setup your bank account">
+                    <padding>
+                        <Insets left="5" right="7"/>
+                    </padding>
+                </Label>
+            </children>
+        </Pane>
+        <Label text="Bank account:"/>
+        <ComboBox fx:id="bankAccountComboBox" GridPane.columnIndex="1"/>
+
+        <Label text="Bank account type:" GridPane.rowIndex="1"/>
+        <ComboBox fx:id="bankAccountTypesComboBox" promptText="Select bank account type"
+                  GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Bank account title:" GridPane.rowIndex="2"/>
+        <TextField fx:id="bankAccountTitleTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+        <Label text="Bank account holder name:" GridPane.rowIndex="3"/>
+        <TextField fx:id="bankAccountHolderNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+        <Label text="Bank account primary ID:" GridPane.rowIndex="4"/>
+        <TextField fx:id="bankAccountPrimaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+
+        <Label text="Bank account secondary ID:" GridPane.rowIndex="5"/>
+        <TextField fx:id="bankAccountSecondaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+
+        <Label text="Bank account currency:" GridPane.rowIndex="6"/>
+        <ComboBox fx:id="bankAccountCurrencyComboBox" promptText="Select currency" GridPane.columnIndex="1"
+                  GridPane.rowIndex="6"/>
+
+        <Label text="Country of bank account:" GridPane.rowIndex="7"/>
+        <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="7">
+            <children>
+                <ComboBox fx:id="bankAccountRegionComboBox" prefWidth="150.0"
+                          promptText="Select region"/>
+                <ComboBox fx:id="bankAccountCountryComboBox" visible="false" prefWidth="150.0"
+                          promptText="Select country"/>
+            </children>
+        </HBox>
+
+        <Button fx:id="saveBankAccountButton" GridPane.columnIndex="1"
+                GridPane.rowIndex="8" defaultButton="true"
+                text="Save bank account"/>
+
+        <Separator orientation="HORIZONTAL" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="9"/>
+
+        <Label text="Manage bank accounts:" GridPane.rowIndex="10"/>
+        <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="10">
+            <children>
+                <Button fx:id="addBankAccountButton" text="Add new bank account" disable="false"/>
+                <Button text="Remove selected bank account"/>
+            </children>
+        </HBox>
+
+        <Separator orientation="HORIZONTAL" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="11"/>
+        <ImageView GridPane.rowSpan="2" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true"
+                   GridPane.rowIndex="12"
+                   GridPane.valignment="TOP">
+            <image>
+                <Image fx:id="infoIcon" url="@../../../../../../../main/resources/images/info.png"/>
+            </image>
+            <GridPane.margin>
+                <Insets right="2.0" top="4.0"/>
+            </GridPane.margin>
+        </ImageView>
+        <Label GridPane.columnIndex="1" GridPane.rowIndex="12" prefWidth="700.0"
+               text="You need to setup at least one bank account which you would like to use for trading. You can also use multiple bank accounts with different currencies. If you want to add later a new bank account you need to pay the registration fee again. The bank account data will be saved in the registration process for identification. You can edit this later in the settings. Open the help menu for further information."
+               wrapText="true">
+            <GridPane.margin>
+                <Insets bottom="5.0"/>
+            </GridPane.margin>
+        </Label>
+
+
+    </children>
+
+
+    <columnConstraints>
+        <ColumnConstraints halignment="RIGHT" hgrow="ALWAYS" minWidth="180"/>
+        <ColumnConstraints hgrow="SOMETIMES"/>
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+    </rowConstraints>
+</GridPane>

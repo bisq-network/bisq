@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bitsquare.
+  ~
+  ~ Bitsquare is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<GridPane fx:id="root" hgap="5.0" stylesheets="@../../../../../../../java/io/bitsquare/gui/bitsquare.css"
+          vgap="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+          AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="io.bitsquare.gui.main.account.registration.uimock.FundRegistrationWalletControllerUIMock">
+
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="26.0"/>
+    </padding>
+
+    <children>
+
+        <Pane id="form-group-background-active" fx:id="payFundsPane" visible="true" GridPane.columnSpan="3"
+              GridPane.rowSpan="4">
+            <GridPane.margin>
+                <Insets bottom="-10.0" left="-10.0" right="-10.0" top="-10.0"/>
+            </GridPane.margin>
+            <children>
+                <Label id="form-group-title-active" fx:id="payFundsTitleLabel" layoutX="8" layoutY="-8"
+                       text="Pay in the registration fee">
+                    <padding>
+                        <Insets left="5" right="7"/>
+                    </padding>
+                </Label>
+            </children>
+        </Pane>
+
+        <Label fx:id="totalToPayLabel" text="Registration fee:" visible="true">
+            <GridPane.margin>
+                <Insets top="10.0"/>
+            </GridPane.margin>
+        </Label>
+        <TextField fx:id="totalToPayTextField" editable="false" focusTraversable="false" text="0.0002 BTC"
+                   visible="true" GridPane.columnIndex="1" GridPane.columnSpan="2">
+            <GridPane.margin>
+                <Insets top="10.0"/>
+            </GridPane.margin>
+        </TextField>
+
+        <Label fx:id="addressLabel" text="Registration BTC address:" visible="true" GridPane.rowIndex="1"/>
+        <TextField fx:id="addressTextField" editable="false" focusTraversable="false"
+                   text="mkpymjfTk7WmG9YC4N9c9h1UzwPvMX3aNG" visible="true" GridPane.columnIndex="1"
+                   GridPane.columnSpan="2" GridPane.rowIndex="1"/>
+
+        <Label fx:id="balanceLabel" text="Registration wallet balance:" visible="true" GridPane.rowIndex="2"/>
+        <TextField fx:id="balanceTextField" editable="false" focusTraversable="false" text="0.00 BTC" visible="true"
+                   GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2">
+            <GridPane.margin>
+                <Insets bottom="5.0"/>
+            </GridPane.margin>
+        </TextField>
+
+        <ImageView fx:id="payFundsInfoIcon" GridPane.rowSpan="2" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true"
+                   preserveRatio="true"
+                   visible="true" GridPane.rowIndex="3" GridPane.valignment="TOP">
+            <image>
+                <Image fx:id="infoIcon" url="@../../../../../../../main/resources/images/info.png"/>
+            </image>
+            <GridPane.margin>
+                <Insets right="2.0" top="4.0"/>
+            </GridPane.margin>
+        </ImageView>
+
+        <Label fx:id="payFundsInfoLabel" prefWidth="740.0"
+               text="You need to pay in a minimal registration fee for storing the bank account data as identification in the Bitcoin block chain. This is needed as security measurement and will not leak and privacy. You need to wait for 1 confirmation before you can start active trading. Open the help menu for more information."
+               visible="true" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3">
+            <GridPane.margin>
+                <Insets bottom="5.0"/>
+            </GridPane.margin>
+        </Label>
+
+        <Button GridPane.columnIndex="1" GridPane.rowIndex="4" defaultButton="true"
+                text="Complete registration" visible="true">
+            <GridPane.margin>
+                <Insets bottom="30" top="20.0"/>
+            </GridPane.margin>
+        </Button>
+
+
+    </children>
+
+    <columnConstraints>
+        <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="200"/>
+        <ColumnConstraints hgrow="ALWAYS"/>
+        <ColumnConstraints hgrow="NEVER" prefWidth="25.0"/>
+    </columnConstraints>
+
+    <rowConstraints>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+    </rowConstraints>
+</GridPane>

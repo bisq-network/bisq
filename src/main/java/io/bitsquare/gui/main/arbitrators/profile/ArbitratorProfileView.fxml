@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ This file is part of Bitsquare.
+  ~
+  ~ Bitsquare is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.arbitrators.profile.ArbitratorProfileController"
+          hgap="5.0" vgap="5.0" AnchorPane.bottomAnchor="80.0" AnchorPane.leftAnchor="10.0"
+          AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
+          xmlns:fx="http://javafx.com/fxml">
+
+    <Label fx:id="nameLabel" text="Name:"/>
+    <TextField fx:id="nameTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"/>
+    <Label text="Languages:" GridPane.rowIndex="1"/>
+    <TextField fx:id="languagesTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"
+               GridPane.rowIndex="1"/>
+
+    <Label text="Reputation:" GridPane.rowIndex="2"/>
+    <TextField fx:id="reputationTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"
+               GridPane.rowIndex="2"/>
+
+    <Label text="Max. trade volume:" GridPane.rowIndex="3"/>
+    <TextField fx:id="maxTradeVolumeTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"
+               GridPane.rowIndex="3"/>
+
+    <Label text="Passive service fee:" GridPane.rowIndex="4"/>
+    <TextField fx:id="passiveServiceFeeTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"
+               GridPane.rowIndex="4"/>
+
+    <Label text="Arbitration fee:" GridPane.rowIndex="5"/>
+    <TextField fx:id="arbitrationFeeTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"
+               GridPane.columnSpan="2" GridPane.rowIndex="5"/>
+
+    <Label text="Methods of arbitration:" GridPane.rowIndex="6"/>
+    <TextField fx:id="methodsTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"
+               GridPane.columnSpan="2" GridPane.rowIndex="6"/>
+
+    <Label text="ID verifications:" GridPane.rowIndex="7"/>
+    <TextField fx:id="idVerificationsTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"
+               GridPane.columnSpan="2" GridPane.rowIndex="7"/>
+
+    <Label text="Web page:" GridPane.rowIndex="9"/>
+    <TextField fx:id="webPageTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"
+               GridPane.columnSpan="2" GridPane.rowIndex="9"/>
+
+    <Label text="Description:" GridPane.rowIndex="10" GridPane.valignment="TOP">
+        <GridPane.margin>
+            <Insets top="10.0"/>
+        </GridPane.margin>
+    </Label>
+    <TextArea fx:id="descriptionTextArea" editable="false" focusTraversable="false" prefHeight="150.0"
+              GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="10"/>
+
+    <columnConstraints>
+        <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="10.0"/>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0"/>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"/>
+    </columnConstraints>
+
+    <rowConstraints>
+        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="ALWAYS"/>
+    </rowConstraints>
+
+</GridPane>

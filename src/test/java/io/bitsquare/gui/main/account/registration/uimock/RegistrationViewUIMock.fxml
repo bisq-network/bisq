@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bitsquare.
+  ~
+  ~ Bitsquare is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane fx:id="root" prefHeight="660.0" prefWidth="1000.0" style="-fx-background-color: f4f4f4;"
+            stylesheets="@../../../../../../../../main/java/io/bitsquare/gui/bitsquare.css"
+            xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="io.bitsquare.gui.main.account.registration.uimock.RegistrationControllerUIMock">
+    <left>
+
+        <VBox spacing="5" prefWidth="300.0" BorderPane.alignment="CENTER">
+            <BorderPane.margin>
+                <Insets left="10.0" top="15.0"/>
+            </BorderPane.margin>
+            <children>
+
+                <HBox id="wizard-item-background-completed" spacing="5" prefWidth="200.0">
+                    <children>
+                        <ImageView fitHeight="20.0" fitWidth="20.0"
+                                   pickOnBounds="true" preserveRatio="true">
+                            <HBox.margin>
+                                <Insets left="8.0" top="8.0"/>
+                            </HBox.margin>
+                            <image>
+                                <Image url="@../../../../../../../../main/resources/images/tick.png"/>
+                            </image>
+
+                        </ImageView>
+                        <VBox spacing="1">
+                            <HBox.margin>
+                                <Insets top="5.0" bottom="8"/>
+                            </HBox.margin>
+                            <children>
+
+                                <Label AnchorPane.topAnchor="0" layoutX="40.0" layoutY="7.0" text="Backup wallet seed"
+                                       id="wizard-title-completed">
+                                </Label>
+                                <Label id="wizard-sub-title-completed" layoutX="40.0" layoutY="33.0" maxWidth="250.0"
+                                       text="Write down the seed word for your wallet."
+                                       wrapText="true" AnchorPane.bottomAnchor="0"/>
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+
+                <HBox id="wizard-item-background-completed" spacing="5" prefWidth="200.0">
+                    <children>
+                        <ImageView fitHeight="20.0" fitWidth="20.0"
+                                   pickOnBounds="true" preserveRatio="true">
+                            <HBox.margin>
+                                <Insets left="8.0" top="8.0"/>
+                            </HBox.margin>
+                            <image>
+                                <Image url="@../../../../../../../../main/resources/images/tick.png"/>
+                            </image>
+
+                        </ImageView>
+                        <VBox spacing="1">
+                            <HBox.margin>
+                                <Insets top="5.0" bottom="8"/>
+                            </HBox.margin>
+                            <children>
+
+                                <Label AnchorPane.topAnchor="0" layoutX="40.0" layoutY="7.0" text="Setup password"
+                                       id="wizard-title-completed">
+                                </Label>
+                                <Label id="wizard-sub-title-completed" layoutX="40.0" layoutY="33.0" maxWidth="250.0"
+                                       text="Protect your wallet with a password."
+                                       wrapText="true" AnchorPane.bottomAnchor="0"/>
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+
+                <HBox id="wizard-item-background-completed" spacing="5" prefWidth="200.0">
+                    <children>
+                        <ImageView fitHeight="20.0" fitWidth="20.0"
+                                   pickOnBounds="true" preserveRatio="true">
+                            <HBox.margin>
+                                <Insets left="8.0" top="8.0"/>
+                            </HBox.margin>
+                            <image>
+                                <Image url="@../../../../../../../../main/resources/images/tick.png"/>
+                            </image>
+
+                        </ImageView>
+                        <VBox spacing="1">
+                            <HBox.margin>
+                                <Insets top="5.0" bottom="8"/>
+                            </HBox.margin>
+                            <children>
+
+                                <Label AnchorPane.topAnchor="0" layoutX="40.0" layoutY="7.0" text="Setup Bank account"
+                                       id="wizard-title-completed">
+                                </Label>
+                                <Label id="wizard-sub-title-completed" layoutX="40.0" layoutY="33.0" maxWidth="250.0"
+                                       text="You need to add the bank account details to your trading account."
+                                       wrapText="true" AnchorPane.bottomAnchor="0"/>
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+
+                <HBox fx:id="prefBox" id="wizard-item-background-active" spacing="5" prefWidth="200.0">
+                    <children>
+                        <ImageView fitHeight="20.0" fitWidth="20.0"
+                                   pickOnBounds="true" preserveRatio="true">
+                            <HBox.margin>
+                                <Insets left="8.0" top="8.0"/>
+                            </HBox.margin>
+                            <image>
+                                <Image url="@../../../../../../../../main/resources/images/arrow_blue.png"/>
+                            </image>
+
+                        </ImageView>
+                        <VBox spacing="1">
+                            <HBox.margin>
+                                <Insets top="5.0" bottom="8"/>
+                            </HBox.margin>
+                            <children>
+
+                                <Label AnchorPane.topAnchor="0" layoutX="40.0" layoutY="7.0"
+                                       text="Setup your preferences"
+                                       id="wizard-title-active">
+                                </Label>
+                                <Label id="wizard-sub-title-active" layoutX="40.0" layoutY="33.0" maxWidth="250.0"
+                                       text="You need to setup your preferences used for trade restrictions."
+                                       wrapText="true" AnchorPane.bottomAnchor="0"/>
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+
+                <HBox id="wizard-item-background-deactivated" spacing="5" prefWidth="200.0">
+                    <children>
+                        <ImageView fitHeight="20.0" fitWidth="20.0"
+                                   pickOnBounds="true" preserveRatio="true">
+                            <HBox.margin>
+                                <Insets left="8.0" top="8.0"/>
+                            </HBox.margin>
+                            <image>
+                                <Image url="@../../../../../../../../main/resources/images/arrow_grey.png"/>
+                            </image>
+
+                        </ImageView>
+                        <VBox spacing="1">
+                            <HBox.margin>
+                                <Insets top="5.0" bottom="8"/>
+                            </HBox.margin>
+                            <children>
+
+                                <Label AnchorPane.topAnchor="0" layoutX="40.0" layoutY="7.0"
+                                       text="Register your account"
+                                       id="wizard-title-deactivated">
+                                </Label>
+                                <Label id="wizard-sub-title-deactivated" layoutX="40.0" layoutY="33.0" maxWidth="250.0"
+                                       text="Pay in the registration fee of 0.0002 BTC and store your account in the BTC block chain."
+                                       wrapText="true" AnchorPane.bottomAnchor="0"/>
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+
+            </children>
+        </VBox>
+    </left>
+    <center>
+        <Pane fx:id="content">
+            <fx:include source="../../../settings/uimock/SeedWordsViewUIMock.fxml" visible="true" prefWidth="690"/>
+            <fx:include source="../../../settings/uimock/SetPasswordViewUIMock.fxml" visible="false" prefWidth="690"/>
+            <fx:include source="../../../settings/uimock/BankAccountSettingsViewUIMock.fxml" visible="false"
+                        prefWidth="690"/>
+            <fx:include source="../../../settings/uimock/RestrictionSettingsViewUIMock.fxml" visible="false"
+                        prefWidth="690"/>
+            <fx:include source="FundRegistrationWalletViewUIMock.fxml" visible="false" prefWidth="690"/>
+        </Pane>
+    </center>
+</BorderPane>
