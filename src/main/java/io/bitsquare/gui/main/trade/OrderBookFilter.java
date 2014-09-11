@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.trade.orderbook;
+package io.bitsquare.gui.main.trade;
 
 import io.bitsquare.trade.Direction;
 

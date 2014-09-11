@@ -26,6 +26,7 @@ import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.OverlayController;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.main.trade.OrderBookFilter;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferViewCB;
 import io.bitsquare.gui.main.trade.takeoffer.TakeOfferController;
 import io.bitsquare.gui.util.BSFormatter;

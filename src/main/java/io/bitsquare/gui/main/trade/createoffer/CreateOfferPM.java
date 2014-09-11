@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.trade.createoffer;
 
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.PresentationModel;
-import io.bitsquare.gui.main.trade.orderbook.OrderBookFilter;
+import io.bitsquare.gui.main.trade.OrderBookFilter;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
