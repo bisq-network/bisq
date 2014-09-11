@@ -110,7 +110,7 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
             Pane view = loader.load();
             tab.setContent(view);
             Initializable childController = loader.getController();
-            ((ViewCB) childController).setParentController(this);
+            ((ViewCB) childController).setParent(this);
 
             if (childController instanceof AccountSetupViewCB)
                 ((AccountSetupViewCB) childController).setRemoveCallBack(() -> {

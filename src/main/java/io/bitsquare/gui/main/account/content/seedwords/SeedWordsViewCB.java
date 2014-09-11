@@ -101,8 +101,8 @@ public class SeedWordsViewCB extends CachedViewCB<SeedWordsPM> implements Contex
 
     @FXML
     private void onCompleted() {
-        if (parentController instanceof MultiStepNavigation)
-            ((MultiStepNavigation) parentController).nextStep(this);
+        if (parent instanceof MultiStepNavigation)
+            ((MultiStepNavigation) parent).nextStep(this);
     }
 
     @FXML

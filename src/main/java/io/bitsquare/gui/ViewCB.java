@@ -23,7 +23,7 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
     //TODO Initializable has to be changed to CodeBehind<? extends PresentationModel> when all UIs are updated
     protected Initializable childController;
     //TODO Initializable has to be changed to CodeBehind<? extends PresentationModel> when all UIs are updated
-    protected Initializable parentController;
+    protected Initializable parent;
 
     @FXML protected Parent root;
 
@@ -71,13 +71,13 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
     }
 
     /**
-     * @param parentController Controller who has created this.getClass().getSimpleName() instance (via
-     *                         navigateToView/FXMLLoader).
+     * @param parent Controller who has created this.getClass().getSimpleName() instance (via
+     *               navigateToView/FXMLLoader).
      */
-    public void setParentController(Initializable parentController) {
+    public void setParent(Initializable parent) {
         log.trace("Lifecycle: setParentController " + this.getClass().getSimpleName() + " / parent = " +
-                parentController);
-        this.parentController = parentController;
+                parent);
+        this.parent = parent;
     }
 
     /**

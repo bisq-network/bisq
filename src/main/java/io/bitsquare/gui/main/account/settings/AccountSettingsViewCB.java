@@ -160,7 +160,7 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
             final Pane view = loader.load();
             content.getChildren().setAll(view);
             childController = loader.getController();
-            ((ViewCB<? extends PresentationModel>) childController).setParentController(this);
+            ((ViewCB<? extends PresentationModel>) childController).setParent(this);
             ((ContextAware) childController).useSettingsContext(true);
             return childController;
         } catch (IOException e) {

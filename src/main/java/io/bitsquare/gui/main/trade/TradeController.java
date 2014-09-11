@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.trade;
 
-import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferViewCB;
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class TradeController extends CachedViewController {
+public class TradeController extends CachedViewCB<TradePM> {
     private static final Logger log = LoggerFactory.getLogger(TradeController.class);
 
     protected OrderBookController orderBookController;
@@ -54,19 +54,24 @@ public class TradeController extends CachedViewController {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected TradeController(TradePM presentationModel) {
+        super(presentationModel);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
-        loadViewAndGetChildController(NavigationItem.ORDER_BOOK);
-    }
-
-    @Override
-    public void deactivate() {
-        super.deactivate();
+        loadView(NavigationItem.ORDER_BOOK);
     }
 
     @Override
@@ -99,13 +104,27 @@ public class TradeController extends CachedViewController {
         });
     }
 
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void deactivate() {
+        super.deactivate();
+    }
+
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void terminate() {
+        super.terminate();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
+    // @Override
+    public Initializable loadView(NavigationItem navigationItem) {
+        super.loadView(navigationItem);
+
         TabPane tabPane = (TabPane) root;
         if (navigationItem == NavigationItem.ORDER_BOOK) {
             checkArgument(orderBookLoader == null);
@@ -122,7 +141,7 @@ public class TradeController extends CachedViewController {
                 log.error(e.getMessage());
             }
             orderBookController = orderBookLoader.getController();
-            orderBookController.setParentController(this);
+            orderBookController.setParent(this);
             return orderBookController;
         }
         else if (navigationItem == NavigationItem.CREATE_OFFER) {
@@ -134,7 +153,7 @@ public class TradeController extends CachedViewController {
             try {
                 createOfferView = loader.load();
                 createOfferCodeBehind = loader.getController();
-                createOfferCodeBehind.setParentController(this);
+                createOfferCodeBehind.setParent(this);
                 createOfferCodeBehind.setOnClose(() -> {
                     orderBookController.onCreateOfferViewRemoved();
                     return null;
@@ -159,7 +178,8 @@ public class TradeController extends CachedViewController {
             try {
                 final Parent view = loader.load();
                 takeOfferController = loader.getController();
-                takeOfferController.setParentController(this);
+                //TODO
+                //takeOfferController.setParentController(this);
                 final Tab tab = new Tab("Take offer");
                 tab.setContent(view);
                 tabPane.getTabs().add(tab);

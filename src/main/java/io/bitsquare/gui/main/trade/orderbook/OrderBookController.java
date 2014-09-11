@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.trade.orderbook;
 
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.OverlayController;
@@ -82,7 +82,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OrderBookController extends CachedViewController {
+public class OrderBookController extends CachedViewCB<OrderBookPM> {
     private static final Logger log = LoggerFactory.getLogger(OrderBookController.class);
 
     private NavigationController navigationController;
@@ -114,11 +114,14 @@ public class OrderBookController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private OrderBookController(NavigationController navigationController,
+    private OrderBookController(OrderBookPM presentationModel,
+                                NavigationController navigationController,
                                 OverlayController overlayController,
                                 OrderBook orderBook, User user,
                                 MessageFacade messageFacade,
                                 WalletFacade walletFacade, Settings settings, Persistence persistence) {
+        super(presentationModel);
+
         this.navigationController = navigationController;
         this.overlayController = overlayController;
         this.orderBook = orderBook;
@@ -173,13 +176,13 @@ public class OrderBookController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setParentController(ViewController parentController) {
-        super.setParentController(parentController);
+    public void setParent(Initializable parent) {
+        super.setParent(parent);
     }
 
     @Override
-    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
-        return null;
+    public Initializable loadView(NavigationItem navigationItem) {
+        return super.loadView(navigationItem);
     }
 
 
@@ -242,12 +245,12 @@ public class OrderBookController extends CachedViewController {
 
             //TODO Remove that when all UIs are converted to CodeBehind
             Initializable nextController = null;
-            if (parentController != null) {
-                if (parentController instanceof ViewController)
-                    nextController = ((ViewController) parentController).loadViewAndGetChildController(NavigationItem
+            if (parent != null) {
+                if (parent instanceof ViewController)
+                    nextController = ((ViewController) parent).loadViewAndGetChildController(NavigationItem
                             .CREATE_OFFER);
-                else if (parentController instanceof ViewCB)
-                    nextController = ((ViewCB) parentController).loadView(NavigationItem
+                else if (parent instanceof ViewCB)
+                    nextController = ((ViewCB) parent).loadView(NavigationItem
                             .CREATE_OFFER);
             }
 
@@ -322,13 +325,13 @@ public class OrderBookController extends CachedViewController {
 
             //TODO Remove that when all UIs are converted to CodeBehind
             TakeOfferController takeOfferController = null;
-            if (parentController != null) {
-                if (parentController instanceof ViewController)
-                    takeOfferController = (TakeOfferController) ((ViewController) parentController)
+            if (parent != null) {
+                if (parent instanceof ViewController)
+                    takeOfferController = (TakeOfferController) ((ViewController) parent)
                             .loadViewAndGetChildController(NavigationItem
                                     .TAKE_OFFER);
-                else if (parentController instanceof ViewCB)
-                    takeOfferController = (TakeOfferController) ((ViewCB) parentController)
+                else if (parent instanceof ViewCB)
+                    takeOfferController = (TakeOfferController) ((ViewCB) parent)
                             .loadView(NavigationItem
                                     .TAKE_OFFER);
             }

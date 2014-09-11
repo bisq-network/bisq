@@ -117,8 +117,8 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         try {
-                            if (parentController instanceof MultiStepNavigation)
-                                ((MultiStepNavigation) parentController).nextStep(RegistrationViewCB.this);
+                            if (parent instanceof MultiStepNavigation)
+                                ((MultiStepNavigation) parent).nextStep(RegistrationViewCB.this);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

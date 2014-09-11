@@ -185,7 +185,7 @@ public class MainViewCB extends ViewCB<MainPM> {
             childController = loader.getController();
 
             if (childController instanceof ViewCB)
-                ((ViewCB) childController).setParentController(this);
+                ((ViewCB) childController).setParent(this);
 
             presentationModel.setSelectedNavigationItem(navigationItem);
             return childController;

@@ -170,7 +170,7 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
             final Pane view = loader.load();
             content.getChildren().setAll(view);
             childController = loader.getController();
-            ((ViewCB<? extends PresentationModel>) childController).setParentController(this);
+            ((ViewCB<? extends PresentationModel>) childController).setParent(this);
             ((ContextAware) childController).useSettingsContext(false);
             return childController;
         } catch (IOException e) {

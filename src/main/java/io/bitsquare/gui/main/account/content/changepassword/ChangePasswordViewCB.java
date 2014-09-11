@@ -107,8 +107,8 @@ public class ChangePasswordViewCB extends CachedViewCB<ChangePasswordPM> impleme
     private void onSaved() {
         boolean result = presentationModel.requestSavePassword();
         if (result) {
-            if (parentController instanceof MultiStepNavigation)
-                ((MultiStepNavigation) parentController).nextStep(this);
+            if (parent instanceof MultiStepNavigation)
+                ((MultiStepNavigation) parent).nextStep(this);
         }
         else {
             log.debug(presentationModel.getErrorMessage()); // TODO use validating TF
@@ -122,8 +122,8 @@ public class ChangePasswordViewCB extends CachedViewCB<ChangePasswordPM> impleme
 
     @FXML
     private void onSkipped() {
-        if (parentController instanceof MultiStepNavigation)
-            ((MultiStepNavigation) parentController).nextStep(this);
+        if (parent instanceof MultiStepNavigation)
+            ((MultiStepNavigation) parent).nextStep(this);
     }
 
 }

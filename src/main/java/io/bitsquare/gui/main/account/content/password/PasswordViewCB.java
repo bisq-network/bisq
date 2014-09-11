@@ -107,8 +107,8 @@ public class PasswordViewCB extends CachedViewCB<PasswordPM> implements ContextA
     private void onSaved() {
         boolean result = presentationModel.requestSavePassword();
         if (result) {
-            if (parentController instanceof MultiStepNavigation)
-                ((MultiStepNavigation) parentController).nextStep(this);
+            if (parent instanceof MultiStepNavigation)
+                ((MultiStepNavigation) parent).nextStep(this);
         }
         else {
             // TODO use validating passwordTF
@@ -118,8 +118,8 @@ public class PasswordViewCB extends CachedViewCB<PasswordPM> implements ContextA
 
     @FXML
     private void onSkipped() {
-        if (parentController instanceof MultiStepNavigation)
-            ((MultiStepNavigation) parentController).nextStep(this);
+        if (parent instanceof MultiStepNavigation)
+            ((MultiStepNavigation) parent).nextStep(this);
     }
 
     @FXML

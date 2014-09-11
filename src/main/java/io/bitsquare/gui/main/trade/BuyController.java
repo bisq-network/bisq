@@ -19,7 +19,15 @@ package io.bitsquare.gui.main.trade;
 
 import io.bitsquare.trade.Direction;
 
+import javax.inject.Inject;
+
 public class BuyController extends TradeController {
+
+    @Inject
+    public BuyController(TradePM presentationModel) {
+        super(presentationModel);
+    }
+
     @Override
     protected void applyDirection() {
         //tabPane.getSelectionModel().select(0);
