@@ -38,8 +38,6 @@ import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
-import io.bitsquare.trade.orderbook.OrderBook;
-import io.bitsquare.trade.orderbook.OrderBookFilter;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
 

@@ -15,11 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.orderbook;
+package io.bitsquare.gui.main.trade.orderbook;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.gui.main.trade.orderbook.OrderBookListItem;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.msg.MessageFacade;
@@ -50,7 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /*
-TODO
+TODO move to OrderBookModel when converted to new UI structure
 remove dependencies to tomp2p
 import net.tomp2p.peers.Number160;
 import net.tomp2p.storage.Data;

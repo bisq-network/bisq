@@ -20,7 +20,6 @@ package io.bitsquare.trade;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
-import io.bitsquare.gui.components.Popups;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.TakeOfferRequestListener;
 import io.bitsquare.persistence.Persistence;
@@ -321,9 +320,9 @@ public class TradeManager {
                         @Override
                         public void onFault(Throwable throwable, BuyerAcceptsOfferProtocol.State state) {
                             log.error("Error while executing trade process at state: " + state + " / " + throwable);
-                            Popups.openErrorPopup("Error while executing trade process",
+                           /* Popups.openErrorPopup("Error while executing trade process",
                                     "Error while executing trade process at state: " + state + " / " +
-                                            throwable);
+                                            throwable);*/
                         }
 
                         @Override

@@ -21,6 +21,7 @@ import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.trade.Direction;
+import io.bitsquare.user.User;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.utils.CoinFormat;
@@ -37,12 +38,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.*;
 
-//TODO a lot of old trash... need to cleanup...
+//TODO convert to non static
 
 /**
  * Central point for formatting and input parsing.
@@ -70,6 +73,17 @@ public class BSFormatter {
     private static final CoinFormat fiatFormat = CoinFormat.FIAT.repeatOptionalDecimals(0, 0);
 
     private static String currencyCode = Currency.getInstance(Locale.getDefault()).getCurrencyCode();
+
+    @Inject
+    public BSFormatter(User user) {
+        if (user.currentBankAccountProperty().get() == null)
+            setFiatCurrencyCode(Currency.getInstance(Locale.getDefault()).getCurrencyCode());
+        else
+            setFiatCurrencyCode(user.currentBankAccountProperty().get().getCurrency().getCurrencyCode());
+
+        user.currentBankAccountProperty().addListener((ov, oldValue, newValue) ->
+                setFiatCurrencyCode(newValue.getCurrency().getCurrencyCode()));
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

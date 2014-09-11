@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.orderbook;
+package io.bitsquare.gui.main.trade.orderbook;
 
 import io.bitsquare.trade.Direction;
 
@@ -24,6 +24,7 @@ import com.google.bitcoin.utils.Fiat;
 
 import javafx.beans.property.SimpleBooleanProperty;
 
+//TODO move to OrderBookModel when converted to new UI structure
 public class OrderBookFilter {
     // TODO use ObjectProperty<Direction> instead
     private final SimpleBooleanProperty directionChangedProperty = new SimpleBooleanProperty();

@@ -21,6 +21,7 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.gui.AWTSystemTray;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.components.ConfidenceDisplay;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
@@ -32,7 +33,6 @@ import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.util.AWTSystemTray;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.ECKey;

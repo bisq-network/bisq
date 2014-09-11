@@ -24,6 +24,9 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.OverlayController;
+import io.bitsquare.gui.main.trade.orderbook.OrderBook;
+import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.msg.BootstrappedPeerFactory;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.P2PNode;
@@ -31,7 +34,6 @@ import io.bitsquare.msg.SeedNodeAddress;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.orderbook.OrderBook;
 import io.bitsquare.user.User;
 
 import com.google.bitcoin.core.NetworkParameters;
@@ -67,6 +69,8 @@ public class BitSquareModule extends AbstractModule {
         bind(TradeManager.class).asEagerSingleton();
         bind(NavigationController.class).asEagerSingleton();
         bind(OverlayController.class).asEagerSingleton();
+        bind(BSFormatter.class).asEagerSingleton();
+        bind(FiatValidator.class).asEagerSingleton();
 
 
         //bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.MAIN_NET);

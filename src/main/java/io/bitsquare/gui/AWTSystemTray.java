@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.util;
+package io.bitsquare.gui;
 
 
 import io.bitsquare.BitSquare;

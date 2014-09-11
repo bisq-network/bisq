@@ -19,6 +19,7 @@ package io.bitsquare;
 
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.BitSquareModule;
+import io.bitsquare.gui.AWTSystemTray;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.Profiler;
@@ -26,7 +27,6 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
-import io.bitsquare.util.AWTSystemTray;
 import io.bitsquare.util.BSFXMLLoader;
 
 import com.google.common.base.Throwables;

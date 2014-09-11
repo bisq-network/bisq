@@ -19,13 +19,13 @@ package io.bitsquare.gui.main.trade.createoffer;
 
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.main.trade.orderbook.OrderBookFilter;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.Direction;
-import io.bitsquare.trade.orderbook.OrderBookFilter;
 
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.Coin;

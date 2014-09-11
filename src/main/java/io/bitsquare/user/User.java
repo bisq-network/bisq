@@ -18,8 +18,6 @@
 package io.bitsquare.user;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.util.DSAKeyUtil;
 
 import java.io.Serializable;
@@ -28,9 +26,7 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 
 import java.util.ArrayList;
-import java.util.Currency;
 import java.util.List;
-import java.util.Locale;
 
 import javax.annotation.Nullable;
 
@@ -88,8 +84,6 @@ public class User implements Serializable {
             // TODO use separate thread. DSAKeyUtil.getKeyPair() runs in same thread now
             messageKeyPair = DSAKeyUtil.generateKeyPair();
         }
-
-        BSFormatter.setFiatCurrencyCode(Currency.getInstance(Locale.getDefault()).getCurrencyCode());
     }
 
     public void setBankAccount(BankAccount bankAccount) {
@@ -125,11 +119,6 @@ public class User implements Serializable {
 
     public void setCurrentBankAccount(@Nullable BankAccount bankAccount) {
         currentBankAccount.set(bankAccount);
-
-        if (currentBankAccount.get() != null) {
-            BSFormatter.setFiatCurrencyCode(currentBankAccount.get().getCurrency().getCurrencyCode());
-            FiatValidator.setFiatCurrencyCode(currentBankAccount.get().getCurrency().getCurrencyCode());
-        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

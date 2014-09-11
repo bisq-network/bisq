@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.gui.AWTSystemTray;
 import io.bitsquare.gui.CodeBehind;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
@@ -27,7 +28,6 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
-import io.bitsquare.util.AWTSystemTray;
 import io.bitsquare.util.BSFXMLLoader;
 
 import java.io.IOException;

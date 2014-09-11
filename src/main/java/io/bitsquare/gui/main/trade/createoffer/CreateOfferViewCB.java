@@ -28,9 +28,9 @@ import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
+import io.bitsquare.gui.main.trade.orderbook.OrderBookFilter;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.trade.orderbook.OrderBookFilter;
 
 import java.net.URL;
 
