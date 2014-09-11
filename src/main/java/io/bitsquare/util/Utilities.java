@@ -39,6 +39,9 @@ import javafx.animation.AnimationTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * General utilities
+ */
 public class Utilities {
     private static final Logger log = LoggerFactory.getLogger(Utilities.class);
     private static long lastTimeStamp = System.currentTimeMillis();

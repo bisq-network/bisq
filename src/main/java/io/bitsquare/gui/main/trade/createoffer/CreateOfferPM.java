@@ -52,8 +52,8 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferPM.class);
 
-    private final BtcValidator btcValidator = new BtcValidator();
-    private final FiatValidator fiatValidator = new FiatValidator();
+    private final BtcValidator btcValidator;
+    private final FiatValidator fiatValidator;
 
     public final StringProperty amount = new SimpleStringProperty();
     public final StringProperty minAmount = new SimpleStringProperty();
@@ -102,8 +102,11 @@ public class CreateOfferPM extends PresentationModel<CreateOfferModel> {
 
     // non private for testing
     @Inject
-    CreateOfferPM(CreateOfferModel model) {
+    CreateOfferPM(CreateOfferModel model, FiatValidator fiatValidator, BtcValidator btcValidator) {
         super(model);
+
+        this.fiatValidator = fiatValidator;
+        this.btcValidator = btcValidator;
     }
 
 

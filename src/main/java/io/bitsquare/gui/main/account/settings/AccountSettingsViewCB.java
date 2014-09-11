@@ -17,11 +17,11 @@
 
 package io.bitsquare.gui.main.account.settings;
 
-import io.bitsquare.gui.CachedCodeBehind;
-import io.bitsquare.gui.CodeBehind;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.util.BSFXMLLoader;
 
@@ -46,7 +46,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountSettingsViewCB extends CachedCodeBehind<AccountSettingsPM> {
+public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSettingsViewCB.class);
 
@@ -160,7 +160,7 @@ public class AccountSettingsViewCB extends CachedCodeBehind<AccountSettingsPM> {
             final Pane view = loader.load();
             content.getChildren().setAll(view);
             childController = loader.getController();
-            ((CodeBehind<? extends PresentationModel>) childController).setParentController(this);
+            ((ViewCB<? extends PresentationModel>) childController).setParentController(this);
             ((ContextAware) childController).useSettingsContext(true);
             return childController;
         } catch (IOException e) {
@@ -174,7 +174,7 @@ public class AccountSettingsViewCB extends CachedCodeBehind<AccountSettingsPM> {
 class MenuItem extends ToggleButton {
     private static final Logger log = LoggerFactory.getLogger(MenuItem.class);
 
-    private CodeBehind<? extends PresentationModel> childController;
+    private ViewCB<? extends PresentationModel> childController;
 
     private final AccountSettingsViewCB parentCB;
     private final Parent content;

@@ -12,10 +12,10 @@ import org.slf4j.LoggerFactory;
  * active and awake it at reactivation.
  * * @param <T>       The PresentationModel used in that class
  */
-public class CachedCodeBehind<T extends PresentationModel> extends CodeBehind<T> {
-    private static final Logger log = LoggerFactory.getLogger(CachedCodeBehind.class);
+public class CachedViewCB<T extends PresentationModel> extends ViewCB<T> {
+    private static final Logger log = LoggerFactory.getLogger(CachedViewCB.class);
 
-    public CachedCodeBehind(T presentationModel) {
+    public CachedViewCB(T presentationModel) {
         super(presentationModel);
     }
 
@@ -47,7 +47,7 @@ public class CachedCodeBehind<T extends PresentationModel> extends CodeBehind<T>
      */
     public void activate() {
         log.trace("Lifecycle: activate " + this.getClass().getSimpleName());
-        if (childController instanceof CachedCodeBehind) ((CachedCodeBehind) childController).activate();
+        if (childController instanceof CachedViewCB) ((CachedViewCB) childController).activate();
 
         presentationModel.activate();
     }
@@ -57,7 +57,7 @@ public class CachedCodeBehind<T extends PresentationModel> extends CodeBehind<T>
      */
     public void deactivate() {
         log.trace("Lifecycle: deactivate " + this.getClass().getSimpleName());
-        if (childController instanceof CachedCodeBehind) ((CachedCodeBehind) childController).deactivate();
+        if (childController instanceof CachedViewCB) ((CachedViewCB) childController).deactivate();
 
         presentationModel.deactivate();
     }

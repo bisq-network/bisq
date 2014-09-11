@@ -35,7 +35,8 @@ import javafx.scene.control.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// TODO refactor
+// TODO in new design not used anymore
+@Deprecated
 public class ConfidenceDisplay {
     private static final Logger log = LoggerFactory.getLogger(ConfidenceDisplay.class);
 

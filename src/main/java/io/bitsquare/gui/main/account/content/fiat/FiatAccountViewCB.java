@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.account.content.fiat;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.CachedCodeBehind;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
 
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
-public class FiatAccountViewCB extends CachedCodeBehind<FiatAccountPm> implements ContextAware {
+public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(FiatAccountViewCB.class);
 
@@ -94,10 +94,10 @@ public class FiatAccountViewCB extends CachedCodeBehind<FiatAccountPm> implement
         regionComboBox.setConverter(presentationModel.getRegionConverter());
         countryComboBox.setConverter(presentationModel.getCountryConverter());
 
-        titleTextField.setValidator(presentationModel.getValidator());
-        holderNameTextField.setValidator(presentationModel.getValidator());
-        primaryIDTextField.setValidator(presentationModel.getValidator());
-        secondaryIDTextField.setValidator(presentationModel.getValidator());
+        titleTextField.setValidator(presentationModel.getBankAccountNumberValidator());
+        holderNameTextField.setValidator(presentationModel.getBankAccountNumberValidator());
+        primaryIDTextField.setValidator(presentationModel.getBankAccountNumberValidator());
+        secondaryIDTextField.setValidator(presentationModel.getBankAccountNumberValidator());
     }
 
     @Override

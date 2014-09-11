@@ -20,10 +20,10 @@ package io.bitsquare.gui.main.trade.orderbook;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
-import io.bitsquare.gui.CodeBehind;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.OverlayController;
+import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.trade.OrderBookFilter;
@@ -246,8 +246,8 @@ public class OrderBookController extends CachedViewController {
                 if (parentController instanceof ViewController)
                     nextController = ((ViewController) parentController).loadViewAndGetChildController(NavigationItem
                             .CREATE_OFFER);
-                else if (parentController instanceof CodeBehind)
-                    nextController = ((CodeBehind) parentController).loadView(NavigationItem
+                else if (parentController instanceof ViewCB)
+                    nextController = ((ViewCB) parentController).loadView(NavigationItem
                             .CREATE_OFFER);
             }
 
@@ -327,8 +327,8 @@ public class OrderBookController extends CachedViewController {
                     takeOfferController = (TakeOfferController) ((ViewController) parentController)
                             .loadViewAndGetChildController(NavigationItem
                                     .TAKE_OFFER);
-                else if (parentController instanceof CodeBehind)
-                    takeOfferController = (TakeOfferController) ((CodeBehind) parentController)
+                else if (parentController instanceof ViewCB)
+                    takeOfferController = (TakeOfferController) ((ViewCB) parentController)
                             .loadView(NavigationItem
                                     .TAKE_OFFER);
             }

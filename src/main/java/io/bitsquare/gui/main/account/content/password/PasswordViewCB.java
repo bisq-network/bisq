@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.password;
 
-import io.bitsquare.gui.CachedCodeBehind;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;
@@ -36,7 +36,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PasswordViewCB extends CachedCodeBehind<PasswordPM> implements ContextAware {
+public class PasswordViewCB extends CachedViewCB<PasswordPM> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(PasswordViewCB.class);
 

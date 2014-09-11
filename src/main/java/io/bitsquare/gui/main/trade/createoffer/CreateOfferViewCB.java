@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.trade.createoffer;
 
-import io.bitsquare.gui.CachedCodeBehind;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.OverlayController;
@@ -70,7 +70,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 // TODO Implement other positioning method in InoutTextField to display it over the field instead of right side
 // priceAmountHBox is too large after redesign as to be used as layoutReference. 
 
-public class CreateOfferViewCB extends CachedCodeBehind<CreateOfferPM> {
+public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferViewCB.class);
 
     private NavigationController navigationController;

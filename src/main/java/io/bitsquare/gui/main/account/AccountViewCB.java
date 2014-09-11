@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.main.account;
 
-import io.bitsquare.gui.CachedCodeBehind;
-import io.bitsquare.gui.CodeBehind;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.main.account.setup.AccountSetupViewCB;
 import io.bitsquare.util.BSFXMLLoader;
 
@@ -39,7 +39,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountViewCB extends CachedCodeBehind<AccountPM> {
+public class AccountViewCB extends CachedViewCB<AccountPM> {
 
     private static final Logger log = LoggerFactory.getLogger(AccountViewCB.class);
 
@@ -110,7 +110,7 @@ public class AccountViewCB extends CachedCodeBehind<AccountPM> {
             Pane view = loader.load();
             tab.setContent(view);
             Initializable childController = loader.getController();
-            ((CodeBehind) childController).setParentController(this);
+            ((ViewCB) childController).setParentController(this);
 
             if (childController instanceof AccountSetupViewCB)
                 ((AccountSetupViewCB) childController).setRemoveCallBack(() -> {

@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
  *
  * @param <T> The PresentationModel used in that class
  */
-public class CodeBehind<T extends PresentationModel> implements Initializable {
-    private static final Logger log = LoggerFactory.getLogger(CodeBehind.class);
+public class ViewCB<T extends PresentationModel> implements Initializable {
+    private static final Logger log = LoggerFactory.getLogger(ViewCB.class);
 
     protected T presentationModel;
     //TODO Initializable has to be changed to CodeBehind<? extends PresentationModel> when all UIs are updated
@@ -26,11 +26,11 @@ public class CodeBehind<T extends PresentationModel> implements Initializable {
     protected Initializable parentController;
     @FXML protected Parent root;
 
-    public CodeBehind(T presentationModel) {
+    public ViewCB(T presentationModel) {
         this.presentationModel = presentationModel;
     }
 
-    public CodeBehind() {
+    public ViewCB() {
     }
 
     /**
@@ -61,7 +61,7 @@ public class CodeBehind<T extends PresentationModel> implements Initializable {
     public void terminate() {
         log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
         if (childController != null)
-            ((CodeBehind<? extends PresentationModel>) childController).terminate();
+            ((ViewCB<? extends PresentationModel>) childController).terminate();
 
         presentationModel.deactivate();
         presentationModel.terminate();

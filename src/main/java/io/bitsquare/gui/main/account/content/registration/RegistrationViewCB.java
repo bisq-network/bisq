@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.registration;
 
-import io.bitsquare.gui.CachedCodeBehind;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.OverlayController;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.btc.AddressTextField;
@@ -48,7 +48,7 @@ import org.controlsfx.dialog.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RegistrationViewCB extends CachedCodeBehind<RegistrationPM> implements ContextAware {
+public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(RegistrationViewCB.class);
 

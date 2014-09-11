@@ -24,6 +24,9 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.*;
 
+/**
+ * Utility class for validating domain data.
+ */
 public class Validator {
     private static final Logger log = LoggerFactory.getLogger(Validator.class);
 

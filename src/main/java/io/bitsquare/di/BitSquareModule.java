@@ -26,7 +26,11 @@ import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.OverlayController;
 import io.bitsquare.gui.main.trade.orderbook.OrderBook;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
+import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
+import io.bitsquare.gui.util.validation.InputValidator;
+import io.bitsquare.gui.util.validation.PasswordValidator;
 import io.bitsquare.msg.BootstrappedPeerFactory;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.P2PNode;
@@ -70,7 +74,12 @@ public class BitSquareModule extends AbstractModule {
         bind(NavigationController.class).asEagerSingleton();
         bind(OverlayController.class).asEagerSingleton();
         bind(BSFormatter.class).asEagerSingleton();
+
+        bind(BankAccountNumberValidator.class).asEagerSingleton();
+        bind(BtcValidator.class).asEagerSingleton();
         bind(FiatValidator.class).asEagerSingleton();
+        bind(InputValidator.class).asEagerSingleton();
+        bind(PasswordValidator.class).asEagerSingleton();
 
 
         //bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.MAIN_NET);

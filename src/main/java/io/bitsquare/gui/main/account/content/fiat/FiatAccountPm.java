@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
     private static final Logger log = LoggerFactory.getLogger(FiatAccountPm.class);
 
-    private final BankAccountNumberValidator validator = new BankAccountNumberValidator();
+    private final BankAccountNumberValidator bankAccountNumberValidator;
 
     public final StringProperty title = new SimpleStringProperty();
     public final StringProperty holderName = new SimpleStringProperty();
@@ -67,8 +67,9 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private FiatAccountPm(FiatAccountModel model) {
+    private FiatAccountPm(FiatAccountModel model, BankAccountNumberValidator bankAccountNumberValidator) {
         super(model);
+        this.bankAccountNumberValidator = bankAccountNumberValidator;
     }
 
 
@@ -264,8 +265,8 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
         return model.getAllCountriesFor(selectedRegion);
     }
 
-    public BankAccountNumberValidator getValidator() {
-        return validator;
+    public BankAccountNumberValidator getBankAccountNumberValidator() {
+        return bankAccountNumberValidator;
     }
 
 
@@ -294,13 +295,13 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private InputValidator.ValidationResult validateInput() {
-        InputValidator.ValidationResult result = validator.validate(model.title.get());
+        InputValidator.ValidationResult result = bankAccountNumberValidator.validate(model.title.get());
         if (result.isValid) {
-            result = validator.validate(model.holderName.get());
+            result = bankAccountNumberValidator.validate(model.holderName.get());
             if (result.isValid) {
-                result = validator.validate(model.primaryID.get());
+                result = bankAccountNumberValidator.validate(model.primaryID.get());
                 if (result.isValid) {
-                    result = validator.validate(model.secondaryID.get());
+                    result = bankAccountNumberValidator.validate(model.secondaryID.get());
                     if (result.isValid) {
                         if (model.currency.get() == null)
                             result = new InputValidator.ValidationResult(false,

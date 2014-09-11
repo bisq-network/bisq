@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.BitSquare;
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.CachedCodeBehind;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
@@ -53,7 +53,7 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RestrictionsViewCB extends CachedCodeBehind<RestrictionsPM> implements ContextAware {
+public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(RestrictionsViewCB.class);
 

@@ -67,8 +67,8 @@ public abstract class ViewController implements Initializable {
         if (childController != null) {
             if (childController instanceof ViewController)
                 ((ViewController) childController).terminate();
-            else if (childController instanceof CodeBehind)
-                ((CodeBehind) childController).terminate();
+            else if (childController instanceof ViewCB)
+                ((ViewCB) childController).terminate();
         }
 
     }

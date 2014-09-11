@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 public class ChangePasswordPM extends PresentationModel<ChangePasswordModel> {
     private static final Logger log = LoggerFactory.getLogger(ChangePasswordPM.class);
 
-    private final PasswordValidator passwordValidator = new PasswordValidator();
+    private final PasswordValidator passwordValidator;
 
     private String errorMessage;
 
@@ -48,8 +48,9 @@ public class ChangePasswordPM extends PresentationModel<ChangePasswordModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ChangePasswordPM(ChangePasswordModel model) {
+    private ChangePasswordPM(ChangePasswordModel model, PasswordValidator passwordValidator) {
         super(model);
+        this.passwordValidator = passwordValidator;
 
         passwordField.addListener((ov) -> saveButtonDisabled.set(!validate()));
         repeatedPasswordField.addListener((ov) -> saveButtonDisabled.set(!validate()));

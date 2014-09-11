@@ -8,7 +8,7 @@ import java.nio.file.Paths;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-// TODO update to open source file when its released
+// TODO update to open source file when its released, check licence issues
 
 /**
  * Manages the directory where the app stores all its files.

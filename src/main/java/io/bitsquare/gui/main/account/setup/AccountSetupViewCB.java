@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.main.account.setup;
 
-import io.bitsquare.gui.CachedCodeBehind;
-import io.bitsquare.gui.CodeBehind;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.account.content.fiat.FiatAccountViewCB;
@@ -51,7 +51,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountSetupViewCB extends CachedCodeBehind<AccountSetupPM> implements MultiStepNavigation {
+public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements MultiStepNavigation {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSetupViewCB.class);
 
@@ -122,7 +122,7 @@ public class AccountSetupViewCB extends CachedCodeBehind<AccountSetupPM> impleme
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void nextStep(CodeBehind<? extends PresentationModel> childView) {
+    public void nextStep(ViewCB<? extends PresentationModel> childView) {
         if (childView instanceof SeedWordsViewCB) {
             seedWords.onCompleted();
             childController = password.show();
@@ -170,7 +170,7 @@ public class AccountSetupViewCB extends CachedCodeBehind<AccountSetupPM> impleme
             final Pane view = loader.load();
             content.getChildren().setAll(view);
             childController = loader.getController();
-            ((CodeBehind<? extends PresentationModel>) childController).setParentController(this);
+            ((ViewCB<? extends PresentationModel>) childController).setParentController(this);
             ((ContextAware) childController).useSettingsContext(false);
             return childController;
         } catch (IOException e) {
@@ -184,7 +184,7 @@ public class AccountSetupViewCB extends CachedCodeBehind<AccountSetupPM> impleme
 class WizardItem extends HBox {
     private static final Logger log = LoggerFactory.getLogger(WizardItem.class);
 
-    private CodeBehind<? extends PresentationModel> childController;
+    private ViewCB<? extends PresentationModel> childController;
 
     private final ImageView imageView;
     private final Label titleLabel;
@@ -232,7 +232,7 @@ class WizardItem extends HBox {
         getChildren().addAll(imageView, vBox);
     }
 
-    CodeBehind<? extends PresentationModel> show() {
+    ViewCB<? extends PresentationModel> show() {
         parentCB.loadView(navigationItem);
         setId("wizard-item-background-active");
         imageView.setImage(ImageUtil.getIconImage(ImageUtil.ARROW_BLUE));

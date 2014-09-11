@@ -15,43 +15,48 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.util;
-
-import io.bitsquare.gui.util.validation.BtcValidator;
-
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.NetworkParameters;
+package io.bitsquare.gui.util.validation;
 
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class BtcValidatorTest {
+public class FiatValidatorTest {
     @Test
-    public void testIsValid() {
-        BtcValidator validator = new BtcValidator();
+    public void testValidate() {
+        FiatValidator validator = new FiatValidator(null);
+        NumberValidator.ValidationResult validationResult;
+
 
         assertTrue(validator.validate("1").isValid);
         assertTrue(validator.validate("1,1").isValid);
         assertTrue(validator.validate("1.1").isValid);
         assertTrue(validator.validate(",1").isValid);
         assertTrue(validator.validate(".1").isValid);
-        assertTrue(validator.validate("0.12345678").isValid);
-        assertTrue(validator.validate(Coin.SATOSHI.toPlainString()).isValid);
-        assertTrue(validator.validate(NetworkParameters.MAX_MONEY.toPlainString()).isValid);
+        assertTrue(validator.validate("0.01").isValid);
+        assertTrue(validator.validate("1000000.00").isValid);
+        assertTrue(validator.validate(String.valueOf(FiatValidator.MIN_FIAT_VALUE)).isValid);
+        assertTrue(validator.validate(String.valueOf(FiatValidator.MAX_FIAT_VALUE)).isValid);
 
         assertFalse(validator.validate(null).isValid);
         assertFalse(validator.validate("").isValid);
+        assertFalse(validator.validate("a").isValid);
+        assertFalse(validator.validate("2a").isValid);
+        assertFalse(validator.validate("a2").isValid);
         assertFalse(validator.validate("0").isValid);
+        assertFalse(validator.validate("-1").isValid);
         assertFalse(validator.validate("0.0").isValid);
         assertFalse(validator.validate("0,1,1").isValid);
         assertFalse(validator.validate("0.1.1").isValid);
         assertFalse(validator.validate("1,000.1").isValid);
         assertFalse(validator.validate("1.000,1").isValid);
-        assertFalse(validator.validate("0.123456789").isValid);
-        assertFalse(validator.validate("-1").isValid);
-        assertFalse(validator.validate(String.valueOf(NetworkParameters.MAX_MONEY.longValue() + Coin.SATOSHI
-                .longValue())).isValid);
-    }
+        assertFalse(validator.validate("0.009").isValid);
+        assertFalse(validator.validate("1000000.01").isValid);
 
+        assertFalse(validator.validate(String.valueOf(FiatValidator.MIN_FIAT_VALUE - 0.0000001)).isValid);
+        assertFalse(validator.validate(String.valueOf(FiatValidator.MAX_FIAT_VALUE + 0.0000001)).isValid);
+        assertFalse(validator.validate(String.valueOf(Double.MIN_VALUE)).isValid);
+        assertFalse(validator.validate(String.valueOf(Double.MAX_VALUE)).isValid);
+
+    }
 }

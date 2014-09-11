@@ -19,6 +19,8 @@ package io.bitsquare.gui.main.trade.createoffer;
 
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.validation.BtcValidator;
+import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.locale.Country;
 
 import com.google.bitcoin.core.Coin;
@@ -47,7 +49,7 @@ public class CreateOfferPMTest {
         BSFormatter.setLocale(Locale.US);
         BSFormatter.setFiatCurrencyCode("USD");
 
-        presenter = new CreateOfferPM(model);
+        presenter = new CreateOfferPM(model, new FiatValidator(null), new BtcValidator());
         presenter.initialized();
     }
 

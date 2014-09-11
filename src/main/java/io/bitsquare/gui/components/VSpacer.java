@@ -20,6 +20,8 @@ package io.bitsquare.gui.components;
 
 import javafx.scene.layout.*;
 
+// TODO remove and use margin or padding instead
+@Deprecated
 public class VSpacer extends Pane {
     public VSpacer() {
     }

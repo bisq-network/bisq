@@ -55,6 +55,8 @@ public class BSFXMLLoader {
         this(url, true);
     }
 
+    // TODO check relationship with CachedViewCB -> derive caching strategy, but there are some special cases where 
+    // we need an override, as caching is done manually in the client class
     public BSFXMLLoader(URL url, boolean useCaching) {
         this.url = url;
 

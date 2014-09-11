@@ -94,6 +94,7 @@ public class TradeManager {
     private final Map<String, Offer> offers;
     private final Map<String, Trade> trades;
 
+    // TODO There might be multiple pending trades
     private Trade pendingTrade;
 
 

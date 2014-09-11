@@ -19,10 +19,10 @@ package io.bitsquare.gui.main;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.AWTSystemTray;
-import io.bitsquare.gui.CodeBehind;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.OverlayController;
+import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.ImageUtil;
@@ -51,7 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class MainViewCB extends CodeBehind<MainPM> {
+public class MainViewCB extends ViewCB<MainPM> {
     private static final Logger log = LoggerFactory.getLogger(MainViewCB.class);
 
     private NavigationController navigationController;
@@ -185,8 +185,8 @@ public class MainViewCB extends CodeBehind<MainPM> {
             contentContainer.getChildren().setAll(view);
             childController = loader.getController();
 
-            if (childController instanceof CodeBehind)
-                ((CodeBehind) childController).setParentController(this);
+            if (childController instanceof ViewCB)
+                ((ViewCB) childController).setParentController(this);
 
             presentationModel.setSelectedNavigationItem(navigationItem);
             return childController;

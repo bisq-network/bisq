@@ -22,8 +22,8 @@ import io.bitsquare.gui.main.trade.createoffer.CreateOfferPMTest;
 import io.bitsquare.gui.util.BSFormatterTest;
 import io.bitsquare.gui.util.BitSquareConverterTest;
 import io.bitsquare.gui.util.BitSquareNumberValidatorTest;
-import io.bitsquare.gui.util.BtcValidatorTest;
-import io.bitsquare.gui.util.FiatValidatorTest;
+import io.bitsquare.gui.util.validation.BtcValidatorTest;
+import io.bitsquare.gui.util.validation.FiatValidatorTest;
 import io.bitsquare.msg.P2PNodeTest;
 
 import org.junit.runner.RunWith;
