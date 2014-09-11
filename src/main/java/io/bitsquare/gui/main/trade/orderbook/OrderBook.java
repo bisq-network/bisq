@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.trade.orderbook;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.gui.main.trade.OrderBookFilter;
+import io.bitsquare.gui.main.trade.OrderBookInfo;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.msg.MessageFacade;
@@ -106,12 +106,12 @@ public class OrderBook implements OrderBookListener {
         tradeManager.removeOffer(offer);
     }
 
-    public void applyFilter(OrderBookFilter orderBookFilter) {
+    public void applyFilter(OrderBookInfo orderBookInfo) {
         filteredList.setPredicate(orderBookListItem -> {
             Offer offer = orderBookListItem.getOffer();
             BankAccount currentBankAccount = user.getCurrentBankAccount();
 
-            if (orderBookFilter == null || currentBankAccount == null || orderBookFilter.getDirection() == null) {
+            if (orderBookInfo == null || currentBankAccount == null || orderBookInfo.getDirection() == null) {
                 return false;
             }
 
@@ -128,19 +128,19 @@ public class OrderBook implements OrderBookListener {
             // Apply applyFilter only if there is a valid value set
             // The requested amount must be lower or equal then the offer amount
             boolean amountResult = true;
-            if (orderBookFilter.getAmount() != null)
-                amountResult = orderBookFilter.getAmount().compareTo(offer.getAmount()) <= 0;
+            if (orderBookInfo.getAmount() != null)
+                amountResult = orderBookInfo.getAmount().compareTo(offer.getAmount()) <= 0;
 
             // The requested trade direction must be opposite of the offerList trade direction
-            boolean directionResult = !orderBookFilter.getDirection().equals(offer.getDirection());
+            boolean directionResult = !orderBookInfo.getDirection().equals(offer.getDirection());
 
             // Apply applyFilter only if there is a valid value set
             boolean priceResult = true;
-            if (orderBookFilter.getPrice() != null) {
+            if (orderBookInfo.getPrice() != null) {
                 if (offer.getDirection() == Direction.SELL)
-                    priceResult = orderBookFilter.getPrice().compareTo(offer.getPrice()) >= 0;
+                    priceResult = orderBookInfo.getPrice().compareTo(offer.getPrice()) >= 0;
                 else
-                    priceResult = orderBookFilter.getPrice().compareTo(offer.getPrice()) <= 0;
+                    priceResult = orderBookInfo.getPrice().compareTo(offer.getPrice()) <= 0;
             }
 
             // The arbitrator defined in the offer must match one of the accepted arbitrators defined in the settings

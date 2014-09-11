@@ -22,16 +22,18 @@ import io.bitsquare.trade.Direction;
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.utils.Fiat;
 
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
-//TODO move to OrderBookModel when converted to new UI structure
-public class OrderBookFilter {
-    // TODO use ObjectProperty<Direction> instead
-    private final SimpleBooleanProperty directionChangedProperty = new SimpleBooleanProperty();
+/**
+ * Shared data between the different trade UIs
+ */
+public class OrderBookInfo {
+
+    private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
 
     private Fiat price;
     private Coin amount;
-    private Direction direction;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -46,19 +48,14 @@ public class OrderBookFilter {
         this.amount = amount;
     }
 
-    public Direction getDirection() {
-        return direction;
+    public void setDirection(Direction direction) {
+        this.direction.set(direction);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setDirection(Direction direction) {
-        this.direction = direction;
-        directionChangedProperty.set(!directionChangedProperty.get());
-    }
 
     public Fiat getPrice() {
         return price;
@@ -68,7 +65,13 @@ public class OrderBookFilter {
         this.price = price;
     }
 
-    public SimpleBooleanProperty getDirectionChangedProperty() {
-        return directionChangedProperty;
+    public Direction getDirection() {
+        return direction.get();
     }
+
+    public ObjectProperty<Direction> directionProperty() {
+        return direction;
+    }
+
+
 }

@@ -47,8 +47,8 @@ public abstract class TradeViewCB extends CachedViewCB<TradePM> {
     private static final Logger log = LoggerFactory.getLogger(TradeViewCB.class);
 
     protected OrderBookViewCB orderBookViewCB;
-    protected CreateOfferViewCB createOfferViewCB;
-    protected TakeOfferController takeOfferController;
+    private CreateOfferViewCB createOfferViewCB;
+    private TakeOfferController takeOfferController;
     private Node createOfferView;
 
 

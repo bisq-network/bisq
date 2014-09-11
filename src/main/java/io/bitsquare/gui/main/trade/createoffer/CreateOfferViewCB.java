@@ -29,7 +29,7 @@ import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
-import io.bitsquare.gui.main.trade.OrderBookFilter;
+import io.bitsquare.gui.main.trade.OrderBookInfo;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
 
@@ -162,8 +162,8 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     // Public methods (called form other views/CB)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setOrderBookFilter(OrderBookFilter orderBookFilter) {
-        presentationModel.setOrderBookFilter(orderBookFilter);
+    public void setOrderBookFilter(OrderBookInfo orderBookInfo) {
+        presentationModel.setOrderBookFilter(orderBookInfo);
     }
 
 

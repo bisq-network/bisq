@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.trade.createoffer;
 
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.PresentationModel;
-import io.bitsquare.gui.main.trade.OrderBookFilter;
+import io.bitsquare.gui.main.trade.OrderBookInfo;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
@@ -154,21 +154,21 @@ public class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // setOrderBookFilter is a one time call
-    public void setOrderBookFilter(@NotNull OrderBookFilter orderBookFilter) {
-        model.setDirection(orderBookFilter.getDirection());
+    public void setOrderBookFilter(@NotNull OrderBookInfo orderBookInfo) {
+        model.setDirection(orderBookInfo.getDirection());
         directionLabel.set(model.getDirection() == Direction.BUY ? BSResources.get("shared.buy") : BSResources.get
                 ("shared.sell"));
 
         // apply only if valid
-        if (orderBookFilter.getAmount() != null && isBtcInputValid(orderBookFilter.getAmount().toPlainString())
+        if (orderBookInfo.getAmount() != null && isBtcInputValid(orderBookInfo.getAmount().toPlainString())
                 .isValid) {
-            model.amountAsCoin.set(orderBookFilter.getAmount());
-            model.minAmountAsCoin.set(orderBookFilter.getAmount());
+            model.amountAsCoin.set(orderBookInfo.getAmount());
+            model.minAmountAsCoin.set(orderBookInfo.getAmount());
         }
 
         // apply only if valid
-        if (orderBookFilter.getPrice() != null && isBtcInputValid(orderBookFilter.getPrice().toPlainString()).isValid)
-            model.priceAsFiat.set(parseToFiatWith2Decimals(orderBookFilter.getPrice().toPlainString()));
+        if (orderBookInfo.getPrice() != null && isBtcInputValid(orderBookInfo.getPrice().toPlainString()).isValid)
+            model.priceAsFiat.set(parseToFiatWith2Decimals(orderBookInfo.getPrice().toPlainString()));
     }
 
 

@@ -30,7 +30,7 @@ public class SellViewCB extends TradeViewCB {
 
     @Override
     protected void initOrderBook() {
-        orderBookViewCB.initOrderBook(Direction.SELL);
+        orderBookViewCB.initOrderBook(Direction.SELL, presentationModel.getOrderBookInfo());
     }
 
 

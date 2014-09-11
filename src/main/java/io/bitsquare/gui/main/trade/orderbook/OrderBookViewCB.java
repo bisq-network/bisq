@@ -26,7 +26,7 @@ import io.bitsquare.gui.OverlayController;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.main.trade.OrderBookFilter;
+import io.bitsquare.gui.main.trade.OrderBookInfo;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferViewCB;
 import io.bitsquare.gui.main.trade.takeoffer.TakeOfferController;
 import io.bitsquare.gui.util.BSFormatter;
@@ -88,7 +88,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     private NavigationController navigationController;
     private OverlayController overlayController;
     private final OrderBook orderBook;
-    private final OrderBookFilter orderBookFilter;
+    private OrderBookInfo orderBookInfo;
     private final User user;
     private final MessageFacade messageFacade;
     private final WalletFacade walletFacade;
@@ -130,8 +130,6 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
         this.walletFacade = walletFacade;
         this.settings = settings;
         this.persistence = persistence;
-
-        this.orderBookFilter = new OrderBookFilter();
     }
 
 
@@ -186,11 +184,13 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     }
 
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void init() {
+    public void initOrderBook(Direction direction, OrderBookInfo orderBookInfo) {
+        this.orderBookInfo = orderBookInfo;
         orderBook.init();
         offerList = orderBook.getOfferList();
         offerList.comparatorProperty().bind(orderBookTable.comparatorProperty());
@@ -202,16 +202,16 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
         // handlers
         amount.textProperty().addListener((observable, oldValue, newValue) -> {
-            orderBookFilter.setAmount(BSFormatter.parseToCoin(newValue));
+            orderBookInfo.setAmount(BSFormatter.parseToCoin(newValue));
             updateVolume();
         });
 
         price.textProperty().addListener((observable, oldValue, newValue) -> {
-            orderBookFilter.setPrice(BSFormatter.parseToFiat(newValue));
+            orderBookInfo.setPrice(BSFormatter.parseToFiat(newValue));
             updateVolume();
         });
 
-        orderBookFilter.getDirectionChangedProperty().addListener((observable) -> applyOffers());
+        orderBookInfo.directionProperty().addListener((observable) -> applyOffers());
 
         user.currentBankAccountProperty().addListener((ov) -> orderBook.loadOffers());
 
@@ -219,18 +219,9 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
         //TODO do polling until broadcast works
         setupPolling();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void initOrderBook(Direction direction) {
-        init();
         orderBookTable.getSelectionModel().clearSelection();
         price.setText("");
-        orderBookFilter.setDirection(direction);
+        this.orderBookInfo.setDirection(direction);
     }
 
 
@@ -255,7 +246,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
             }
 
             if (nextController != null)
-                ((CreateOfferViewCB) nextController).setOrderBookFilter(orderBookFilter);
+                ((CreateOfferViewCB) nextController).setOrderBookFilter(orderBookInfo);
         }
         else {
             openSetupScreen();
@@ -358,9 +349,9 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     }
 
     private void applyOffers() {
-        orderBook.applyFilter(orderBookFilter);
+        orderBook.applyFilter(orderBookInfo);
 
-        priceColumn.setSortType((orderBookFilter.getDirection() == Direction.BUY) ?
+        priceColumn.setSortType((orderBookInfo.getDirection() == Direction.BUY) ?
                 TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
         orderBookTable.sort();
 
