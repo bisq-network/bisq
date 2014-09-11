@@ -28,8 +28,6 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//TODO convert to non static
-
 /**
  * FiatNumberValidator for validating fiat values.
  * <p>
@@ -41,12 +39,8 @@ public final class FiatValidator extends NumberValidator {
     //TODO Find appropriate values - depends on currencies
     public static final double MIN_FIAT_VALUE = 0.01; // usually a cent is the smallest currency unit
     public static final double MAX_FIAT_VALUE = 1000000;
-    private static String currencyCode = "Fiat";
+    private String currencyCode = "Fiat";
 
-
-    public static void setFiatCurrencyCode(String currencyCode) {
-        FiatValidator.currencyCode = currencyCode;
-    }
 
     @Inject
     public FiatValidator(User user) {
@@ -82,6 +76,15 @@ public final class FiatValidator extends NumberValidator {
         }
 
         return result;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setter
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setFiatCurrencyCode(String currencyCode) {
+        this.currencyCode = currencyCode;
     }
 
 

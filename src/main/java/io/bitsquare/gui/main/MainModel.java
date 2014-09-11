@@ -169,8 +169,7 @@ public class MainModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onFacadesInitialised() {
-        // TODO Check this: never called on regtest
-        // Consider to use version from Mike Hearn
+        // TODO Consider to use version from Mike Hearn
         walletFacade.addDownloadListener(new WalletFacade.DownloadListener() {
             @Override
             public void progress(double percent) {

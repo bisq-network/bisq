@@ -163,7 +163,7 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
     @Override
     public void useSettingsContext(boolean useSettingsContext) {
         if (useSettingsContext) {
-            // TODO
+            // TODO not impl. yet
         }
     }
 
