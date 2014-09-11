@@ -126,8 +126,8 @@ public class CreateOfferModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialized() {
-        super.initialized();
+    public void initialize() {
+        super.initialize();
 
         // static data
         offerFeeAsCoin.set(FeePolicy.CREATE_OFFER_FEE);

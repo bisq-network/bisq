@@ -50,7 +50,7 @@ public class CreateOfferPMTest {
         BSFormatter.setFiatCurrencyCode("USD");
 
         presenter = new CreateOfferPM(model, new FiatValidator(null), new BtcValidator());
-        presenter.initialized();
+        presenter.initialize();
     }
 
 

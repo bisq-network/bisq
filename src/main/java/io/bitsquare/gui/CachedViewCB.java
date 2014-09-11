@@ -30,16 +30,19 @@ public class CachedViewCB<T extends PresentationModel> extends ViewCB<T> {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         log.trace("Lifecycle: initialize " + this.getClass().getSimpleName());
-        root.sceneProperty().addListener((ov, oldValue, newValue) -> {
-            // we got removed from the scene
-            // lets terminate
-            log.trace("Lifecycle: sceneProperty changed: " + this.getClass().getSimpleName() + " / oldValue=" +
-                    oldValue + " / newValue=" + newValue);
-            if (oldValue == null && newValue != null) activate();
-            else if (oldValue != null && newValue == null) deactivate();
-        });
+        if (root != null) {
+            root.sceneProperty().addListener((ov, oldValue, newValue) -> {
+                // we got removed from the scene
+                // lets terminate
+                log.trace("Lifecycle: sceneProperty changed: " + this.getClass().getSimpleName() + " / oldValue=" +
+                        oldValue + " / newValue=" + newValue);
+                if (oldValue == null && newValue != null) activate();
+                else if (oldValue != null && newValue == null) deactivate();
+            });
+        }
 
-        presentationModel.initialized();
+        if (presentationModel != null)
+            presentationModel.initialize();
     }
 
     /**
@@ -49,7 +52,8 @@ public class CachedViewCB<T extends PresentationModel> extends ViewCB<T> {
         log.trace("Lifecycle: activate " + this.getClass().getSimpleName());
         if (childController instanceof CachedViewCB) ((CachedViewCB) childController).activate();
 
-        presentationModel.activate();
+        if (presentationModel != null)
+            presentationModel.activate();
     }
 
     /**
@@ -59,7 +63,8 @@ public class CachedViewCB<T extends PresentationModel> extends ViewCB<T> {
         log.trace("Lifecycle: deactivate " + this.getClass().getSimpleName());
         if (childController instanceof CachedViewCB) ((CachedViewCB) childController).deactivate();
 
-        presentationModel.deactivate();
+        if (presentationModel != null)
+            presentationModel.deactivate();
     }
 
     /**
@@ -70,7 +75,8 @@ public class CachedViewCB<T extends PresentationModel> extends ViewCB<T> {
         log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
         super.terminate();
 
-        presentationModel.terminate();
+        if (presentationModel != null)
+            presentationModel.terminate();
     }
 
 }

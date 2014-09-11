@@ -24,12 +24,14 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
     protected Initializable childController;
     //TODO Initializable has to be changed to CodeBehind<? extends PresentationModel> when all UIs are updated
     protected Initializable parentController;
+
     @FXML protected Parent root;
 
     public ViewCB(T presentationModel) {
         this.presentationModel = presentationModel;
     }
 
+    // TODO Still open question if we enforce a presentationModel or not? For small UIs it might be too much overhead.
     public ViewCB() {
     }
 
@@ -42,16 +44,17 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         log.trace("Lifecycle: initialize " + this.getClass().getSimpleName());
-        root.sceneProperty().addListener((ov, oldValue, newValue) -> {
-            // we got removed from the scene
-            // lets terminate
-            if (oldValue != null && newValue == null)
-                terminate();
+        if (root != null) {
+            root.sceneProperty().addListener((ov, oldValue, newValue) -> {
+                // we got removed from the scene
+                // lets terminate
+                if (oldValue != null && newValue == null)
+                    terminate();
+            });
+        }
 
-        });
-
-        presentationModel.initialized();
-        presentationModel.activate();
+        if (presentationModel != null)
+            presentationModel.initialize();
     }
 
     /**
@@ -63,8 +66,8 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
         if (childController != null)
             ((ViewCB<? extends PresentationModel>) childController).terminate();
 
-        presentationModel.deactivate();
-        presentationModel.terminate();
+        if (presentationModel != null)
+            presentationModel.terminate();
     }
 
     /**

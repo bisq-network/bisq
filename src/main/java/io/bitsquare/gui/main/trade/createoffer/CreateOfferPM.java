@@ -115,8 +115,8 @@ public class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialized() {
-        super.initialized();
+    public void initialize() {
+        super.initialize();
 
         // static
         paymentLabel.set(BSResources.get("createOffer.fundsBox.paymentLabel", model.getOfferId()));

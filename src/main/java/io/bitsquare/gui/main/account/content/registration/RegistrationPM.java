@@ -64,8 +64,8 @@ public class RegistrationPM extends PresentationModel<RegistrationModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialized() {
-        super.initialized();
+    public void initialize() {
+        super.initialize();
 
         if (model.getAddressEntry() != null) {
             address.set(model.getAddressEntry().getAddress());

@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 public class UIModel<T> {
     private static final Logger log = LoggerFactory.getLogger(UIModel.class);
 
-    public void initialized() {
+    public void initialize() {
         activate();
     }
 

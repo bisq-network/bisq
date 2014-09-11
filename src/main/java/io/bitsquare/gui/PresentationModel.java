@@ -8,25 +8,31 @@ public class PresentationModel<T extends UIModel> {
         this.model = model;
     }
 
+    // TODO Still open question if we enforce a model or not? For small UIs it might be too much overhead.
     public PresentationModel() {
     }
 
-    public void initialized() {
-        model.initialized();
+    public void initialize() {
+        if (model != null)
+            model.initialize();
+
         activate();
     }
 
     public void activate() {
-        model.activate();
+        if (model != null)
+            model.activate();
     }
 
     public void deactivate() {
-        model.deactivate();
+        if (model != null)
+            model.deactivate();
     }
 
     public void terminate() {
-        model.terminate();
+        if (model != null)
+            model.terminate();
+        
         deactivate();
     }
-
 }

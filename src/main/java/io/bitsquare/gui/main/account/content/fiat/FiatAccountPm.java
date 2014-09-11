@@ -78,8 +78,8 @@ public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialized() {
-        super.initialized();
+    public void initialize() {
+        super.initialize();
 
         // input
         title.bindBidirectional(model.title);

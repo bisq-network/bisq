@@ -78,8 +78,8 @@ public class RegistrationModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialized() {
-        super.initialized();
+    public void initialize() {
+        super.initialize();
 
         if (walletFacade != null && walletFacade.getWallet() != null) {
             addressEntry = walletFacade.getRegistrationAddressEntry();

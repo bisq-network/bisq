@@ -79,8 +79,8 @@ public class RestrictionsModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialized() {
-        super.initialized();
+    public void initialize() {
+        super.initialize();
 
         Settings persistedSettings = (Settings) persistence.read(settings);
         if (persistedSettings != null) {

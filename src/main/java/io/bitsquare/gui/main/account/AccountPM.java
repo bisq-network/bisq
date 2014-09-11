@@ -44,8 +44,8 @@ public class AccountPM extends PresentationModel<AccountModel> {
 
     @SuppressWarnings("EmptyMethod")
     @Override
-    public void initialized() {
-        super.initialized();
+    public void initialize() {
+        super.initialize();
     }
 
     @Override

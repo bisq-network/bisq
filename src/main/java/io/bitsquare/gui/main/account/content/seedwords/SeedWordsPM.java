@@ -50,8 +50,8 @@ public class SeedWordsPM extends PresentationModel<SeedWordsModel> {
 
     @SuppressWarnings("EmptyMethod")
     @Override
-    public void initialized() {
-        super.initialized();
+    public void initialize() {
+        super.initialize();
 
         if (model.getMnemonicCode() != null)
             seedWords.set(BSFormatter.mnemonicCodeToString(model.getMnemonicCode()));

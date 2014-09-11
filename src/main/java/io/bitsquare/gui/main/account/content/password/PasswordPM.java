@@ -63,8 +63,8 @@ public class PasswordPM extends PresentationModel<PasswordModel> {
 
     @SuppressWarnings("EmptyMethod")
     @Override
-    public void initialized() {
-        super.initialized();
+    public void initialize() {
+        super.initialize();
     }
 
     @Override

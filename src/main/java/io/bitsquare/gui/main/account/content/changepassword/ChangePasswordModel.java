@@ -42,8 +42,8 @@ public class ChangePasswordModel extends UIModel {
 
     @SuppressWarnings("EmptyMethod")
     @Override
-    public void initialized() {
-        super.initialized();
+    public void initialize() {
+        super.initialize();
     }
 
     @Override

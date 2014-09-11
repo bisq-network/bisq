@@ -64,8 +64,8 @@ public class MainPM extends PresentationModel<MainModel> {
 
     @SuppressWarnings("EmptyMethod")
     @Override
-    public void initialized() {
-        super.initialized();
+    public void initialize() {
+        super.initialize();
 
         backendInited.bind(model.backendInited);
         networkSyncComplete.bind(model.networkSyncComplete);
