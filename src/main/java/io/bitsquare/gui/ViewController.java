@@ -77,7 +77,7 @@ public abstract class ViewController implements Initializable {
      * @param parentController Controller who has created this.getClass().getSimpleName() instance (via
      *                         navigateToView/FXMLLoader).
      */
-    public void setParentController(ViewController parentController) {
+    public void setParentController(Initializable parentController) {
         log.trace("Lifecycle: setParentController " + this.getClass().getSimpleName() + " / parent = " +
                 parentController);
         this.parentController = parentController;

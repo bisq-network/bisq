@@ -21,18 +21,16 @@ import io.bitsquare.trade.Direction;
 
 import javax.inject.Inject;
 
-public class SellController extends TradeController {
+public class BuyViewCB extends TradeViewCB {
 
     @Inject
-    public SellController(TradePM presentationModel) {
+    public BuyViewCB(TradePM presentationModel) {
         super(presentationModel);
     }
 
     @Override
-    protected void applyDirection() {
-        orderBookController.applyDirection(Direction.SELL);
+    protected void initOrderBook() {
+        orderBookViewCB.initOrderBook(Direction.BUY);
     }
-
-
 }
 

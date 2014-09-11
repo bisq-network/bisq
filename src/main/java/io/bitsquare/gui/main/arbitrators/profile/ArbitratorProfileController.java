@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.arbitrators.profile;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
@@ -95,7 +94,7 @@ public class ArbitratorProfileController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setParentController(ViewController parentController) {
+    public void setParentController(Initializable parentController) {
         super.setParentController(parentController);
     }
 

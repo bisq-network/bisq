@@ -23,7 +23,7 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.ValidatedTextField;
-import io.bitsquare.gui.main.trade.TradeController;
+import io.bitsquare.gui.main.trade.TradeViewCB;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.trade.Offer;
@@ -95,7 +95,7 @@ public class TakeOfferController extends CachedViewController {
     @Override
     public void deactivate() {
         super.deactivate();
-        ((TradeController) parentController).onTakeOfferViewRemoved();
+        ((TradeViewCB) parentController).onTakeOfferViewRemoved();
     }
 
     @Override

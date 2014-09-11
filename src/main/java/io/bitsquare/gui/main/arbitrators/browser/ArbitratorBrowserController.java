@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.arbitrators.browser;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.main.arbitrators.profile.ArbitratorProfileController;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.msg.MessageFacade;
@@ -117,7 +116,7 @@ public class ArbitratorBrowserController extends CachedViewController implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setParentController(ViewController parentController) {
+    public void setParentController(Initializable parentController) {
         super.setParentController(parentController);
     }
 

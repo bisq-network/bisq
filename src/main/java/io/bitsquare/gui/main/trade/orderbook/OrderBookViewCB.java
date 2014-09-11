@@ -82,8 +82,8 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OrderBookController extends CachedViewCB<OrderBookPM> {
-    private static final Logger log = LoggerFactory.getLogger(OrderBookController.class);
+public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
+    private static final Logger log = LoggerFactory.getLogger(OrderBookViewCB.class);
 
     private NavigationController navigationController;
     private OverlayController overlayController;
@@ -114,12 +114,12 @@ public class OrderBookController extends CachedViewCB<OrderBookPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private OrderBookController(OrderBookPM presentationModel,
-                                NavigationController navigationController,
-                                OverlayController overlayController,
-                                OrderBook orderBook, User user,
-                                MessageFacade messageFacade,
-                                WalletFacade walletFacade, Settings settings, Persistence persistence) {
+    private OrderBookViewCB(OrderBookPM presentationModel,
+                            NavigationController navigationController,
+                            OverlayController overlayController,
+                            OrderBook orderBook, User user,
+                            MessageFacade messageFacade,
+                            WalletFacade walletFacade, Settings settings, Persistence persistence) {
         super(presentationModel);
 
         this.navigationController = navigationController;
@@ -226,7 +226,7 @@ public class OrderBookController extends CachedViewCB<OrderBookPM> {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void applyDirection(Direction direction) {
+    public void initOrderBook(Direction direction) {
         init();
         orderBookTable.getSelectionModel().clearSelection();
         price.setText("");
@@ -542,7 +542,7 @@ public class OrderBookController extends CachedViewCB<OrderBookPM> {
         volume.setText(BSFormatter.formatFiat(Fiat.valueOf("EUR", (long) (a * p))));
     }
 
-    public void onCreateOfferViewRemoved() {
+    public void enableCreateOfferButton() {
         createOfferButton.setDisable(false);
     }
 

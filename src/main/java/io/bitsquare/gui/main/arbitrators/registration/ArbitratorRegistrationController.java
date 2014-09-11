@@ -22,7 +22,6 @@ import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.ConfidenceDisplay;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.main.arbitrators.profile.ArbitratorProfileController;
@@ -220,7 +219,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void setParentController(ViewController parentController) {
+    public void setParentController(Initializable parentController) {
         super.setParentController(parentController);
     }
 

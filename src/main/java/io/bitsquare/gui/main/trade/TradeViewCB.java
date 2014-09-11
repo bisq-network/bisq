@@ -21,9 +21,8 @@ import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferViewCB;
-import io.bitsquare.gui.main.trade.orderbook.OrderBookController;
+import io.bitsquare.gui.main.trade.orderbook.OrderBookViewCB;
 import io.bitsquare.gui.main.trade.takeoffer.TakeOfferController;
-import io.bitsquare.trade.Direction;
 import io.bitsquare.util.BSFXMLLoader;
 
 import java.io.IOException;
@@ -33,6 +32,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.Initializable;
 import javafx.scene.*;
@@ -43,13 +43,12 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class TradeController extends CachedViewCB<TradePM> {
-    private static final Logger log = LoggerFactory.getLogger(TradeController.class);
+public abstract class TradeViewCB extends CachedViewCB<TradePM> {
+    private static final Logger log = LoggerFactory.getLogger(TradeViewCB.class);
 
-    protected OrderBookController orderBookController;
-    protected CreateOfferViewCB createOfferCodeBehind;
+    protected OrderBookViewCB orderBookViewCB;
+    protected CreateOfferViewCB createOfferViewCB;
     protected TakeOfferController takeOfferController;
-    protected BSFXMLLoader orderBookLoader;
     private Node createOfferView;
 
 
@@ -57,7 +56,7 @@ public class TradeController extends CachedViewCB<TradePM> {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected TradeController(TradePM presentationModel) {
+    protected TradeViewCB(TradePM presentationModel) {
         super(presentationModel);
     }
 
@@ -72,33 +71,29 @@ public class TradeController extends CachedViewCB<TradePM> {
         super.initialize(url, rb);
 
         loadView(NavigationItem.ORDER_BOOK);
+        initOrderBook();
     }
 
     @Override
     public void activate() {
         super.activate();
 
-        applyDirection();
-
-        // TODO find better solution
-        // Textfield focus out triggers validation, use runLater as quick fix...
-
-        //TODO update to new verison
-        ((TabPane) root).getSelectionModel().selectedIndexProperty().addListener((observableValue, oldValue,
-                                                                                  newValue) ->
-                {
-                    InputTextField.hideErrorMessageDisplay();
-                }
-        );
+        // We need to remove open validation error popups
+        // TODO Find a way to do that in the InputTextField directly, but a tab change does not trigger any event there
+        // Platform.runLater needed as focusout evetn is called after selectedIndexProperty changed
+        TabPane tabPane = (TabPane) root;
+        tabPane.getSelectionModel().selectedIndexProperty()
+                .addListener((observableValue, oldValue, newValue) ->
+                        Platform.runLater(InputTextField::hideErrorMessageDisplay));
 
         // We want to get informed when a tab get closed
-        ((TabPane) root).getTabs().addListener((ListChangeListener<Tab>) change -> {
+        tabPane.getTabs().addListener((ListChangeListener<Tab>) change -> {
             change.next();
             List<? extends Tab> removedTabs = change.getRemoved();
             if (removedTabs.size() == 1 && removedTabs.get(0).getContent().equals(createOfferView)) {
-                if (createOfferCodeBehind != null) {
-                    createOfferCodeBehind.terminate();
-                    createOfferCodeBehind = null;
+                if (createOfferViewCB != null) {
+                    createOfferViewCB.terminate();
+                    createOfferViewCB = null;
                 }
             }
         });
@@ -127,47 +122,46 @@ public class TradeController extends CachedViewCB<TradePM> {
 
         TabPane tabPane = (TabPane) root;
         if (navigationItem == NavigationItem.ORDER_BOOK) {
-            checkArgument(orderBookLoader == null);
+            checkArgument(orderBookViewCB == null);
             // Orderbook must not be cached by GuiceFXMLLoader as we use 2 instances for sell and buy screens.
-            orderBookLoader =
-                    new BSFXMLLoader(getClass().getResource(NavigationItem.ORDER_BOOK.getFxmlUrl()), false);
+            BSFXMLLoader orderBookLoader =
+                    new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
             try {
                 final Parent view = orderBookLoader.load();
                 final Tab tab = new Tab("Orderbook");
                 tab.setClosable(false);
                 tab.setContent(view);
                 tabPane.getTabs().add(tab);
+                orderBookViewCB = orderBookLoader.getController();
+                orderBookViewCB.setParent(this);
+                return orderBookViewCB;
             } catch (IOException e) {
                 log.error(e.getMessage());
             }
-            orderBookController = orderBookLoader.getController();
-            orderBookController.setParent(this);
-            return orderBookController;
         }
         else if (navigationItem == NavigationItem.CREATE_OFFER) {
-            checkArgument(createOfferCodeBehind == null);
+            checkArgument(createOfferViewCB == null);
 
             // CreateOffer and TakeOffer must not be cached by GuiceFXMLLoader as we cannot use a view multiple times
             // in different graphs
             BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
             try {
                 createOfferView = loader.load();
-                createOfferCodeBehind = loader.getController();
-                createOfferCodeBehind.setParent(this);
-                createOfferCodeBehind.setOnClose(() -> {
-                    orderBookController.onCreateOfferViewRemoved();
+                createOfferViewCB = loader.getController();
+                createOfferViewCB.setParent(this);
+                createOfferViewCB.setOnClose(() -> {
+                    orderBookViewCB.enableCreateOfferButton();
                     return null;
                 });
 
                 final Tab tab = new Tab("Create offer");
                 tab.setContent(createOfferView);
                 tabPane.getTabs().add(tab);
-                tabPane.getSelectionModel().select(tabPane.getTabs().size() - 1);
-                return createOfferCodeBehind;
+                tabPane.getSelectionModel().select(tab);
+                return createOfferViewCB;
             } catch (IOException e) {
                 log.error(e.getMessage());
             }
-            return null;
         }
         else if (navigationItem == NavigationItem.TAKE_OFFER) {
             checkArgument(takeOfferController == null);
@@ -178,22 +172,20 @@ public class TradeController extends CachedViewCB<TradePM> {
             try {
                 final Parent view = loader.load();
                 takeOfferController = loader.getController();
-                //TODO
-                //takeOfferController.setParentController(this);
+                takeOfferController.setParentController(this);
                 final Tab tab = new Tab("Take offer");
                 tab.setContent(view);
                 tabPane.getTabs().add(tab);
-                tabPane.getSelectionModel().select(tabPane.getTabs().size() - 1);
+                tabPane.getSelectionModel().select(tab);
                 return takeOfferController;
             } catch (IOException e) {
                 log.error(e.getMessage());
             }
-            return null;
         }
         else {
             log.error("navigationItem not supported: " + navigationItem);
-            return null;
         }
+        return null;
     }
 
 
@@ -202,7 +194,8 @@ public class TradeController extends CachedViewCB<TradePM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onCreateOfferViewRemoved() {
-        orderBookController.onCreateOfferViewRemoved();
+        createOfferViewCB = null;
+        orderBookViewCB.enableCreateOfferButton();
     }
 
     public void onTakeOfferViewRemoved() {
@@ -211,13 +204,10 @@ public class TradeController extends CachedViewCB<TradePM> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected
+    // Abstract methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Template method to be overwritten by sub class.
-    protected void applyDirection() {
-        orderBookController.applyDirection(Direction.SELL);
-    }
+    abstract protected void initOrderBook();
 
 
 }
