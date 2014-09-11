@@ -18,6 +18,7 @@
   -->
 
 <?import io.bitsquare.gui.components.InfoDisplay?>
+<?import io.bitsquare.gui.components.TitledGroupBg?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -28,28 +29,7 @@
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
 
-    <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="140.0"/>
-        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
-    </columnConstraints>
-
-    <rowConstraints>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-    </rowConstraints>
-    <Pane id="form-group-background-active" GridPane.columnSpan="2" GridPane.rowSpan="4">
-        <GridPane.margin>
-            <Insets bottom="-10.0" left="-10.0" right="-10.0" top="-10.0"/>
-        </GridPane.margin>
-        <Label id="form-group-title-active" text="Backup your wallet seed words"
-               layoutX="8" layoutY="-8">
-            <padding>
-                <Insets left="5" right="7"/>
-            </padding>
-        </Label>
-    </Pane>
+    <TitledGroupBg text="Backup your wallet seed words" GridPane.rowSpan="4"/>
 
     <Label text="Wallet seed words:" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.valignment="TOP">
         <GridPane.margin>
@@ -71,5 +51,17 @@
     </Button>
     <InfoDisplay gridPane="$root" onAction="#onOpenHelp" rowIndex="3"
                  text="You can recreate your wallet our of these words when you lose your wallet. Backup it on paper to have better protection against online theft. Open the help menu for more information."/>
+
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="140.0"/>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
+    </columnConstraints>
+
+    <rowConstraints>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+    </rowConstraints>
 
 </GridPane>

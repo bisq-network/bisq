@@ -12,12 +12,244 @@ upper border on tab: cfcfcf
 lower border on tab: b5b5b5
 upper gradient color on tab: d3d3d3
 lower gradient color on tab: dddddd
-
-
 */
 
-/* Account */
 
+/* Splash */
+#splash {
+    -fx-background-color: #ffffff;
+}
+
+/* Main UI */
+#logo-sub-title-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 24;
+}
+
+#base-content-container {
+    -fx-background-color: #dddddd;
+}
+
+#content-pane {
+    -fx-background-color: #f4f4f4;
+}
+
+#headline-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 18;
+}
+
+#info-label {
+    -fx-font-size: 14;
+}
+
+#online-label {
+    -fx-fill: green;
+}
+
+#offline-label {
+    -fx-fill: red;
+}
+
+/* main nav */
+
+#nav-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+}
+
+#nav-button .text {
+    -fx-font-size: 10; 
+}
+
+#nav-button:selected .text {
+   -fx-font-size: 11; 
+    -fx-font-weight: bold;
+}
+
+#nav-alert-button {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-border-style: none;
+}
+
+#nav-button-label {
+    -fx-font-size: 10;  
+}
+
+#nav-balance-label {
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+}
+
+.text-field:readonly {
+    -fx-text-fill: #000000;
+    -fx-background-color: #FAFAFA;
+}
+
+#feedback-text {
+    -fx-font-size: 10;
+}
+
+#label-url {
+    -fx-cursor: hand;
+    -fx-text-fill: blue;
+    -fx-underline: true;
+}
+
+#icon-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+}
+
+.copy-icon {
+    -fx-text-fill: #0096c9;
+    -fx-cursor: hand;
+}
+
+.copy-icon:hover {
+    -fx-text-fill: black;
+}
+
+/* Same style like non editable textfield. But textfield spans a whole column in a grid, so we use generally 
+textfield */
+#label-with-background {
+    -fx-background-color: #FAFAFA;
+    -fx-border-radius: 4;
+    -fx-padding: 4 4 4 4;
+}
+
+#address-text-field {
+    -fx-cursor: hand;
+    -fx-text-fill: #0096c9;
+}
+#address-text-field:hover {
+    -fx-text-fill: black;
+}
+
+#funds-confidence {
+    -fx-progress-color: dimgrey;
+}
+
+/* .table-view */
+.table-view .table-cell {
+    -fx-alignment: center;
+}
+
+.table-view .column-header .label {
+    -fx-alignment-alignment: center;
+}
+
+.table-view .focus {
+    -fx-alignment: center;
+}
+
+.table-view .text {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection .text {
+    -fx-fill: white;
+}
+
+.table-view .table-row-cell:selected .button .text {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell .copy-icon .text {
+    -fx-fill: #0096c9;
+}
+
+.table-view .table-row-cell .copy-icon .text:hover {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell:selected .copy-icon .text {
+    -fx-fill: white;
+}
+
+.table-view .table-row-cell:selected .copy-icon .text:hover {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell .hyperlink .text {
+    -fx-fill: #0096c9;
+}
+
+.table-view .table-row-cell .hyperlink .text:hover {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell:selected .hyperlink .text {
+    -fx-fill: white;
+}
+
+.table-view .table-row-cell:selected .hyperlink .text:hover {
+    -fx-fill: black;
+}
+
+#form-header-text {
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+}
+
+#clickable-icon {
+    -fx-text-fill: #0096c9;
+    -fx-cursor: hand;
+}
+
+#clickable-icon:hover {
+    -fx-text-fill: #666;
+}
+
+#form-title {
+    -fx-font-weight: bold;
+}
+
+/* tab pane */
+.tab-pane .tab-label {
+    -fx-font-size: 15;
+}
+
+.tab-pane:focused {
+    -fx-background-color: transparent;
+}
+
+.tab-header-area:focused {
+    -fx-background-color: transparent;
+}
+
+.tab:focused {
+    -fx-background-color: transparent;
+}
+
+/* table-view */
+.table-view:focused {
+    -fx-background-color: transparent;
+}
+
+/* scroll-pane */
+
+.scroll-pane {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.scroll-pane:focused {
+    -fx-background-insets: 0;
+}
+
+.scroll-pane .corner {
+    -fx-background-insets: 0;
+}
+
+/* validation */
+#validation-error {
+    -fx-text-fill: red;
+}
+
+
+/* Account */
 
 #content-pane-top {
     -fx-background-color:
@@ -184,199 +416,20 @@ lower gradient color on tab: dddddd
 }
 
 
-/* Splash */
-#splash {
-    -fx-background-color: #ffffff;
-}
-
-/* Main UI */
-#logo-sub-title-label {
+/* TitledGroupBg */
+#titled-group-bg-label {
     -fx-font-weight: bold;
-    -fx-font-size: 24;
-}
-
-#base-content-container {
-    -fx-background-color: #dddddd;
-}
-
-#content-pane {
+    -fx-font-size: 14;
+    -fx-text-fill: #333;
     -fx-background-color: #f4f4f4;
 }
-
-#headline-label {
-    -fx-font-weight: bold;
-    -fx-font-size: 18;
-}
-
-#info-label {
-    -fx-font-size: 14;
-}
-
-#online-label {
-    -fx-fill: green;
-}
-
-#offline-label {
-    -fx-fill: red;
-}
-
-/* main nav */
-
-#nav-button {
-    -fx-cursor: hand;
-    -fx-background-color: transparent;
-}
-
-#nav-button .text {
-    -fx-font-size: 10; 
-}
-
-#nav-button:selected .text {
-   -fx-font-size: 11; 
-    -fx-font-weight: bold;
-}
-
-#nav-alert-button {
-    -fx-background-color: transparent;
-    -fx-cursor: hand;
-    -fx-border-style: none;
-}
-
-#nav-button-label {
-    -fx-font-size: 10;  
-}
-
-#nav-balance-label {
-    -fx-font-weight: bold;
-    -fx-alignment: center;
-}
-
-.text-field:readonly {
-    -fx-text-fill: #000000;
-    -fx-background-color: #FAFAFA;
-}
-
-#feedback-text {
-    -fx-font-size: 10;
-}
-
-#label-url {
-    -fx-cursor: hand;
-    -fx-text-fill: blue;
-    -fx-underline: true;
-}
-
-#icon-button {
-    -fx-cursor: hand;
-    -fx-background-color: transparent;
-}
-
-.copy-icon {
-    -fx-text-fill: #0096c9;
-    -fx-cursor: hand;
-}
-
-.copy-icon:hover {
-    -fx-text-fill: black;
-}
-
-/* Same stlye like non editable textfield. But textfield spans a whole column in a grid, so we use generally textfield */
-#label-with-background {
-    -fx-background-color: #FAFAFA;
-    -fx-border-radius: 4;
-    -fx-padding: 4 4 4 4;
-}
-
-#address-text-field {
-    -fx-cursor: hand;
-    -fx-text-fill: #0096c9;
-}
-#address-text-field:hover {
-    -fx-text-fill: black;
-}
-
-#funds-confidence {
-    -fx-progress-color: dimgrey;
-}
-
-/* .table-view */
-.table-view .table-cell {
-    -fx-alignment: center;
-}
-
-.table-view .column-header .label {
-    -fx-alignment-alignment: center;
-}
-
-.table-view .focus {
-    -fx-alignment: center;
-}
-
-.table-view .text {
-    -fx-fill: black;
-}
-
-.table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection .text {
-    -fx-fill: white;
-}
-
-.table-view .table-row-cell:selected .button .text {
-    -fx-fill: black;
-}
-
-.table-view .table-row-cell .copy-icon .text {
-    -fx-fill: #0096c9;
-}
-
-.table-view .table-row-cell .copy-icon .text:hover {
-    -fx-fill: black;
-}
-
-.table-view .table-row-cell:selected .copy-icon .text {
-    -fx-fill: white;
-}
-
-.table-view .table-row-cell:selected .copy-icon .text:hover {
-    -fx-fill: black;
-}
-
-.table-view .table-row-cell .hyperlink .text {
-    -fx-fill: #0096c9;
-}
-
-.table-view .table-row-cell .hyperlink .text:hover {
-    -fx-fill: black;
-}
-
-.table-view .table-row-cell:selected .hyperlink .text {
-    -fx-fill: white;
-}
-
-.table-view .table-row-cell:selected .hyperlink .text:hover {
-    -fx-fill: black;
-}
-
-/* forms */
-#form-header-text {
-    -fx-font-weight: bold;
-    -fx-font-size: 14;
-}
-
-#form-group-title {
-    -fx-font-weight: bold;
-    -fx-font-size: 14;
-    -fx-text-fill: #111;
-    -fx-background-color: #f4f4f4;
-}
-
-#form-group-title-active {
+#titled-group-bg-label-active {
     -fx-font-weight: bold;
     -fx-font-size: 14;
     -fx-text-fill: #0096c9;
     -fx-background-color: #f4f4f4;
 }
-
-#form-group-background {
+#titled-group-bg {
     -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
     -fx-outer-border: linear-gradient(to bottom, #ddd, #ccc);
     -fx-background-color: -fx-shadow-highlight-color,
@@ -386,7 +439,7 @@ lower gradient color on tab: dddddd
     -fx-background-insets: 0 0 -1 0, 0, 1, 2;
     -fx-background-radius: 3px, 3px, 2px, 1px;
 }
-#form-group-background-active {
+#titled-group-bg-active {
     -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
     -fx-outer-border: linear-gradient(to bottom, #9bbdc9, #57acc9);
     -fx-background-color: -fx-shadow-highlight-color,
@@ -395,58 +448,4 @@ lower gradient color on tab: dddddd
     -fx-body-color;
     -fx-background-insets: 0 0 -1 0, 0, 1, 2;
     -fx-background-radius: 3px, 3px, 2px, 1px;
-}
-#clickable-icon {
-    -fx-text-fill: #0096c9;
-    -fx-cursor: hand;
-}
-
-#clickable-icon:hover {
-    -fx-text-fill: #666;
-}
-
-#form-title {
-    -fx-font-weight: bold;
-}
-
-/* tab pane */
-.tab-pane .tab-label {
-    -fx-font-size: 15;
-}
-
-.tab-pane:focused {
-    -fx-background-color: transparent;
-}
-
-.tab-header-area:focused {
-    -fx-background-color: transparent;
-}
-
-.tab:focused {
-    -fx-background-color: transparent;
-}
-
-/* table-view */
-.table-view:focused {
-    -fx-background-color: transparent;
-}
-
-/* scroll-pane */
-
-.scroll-pane {
-    -fx-background-insets: 0;
-    -fx-padding: 0;
-}
-
-.scroll-pane:focused {
-    -fx-background-insets: 0;
-}
-
-.scroll-pane .corner {
-    -fx-background-insets: 0;
-}
-
-/* validation */
-#validation-error {
-    -fx-text-fill: red;
 }

@@ -21,6 +21,7 @@
 <?import io.bitsquare.gui.components.btc.BalanceTextField?>
 <?import io.bitsquare.gui.components.InfoDisplay?>
 <?import io.bitsquare.gui.components.InputTextField?>
+<?import io.bitsquare.gui.components.TitledGroupBg?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
@@ -41,22 +42,23 @@
             </padding>
 
             <!-- 
-            
             Amount/Price group
-            
              -->
-            <Pane fx:id="priceAmountPane" id="form-group-background-active" GridPane.columnSpan="3"
-                  GridPane.rowSpan="3">
-                <GridPane.margin>
-                    <Insets right="-10" bottom="-10" left="-10" top="-10"/>
-                </GridPane.margin>
-                <Label fx:id="priceAmountTitleLabel" id="form-group-title-active"
-                       text="%createOffer.amountPriceBox.title" layoutX="8" layoutY="-8">
-                    <padding>
-                        <Insets left="5" right="7"/>
-                    </padding>
-                </Label>
-            </Pane>
+            <TitledGroupBg fx:id="priceAmountPane" text="%createOffer.amountPriceBox.title"
+                           GridPane.rowSpan="3" GridPane.columnSpan="3"/>
+
+            <!--   <Pane fx:id="priceAmountPane" id="form-group-background-active" GridPane.columnSpan="3"
+                    GridPane.rowSpan="3">
+                  <GridPane.margin>
+                      <Insets right="-10" bottom="-10" left="-10" top="-10"/>
+                  </GridPane.margin>
+                  <Label fx:id="priceAmountTitleLabel" id="form-group-title-active"
+                         text="%createOffer.amountPriceBox.title" layoutX="8" layoutY="-8">
+                      <padding>
+                          <Insets left="5" right="7"/>
+                      </padding>
+                  </Label>
+              </Pane>  -->
 
             <VBox alignment="CENTER" spacing="6" GridPane.rowSpan="2">
                 <GridPane.margin>
@@ -151,11 +153,12 @@
             </Button>
 
             <!-- 
-           
             Pay funds group 
-           
             -->
-            <Pane fx:id="payFundsPane" id="form-group-background-active" GridPane.columnSpan="3"
+            <TitledGroupBg fx:id="payFundsPane" text="%createOffer.fundsBox.title" GridPane.rowIndex="4"
+                           GridPane.rowSpan="4" GridPane.columnSpan="3" visible="false"/>
+
+            <!--  <Pane fx:id="payFundsPane" id="form-group-background-active" GridPane.columnSpan="3"
                   GridPane.rowIndex="4" GridPane.rowSpan="4" visible="false">
                 <GridPane.margin>
                     <Insets right="-10" bottom="-10" left="-10" top="-10"/>
@@ -166,7 +169,7 @@
                         <Insets left="5" right="7"/>
                     </padding>
                 </Label>
-            </Pane>
+            </Pane>  -->
 
             <HBox GridPane.rowIndex="4" spacing="4" alignment="CENTER_RIGHT">
                 <Label fx:id="totalToPayLabel" text="%createOffer.fundsBox.totalsNeeded" visible="false"/>
@@ -215,23 +218,24 @@
             </HBox>
 
             <!-- 
-            
             Advanced settings group
-            
             -->
-            <Pane fx:id="showDetailsPane" id="form-group-background-active" GridPane.columnSpan="3"
-                  GridPane.rowIndex="9" GridPane.rowSpan="7" visible="false">
-                <GridPane.margin>
-                    <Insets right="-10" bottom="-10" left="-10" top="-10"/>
-                </GridPane.margin>
-                <Label fx:id="showDetailsTitleLabel" text="%createOffer.advancedBox.title" id="form-group-title-active"
-                       layoutX="8"
-                       layoutY="-8">
-                    <padding>
-                        <Insets left="5" right="7"/>
-                    </padding>
-                </Label>
-            </Pane>
+            <TitledGroupBg fx:id="showDetailsPane" text="%createOffer.advancedBox.title" GridPane.columnSpan="3"
+                           GridPane.rowIndex="9" GridPane.rowSpan="7" visible="false"/>
+
+            <!--     <Pane fx:id="showDetailsPane" id="form-group-background-active" GridPane.columnSpan="3"
+                     GridPane.rowIndex="9" GridPane.rowSpan="7" visible="false">
+                   <GridPane.margin>
+                       <Insets right="-10" bottom="-10" left="-10" top="-10"/>
+                   </GridPane.margin>
+                   <Label fx:id="showDetailsTitleLabel" text="%createOffer.advancedBox.title" id="form-group-title-active"
+                          layoutX="8"
+                          layoutY="-8">
+                       <padding>
+                           <Insets left="5" right="7"/>
+                       </padding>
+                   </Label>
+               </Pane> -->
 
             <HBox GridPane.rowIndex="9" spacing="4" alignment="CENTER_RIGHT">
                 <Label fx:id="acceptedCountriesLabel" text="%createOffer.advancedBox.countries" visible="false"/>
@@ -314,3 +318,4 @@
         </GridPane>
     </ScrollPane>
 </AnchorPane>
+   

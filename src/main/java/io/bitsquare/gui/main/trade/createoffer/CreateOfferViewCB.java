@@ -24,6 +24,7 @@ import io.bitsquare.gui.OverlayController;
 import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.main.help.Help;
@@ -86,10 +87,10 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
     @FXML private InfoDisplay advancedInfoDisplay, fundsBoxInfoDisplay;
     @FXML private ScrollPane scrollPane;
-    @FXML private Pane priceAmountPane, payFundsPane, showDetailsPane;
-    @FXML private Label buyLabel, priceAmountTitleLabel, addressLabel,
-            balanceLabel, payFundsTitleLabel, totalToPayLabel, totalToPayInfoIconLabel,
-            showDetailsTitleLabel, bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel,
+    @FXML private TitledGroupBg priceAmountPane, payFundsPane, showDetailsPane;
+    @FXML private Label buyLabel, addressLabel,
+            balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
+            bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel,
             acceptedCountriesLabel, acceptedCountriesLabelIcon, acceptedLanguagesLabel, acceptedLanguagesLabelIcon,
             acceptedArbitratorsLabel, acceptedArbitratorsLabelIcon, amountBtcLabel,
             priceFiatLabel, volumeFiatLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel;
@@ -177,8 +178,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
     @FXML
     private void onShowPayFundsScreen() {
-        priceAmountPane.setId("form-group-background");
-        priceAmountTitleLabel.setId("form-group-title");
+        priceAmountPane.setInactive();
 
         showPaymentInfoScreenButton.setVisible(false);
 
@@ -397,8 +397,8 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     }
 
     private void showDetailsScreen() {
-        payFundsPane.setId("form-group-background");
-        payFundsTitleLabel.setId("form-group-title");
+        payFundsPane.setInactive();
+
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.layout();
 
@@ -411,8 +411,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     }
 
     private void hideDetailsScreen() {
-        payFundsPane.setId("form-group-background-active");
-        payFundsTitleLabel.setId("form-group-title-active");
+        payFundsPane.setActive();
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.layout();
         toggleDetailsScreen(false);
@@ -428,9 +427,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         scrollPane.setVmax(visible ? scrollPane.getHeight() : 0);
         scrollPane.setVvalue(visible ? scrollPane.getHeight() : 0);
 
-
         showDetailsPane.setVisible(visible);
-        showDetailsTitleLabel.setVisible(visible);
 
         acceptedCountriesLabel.setVisible(visible);
         acceptedCountriesLabelIcon.setVisible(visible);

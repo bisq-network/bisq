@@ -20,6 +20,7 @@
 
 <?import io.bitsquare.gui.components.InfoDisplay?>
 <?import io.bitsquare.gui.components.InputTextField?>
+<?import io.bitsquare.gui.components.TitledGroupBg?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -29,39 +30,10 @@
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
 
-    <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>
-        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
-    </columnConstraints>
-
-    <rowConstraints>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-    </rowConstraints>
-
     <!--
     Setup
     -->
-    <Pane id="form-group-background-active" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.rowSpan="8">
-        <GridPane.margin>
-            <Insets bottom="-10.0" left="-10.0" right="-10.0" top="-10.0"/>
-        </GridPane.margin>
-        <Label id="form-group-title-active" text="Setup your payments account" layoutX="8" layoutY="-8">
-            <padding>
-                <Insets left="5" right="7"/>
-            </padding>
-        </Label>
-    </Pane>
+    <TitledGroupBg text="Setup your payments account" GridPane.rowSpan="8"/>
 
     <Label text="Payments method:" GridPane.rowIndex="0">
         <GridPane.margin>
@@ -114,19 +86,14 @@
     <!--
     Manage
     -->
-    <Pane id="form-group-background-active" GridPane.columnSpan="2" GridPane.rowIndex="9" GridPane.rowSpan="4">
-        <GridPane.margin>
-            <Insets bottom="-10" left="-10" right="-10" top="20"/>
-        </GridPane.margin>
+    <TitledGroupBg text="Manage payments accounts" GridPane.rowIndex="9" GridPane.rowSpan="4">
         <padding>
             <Insets top="40.0"/>
         </padding>
-        <Label id="form-group-title-active" text="Manage payments accounts" layoutX="8" layoutY="-8">
-            <padding>
-                <Insets left="5" right="7"/>
-            </padding>
-        </Label>
-    </Pane>
+        <GridPane.margin>
+            <Insets bottom="-10" left="-10" right="-10" top="20"/>
+        </GridPane.margin>
+    </TitledGroupBg>
 
     <Label text="Select payments account:" GridPane.rowIndex="9">
         <GridPane.margin>
@@ -146,5 +113,25 @@
 
     <InfoDisplay gridPane="$root" onAction="#onOpenManageAccountsHelp" rowIndex="11"
                  text="When you change your payments accounts later you need to do the renew the registration and pay the small registration fee."/>
+
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
+    </columnConstraints>
+
+    <rowConstraints>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+    </rowConstraints>
 
 </GridPane>

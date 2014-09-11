@@ -20,6 +20,7 @@
 <?import io.bitsquare.gui.components.btc.AddressTextField?>
 <?import io.bitsquare.gui.components.btc.BalanceTextField?>
 <?import io.bitsquare.gui.components.InfoDisplay?>
+<?import io.bitsquare.gui.components.TitledGroupBg?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -29,29 +30,7 @@
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
 
-    <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>
-        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
-    </columnConstraints>
-
-    <rowConstraints>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-        <RowConstraints vgrow="NEVER"/>
-    </rowConstraints>
-    <Pane id="form-group-background-active" GridPane.columnSpan="2" GridPane.rowSpan="4">
-        <GridPane.margin>
-            <Insets bottom="-10.0" left="-10.0" right="-10.0" top="-10.0"/>
-        </GridPane.margin>
-        <Label id="form-group-title-active" text="Fund the registration fee"
-               layoutX="8" layoutY="-8">
-            <padding>
-                <Insets left="5" right="7"/>
-            </padding>
-        </Label>
-    </Pane>
+    <TitledGroupBg text="Fund the registration fee" GridPane.rowSpan="4"/>
 
     <Label text="Registration fee:" GridPane.rowIndex="0">
         <GridPane.margin>
@@ -94,4 +73,16 @@
         </GridPane.margin>
     </Button>
 
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
+    </columnConstraints>
+
+    <rowConstraints>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+    </rowConstraints>
 </GridPane>
