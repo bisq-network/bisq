@@ -127,9 +127,10 @@
         <TitledSeparator text="Order book for buying Bitcoin" GridPane.rowIndex="6" GridPane.columnIndex="0"
                          GridPane.columnSpan="2"/>
 
-        <TableView fx:id="orderBookTable" GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.columnSpan="2">
+        <TableView fx:id="orderBookTable" GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.columnSpan="2"
+                   prefHeight="1500">
             <GridPane.margin>
-                <Insets top="10.0" left="-10" right="-10" bottom="-30"/>
+                <Insets top="10.0" left="-10" right="-10" bottom="-15"/>
             </GridPane.margin>
             <columns>
                 <TableColumn text="Amount in BTC (Min.)" fx:id="amountColumn" minWidth="130"/>
