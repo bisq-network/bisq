@@ -17,49 +17,52 @@
 
 package io.bitsquare.gui.main.trade.orderbook;
 
-import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.Country;
 import io.bitsquare.trade.Offer;
 
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
 public class OrderBookListItem {
-    private final StringProperty price = new SimpleStringProperty();
-    private final StringProperty amount = new SimpleStringProperty();
-    private final StringProperty volume = new SimpleStringProperty();
-
-
     private final Offer offer;
+    private final ObjectProperty<Country> bankAccountCountry = new SimpleObjectProperty<>();
 
 
-    public OrderBookListItem(Offer offer) {
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public OrderBookListItem(Offer offer, Country bankAccountCountry) {
         this.offer = offer;
-        this.price.set(BSFormatter.formatFiat(offer.getPrice()));
-        this.price.set(BSFormatter.formatFiat(offer.getPrice()));
-        this.amount.set(BSFormatter.formatCoin(
-                offer.getAmount()) + " (" + BSFormatter.formatCoin(offer.getMinAmount()) + ")");
-        this.volume.set(BSFormatter.formatVolumeWithMinVolume(
-                offer.getOfferVolume(), offer.getMinOfferVolume()));
+        setBankAccountCountry(bankAccountCountry);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setBankAccountCountry(Country bankAccountCountry) {
+        this.bankAccountCountry.set(bankAccountCountry);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Offer getOffer() {
         return offer;
     }
 
-    // called form table columns
+    public Country getBankAccountCountry() {
+        return bankAccountCountry.get();
+    }
 
-    public final StringProperty priceProperty() {
-        return this.price;
+    public ObjectProperty<Country> bankAccountCountryProperty() {
+        return bankAccountCountry;
     }
 
 
-    public final StringProperty amountProperty() {
-        return this.amount;
-    }
-
-
-    public final StringProperty volumeProperty() {
-        return this.volume;
-    }
 }
+

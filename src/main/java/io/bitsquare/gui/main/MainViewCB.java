@@ -28,7 +28,7 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
-import io.bitsquare.util.BSFXMLLoader;
+import io.bitsquare.util.ViewLoader;
 
 import java.io.IOException;
 
@@ -53,20 +53,17 @@ import org.slf4j.LoggerFactory;
 public class MainViewCB extends ViewCB<MainPM> {
     private static final Logger log = LoggerFactory.getLogger(MainViewCB.class);
 
-    private NavigationController navigationController;
-    private OverlayController overlayController;
+    private final NavigationController navigationController;
+    private final OverlayController overlayController;
 
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
     private NavigationItem mainNavigationItem;
 
     private BorderPane baseApplicationContainer;
     private VBox baseOverlayContainer;
-    private AnchorPane applicationContainer;
     private AnchorPane contentContainer;
     private HBox leftNavPane, rightNavPane;
     private NetworkSyncPane networkSyncPane;
-    private MenuBar menuBar;
-    private Label loadingLabel;
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton,
             accountButton;
     private Pane ordersButtonButtonPane;
@@ -83,15 +80,27 @@ public class MainViewCB extends ViewCB<MainPM> {
 
         this.navigationController = navigationController;
         this.overlayController = overlayController;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        super.initialize(url, rb);
+        Profiler.printMsgWithTime("MainController.initialize");
 
         // just temp. ugly hack... Popups will be removed
         Popups.setOverlayController(overlayController);
 
         navigationController.addListener(navigationItems -> {
             if (navigationItems != null) {
-                for (int i = 0; i < navigationItems.length; i++) {
-                    if (navigationItems[i].getLevel() == 1) {
-                        mainNavigationItem = navigationItems[i];
+                for (NavigationItem navigationItem : navigationItems) {
+                    if (navigationItem.getLevel() == 1) {
+                        mainNavigationItem = navigationItem;
                         break;
                     }
                 }
@@ -115,19 +124,7 @@ public class MainViewCB extends ViewCB<MainPM> {
                 Transitions.removeBlur(baseApplicationContainer);
             }
         });
-    }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
-        Profiler.printMsgWithTime("MainController.initialize");
         startup();
     }
 
@@ -142,43 +139,11 @@ public class MainViewCB extends ViewCB<MainPM> {
     // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void selectMainMenuButton(NavigationItem navigationItem) {
-        switch (navigationItem) {
-            case HOME:
-                homeButton.setSelected(true);
-                break;
-            case FUNDS:
-                fundsButton.setSelected(true);
-                break;
-            case MSG:
-                msgButton.setSelected(true);
-                break;
-            case ORDERS:
-                ordersButton.setSelected(true);
-                break;
-            case SETTINGS:
-                settingsButton.setSelected(true);
-                break;
-            case SELL:
-                sellButton.setSelected(true);
-                break;
-            case BUY:
-                buyButton.setSelected(true);
-                break;
-            case ACCOUNT:
-                accountButton.setSelected(true);
-                break;
-            default:
-                log.error(navigationItem.getFxmlUrl() + " is no main navigation item");
-                break;
-        }
-    }
-
     @Override
     public Initializable loadView(NavigationItem navigationItem) {
         super.loadView((navigationItem));
 
-        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
             final Node view = loader.load();
             contentContainer.getChildren().setAll(view);
@@ -212,8 +177,8 @@ public class MainViewCB extends ViewCB<MainPM> {
     private void onBaseContainersCreated() {
         Profiler.printMsgWithTime("MainController.onBaseContainersCreated");
 
-        menuBar = getMenuBar();
-        applicationContainer = getApplicationContainer();
+        MenuBar menuBar = getMenuBar();
+        AnchorPane applicationContainer = getApplicationContainer();
 
         baseApplicationContainer.setTop(menuBar);
         baseApplicationContainer.setCenter(applicationContainer);
@@ -260,6 +225,38 @@ public class MainViewCB extends ViewCB<MainPM> {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void selectMainMenuButton(NavigationItem navigationItem) {
+        switch (navigationItem) {
+            case HOME:
+                homeButton.setSelected(true);
+                break;
+            case FUNDS:
+                fundsButton.setSelected(true);
+                break;
+            case MSG:
+                msgButton.setSelected(true);
+                break;
+            case ORDERS:
+                ordersButton.setSelected(true);
+                break;
+            case SETTINGS:
+                settingsButton.setSelected(true);
+                break;
+            case SELL:
+                sellButton.setSelected(true);
+                break;
+            case BUY:
+                buyButton.setSelected(true);
+                break;
+            case ACCOUNT:
+                accountButton.setSelected(true);
+                break;
+            default:
+                log.error(navigationItem.getFxmlUrl() + " is no main navigation item");
+                break;
+        }
+    }
+
     private BorderPane getBaseApplicationContainer() {
         BorderPane borderPane = new BorderPane();
         borderPane.setId("base-content-container");
@@ -280,7 +277,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         subTitle.setAlignment(Pos.CENTER);
         subTitle.setId("logo-sub-title-label");
 
-        loadingLabel = new Label();
+        Label loadingLabel = new Label();
         loadingLabel.setAlignment(Pos.CENTER);
         loadingLabel.setPadding(new Insets(80, 0, 0, 0));
         loadingLabel.textProperty().bind(presentationModel.splashScreenInfoText);
@@ -460,6 +457,4 @@ public class MainViewCB extends ViewCB<MainPM> {
         vBox.getChildren().setAll(comboBox, titleLabel);
         parent.getChildren().add(vBox);
     }
-
-
 }

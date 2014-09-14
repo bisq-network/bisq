@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.settings.uimock;
 
 import io.bitsquare.di.BitSquareModule;
-import io.bitsquare.util.BSFXMLLoader;
+import io.bitsquare.util.ViewLoader;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -54,7 +54,7 @@ public class RestrictionSettingsUIMockRunner extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException {
         Injector injector = Guice.createInjector(new BitSquareModule());
-        BSFXMLLoader.setInjector(injector);
+        ViewLoader.setInjector(injector);
 
         pane = new StackPane();
         scene = new Scene(pane, 1000, 1200);
@@ -67,7 +67,7 @@ public class RestrictionSettingsUIMockRunner extends Application {
     public void loadMainWindow() {
         log.debug("re load");
         pane.getChildren().removeAll();
-        BSFXMLLoader loader = new BSFXMLLoader(
+        ViewLoader loader = new ViewLoader(
                 getUrl("/io/bitsquare/gui/settings/uimock/RestrictionSettingsViewUIMock.fxml"), false);
 
         try {

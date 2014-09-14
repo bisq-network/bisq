@@ -27,7 +27,7 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
-import io.bitsquare.util.BSFXMLLoader;
+import io.bitsquare.util.ViewLoader;
 
 import com.google.common.base.Throwables;
 
@@ -105,16 +105,16 @@ public class BitSquare extends Application {
 
         User persistedUser = (User) persistence.read(user);
         user.applyPersistedUser(persistedUser);
-        persistence.write(user);
+        //persistence.write(user);
 
         settings.applyPersistedSettings((Settings) persistence.read(settings.getClass().getName()));
 
         primaryStage.setTitle("BitSquare (" + APP_NAME + ")");
 
-        BSFXMLLoader.setInjector(injector);
+        ViewLoader.setInjector(injector);
 
-        final BSFXMLLoader loader =
-                new BSFXMLLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), false);
+        final ViewLoader loader =
+                new ViewLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), false);
         try {
             final Parent view = loader.load();
 

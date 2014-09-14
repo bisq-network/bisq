@@ -31,7 +31,6 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
         this.presentationModel = presentationModel;
     }
 
-    // TODO Still open question if we enforce a presentationModel or not? For small UIs it might be too much overhead.
     public ViewCB() {
     }
 

@@ -44,7 +44,7 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MainModel extends UIModel {
+class MainModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(MainModel.class);
 
     private final User user;
@@ -56,11 +56,11 @@ public class MainModel extends UIModel {
     private boolean messageFacadeInited;
     private boolean walletFacadeInited;
 
-    public final BooleanProperty backendInited = new SimpleBooleanProperty();
-    public final DoubleProperty networkSyncProgress = new SimpleDoubleProperty();
-    public final BooleanProperty networkSyncComplete = new SimpleBooleanProperty();
-    public final BooleanProperty takeOfferRequested = new SimpleBooleanProperty();
-    public final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
+    final BooleanProperty backendInited = new SimpleBooleanProperty();
+    final DoubleProperty networkSyncProgress = new SimpleDoubleProperty();
+    final BooleanProperty networkSyncComplete = new SimpleBooleanProperty();
+    final BooleanProperty takeOfferRequested = new SimpleBooleanProperty();
+    final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -99,7 +99,7 @@ public class MainModel extends UIModel {
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initBackend() {
+    void initBackend() {
         Profiler.printMsgWithTime("MainModel.initFacades");
         messageFacade.init(new BootstrapListener() {
             @Override
@@ -135,27 +135,29 @@ public class MainModel extends UIModel {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setSelectedNavigationItem(NavigationItem navigationItem) {
+    void setSelectedNavigationItem(NavigationItem navigationItem) {
         persistence.write(this, "selectedNavigationItem", navigationItem);
     }
 
-    public void setCurrentBankAccount(BankAccount bankAccount) {
+    void setCurrentBankAccount(BankAccount bankAccount) {
         user.setCurrentBankAccount(bankAccount);
+        persistence.write(user);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<BankAccount> getBankAccounts() {
+    ObservableList<BankAccount> getBankAccounts() {
         return user.getBankAccounts();
     }
 
-    public ObjectProperty<BankAccount> currentBankAccountProperty() {
+    ObjectProperty<BankAccount> currentBankAccountProperty() {
         return user.currentBankAccountProperty();
     }
 
-    public NavigationItem[] getSelectedNavigationItems() {
+    NavigationItem[] getSelectedNavigationItems() {
         NavigationItem[] selectedNavigationItems = (NavigationItem[]) persistence.read(this, "selectedNavigationItems");
         if (selectedNavigationItems == null || selectedNavigationItems.length == 0)
             selectedNavigationItems = new NavigationItem[]{NavigationItem.BUY};
@@ -186,7 +188,6 @@ public class MainModel extends UIModel {
 
         backendInited.set(true);
     }
-
 
     private void updateBalance(Coin balance) {
         this.balance.set(balance);

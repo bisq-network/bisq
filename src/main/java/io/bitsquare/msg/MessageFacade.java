@@ -35,9 +35,9 @@ import java.io.IOException;
 import java.security.PublicKey;
 
 import java.util.ArrayList;
-import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -56,6 +56,7 @@ import net.tomp2p.futures.BaseFutureAdapter;
 import net.tomp2p.futures.BaseFutureListener;
 import net.tomp2p.futures.FutureDirect;
 import net.tomp2p.peers.Number160;
+import net.tomp2p.peers.Number640;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.storage.Data;
 import net.tomp2p.utils.Utils;
@@ -184,14 +185,22 @@ public class MessageFacade implements MessageBroker {
                     if (future.isSuccess()) {
                         Platform.runLater(() -> {
                             addOfferListener.onComplete();
-                            orderBookListeners.stream().forEach(listener ->
-                                    listener.onOfferAdded(offerData, future.isSuccess()));
+                            orderBookListeners.stream().forEach(listener -> {
+                                try {
+                                    Object offerDataObject = offerData.object();
+                                    if (offerDataObject instanceof Offer) {
+                                        listener.onOfferAdded((Offer) offerDataObject);
+                                    }
+                                } catch (ClassNotFoundException | IOException e) {
+                                    e.printStackTrace();
+                                    log.error("Add offer to DHT failed: " + e.getMessage());
+                                }
+                            });
 
                             // TODO will be removed when we don't use polling anymore
                             setDirty(locationKey);
-                            log.trace("Add offer to DHT was successful. Stored data: [locationKey: " + locationKey +
-                                    ", " +
-                                    "value: " + offerData + "]");
+                            log.trace("Add offer to DHT was successful. Added data: [locationKey: " + locationKey +
+                                    ", value: " + offerData + "]");
                         });
                     }
                     else {
@@ -229,28 +238,39 @@ public class MessageFacade implements MessageBroker {
             futureRemove.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    Platform.runLater(() -> {
-                        orderBookListeners.stream().forEach(orderBookListener ->
-                                orderBookListener.onOfferRemoved(offerData, future.isSuccess()));
-                        setDirty(locationKey);
-                    });
                     if (future.isSuccess()) {
-                        log.trace("Remove offer from DHT was successful. Stored data: [key: " + locationKey + ", " +
+                        Platform.runLater(() -> {
+                            orderBookListeners.stream().forEach(orderBookListener -> {
+                                try {
+                                    Object offerDataObject = offerData.object();
+                                    if (offerDataObject instanceof Offer) {
+                                        orderBookListener.onOfferRemoved((Offer) offerDataObject);
+                                    }
+                                } catch (ClassNotFoundException | IOException e) {
+                                    e.printStackTrace();
+                                    log.error("Remove offer from DHT failed. Error: " + e.getMessage());
+                                }
+                            });
+                            setDirty(locationKey);
+                        });
+
+                        log.trace("Remove offer from DHT was successful. Removed data: [key: " + locationKey + ", " +
                                 "value: " + offerData + "]");
                     }
                     else {
-                        log.error("Remove offer from DHT failed. locationKey: " + locationKey + ", Reason: " + future
-                                .failedReason());
+                        log.error("Remove offer from DHT  was not successful. locationKey: " + locationKey + ", " +
+                                "Reason: " + future.failedReason());
                     }
                 }
 
                 @Override
                 public void exceptionCaught(Throwable t) throws Exception {
-                    log.error(t.toString());
+                    log.error("Remove offer from DHT failed. Error: " + t.getMessage());
                 }
             });
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+            log.error("Remove offer from DHT failed. Error: " + e.getMessage());
         }
     }
 
@@ -260,14 +280,31 @@ public class MessageFacade implements MessageBroker {
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture baseFuture) throws Exception {
-                Platform.runLater(() -> orderBookListeners.stream().forEach(orderBookListener -> orderBookListener
-                        .onOffersReceived(futureGet.dataMap(), baseFuture.isSuccess())));
                 if (baseFuture.isSuccess()) {
-                    log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey
-                            + ", values: " + futureGet.dataMap() + "]");
+                    final Map<Number640, Data> dataMap = futureGet.dataMap();
+                    final List<Offer> offers = new ArrayList<>();
+                    if (dataMap != null) {
+                        for (Data offerData : dataMap.values()) {
+                            try {
+                                Object offerDataObject = offerData.object();
+                                if (offerDataObject instanceof Offer) {
+                                    offers.add((Offer) offerDataObject);
+                                }
+                            } catch (ClassNotFoundException | IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        Platform.runLater(() -> orderBookListeners.stream().forEach(listener ->
+                                listener.onOffersReceived(offers)));
+                    }
+
+                    log.trace("Get offers from DHT was successful");
+                    /* log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey
+                            + ", values: " + futureGet.dataMap() + "]");*/
                 }
                 else {
-                    log.error("Get offers from DHT failed with reason:" + baseFuture.failedReason());
+                    log.error("Get offers from DHT  was not successful with reason:" + baseFuture.failedReason());
                 }
             }
         });
@@ -409,8 +446,8 @@ public class MessageFacade implements MessageBroker {
         return isDirty;
     }
 
-    public void getDirtyFlag(Currency currency) {
-        Number160 locationKey = Number160.createHash(currency.getCurrencyCode());
+    public void getDirtyFlag(String currencyCode) {
+        Number160 locationKey = Number160.createHash(currencyCode);
         try {
             FutureGet getFuture = p2pNode.getData(getDirtyLocationKey(locationKey));
             getFuture.addListener(new BaseFutureListener<BaseFuture>() {

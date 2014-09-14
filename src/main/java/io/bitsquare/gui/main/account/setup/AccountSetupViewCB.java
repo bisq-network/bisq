@@ -29,7 +29,7 @@ import io.bitsquare.gui.main.account.content.registration.RegistrationViewCB;
 import io.bitsquare.gui.main.account.content.restrictions.RestrictionsViewCB;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsViewCB;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.util.BSFXMLLoader;
+import io.bitsquare.util.ViewLoader;
 
 import java.io.IOException;
 
@@ -165,7 +165,7 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
 
     @Override
     public Initializable loadView(NavigationItem navigationItem) {
-        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
             final Pane view = loader.load();
             content.getChildren().setAll(view);

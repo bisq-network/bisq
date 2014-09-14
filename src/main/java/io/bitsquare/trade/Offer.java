@@ -154,20 +154,20 @@ public class Offer implements Serializable {
         return acceptedLanguageLocales;
     }
 
-    public Fiat getVolumeForCoin(Coin coin) {
-        if (price != null && coin != null && !coin.isZero() && !price.isZero()) {
-            return new ExchangeRate(price).coinToFiat(coin);
+    public Fiat getVolumeByAmount(Coin amount) {
+        if (price != null && amount != null && !amount.isZero() && !price.isZero()) {
+            return new ExchangeRate(price).coinToFiat(amount);
         }
         else
             return null;
     }
 
     public Fiat getOfferVolume() {
-        return getVolumeForCoin(amount);
+        return getVolumeByAmount(amount);
     }
 
     public Fiat getMinOfferVolume() {
-        return getVolumeForCoin(minAmount);
+        return getVolumeByAmount(minAmount);
     }
 
     public String getOfferFeePaymentTxID() {

@@ -77,32 +77,32 @@ public class CreateOfferModel extends UIModel {
     @Nullable private Direction direction = null;
     private AddressEntry addressEntry;
 
-    public final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
-    public final StringProperty transactionId = new SimpleStringProperty();
-    public final StringProperty bankAccountCurrency = new SimpleStringProperty();
-    public final StringProperty bankAccountCounty = new SimpleStringProperty();
-    public final StringProperty bankAccountType = new SimpleStringProperty();
-    public final StringProperty fiatCode = new SimpleStringProperty();
-    public final StringProperty btcCode = new SimpleStringProperty();
+    final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
+    final StringProperty transactionId = new SimpleStringProperty();
+    final StringProperty bankAccountCurrency = new SimpleStringProperty();
+    final StringProperty bankAccountCounty = new SimpleStringProperty();
+    final StringProperty bankAccountType = new SimpleStringProperty();
+    final StringProperty fiatCode = new SimpleStringProperty();
+    final StringProperty btcCode = new SimpleStringProperty();
 
-    public final LongProperty collateralAsLong = new SimpleLongProperty();
+    final LongProperty collateralAsLong = new SimpleLongProperty();
 
-    public final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty();
-    public final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
-    public final BooleanProperty useMBTC = new SimpleBooleanProperty();
+    final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty();
+    final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
+    final BooleanProperty useMBTC = new SimpleBooleanProperty();
 
-    public final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
-    public final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
-    public final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
-    public final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
-    public final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
-    public final ObjectProperty<Coin> collateralAsCoin = new SimpleObjectProperty<>();
-    public final ObjectProperty<Coin> offerFeeAsCoin = new SimpleObjectProperty<>();
-    public final ObjectProperty<Coin> networkFeeAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
+    final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> collateralAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> offerFeeAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> networkFeeAsCoin = new SimpleObjectProperty<>();
 
-    public final ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();
-    public final ObservableList<Locale> acceptedLanguages = FXCollections.observableArrayList();
-    public final ObservableList<Arbitrator> acceptedArbitrators = FXCollections.observableArrayList();
+    final ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();
+    final ObservableList<Locale> acceptedLanguages = FXCollections.observableArrayList();
+    final ObservableList<Arbitrator> acceptedArbitrators = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -144,6 +144,15 @@ public class CreateOfferModel extends UIModel {
             });
             updateBalance(walletFacade.getBalanceForAddress(getAddressEntry().getAddress()));
         }
+
+        if (user != null) {
+            user.currentBankAccountProperty().addListener((ov, oldValue, newValue) -> applyBankAccount(newValue));
+
+            applyBankAccount(user.getCurrentBankAccount());
+        }
+
+        if (settings != null)
+            btcCode.bind(settings.btcDenominationProperty());
     }
 
     @Override
@@ -156,18 +165,6 @@ public class CreateOfferModel extends UIModel {
             acceptedCountries.setAll(settings.getAcceptedCountries());
             acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
             acceptedArbitrators.setAll(settings.getAcceptedArbitrators());
-            btcCode.bind(settings.btcDenominationProperty());
-        }
-
-        if (user != null) {
-            BankAccount bankAccount = user.getCurrentBankAccount();
-            if (bankAccount != null) {
-                bankAccountType.set(bankAccount.getBankAccountType().toString());
-                bankAccountCurrency.set(bankAccount.getCurrency().getCurrencyCode());
-                bankAccountCounty.set(bankAccount.getCountry().getName());
-
-                fiatCode.set(bankAccount.getCurrency().getCurrencyCode());
-            }
         }
     }
 
@@ -188,7 +185,7 @@ public class CreateOfferModel extends UIModel {
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void placeOffer() {
+    void placeOffer() {
         // data validation is done in the trade domain
         tradeManager.requestPlaceOffer(offerId,
                 direction,
@@ -203,10 +200,12 @@ public class CreateOfferModel extends UIModel {
         );
     }
 
-    public void calculateVolume() {
+    void calculateVolume() {
         try {
-            if (priceAsFiat.get() != null && amountAsCoin.get() != null && !amountAsCoin.get().isZero() && !priceAsFiat
-                    .get().isZero()) {
+            if (priceAsFiat.get() != null &&
+                    amountAsCoin.get() != null &&
+                    !amountAsCoin.get().isZero() &&
+                    !priceAsFiat.get().isZero()) {
                 volumeAsFiat.set(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
             }
         } catch (Throwable t) {
@@ -215,14 +214,15 @@ public class CreateOfferModel extends UIModel {
         }
     }
 
-    public void calculateAmount() {
+    void calculateAmount() {
         try {
-            if (volumeAsFiat.get() != null && priceAsFiat.get() != null && !volumeAsFiat.get().isZero() && !priceAsFiat
-                    .get().isZero()) {
-                amountAsCoin.set(new ExchangeRate(priceAsFiat.get()).fiatToCoin(volumeAsFiat.get()));
-
+            if (volumeAsFiat.get() != null &&
+                    priceAsFiat.get() != null &&
+                    !volumeAsFiat.get().isZero() &&
+                    !priceAsFiat.get().isZero()) {
                 // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
-                amountAsCoin.set(reduceTo4Decimals(amountAsCoin.get()));
+                amountAsCoin.set(reduceTo4Decimals(new ExchangeRate(priceAsFiat.get()).fiatToCoin(volumeAsFiat.get())));
+
                 calculateTotalToPay();
                 calculateCollateral();
             }
@@ -232,7 +232,7 @@ public class CreateOfferModel extends UIModel {
         }
     }
 
-    public void calculateTotalToPay() {
+    void calculateTotalToPay() {
         calculateCollateral();
         try {
             if (collateralAsCoin.get() != null) {
@@ -244,7 +244,7 @@ public class CreateOfferModel extends UIModel {
         }
     }
 
-    public void calculateCollateral() {
+    void calculateCollateral() {
         try {
 
             if (amountAsCoin.get() != null)
@@ -255,7 +255,7 @@ public class CreateOfferModel extends UIModel {
         }
     }
 
-    public boolean isMinAmountLessOrEqualAmount() {
+    boolean isMinAmountLessOrEqualAmount() {
         //noinspection SimplifiableIfStatement
         if (minAmountAsCoin.get() != null && amountAsCoin.get() != null)
             return !minAmountAsCoin.get().isGreaterThan(amountAsCoin.get());
@@ -268,21 +268,21 @@ public class CreateOfferModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Nullable
-    public Direction getDirection() {
+    Direction getDirection() {
         return direction;
     }
 
-    public void setDirection(Direction direction) {
+    void setDirection(Direction direction) {
         // direction can not be changed once it is initially set
         checkArgument(this.direction == null);
         this.direction = direction;
     }
 
-    public WalletFacade getWalletFacade() {
+    WalletFacade getWalletFacade() {
         return walletFacade;
     }
 
-    public String getOfferId() {
+    String getOfferId() {
         return offerId;
     }
 
@@ -298,5 +298,15 @@ public class CreateOfferModel extends UIModel {
 
     public AddressEntry getAddressEntry() {
         return addressEntry;
+    }
+
+    private void applyBankAccount(BankAccount bankAccount) {
+        if (bankAccount != null) {
+            bankAccountType.set(bankAccount.getBankAccountType().toString());
+            bankAccountCurrency.set(bankAccount.getCurrency().getCurrencyCode());
+            bankAccountCounty.set(bankAccount.getCountry().getName());
+
+            fiatCode.set(bankAccount.getCurrency().getCurrencyCode());
+        }
     }
 }

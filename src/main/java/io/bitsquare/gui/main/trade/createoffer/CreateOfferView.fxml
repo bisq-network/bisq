@@ -47,19 +47,6 @@
             <TitledGroupBg fx:id="priceAmountPane" text="%createOffer.amountPriceBox.title"
                            GridPane.rowSpan="3" GridPane.columnSpan="3"/>
 
-            <!--   <Pane fx:id="priceAmountPane" id="form-group-background-active" GridPane.columnSpan="3"
-                    GridPane.rowSpan="3">
-                  <GridPane.margin>
-                      <Insets right="-10" bottom="-10" left="-10" top="-10"/>
-                  </GridPane.margin>
-                  <Label fx:id="priceAmountTitleLabel" id="form-group-title-active"
-                         text="%createOffer.amountPriceBox.title" layoutX="8" layoutY="-8">
-                      <padding>
-                          <Insets left="5" right="7"/>
-                      </padding>
-                  </Label>
-              </Pane>  -->
-
             <VBox alignment="CENTER" spacing="6" GridPane.rowSpan="2">
                 <GridPane.margin>
                     <Insets bottom="10.0" left="10.0" right="10.0" top="20.0"/>
@@ -141,7 +128,7 @@
                 </HBox>
             </VBox>
 
-            <InfoDisplay gridPane="$gridPane" onAction="#onOpenGeneralHelp" rowIndex="2"
+            <InfoDisplay gridPane="$gridPane" onAction="#onOpenGeneralHelp" rowIndex="2" prefWidth="740"
                          text="%createOffer.amountPriceBox.info"/>
 
             <Button fx:id="showPaymentInfoScreenButton" text="%createOffer.amountPriceBox.next" id="show-details-button"
@@ -157,19 +144,6 @@
             -->
             <TitledGroupBg fx:id="payFundsPane" text="%createOffer.fundsBox.title" GridPane.rowIndex="4"
                            GridPane.rowSpan="4" GridPane.columnSpan="3" visible="false"/>
-
-            <!--  <Pane fx:id="payFundsPane" id="form-group-background-active" GridPane.columnSpan="3"
-                  GridPane.rowIndex="4" GridPane.rowSpan="4" visible="false">
-                <GridPane.margin>
-                    <Insets right="-10" bottom="-10" left="-10" top="-10"/>
-                </GridPane.margin>
-                <Label fx:id="payFundsTitleLabel" text="%createOffer.fundsBox.title" id="form-group-title-active"
-                       layoutX="8" layoutY="-8">
-                    <padding>
-                        <Insets left="5" right="7"/>
-                    </padding>
-                </Label>
-            </Pane>  -->
 
             <HBox GridPane.rowIndex="4" spacing="4" alignment="CENTER_RIGHT">
                 <Label fx:id="totalToPayLabel" text="%createOffer.fundsBox.totalsNeeded" visible="false"/>
@@ -204,17 +178,17 @@
             </BalanceTextField>
 
             <InfoDisplay fx:id="fundsBoxInfoDisplay" gridPane="$gridPane" onAction="#onOpenFundingHelp" rowIndex="7"
-                         text="%createOffer.fundsBox.info" visible="false"/>
+                         text="%createOffer.fundsBox.info" visible="false" prefWidth="740"/>
 
             <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="8">
-                <GridPane.margin>
-                    <Insets bottom="30" top="15.0"/>
-                </GridPane.margin>
                 <Button fx:id="showAdvancedSettingsButton" text="%createOffer.fundsBox.showAdvanced"
                         onAction="#onToggleShowAdvancedSettings" visible="false"/>
                 <Button fx:id="placeOfferButton" text="%createOffer.fundsBox.placeOffer" visible="false"
                         defaultButton="true"
                         onAction="#onPlaceOffer"/>
+                <GridPane.margin>
+                    <Insets bottom="30" top="15.0"/>
+                </GridPane.margin>
             </HBox>
 
             <!-- 
@@ -286,7 +260,7 @@
             </TextField>
 
             <InfoDisplay fx:id="advancedInfoDisplay" gridPane="$gridPane" onAction="#onOpenAdvancedSettingsHelp"
-                         rowIndex="15" visible="false"
+                         rowIndex="15" visible="false" prefWidth="740"
                          text="%createOffer.advancedBox.info">
             </InfoDisplay>
 

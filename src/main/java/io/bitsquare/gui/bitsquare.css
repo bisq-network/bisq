@@ -14,6 +14,12 @@ upper gradient color on tab: d3d3d3
 lower gradient color on tab: dddddd
 */
 
+.root {
+    -bs-theme-color: #0096c9;
+    -bs-dark-grey: #333333;
+    -bs-bg-grey: #dddddd;
+}
+
 
 /* Splash */
 #splash {
@@ -27,7 +33,7 @@ lower gradient color on tab: dddddd
 }
 
 #base-content-container {
-    -fx-background-color: #dddddd;
+    -fx-background-color: -bs-bg-grey;
 }
 
 #content-pane {
@@ -63,7 +69,7 @@ lower gradient color on tab: dddddd
 }
 
 #nav-button:selected .text {
-   -fx-font-size: 11; 
+    -fx-font-size: 11; 
     -fx-font-weight: bold;
 }
 
@@ -103,13 +109,19 @@ lower gradient color on tab: dddddd
 }
 
 .copy-icon {
-    -fx-text-fill: #0096c9;
+    -fx-text-fill: -bs-theme-color;
     -fx-cursor: hand;
 }
 
 .copy-icon:hover {
     -fx-text-fill: black;
 }
+
+.tooltip {
+    -fx-background-color: white;
+    -fx-text-fill: black;
+}
+
 
 /* Same style like non editable textfield. But textfield spans a whole column in a grid, so we use generally 
 textfield */
@@ -121,7 +133,7 @@ textfield */
 
 #address-text-field {
     -fx-cursor: hand;
-    -fx-text-fill: #0096c9;
+    -fx-text-fill: -bs-theme-color;
 }
 #address-text-field:hover {
     -fx-text-fill: black;
@@ -157,7 +169,7 @@ textfield */
 }
 
 .table-view .table-row-cell .copy-icon .text {
-    -fx-fill: #0096c9;
+    -fx-fill: -bs-theme-color;
 }
 
 .table-view .table-row-cell .copy-icon .text:hover {
@@ -173,7 +185,7 @@ textfield */
 }
 
 .table-view .table-row-cell .hyperlink .text {
-    -fx-fill: #0096c9;
+    -fx-fill: -bs-theme-color;
 }
 
 .table-view .table-row-cell .hyperlink .text:hover {
@@ -194,12 +206,12 @@ textfield */
 }
 
 #clickable-icon {
-    -fx-text-fill: #0096c9;
+    -fx-text-fill: -bs-theme-color;
     -fx-cursor: hand;
 }
 
 #clickable-icon:hover {
-    -fx-text-fill: #666;
+    -fx-text-fill: #666666;
 }
 
 #form-title {
@@ -255,13 +267,13 @@ textfield */
     -fx-background-color:
            #cfcfcf,
            linear-gradient(#cfcfcf 0%, #b5b5b5 100%),
-           linear-gradient(#d3d3d3 0%, #dddddd 100%);
+           linear-gradient(#d3d3d3 0%, -bs-bg-grey 100%);
        -fx-background-insets: 0 0 0 0,0,1;
 }
 
 #content-pane-label {
     -fx-font-size: 14;
-     -fx-text-fill: #000;
+     -fx-text-fill: black;
 }
 #info-icon-label {
     -fx-font-size:16; 
@@ -272,7 +284,7 @@ textfield */
 #direction-icon-label {
     -fx-font-weight:bold; 
     -fx-font-size:16; 
-    -fx-text-fill: #333;
+    -fx-text-fill: -bs-dark-grey;
 }
 
 #input-description-label {
@@ -289,14 +301,14 @@ textfield */
 #currency-info-label {
     -fx-border-radius: 0 4 4 0;
     -fx-padding: 4 4 4 4;
-    -fx-background-color: linear-gradient(to bottom, #eee, #ddd);
+     -fx-background-color: #f6f6f6;
     -fx-border-color: #aaa;
     -fx-border-style:  solid  solid solid none;
     -fx-border-insets: 0 0 0 -2;
 }
 
 #totals-separator {
-      -fx-background: #aaa;
+      -fx-background: #AAAAAA;
 }
 
 #payment-info {
@@ -308,32 +320,32 @@ textfield */
 #wizard-title-deactivated {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: #ccc;
+    -fx-text-fill: #CCCCCC;
 }
 #wizard-title-active {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: #000;
+    -fx-text-fill: black;
 }
 #wizard-title-completed {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: #000;
+    -fx-text-fill: black;
 }
 
 #wizard-sub-title-deactivated {
-    -fx-text-fill: #ccc;
+    -fx-text-fill: #CCCCCC;
 }
 #wizard-sub-title-active {
-    -fx-text-fill: #000;
+    -fx-text-fill: black;
 }
 #wizard-sub-title-completed {
-    -fx-text-fill: #000;
+    -fx-text-fill: black;
 }
 
 #wizard-item-background-deactivated {
     -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, #ddd, #ccc);
+    -fx-outer-border: linear-gradient(to bottom, #dddddd, #ccc);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -369,22 +381,22 @@ textfield */
 #wizard-title-disabled {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: #ccc;
+    -fx-text-fill: #CCCCCC;
 }
 #wizard-title-active {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: #000;
+    -fx-text-fill: black;
 }
 #wizard-title-selected {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: #0096c9;
+    -fx-text-fill: -bs-theme-color;
 }
 
 #account-settings-item-background-disabled {
     -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, #ddd, #ccc);
+    -fx-outer-border: linear-gradient(to bottom, #dddddd, #ccc);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -395,7 +407,7 @@ textfield */
 
 #account-settings-item-background-active {
     -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, #ddd, #ccc);
+    -fx-outer-border: linear-gradient(to bottom, #dddddd, #ccc);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -420,18 +432,18 @@ textfield */
 #titled-group-bg-label {
     -fx-font-weight: bold;
     -fx-font-size: 14;
-    -fx-text-fill: #333;
+    -fx-text-fill: -bs-dark-grey;
     -fx-background-color: #f4f4f4;
 }
 #titled-group-bg-label-active {
     -fx-font-weight: bold;
     -fx-font-size: 14;
-    -fx-text-fill: #0096c9;
+    -fx-text-fill: -bs-theme-color;
     -fx-background-color: #f4f4f4;
 }
 #titled-group-bg {
     -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
-    -fx-outer-border: linear-gradient(to bottom, #ddd, #ccc);
+    -fx-outer-border: linear-gradient(to bottom, #dddddd, #ccc);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
     -fx-inner-border,
@@ -448,4 +460,27 @@ textfield */
     -fx-body-color;
     -fx-background-insets: 0 0 -1 0, 0, 1, 2;
     -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+
+
+/* TitledSeparator */
+#titled-separator-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+    -fx-text-fill: -bs-dark-grey;
+    -fx-background-color: #f4f4f4;
+}
+#titled-separator-label-active {
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+    -fx-text-fill: -bs-theme-color;
+    -fx-background-color: #f4f4f4;
+}
+#titled-separator:horizontal .line {
+     -fx-border-color: #cccccc transparent #999999 transparent;
+}
+
+#titled-separator-active:horizontal .line {
+      -fx-border-color: #dddddd transparent derive(-bs-theme-color, 50%) transparent;
 }

@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.trade.createoffer;
 
 import io.bitsquare.gui.CachedViewCB;
+import io.bitsquare.gui.CloseListener;
 import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.OverlayController;
@@ -38,7 +39,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
@@ -76,32 +76,32 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
     private NavigationController navigationController;
     private OverlayController overlayController;
+    private CloseListener closeListener;
 
     private boolean detailsVisible;
     private boolean advancedScreenInited;
-    private Callable<Void> onCloseCallable;
 
     private ImageView expand;
     private ImageView collapse;
     private PopOver totalToPayInfoPopover;
 
-    @FXML private InfoDisplay advancedInfoDisplay, fundsBoxInfoDisplay;
-    @FXML private ScrollPane scrollPane;
-    @FXML private TitledGroupBg priceAmountPane, payFundsPane, showDetailsPane;
-    @FXML private Label buyLabel, addressLabel,
+    @FXML InfoDisplay advancedInfoDisplay, fundsBoxInfoDisplay;
+    @FXML ScrollPane scrollPane;
+    @FXML TitledGroupBg priceAmountPane, payFundsPane, showDetailsPane;
+    @FXML Label buyLabel, addressLabel,
             balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
             bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel,
             acceptedCountriesLabel, acceptedCountriesLabelIcon, acceptedLanguagesLabel, acceptedLanguagesLabelIcon,
             acceptedArbitratorsLabel, acceptedArbitratorsLabelIcon, amountBtcLabel,
             priceFiatLabel, volumeFiatLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel;
-    @FXML private Button showPaymentInfoScreenButton, showAdvancedSettingsButton, placeOfferButton;
+    @FXML Button showPaymentInfoScreenButton, showAdvancedSettingsButton, placeOfferButton;
 
-    @FXML private InputTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
-    @FXML private TextField acceptedArbitratorsTextField, totalToPayTextField, bankAccountTypeTextField,
+    @FXML InputTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
+    @FXML TextField acceptedArbitratorsTextField, totalToPayTextField, bankAccountTypeTextField,
             bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField,
             acceptedLanguagesTextField;
-    @FXML private AddressTextField addressTextField;
-    @FXML private BalanceTextField balanceTextField;
+    @FXML AddressTextField addressTextField;
+    @FXML BalanceTextField balanceTextField;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -147,14 +147,8 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
         // Inform parent that we gor removed.
         // Needed to reset disable state of createOfferButton in OrderBookController
-        if (onCloseCallable != null) {
-            try {
-                onCloseCallable.call();
-            } catch (Exception e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-            }
-        }
+        if (closeListener != null)
+            closeListener.onClosed();
     }
 
 
@@ -162,22 +156,25 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     // Public methods (called form other views/CB)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setOrderBookFilter(OrderBookInfo orderBookInfo) {
+    public void initWithOrderBookInfo(OrderBookInfo orderBookInfo) {
         presentationModel.setOrderBookFilter(orderBookInfo);
     }
 
+    public void setCloseListener(CloseListener closeListener) {
+        this.closeListener = closeListener;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
-    private void onPlaceOffer() {
+    void onPlaceOffer() {
         presentationModel.onPlaceOffer();
     }
 
     @FXML
-    private void onShowPayFundsScreen() {
+    void onShowPayFundsScreen() {
         priceAmountPane.setInactive();
 
         showPaymentInfoScreenButton.setVisible(false);
@@ -205,7 +202,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     }
 
     @FXML
-    private void onToggleShowAdvancedSettings() {
+    void onToggleShowAdvancedSettings() {
         detailsVisible = !detailsVisible;
         if (detailsVisible) {
             showAdvancedSettingsButton.setText(BSResources.get("createOffer.fundsBox.hideAdvanced"));
@@ -220,17 +217,17 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     }
 
     @FXML
-    private void onOpenGeneralHelp() {
+    void onOpenGeneralHelp() {
         Help.openWindow(HelpId.CREATE_OFFER_GENERAL);
     }
 
     @FXML
-    private void onOpenFundingHelp() {
+    void onOpenFundingHelp() {
         Help.openWindow(HelpId.CREATE_OFFER_FUNDING);
     }
 
     @FXML
-    private void onOpenAdvancedSettingsHelp() {
+    void onOpenAdvancedSettingsHelp() {
         Help.openWindow(HelpId.CREATE_OFFER_ADVANCED);
     }
 
@@ -359,9 +356,11 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         volumeDescriptionLabel.textProperty().bind(presentationModel.fiatCode);//Price per Bitcoin in EUR
 
         priceDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                BSResources.get("createOffer.amountPriceBox.priceDescr", presentationModel.fiatCode.get())));
+                        BSResources.get("createOffer.amountPriceBox.priceDescr", presentationModel.fiatCode.get()),
+                presentationModel.fiatCode));
         volumeDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                BSResources.get("createOffer.amountPriceBox.volumeDescr", presentationModel.fiatCode.get())));
+                        BSResources.get("createOffer.amountPriceBox.volumeDescr", presentationModel.fiatCode.get()),
+                presentationModel.fiatCode));
 
         buyLabel.textProperty().bind(presentationModel.directionLabel);
 
@@ -526,10 +525,6 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         double x = point.getX() + window.getX() + totalToPayInfoIconLabel.getWidth() - 3;
         double y = point.getY() + window.getY() + Math.floor(totalToPayInfoIconLabel.getHeight() / 2) - 9;
         return new Point2D(x, y);
-    }
-
-    public void setOnClose(Callable<Void> onCloseCallBack) {
-        this.onCloseCallable = onCloseCallBack;
     }
 }
 

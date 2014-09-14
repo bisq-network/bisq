@@ -19,6 +19,10 @@ public class CachedViewCB<T extends PresentationModel> extends ViewCB<T> {
         super(presentationModel);
     }
 
+    public CachedViewCB() {
+        super();
+    }
+
     /**
      * Get called form GUI framework when the UI is ready.
      * In caching controllers the initialize is only used for static UI setup.
@@ -36,8 +40,11 @@ public class CachedViewCB<T extends PresentationModel> extends ViewCB<T> {
                 // lets terminate
                 log.trace("Lifecycle: sceneProperty changed: " + this.getClass().getSimpleName() + " / oldValue=" +
                         oldValue + " / newValue=" + newValue);
-                if (oldValue == null && newValue != null) activate();
-                else if (oldValue != null && newValue == null) deactivate();
+
+                if (oldValue == null && newValue != null)
+                    activate();
+                else if (oldValue != null && newValue == null)
+                    deactivate();
             });
         }
 
@@ -50,7 +57,8 @@ public class CachedViewCB<T extends PresentationModel> extends ViewCB<T> {
      */
     public void activate() {
         log.trace("Lifecycle: activate " + this.getClass().getSimpleName());
-        if (childController instanceof CachedViewCB) ((CachedViewCB) childController).activate();
+        if (childController instanceof CachedViewCB)
+            ((CachedViewCB) childController).activate();
 
         if (presentationModel != null)
             presentationModel.activate();
@@ -61,7 +69,8 @@ public class CachedViewCB<T extends PresentationModel> extends ViewCB<T> {
      */
     public void deactivate() {
         log.trace("Lifecycle: deactivate " + this.getClass().getSimpleName());
-        if (childController instanceof CachedViewCB) ((CachedViewCB) childController).deactivate();
+        if (childController instanceof CachedViewCB)
+            ((CachedViewCB) childController).deactivate();
 
         if (presentationModel != null)
             presentationModel.deactivate();

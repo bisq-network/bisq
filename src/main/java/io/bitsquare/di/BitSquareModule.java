@@ -57,7 +57,6 @@ public class BitSquareModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(User.class).asEagerSingleton();
-        bind(OrderBook.class).asEagerSingleton();
         bind(Persistence.class).asEagerSingleton();
         bind(Settings.class).asEagerSingleton();
 
@@ -71,6 +70,7 @@ public class BitSquareModule extends AbstractModule {
         bind(BootstrappedPeerFactory.class).asEagerSingleton();
 
         bind(TradeManager.class).asEagerSingleton();
+        bind(OrderBook.class).asEagerSingleton();
         bind(NavigationController.class).asEagerSingleton();
         bind(OverlayController.class).asEagerSingleton();
         bind(BSFormatter.class).asEagerSingleton();
@@ -80,7 +80,6 @@ public class BitSquareModule extends AbstractModule {
         bind(FiatValidator.class).asEagerSingleton();
         bind(InputValidator.class).asEagerSingleton();
         bind(PasswordValidator.class).asEagerSingleton();
-
 
         //bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.MAIN_NET);
         // how to use reg test see description in the readme file

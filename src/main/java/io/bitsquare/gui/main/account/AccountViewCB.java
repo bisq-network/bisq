@@ -22,7 +22,7 @@ import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.main.account.setup.AccountSetupViewCB;
-import io.bitsquare.util.BSFXMLLoader;
+import io.bitsquare.util.ViewLoader;
 
 import java.io.IOException;
 
@@ -105,7 +105,7 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     public Initializable loadView(NavigationItem navigationItem) {
         super.loadView(navigationItem);
 
-        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
             Pane view = loader.load();
             tab.setContent(view);

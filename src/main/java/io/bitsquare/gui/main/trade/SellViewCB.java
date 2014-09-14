@@ -17,22 +17,13 @@
 
 package io.bitsquare.gui.main.trade;
 
-import io.bitsquare.trade.Direction;
-
 import javax.inject.Inject;
 
 public class SellViewCB extends TradeViewCB {
 
     @Inject
-    public SellViewCB(TradePM presentationModel) {
-        super(presentationModel);
+    public SellViewCB() {
+        super();
     }
-
-    @Override
-    protected void initOrderBook() {
-        orderBookViewCB.initOrderBook(Direction.SELL, presentationModel.getOrderBookInfo());
-    }
-
-
 }
 

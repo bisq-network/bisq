@@ -59,7 +59,7 @@ public class Trade implements Serializable {
     }
 
     public Fiat getTradeVolume() {
-        return offer.getVolumeForCoin(tradeAmount);
+        return offer.getVolumeByAmount(tradeAmount);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

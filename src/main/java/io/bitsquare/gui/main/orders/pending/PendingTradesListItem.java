@@ -23,6 +23,7 @@ import io.bitsquare.trade.Trade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// TODO don't use inheritance
 public class PendingTradesListItem extends OrderBookListItem {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesListItem.class);
 
@@ -30,7 +31,7 @@ public class PendingTradesListItem extends OrderBookListItem {
     private final Trade trade;
 
     public PendingTradesListItem(Trade trade) {
-        super(trade.getOffer());
+        super(trade.getOffer(), trade.getOffer().getBankAccountCountry());
         this.trade = trade;
     }
 

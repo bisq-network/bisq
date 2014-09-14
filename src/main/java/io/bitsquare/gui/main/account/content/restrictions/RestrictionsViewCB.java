@@ -28,7 +28,7 @@ import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
-import io.bitsquare.util.BSFXMLLoader;
+import io.bitsquare.util.ViewLoader;
 
 import java.io.IOException;
 
@@ -187,7 +187,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
     @Override
     public Initializable loadView(NavigationItem navigationItem) {
         // TODO caching causes exception
-        final BSFXMLLoader loader = new BSFXMLLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
+        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
         try {
             final Node view = loader.load();
             //TODO Resolve type problem...

@@ -49,7 +49,7 @@
             <Insets bottom="5"/>
         </GridPane.margin>
     </Button>
-    <InfoDisplay gridPane="$root" onAction="#onOpenHelp" rowIndex="3"
+    <InfoDisplay gridPane="$root" onAction="#onOpenHelp" rowIndex="3" prefWidth="570"
                  text="You can recreate your wallet our of these words when you lose your wallet. Backup it on paper to have better protection against online theft. Open the help menu for more information."/>
 
     <columnConstraints>

@@ -36,8 +36,8 @@ import org.slf4j.LoggerFactory;
  * Guice support for fxml controllers
  * Support caching to speed up switches between UI screens.
  */
-public class BSFXMLLoader {
-    private static final Logger log = LoggerFactory.getLogger(BSFXMLLoader.class);
+public class ViewLoader {
+    private static final Logger log = LoggerFactory.getLogger(ViewLoader.class);
     private static Injector injector = null;
     private FXMLLoader loader;
     private final boolean isCached;
@@ -45,27 +45,27 @@ public class BSFXMLLoader {
     private Item item;
 
     public static void setInjector(Injector injector) {
-        BSFXMLLoader.injector = injector;
+        ViewLoader.injector = injector;
     }
 
     // TODO maybe add more sophisticated caching strategy with removal of rarely accessed items
     private static final Map<URL, Item> cachedGUIItems = new HashMap<>();
 
-    public BSFXMLLoader(URL url) {
+    public ViewLoader(URL url) {
         this(url, true);
     }
 
     // TODO check relationship with CachedViewCB -> derive caching strategy, but there are some special cases where 
     // we need an override, as caching is done manually in the client class
-    public BSFXMLLoader(URL url, boolean useCaching) {
+    public ViewLoader(URL url, boolean useCaching) {
         this.url = url;
 
         isCached = useCaching && cachedGUIItems.containsKey(url);
         if (!isCached) {
             loader = new FXMLLoader(url, BSResources.getResourceBundle());
 
-            if (BSFXMLLoader.injector != null)
-                loader.setControllerFactory(new GuiceControllerFactory(BSFXMLLoader.injector));
+            if (ViewLoader.injector != null)
+                loader.setControllerFactory(new GuiceControllerFactory(ViewLoader.injector));
         }
     }
 

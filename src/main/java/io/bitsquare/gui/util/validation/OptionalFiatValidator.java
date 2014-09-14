@@ -33,8 +33,8 @@ import org.slf4j.LoggerFactory;
  * <p>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
-public final class FiatValidator extends NumberValidator {
-    private static final Logger log = LoggerFactory.getLogger(FiatValidator.class);
+public final class OptionalFiatValidator extends NumberValidator {
+    private static final Logger log = LoggerFactory.getLogger(OptionalFiatValidator.class);
 
     //TODO Find appropriate values - depends on currencies
     public static final double MIN_FIAT_VALUE = 0.01; // usually a cent is the smallest currency unit
@@ -43,7 +43,7 @@ public final class FiatValidator extends NumberValidator {
 
 
     @Inject
-    public FiatValidator(User user) {
+    public OptionalFiatValidator(User user) {
         if (user != null) {
             if (user.currentBankAccountProperty().get() == null)
                 setFiatCurrencyCode(Currency.getInstance(Locale.getDefault()).getCurrencyCode());
@@ -65,16 +65,27 @@ public final class FiatValidator extends NumberValidator {
     @Override
     public ValidationResult validate(String input) {
         ValidationResult result = validateIfNotEmpty(input);
+
+        // we accept empty input
+        if (!result.isValid)
+            return new ValidationResult(true);
+
         if (result.isValid) {
             input = cleanInput(input);
             result = validateIfNumber(input);
         }
 
         if (result.isValid) {
-            result = validateIfNotZero(input)
-                    .and(validateIfNotNegative(input))
-                    .and(validateIfNotExceedsMinFiatValue(input))
-                    .and(validateIfNotExceedsMaxFiatValue(input));
+            result = validateIfNotZero(input);
+            if (result.isValid) {
+                result = validateIfNotNegative(input)
+                        .and(validateIfNotExceedsMinFiatValue(input))
+                        .and(validateIfNotExceedsMaxFiatValue(input));
+            }
+            else {
+                // we accept zero input
+                return new ValidationResult(true);
+            }
         }
 
         return result;

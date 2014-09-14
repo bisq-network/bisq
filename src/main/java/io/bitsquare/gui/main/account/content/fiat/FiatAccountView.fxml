@@ -72,7 +72,7 @@
                   visible="false" prefWidth="150.0"/>
     </HBox>
 
-    <InfoDisplay gridPane="$root" onAction="#onOpenSetupHelp" rowIndex="7"
+    <InfoDisplay gridPane="$root" onAction="#onOpenSetupHelp" rowIndex="7" prefWidth="510"
                  text="The payments account data will be saved in a encrypted form to the Bitcoin block chain and will be used in the trade process for account verification."/>
 
     <HBox fx:id="buttonsHBox" GridPane.columnIndex="1" GridPane.rowIndex="8" spacing="10">
@@ -111,7 +111,7 @@
     <Button fx:id="removeBankAccountButton" text="Remove selected payments account" onAction="#onRemoveAccount"
             GridPane.columnIndex="1" GridPane.rowIndex="10" disable="true"/>
 
-    <InfoDisplay gridPane="$root" onAction="#onOpenManageAccountsHelp" rowIndex="11"
+    <InfoDisplay gridPane="$root" onAction="#onOpenManageAccountsHelp" rowIndex="11" prefWidth="510"
                  text="When you change your payments accounts later you need to do the renew the registration and pay the small registration fee."/>
 
     <columnConstraints>

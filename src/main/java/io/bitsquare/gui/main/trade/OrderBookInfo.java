@@ -26,26 +26,38 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 /**
- * Shared data between the different trade UIs
+ * Holds shared data between the different trade UIs
  */
 public class OrderBookInfo {
 
     private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
-
-    private Fiat price;
     private Coin amount;
+    private Fiat price;
+    private Fiat volume;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public OrderBookInfo() {
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Coin getAmount() {
-        return amount;
-    }
-
     public void setAmount(Coin amount) {
         this.amount = amount;
+    }
+
+    public void setPrice(Fiat price) {
+        this.price = price;
+    }
+
+    public void setVolume(Fiat volume) {
+        this.volume = volume;
     }
 
     public void setDirection(Direction direction) {
@@ -57,12 +69,16 @@ public class OrderBookInfo {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public Coin getAmount() {
+        return amount;
+    }
+
     public Fiat getPrice() {
         return price;
     }
 
-    public void setPrice(Fiat price) {
-        this.price = price;
+    public Fiat getVolume() {
+        return volume;
     }
 
     public Direction getDirection() {
@@ -72,6 +88,4 @@ public class OrderBookInfo {
     public ObjectProperty<Direction> directionProperty() {
         return direction;
     }
-
-
 }

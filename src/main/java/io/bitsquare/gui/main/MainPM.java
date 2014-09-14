@@ -36,16 +36,16 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MainPM extends PresentationModel<MainModel> {
+class MainPM extends PresentationModel<MainModel> {
     private static final Logger log = LoggerFactory.getLogger(MainPM.class);
 
-    public final BooleanProperty backendInited = new SimpleBooleanProperty();
-    public final StringProperty balance = new SimpleStringProperty();
-    public final StringProperty bankAccountsComboBoxPrompt = new SimpleStringProperty();
-    public final BooleanProperty bankAccountsComboBoxDisable = new SimpleBooleanProperty();
-    public final StringProperty splashScreenInfoText = new SimpleStringProperty();
-    public final BooleanProperty networkSyncComplete = new SimpleBooleanProperty();
-    public final BooleanProperty takeOfferRequested = new SimpleBooleanProperty();
+    final BooleanProperty backendInited = new SimpleBooleanProperty();
+    final StringProperty balance = new SimpleStringProperty();
+    final StringProperty bankAccountsComboBoxPrompt = new SimpleStringProperty();
+    final BooleanProperty bankAccountsComboBoxDisable = new SimpleBooleanProperty();
+    final StringProperty splashScreenInfoText = new SimpleStringProperty();
+    final BooleanProperty networkSyncComplete = new SimpleBooleanProperty();
+    final BooleanProperty takeOfferRequested = new SimpleBooleanProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +103,7 @@ public class MainPM extends PresentationModel<MainModel> {
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initBackend() {
+    void initBackend() {
         model.initBackend();
     }
 
@@ -112,11 +112,11 @@ public class MainPM extends PresentationModel<MainModel> {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setSelectedNavigationItem(NavigationItem navigationItem) {
+    void setSelectedNavigationItem(NavigationItem navigationItem) {
         model.setSelectedNavigationItem(navigationItem);
     }
 
-    public void setCurrentBankAccount(BankAccount bankAccount) {
+    void setCurrentBankAccount(BankAccount bankAccount) {
         model.setCurrentBankAccount(bankAccount);
     }
 
@@ -125,19 +125,19 @@ public class MainPM extends PresentationModel<MainModel> {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public NavigationItem[] getSelectedNavigationItems() {
+    NavigationItem[] getSelectedNavigationItems() {
         return model.getSelectedNavigationItems();
     }
 
-    public ObservableList<BankAccount> getBankAccounts() {
+    ObservableList<BankAccount> getBankAccounts() {
         return model.getBankAccounts();
     }
 
-    public ObjectProperty<BankAccount> currentBankAccountProperty() {
+    ObjectProperty<BankAccount> currentBankAccountProperty() {
         return model.currentBankAccountProperty();
     }
 
-    public StringConverter<BankAccount> getBankAccountsConverter() {
+    StringConverter<BankAccount> getBankAccountsConverter() {
         return new StringConverter<BankAccount>() {
             @Override
             public String toString(BankAccount bankAccount) {

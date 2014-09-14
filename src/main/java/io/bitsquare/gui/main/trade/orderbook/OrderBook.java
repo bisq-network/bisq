@@ -17,55 +17,48 @@
 
 package io.bitsquare.gui.main.trade.orderbook;
 
-import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.gui.main.trade.OrderBookInfo;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OrderBookListener;
-import io.bitsquare.settings.Settings;
-import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
-import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
-
-import java.io.IOException;
+import io.bitsquare.util.Utilities;
 
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 import javax.inject.Inject;
 
+import javafx.animation.AnimationTimer;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
-
-import net.tomp2p.peers.Number640;
-import net.tomp2p.storage.Data;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/*
-TODO move to OrderBookModel when converted to new UI structure
-remove dependencies to tomp2p
-import net.tomp2p.peers.Number160;
-import net.tomp2p.storage.Data;
- */
+import static com.google.common.base.Preconditions.checkArgument;
 
-public class OrderBook implements OrderBookListener {
+/**
+ * Holds and manages the unsorted and unfiltered orderbook list of both buy and sell offers.
+ * As it is used only by the Buy and Sell UIs we treat it as local UI model.
+ */
+public class OrderBook {
+
     private static final Logger log = LoggerFactory.getLogger(OrderBook.class);
-    private final ObservableList<OrderBookListItem> allOffers = FXCollections.observableArrayList();
-    private final FilteredList<OrderBookListItem> filteredList = new FilteredList<>(allOffers);
-    // FilteredList does not support sorting, so we need to wrap it to a SortedList
-    private final SortedList<OrderBookListItem> offerList = new SortedList<>(filteredList);
-    private final Settings settings;
-    private final User user;
+
     private final MessageFacade messageFacade;
-    private final TradeManager tradeManager;
+    private final User user;
+
+    private final ObservableList<OrderBookListItem> orderBookListItems = FXCollections.observableArrayList();
+    private final OrderBookListener orderBookListener;
+    private final ChangeListener<BankAccount> bankAccountChangeListener;
+    private final ChangeListener<Boolean> dirtyListener;
+    private String fiatCode;
+    private AnimationTimer pollingTimer;
+    private Country country;
+    private int numClients = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,143 +66,48 @@ public class OrderBook implements OrderBookListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OrderBook(Settings settings, User user, MessageFacade messageFacade, TradeManager tradeManager) {
-        this.settings = settings;
-        this.user = user;
+    public OrderBook(MessageFacade messageFacade, User user) {
         this.messageFacade = messageFacade;
-        this.tradeManager = tradeManager;
+        this.user = user;
+
+        bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
+        dirtyListener = (ov, oldValue, newValue) -> requestOffers();
+        orderBookListener = new OrderBookListener() {
+            @Override
+            public void onOfferAdded(Offer offer) {
+                addOfferToOrderBookListItems(offer);
+            }
+
+            @Override
+            public void onOffersReceived(List<Offer> offers) {
+                //TODO use deltas instead replacing the whole list
+                orderBookListItems.clear();
+                offers.stream().forEach(offer -> addOfferToOrderBookListItems(offer));
+            }
+
+            @Override
+            public void onOfferRemoved(Offer offer) {
+                orderBookListItems.removeIf(item -> item.getOffer().equals(offer));
+            }
+        };
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public API
+    // Package scope
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void init() {
-        messageFacade.addOrderBookListener(this);
+    void addClient() {
+        numClients++;
+        if (numClients == 1)
+            startPolling();
     }
 
-    public void cleanup() {
-        messageFacade.removeOrderBookListener(this);
-    }
-
-    public void loadOffers() {
-        if (user.getCurrentBankAccount() != null) {
-            messageFacade.getOffers(user.getCurrentBankAccount().getCurrency().getCurrencyCode());
-        }
-        else {
-            messageFacade.getOffers(CurrencyUtil.getDefaultCurrency().getCurrencyCode());
-        }
-    }
-
-    public void removeOffer(Offer offer) {
-        tradeManager.removeOffer(offer);
-    }
-
-    public void applyFilter(OrderBookInfo orderBookInfo) {
-        filteredList.setPredicate(orderBookListItem -> {
-            Offer offer = orderBookListItem.getOffer();
-            BankAccount currentBankAccount = user.getCurrentBankAccount();
-
-            if (orderBookInfo == null || currentBankAccount == null || orderBookInfo.getDirection() == null) {
-                return false;
-            }
-
-            // The users current bank account currency must match the offer currency (1 to 1)
-            boolean currencyResult = currentBankAccount.getCurrency().equals(offer.getCurrency());
-
-            // The offer bank account country must match one of the accepted countries defined in the settings (1 to n)
-            boolean countryResult = countryInList(offer.getBankAccountCountry(), settings.getAcceptedCountries());
-
-            // One of the supported languages from the settings must match one of the offer languages (n to n)
-            boolean languageResult =
-                    languagesInList(settings.getAcceptedLanguageLocales(), offer.getAcceptedLanguageLocales());
-
-            // Apply applyFilter only if there is a valid value set
-            // The requested amount must be lower or equal then the offer amount
-            boolean amountResult = true;
-            if (orderBookInfo.getAmount() != null)
-                amountResult = orderBookInfo.getAmount().compareTo(offer.getAmount()) <= 0;
-
-            // The requested trade direction must be opposite of the offerList trade direction
-            boolean directionResult = !orderBookInfo.getDirection().equals(offer.getDirection());
-
-            // Apply applyFilter only if there is a valid value set
-            boolean priceResult = true;
-            if (orderBookInfo.getPrice() != null) {
-                if (offer.getDirection() == Direction.SELL)
-                    priceResult = orderBookInfo.getPrice().compareTo(offer.getPrice()) >= 0;
-                else
-                    priceResult = orderBookInfo.getPrice().compareTo(offer.getPrice()) <= 0;
-            }
-
-            // The arbitrator defined in the offer must match one of the accepted arbitrators defined in the settings
-            // (1 to n)
-            boolean arbitratorResult = arbitratorsInList(offer.getArbitrators(), settings.getAcceptedArbitrators());
-
-            boolean result = currencyResult && countryResult && languageResult && amountResult && directionResult &&
-                    priceResult && arbitratorResult;
-
-            return result;
-        });
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: MessageListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onOfferAdded(Data offerData, boolean success) {
-        try {
-            Object offerDataObject = offerData.object();
-            if (offerDataObject instanceof Offer) {
-                Offer offer = (Offer) offerDataObject;
-                allOffers.add(new OrderBookListItem(offer));
-            }
-        } catch (ClassNotFoundException | IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-    }
-
-    @Override
-    public void onOffersReceived(Map<Number640, Data> dataMap, boolean success) {
-        if (success && dataMap != null) {
-            allOffers.clear();
-
-            for (Data offerData : dataMap.values()) {
-                try {
-                    Object offerDataObject = offerData.object();
-                    if (offerDataObject instanceof Offer) {
-                        Offer offer = (Offer) offerDataObject;
-                        OrderBookListItem orderBookListItem = new OrderBookListItem(offer);
-                        allOffers.add(orderBookListItem);
-                    }
-                } catch (ClassNotFoundException | IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        else {
-            allOffers.clear();
-        }
-    }
-
-    @Override
-    public void onOfferRemoved(Data offerData, boolean success) {
-        if (success && offerData != null) {
-            try {
-                Object offerDataObject = offerData.object();
-                if (offerDataObject instanceof Offer) {
-                    Offer offer = (Offer) offerDataObject;
-                    allOffers.removeIf(orderBookListItem -> orderBookListItem.getOffer().getId().equals(offer.getId()));
-                }
-            } catch (ClassNotFoundException | IOException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
-        }
-        else {
-            log.warn("onOfferRemoved failed");
-        }
+    void removeClient() {
+        numClients--;
+        checkArgument(numClients >= 0);
+        if (numClients == 0)
+            stopPolling();
     }
 
 
@@ -217,46 +115,69 @@ public class OrderBook implements OrderBookListener {
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public SortedList<OrderBookListItem> getOfferList() {
-        return offerList;
+    ObservableList<OrderBookListItem> getOrderBookListItems() {
+        return orderBookListItems;
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private Methods
+    // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean countryInList(Country countryToMatch, List<Country> list) {
-        for (Country country : list) {
-            if (country.getCode().equals(countryToMatch.getCode())) {
-                return true;
-            }
+    private void setBankAccount(BankAccount bankAccount) {
+        log.debug("setBankAccount " + bankAccount);
+        if (bankAccount != null) {
+            country = bankAccount.getCountry();
+            fiatCode = bankAccount.getCurrency().getCurrencyCode();
+            orderBookListItems.stream().forEach(e -> e.setBankAccountCountry(country));
         }
-        return false;
+        else {
+            fiatCode = CurrencyUtil.getDefaultCurrency().getCurrencyCode();
+        }
     }
 
-    private boolean languagesInList(List<Locale> list1, List<Locale> list2) {
-        for (Locale locale1 : list2) {
-            for (Locale locale2 : list1) {
-                if (locale1.getLanguage().equals(locale2.getLanguage())) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    private void addListeners() {
+        user.currentBankAccountProperty().addListener(bankAccountChangeListener);
+        messageFacade.addOrderBookListener(orderBookListener);
+        messageFacade.getIsDirtyProperty().addListener(dirtyListener);
     }
 
-    private boolean arbitratorsInList(List<Arbitrator> list1, List<Arbitrator> list2) {
-        for (Arbitrator arbitrator1 : list2) {
-            for (Arbitrator arbitrator2 : list1) {
-                if (arbitrator1.getId().equals(arbitrator2.getId())) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    private void removeListeners() {
+        user.currentBankAccountProperty().removeListener(bankAccountChangeListener);
+        messageFacade.removeOrderBookListener(orderBookListener);
+        messageFacade.getIsDirtyProperty().removeListener(dirtyListener);
     }
 
+    private void addOfferToOrderBookListItems(Offer offer) {
+        if (offer != null) {
+            orderBookListItems.add(new OrderBookListItem(offer, country));
+        }
+    }
+
+    private void requestOffers() {
+        messageFacade.getOffers(fiatCode);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Polling
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // TODO Just temporary, will be removed later when we have a push solution
+    private void startPolling() {
+        addListeners();
+        setBankAccount(user.getCurrentBankAccount());
+        pollingTimer = Utilities.setInterval(1000, (animationTimer) -> {
+            messageFacade.getDirtyFlag(fiatCode);
+            return null;
+        });
+
+        messageFacade.getOffers(fiatCode);
+    }
+
+    private void stopPolling() {
+        pollingTimer.stop();
+        removeListeners();
+    }
 
 }

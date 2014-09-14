@@ -21,8 +21,10 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
 
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -35,6 +37,7 @@ import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
+import javafx.scene.text.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,12 +54,14 @@ public class InfoDisplay extends Parent {
     private final StringProperty text = new SimpleStringProperty();
     private final IntegerProperty rowIndex = new SimpleIntegerProperty(0);
     private final IntegerProperty columnIndex = new SimpleIntegerProperty(0);
+    private final DoubleProperty prefWidth = new SimpleDoubleProperty(740);
     private final ObjectProperty<EventHandler<ActionEvent>> onAction = new SimpleObjectProperty<>();
-
     private final ObjectProperty<GridPane> gridPane = new SimpleObjectProperty<>();
 
+    private boolean useReadMore;
+
     private final ImageView icon;
-    private final VBox vBox;
+    private final TextFlow textFlow;
     private final Label label;
     private final Hyperlink link;
 
@@ -70,34 +75,58 @@ public class InfoDisplay extends Parent {
         icon = ImageUtil.getIconImageView(ImageUtil.INFO);
         icon.setPickOnBounds(true);
         icon.setPreserveRatio(true);
-
+        icon.visibleProperty().bind(visibleProperty());
 
         GridPane.setValignment(icon, VPos.TOP);
         GridPane.setMargin(icon, new Insets(4, 2, 0, 0));
         GridPane.setRowSpan(icon, 2);
 
         label = new Label();
-        label.textProperty().bindBidirectional(text);
-        label.setWrapText(true);
+        label.textProperty().bind(text);
+        label.prefWidthProperty().bind(prefWidth);
+        label.setTextOverrun(OverrunStyle.WORD_ELLIPSIS);
 
         link = new Hyperlink(BSResources.get("shared.readMore"));
         link.setPadding(new Insets(0, 0, 0, -2));
 
-        vBox = new VBox();
-        vBox.setSpacing(0);
-        vBox.getChildren().addAll(label, link);
+        // We need that to know if we have a wrapping or not. 
+        // Did not find a way to get that from the API.
+        Label testLabel = new Label();
+        testLabel.textProperty().bind(text);
 
-        visibleProperty().addListener((ov, oldValue, newValue) -> {
-            icon.setVisible(newValue);
-            vBox.setVisible(newValue);
+        textFlow = new TextFlow();
+        textFlow.visibleProperty().bind(visibleProperty());
+        textFlow.getChildren().addAll(testLabel);
+
+        testLabel.widthProperty().addListener((ov, o, n) -> {
+            if ((double) n > textFlow.getWidth()) {
+                link.setText(BSResources.get("shared.readMore"));
+                useReadMore = true;
+            }
+            else {
+                link.setText(BSResources.get("shared.openHelp"));
+            }
+            Platform.runLater(() -> textFlow.getChildren().setAll(label, link));
         });
 
-        // The text in the label does not get correctly displayed if there is not enough available overall height.
-        // Did not find a better way yet to solve the issue...
-        label.heightProperty().addListener((ov, o, n) -> {
-            vBox.setMinHeight((double) n + 100);
-            label.setMinHeight((double) n);
-            Platform.runLater(() -> vBox.setMinHeight(label.getHeight() + 15));
+        // when clicking "Read more..." we expand and change the link to the Help 
+        link.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                if (useReadMore) {
+
+                    label.setWrapText(true);
+                    link.setText(BSResources.get("shared.openHelp"));
+                    label.prefWidthProperty().bind(textFlow.widthProperty());
+                    link.setVisited(false);
+                    // focus border is a bit confusing here so we remove it
+                    link.setStyle("-fx-focus-color: transparent;");
+                    link.setOnAction(onAction.get());
+                }
+                else {
+                    onAction.get().handle(actionEvent);
+                }
+            }
         });
     }
 
@@ -108,41 +137,42 @@ public class InfoDisplay extends Parent {
 
     public void setText(String text) {
         this.text.set(text);
+    }
 
-        label.setText(text);
+    public void setPrefWidth(double prefWidth) {
+        this.prefWidth.set(prefWidth);
+        //  label.setPrefWidth(getPrefWidth());
     }
 
     public void setGridPane(GridPane gridPane) {
         this.gridPane.set(gridPane);
 
-        gridPane.getChildren().addAll(icon, vBox);
+        gridPane.getChildren().addAll(icon, textFlow);
 
         GridPane.setColumnIndex(icon, columnIndex.get());
-        GridPane.setColumnIndex(vBox, columnIndex.get() + 1);
+        GridPane.setColumnIndex(textFlow, columnIndex.get() + 1);
 
         GridPane.setRowIndex(icon, rowIndex.get());
-        GridPane.setRowIndex(vBox, rowIndex.get());
+        GridPane.setRowIndex(textFlow, rowIndex.get());
     }
 
     public void setRowIndex(int rowIndex) {
         this.rowIndex.set(rowIndex);
 
         GridPane.setRowIndex(icon, rowIndex);
-        GridPane.setRowIndex(vBox, rowIndex);
+        GridPane.setRowIndex(textFlow, rowIndex);
     }
 
     public void setColumnIndex(int columnIndex) {
         this.columnIndex.set(columnIndex);
 
         GridPane.setColumnIndex(icon, columnIndex);
-        GridPane.setColumnIndex(vBox, columnIndex + 1);
+        GridPane.setColumnIndex(textFlow, columnIndex + 1);
 
     }
 
-    public final void setOnAction(javafx.event.EventHandler<javafx.event.ActionEvent> eventHandler) {
+    public final void setOnAction(EventHandler<ActionEvent> eventHandler) {
         onAction.set(eventHandler);
-
-        link.setOnAction(eventHandler);
     }
 
 
@@ -156,6 +186,14 @@ public class InfoDisplay extends Parent {
 
     public StringProperty textProperty() {
         return text;
+    }
+
+    public double getPrefWidth() {
+        return prefWidth.get();
+    }
+
+    public DoubleProperty prefWidthProperty() {
+        return prefWidth;
     }
 
     public int getColumnIndex() {
@@ -189,4 +227,5 @@ public class InfoDisplay extends Parent {
     public ObjectProperty<GridPane> gridPaneProperty() {
         return gridPane;
     }
+
 }

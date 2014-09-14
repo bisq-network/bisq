@@ -15,16 +15,8 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg.listeners;
+package io.bitsquare.gui;
 
-import io.bitsquare.trade.Offer;
-
-import java.util.List;
-
-public interface OrderBookListener {
-    void onOfferAdded(Offer offer);
-
-    void onOffersReceived(List<Offer> offers);
-
-    void onOfferRemoved(Offer offer);
+public interface NavigationListener {
+    public void navigate(NavigationItem navigationItem);
 }

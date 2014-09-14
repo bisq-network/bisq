@@ -78,11 +78,13 @@ public class BSFormatter {
     public BSFormatter(User user) {
         if (user.currentBankAccountProperty().get() == null)
             setFiatCurrencyCode(Currency.getInstance(Locale.getDefault()).getCurrencyCode());
-        else
+        else if (user.currentBankAccountProperty().get() != null)
             setFiatCurrencyCode(user.currentBankAccountProperty().get().getCurrency().getCurrencyCode());
 
-        user.currentBankAccountProperty().addListener((ov, oldValue, newValue) ->
-                setFiatCurrencyCode(newValue.getCurrency().getCurrencyCode()));
+        user.currentBankAccountProperty().addListener((ov, oldValue, newValue) -> {
+            if (newValue != null)
+                setFiatCurrencyCode(newValue.getCurrency().getCurrencyCode());
+        });
     }
 
 
