@@ -59,7 +59,8 @@ public class Navigation {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void navigationTo(Item... items) {
-        log.trace("navigationTo " + Arrays.asList(items).toString());
+        if (items != null)
+            log.trace("navigationTo " + Arrays.asList(items).toString());
         List<Item> temp = new ArrayList<>();
         for (int i = 0; i < items.length; i++) {
             Item item = items[i];
@@ -82,8 +83,9 @@ public class Navigation {
         currentItems = items;
 
         persistence.write(this, "navigationItems", items);
-        log.trace("navigationTo notify listeners " + Arrays.asList(items).toString() + " / " + listeners
-                .size());
+        if (items != null)
+            log.trace("navigationTo notify listeners " + Arrays.asList(items).toString() + " / " + listeners
+                    .size());
         listeners.stream().forEach((e) -> e.onNavigationRequested(items));
     }
 

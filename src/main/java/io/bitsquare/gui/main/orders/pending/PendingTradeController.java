@@ -78,8 +78,8 @@ public class PendingTradeController extends CachedViewController {
 
     private Trade currentTrade;
 
-    private final Image buyIcon = ImageUtil.getIconImage(ImageUtil.BUY_ICON);
-    private final Image sellIcon = ImageUtil.getIconImage(ImageUtil.SELL_ICON);
+    private final Image buyIcon = ImageUtil.getImage(ImageUtil.BUY_ICON);
+    private final Image sellIcon = ImageUtil.getImage(ImageUtil.SELL_ICON);
     private ConfidenceDisplay confidenceDisplay;
 
     @FXML private TableView openTradesTable;
@@ -365,7 +365,7 @@ public class PendingTradeController extends CachedViewController {
                                 if (tradesTableItem != null) {
                                     Country country = tradesTableItem.getTrade().getOffer().getBankAccountCountry();
                                     try {
-                                        hBox.getChildren().add(ImageUtil.getIconImageView(
+                                        hBox.getChildren().add(ImageUtil.getImageView(
                                                 "/images/countries/" + country.getCode().toLowerCase() + ".png"));
 
                                     } catch (Exception e) {

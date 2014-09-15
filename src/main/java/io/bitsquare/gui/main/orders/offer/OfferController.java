@@ -155,7 +155,7 @@ public class OfferController extends CachedViewController {
                     @Override
                     public TableCell<String, OfferListItem> call(TableColumn<String, OfferListItem> directionColumn) {
                         return new TableCell<String, OfferListItem>() {
-                            final ImageView iconView = ImageUtil.getIconImageView(ImageUtil.REMOVE_ICON);
+                            final ImageView iconView = ImageUtil.getImageView(ImageUtil.REMOVE_ICON);
                             final Button button = new Button();
 
                             {

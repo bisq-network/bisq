@@ -72,7 +72,7 @@ public class InfoDisplay extends Parent {
 
     public InfoDisplay() {
 
-        icon = ImageUtil.getIconImageView(ImageUtil.INFO);
+        icon = ImageUtil.getImageView(ImageUtil.INFO);
         icon.setPickOnBounds(true);
         icon.setPreserveRatio(true);
         icon.visibleProperty().bind(visibleProperty());

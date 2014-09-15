@@ -190,8 +190,8 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         showAdvancedSettingsButton.setVisible(true);
 
         if (expand == null) {
-            expand = ImageUtil.getIconImageView(ImageUtil.EXPAND);
-            collapse = ImageUtil.getIconImageView(ImageUtil.COLLAPSE);
+            expand = ImageUtil.getImageView(ImageUtil.EXPAND);
+            collapse = ImageUtil.getImageView(ImageUtil.COLLAPSE);
         }
         showAdvancedSettingsButton.setGraphic(expand);
 

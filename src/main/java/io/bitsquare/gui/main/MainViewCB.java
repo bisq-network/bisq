@@ -85,7 +85,6 @@ public class MainViewCB extends ViewCB<MainPM> {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
@@ -188,7 +187,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         Profiler.printMsgWithTime("MainController.ondMainNavigationAdded");
 
         presentationModel.takeOfferRequested.addListener((ov, olaValue, newValue) -> {
-            final Button alertButton = new Button("", ImageUtil.getIconImageView(ImageUtil.MSG_ALERT));
+            final Button alertButton = new Button("", ImageUtil.getImageView(ImageUtil.MSG_ALERT));
             alertButton.setId("nav-alert-button");
             alertButton.relocate(36, 19);
             alertButton.setOnAction((e) ->
@@ -361,8 +360,8 @@ public class MainViewCB extends ViewCB<MainPM> {
         onMainNavigationAdded();
     }
 
-    private ToggleButton addNavButton(Pane parent, String title, Navigation.Item item) {
-        ImageView icon = ImageUtil.getIconImageView(item.getIcon());
+    private ToggleButton addNavButton(Pane parent, String title, Navigation.Item navigationItem) {
+        ImageView icon = ImageUtil.getImageView(navigationItem.getIcon());
         icon.setFitWidth(32);
         icon.setFitHeight(32);
 
@@ -381,16 +380,16 @@ public class MainViewCB extends ViewCB<MainPM> {
             toggleButton.setMaxSize(50, 50);
             toggleButton.setGraphicTextGap(newValue ? -1 : 0);
             if (newValue) {
-                Image activeIcon = ImageUtil.getIconImage(item.getActiveIcon());
+                Image activeIcon = ImageUtil.getImage(navigationItem.getActiveIcon());
                 ((ImageView) toggleButton.getGraphic()).setImage(activeIcon);
             }
             else {
-                Image activeIcon = ImageUtil.getIconImage(item.getIcon());
+                Image activeIcon = ImageUtil.getImage(navigationItem.getIcon());
                 ((ImageView) toggleButton.getGraphic()).setImage(activeIcon);
             }
         });
 
-        toggleButton.setOnAction(e -> navigation.navigationTo(Navigation.Item.MAIN, item));
+        toggleButton.setOnAction(e -> navigation.navigationTo(Navigation.Item.MAIN, navigationItem));
 
         parent.getChildren().add(toggleButton);
         return toggleButton;

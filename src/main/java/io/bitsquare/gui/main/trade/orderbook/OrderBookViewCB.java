@@ -70,8 +70,8 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     private boolean detailsVisible;
     private boolean advancedScreenInited;
 
-    private final Image buyIcon = ImageUtil.getIconImage(ImageUtil.BUY_ICON);
-    private final Image sellIcon = ImageUtil.getIconImage(ImageUtil.SELL_ICON);
+    private final Image buyIcon = ImageUtil.getImage(ImageUtil.BUY_ICON);
+    private final Image sellIcon = ImageUtil.getImage(ImageUtil.SELL_ICON);
 
     private ImageView expand;
     private ImageView collapse;
@@ -125,8 +125,8 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
         setupValidators();
         setupComparators();
 
-        expand = ImageUtil.getIconImageView(ImageUtil.EXPAND);
-        collapse = ImageUtil.getIconImageView(ImageUtil.COLLAPSE);
+        expand = ImageUtil.getImageView(ImageUtil.EXPAND);
+        collapse = ImageUtil.getImageView(ImageUtil.COLLAPSE);
         showAdvancedSettingsButton.setGraphic(expand);
 
         super.initialize(url, rb);
@@ -456,7 +456,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                                     Offer offer = item.getOffer();
 
                                     if (presentationModel.isMyOffer(offer)) {
-                                        icon = ImageUtil.getIconImage(ImageUtil.REMOVE_ICON);
+                                        icon = ImageUtil.getImage(ImageUtil.REMOVE_ICON);
                                         title = "Remove";
                                         button.setOnAction(event -> presentationModel.removeOffer(item
                                                 .getOffer()));

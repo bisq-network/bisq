@@ -128,7 +128,6 @@ public class BitSquare extends Application {
             primaryStage.setMinHeight(500);
 
             primaryStage.show();
-
         } catch (IOException e) {
             log.error(e.getMessage());
         }

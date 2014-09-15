@@ -202,7 +202,7 @@ class WizardItem extends HBox {
         setSpacing(5);
         setPrefWidth(200);
 
-        imageView = ImageUtil.getIconImageView(ImageUtil.ARROW_GREY);
+        imageView = ImageUtil.getImageView(ImageUtil.ARROW_GREY);
         imageView.setFitHeight(15);
         imageView.setFitWidth(20);
         imageView.setPickOnBounds(true);
@@ -237,7 +237,7 @@ class WizardItem extends HBox {
                 navigationItem);
 
         setId("wizard-item-background-active");
-        imageView.setImage(ImageUtil.getIconImage(ImageUtil.ARROW_BLUE));
+        imageView.setImage(ImageUtil.getImage(ImageUtil.ARROW_BLUE));
         titleLabel.setId("wizard-title-active");
         subTitleLabel.setId("wizard-sub-title-active");
         return childController;
@@ -245,7 +245,7 @@ class WizardItem extends HBox {
 
     void onCompleted() {
         setId("wizard-item-background-completed");
-        imageView.setImage(ImageUtil.getIconImage(ImageUtil.TICK));
+        imageView.setImage(ImageUtil.getImage(ImageUtil.TICK));
         titleLabel.setId("wizard-title-completed");
         subTitleLabel.setId("wizard-sub-title-completed");
     }

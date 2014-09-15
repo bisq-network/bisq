@@ -90,9 +90,8 @@ public class TradeViewCB extends CachedViewCB {
         super.activate();
 
         // We need to remove open validation error popups
-        // TODO Find a way to do that in the InputTextField directly, but a tab change does not trigger any event
-        // there
         // Platform.runLater needed as focus-out event is called after selectedIndexProperty changed
+        // TODO Find a way to do that in the InputTextField directly, but a tab change does not trigger any event...
         TabPane tabPane = (TabPane) root;
         tabPane.getSelectionModel().selectedIndexProperty()
                 .addListener((observableValue, oldValue, newValue) ->
@@ -128,8 +127,7 @@ public class TradeViewCB extends CachedViewCB {
     // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // @Override
-
+    @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
         TabPane tabPane = (TabPane) root;

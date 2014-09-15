@@ -24,6 +24,7 @@ import javafx.scene.image.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 public class ImageUtil {
     private static final Logger log = LoggerFactory.getLogger(ImageUtil.class);
 
@@ -63,17 +64,17 @@ public class ImageUtil {
     public static final String ARROW_GREY = "/images/arrow_grey.png";
     public static final String INFO = "/images/info.png";
 
-    public static Image getIconImage(String iconName) {
-        return new Image(ImageUtil.class.getResourceAsStream(iconName));
+    public static Image getImage(String url) {
+        return new Image(ImageUtil.class.getResourceAsStream(url));
     }
 
-    public static ImageView getIconImageView(String iconName) {
-        return new ImageView(new Image(ImageUtil.class.getResourceAsStream(iconName)));
+    public static ImageView getImageView(String url) {
+        return new ImageView(getImage(url));
     }
 
     public static ImageView getCountryIconImageView(Country country) {
         try {
-            return ImageUtil.getIconImageView("/images/countries/" + country.getCode().toLowerCase() + ".png");
+            return ImageUtil.getImageView("/images/countries/" + country.getCode().toLowerCase() + ".png");
 
         } catch (Exception e) {
             log.error("Country icon not found URL = /images/countries/" + country.getCode().toLowerCase() +
