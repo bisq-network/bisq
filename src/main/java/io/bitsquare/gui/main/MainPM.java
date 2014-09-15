@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.util.BSFormatter;
 
@@ -112,10 +111,6 @@ class MainPM extends PresentationModel<MainModel> {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void setSelectedNavigationItem(NavigationItem navigationItem) {
-        model.setSelectedNavigationItem(navigationItem);
-    }
-
     void setCurrentBankAccount(BankAccount bankAccount) {
         model.setCurrentBankAccount(bankAccount);
     }
@@ -124,10 +119,6 @@ class MainPM extends PresentationModel<MainModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    NavigationItem[] getSelectedNavigationItems() {
-        return model.getSelectedNavigationItems();
-    }
 
     ObservableList<BankAccount> getBankAccounts() {
         return model.getBankAccounts();

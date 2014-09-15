@@ -17,6 +17,8 @@
 
 package io.bitsquare.gui;
 
+import io.bitsquare.persistence.Persistence;
+
 import com.google.inject.Inject;
 
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 public class NavigationManager {
     private static final Logger log = LoggerFactory.getLogger(NavigationManager.class);
+    private Persistence persistence;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface
@@ -35,7 +38,6 @@ public class NavigationManager {
     public interface NavigationListener {
         void onNavigationRequested(NavigationItem... navigationItems);
     }
-
 
     private List<NavigationListener> listeners = new ArrayList<>();
     private NavigationItem[] previousMainNavigationItems;
@@ -47,7 +49,8 @@ public class NavigationManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public NavigationManager() {
+    public NavigationManager(Persistence persistence) {
+        this.persistence = persistence;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -58,10 +61,18 @@ public class NavigationManager {
         previousMainNavigationItems = currentNavigationItems;
         currentNavigationItems = navigationItems;
 
+        persistence.write(this, "navigationItems", navigationItems);
+
         listeners.stream().forEach((e) -> e.onNavigationRequested(navigationItems));
     }
 
+    public void navigateToLastStoredItem() {
+        NavigationItem[] navigationItems = (NavigationItem[]) persistence.read(this, "navigationItems");
+        if (navigationItems == null || navigationItems.length == 0)
+            navigationItems = new NavigationItem[]{NavigationItem.HOME};
 
+        navigationTo(navigationItems);
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -20,7 +20,6 @@ package io.bitsquare.gui.main;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.msg.MessageFacade;
@@ -135,10 +134,6 @@ class MainModel extends UIModel {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void setSelectedNavigationItem(NavigationItem navigationItem) {
-        persistence.write(this, "selectedNavigationItem", navigationItem);
-    }
-
     void setCurrentBankAccount(BankAccount bankAccount) {
         user.setCurrentBankAccount(bankAccount);
         persistence.write(user);
@@ -155,14 +150,6 @@ class MainModel extends UIModel {
 
     ObjectProperty<BankAccount> currentBankAccountProperty() {
         return user.currentBankAccountProperty();
-    }
-
-    NavigationItem[] getSelectedNavigationItems() {
-        NavigationItem[] selectedNavigationItems = (NavigationItem[]) persistence.read(this, "selectedNavigationItems");
-        if (selectedNavigationItems == null || selectedNavigationItems.length == 0)
-            selectedNavigationItems = new NavigationItem[]{NavigationItem.BUY};
-
-        return selectedNavigationItems;
     }
 
 

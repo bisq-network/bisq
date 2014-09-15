@@ -152,7 +152,6 @@ public class MainViewCB extends ViewCB<MainPM> {
             if (childController instanceof ViewCB)
                 ((ViewCB) childController).setParent(this);
 
-            presentationModel.setSelectedNavigationItem(navigationItem);
             return childController;
         } catch (IOException e) {
             e.getStackTrace();
@@ -211,7 +210,7 @@ public class MainViewCB extends ViewCB<MainPM> {
             AWTSystemTray.setAlert();
         });
 
-        navigationManager.navigationTo(presentationModel.getSelectedNavigationItems());
+        navigationManager.navigateToLastStoredItem();
         onContentAdded();
     }
 
@@ -400,7 +399,9 @@ public class MainViewCB extends ViewCB<MainPM> {
             }
         });
 
-        toggleButton.setOnAction(e -> loadView(navigationItem));
+        toggleButton.setOnAction(e -> navigationManager.navigationTo(navigationItem));
+        // toggleButton.setOnAction(e -> loadView(navigationItem));
+
         parent.getChildren().add(toggleButton);
         return toggleButton;
     }
