@@ -34,10 +34,10 @@ public class ImageUtil {
 
     public static final String HOME = "/images/nav/home.png";
     public static final String HOME_ACTIVE = "/images/nav/home_active.png";
-    public static final String NAV_BUY = "/images/nav/nav_buy.png";
-    public static final String NAV_BUY_ACTIVE = "/images/nav/nav_buy_active.png";
-    public static final String NAV_SELL = "/images/nav/nav_sell.png";
-    public static final String NAV_SELL_ACTIVE = "/images/nav/nav_sell_active.png";
+    public static final String NAV_BUY = "/images/nav/buy.png";
+    public static final String NAV_BUY_ACTIVE = "/images/nav/buy_active.png";
+    public static final String NAV_SELL = "/images/nav/sell.png";
+    public static final String NAV_SELL_ACTIVE = "/images/nav/sell_active.png";
     public static final String ORDERS = "/images/nav/orders.png";
     public static final String ORDERS_ACTIVE = "/images/nav/orders_active.png";
     public static final String FUNDS = "/images/nav/funds.png";
