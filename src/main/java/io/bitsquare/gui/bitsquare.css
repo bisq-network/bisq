@@ -465,22 +465,8 @@ textfield */
 
 
 /* TitledSeparator */
-#titled-separator-label {
-    -fx-font-weight: bold;
-    -fx-font-size: 14;
-    -fx-text-fill: -bs-dark-grey;
-    -fx-background-color: #f4f4f4;
-}
-#titled-separator-label-active {
-    -fx-font-weight: bold;
-    -fx-font-size: 14;
-    -fx-text-fill: -bs-theme-color;
-    -fx-background-color: #f4f4f4;
-}
 #titled-separator:horizontal .line {
-     -fx-border-color: #cccccc transparent #999999 transparent;
-}
-
-#titled-separator-active:horizontal .line {
-      -fx-border-color: #dddddd transparent derive(-bs-theme-color, 50%) transparent;
+     -fx-border-color: transparent #f4f4f4 transparent #f4f4f4;
+     -fx-background-color: transparent;
+     -fx-border-width: 10px;
 }

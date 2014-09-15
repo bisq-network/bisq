@@ -43,6 +43,9 @@ public class TitledSeparator extends Pane {
 
         separator = new Separator();
         separator.prefWidthProperty().bind(widthProperty());
+        separator.setLayoutX(0);
+        separator.setLayoutY(6);
+        separator.setId("titled-separator");
 
         label = new Label();
         label.textProperty().bind(text);
@@ -51,16 +54,17 @@ public class TitledSeparator extends Pane {
         label.setPadding(new Insets(0, 7, 0, 5));
         setActive();
         getChildren().addAll(separator, label);
+
     }
 
     public void setInactive() {
-        separator.setId("titled-separator");
-        label.setId("titled-separator-label");
+        setId("titled-group-bg");
+        label.setId("titled-group-bg-label");
     }
 
     public void setActive() {
-        separator.setId("titled-separator-active");
-        label.setId("titled-separator-label-active");
+        setId("titled-group-bg-active");
+        label.setId("titled-group-bg-label-active");
     }
 
     public String getText() {
