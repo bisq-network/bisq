@@ -299,7 +299,7 @@ public class MessageFacade implements MessageBroker {
                                 listener.onOffersReceived(offers)));
                     }
 
-                    log.trace("Get offers from DHT was successful");
+                    //log.trace("Get offers from DHT was successful");
                     /* log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey
                             + ", values: " + futureGet.dataMap() + "]");*/
                 }

@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.trade;
 
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.NavigationManager;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferViewCB;
 import io.bitsquare.gui.main.trade.orderbook.OrderBookViewCB;
@@ -42,8 +43,6 @@ import javafx.scene.control.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 public class TradeViewCB extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(TradeViewCB.class);
 
@@ -52,14 +51,19 @@ public class TradeViewCB extends CachedViewCB {
     private CreateOfferViewCB createOfferViewCB;
     private TakeOfferController takeOfferController;
     private Node createOfferView;
+    private NavigationManager navigationManager;
+    private NavigationManager.Listener listener;
+    private NavigationItem tradeNavigationItem;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected TradeViewCB() {
+    protected TradeViewCB(NavigationManager navigationManager) {
         super();
+
+        this.navigationManager = navigationManager;
     }
 
 
@@ -67,15 +71,19 @@ public class TradeViewCB extends CachedViewCB {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
+        listener = navigationItems -> {
+            if (navigationItems != null && navigationItems.length == 3 && navigationItems[1] == tradeNavigationItem) {
+                loadView(navigationItems[2]);
+            }
+        };
 
         Direction direction = (this instanceof BuyViewCB) ? Direction.BUY : Direction.SELL;
         orderBookInfo.setDirection(direction);
+        tradeNavigationItem = (direction == Direction.BUY) ? NavigationItem.BUY : NavigationItem.SELL;
 
-        loadView(NavigationItem.ORDER_BOOK);
+        super.initialize(url, rb);
     }
 
     @Override
@@ -83,8 +91,9 @@ public class TradeViewCB extends CachedViewCB {
         super.activate();
 
         // We need to remove open validation error popups
-        // TODO Find a way to do that in the InputTextField directly, but a tab change does not trigger any event there
-        // Platform.runLater needed as focusout evetn is called after selectedIndexProperty changed
+        // TODO Find a way to do that in the InputTextField directly, but a tab change does not trigger any event
+        // there
+        // Platform.runLater needed as focus-out event is called after selectedIndexProperty changed
         TabPane tabPane = (TabPane) root;
         tabPane.getSelectionModel().selectedIndexProperty()
                 .addListener((observableValue, oldValue, newValue) ->
@@ -94,9 +103,13 @@ public class TradeViewCB extends CachedViewCB {
         tabPane.getTabs().addListener((ListChangeListener<Tab>) change -> {
             change.next();
             List<? extends Tab> removedTabs = change.getRemoved();
-            if (removedTabs.size() == 1 && removedTabs.get(0).getContent().equals(createOfferView))
+            if (removedTabs.size() == 1 && removedTabs.get(0).getContent().equals(createOfferView)) {
                 onCreateOfferViewRemoved();
+            }
         });
+
+        navigationManager.addListener(listener);
+        navigationManager.navigationTo(NavigationItem.MAIN, tradeNavigationItem, NavigationItem.ORDER_BOOK);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -117,12 +130,11 @@ public class TradeViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // @Override
-    public Initializable loadView(NavigationItem navigationItem) {
-        super.loadView(navigationItem);
 
+    protected Initializable loadView(NavigationItem navigationItem) {
+        super.loadView(navigationItem);
         TabPane tabPane = (TabPane) root;
-        if (navigationItem == NavigationItem.ORDER_BOOK) {
-            checkArgument(orderBookViewCB == null);
+        if (navigationItem == NavigationItem.ORDER_BOOK && orderBookViewCB == null) {
             // Orderbook must not be cached by GuiceFXMLLoader as we use 2 instances for sell and buy screens.
             ViewLoader orderBookLoader =
                     new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
@@ -135,16 +147,14 @@ public class TradeViewCB extends CachedViewCB {
                 orderBookViewCB = orderBookLoader.getController();
                 orderBookViewCB.setParent(this);
                 orderBookViewCB.setOrderBookInfo(orderBookInfo);
-                orderBookViewCB.setNavigationListener(n -> loadView(n));
+                // orderBookViewCB.setNavigationListener(n -> loadView(n));
 
                 return orderBookViewCB;
             } catch (IOException e) {
                 log.error(e.getMessage());
             }
         }
-        else if (navigationItem == NavigationItem.CREATE_OFFER) {
-            checkArgument(createOfferViewCB == null);
-
+        else if (navigationItem == NavigationItem.CREATE_OFFER && createOfferViewCB == null) {
             // CreateOffer and TakeOffer must not be cached by GuiceFXMLLoader as we cannot use a view multiple times
             // in different graphs
             ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
@@ -163,9 +173,7 @@ public class TradeViewCB extends CachedViewCB {
                 log.error(e.getMessage());
             }
         }
-        else if (navigationItem == NavigationItem.TAKE_OFFER) {
-            checkArgument(takeOfferController == null);
-
+        else if (navigationItem == NavigationItem.TAKE_OFFER && takeOfferController == null) {
             // CreateOffer and TakeOffer must not be cached by GuiceFXMLLoader as we cannot use a view multiple times
             // in different graphs
             ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
@@ -173,10 +181,12 @@ public class TradeViewCB extends CachedViewCB {
                 final Parent view = loader.load();
                 takeOfferController = loader.getController();
                 takeOfferController.setParentController(this);
+                takeOfferController.initWithData(orderBookInfo);
                 final Tab tab = new Tab("Take offer");
                 tab.setContent(view);
                 tabPane.getTabs().add(tab);
                 tabPane.getSelectionModel().select(tab);
+
                 return takeOfferController;
             } catch (IOException e) {
                 log.error(e.getMessage());
@@ -207,6 +217,9 @@ public class TradeViewCB extends CachedViewCB {
         if (createOfferViewCB != null)
             createOfferViewCB = null;
         orderBookViewCB.enableCreateOfferButton();
+
+        // update the navigation state
+        navigationManager.navigationTo(NavigationItem.MAIN, tradeNavigationItem, NavigationItem.ORDER_BOOK);
     }
 }
 

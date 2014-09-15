@@ -34,10 +34,10 @@ public class ImageUtil {
 
     public static final String HOME = "/images/nav/home.png";
     public static final String HOME_ACTIVE = "/images/nav/home_active.png";
-    public static final String NAV_BUY = "/images/nav/buy.png";
-    public static final String NAV_BUY_ACTIVE = "/images/nav/buy_active.png";
-    public static final String NAV_SELL = "/images/nav/sell.png";
-    public static final String NAV_SELL_ACTIVE = "/images/nav/sell_active.png";
+    public static final String BUY = "/images/nav/buy.png";
+    public static final String BUY_ACTIVE = "/images/nav/buy_active.png";
+    public static final String SELL = "/images/nav/sell.png";
+    public static final String SELL_ACTIVE = "/images/nav/sell_active.png";
     public static final String ORDERS = "/images/nav/orders.png";
     public static final String ORDERS_ACTIVE = "/images/nav/orders_active.png";
     public static final String FUNDS = "/images/nav/funds.png";
@@ -51,9 +51,9 @@ public class ImageUtil {
 
     public static final String MSG_ALERT = "/images/nav/alertRound.png";
 
-    public static final String BUY = "/images/buy.png";
-    public static final String SELL = "/images/sell.png";
-    public static final String REMOVE = "/images/removeOffer.png";
+    public static final String BUY_ICON = "/images/buy.png";
+    public static final String SELL_ICON = "/images/sell.png";
+    public static final String REMOVE_ICON = "/images/removeOffer.png";
 
     public static final String EXPAND = "/images/expand.png";
     public static final String COLLAPSE = "/images/collapse.png";

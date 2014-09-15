@@ -237,7 +237,8 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void openAccountSettings() {
-        navigationManager.navigationTo(NavigationItem.ACCOUNT,
+        navigationManager.navigationTo(NavigationItem.MAIN,
+                NavigationItem.ACCOUNT,
                 NavigationItem.ACCOUNT_SETTINGS,
                 NavigationItem.RESTRICTIONS);
     }

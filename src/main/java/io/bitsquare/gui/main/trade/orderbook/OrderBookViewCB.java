@@ -19,16 +19,11 @@ package io.bitsquare.gui.main.trade.orderbook;
 
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.NavigationListener;
 import io.bitsquare.gui.NavigationManager;
 import io.bitsquare.gui.OverlayManager;
-import io.bitsquare.gui.ViewCB;
-import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.trade.OrderBookInfo;
-import io.bitsquare.gui.main.trade.takeoffer.TakeOfferController;
-import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
 import io.bitsquare.gui.util.validation.OptionalFiatValidator;
@@ -36,8 +31,6 @@ import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
-
-import com.google.bitcoin.core.Coin;
 
 import java.net.URL;
 
@@ -69,31 +62,29 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     private static final Logger log = LoggerFactory.getLogger(OrderBookViewCB.class);
 
-    //TODO nav?
     private NavigationManager navigationManager;
+    private NavigationItem tradeNavigationItem;
     private OverlayManager overlayManager;
     private OptionalBtcValidator optionalBtcValidator;
     private OptionalFiatValidator optionalFiatValidator;
-    private NavigationListener navigationListener;
 
     private boolean detailsVisible;
     private boolean advancedScreenInited;
 
-    private final Image buyIcon = ImageUtil.getIconImage(ImageUtil.BUY);
-    private final Image sellIcon = ImageUtil.getIconImage(ImageUtil.SELL);
+    private final Image buyIcon = ImageUtil.getIconImage(ImageUtil.BUY_ICON);
+    private final Image sellIcon = ImageUtil.getIconImage(ImageUtil.SELL_ICON);
 
     private ImageView expand;
     private ImageView collapse;
 
-    @FXML private CheckBox extendedCheckBox;
-    @FXML private Label amountBtcLabel, priceDescriptionLabel, priceFiatLabel, volumeDescriptionLabel,
+    @FXML CheckBox extendedCheckBox;
+    @FXML Label amountBtcLabel, priceDescriptionLabel, priceFiatLabel, volumeDescriptionLabel,
             volumeFiatLabel, extendedButton1Label, extendedButton2Label, extendedCheckBoxLabel;
-    @FXML private InputTextField volumeTextField, amountTextField, priceTextField;
-    @FXML private TableView<OrderBookListItem> orderBookTable;
-    @FXML private Button createOfferButton, showAdvancedSettingsButton, extendedButton1, extendedButton2;
-    @FXML private TableColumn<OrderBookListItem, OrderBookListItem> priceColumn, amountColumn, volumeColumn,
+    @FXML InputTextField volumeTextField, amountTextField, priceTextField;
+    @FXML TableView<OrderBookListItem> orderBookTable;
+    @FXML Button createOfferButton, showAdvancedSettingsButton, extendedButton1, extendedButton2;
+    @FXML TableColumn<OrderBookListItem, OrderBookListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, countryColumn, bankAccountTypeColumn;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -120,8 +111,6 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
         // init table
         setAmountColumnCellFactory();
         setPriceColumnCellFactory();
@@ -129,72 +118,41 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
         setCountryColumnCellFactory();
         setBankAccountTypeColumnCellFactory();
         setDirectionColumnCellFactory();
-        //setRowFactory();
-
-        amountTextField.textProperty().bindBidirectional(presentationModel.amount);
-        priceTextField.textProperty().bindBidirectional(presentationModel.price);
-        volumeTextField.textProperty().bindBidirectional(presentationModel.volume);
-        amountBtcLabel.textProperty().bind(presentationModel.btcCode);
-        priceFiatLabel.textProperty().bind(presentationModel.fiatCode);
-        volumeFiatLabel.textProperty().bind(presentationModel.fiatCode);
-        priceDescriptionLabel.textProperty().bind(presentationModel.fiatCode);
-        volumeDescriptionLabel.textProperty().bind(presentationModel.fiatCode);//Price per Bitcoin in EUR
-        priceDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                        BSResources.get("Filter by price in {0}", presentationModel.fiatCode.get()),
-                presentationModel.fiatCode));
-        volumeDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                        BSResources.get("Filter by amount in {0}", presentationModel.fiatCode.get()),
-                presentationModel.fiatCode));
-        volumeTextField.promptTextProperty().bind(createStringBinding(() ->
-                        BSResources.get("Amount in {0}", presentationModel.fiatCode.get()),
-                presentationModel.fiatCode));
 
         orderBookTable.getSortOrder().add(priceColumn);
         orderBookTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        amountTextField.setValidator(optionalBtcValidator);
-        priceTextField.setValidator(optionalFiatValidator);
-        volumeTextField.setValidator(optionalFiatValidator);
+        setupBindings();
+        setupValidators();
+        setupComparators();
 
         expand = ImageUtil.getIconImageView(ImageUtil.EXPAND);
         collapse = ImageUtil.getIconImageView(ImageUtil.COLLAPSE);
         showAdvancedSettingsButton.setGraphic(expand);
-    }
 
+        super.initialize(url, rb);
+    }
 
     @Override
     public void activate() {
         super.activate();
 
+        // setOrderBookInfo has been called before
         SortedList<OrderBookListItem> offerList = presentationModel.getOfferList();
         orderBookTable.setItems(offerList);
-        // presentationModel.comparator.bind(orderBookTable.comparatorProperty());
         offerList.comparatorProperty().bind(orderBookTable.comparatorProperty());
 
-        priceColumn.setComparator((o1, o2) -> o1.getOffer().getPrice().compareTo(o2.getOffer().getPrice()));
-        amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
-        volumeColumn.setComparator((o1, o2) ->
-                o1.getOffer().getOfferVolume().compareTo(o2.getOffer().getOfferVolume()));
-        countryColumn.setComparator((o1, o2) -> o1.getOffer().getBankAccountCountry().getName().compareTo(o2.getOffer()
-                .getBankAccountCountry().getName()));
-        bankAccountTypeColumn.setComparator((o1, o2) -> o1.getOffer().getBankAccountType().compareTo(o2.getOffer()
-                .getBankAccountType()));
 
         priceColumn.setSortType((presentationModel.getOrderBookInfo().getDirection() == Direction.BUY) ?
                 TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
         orderBookTable.sort();
-
-        
-       /* if (orderBookTable.getItems() != null)
-            createOfferButton.setDefaultButton(orderBookTable.getItems().isEmpty());*/
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
 
-        //  orderBookTable.getSelectionModel().clearSelection();
-        // orderBookTable.setItems(null);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -219,10 +177,9 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
     public void setOrderBookInfo(OrderBookInfo orderBookInfo) {
         presentationModel.setOrderBookInfo(orderBookInfo);
-    }
+        tradeNavigationItem = (orderBookInfo.getDirection() == Direction.BUY) ? NavigationItem.BUY : NavigationItem
+                .SELL;
 
-    public void setNavigationListener(NavigationListener navigationListener) {
-        this.navigationListener = navigationListener;
     }
 
 
@@ -234,7 +191,11 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     void createOffer() {
         if (presentationModel.isRegistered()) {
             createOfferButton.setDisable(true);
-            navigationListener.navigate(NavigationItem.CREATE_OFFER);
+            if (presentationModel.getOrderBookInfo().getDirection() == Direction.BUY)
+                navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.BUY, NavigationItem.CREATE_OFFER);
+            else
+                navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.SELL, NavigationItem.CREATE_OFFER);
+
         }
         else {
             openSetupScreen();
@@ -261,6 +222,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+
     private void openSetupScreen() {
         overlayManager.blurContent();
         List<Action> actions = new ArrayList<>();
@@ -269,7 +231,9 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
             public void handle(ActionEvent actionEvent) {
                 Dialog.Actions.OK.handle(actionEvent);
                 overlayManager.removeBlurContent();
-                navigationManager.navigationTo(NavigationItem.ACCOUNT, NavigationItem.ACCOUNT_SETUP);
+                navigationManager.setNavigationItemsForReturning(navigationManager.getCurrentNavigationItems());
+                navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.ACCOUNT,
+                        NavigationItem.ACCOUNT_SETUP);
             }
         });
         Popups.openInfo("You need to setup your trading account before you can trade.",
@@ -279,30 +243,13 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     //TODO not updated yet
     private void takeOffer(Offer offer) {
         if (presentationModel.isRegistered()) {
-            //TODO Remove that when all UIs are converted to CodeBehind
-            TakeOfferController takeOfferController = null;
-            if (parent != null) {
-                if (parent instanceof ViewController)
-                    takeOfferController = (TakeOfferController) ((ViewController) parent)
-                            .loadViewAndGetChildController(NavigationItem
-                                    .TAKE_OFFER);
-                else if (parent instanceof ViewCB)
-                    takeOfferController = (TakeOfferController) ((ViewCB) parent)
-                            .loadView(NavigationItem
-                                    .TAKE_OFFER);
-            }
 
-            Coin requestedAmount;
-            if (!"".equals(amountTextField.getText())) {
-                requestedAmount = BSFormatter.parseToCoin(amountTextField.getText());
-            }
-            else {
-                requestedAmount = offer.getAmount();
-            }
+            presentationModel.getOrderBookInfo().setOffer(offer);
 
-            if (takeOfferController != null) {
-                takeOfferController.initWithData(offer, requestedAmount);
-            }
+            if (presentationModel.getOrderBookInfo().getDirection() == Direction.BUY)
+                navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.BUY, NavigationItem.TAKE_OFFER);
+            else
+                navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.SELL, NavigationItem.TAKE_OFFER);
         }
         else {
             openSetupScreen();
@@ -320,7 +267,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                 actions);
 
         if (response == Dialog.Actions.YES)
-            navigationManager.navigationTo(NavigationItem.ACCOUNT, NavigationItem.ACCOUNT_SETTINGS,
+            navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.ACCOUNT, NavigationItem.ACCOUNT_SETTINGS,
                     NavigationItem.RESTRICTIONS);
         else
             orderBookTable.getSelectionModel().clearSelection();
@@ -364,8 +311,45 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Table
+    // Setup
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void setupBindings() {
+        amountTextField.textProperty().bindBidirectional(presentationModel.amount);
+        priceTextField.textProperty().bindBidirectional(presentationModel.price);
+        volumeTextField.textProperty().bindBidirectional(presentationModel.volume);
+        amountBtcLabel.textProperty().bind(presentationModel.btcCode);
+        priceFiatLabel.textProperty().bind(presentationModel.fiatCode);
+        volumeFiatLabel.textProperty().bind(presentationModel.fiatCode);
+        priceDescriptionLabel.textProperty().bind(presentationModel.fiatCode);
+        volumeDescriptionLabel.textProperty().bind(presentationModel.fiatCode);//Price per Bitcoin in EUR
+        priceDescriptionLabel.textProperty().bind(createStringBinding(() ->
+                        BSResources.get("Filter by price in {0}", presentationModel.fiatCode.get()),
+                presentationModel.fiatCode));
+        volumeDescriptionLabel.textProperty().bind(createStringBinding(() ->
+                        BSResources.get("Filter by amount in {0}", presentationModel.fiatCode.get()),
+                presentationModel.fiatCode));
+        volumeTextField.promptTextProperty().bind(createStringBinding(() ->
+                        BSResources.get("Amount in {0}", presentationModel.fiatCode.get()),
+                presentationModel.fiatCode));
+    }
+
+    private void setupValidators() {
+        amountTextField.setValidator(optionalBtcValidator);
+        priceTextField.setValidator(optionalFiatValidator);
+        volumeTextField.setValidator(optionalFiatValidator);
+    }
+
+    private void setupComparators() {
+        priceColumn.setComparator((o1, o2) -> o1.getOffer().getPrice().compareTo(o2.getOffer().getPrice()));
+        amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
+        volumeColumn.setComparator((o1, o2) ->
+                o1.getOffer().getOfferVolume().compareTo(o2.getOffer().getOfferVolume()));
+        countryColumn.setComparator((o1, o2) -> o1.getOffer().getBankAccountCountry().getName().compareTo(o2.getOffer()
+                .getBankAccountCountry().getName()));
+        bankAccountTypeColumn.setComparator((o1, o2) -> o1.getOffer().getBankAccountType().compareTo(o2.getOffer()
+                .getBankAccountType()));
+    }
 
     private void setAmountColumnCellFactory() {
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
@@ -479,7 +463,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                                     Offer offer = item.getOffer();
 
                                     if (presentationModel.isMyOffer(offer)) {
-                                        icon = ImageUtil.getIconImage(ImageUtil.REMOVE);
+                                        icon = ImageUtil.getIconImage(ImageUtil.REMOVE_ICON);
                                         title = "Remove";
                                         button.setOnAction(event -> presentationModel.removeOffer(item
                                                 .getOffer()));

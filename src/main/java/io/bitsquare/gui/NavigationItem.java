@@ -25,21 +25,21 @@ public enum NavigationItem {
     // Application
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    MAIN(0, "/io/bitsquare/gui/main/MainView.fxml"),
+    MAIN("/io/bitsquare/gui/main/MainView.fxml"),
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Main menu screens
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    HOME(1, "/io/bitsquare/gui/main/home/HomeView.fxml", ImageUtil.HOME, ImageUtil.HOME_ACTIVE),
-    BUY(1, "/io/bitsquare/gui/main/trade/BuyView.fxml", ImageUtil.NAV_BUY, ImageUtil.NAV_BUY_ACTIVE),
-    SELL(1, "/io/bitsquare/gui/main/trade/SellView.fxml", ImageUtil.NAV_SELL, ImageUtil.NAV_SELL_ACTIVE),
-    ORDERS(1, "/io/bitsquare/gui/main/orders/OrdersView.fxml", ImageUtil.ORDERS, ImageUtil.ORDERS_ACTIVE),
-    FUNDS(1, "/io/bitsquare/gui/main/funds/FundsView.fxml", ImageUtil.FUNDS, ImageUtil.FUNDS_ACTIVE),
-    MSG(1, "/io/bitsquare/gui/main/msg/MsgView.fxml", ImageUtil.MSG, ImageUtil.MSG_ACTIVE),
-    SETTINGS(1, "/io/bitsquare/gui/main/settings/SettingsView.fxml", ImageUtil.SETTINGS, ImageUtil.SETTINGS_ACTIVE),
-    ACCOUNT(1, "/io/bitsquare/gui/main/account/AccountView.fxml", ImageUtil.ACCOUNT, ImageUtil.ACCOUNT_ACTIVE),
+    HOME("/io/bitsquare/gui/main/home/HomeView.fxml", ImageUtil.HOME, ImageUtil.HOME_ACTIVE),
+    BUY("/io/bitsquare/gui/main/trade/BuyView.fxml", ImageUtil.BUY, ImageUtil.BUY_ACTIVE),
+    SELL("/io/bitsquare/gui/main/trade/SellView.fxml", ImageUtil.SELL, ImageUtil.SELL_ACTIVE),
+    ORDERS("/io/bitsquare/gui/main/orders/OrdersView.fxml", ImageUtil.ORDERS, ImageUtil.ORDERS_ACTIVE),
+    FUNDS("/io/bitsquare/gui/main/funds/FundsView.fxml", ImageUtil.FUNDS, ImageUtil.FUNDS_ACTIVE),
+    MSG("/io/bitsquare/gui/main/msg/MsgView.fxml", ImageUtil.MSG, ImageUtil.MSG_ACTIVE),
+    SETTINGS("/io/bitsquare/gui/main/settings/SettingsView.fxml", ImageUtil.SETTINGS, ImageUtil.SETTINGS_ACTIVE),
+    ACCOUNT("/io/bitsquare/gui/main/account/AccountView.fxml", ImageUtil.ACCOUNT, ImageUtil.ACCOUNT_ACTIVE),
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -47,23 +47,23 @@ public enum NavigationItem {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // buy/sell (trade)
-    ORDER_BOOK(2, "/io/bitsquare/gui/main/trade/orderbook/OrderBookView.fxml"),
-    CREATE_OFFER(2, "/io/bitsquare/gui/main/trade/createoffer/CreateOfferView.fxml"),
-    TAKE_OFFER(2, "/io/bitsquare/gui/main/trade/takeoffer/TakeOfferView.fxml"),
+    ORDER_BOOK("/io/bitsquare/gui/main/trade/orderbook/OrderBookView.fxml"),
+    CREATE_OFFER("/io/bitsquare/gui/main/trade/createoffer/CreateOfferView.fxml"),
+    TAKE_OFFER("/io/bitsquare/gui/main/trade/takeoffer/TakeOfferView.fxml"),
 
     // orders
-    OFFER(2, "/io/bitsquare/gui/main/orders/offer/OfferView.fxml"),
-    PENDING_TRADE(2, "/io/bitsquare/gui/main/orders/pending/PendingTradeView.fxml"),
-    CLOSED_TRADE(2, "/io/bitsquare/gui/main/orders/closed/ClosedTradeView.fxml"),
+    OFFER("/io/bitsquare/gui/main/orders/offer/OfferView.fxml"),
+    PENDING_TRADE("/io/bitsquare/gui/main/orders/pending/PendingTradeView.fxml"),
+    CLOSED_TRADE("/io/bitsquare/gui/main/orders/closed/ClosedTradeView.fxml"),
 
     // funds
-    DEPOSIT(2, "/io/bitsquare/gui/main/funds/deposit/DepositView.fxml"),
-    WITHDRAWAL(2, "/io/bitsquare/gui/main/funds/withdrawal/WithdrawalView.fxml"),
-    TRANSACTIONS(2, "/io/bitsquare/gui/main/funds/transactions/TransactionsView.fxml"),
+    DEPOSIT("/io/bitsquare/gui/main/funds/deposit/DepositView.fxml"),
+    WITHDRAWAL("/io/bitsquare/gui/main/funds/withdrawal/WithdrawalView.fxml"),
+    TRANSACTIONS("/io/bitsquare/gui/main/funds/transactions/TransactionsView.fxml"),
 
     // account
-    ACCOUNT_SETUP(2, "/io/bitsquare/gui/main/account/setup/AccountSetupView.fxml"),
-    ACCOUNT_SETTINGS(2, "/io/bitsquare/gui/main/account/settings/AccountSettingsView.fxml"),
+    ACCOUNT_SETUP("/io/bitsquare/gui/main/account/setup/AccountSetupView.fxml"),
+    ACCOUNT_SETTINGS("/io/bitsquare/gui/main/account/settings/AccountSettingsView.fxml"),
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -71,12 +71,12 @@ public enum NavigationItem {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // account content
-    SEED_WORDS(3, "/io/bitsquare/gui/main/account/content/seedwords/SeedWordsView.fxml"),
-    ADD_PASSWORD(3, "/io/bitsquare/gui/main/account/content/password/PasswordView.fxml"),
-    CHANGE_PASSWORD(3, "/io/bitsquare/gui/main/account/content/password/PasswordView.fxml"),
-    RESTRICTIONS(3, "/io/bitsquare/gui/main/account/content/restrictions/RestrictionsView.fxml"),
-    REGISTRATION(3, "/io/bitsquare/gui/main/account/content/registration/RegistrationView.fxml"),
-    FIAT_ACCOUNT(3, "/io/bitsquare/gui/main/account/content/fiat/FiatAccountView.fxml"),
+    SEED_WORDS("/io/bitsquare/gui/main/account/content/seedwords/SeedWordsView.fxml"),
+    ADD_PASSWORD("/io/bitsquare/gui/main/account/content/password/PasswordView.fxml"),
+    CHANGE_PASSWORD("/io/bitsquare/gui/main/account/content/password/PasswordView.fxml"),
+    RESTRICTIONS("/io/bitsquare/gui/main/account/content/restrictions/RestrictionsView.fxml"),
+    REGISTRATION("/io/bitsquare/gui/main/account/content/registration/RegistrationView.fxml"),
+    FIAT_ACCOUNT("/io/bitsquare/gui/main/account/content/fiat/FiatAccountView.fxml"),
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -84,37 +84,28 @@ public enum NavigationItem {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // arbitrator
-    ARBITRATOR_PROFILE(2, "/io/bitsquare/gui/main/arbitrators/profile/ArbitratorProfileView.fxml"),
-    ARBITRATOR_BROWSER(-1, "/io/bitsquare/gui/main/arbitrators/browser/ArbitratorBrowserView.fxml"),
-    ARBITRATOR_REGISTRATION(-1, "/io/bitsquare/gui/main/arbitrators/registration/ArbitratorRegistrationView.fxml");
+    ARBITRATOR_PROFILE("/io/bitsquare/gui/main/arbitrators/profile/ArbitratorProfileView.fxml"),
+    ARBITRATOR_BROWSER("/io/bitsquare/gui/main/arbitrators/browser/ArbitratorBrowserView.fxml"),
+    ARBITRATOR_REGISTRATION("/io/bitsquare/gui/main/arbitrators/registration/ArbitratorRegistrationView.fxml");
 
 
-    private int level;
     private final String fxmlUrl;
     private String icon;
     private String activeIcon;
 
     /**
-     * @param level      The navigation hierarchy depth. 0 is main app level, 1 is main menu items, 2 is sub-menus,
-     *                   3 content in sub-menus, -1 is popup window
      * @param fxmlUrl
      * @param icon
      * @param activeIcon
      */
-    NavigationItem(int level, String fxmlUrl, String icon, String activeIcon) {
-        this.level = level;
+    NavigationItem(String fxmlUrl, String icon, String activeIcon) {
         this.fxmlUrl = fxmlUrl;
         this.icon = icon;
         this.activeIcon = activeIcon;
     }
 
-    NavigationItem(int level, String fxmlUrl) {
-        this.level = level;
+    NavigationItem(String fxmlUrl) {
         this.fxmlUrl = fxmlUrl;
-    }
-
-    public int getLevel() {
-        return level;
     }
 
     public String getFxmlUrl() {

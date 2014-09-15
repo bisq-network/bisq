@@ -78,8 +78,8 @@ public class PendingTradeController extends CachedViewController {
 
     private Trade currentTrade;
 
-    private final Image buyIcon = ImageUtil.getIconImage(ImageUtil.BUY);
-    private final Image sellIcon = ImageUtil.getIconImage(ImageUtil.SELL);
+    private final Image buyIcon = ImageUtil.getIconImage(ImageUtil.BUY_ICON);
+    private final Image sellIcon = ImageUtil.getIconImage(ImageUtil.SELL_ICON);
     private ConfidenceDisplay confidenceDisplay;
 
     @FXML private TableView openTradesTable;

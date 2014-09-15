@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.account.setup;
 
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.NavigationManager;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
@@ -36,14 +37,12 @@ import java.io.IOException;
 import java.net.URL;
 
 import java.util.ResourceBundle;
-import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
-import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
@@ -56,10 +55,11 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
     private static final Logger log = LoggerFactory.getLogger(AccountSetupViewCB.class);
 
     private WizardItem seedWords, password, fiatAccount, restrictions, registration;
-    private Callable<Void> requestCloseCallable;
+    private NavigationManager navigationManager;
+    private NavigationManager.Listener listener;
 
-    @FXML private VBox leftVBox;
-    @FXML private AnchorPane content;
+    @FXML VBox leftVBox;
+    @FXML AnchorPane content;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,8 +67,9 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountSetupViewCB(AccountSetupPM presentationModel) {
+    private AccountSetupViewCB(AccountSetupPM presentationModel, NavigationManager navigationManager) {
         super(presentationModel);
+        this.navigationManager = navigationManager;
     }
 
 
@@ -78,37 +79,49 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
+        listener = navigationItems -> {
+            if (navigationItems != null &&
+                    navigationItems.length == 4 &&
+                    navigationItems[2] == NavigationItem.ACCOUNT_SETUP) {
+                loadView(navigationItems[3]);
+            }
+        };
 
-        seedWords = new WizardItem(this, content, "Backup wallet seed", "Write down the seed word for your wallet",
+        seedWords = new WizardItem(navigationManager, "Backup wallet seed", "Write down the seed word for your wallet",
                 NavigationItem.SEED_WORDS);
-        password = new WizardItem(this, content, "Setup password", "Protect your wallet with a password",
+        password = new WizardItem(navigationManager, "Setup password", "Protect your wallet with a password",
                 NavigationItem.ADD_PASSWORD);
-        restrictions = new WizardItem(this, content, "Setup your preferences",
+        restrictions = new WizardItem(navigationManager, "Setup your preferences",
                 "Define your preferences with whom you want to trade",
                 NavigationItem.RESTRICTIONS);
-        fiatAccount = new WizardItem(this, content, " Setup Payments account(s)",
+        fiatAccount = new WizardItem(navigationManager, " Setup Payments account(s)",
                 "You need to add a payments account to your trading account",
                 NavigationItem.FIAT_ACCOUNT);
-        registration = new WizardItem(this, content, "Register your account",
+        registration = new WizardItem(navigationManager, "Register your account",
                 "Pay in the registration fee of 0.0002 BTC and store your account in the BTC block chain",
                 NavigationItem.REGISTRATION);
 
         leftVBox.getChildren().addAll(seedWords, password, restrictions, fiatAccount, registration);
 
-        childController = seedWords.show();
+        super.initialize(url, rb);
     }
 
-    @SuppressWarnings("EmptyMethod")
+
     @Override
     public void activate() {
         super.activate();
+
+        navigationManager.addListener(listener);
+
+        // triggers navigationTo
+        childController = seedWords.show();
     }
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
+
+        navigationManager.removeListener(listener);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -143,13 +156,7 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
             registration.onCompleted();
             childController = null;
 
-            if (requestCloseCallable != null) {
-                try {
-                    requestCloseCallable.call();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+            navigationManager.navigationTo(navigationManager.getNavigationItemsForReturning());
         }
     }
 
@@ -158,13 +165,8 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setRemoveCallBack(Callable<Void> requestCloseCallable) {
-
-        this.requestCloseCallable = requestCloseCallable;
-    }
-
     @Override
-    public Initializable loadView(NavigationItem navigationItem) {
+    protected Initializable loadView(NavigationItem navigationItem) {
         final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
             final Pane view = loader.load();
@@ -189,14 +191,12 @@ class WizardItem extends HBox {
     private final ImageView imageView;
     private final Label titleLabel;
     private final Label subTitleLabel;
-    private final AccountSetupViewCB parentCB;
-    private final Parent content;
     private final NavigationItem navigationItem;
+    private final NavigationManager navigationManager;
 
-    WizardItem(AccountSetupViewCB parentCB, Parent content, String title, String subTitle,
+    WizardItem(NavigationManager navigationManager, String title, String subTitle,
                NavigationItem navigationItem) {
-        this.parentCB = parentCB;
-        this.content = content;
+        this.navigationManager = navigationManager;
         this.navigationItem = navigationItem;
 
         setId("wizard-item-background-deactivated");
@@ -233,7 +233,9 @@ class WizardItem extends HBox {
     }
 
     ViewCB<? extends PresentationModel> show() {
-        parentCB.loadView(navigationItem);
+        navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.ACCOUNT, NavigationItem.ACCOUNT_SETUP,
+                navigationItem);
+
         setId("wizard-item-background-active");
         imageView.setImage(ImageUtil.getIconImage(ImageUtil.ARROW_BLUE));
         titleLabel.setId("wizard-title-active");

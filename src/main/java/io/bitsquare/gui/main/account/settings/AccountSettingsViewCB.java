@@ -33,9 +33,9 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
-import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.*;
@@ -50,12 +50,13 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSettingsViewCB.class);
 
-    public NavigationItem subMenuNavigationItem;
-
-    public VBox leftVBox;
-    public AnchorPane content;
     private MenuItem seedWords, password, restrictions, fiatAccount, registration;
     private NavigationManager navigationManager;
+    private NavigationManager.Listener listener;
+
+    @FXML VBox leftVBox;
+    @FXML AnchorPane content;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -75,18 +76,25 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
+        listener = navigationItems -> {
+            if (navigationItems != null &&
+                    navigationItems.length == 4 &&
+                    navigationItems[2] == NavigationItem.ACCOUNT_SETTINGS) {
+                loadView(navigationItems[3]);
+                selectMainMenuButton(navigationItems[3]);
+            }
+        };
 
         ToggleGroup toggleGroup = new ToggleGroup();
-        seedWords = new MenuItem(this, content, "Wallet seed",
+        seedWords = new MenuItem(navigationManager, "Wallet seed",
                 NavigationItem.SEED_WORDS, toggleGroup);
-        password = new MenuItem(this, content, "Wallet password",
+        password = new MenuItem(navigationManager, "Wallet password",
                 NavigationItem.CHANGE_PASSWORD, toggleGroup);
-        restrictions = new MenuItem(this, content, "Trading restrictions",
+        restrictions = new MenuItem(navigationManager, "Trading restrictions",
                 NavigationItem.RESTRICTIONS, toggleGroup);
-        fiatAccount = new MenuItem(this, content, "Payments account(s)",
+        fiatAccount = new MenuItem(navigationManager, "Payments account(s)",
                 NavigationItem.FIAT_ACCOUNT, toggleGroup);
-        registration = new MenuItem(this, content, "Renew your account",
+        registration = new MenuItem(navigationManager, "Renew your account",
                 NavigationItem.REGISTRATION, toggleGroup);
 
         registration.setDisable(true);
@@ -94,27 +102,72 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
         leftVBox.getChildren().addAll(seedWords, password,
                 restrictions, fiatAccount, registration);
 
-
+        super.initialize(url, rb);
     }
 
     @Override
     public void activate() {
         super.activate();
 
-        NavigationItem[] navigationItems = navigationManager.getCurrentNavigationItems();
-        for (int i = 0; i < navigationItems.length; i++) {
-            if (navigationItems[i].getLevel() == 3) {
-                subMenuNavigationItem = navigationItems[i];
-                break;
+        navigationManager.addListener(listener);
+        NavigationItem[] items = navigationManager.getCurrentNavigationItems();
+        if (items.length == 3 &&
+                items[2] == NavigationItem.ACCOUNT_SETTINGS) {
+            navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.ACCOUNT,
+                    NavigationItem.ACCOUNT_SETTINGS, NavigationItem.SEED_WORDS);
+        }
+        else {
+            if (items != null &&
+                    items.length == 4 &&
+                    items[2] == NavigationItem.ACCOUNT_SETTINGS) {
+                loadView(items[3]);
+                selectMainMenuButton(items[3]);
             }
         }
+    }
 
-        if (subMenuNavigationItem == null)
-            subMenuNavigationItem = NavigationItem.SEED_WORDS;
+    @Override
+    public void deactivate() {
+        super.deactivate();
 
-        loadView(subMenuNavigationItem);
+        navigationManager.removeListener(listener);
+    }
 
-        switch (subMenuNavigationItem) {
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void terminate() {
+        super.terminate();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected Initializable loadView(NavigationItem navigationItem) {
+        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        try {
+            final Pane view = loader.load();
+            content.getChildren().setAll(view);
+            childController = loader.getController();
+            ((ViewCB<? extends PresentationModel>) childController).setParent(this);
+            ((ContextAware) childController).useSettingsContext(true);
+            return childController;
+        } catch (IOException e) {
+            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
+            e.getStackTrace();
+        }
+        return null;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void selectMainMenuButton(NavigationItem navigationItem) {
+        switch (navigationItem) {
             case SEED_WORDS:
                 seedWords.setSelected(true);
                 break;
@@ -131,60 +184,17 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
                 registration.setSelected(true);
                 break;
             default:
-                log.error(subMenuNavigationItem.getFxmlUrl() + " is no subMenuNavigationItem");
+                log.error(navigationItem.getFxmlUrl() + " is invalid");
                 break;
         }
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public Initializable loadView(NavigationItem navigationItem) {
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
-        try {
-            final Pane view = loader.load();
-            content.getChildren().setAll(view);
-            childController = loader.getController();
-            ((ViewCB<? extends PresentationModel>) childController).setParent(this);
-            ((ContextAware) childController).useSettingsContext(true);
-            return childController;
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            e.getStackTrace();
-        }
-        return null;
     }
 }
 
 class MenuItem extends ToggleButton {
     private static final Logger log = LoggerFactory.getLogger(MenuItem.class);
 
-    private ViewCB<? extends PresentationModel> childController;
-
-    private final AccountSettingsViewCB parentCB;
-    private final Parent content;
-    private final NavigationItem navigationItem;
-
-    MenuItem(AccountSettingsViewCB parentCB, Parent content, String title, NavigationItem navigationItem,
+    MenuItem(NavigationManager navigationManager, String title, NavigationItem navigationItem,
              ToggleGroup toggleGroup) {
-        this.parentCB = parentCB;
-        this.content = content;
-        this.navigationItem = navigationItem;
 
         setToggleGroup(toggleGroup);
         setText(title);
@@ -204,7 +214,8 @@ class MenuItem extends ToggleButton {
 
         setGraphic(icon);
 
-        setOnAction((event) -> parentCB.loadView(navigationItem));
+        setOnAction((event) -> navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.ACCOUNT,
+                NavigationItem.ACCOUNT_SETTINGS, navigationItem));
 
         selectedProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue) {

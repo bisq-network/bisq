@@ -83,7 +83,7 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
      * @param navigationItem NavigationItem to be loaded.
      * @return The ViewController of the loaded view.
      */
-    public Initializable loadView(NavigationItem navigationItem) {
+    protected Initializable loadView(NavigationItem navigationItem) {
         log.trace("Lifecycle: loadViewAndGetChildController " + this.getClass().getSimpleName() + " / navigationItem " +
                 "= " + navigationItem);
         return null;

@@ -57,7 +57,6 @@ public class MainViewCB extends ViewCB<MainPM> {
     private final OverlayManager overlayManager;
 
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
-    private NavigationItem mainNavigationItem;
 
     private BorderPane baseApplicationContainer;
     private VBox baseOverlayContainer;
@@ -97,20 +96,12 @@ public class MainViewCB extends ViewCB<MainPM> {
         Popups.setOverlayManager(overlayManager);
 
         navigationManager.addListener(navigationItems -> {
-            if (navigationItems != null) {
-                for (NavigationItem navigationItem : navigationItems) {
-                    if (navigationItem.getLevel() == 1) {
-                        mainNavigationItem = navigationItem;
-                        break;
-                    }
+            if (navigationItems != null && navigationItems.length == 2) {
+                if (navigationItems[0] == NavigationItem.MAIN) {
+                    loadView(navigationItems[1]);
+                    selectMainMenuButton(navigationItems[1]);
                 }
             }
-
-            if (mainNavigationItem == null)
-                mainNavigationItem = NavigationItem.HOME;
-
-            loadView(mainNavigationItem);
-            selectMainMenuButton(mainNavigationItem);
         });
 
         overlayManager.addListener(new OverlayManager.OverlayListener() {
@@ -140,9 +131,8 @@ public class MainViewCB extends ViewCB<MainPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Initializable loadView(NavigationItem navigationItem) {
+    protected Initializable loadView(NavigationItem navigationItem) {
         super.loadView((navigationItem));
-
         final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
             final Node view = loader.load();
@@ -203,7 +193,9 @@ public class MainViewCB extends ViewCB<MainPM> {
             alertButton.setId("nav-alert-button");
             alertButton.relocate(36, 19);
             alertButton.setOnAction((e) ->
-                    navigationManager.navigationTo(NavigationItem.ORDERS, NavigationItem.PENDING_TRADE));
+                    navigationManager.navigationTo(NavigationItem.MAIN,
+                            NavigationItem.ORDERS,
+                            NavigationItem.PENDING_TRADE));
             Tooltip.install(alertButton, new Tooltip("Your offer has been accepted"));
             ordersButtonButtonPane.getChildren().add(alertButton);
 
@@ -399,8 +391,7 @@ public class MainViewCB extends ViewCB<MainPM> {
             }
         });
 
-        toggleButton.setOnAction(e -> navigationManager.navigationTo(navigationItem));
-        // toggleButton.setOnAction(e -> loadView(navigationItem));
+        toggleButton.setOnAction(e -> navigationManager.navigationTo(NavigationItem.MAIN, navigationItem));
 
         parent.getChildren().add(toggleButton);
         return toggleButton;

@@ -21,7 +21,6 @@ import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.NavigationManager;
 import io.bitsquare.gui.ViewCB;
-import io.bitsquare.gui.main.account.setup.AccountSetupViewCB;
 import io.bitsquare.util.ViewLoader;
 
 import java.io.IOException;
@@ -45,6 +44,7 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
 
     public Tab tab;
     private NavigationManager navigationManager;
+    private NavigationManager.Listener listener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -54,6 +54,7 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     @Inject
     private AccountViewCB(AccountPM presentationModel, NavigationManager navigationManager) {
         super(presentationModel);
+
         this.navigationManager = navigationManager;
     }
 
@@ -65,6 +66,13 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        listener = navigationItems -> {
+            if (navigationItems != null &&
+                    navigationItems.length == 3 &&
+                    navigationItems[1] == NavigationItem.ACCOUNT)
+                loadView(navigationItems[2]);
+        };
+
         super.initialize(url, rb);
     }
 
@@ -72,22 +80,24 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     public void activate() {
         super.activate();
 
-        if (childController == null) {
-            if (presentationModel.getNeedRegistration()) {
-                childController = loadView(NavigationItem.ACCOUNT_SETUP);
-                tab.setText("Account setup");
-            }
-            else {
-                childController = loadView(NavigationItem.ACCOUNT_SETTINGS);
-                tab.setText("Account settings");
-            }
+        navigationManager.addListener(listener);
+
+        if (navigationManager.getCurrentNavigationItems().length == 2 &&
+                navigationManager.getCurrentNavigationItems()[1] == NavigationItem.ACCOUNT) {
+            if (presentationModel.getNeedRegistration())
+                navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.ACCOUNT,
+                        NavigationItem.ACCOUNT_SETUP);
+            else
+                navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.ACCOUNT,
+                        NavigationItem.ACCOUNT_SETTINGS);
         }
     }
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
+
+        navigationManager.removeListener(listener);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -102,21 +112,16 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Initializable loadView(NavigationItem navigationItem) {
+    protected Initializable loadView(NavigationItem navigationItem) {
         super.loadView(navigationItem);
 
+        tab.setText((navigationItem == NavigationItem.ACCOUNT_SETUP) ? "Account setup" : "Account settings");
         final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
-            Pane view = loader.load();
+            AnchorPane view = loader.load();
             tab.setContent(view);
             Initializable childController = loader.getController();
             ((ViewCB) childController).setParent(this);
-
-            if (childController instanceof AccountSetupViewCB)
-                ((AccountSetupViewCB) childController).setRemoveCallBack(() -> {
-                    removeSetup();
-                    return null;
-                });
 
         } catch (IOException e) {
             log.error("Loading view failed. FxmlUrl = " + NavigationItem.ACCOUNT_SETUP.getFxmlUrl());
@@ -130,11 +135,6 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void removeSetup() {
-        childController = null;
-
-        navigationManager.navigationTo(navigationManager.getPreviousMainNavigationItems());
-    }
 
 }
 

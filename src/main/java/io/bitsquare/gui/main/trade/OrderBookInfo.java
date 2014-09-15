@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.trade;
 
 import io.bitsquare.trade.Direction;
+import io.bitsquare.trade.Offer;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.utils.Fiat;
@@ -34,6 +35,9 @@ public class OrderBookInfo {
     private Coin amount;
     private Fiat price;
     private Fiat volume;
+
+
+    private Offer offer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +68,9 @@ public class OrderBookInfo {
         this.direction.set(direction);
     }
 
+    public Offer getOffer() {
+        return offer;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -87,5 +94,9 @@ public class OrderBookInfo {
 
     public ObjectProperty<Direction> directionProperty() {
         return direction;
+    }
+
+    public void setOffer(Offer offer) {
+        this.offer = offer;
     }
 }

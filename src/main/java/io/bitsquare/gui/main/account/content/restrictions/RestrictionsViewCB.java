@@ -185,7 +185,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Initializable loadView(NavigationItem navigationItem) {
+    protected Initializable loadView(NavigationItem navigationItem) {
         // TODO caching causes exception
         final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
         try {
@@ -236,7 +236,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
             public ListCell<Locale> call(ListView<Locale> list) {
                 return new ListCell<Locale>() {
                     final Label label = new Label();
-                    final ImageView icon = ImageUtil.getIconImageView(ImageUtil.REMOVE);
+                    final ImageView icon = ImageUtil.getIconImageView(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new Button("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
@@ -294,7 +294,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
             public ListCell<Country> call(ListView<Country> list) {
                 return new ListCell<Country>() {
                     final Label label = new Label();
-                    final ImageView icon = ImageUtil.getIconImageView(ImageUtil.REMOVE);
+                    final ImageView icon = ImageUtil.getIconImageView(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new Button("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
@@ -338,7 +338,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
             public ListCell<Arbitrator> call(ListView<Arbitrator> list) {
                 return new ListCell<Arbitrator>() {
                     final Label label = new Label();
-                    final ImageView icon = ImageUtil.getIconImageView(ImageUtil.REMOVE);
+                    final ImageView icon = ImageUtil.getIconImageView(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new Button("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
