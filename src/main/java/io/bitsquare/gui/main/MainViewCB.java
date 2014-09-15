@@ -269,9 +269,9 @@ public class MainViewCB extends ViewCB<MainPM> {
         vBox.setSpacing(10);
         vBox.setId("splash");
 
-        ImageView logo = ImageUtil.getIconImageView(ImageUtil.SPLASH_LOGO);
-        logo.setFitWidth(300);
-        logo.setFitHeight(300);
+        //ImageView logo = ImageUtil.getIconImageView(ImageUtil.SPLASH_LOGO);
+        ImageView logo = new ImageView();
+        logo.setId("splash-logo");
 
         Label subTitle = new Label("The decentralized Bitcoin exchange");
         subTitle.setAlignment(Pos.CENTER);
