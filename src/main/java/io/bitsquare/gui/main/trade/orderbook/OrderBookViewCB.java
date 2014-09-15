@@ -85,7 +85,6 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     private ImageView expand;
     private ImageView collapse;
 
-    @FXML private GridPane gridPane;
     @FXML private CheckBox extendedCheckBox;
     @FXML private Label amountBtcLabel, priceDescriptionLabel, priceFiatLabel, volumeDescriptionLabel,
             volumeFiatLabel, extendedButton1Label, extendedButton2Label, extendedCheckBoxLabel;
@@ -342,7 +341,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     }
 
     private void toggleDetailsScreen(boolean visible) {
-        gridPane.setVgap(visible ? 5 : 0);
+        ((GridPane) root).setVgap(visible ? 5 : 0);
 
         extendedButton1Label.setVisible(visible);
         extendedButton1Label.setManaged(visible);
