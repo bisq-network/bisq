@@ -19,9 +19,9 @@ package io.bitsquare.gui.main.trade.createoffer;
 
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.CloseListener;
-import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.OverlayController;
+import io.bitsquare.gui.NavigationManager;
+import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
@@ -74,8 +74,8 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferViewCB.class);
 
-    private NavigationController navigationController;
-    private OverlayController overlayController;
+    private NavigationManager navigationManager;
+    private OverlayManager overlayManager;
     private CloseListener closeListener;
 
     private boolean detailsVisible;
@@ -109,11 +109,11 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferViewCB(CreateOfferPM presentationModel, NavigationController navigationController,
-                              OverlayController overlayController) {
+    private CreateOfferViewCB(CreateOfferPM presentationModel, NavigationManager navigationManager,
+                              OverlayManager overlayManager) {
         super(presentationModel);
-        this.navigationController = navigationController;
-        this.overlayController = overlayController;
+        this.navigationManager = navigationManager;
+        this.overlayManager = overlayManager;
     }
 
 
@@ -237,7 +237,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void openAccountSettings() {
-        navigationController.navigationTo(NavigationItem.ACCOUNT,
+        navigationManager.navigationTo(NavigationItem.ACCOUNT,
                 NavigationItem.ACCOUNT_SETTINGS,
                 NavigationItem.RESTRICTIONS);
     }
@@ -312,7 +312,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
         presentationModel.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                overlayController.blurContent();
+                overlayManager.blurContent();
 
                 // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added 
                 // our own actions.
@@ -335,7 +335,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
                             e.printStackTrace();
                         }
                         Dialog.Actions.CLOSE.handle(actionEvent);
-                        overlayController.removeBlurContent();
+                        overlayManager.removeBlurContent();
                     }
                 });
 

@@ -18,10 +18,10 @@
 package io.bitsquare.gui.main.trade.orderbook;
 
 import io.bitsquare.gui.CachedViewCB;
-import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
 import io.bitsquare.gui.NavigationListener;
-import io.bitsquare.gui.OverlayController;
+import io.bitsquare.gui.NavigationManager;
+import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.InputTextField;
@@ -70,8 +70,8 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     private static final Logger log = LoggerFactory.getLogger(OrderBookViewCB.class);
 
     //TODO nav?
-    private NavigationController navigationController;
-    private OverlayController overlayController;
+    private NavigationManager navigationManager;
+    private OverlayManager overlayManager;
     private OptionalBtcValidator optionalBtcValidator;
     private OptionalFiatValidator optionalFiatValidator;
     private NavigationListener navigationListener;
@@ -101,14 +101,14 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
     @Inject
     private OrderBookViewCB(OrderBookPM presentationModel,
-                            NavigationController navigationController,
-                            OverlayController overlayController,
+                            NavigationManager navigationManager,
+                            OverlayManager overlayManager,
                             OptionalBtcValidator optionalBtcValidator,
                             OptionalFiatValidator optionalFiatValidator) {
         super(presentationModel);
 
-        this.navigationController = navigationController;
-        this.overlayController = overlayController;
+        this.navigationManager = navigationManager;
+        this.overlayManager = overlayManager;
         this.optionalBtcValidator = optionalBtcValidator;
         this.optionalFiatValidator = optionalFiatValidator;
     }
@@ -262,14 +262,14 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void openSetupScreen() {
-        overlayController.blurContent();
+        overlayManager.blurContent();
         List<Action> actions = new ArrayList<>();
         actions.add(new AbstractAction(BSResources.get("shared.ok")) {
             @Override
             public void handle(ActionEvent actionEvent) {
                 Dialog.Actions.OK.handle(actionEvent);
-                overlayController.removeBlurContent();
-                navigationController.navigationTo(NavigationItem.ACCOUNT, NavigationItem.ACCOUNT_SETUP);
+                overlayManager.removeBlurContent();
+                navigationManager.navigationTo(NavigationItem.ACCOUNT, NavigationItem.ACCOUNT_SETUP);
             }
         });
         Popups.openInfo("You need to setup your trading account before you can trade.",
@@ -320,7 +320,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                 actions);
 
         if (response == Dialog.Actions.YES)
-            navigationController.navigationTo(NavigationItem.ACCOUNT, NavigationItem.ACCOUNT_SETTINGS,
+            navigationManager.navigationTo(NavigationItem.ACCOUNT, NavigationItem.ACCOUNT_SETTINGS,
                     NavigationItem.RESTRICTIONS);
         else
             orderBookTable.getSelectionModel().clearSelection();

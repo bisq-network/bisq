@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.account.settings;
 
 import io.bitsquare.gui.CachedViewCB;
-import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.NavigationManager;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.main.account.content.ContextAware;
@@ -55,17 +55,17 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
     public VBox leftVBox;
     public AnchorPane content;
     private MenuItem seedWords, password, restrictions, fiatAccount, registration;
-    private NavigationController navigationController;
+    private NavigationManager navigationManager;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountSettingsViewCB(AccountSettingsPM presentationModel, NavigationController navigationController) {
+    private AccountSettingsViewCB(AccountSettingsPM presentationModel, NavigationManager navigationManager) {
         super(presentationModel);
 
-        this.navigationController = navigationController;
+        this.navigationManager = navigationManager;
     }
 
 
@@ -101,7 +101,7 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
     public void activate() {
         super.activate();
 
-        NavigationItem[] navigationItems = navigationController.getCurrentNavigationItems();
+        NavigationItem[] navigationItems = navigationManager.getCurrentNavigationItems();
         for (int i = 0; i < navigationItems.length; i++) {
             if (navigationItems[i].getLevel() == 3) {
                 subMenuNavigationItem = navigationItems[i];

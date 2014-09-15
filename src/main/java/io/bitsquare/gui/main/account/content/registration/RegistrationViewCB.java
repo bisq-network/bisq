@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.account.content.registration;
 
 import io.bitsquare.gui.CachedViewCB;
-import io.bitsquare.gui.OverlayController;
+import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
@@ -52,7 +52,7 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
 
     private static final Logger log = LoggerFactory.getLogger(RegistrationViewCB.class);
 
-    private OverlayController overlayController;
+    private OverlayManager overlayManager;
 
     @FXML private TextField feeTextField;
     @FXML private AddressTextField addressTextField;
@@ -65,9 +65,9 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private RegistrationViewCB(RegistrationPM presentationModel, OverlayController overlayController) {
+    private RegistrationViewCB(RegistrationPM presentationModel, OverlayManager overlayManager) {
         super(presentationModel);
-        this.overlayController = overlayController;
+        this.overlayManager = overlayManager;
     }
 
 
@@ -85,7 +85,7 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
         addressTextField.setAddress(presentationModel.getAddressAsString());
 
         // TODO find better solution
-        addressTextField.setOverlayController(overlayController);
+        addressTextField.setOverlayManager(overlayManager);
 
         balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get());
 
@@ -101,7 +101,7 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
 
         presentationModel.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
             if (newValue) {
-                overlayController.blurContent();
+                overlayManager.blurContent();
 
                 List<Action> actions = new ArrayList<>();
                 actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {
@@ -123,7 +123,7 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
                             e.printStackTrace();
                         }
                         Dialog.Actions.CLOSE.handle(actionEvent);
-                        overlayController.removeBlurContent();
+                        overlayManager.removeBlurContent();
                     }
                 });
 

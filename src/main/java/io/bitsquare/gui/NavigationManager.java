@@ -25,8 +25,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NavigationController {
-    private static final Logger log = LoggerFactory.getLogger(NavigationController.class);
+public class NavigationManager {
+    private static final Logger log = LoggerFactory.getLogger(NavigationManager.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface
@@ -47,7 +47,7 @@ public class NavigationController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public NavigationController() {
+    public NavigationManager() {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

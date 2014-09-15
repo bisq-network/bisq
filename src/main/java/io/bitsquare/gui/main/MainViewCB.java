@@ -19,9 +19,9 @@ package io.bitsquare.gui.main;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.AWTSystemTray;
-import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.OverlayController;
+import io.bitsquare.gui.NavigationManager;
+import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.components.Popups;
@@ -53,8 +53,8 @@ import org.slf4j.LoggerFactory;
 public class MainViewCB extends ViewCB<MainPM> {
     private static final Logger log = LoggerFactory.getLogger(MainViewCB.class);
 
-    private final NavigationController navigationController;
-    private final OverlayController overlayController;
+    private final NavigationManager navigationManager;
+    private final OverlayManager overlayManager;
 
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
     private NavigationItem mainNavigationItem;
@@ -74,12 +74,12 @@ public class MainViewCB extends ViewCB<MainPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MainViewCB(MainPM presentationModel, NavigationController navigationController,
-                       OverlayController overlayController) {
+    private MainViewCB(MainPM presentationModel, NavigationManager navigationManager,
+                       OverlayManager overlayManager) {
         super(presentationModel);
 
-        this.navigationController = navigationController;
-        this.overlayController = overlayController;
+        this.navigationManager = navigationManager;
+        this.overlayManager = overlayManager;
     }
 
 
@@ -94,9 +94,9 @@ public class MainViewCB extends ViewCB<MainPM> {
         Profiler.printMsgWithTime("MainController.initialize");
 
         // just temp. ugly hack... Popups will be removed
-        Popups.setOverlayController(overlayController);
+        Popups.setOverlayManager(overlayManager);
 
-        navigationController.addListener(navigationItems -> {
+        navigationManager.addListener(navigationItems -> {
             if (navigationItems != null) {
                 for (NavigationItem navigationItem : navigationItems) {
                     if (navigationItem.getLevel() == 1) {
@@ -113,7 +113,7 @@ public class MainViewCB extends ViewCB<MainPM> {
             selectMainMenuButton(mainNavigationItem);
         });
 
-        overlayController.addListener(new OverlayController.OverlayListener() {
+        overlayManager.addListener(new OverlayManager.OverlayListener() {
             @Override
             public void onBlurContentRequested() {
                 Transitions.blur(baseApplicationContainer);
@@ -204,14 +204,14 @@ public class MainViewCB extends ViewCB<MainPM> {
             alertButton.setId("nav-alert-button");
             alertButton.relocate(36, 19);
             alertButton.setOnAction((e) ->
-                    navigationController.navigationTo(NavigationItem.ORDERS, NavigationItem.PENDING_TRADE));
+                    navigationManager.navigationTo(NavigationItem.ORDERS, NavigationItem.PENDING_TRADE));
             Tooltip.install(alertButton, new Tooltip("Your offer has been accepted"));
             ordersButtonButtonPane.getChildren().add(alertButton);
 
             AWTSystemTray.setAlert();
         });
 
-        navigationController.navigationTo(presentationModel.getSelectedNavigationItems());
+        navigationManager.navigationTo(presentationModel.getSelectedNavigationItems());
         onContentAdded();
     }
 

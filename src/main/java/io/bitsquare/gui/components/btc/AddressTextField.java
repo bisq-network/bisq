@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.components.btc;
 
-import io.bitsquare.gui.OverlayController;
+import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.Popups;
 
 import com.google.bitcoin.core.Coin;
@@ -60,7 +60,7 @@ public class AddressTextField extends AnchorPane {
     private final StringProperty address = new SimpleStringProperty();
     private final StringProperty paymentLabel = new SimpleStringProperty();
     public final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
-    private OverlayController overlayController;
+    private OverlayManager overlayManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -125,16 +125,16 @@ public class AddressTextField extends AnchorPane {
                 popOver.setDetachedTitle("Scan QR code for this address");
                 popOver.setDetached(true);
                 popOver.setOnHiding(windowEvent -> {
-                    if (overlayController != null)
-                        overlayController.removeBlurContent();
+                    if (overlayManager != null)
+                        overlayManager.removeBlurContent();
                 });
 
                 Window window = getScene().getWindow();
                 double x = Math.round(window.getX() + (window.getWidth() - 320) / 2);
                 double y = Math.round(window.getY() + (window.getHeight() - 240) / 2);
                 popOver.show(getScene().getWindow(), x, y);
-                if (overlayController != null)
-                    overlayController.blurContent();
+                if (overlayManager != null)
+                    overlayManager.blurContent();
             }
         });
 
@@ -188,8 +188,8 @@ public class AddressTextField extends AnchorPane {
     }
 
     // TODO find better solution
-    public void setOverlayController(OverlayController overlayController) {
-        this.overlayController = overlayController;
+    public void setOverlayManager(OverlayManager overlayManager) {
+        this.overlayManager = overlayManager;
     }
 
 

@@ -22,8 +22,8 @@ import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
-import io.bitsquare.gui.NavigationController;
-import io.bitsquare.gui.OverlayController;
+import io.bitsquare.gui.NavigationManager;
+import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.main.trade.orderbook.OrderBook;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
@@ -71,8 +71,8 @@ public class BitSquareModule extends AbstractModule {
 
         bind(TradeManager.class).asEagerSingleton();
         bind(OrderBook.class).asEagerSingleton();
-        bind(NavigationController.class).asEagerSingleton();
-        bind(OverlayController.class).asEagerSingleton();
+        bind(NavigationManager.class).asEagerSingleton();
+        bind(OverlayManager.class).asEagerSingleton();
         bind(BSFormatter.class).asEagerSingleton();
 
         bind(BankAccountNumberValidator.class).asEagerSingleton();

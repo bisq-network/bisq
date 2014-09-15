@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.account;
 
 import io.bitsquare.gui.CachedViewCB;
-import io.bitsquare.gui.NavigationController;
 import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.NavigationManager;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.main.account.setup.AccountSetupViewCB;
 import io.bitsquare.util.ViewLoader;
@@ -44,7 +44,7 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     private static final Logger log = LoggerFactory.getLogger(AccountViewCB.class);
 
     public Tab tab;
-    private NavigationController navigationController;
+    private NavigationManager navigationManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -52,9 +52,9 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountViewCB(AccountPM presentationModel, NavigationController navigationController) {
+    private AccountViewCB(AccountPM presentationModel, NavigationManager navigationManager) {
         super(presentationModel);
-        this.navigationController = navigationController;
+        this.navigationManager = navigationManager;
     }
 
 
@@ -133,7 +133,7 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     private void removeSetup() {
         childController = null;
 
-        navigationController.navigationTo(navigationController.getPreviousMainNavigationItems());
+        navigationManager.navigationTo(navigationManager.getPreviousMainNavigationItems());
     }
 
 }
