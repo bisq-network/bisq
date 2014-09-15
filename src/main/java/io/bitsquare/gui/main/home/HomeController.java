@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.home;
 
 import io.bitsquare.BitSquare;
 import io.bitsquare.gui.CachedViewController;
-import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.arbitrators.registration.ArbitratorRegistrationController;
 import io.bitsquare.util.ViewLoader;
 
@@ -70,9 +70,9 @@ public class HomeController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadViewAndGetChildController(Navigation.Item item) {
         // don't use caching here, cause exc. -> need to investigate and is rarely called so no caching is better
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
+        final ViewLoader loader = new ViewLoader(getClass().getResource(item.getFxmlUrl()), false);
         try {
             final Parent view = loader.load();
             arbitratorRegistrationController = loader.getController();
@@ -107,12 +107,12 @@ public class HomeController extends CachedViewController {
 
     @FXML
     public void onArbitratorRegistration() {
-        loadViewAndGetChildController(NavigationItem.ARBITRATOR_REGISTRATION);
+        loadViewAndGetChildController(Navigation.Item.ARBITRATOR_REGISTRATION);
     }
 
     @FXML
     public void onArbitratorEdit() {
-        loadViewAndGetChildController(NavigationItem.ARBITRATOR_REGISTRATION);
+        loadViewAndGetChildController(Navigation.Item.ARBITRATOR_REGISTRATION);
         arbitratorRegistrationController.setEditMode(true);
     }
 

@@ -18,8 +18,7 @@
 package io.bitsquare.gui.main.trade.orderbook;
 
 import io.bitsquare.gui.CachedViewCB;
-import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.NavigationManager;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
@@ -62,8 +61,8 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     private static final Logger log = LoggerFactory.getLogger(OrderBookViewCB.class);
 
-    private NavigationManager navigationManager;
-    private NavigationItem tradeNavigationItem;
+    private Navigation navigation;
+    private Navigation.Item navigationItem;
     private OverlayManager overlayManager;
     private OptionalBtcValidator optionalBtcValidator;
     private OptionalFiatValidator optionalFiatValidator;
@@ -92,13 +91,13 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
     @Inject
     private OrderBookViewCB(OrderBookPM presentationModel,
-                            NavigationManager navigationManager,
+                            Navigation navigation,
                             OverlayManager overlayManager,
                             OptionalBtcValidator optionalBtcValidator,
                             OptionalFiatValidator optionalFiatValidator) {
         super(presentationModel);
 
-        this.navigationManager = navigationManager;
+        this.navigation = navigation;
         this.overlayManager = overlayManager;
         this.optionalBtcValidator = optionalBtcValidator;
         this.optionalFiatValidator = optionalFiatValidator;
@@ -177,8 +176,8 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
     public void setOrderBookInfo(OrderBookInfo orderBookInfo) {
         presentationModel.setOrderBookInfo(orderBookInfo);
-        tradeNavigationItem = (orderBookInfo.getDirection() == Direction.BUY) ? NavigationItem.BUY : NavigationItem
-                .SELL;
+        navigationItem = (orderBookInfo.getDirection() == Direction.BUY) ?
+                Navigation.Item.BUY : Navigation.Item.SELL;
 
     }
 
@@ -191,11 +190,8 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     void createOffer() {
         if (presentationModel.isRegistered()) {
             createOfferButton.setDisable(true);
-            if (presentationModel.getOrderBookInfo().getDirection() == Direction.BUY)
-                navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.BUY, NavigationItem.CREATE_OFFER);
-            else
-                navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.SELL, NavigationItem.CREATE_OFFER);
-
+            navigation.navigationTo(Navigation.Item.MAIN, navigationItem,
+                    Navigation.Item.CREATE_OFFER);
         }
         else {
             openSetupScreen();
@@ -231,9 +227,9 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
             public void handle(ActionEvent actionEvent) {
                 Dialog.Actions.OK.handle(actionEvent);
                 overlayManager.removeBlurContent();
-                navigationManager.setNavigationItemsForReturning(navigationManager.getCurrentNavigationItems());
-                navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.ACCOUNT,
-                        NavigationItem.ACCOUNT_SETUP);
+                navigation.setItemsForReturning(navigation.getCurrentItems());
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
+                        Navigation.Item.ACCOUNT_SETUP);
             }
         });
         Popups.openInfo("You need to setup your trading account before you can trade.",
@@ -243,13 +239,9 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     //TODO not updated yet
     private void takeOffer(Offer offer) {
         if (presentationModel.isRegistered()) {
-
             presentationModel.getOrderBookInfo().setOffer(offer);
-
-            if (presentationModel.getOrderBookInfo().getDirection() == Direction.BUY)
-                navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.BUY, NavigationItem.TAKE_OFFER);
-            else
-                navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.SELL, NavigationItem.TAKE_OFFER);
+            navigation.navigationTo(Navigation.Item.MAIN, navigationItem,
+                    Navigation.Item.TAKE_OFFER);
         }
         else {
             openSetupScreen();
@@ -267,8 +259,9 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                 actions);
 
         if (response == Dialog.Actions.YES)
-            navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.ACCOUNT, NavigationItem.ACCOUNT_SETTINGS,
-                    NavigationItem.RESTRICTIONS);
+            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
+                    Navigation.Item.ACCOUNT_SETTINGS,
+                    Navigation.Item.RESTRICTIONS);
         else
             orderBookTable.getSelectionModel().clearSelection();
     }

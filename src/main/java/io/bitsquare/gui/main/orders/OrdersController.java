@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.orders;
 
 import io.bitsquare.gui.CachedViewController;
-import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.CachingTabPane;
 import io.bitsquare.persistence.Persistence;
 
@@ -61,8 +61,8 @@ public class OrdersController extends CachedViewController {
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
-        ((CachingTabPane) root).initialize(this, persistence, NavigationItem.OFFER.getFxmlUrl(),
-                NavigationItem.PENDING_TRADE.getFxmlUrl(), NavigationItem.CLOSED_TRADE.getFxmlUrl());
+        ((CachingTabPane) root).initialize(this, persistence, Navigation.Item.OFFER.getFxmlUrl(),
+                Navigation.Item.PENDING_TRADE.getFxmlUrl(), Navigation.Item.CLOSED_TRADE.getFxmlUrl());
     }
 
     @Override
@@ -81,8 +81,8 @@ public class OrdersController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
-        childController = ((CachingTabPane) root).loadViewAndGetChildController(navigationItem.getFxmlUrl());
+    public Initializable loadViewAndGetChildController(Navigation.Item item) {
+        childController = ((CachingTabPane) root).loadViewAndGetChildController(item.getFxmlUrl());
         return childController;
     }
 

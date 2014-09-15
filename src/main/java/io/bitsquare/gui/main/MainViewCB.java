@@ -19,8 +19,7 @@ package io.bitsquare.gui.main;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.AWTSystemTray;
-import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.NavigationManager;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.components.NetworkSyncPane;
@@ -53,7 +52,7 @@ import org.slf4j.LoggerFactory;
 public class MainViewCB extends ViewCB<MainPM> {
     private static final Logger log = LoggerFactory.getLogger(MainViewCB.class);
 
-    private final NavigationManager navigationManager;
+    private final Navigation navigation;
     private final OverlayManager overlayManager;
 
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
@@ -73,11 +72,11 @@ public class MainViewCB extends ViewCB<MainPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MainViewCB(MainPM presentationModel, NavigationManager navigationManager,
+    private MainViewCB(MainPM presentationModel, Navigation navigation,
                        OverlayManager overlayManager) {
         super(presentationModel);
 
-        this.navigationManager = navigationManager;
+        this.navigation = navigation;
         this.overlayManager = overlayManager;
     }
 
@@ -95,9 +94,9 @@ public class MainViewCB extends ViewCB<MainPM> {
         // just temp. ugly hack... Popups will be removed
         Popups.setOverlayManager(overlayManager);
 
-        navigationManager.addListener(navigationItems -> {
+        navigation.addListener(navigationItems -> {
             if (navigationItems != null && navigationItems.length == 2) {
-                if (navigationItems[0] == NavigationItem.MAIN) {
+                if (navigationItems[0] == Navigation.Item.MAIN) {
                     loadView(navigationItems[1]);
                     selectMainMenuButton(navigationItems[1]);
                 }
@@ -131,7 +130,7 @@ public class MainViewCB extends ViewCB<MainPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected Initializable loadView(NavigationItem navigationItem) {
+    protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView((navigationItem));
         final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
@@ -193,16 +192,16 @@ public class MainViewCB extends ViewCB<MainPM> {
             alertButton.setId("nav-alert-button");
             alertButton.relocate(36, 19);
             alertButton.setOnAction((e) ->
-                    navigationManager.navigationTo(NavigationItem.MAIN,
-                            NavigationItem.ORDERS,
-                            NavigationItem.PENDING_TRADE));
+                    navigation.navigationTo(Navigation.Item.MAIN,
+                            Navigation.Item.ORDERS,
+                            Navigation.Item.PENDING_TRADE));
             Tooltip.install(alertButton, new Tooltip("Your offer has been accepted"));
             ordersButtonButtonPane.getChildren().add(alertButton);
 
             AWTSystemTray.setAlert();
         });
 
-        navigationManager.navigateToLastStoredItem();
+        navigation.navigateToLastStoredItem();
         onContentAdded();
     }
 
@@ -216,8 +215,8 @@ public class MainViewCB extends ViewCB<MainPM> {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void selectMainMenuButton(NavigationItem navigationItem) {
-        switch (navigationItem) {
+    private void selectMainMenuButton(Navigation.Item item) {
+        switch (item) {
             case HOME:
                 homeButton.setSelected(true);
                 break;
@@ -243,7 +242,7 @@ public class MainViewCB extends ViewCB<MainPM> {
                 accountButton.setSelected(true);
                 break;
             default:
-                log.error(navigationItem.getFxmlUrl() + " is no main navigation item");
+                log.error(item.getFxmlUrl() + " is no main navigation item");
                 break;
         }
     }
@@ -338,32 +337,32 @@ public class MainViewCB extends ViewCB<MainPM> {
     }
 
     private void addMainNavigation() {
-        homeButton = addNavButton(leftNavPane, "Overview", NavigationItem.HOME);
-        buyButton = addNavButton(leftNavPane, "Buy BTC", NavigationItem.BUY);
-        sellButton = addNavButton(leftNavPane, "Sell BTC", NavigationItem.SELL);
+        homeButton = addNavButton(leftNavPane, "Overview", Navigation.Item.HOME);
+        buyButton = addNavButton(leftNavPane, "Buy BTC", Navigation.Item.BUY);
+        sellButton = addNavButton(leftNavPane, "Sell BTC", Navigation.Item.SELL);
 
         ordersButtonButtonPane = new Pane();
-        ordersButton = addNavButton(ordersButtonButtonPane, "Orders", NavigationItem.ORDERS);
+        ordersButton = addNavButton(ordersButtonButtonPane, "Orders", Navigation.Item.ORDERS);
         leftNavPane.getChildren().add(ordersButtonButtonPane);
 
-        fundsButton = addNavButton(leftNavPane, "Funds", NavigationItem.FUNDS);
+        fundsButton = addNavButton(leftNavPane, "Funds", Navigation.Item.FUNDS);
 
         final Pane msgButtonHolder = new Pane();
-        msgButton = addNavButton(msgButtonHolder, "Message", NavigationItem.MSG);
+        msgButton = addNavButton(msgButtonHolder, "Message", Navigation.Item.MSG);
         leftNavPane.getChildren().add(msgButtonHolder);
 
         addBalanceInfo(rightNavPane);
 
         addBankAccountComboBox(rightNavPane);
 
-        settingsButton = addNavButton(rightNavPane, "Settings", NavigationItem.SETTINGS);
-        accountButton = addNavButton(rightNavPane, "Account", NavigationItem.ACCOUNT);
+        settingsButton = addNavButton(rightNavPane, "Settings", Navigation.Item.SETTINGS);
+        accountButton = addNavButton(rightNavPane, "Account", Navigation.Item.ACCOUNT);
 
         onMainNavigationAdded();
     }
 
-    private ToggleButton addNavButton(Pane parent, String title, NavigationItem navigationItem) {
-        ImageView icon = ImageUtil.getIconImageView(navigationItem.getIcon());
+    private ToggleButton addNavButton(Pane parent, String title, Navigation.Item item) {
+        ImageView icon = ImageUtil.getIconImageView(item.getIcon());
         icon.setFitWidth(32);
         icon.setFitHeight(32);
 
@@ -382,16 +381,16 @@ public class MainViewCB extends ViewCB<MainPM> {
             toggleButton.setMaxSize(50, 50);
             toggleButton.setGraphicTextGap(newValue ? -1 : 0);
             if (newValue) {
-                Image activeIcon = ImageUtil.getIconImage(navigationItem.getActiveIcon());
+                Image activeIcon = ImageUtil.getIconImage(item.getActiveIcon());
                 ((ImageView) toggleButton.getGraphic()).setImage(activeIcon);
             }
             else {
-                Image activeIcon = ImageUtil.getIconImage(navigationItem.getIcon());
+                Image activeIcon = ImageUtil.getIconImage(item.getIcon());
                 ((ImageView) toggleButton.getGraphic()).setImage(activeIcon);
             }
         });
 
-        toggleButton.setOnAction(e -> navigationManager.navigationTo(NavigationItem.MAIN, navigationItem));
+        toggleButton.setOnAction(e -> navigation.navigationTo(Navigation.Item.MAIN, item));
 
         parent.getChildren().add(toggleButton);
         return toggleButton;

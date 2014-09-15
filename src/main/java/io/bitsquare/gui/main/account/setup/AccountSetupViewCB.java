@@ -18,8 +18,7 @@
 package io.bitsquare.gui.main.account.setup;
 
 import io.bitsquare.gui.CachedViewCB;
-import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.NavigationManager;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
@@ -55,8 +54,8 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
     private static final Logger log = LoggerFactory.getLogger(AccountSetupViewCB.class);
 
     private WizardItem seedWords, password, fiatAccount, restrictions, registration;
-    private NavigationManager navigationManager;
-    private NavigationManager.Listener listener;
+    private Navigation navigation;
+    private Navigation.Listener listener;
 
     @FXML VBox leftVBox;
     @FXML AnchorPane content;
@@ -67,9 +66,9 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountSetupViewCB(AccountSetupPM presentationModel, NavigationManager navigationManager) {
+    private AccountSetupViewCB(AccountSetupPM presentationModel, Navigation navigation) {
         super(presentationModel);
-        this.navigationManager = navigationManager;
+        this.navigation = navigation;
     }
 
 
@@ -82,24 +81,24 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
         listener = navigationItems -> {
             if (navigationItems != null &&
                     navigationItems.length == 4 &&
-                    navigationItems[2] == NavigationItem.ACCOUNT_SETUP) {
+                    navigationItems[2] == Navigation.Item.ACCOUNT_SETUP) {
                 loadView(navigationItems[3]);
             }
         };
 
-        seedWords = new WizardItem(navigationManager, "Backup wallet seed", "Write down the seed word for your wallet",
-                NavigationItem.SEED_WORDS);
-        password = new WizardItem(navigationManager, "Setup password", "Protect your wallet with a password",
-                NavigationItem.ADD_PASSWORD);
-        restrictions = new WizardItem(navigationManager, "Setup your preferences",
+        seedWords = new WizardItem(navigation, "Backup wallet seed", "Write down the seed word for your wallet",
+                Navigation.Item.SEED_WORDS);
+        password = new WizardItem(navigation, "Setup password", "Protect your wallet with a password",
+                Navigation.Item.ADD_PASSWORD);
+        restrictions = new WizardItem(navigation, "Setup your preferences",
                 "Define your preferences with whom you want to trade",
-                NavigationItem.RESTRICTIONS);
-        fiatAccount = new WizardItem(navigationManager, " Setup Payments account(s)",
+                Navigation.Item.RESTRICTIONS);
+        fiatAccount = new WizardItem(navigation, " Setup Payments account(s)",
                 "You need to add a payments account to your trading account",
-                NavigationItem.FIAT_ACCOUNT);
-        registration = new WizardItem(navigationManager, "Register your account",
+                Navigation.Item.FIAT_ACCOUNT);
+        registration = new WizardItem(navigation, "Register your account",
                 "Pay in the registration fee of 0.0002 BTC and store your account in the BTC block chain",
-                NavigationItem.REGISTRATION);
+                Navigation.Item.REGISTRATION);
 
         leftVBox.getChildren().addAll(seedWords, password, restrictions, fiatAccount, registration);
 
@@ -111,7 +110,7 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
     public void activate() {
         super.activate();
 
-        navigationManager.addListener(listener);
+        navigation.addListener(listener);
 
         // triggers navigationTo
         childController = seedWords.show();
@@ -121,7 +120,7 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
     public void deactivate() {
         super.deactivate();
 
-        navigationManager.removeListener(listener);
+        navigation.removeListener(listener);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -156,7 +155,7 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
             registration.onCompleted();
             childController = null;
 
-            navigationManager.navigationTo(navigationManager.getNavigationItemsForReturning());
+            navigation.navigationTo(navigation.getItemsForReturning());
         }
     }
 
@@ -166,7 +165,7 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected Initializable loadView(NavigationItem navigationItem) {
+    protected Initializable loadView(Navigation.Item navigationItem) {
         final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
             final Pane view = loader.load();
@@ -191,12 +190,12 @@ class WizardItem extends HBox {
     private final ImageView imageView;
     private final Label titleLabel;
     private final Label subTitleLabel;
-    private final NavigationItem navigationItem;
-    private final NavigationManager navigationManager;
+    private final Navigation.Item navigationItem;
+    private final Navigation navigation;
 
-    WizardItem(NavigationManager navigationManager, String title, String subTitle,
-               NavigationItem navigationItem) {
-        this.navigationManager = navigationManager;
+    WizardItem(Navigation navigation, String title, String subTitle,
+               Navigation.Item navigationItem) {
+        this.navigation = navigation;
         this.navigationItem = navigationItem;
 
         setId("wizard-item-background-deactivated");
@@ -233,7 +232,8 @@ class WizardItem extends HBox {
     }
 
     ViewCB<? extends PresentationModel> show() {
-        navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.ACCOUNT, NavigationItem.ACCOUNT_SETUP,
+        navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT, Navigation
+                        .Item.ACCOUNT_SETUP,
                 navigationItem);
 
         setId("wizard-item-background-active");

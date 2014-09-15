@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.arbitrators.browser;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedViewController;
-import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.arbitrators.profile.ArbitratorProfileController;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.msg.MessageFacade;
@@ -91,7 +91,7 @@ public class ArbitratorBrowserController extends CachedViewController implements
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
-        loadViewAndGetChildController(NavigationItem.ARBITRATOR_PROFILE);
+        loadViewAndGetChildController(Navigation.Item.ARBITRATOR_PROFILE);
         checkButtonState();
     }
 
@@ -121,8 +121,8 @@ public class ArbitratorBrowserController extends CachedViewController implements
     }
 
     @Override
-    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+    public Initializable loadViewAndGetChildController(Navigation.Item item) {
+        final ViewLoader loader = new ViewLoader(getClass().getResource(item.getFxmlUrl()));
         try {
             final Node view = loader.load();
             arbitratorProfileController = loader.getController();

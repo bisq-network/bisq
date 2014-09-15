@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.funds;
 
 import io.bitsquare.gui.CachedViewController;
-import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewController;
 import io.bitsquare.gui.components.CachingTabPane;
 import io.bitsquare.persistence.Persistence;
@@ -59,8 +59,8 @@ public class FundsController extends CachedViewController {
         super.initialize(url, rb);
 
         ((CachingTabPane) root).initialize(
-                this, persistence, NavigationItem.DEPOSIT.getFxmlUrl(), NavigationItem.WITHDRAWAL.getFxmlUrl(),
-                NavigationItem.TRANSACTIONS.getFxmlUrl());
+                this, persistence, Navigation.Item.DEPOSIT.getFxmlUrl(), Navigation.Item.WITHDRAWAL.getFxmlUrl(),
+                Navigation.Item.TRANSACTIONS.getFxmlUrl());
     }
 
     @Override
@@ -79,8 +79,8 @@ public class FundsController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
-        childController = ((CachingTabPane) root).loadViewAndGetChildController(navigationItem.getFxmlUrl());
+    public Initializable loadViewAndGetChildController(Navigation.Item item) {
+        childController = ((CachingTabPane) root).loadViewAndGetChildController(item.getFxmlUrl());
         return childController;
     }
 

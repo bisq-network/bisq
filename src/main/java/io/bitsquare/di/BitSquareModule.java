@@ -22,7 +22,7 @@ import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
-import io.bitsquare.gui.NavigationManager;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.main.trade.orderbook.OrderBook;
 import io.bitsquare.gui.util.BSFormatter;
@@ -71,7 +71,7 @@ public class BitSquareModule extends AbstractModule {
 
         bind(TradeManager.class).asEagerSingleton();
         bind(OrderBook.class).asEagerSingleton();
-        bind(NavigationManager.class).asEagerSingleton();
+        bind(Navigation.class).asEagerSingleton();
         bind(OverlayManager.class).asEagerSingleton();
         bind(BSFormatter.class).asEagerSingleton();
 

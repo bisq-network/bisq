@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.arbitrators.profile;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedViewController;
-import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
@@ -99,7 +99,7 @@ public class ArbitratorProfileController extends CachedViewController {
     }
 
     @Override
-    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadViewAndGetChildController(Navigation.Item item) {
         return null;
     }
 

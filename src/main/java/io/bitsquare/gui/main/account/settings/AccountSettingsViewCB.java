@@ -18,8 +18,7 @@
 package io.bitsquare.gui.main.account.settings;
 
 import io.bitsquare.gui.CachedViewCB;
-import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.NavigationManager;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.main.account.content.ContextAware;
@@ -51,8 +50,8 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
     private static final Logger log = LoggerFactory.getLogger(AccountSettingsViewCB.class);
 
     private MenuItem seedWords, password, restrictions, fiatAccount, registration;
-    private NavigationManager navigationManager;
-    private NavigationManager.Listener listener;
+    private Navigation navigation;
+    private Navigation.Listener listener;
 
     @FXML VBox leftVBox;
     @FXML AnchorPane content;
@@ -63,10 +62,10 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountSettingsViewCB(AccountSettingsPM presentationModel, NavigationManager navigationManager) {
+    private AccountSettingsViewCB(AccountSettingsPM presentationModel, Navigation navigation) {
         super(presentationModel);
 
-        this.navigationManager = navigationManager;
+        this.navigation = navigation;
     }
 
 
@@ -79,23 +78,23 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
         listener = navigationItems -> {
             if (navigationItems != null &&
                     navigationItems.length == 4 &&
-                    navigationItems[2] == NavigationItem.ACCOUNT_SETTINGS) {
+                    navigationItems[2] == Navigation.Item.ACCOUNT_SETTINGS) {
                 loadView(navigationItems[3]);
                 selectMainMenuButton(navigationItems[3]);
             }
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
-        seedWords = new MenuItem(navigationManager, "Wallet seed",
-                NavigationItem.SEED_WORDS, toggleGroup);
-        password = new MenuItem(navigationManager, "Wallet password",
-                NavigationItem.CHANGE_PASSWORD, toggleGroup);
-        restrictions = new MenuItem(navigationManager, "Trading restrictions",
-                NavigationItem.RESTRICTIONS, toggleGroup);
-        fiatAccount = new MenuItem(navigationManager, "Payments account(s)",
-                NavigationItem.FIAT_ACCOUNT, toggleGroup);
-        registration = new MenuItem(navigationManager, "Renew your account",
-                NavigationItem.REGISTRATION, toggleGroup);
+        seedWords = new MenuItem(navigation, "Wallet seed",
+                Navigation.Item.SEED_WORDS, toggleGroup);
+        password = new MenuItem(navigation, "Wallet password",
+                Navigation.Item.CHANGE_PASSWORD, toggleGroup);
+        restrictions = new MenuItem(navigation, "Trading restrictions",
+                Navigation.Item.RESTRICTIONS, toggleGroup);
+        fiatAccount = new MenuItem(navigation, "Payments account(s)",
+                Navigation.Item.FIAT_ACCOUNT, toggleGroup);
+        registration = new MenuItem(navigation, "Renew your account",
+                Navigation.Item.REGISTRATION, toggleGroup);
 
         registration.setDisable(true);
 
@@ -109,17 +108,17 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
     public void activate() {
         super.activate();
 
-        navigationManager.addListener(listener);
-        NavigationItem[] items = navigationManager.getCurrentNavigationItems();
+        navigation.addListener(listener);
+        Navigation.Item[] items = navigation.getCurrentItems();
         if (items.length == 3 &&
-                items[2] == NavigationItem.ACCOUNT_SETTINGS) {
-            navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.ACCOUNT,
-                    NavigationItem.ACCOUNT_SETTINGS, NavigationItem.SEED_WORDS);
+                items[2] == Navigation.Item.ACCOUNT_SETTINGS) {
+            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
+                    Navigation.Item.ACCOUNT_SETTINGS, Navigation.Item.SEED_WORDS);
         }
         else {
             if (items != null &&
                     items.length == 4 &&
-                    items[2] == NavigationItem.ACCOUNT_SETTINGS) {
+                    items[2] == Navigation.Item.ACCOUNT_SETTINGS) {
                 loadView(items[3]);
                 selectMainMenuButton(items[3]);
             }
@@ -130,7 +129,7 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
     public void deactivate() {
         super.deactivate();
 
-        navigationManager.removeListener(listener);
+        navigation.removeListener(listener);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -145,7 +144,7 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected Initializable loadView(NavigationItem navigationItem) {
+    protected Initializable loadView(Navigation.Item navigationItem) {
         final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
             final Pane view = loader.load();
@@ -166,8 +165,8 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void selectMainMenuButton(NavigationItem navigationItem) {
-        switch (navigationItem) {
+    private void selectMainMenuButton(Navigation.Item item) {
+        switch (item) {
             case SEED_WORDS:
                 seedWords.setSelected(true);
                 break;
@@ -184,7 +183,7 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
                 registration.setSelected(true);
                 break;
             default:
-                log.error(navigationItem.getFxmlUrl() + " is invalid");
+                log.error(item.getFxmlUrl() + " is invalid");
                 break;
         }
     }
@@ -193,7 +192,7 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
 class MenuItem extends ToggleButton {
     private static final Logger log = LoggerFactory.getLogger(MenuItem.class);
 
-    MenuItem(NavigationManager navigationManager, String title, NavigationItem navigationItem,
+    MenuItem(Navigation navigation, String title, Navigation.Item navigationItem,
              ToggleGroup toggleGroup) {
 
         setToggleGroup(toggleGroup);
@@ -205,17 +204,17 @@ class MenuItem extends ToggleButton {
 
         Label icon = new Label();
         icon.setTextFill(Paint.valueOf("#999"));
-        if (navigationItem.equals(NavigationItem.SEED_WORDS))
+        if (navigationItem.equals(Navigation.Item.SEED_WORDS))
             AwesomeDude.setIcon(icon, AwesomeIcon.INFO_SIGN);
-        else if (navigationItem.equals(NavigationItem.REGISTRATION))
+        else if (navigationItem.equals(Navigation.Item.REGISTRATION))
             AwesomeDude.setIcon(icon, AwesomeIcon.BRIEFCASE);
         else
             AwesomeDude.setIcon(icon, AwesomeIcon.EDIT_SIGN);
 
         setGraphic(icon);
 
-        setOnAction((event) -> navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.ACCOUNT,
-                NavigationItem.ACCOUNT_SETTINGS, navigationItem));
+        setOnAction((event) -> navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
+                Navigation.Item.ACCOUNT_SETTINGS, navigationItem));
 
         selectedProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue) {

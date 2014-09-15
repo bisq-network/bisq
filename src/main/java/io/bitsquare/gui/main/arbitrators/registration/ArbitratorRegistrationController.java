@@ -21,7 +21,7 @@ import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
-import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.ConfidenceDisplay;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.main.arbitrators.profile.ArbitratorProfileController;
@@ -224,7 +224,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
     }
 
     @Override
-    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadViewAndGetChildController(Navigation.Item item) {
         return null;
     }
 

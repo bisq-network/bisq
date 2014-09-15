@@ -18,8 +18,7 @@
 package io.bitsquare.gui.main.account;
 
 import io.bitsquare.gui.CachedViewCB;
-import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.NavigationManager;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.util.ViewLoader;
 
@@ -43,8 +42,8 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     private static final Logger log = LoggerFactory.getLogger(AccountViewCB.class);
 
     public Tab tab;
-    private NavigationManager navigationManager;
-    private NavigationManager.Listener listener;
+    private Navigation navigation;
+    private Navigation.Listener listener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -52,10 +51,10 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountViewCB(AccountPM presentationModel, NavigationManager navigationManager) {
+    private AccountViewCB(AccountPM presentationModel, Navigation navigation) {
         super(presentationModel);
 
-        this.navigationManager = navigationManager;
+        this.navigation = navigation;
     }
 
 
@@ -69,7 +68,7 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
         listener = navigationItems -> {
             if (navigationItems != null &&
                     navigationItems.length == 3 &&
-                    navigationItems[1] == NavigationItem.ACCOUNT)
+                    navigationItems[1] == Navigation.Item.ACCOUNT)
                 loadView(navigationItems[2]);
         };
 
@@ -80,16 +79,16 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     public void activate() {
         super.activate();
 
-        navigationManager.addListener(listener);
+        navigation.addListener(listener);
 
-        if (navigationManager.getCurrentNavigationItems().length == 2 &&
-                navigationManager.getCurrentNavigationItems()[1] == NavigationItem.ACCOUNT) {
+        if (navigation.getCurrentItems().length == 2 &&
+                navigation.getCurrentItems()[1] == Navigation.Item.ACCOUNT) {
             if (presentationModel.getNeedRegistration())
-                navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.ACCOUNT,
-                        NavigationItem.ACCOUNT_SETUP);
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
+                        Navigation.Item.ACCOUNT_SETUP);
             else
-                navigationManager.navigationTo(NavigationItem.MAIN, NavigationItem.ACCOUNT,
-                        NavigationItem.ACCOUNT_SETTINGS);
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
+                        Navigation.Item.ACCOUNT_SETTINGS);
         }
     }
 
@@ -97,7 +96,7 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     public void deactivate() {
         super.deactivate();
 
-        navigationManager.removeListener(listener);
+        navigation.removeListener(listener);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -112,10 +111,10 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected Initializable loadView(NavigationItem navigationItem) {
+    protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
 
-        tab.setText((navigationItem == NavigationItem.ACCOUNT_SETUP) ? "Account setup" : "Account settings");
+        tab.setText((navigationItem == Navigation.Item.ACCOUNT_SETUP) ? "Account setup" : "Account settings");
         final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
             AnchorPane view = loader.load();
@@ -124,7 +123,7 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
             ((ViewCB) childController).setParent(this);
 
         } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + NavigationItem.ACCOUNT_SETUP.getFxmlUrl());
+            log.error("Loading view failed. FxmlUrl = " + Navigation.Item.ACCOUNT_SETUP.getFxmlUrl());
             e.getStackTrace();
         }
         return childController;

@@ -19,8 +19,7 @@ package io.bitsquare.gui.main.trade.createoffer;
 
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.CloseListener;
-import io.bitsquare.gui.NavigationItem;
-import io.bitsquare.gui.NavigationManager;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
@@ -74,7 +73,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferViewCB.class);
 
-    private NavigationManager navigationManager;
+    private Navigation navigation;
     private OverlayManager overlayManager;
     private CloseListener closeListener;
 
@@ -109,10 +108,10 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferViewCB(CreateOfferPM presentationModel, NavigationManager navigationManager,
+    private CreateOfferViewCB(CreateOfferPM presentationModel, Navigation navigation,
                               OverlayManager overlayManager) {
         super(presentationModel);
-        this.navigationManager = navigationManager;
+        this.navigation = navigation;
         this.overlayManager = overlayManager;
     }
 
@@ -237,10 +236,10 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void openAccountSettings() {
-        navigationManager.navigationTo(NavigationItem.MAIN,
-                NavigationItem.ACCOUNT,
-                NavigationItem.ACCOUNT_SETTINGS,
-                NavigationItem.RESTRICTIONS);
+        navigation.navigationTo(Navigation.Item.MAIN,
+                Navigation.Item.ACCOUNT,
+                Navigation.Item.ACCOUNT_SETTINGS,
+                Navigation.Item.RESTRICTIONS);
     }
 
     private void close() {

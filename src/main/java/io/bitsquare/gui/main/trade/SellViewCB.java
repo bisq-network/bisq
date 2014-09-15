@@ -17,15 +17,15 @@
 
 package io.bitsquare.gui.main.trade;
 
-import io.bitsquare.gui.NavigationManager;
+import io.bitsquare.gui.Navigation;
 
 import javax.inject.Inject;
 
 public class SellViewCB extends TradeViewCB {
 
     @Inject
-    public SellViewCB(NavigationManager navigationManager) {
-        super(navigationManager);
+    public SellViewCB(Navigation navigation) {
+        super(navigation);
     }
 }
 

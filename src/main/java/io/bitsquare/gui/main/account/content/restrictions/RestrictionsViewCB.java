@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.account.content.restrictions;
 import io.bitsquare.BitSquare;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedViewCB;
-import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;
@@ -154,7 +154,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
 
     @FXML
     private void onOpenArbitratorScreen() {
-        loadView(NavigationItem.ARBITRATOR_BROWSER);
+        loadView(Navigation.Item.ARBITRATOR_BROWSER);
     }
 
 
@@ -185,7 +185,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected Initializable loadView(NavigationItem navigationItem) {
+    protected Initializable loadView(Navigation.Item navigationItem) {
         // TODO caching causes exception
         final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
         try {
@@ -208,7 +208,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
             Scene scene = new Scene((Parent) view, 800, 600);
             stage.setScene(scene);
             stage.setOnHidden(windowEvent -> {
-                if (navigationItem == NavigationItem.ARBITRATOR_BROWSER)
+                if (navigationItem == Navigation.Item.ARBITRATOR_BROWSER)
                     updateArbitratorList();
             });
             stage.show();

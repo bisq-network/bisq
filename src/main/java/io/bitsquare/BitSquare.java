@@ -20,7 +20,7 @@ package io.bitsquare;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.gui.AWTSystemTray;
-import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.msg.MessageFacade;
@@ -114,7 +114,7 @@ public class BitSquare extends Application {
         ViewLoader.setInjector(injector);
 
         final ViewLoader loader =
-                new ViewLoader(getClass().getResource(NavigationItem.MAIN.getFxmlUrl()), false);
+                new ViewLoader(getClass().getResource(Navigation.Item.MAIN.getFxmlUrl()), false);
         try {
             final Parent view = loader.load();
 

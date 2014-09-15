@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.msg;
 
 import io.bitsquare.gui.CachedViewController;
-import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.Navigation;
 
 import java.net.URL;
 
@@ -76,7 +76,7 @@ public class MsgController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
+    public Initializable loadViewAndGetChildController(Navigation.Item item) {
         return null;
     }
 

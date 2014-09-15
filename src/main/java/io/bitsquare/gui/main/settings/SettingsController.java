@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.settings;
 
 import io.bitsquare.gui.CachedViewController;
-import io.bitsquare.gui.NavigationItem;
+import io.bitsquare.gui.Navigation;
 
 import java.net.URL;
 
@@ -68,8 +68,8 @@ public class SettingsController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Initializable loadViewAndGetChildController(NavigationItem navigationItem) {
-        return super.loadViewAndGetChildController(navigationItem);
+    public Initializable loadViewAndGetChildController(Navigation.Item item) {
+        return super.loadViewAndGetChildController(item);
     }
 
 
