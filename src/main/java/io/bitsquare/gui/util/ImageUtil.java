@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 public class ImageUtil {
     private static final Logger log = LoggerFactory.getLogger(ImageUtil.class);
 
-    public static final String SPLASH_LOGO = "/images/logo_600_600.png";
+    public static final String SPLASH_LOGO = "/images/logo_splash.png";
 
     public static final String SYS_TRAY = "/images/system_tray_icon_44_32.png";
     public static final String SYS_TRAY_ALERT = "/images/system_tray_notify_icon_44_32.png";
