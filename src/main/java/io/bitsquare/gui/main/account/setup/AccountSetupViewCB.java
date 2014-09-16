@@ -28,7 +28,6 @@ import io.bitsquare.gui.main.account.content.password.PasswordViewCB;
 import io.bitsquare.gui.main.account.content.registration.RegistrationViewCB;
 import io.bitsquare.gui.main.account.content.restrictions.RestrictionsViewCB;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsViewCB;
-import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.util.ViewLoader;
 
 import java.io.IOException;
@@ -202,7 +201,8 @@ class WizardItem extends HBox {
         setSpacing(5);
         setPrefWidth(200);
 
-        imageView = ImageUtil.getImageView(ImageUtil.ARROW_GREY);
+        imageView = new ImageView();
+        imageView.setId("image-arrow-grey");
         imageView.setFitHeight(15);
         imageView.setFitWidth(20);
         imageView.setPickOnBounds(true);
@@ -237,7 +237,7 @@ class WizardItem extends HBox {
                 navigationItem);
 
         setId("wizard-item-background-active");
-        imageView.setImage(ImageUtil.getImage(ImageUtil.ARROW_BLUE));
+        imageView.setId("image-arrow-blue");
         titleLabel.setId("wizard-title-active");
         subTitleLabel.setId("wizard-sub-title-active");
         return childController;
@@ -245,7 +245,7 @@ class WizardItem extends HBox {
 
     void onCompleted() {
         setId("wizard-item-background-completed");
-        imageView.setImage(ImageUtil.getImage(ImageUtil.TICK));
+        imageView.setId("image-tick");
         titleLabel.setId("wizard-title-completed");
         subTitleLabel.setId("wizard-sub-title-completed");
     }

@@ -28,27 +28,8 @@ import org.slf4j.LoggerFactory;
 public class ImageUtil {
     private static final Logger log = LoggerFactory.getLogger(ImageUtil.class);
 
-    public static final String SPLASH_LOGO = "/images/logo_splash.png";
-
     public static final String SYS_TRAY = "/images/system_tray_icon_44_32.png";
     public static final String SYS_TRAY_ALERT = "/images/system_tray_notify_icon_44_32.png";
-
-    public static final String HOME = "/images/nav/home.png";
-    public static final String HOME_ACTIVE = "/images/nav/home_active.png";
-    public static final String BUY = "/images/nav/buy.png";
-    public static final String BUY_ACTIVE = "/images/nav/buy_active.png";
-    public static final String SELL = "/images/nav/sell.png";
-    public static final String SELL_ACTIVE = "/images/nav/sell_active.png";
-    public static final String ORDERS = "/images/nav/orders.png";
-    public static final String ORDERS_ACTIVE = "/images/nav/orders_active.png";
-    public static final String FUNDS = "/images/nav/funds.png";
-    public static final String FUNDS_ACTIVE = "/images/nav/funds_active.png";
-    public static final String MSG = "/images/nav/msg.png";
-    public static final String MSG_ACTIVE = "/images/nav/msg_active.png";
-    public static final String SETTINGS = "/images/nav/settings.png";
-    public static final String SETTINGS_ACTIVE = "/images/nav/settings_active.png";
-    public static final String ACCOUNT = "/images/nav/account.png";
-    public static final String ACCOUNT_ACTIVE = "/images/nav/account_active.png";
 
     public static final String MSG_ALERT = "/images/nav/alertRound.png";
 
@@ -58,11 +39,6 @@ public class ImageUtil {
 
     public static final String EXPAND = "/images/expand.png";
     public static final String COLLAPSE = "/images/collapse.png";
-
-    public static final String TICK = "/images/tick.png";
-    public static final String ARROW_BLUE = "/images/arrow_blue.png";
-    public static final String ARROW_GREY = "/images/arrow_grey.png";
-    public static final String INFO = "/images/info.png";
 
     public static Image getImage(String url) {
         return new Image(ImageUtil.class.getResourceAsStream(url));

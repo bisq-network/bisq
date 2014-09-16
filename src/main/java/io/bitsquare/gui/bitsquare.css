@@ -19,10 +19,7 @@ lower gradient color on tab: dddddd
     -bs-dark-grey: #333333;
     -bs-bg-grey: #dddddd;
 }
-
-#splash-logo {
-    -fx-image: url("../../../images/logo_splash.png");
-}
+    
 
 /* Splash */
 #splash {

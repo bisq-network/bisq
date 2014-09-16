@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui;
 
-import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
 
 import com.google.inject.Inject;
@@ -159,14 +158,14 @@ public class Navigation {
         // Main menu screens
         ///////////////////////////////////////////////////////////////////////////////////////////
 
-        HOME("/io/bitsquare/gui/main/home/HomeView.fxml", ImageUtil.HOME, ImageUtil.HOME_ACTIVE),
-        BUY("/io/bitsquare/gui/main/trade/BuyView.fxml", ImageUtil.BUY, ImageUtil.BUY_ACTIVE),
-        SELL("/io/bitsquare/gui/main/trade/SellView.fxml", ImageUtil.SELL, ImageUtil.SELL_ACTIVE),
-        ORDERS("/io/bitsquare/gui/main/orders/OrdersView.fxml", ImageUtil.ORDERS, ImageUtil.ORDERS_ACTIVE),
-        FUNDS("/io/bitsquare/gui/main/funds/FundsView.fxml", ImageUtil.FUNDS, ImageUtil.FUNDS_ACTIVE),
-        MSG("/io/bitsquare/gui/main/msg/MsgView.fxml", ImageUtil.MSG, ImageUtil.MSG_ACTIVE),
-        SETTINGS("/io/bitsquare/gui/main/settings/SettingsView.fxml", ImageUtil.SETTINGS, ImageUtil.SETTINGS_ACTIVE),
-        ACCOUNT("/io/bitsquare/gui/main/account/AccountView.fxml", ImageUtil.ACCOUNT, ImageUtil.ACCOUNT_ACTIVE),
+        HOME("/io/bitsquare/gui/main/home/HomeView.fxml"),
+        BUY("/io/bitsquare/gui/main/trade/BuyView.fxml"),
+        SELL("/io/bitsquare/gui/main/trade/SellView.fxml"),
+        ORDERS("/io/bitsquare/gui/main/orders/OrdersView.fxml"),
+        FUNDS("/io/bitsquare/gui/main/funds/FundsView.fxml"),
+        MSG("/io/bitsquare/gui/main/msg/MsgView.fxml"),
+        SETTINGS("/io/bitsquare/gui/main/settings/SettingsView.fxml"),
+        ACCOUNT("/io/bitsquare/gui/main/account/AccountView.fxml"),
 
 
         ///////////////////////////////////////////////////////////////////////////////////////////
@@ -217,19 +216,6 @@ public class Navigation {
 
 
         private final String fxmlUrl;
-        private String icon;
-        private String activeIcon;
-
-        /**
-         * @param fxmlUrl
-         * @param icon
-         * @param activeIcon
-         */
-        Item(String fxmlUrl, String icon, String activeIcon) {
-            this.fxmlUrl = fxmlUrl;
-            this.icon = icon;
-            this.activeIcon = activeIcon;
-        }
 
         Item(String fxmlUrl) {
             this.fxmlUrl = fxmlUrl;
@@ -237,14 +223,6 @@ public class Navigation {
 
         public String getFxmlUrl() {
             return fxmlUrl;
-        }
-
-        public String getIcon() {
-            return icon;
-        }
-
-        public String getActiveIcon() {
-            return activeIcon;
         }
     }
 }

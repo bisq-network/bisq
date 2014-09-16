@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
 
 import javafx.application.Platform;
@@ -72,7 +71,8 @@ public class InfoDisplay extends Parent {
 
     public InfoDisplay() {
 
-        icon = ImageUtil.getImageView(ImageUtil.INFO);
+        icon = new ImageView();
+        icon.setId("image-info");
         icon.setPickOnBounds(true);
         icon.setPreserveRatio(true);
         icon.visibleProperty().bind(visibleProperty());

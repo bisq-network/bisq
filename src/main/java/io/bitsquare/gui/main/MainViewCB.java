@@ -164,10 +164,7 @@ public class MainViewCB extends ViewCB<MainPM> {
     private void onBaseContainersCreated() {
         Profiler.printMsgWithTime("MainController.onBaseContainersCreated");
 
-        MenuBar menuBar = getMenuBar();
         AnchorPane applicationContainer = getApplicationContainer();
-
-        baseApplicationContainer.setTop(menuBar);
         baseApplicationContainer.setCenter(applicationContainer);
 
         presentationModel.backendInited.addListener((ov, oldValue, newValue) -> {
@@ -258,9 +255,8 @@ public class MainViewCB extends ViewCB<MainPM> {
         vBox.setSpacing(10);
         vBox.setId("splash");
 
-        //ImageView logo = ImageUtil.getIconImageView(ImageUtil.SPLASH_LOGO);
         ImageView logo = new ImageView();
-        logo.setId("splash-logo");
+        logo.setId("image-splash-logo");
 
         Label subTitle = new Label("The decentralized Bitcoin exchange");
         subTitle.setAlignment(Pos.CENTER);
@@ -273,30 +269,6 @@ public class MainViewCB extends ViewCB<MainPM> {
 
         vBox.getChildren().addAll(logo, subTitle, loadingLabel);
         return vBox;
-    }
-
-    private MenuBar getMenuBar() {
-        MenuBar menuBar = new MenuBar();
-        menuBar.setUseSystemMenuBar(false);
-
-        Menu fileMenu = new Menu("_File");
-        fileMenu.setMnemonicParsing(true);
-        MenuItem backupMenuItem = new MenuItem("Backup wallet");
-        fileMenu.getItems().addAll(backupMenuItem);
-
-        Menu settingsMenu = new Menu("_Settings");
-        settingsMenu.setMnemonicParsing(true);
-        MenuItem changePwMenuItem = new MenuItem("Change password");
-        settingsMenu.getItems().addAll(changePwMenuItem);
-
-        Menu helpMenu = new Menu("_Help");
-        helpMenu.setMnemonicParsing(true);
-        MenuItem faqMenuItem = new MenuItem("FAQ");
-        MenuItem forumMenuItem = new MenuItem("Forum");
-        helpMenu.getItems().addAll(faqMenuItem, forumMenuItem);
-
-        menuBar.getMenus().setAll(fileMenu, settingsMenu, helpMenu);
-        return menuBar;
     }
 
     private AnchorPane getApplicationContainer() {
@@ -361,11 +333,15 @@ public class MainViewCB extends ViewCB<MainPM> {
     }
 
     private ToggleButton addNavButton(Pane parent, String title, Navigation.Item navigationItem) {
-        ImageView icon = ImageUtil.getImageView(navigationItem.getIcon());
-        icon.setFitWidth(32);
-        icon.setFitHeight(32);
+        final String url = navigationItem.getFxmlUrl();
+        int lastSlash = url.lastIndexOf("/") + 1;
+        int end = url.lastIndexOf("View.fxml");
+        final String id = url.substring(lastSlash, end).toLowerCase();
 
-        final ToggleButton toggleButton = new ToggleButton(title, icon);
+        ImageView iconImageView = new ImageView();
+        iconImageView.setId("image-nav-" + id);
+
+        final ToggleButton toggleButton = new ToggleButton(title, iconImageView);
         toggleButton.setToggleGroup(navButtonsGroup);
         toggleButton.setId("nav-button");
         toggleButton.setPadding(new Insets(0, -10, -10, -10));
@@ -380,12 +356,10 @@ public class MainViewCB extends ViewCB<MainPM> {
             toggleButton.setMaxSize(50, 50);
             toggleButton.setGraphicTextGap(newValue ? -1 : 0);
             if (newValue) {
-                Image activeIcon = ImageUtil.getImage(navigationItem.getActiveIcon());
-                ((ImageView) toggleButton.getGraphic()).setImage(activeIcon);
+                toggleButton.getGraphic().setId("image-nav-" + id + "-active");
             }
             else {
-                Image activeIcon = ImageUtil.getImage(navigationItem.getIcon());
-                ((ImageView) toggleButton.getGraphic()).setImage(activeIcon);
+                toggleButton.getGraphic().setId("image-nav-" + id);
             }
         });
 

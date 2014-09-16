@@ -119,7 +119,8 @@ public class BitSquare extends Application {
             final Parent view = loader.load();
 
             final Scene scene = new Scene(view, 1000, 750);
-            scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm());
+            scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm(),
+                    getClass().getResource("/io/bitsquare/gui/images.css").toExternalForm());
 
             setupCloseHandlers(primaryStage, scene);
 
