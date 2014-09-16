@@ -174,6 +174,9 @@ public class MessageFacade implements MessageBroker {
         try {
             final Data offerData = new Data(offer);
 
+            log.trace("Add offer to DHT requested. Added data: [locationKey: " + locationKey +
+                    ", value: " + offerData + "]");
+
             // the offer is default 30 days valid
             int defaultOfferTTL = 30 * 24 * 60 * 60;
             offerData.ttlSeconds(defaultOfferTTL);
@@ -234,6 +237,10 @@ public class MessageFacade implements MessageBroker {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         try {
             final Data offerData = new Data(offer);
+
+            log.trace("Remove offer from DHT requested. Removed data: [locationKey: " + locationKey +
+                    ", value: " + offerData + "]");
+            
             FutureRemove futureRemove = p2pNode.removeFromDataMap(locationKey, offerData);
             futureRemove.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
