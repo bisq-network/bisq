@@ -71,7 +71,7 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private FiatAccountViewCB(FiatAccountPm presentationModel) {
+    FiatAccountViewCB(FiatAccountPm presentationModel) {
         super(presentationModel);
     }
 
@@ -82,11 +82,8 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
         typesComboBox.setItems(presentationModel.getAllTypes());
         typesComboBox.setConverter(presentationModel.getTypesConverter());
-        selectionComboBox.setItems(presentationModel.getAllBankAccounts());
         selectionComboBox.setConverter(presentationModel.getSelectionConverter());
         currencyComboBox.setItems(presentationModel.getAllCurrencies());
         currencyComboBox.setConverter(presentationModel.getCurrencyConverter());
@@ -98,6 +95,8 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
         holderNameTextField.setValidator(presentationModel.getBankAccountNumberValidator());
         primaryIDTextField.setValidator(presentationModel.getBankAccountNumberValidator());
         secondaryIDTextField.setValidator(presentationModel.getBankAccountNumberValidator());
+
+        super.initialize(url, rb);
     }
 
     @Override
@@ -106,6 +105,8 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
 
         setupListeners();
         setupBindings();
+
+        selectionComboBox.setItems(presentationModel.getAllBankAccounts());
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -137,35 +138,35 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
-    public void onSelectAccount() {
+    void onSelectAccount() {
         if (selectionComboBox.getSelectionModel().getSelectedItem() != null)
             presentationModel.selectBankAccount(selectionComboBox.getSelectionModel().getSelectedItem());
     }
 
     @FXML
-    public void onSelectType() {
+    void onSelectType() {
         presentationModel.setType(typesComboBox.getSelectionModel().getSelectedItem());
     }
 
     @FXML
-    public void onSelectCurrency() {
+    void onSelectCurrency() {
         presentationModel.setCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
     }
 
     @FXML
-    private void onSelectRegion() {
+    void onSelectRegion() {
         countryComboBox.setVisible(true);
         Region region = regionComboBox.getSelectionModel().getSelectedItem();
         countryComboBox.setItems(presentationModel.getAllCountriesFor(region));
     }
 
     @FXML
-    private void onSelectCountry() {
+    void onSelectCountry() {
         presentationModel.setCountry(countryComboBox.getSelectionModel().getSelectedItem());
     }
 
     @FXML
-    private void onSave() {
+    void onSave() {
         InputValidator.ValidationResult result = presentationModel.requestSaveBankAccount();
         if (result.isValid) {
             selectionComboBox.getSelectionModel().select(null);
@@ -175,24 +176,24 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
     }
 
     @FXML
-    private void onCompleted() {
+    void onCompleted() {
         if (parent != null)
             ((MultiStepNavigation) parent).nextStep(this);
     }
 
     @FXML
-    private void onRemoveAccount() {
+    void onRemoveAccount() {
         presentationModel.removeBankAccount();
         selectionComboBox.getSelectionModel().select(null);
     }
 
     @FXML
-    private void onOpenSetupHelp() {
+    void onOpenSetupHelp() {
         Help.openWindow(HelpId.SETUP_FIAT_ACCOUNT);
     }
 
     @FXML
-    private void onOpenManageAccountsHelp() {
+    void onOpenManageAccountsHelp() {
         Help.openWindow(HelpId.MANAGE_FIAT_ACCOUNT);
     }
 

@@ -51,24 +51,23 @@ public class FiatAccountModel extends UIModel {
     private final Settings settings;
     private final Persistence persistence;
 
-    public final StringProperty title = new SimpleStringProperty();
-    public final StringProperty holderName = new SimpleStringProperty();
-    public final StringProperty primaryID = new SimpleStringProperty();
-    public final StringProperty secondaryID = new SimpleStringProperty();
-    public final StringProperty primaryIDPrompt = new SimpleStringProperty();
-    public final StringProperty secondaryIDPrompt = new SimpleStringProperty();
-    public final BooleanProperty countryNotInAcceptedCountriesList = new SimpleBooleanProperty();
-    public final ObjectProperty<BankAccountType> type = new SimpleObjectProperty<>();
-    public final ObjectProperty<Country> country = new SimpleObjectProperty<>();
-    public final ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
-    public final ObjectProperty<BankAccount> currentBankAccount = new SimpleObjectProperty<>();
+    final StringProperty title = new SimpleStringProperty();
+    final StringProperty holderName = new SimpleStringProperty();
+    final StringProperty primaryID = new SimpleStringProperty();
+    final StringProperty secondaryID = new SimpleStringProperty();
+    final StringProperty primaryIDPrompt = new SimpleStringProperty();
+    final StringProperty secondaryIDPrompt = new SimpleStringProperty();
+    final BooleanProperty countryNotInAcceptedCountriesList = new SimpleBooleanProperty();
+    final ObjectProperty<BankAccountType> type = new SimpleObjectProperty<>();
+    final ObjectProperty<Country> country = new SimpleObjectProperty<>();
+    final ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
 
-    public final ObservableList<BankAccountType> allTypes = FXCollections.observableArrayList(BankAccountType
+    final ObservableList<BankAccountType> allTypes = FXCollections.observableArrayList(BankAccountType
             .getAllBankAccountTypes());
-    public final ObservableList<BankAccount> allBankAccounts = FXCollections.observableArrayList();
-    public final ObservableList<Currency> allCurrencies = FXCollections.observableArrayList(CurrencyUtil
+    final ObservableList<BankAccount> allBankAccounts = FXCollections.observableArrayList();
+    final ObservableList<Currency> allCurrencies = FXCollections.observableArrayList(CurrencyUtil
             .getAllCurrencies());
-    public final ObservableList<Region> allRegions = FXCollections.observableArrayList(CountryUtil.getAllRegions());
+    final ObservableList<Region> allRegions = FXCollections.observableArrayList(CountryUtil.getAllRegions());
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +75,7 @@ public class FiatAccountModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private FiatAccountModel(User user, Persistence persistence, Settings settings) {
+    FiatAccountModel(User user, Persistence persistence, Settings settings) {
         this.persistence = persistence;
         this.user = user;
         this.settings = settings;
@@ -97,7 +96,6 @@ public class FiatAccountModel extends UIModel {
     public void activate() {
         super.activate();
 
-        currentBankAccount.set(user.getCurrentBankAccount());
         allBankAccounts.setAll(user.getBankAccounts());
     }
 
@@ -118,7 +116,7 @@ public class FiatAccountModel extends UIModel {
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void saveBankAccount() {
+    void saveBankAccount() {
         BankAccount bankAccount = new BankAccount(type.get(),
                 currency.get(),
                 country.get(),
@@ -133,7 +131,7 @@ public class FiatAccountModel extends UIModel {
         reset();
     }
 
-    public void removeBankAccount() {
+    void removeBankAccount() {
         user.removeCurrentBankAccount();
         saveUser();
         allBankAccounts.setAll(user.getBankAccounts());
@@ -142,15 +140,13 @@ public class FiatAccountModel extends UIModel {
 
     // We ask the user if he likes to add his own bank account country to the accepted country list if he has not 
     // already added it before
-    public void addCountryToAcceptedCountriesList() {
+    void addCountryToAcceptedCountriesList() {
         settings.addAcceptedCountry(country.get());
         saveSettings();
         countryNotInAcceptedCountriesList.set(false);
     }
 
-    public void selectBankAccount(BankAccount bankAccount) {
-        currentBankAccount.set(bankAccount);
-
+    void selectBankAccount(BankAccount bankAccount) {
         user.setCurrentBankAccount(bankAccount);
         persistence.write(user);
 
@@ -176,7 +172,7 @@ public class FiatAccountModel extends UIModel {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
+    ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
         return FXCollections.observableArrayList(CountryUtil.getAllCountriesFor(selectedRegion));
     }
 
@@ -185,7 +181,7 @@ public class FiatAccountModel extends UIModel {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setType(BankAccountType type) {
+    void setType(BankAccountType type) {
         this.type.set(type);
 
         if (type != null) {
@@ -198,11 +194,11 @@ public class FiatAccountModel extends UIModel {
         }
     }
 
-    public void setCountry(Country country) {
+    void setCountry(Country country) {
         this.country.set(country);
     }
 
-    public void setCurrency(Currency currency) {
+    void setCurrency(Currency currency) {
         this.currency.set(currency);
     }
 
