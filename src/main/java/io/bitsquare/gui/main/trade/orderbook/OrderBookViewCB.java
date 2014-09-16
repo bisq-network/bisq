@@ -70,9 +70,6 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     private boolean detailsVisible;
     private boolean advancedScreenInited;
 
-    private final Image buyIcon = ImageUtil.getImage(ImageUtil.BUY_ICON);
-    private final Image sellIcon = ImageUtil.getImage(ImageUtil.SELL_ICON);
-
     private ImageView expand;
     private ImageView collapse;
 
@@ -125,8 +122,8 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
         setupValidators();
         setupComparators();
 
-        expand = ImageUtil.getImageView(ImageUtil.EXPAND);
-        collapse = ImageUtil.getImageView(ImageUtil.COLLAPSE);
+        expand = ImageUtil.getImageViewById(ImageUtil.EXPAND);
+        collapse = ImageUtil.getImageViewById(ImageUtil.COLLAPSE);
         showAdvancedSettingsButton.setGraphic(expand);
 
         super.initialize(url, rb);
@@ -452,17 +449,19 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
                                 if (item != null) {
                                     String title;
-                                    Image icon;
                                     Offer offer = item.getOffer();
 
                                     if (presentationModel.isMyOffer(offer)) {
-                                        icon = ImageUtil.getImage(ImageUtil.REMOVE_ICON);
+                                        iconView.setId("image-remove");
                                         title = "Remove";
                                         button.setOnAction(event -> presentationModel.removeOffer(item
                                                 .getOffer()));
                                     }
                                     else {
-                                        icon = offer.getDirection() == Direction.SELL ? buyIcon : sellIcon;
+                                        if (offer.getDirection() == Direction.SELL)
+                                            iconView.setId("image-buy");
+                                        else
+                                            iconView.setId("image-sell");
                                         title = presentationModel.getDirectionLabel(offer);
                                         button.setOnAction(event -> takeOffer(item.getOffer()));
                                     }
@@ -471,7 +470,6 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                                             verifyIfTradable(item));
                                     verifyIfTradable(item);
 
-                                    iconView.setImage(icon);
                                     button.setText(title);
                                     setGraphic(button);
                                 }

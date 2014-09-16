@@ -24,7 +24,6 @@ import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.util.ViewLoader;
@@ -184,7 +183,9 @@ public class MainViewCB extends ViewCB<MainPM> {
         Profiler.printMsgWithTime("MainController.ondMainNavigationAdded");
 
         presentationModel.takeOfferRequested.addListener((ov, olaValue, newValue) -> {
-            final Button alertButton = new Button("", ImageUtil.getImageView(ImageUtil.MSG_ALERT));
+            ImageView icon = new ImageView();
+            icon.setId("image-alert-round");
+            final Button alertButton = new Button("", icon);
             alertButton.setId("nav-alert-button");
             alertButton.relocate(36, 19);
             alertButton.setOnAction((e) ->
@@ -194,7 +195,7 @@ public class MainViewCB extends ViewCB<MainPM> {
             Tooltip.install(alertButton, new Tooltip("Your offer has been accepted"));
             ordersButtonButtonPane.getChildren().add(alertButton);
 
-            AWTSystemTray.setAlert();
+            AWTSystemTray.setAlertIcon();
         });
 
         navigation.navigateToLastStoredItem();

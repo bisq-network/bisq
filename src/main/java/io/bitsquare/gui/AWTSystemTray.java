@@ -49,7 +49,11 @@ public class AWTSystemTray {
             Platform.setImplicitExit(false);
 
             SystemTray systemTray = SystemTray.getSystemTray();
-            trayIcon = new TrayIcon(getImage(ImageUtil.SYS_TRAY));
+            if (ImageUtil.isRetina())
+                trayIcon = new TrayIcon(getImage(ImageUtil.SYS_TRAY_HI_RES));
+            else
+                trayIcon = new TrayIcon(getImage(ImageUtil.SYS_TRAY));
+
             trayIcon.setToolTip("BitSquare P2P Fiat-Bitcoin exchange");
 
             PopupMenu popupMenu = new PopupMenu();
@@ -93,12 +97,18 @@ public class AWTSystemTray {
         }
     }
 
-    public static void setAlert() {
-        trayIcon.setImage(getImage(ImageUtil.SYS_TRAY_ALERT));
+    public static void setAlertIcon() {
+        if (ImageUtil.isRetina())
+            trayIcon.setImage(getImage(ImageUtil.SYS_TRAY_ALERT_HI_RES));
+        else
+            trayIcon.setImage(getImage(ImageUtil.SYS_TRAY_ALERT));
     }
 
-    public static void unSetAlert() {
-        trayIcon.setImage(getImage(ImageUtil.SYS_TRAY));
+    public static void setIcon() {
+        if (ImageUtil.isRetina())
+            trayIcon.setImage(getImage(ImageUtil.SYS_TRAY_HI_RES));
+        else
+            trayIcon.setImage(getImage(ImageUtil.SYS_TRAY));
     }
 
     public static void setStageHidden() {

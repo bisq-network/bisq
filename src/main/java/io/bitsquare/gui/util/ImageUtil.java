@@ -21,6 +21,8 @@ import io.bitsquare.locale.Country;
 
 import javafx.scene.image.*;
 
+import com.sun.javafx.tk.quantum.QuantumToolkit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,30 +30,34 @@ import org.slf4j.LoggerFactory;
 public class ImageUtil {
     private static final Logger log = LoggerFactory.getLogger(ImageUtil.class);
 
-    public static final String SYS_TRAY = "/images/system_tray_icon_44_32.png";
-    public static final String SYS_TRAY_ALERT = "/images/system_tray_notify_icon_44_32.png";
+    // System tray use AWT and there is no CSS support for loading retina supported images
+    public static final String SYS_TRAY = "/images/system_tray_icon.png";
+    public static final String SYS_TRAY_HI_RES = "/images/system_tray_icon@2x.png";
+    public static final String SYS_TRAY_ALERT = "/images/system_tray_icon_alert.png";
+    public static final String SYS_TRAY_ALERT_HI_RES = "/images/system_tray_icon_alert@2x.png";
 
-    public static final String MSG_ALERT = "/images/nav/alertRound.png";
 
-    public static final String BUY_ICON = "/images/buy.png";
-    public static final String SELL_ICON = "/images/sell.png";
-    public static final String REMOVE_ICON = "/images/removeOffer.png";
+    public static final String REMOVE_ICON = "image-remove";
+    public static final String EXPAND = "image-expand";
+    public static final String COLLAPSE = "image-collapse";
 
-    public static final String EXPAND = "/images/expand.png";
-    public static final String COLLAPSE = "/images/collapse.png";
+    public static ImageView getImageViewById(String id) {
+        ImageView imageView = new ImageView();
+        imageView.setId(id);
+        return imageView;
+    }
 
-    public static Image getImage(String url) {
+    private static Image getImageByUrl(String url) {
         return new Image(ImageUtil.class.getResourceAsStream(url));
     }
 
-    public static ImageView getImageView(String url) {
-        return new ImageView(getImage(url));
+    public static ImageView getImageViewByUrl(String url) {
+        return new ImageView(getImageByUrl(url));
     }
 
     public static ImageView getCountryIconImageView(Country country) {
         try {
-            return ImageUtil.getImageView("/images/countries/" + country.getCode().toLowerCase() + ".png");
-
+            return ImageUtil.getImageViewByUrl("/images/countries/" + country.getCode().toLowerCase() + ".png");
         } catch (Exception e) {
             log.error("Country icon not found URL = /images/countries/" + country.getCode().toLowerCase() +
                     ".png / country name = " + country.getName());
@@ -59,5 +65,8 @@ public class ImageUtil {
         }
     }
 
+    public static boolean isRetina() {
+        return ((QuantumToolkit) QuantumToolkit.getToolkit()).getMaxPixelScale() > 1.9f;
+    }
 
 }

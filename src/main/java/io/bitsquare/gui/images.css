@@ -9,6 +9,38 @@
     -fx-image: url("../../../images/info.png");
 }
 
+#image-alert-round {
+    -fx-image: url("../../../images/alert_round.png");
+}
+#image-remove {
+    -fx-image: url("../../../images/remove.png");
+}
+
+#image-buy {
+    -fx-image: url("../../../images/buy.png");
+}
+
+#image-sell {
+    -fx-image: url("../../../images/sell.png");
+}
+
+#image-expand {
+    -fx-image: url("../../../images/expand.png");
+}
+
+#image-collapse {
+    -fx-image: url("../../../images/collapse.png");
+}
+
+#image-buy-large {
+    -fx-image: url("../../../images/buy_large.png");
+}
+
+#image-sell-large {
+    -fx-image: url("../../../images/sell_large.png");
+}
+
+
 
 /* naviagtion buttons */
 #image-nav-home {

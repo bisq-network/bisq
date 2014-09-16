@@ -78,8 +78,6 @@ public class PendingTradeController extends CachedViewController {
 
     private Trade currentTrade;
 
-    private final Image buyIcon = ImageUtil.getImage(ImageUtil.BUY_ICON);
-    private final Image sellIcon = ImageUtil.getImage(ImageUtil.SELL_ICON);
     private ConfidenceDisplay confidenceDisplay;
 
     @FXML private TableView openTradesTable;
@@ -290,7 +288,7 @@ public class PendingTradeController extends CachedViewController {
 
             bankTransferInitedButton.setVisible(false);
 
-            AWTSystemTray.unSetAlert();
+            AWTSystemTray.setIcon();
         }
     }
 
@@ -364,15 +362,7 @@ public class PendingTradeController extends CachedViewController {
                                 hBox.getChildren().clear();
                                 if (tradesTableItem != null) {
                                     Country country = tradesTableItem.getTrade().getOffer().getBankAccountCountry();
-                                    try {
-                                        hBox.getChildren().add(ImageUtil.getImageView(
-                                                "/images/countries/" + country.getCode().toLowerCase() + ".png"));
-
-                                    } catch (Exception e) {
-                                        log.warn("Country icon not found: /images/countries/" +
-                                                country.getCode().toLowerCase() + ".png country name: " +
-                                                country.getName());
-                                    }
+                                    hBox.getChildren().add(ImageUtil.getCountryIconImageView(country));
                                     Tooltip.install(this, new Tooltip(country.getName()));
                                 }
                             }
@@ -429,19 +419,17 @@ public class PendingTradeController extends CachedViewController {
 
                                 if (tradesTableItem != null) {
                                     String title;
-                                    Image icon;
                                     Offer offer = tradesTableItem.getTrade().getOffer();
 
                                     if (offer.getDirection() == Direction.SELL) {
-                                        icon = buyIcon;
+                                        iconView.setId("image-buy");
                                         title = BSFormatter.formatDirection(Direction.BUY, true);
                                     }
                                     else {
-                                        icon = sellIcon;
+                                        iconView.setId("image-sell");
                                         title = BSFormatter.formatDirection(Direction.SELL, true);
                                     }
                                     button.setDisable(true);
-                                    iconView.setImage(icon);
                                     button.setText(title);
                                     setGraphic(button);
                                 }

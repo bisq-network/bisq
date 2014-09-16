@@ -51,9 +51,7 @@
                 <GridPane.margin>
                     <Insets bottom="10.0" left="10.0" right="10.0" top="20.0"/>
                 </GridPane.margin>
-                <ImageView pickOnBounds="true" preserveRatio="true">
-                    <Image url="@/images/buy_large.png"/>
-                </ImageView>
+                <ImageView fx:id="imageView" pickOnBounds="true"/>
                 <Label fx:id="buyLabel" id="direction-icon-label" text="%createOffer.amountPriceBox.subTitle"
                        alignment="CENTER">
                     <padding>

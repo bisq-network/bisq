@@ -25,6 +25,7 @@ import io.bitsquare.gui.util.validation.OptionalBtcValidator;
 import io.bitsquare.gui.util.validation.OptionalFiatValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
+import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 
 import com.google.inject.Inject;
@@ -200,7 +201,9 @@ public class OrderBookPM extends PresentationModel<OrderBookModel> {
     }
 
     String getDirectionLabel(Offer offer) {
-        return BSFormatter.formatDirection(offer.getDirection(), true);
+        // mirror direction
+        Direction direction = offer.getDirection() == Direction.BUY ? Direction.SELL : Direction.BUY;
+        return BSFormatter.formatDirection(direction, true);
     }
 
     OrderBookInfo getOrderBookInfo() {

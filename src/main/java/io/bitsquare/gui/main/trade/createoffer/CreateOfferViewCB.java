@@ -32,6 +32,7 @@ import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.main.trade.OrderBookInfo;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.trade.Direction;
 
 import java.net.URL;
 
@@ -73,6 +74,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferViewCB.class);
 
+
     private Navigation navigation;
     private OverlayManager overlayManager;
     private CloseListener closeListener;
@@ -86,6 +88,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
     @FXML InfoDisplay advancedInfoDisplay, fundsBoxInfoDisplay;
     @FXML ScrollPane scrollPane;
+    @FXML ImageView imageView;
     @FXML TitledGroupBg priceAmountPane, payFundsPane, showDetailsPane;
     @FXML Label buyLabel, addressLabel,
             balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
@@ -157,6 +160,11 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
     public void initWithOrderBookInfo(OrderBookInfo orderBookInfo) {
         presentationModel.setOrderBookFilter(orderBookInfo);
+
+        if (orderBookInfo.getDirection() == Direction.BUY)
+            imageView.setId("image-buy-large");
+        else
+            imageView.setId("image-sell-large");
     }
 
     public void setCloseListener(CloseListener closeListener) {
@@ -190,8 +198,8 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         showAdvancedSettingsButton.setVisible(true);
 
         if (expand == null) {
-            expand = ImageUtil.getImageView(ImageUtil.EXPAND);
-            collapse = ImageUtil.getImageView(ImageUtil.COLLAPSE);
+            expand = ImageUtil.getImageViewById(ImageUtil.EXPAND);
+            collapse = ImageUtil.getImageViewById(ImageUtil.COLLAPSE);
         }
         showAdvancedSettingsButton.setGraphic(expand);
 
