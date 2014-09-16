@@ -18,6 +18,7 @@
 package io.bitsquare.trade.protocol.createoffer.tasks;
 
 import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.listeners.AddOfferListener;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
@@ -30,7 +31,7 @@ public class PublishOfferToDHT {
 
     public static void run(ResultHandler resultHandler, FaultHandler faultHandler, MessageFacade messageFacade,
                            Offer offer) {
-        messageFacade.addOffer(offer, new MessageFacade.AddOfferListener() {
+        messageFacade.addOffer(offer, new AddOfferListener() {
             @Override
             public void onComplete() {
                 resultHandler.onResult();

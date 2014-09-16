@@ -47,7 +47,8 @@ public class Offer implements Serializable {
 
     private final Date creationDate;
 
-    private final Fiat price;
+    // Fiat cause problems with offer removal (don` found out why, but we want plain objects anyway)
+    private final long fiatPrice;
     private final Coin amount;
     private final Coin minAmount;
     //TODO use hex string
@@ -70,7 +71,7 @@ public class Offer implements Serializable {
     public Offer(String id,
                  PublicKey messagePublicKey,
                  Direction direction,
-                 Fiat price,
+                 long fiatPrice,
                  Coin amount,
                  Coin minAmount,
                  BankAccountType bankAccountType,
@@ -84,7 +85,7 @@ public class Offer implements Serializable {
         this.id = id;
         this.messagePublicKey = messagePublicKey;
         this.direction = direction;
-        this.price = price;
+        this.fiatPrice = fiatPrice;
         this.amount = amount;
         this.minAmount = minAmount;
         this.bankAccountType = bankAccountType;
@@ -119,7 +120,7 @@ public class Offer implements Serializable {
     }
 
     public Fiat getPrice() {
-        return price;
+        return Fiat.valueOf(currency.getCurrencyCode(), fiatPrice);
     }
 
     public Coin getAmount() {
@@ -155,9 +156,8 @@ public class Offer implements Serializable {
     }
 
     public Fiat getVolumeByAmount(Coin amount) {
-        if (price != null && amount != null && !amount.isZero() && !price.isZero()) {
-            return new ExchangeRate(price).coinToFiat(amount);
-        }
+        if (fiatPrice != 0 && amount != null && !amount.isZero())
+            return new ExchangeRate(Fiat.valueOf(currency.getCurrencyCode(), fiatPrice)).coinToFiat(amount);
         else
             return null;
     }
@@ -197,7 +197,7 @@ public class Offer implements Serializable {
                 "direction=" + direction +
                 ", currency=" + currency +
                 ", uid='" + id + '\'' +
-                ", price=" + price +
+                ", fiatPrice=" + fiatPrice +
                 ", amount=" + amount +
                 ", minAmount=" + minAmount +
                 ", messagePubKey=" + messagePublicKey.hashCode() +

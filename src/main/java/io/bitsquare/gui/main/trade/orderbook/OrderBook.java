@@ -54,7 +54,7 @@ public class OrderBook {
     private final ObservableList<OrderBookListItem> orderBookListItems = FXCollections.observableArrayList();
     private final OrderBookListener orderBookListener;
     private final ChangeListener<BankAccount> bankAccountChangeListener;
-    private final ChangeListener<Boolean> dirtyListener;
+    private final ChangeListener<Number> invalidationListener;
     private String fiatCode;
     private AnimationTimer pollingTimer;
     private Country country;
@@ -71,7 +71,11 @@ public class OrderBook {
         this.user = user;
 
         bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
-        dirtyListener = (ov, oldValue, newValue) -> requestOffers();
+        invalidationListener = (ov, oldValue, newValue) -> {
+            log.debug("#### oldValue " + oldValue);
+            log.debug("#### newValue " + newValue);
+            requestOffers();
+        };
         orderBookListener = new OrderBookListener() {
             @Override
             public void onOfferAdded(Offer offer) {
@@ -87,7 +91,7 @@ public class OrderBook {
 
             @Override
             public void onOfferRemoved(Offer offer) {
-                orderBookListItems.removeIf(item -> item.getOffer().equals(offer));
+                orderBookListItems.removeIf(item -> item.getOffer().getId().equals(offer.getId()));
             }
         };
     }
@@ -137,15 +141,17 @@ public class OrderBook {
     }
 
     private void addListeners() {
+        log.trace("addListeners ");
         user.currentBankAccountProperty().addListener(bankAccountChangeListener);
         messageFacade.addOrderBookListener(orderBookListener);
-        messageFacade.getIsDirtyProperty().addListener(dirtyListener);
+        messageFacade.invalidationTimestampProperty().addListener(invalidationListener);
     }
 
     private void removeListeners() {
+        log.trace("removeListeners ");
         user.currentBankAccountProperty().removeListener(bankAccountChangeListener);
         messageFacade.removeOrderBookListener(orderBookListener);
-        messageFacade.getIsDirtyProperty().removeListener(dirtyListener);
+        messageFacade.invalidationTimestampProperty().removeListener(invalidationListener);
     }
 
     private void addOfferToOrderBookListItems(Offer offer) {
@@ -155,6 +161,7 @@ public class OrderBook {
     }
 
     private void requestOffers() {
+        log.debug("requestOffers");
         messageFacade.getOffers(fiatCode);
     }
 
@@ -168,7 +175,7 @@ public class OrderBook {
         addListeners();
         setBankAccount(user.getCurrentBankAccount());
         pollingTimer = Utilities.setInterval(1000, (animationTimer) -> {
-            messageFacade.getDirtyFlag(fiatCode);
+            messageFacade.getInvalidationTimeStamp(fiatCode);
             return null;
         });
 

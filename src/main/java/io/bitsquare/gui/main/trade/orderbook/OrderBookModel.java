@@ -64,7 +64,7 @@ public class OrderBookModel extends UIModel {
     private final FilteredList<OrderBookListItem> filteredItems;
     private final SortedList<OrderBookListItem> sortedItems;
     private OrderBookInfo orderBookInfo;
-    private final ChangeListener<BankAccount> bankAccountChangeListener;
+    private ChangeListener<BankAccount> bankAccountChangeListener;
 
     private final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     private final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
@@ -93,16 +93,16 @@ public class OrderBookModel extends UIModel {
 
         filteredItems = new FilteredList<>(orderBook.getOrderBookListItems());
         sortedItems = new SortedList<>(filteredItems);
-        bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize() {
+        bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
+
         super.initialize();
     }
 
@@ -176,7 +176,6 @@ public class OrderBookModel extends UIModel {
     }
 
     boolean isTradable(Offer offer) {
-        log.debug("### isMatchingRestrictions " + offer);
         // if user has not registered yet we display all
         if (user.getCurrentBankAccount() == null)
             return true;

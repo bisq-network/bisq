@@ -170,7 +170,7 @@ public class TradeManager {
         Offer offer = new Offer(id,
                 user.getMessagePublicKey(),
                 direction,
-                price,
+                price.getValue(),
                 amount,
                 minAmount,
                 user.getCurrentBankAccount().getBankAccountType(),

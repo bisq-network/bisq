@@ -18,6 +18,7 @@
 package io.bitsquare.msg;
 
 import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.msg.listeners.AddOfferListener;
 import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.msg.listeners.GetPeerAddressListener;
@@ -44,8 +45,8 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleLongProperty;
 
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
@@ -73,27 +74,16 @@ import org.slf4j.LoggerFactory;
  * TODO: improve callbacks that Platform.runLater is not necessary. We call usually that methods form teh UI thread.
  */
 public class MessageFacade implements MessageBroker {
-
-    public static interface AddOfferListener {
-        void onComplete();
-
-        void onFailed(String reason, Throwable throwable);
-    }
-
     private static final Logger log = LoggerFactory.getLogger(MessageFacade.class);
     private static final String ARBITRATORS_ROOT = "ArbitratorsRoot";
 
-    public P2PNode getP2pNode() {
-        return p2pNode;
-    }
-
     private final P2PNode p2pNode;
+    private final User user;
 
     private final List<OrderBookListener> orderBookListeners = new ArrayList<>();
     private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
     private final List<IncomingTradeMessageListener> incomingTradeMessageListeners = new ArrayList<>();
-    private final User user;
-    private SeedNodeAddress.StaticSeedNodeAddresses defaultStaticSeedNodeAddresses;
+    private final LongProperty invalidationTimestamp = new SimpleLongProperty(0);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -174,13 +164,11 @@ public class MessageFacade implements MessageBroker {
         try {
             final Data offerData = new Data(offer);
 
-            log.trace("Add offer to DHT requested. Added data: [locationKey: " + locationKey +
-                    ", value: " + offerData + "]");
-
             // the offer is default 30 days valid
             int defaultOfferTTL = 30 * 24 * 60 * 60;
             offerData.ttlSeconds(defaultOfferTTL);
-
+            log.trace("Add offer to DHT requested. Added data: [locationKey: " + locationKey +
+                    ", hash: " + offerData.hash().toString() + "]");
             FuturePut futurePut = p2pNode.addProtectedData(locationKey, offerData);
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
@@ -201,7 +189,7 @@ public class MessageFacade implements MessageBroker {
                             });
 
                             // TODO will be removed when we don't use polling anymore
-                            setDirty(locationKey);
+                            updateInvalidationTimestamp(locationKey);
                             log.trace("Add offer to DHT was successful. Added data: [locationKey: " + locationKey +
                                     ", value: " + offerData + "]");
                         });
@@ -237,10 +225,8 @@ public class MessageFacade implements MessageBroker {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         try {
             final Data offerData = new Data(offer);
-
             log.trace("Remove offer from DHT requested. Removed data: [locationKey: " + locationKey +
-                    ", value: " + offerData + "]");
-            
+                    ", hash: " + offerData.hash().toString() + "]");
             FutureRemove futureRemove = p2pNode.removeFromDataMap(locationKey, offerData);
             futureRemove.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
@@ -258,7 +244,7 @@ public class MessageFacade implements MessageBroker {
                                     log.error("Remove offer from DHT failed. Error: " + e.getMessage());
                                 }
                             });
-                            setDirty(locationKey);
+                            updateInvalidationTimestamp(locationKey);
                         });
 
                         log.trace("Remove offer from DHT was successful. Removed data: [key: " + locationKey + ", " +
@@ -283,6 +269,7 @@ public class MessageFacade implements MessageBroker {
 
     public void getOffers(String currencyCode) {
         Number160 locationKey = Number160.createHash(currencyCode);
+        log.trace("Get offers from DHT requested for locationKey: " + locationKey);
         FutureGet futureGet = p2pNode.getDataMap(locationKey);
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
@@ -306,12 +293,19 @@ public class MessageFacade implements MessageBroker {
                                 listener.onOffersReceived(offers)));
                     }
 
-                    //log.trace("Get offers from DHT was successful");
-                    /* log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey
-                            + ", values: " + futureGet.dataMap() + "]");*/
+                    log.trace("Get offers from DHT was successful. Stored data: [key: " + locationKey
+                            + ", values: " + futureGet.dataMap() + "]");
                 }
                 else {
-                    log.error("Get offers from DHT  was not successful with reason:" + baseFuture.failedReason());
+                    final Map<Number640, Data> dataMap = futureGet.dataMap();
+                    if (dataMap == null || dataMap.size() == 0) {
+                        log.trace("Get offers from DHT delivered empty dataMap.");
+                        Platform.runLater(() -> orderBookListeners.stream().forEach(listener ->
+                                listener.onOffersReceived(new ArrayList<>())));
+                    }
+                    else {
+                        log.error("Get offers from DHT  was not successful with reason:" + baseFuture.failedReason());
+                    }
                 }
             }
         });
@@ -442,83 +436,88 @@ public class MessageFacade implements MessageBroker {
     public void removeIncomingTradeMessageListener(IncomingTradeMessageListener listener) {
         incomingTradeMessageListeners.remove(listener);
     }
+    
 
+    /*
+     * We store the timestamp of any change of the offer list (add, remove offer) and we poll in intervals for changes.
+     * If we detect a change we request the offer list from the DHT.
+     * Polling should be replaced by a push based solution later.
+     */
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Check dirty flag for a location key
+    // Polling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO just temporary
-    public BooleanProperty getIsDirtyProperty() {
-        return isDirty;
+    public void updateInvalidationTimestamp(Number160 locationKey) {
+        invalidationTimestamp.set(System.currentTimeMillis());
+        try {
+            FuturePut putFuture = p2pNode.putData(getInvalidatedLocationKey(locationKey),
+                    new Data(invalidationTimestamp.get()));
+            putFuture.addListener(new BaseFutureListener<BaseFuture>() {
+                @Override
+                public void operationComplete(BaseFuture future) throws Exception {
+                    if (putFuture.isSuccess())
+                        log.trace("Update invalidationTimestamp to DHT was successful. TimeStamp=" +
+                                invalidationTimestamp.get());
+                    else
+                        log.error("Update invalidationTimestamp to DHT failed with reason:" + putFuture.failedReason());
+                }
+
+                @Override
+                public void exceptionCaught(Throwable t) throws Exception {
+                    log.error("Update invalidationTimestamp to DHT failed with exception:" + t.getMessage());
+                }
+            });
+        } catch (IOException | ClassNotFoundException e) {
+            log.error("Update invalidationTimestamp to DHT failed with exception:" + e.getMessage());
+        }
     }
 
-    public void getDirtyFlag(String currencyCode) {
+    public LongProperty invalidationTimestampProperty() {
+        return invalidationTimestamp;
+    }
+
+    public void getInvalidationTimeStamp(String currencyCode) {
         Number160 locationKey = Number160.createHash(currencyCode);
         try {
-            FutureGet getFuture = p2pNode.getData(getDirtyLocationKey(locationKey));
+            FutureGet getFuture = p2pNode.getData(getInvalidatedLocationKey(locationKey));
             getFuture.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    Data data = getFuture.data();
-                    if (data != null) {
-                        Object object = data.object();
-                        if (object instanceof Long) {
-                            Platform.runLater(() -> onGetDirtyFlag((Long) object));
+                    if (getFuture.isSuccess()) {
+                        Data data = getFuture.data();
+                        if (data != null && data.object() instanceof Long) {
+                            final Object object = data.object();
+                            Platform.runLater(() -> {
+                                Long timeStamp = (Long) object;
+                                log.trace("Get invalidationTimestamp from DHT was successful. TimeStamp=" +
+                                        timeStamp);
+                                invalidationTimestamp.set(timeStamp);
+                            });
                         }
+                        else {
+                            log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
+                        }
+                    }
+                    else {
+                        log.error("Get invalidationTimestamp from DHT failed with reason:" + getFuture.failedReason());
                     }
                 }
 
                 @Override
                 public void exceptionCaught(Throwable t) throws Exception {
-                    log.error("getFuture exceptionCaught " + t.toString());
+                    log.error("Get invalidationTimestamp from DHT failed with exception:" + t.getMessage());
+                    t.printStackTrace();
                 }
             });
         } catch (IOException | ClassNotFoundException e) {
+            log.error("Get invalidationTimestamp from DHT failed with exception:" + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private Long lastTimeStamp = -3L;
-    private final BooleanProperty isDirty = new SimpleBooleanProperty(false);
-
-    private void onGetDirtyFlag(long timeStamp) {
-        // TODO don't get updates at first execute....
-        if (lastTimeStamp != timeStamp) {
-            isDirty.setValue(!isDirty.get());
-        }
-        if (lastTimeStamp > 0) {
-            lastTimeStamp = timeStamp;
-        }
-        else {
-            lastTimeStamp++;
-        }
-    }
-
-    public void setDirty(Number160 locationKey) {
-        // we don't want to get an update from dirty for own changes, so update the lastTimeStamp to omit a change
-        // trigger
-        lastTimeStamp = System.currentTimeMillis();
-        try {
-            FuturePut putFuture = p2pNode.putData(getDirtyLocationKey(locationKey), new Data(lastTimeStamp));
-            putFuture.addListener(new BaseFutureListener<BaseFuture>() {
-                @Override
-                public void operationComplete(BaseFuture future) throws Exception {
-                    // log.trace("operationComplete");
-                }
-
-                @Override
-                public void exceptionCaught(Throwable t) throws Exception {
-                    log.warn("Error at writing dirty flag (timeStamp) " + t.toString());
-                }
-            });
-        } catch (IOException | ClassNotFoundException e) {
-            log.warn("Error at writing dirty flag (timeStamp) " + e.getMessage());
-        }
-    }
-
-    private Number160 getDirtyLocationKey(Number160 locationKey) {
-        return Number160.createHash(locationKey + "Dirty");
+    private Number160 getInvalidatedLocationKey(Number160 locationKey) {
+        return Number160.createHash(locationKey + "invalidated");
     }
 
 
@@ -529,7 +528,6 @@ public class MessageFacade implements MessageBroker {
     @Override
     public void handleMessage(Object message, PeerAddress peerAddress) {
         if (message instanceof TradeMessage) {
-            log.error("####################");
             Platform.runLater(() -> incomingTradeMessageListeners.stream().forEach(e ->
                     e.onMessage((TradeMessage) message, peerAddress)));
         }
