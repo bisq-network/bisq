@@ -62,6 +62,8 @@ import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.storage.Data;
 import net.tomp2p.utils.Utils;
 
+import org.jetbrains.annotations.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,11 +111,11 @@ public class MessageFacade implements MessageBroker {
             @Override
             public void onSuccess(@Nullable PeerDHT result) {
                 log.debug("p2pNode.start success result = " + result);
-                Platform.runLater(() -> bootstrapListener.onCompleted());
+                Platform.runLater(bootstrapListener::onCompleted);
             }
 
             @Override
-            public void onFailure(Throwable t) {
+            public void onFailure(@NotNull Throwable t) {
                 log.error(t.toString());
                 Platform.runLater(() -> bootstrapListener.onFailed(t));
             }
@@ -144,7 +146,7 @@ public class MessageFacade implements MessageBroker {
                         Platform.runLater(() -> listener.onResult(peerAddress));
                     }
                     else {
-                        Platform.runLater(() -> listener.onFailed());
+                        Platform.runLater(listener::onFailed);
                     }
                 }
             });
@@ -323,16 +325,16 @@ public class MessageFacade implements MessageBroker {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 if (futureDirect.isSuccess()) {
-                    Platform.runLater(() -> listener.onResult());
+                    Platform.runLater(listener::onResult);
                 }
                 else {
-                    Platform.runLater(() -> listener.onFailed());
+                    Platform.runLater(listener::onFailed);
                 }
             }
 
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
-                Platform.runLater(() -> listener.onFailed());
+                Platform.runLater(listener::onFailed);
             }
         });
     }
@@ -362,9 +364,7 @@ public class MessageFacade implements MessageBroker {
                     }
                 }
             });
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -448,7 +448,7 @@ public class MessageFacade implements MessageBroker {
     // Polling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void updateInvalidationTimestamp(Number160 locationKey) {
+    private void updateInvalidationTimestamp(Number160 locationKey) {
         invalidationTimestamp.set(System.currentTimeMillis());
         try {
             FuturePut putFuture = p2pNode.putData(getInvalidatedLocationKey(locationKey),
@@ -477,7 +477,7 @@ public class MessageFacade implements MessageBroker {
         return invalidationTimestamp;
     }
 
-    public void getInvalidationTimeStamp(String currencyCode) {
+    public void requestInvalidationTimeStamp(String currencyCode) {
         Number160 locationKey = Number160.createHash(currencyCode);
         try {
             FutureGet getFuture = p2pNode.getData(getInvalidatedLocationKey(locationKey));
@@ -490,8 +490,8 @@ public class MessageFacade implements MessageBroker {
                             final Object object = data.object();
                             Platform.runLater(() -> {
                                 Long timeStamp = (Long) object;
-                                log.trace("Get invalidationTimestamp from DHT was successful. TimeStamp=" +
-                                        timeStamp);
+                                // log.trace("Get invalidationTimestamp from DHT was successful. TimeStamp=" + 
+                                // timeStamp);
                                 invalidationTimestamp.set(timeStamp);
                             });
                         }

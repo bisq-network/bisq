@@ -23,7 +23,7 @@ import io.bitsquare.trade.Offer;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
-public class OrderBookListItem {
+class OrderBookListItem {
     private final Offer offer;
     private final ObjectProperty<Country> bankAccountCountry = new SimpleObjectProperty<>();
 
@@ -32,7 +32,7 @@ public class OrderBookListItem {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OrderBookListItem(Offer offer, Country bankAccountCountry) {
+    OrderBookListItem(Offer offer, Country bankAccountCountry) {
         this.offer = offer;
         setBankAccountCountry(bankAccountCountry);
     }
@@ -42,7 +42,7 @@ public class OrderBookListItem {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setBankAccountCountry(Country bankAccountCountry) {
+    void setBankAccountCountry(Country bankAccountCountry) {
         this.bankAccountCountry.set(bankAccountCountry);
     }
 
@@ -51,15 +51,15 @@ public class OrderBookListItem {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Offer getOffer() {
+    Offer getOffer() {
         return offer;
     }
 
-    public Country getBankAccountCountry() {
+    Country getBankAccountCountry() {
         return bankAccountCountry.get();
     }
 
-    public ObjectProperty<Country> bankAccountCountryProperty() {
+    ObjectProperty<Country> bankAccountCountryProperty() {
         return bankAccountCountry;
     }
 

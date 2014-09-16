@@ -58,15 +58,19 @@ import org.slf4j.LoggerFactory;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
+/**
+ * TODO: The advanced filters are not impl. yet
+ * The restrictions handling is open from the concept and is only implemented for countries yet.
+ */
 public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     private static final Logger log = LoggerFactory.getLogger(OrderBookViewCB.class);
 
-    private Navigation navigation;
-    private Navigation.Item navigationItem;
-    private OverlayManager overlayManager;
-    private OptionalBtcValidator optionalBtcValidator;
-    private OptionalFiatValidator optionalFiatValidator;
+    private final Navigation navigation;
+    private final OverlayManager overlayManager;
+    private final OptionalBtcValidator optionalBtcValidator;
+    private final OptionalFiatValidator optionalFiatValidator;
 
+    private Navigation.Item navigationItem;
     private boolean detailsVisible;
     private boolean advancedScreenInited;
 
@@ -87,11 +91,11 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private OrderBookViewCB(OrderBookPM presentationModel,
-                            Navigation navigation,
-                            OverlayManager overlayManager,
-                            OptionalBtcValidator optionalBtcValidator,
-                            OptionalFiatValidator optionalFiatValidator) {
+    OrderBookViewCB(OrderBookPM presentationModel,
+                    Navigation navigation,
+                    OverlayManager overlayManager,
+                    OptionalBtcValidator optionalBtcValidator,
+                    OptionalFiatValidator optionalFiatValidator) {
         super(presentationModel);
 
         this.navigation = navigation;
@@ -215,7 +219,6 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     private void openSetupScreen() {
         overlayManager.blurContent();
         List<Action> actions = new ArrayList<>();
@@ -264,7 +267,6 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     }
 
     private void showDetailsScreen() {
-        log.debug("showDetailsScreen");
         if (!advancedScreenInited) {
             advancedScreenInited = true;
         }
@@ -274,7 +276,6 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
     private void hideDetailsScreen() {
         toggleDetailsScreen(false);
-        log.debug("hideDetailsScreen");
     }
 
     private void toggleDetailsScreen(boolean visible) {
@@ -341,8 +342,13 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                 .getBankAccountType()));
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // CellFactories
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void setAmountColumnCellFactory() {
-        amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
+        amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
                 new Callback<TableColumn<OrderBookListItem, OrderBookListItem>, TableCell<OrderBookListItem,
                         OrderBookListItem>>() {
@@ -361,7 +367,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     }
 
     private void setPriceColumnCellFactory() {
-        priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
+        priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
                 new Callback<TableColumn<OrderBookListItem, OrderBookListItem>, TableCell<OrderBookListItem,
                         OrderBookListItem>>() {
@@ -380,7 +386,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     }
 
     private void setVolumeColumnCellFactory() {
-        volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
+        volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
                 new Callback<TableColumn<OrderBookListItem, OrderBookListItem>, TableCell<OrderBookListItem,
                         OrderBookListItem>>() {
@@ -399,7 +405,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     }
 
     private void setDirectionColumnCellFactory() {
-        directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
+        directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         directionColumn.setCellFactory(
                 new Callback<TableColumn<OrderBookListItem, OrderBookListItem>, TableCell<OrderBookListItem,
                         OrderBookListItem>>() {
@@ -483,7 +489,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     }
 
     private void setCountryColumnCellFactory() {
-        countryColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
+        countryColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         countryColumn.setCellFactory(
                 new Callback<TableColumn<OrderBookListItem, OrderBookListItem>, TableCell<OrderBookListItem,
                         OrderBookListItem>>() {
@@ -518,7 +524,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     }
 
     private void setBankAccountTypeColumnCellFactory() {
-        bankAccountTypeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper(offer.getValue()));
+        bankAccountTypeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         bankAccountTypeColumn.setCellFactory(
                 new Callback<TableColumn<OrderBookListItem, OrderBookListItem>, TableCell<OrderBookListItem,
                         OrderBookListItem>>() {

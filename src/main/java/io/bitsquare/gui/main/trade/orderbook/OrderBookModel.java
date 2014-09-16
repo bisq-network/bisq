@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.trade.orderbook;
 
-import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.gui.main.trade.OrderBookInfo;
@@ -37,8 +36,6 @@ import com.google.bitcoin.utils.Fiat;
 import com.google.inject.Inject;
 
 import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -53,7 +50,10 @@ import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.gui.util.BSFormatter.reduceTo4Decimals;
 
-public class OrderBookModel extends UIModel {
+/**
+ * It holds the scope specific domain data for either a buy or sell UI screen.
+ */
+class OrderBookModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(OrderBookModel.class);
 
     private final User user;
@@ -82,10 +82,10 @@ public class OrderBookModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OrderBookModel(User user,
-                          TradeManager tradeManager,
-                          OrderBook orderBook,
-                          Settings settings) {
+    OrderBookModel(User user,
+                   TradeManager tradeManager,
+                   OrderBook orderBook,
+                   Settings settings) {
         this.tradeManager = tradeManager;
         this.user = user;
         this.orderBook = orderBook;
@@ -94,6 +94,7 @@ public class OrderBookModel extends UIModel {
         filteredItems = new FilteredList<>(orderBook.getOrderBookListItems());
         sortedItems = new SortedList<>(filteredItems);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
@@ -180,49 +181,27 @@ public class OrderBookModel extends UIModel {
         if (user.getCurrentBankAccount() == null)
             return true;
 
-
         boolean countryResult = offer.getAcceptedCountries().contains(user.getCurrentBankAccount().getCountry());
         if (!countryResult)
             restrictionsInfo.set("This offer requires that the payments account resides in one of those countries:\n" +
                     BSFormatter.countryLocalesToString(offer.getAcceptedCountries()) +
                     "\n\nThe country of your payments account (" + user.getCurrentBankAccount().getCountry().getName() +
                     ") is not included in that list.");
-        //TODO
 
-        // One of the supported languages from the settings must match one of the offer languages (n to n)
-      /*  boolean languageResult =
-                languagesInList(settings.getAcceptedLanguageLocales(), offer.getAcceptedLanguageLocales());
+        // TODO Leave that for now as it is not so clear how the restrictions will be handled
+        // we might get rid of languages (handles viy arbitrators)
+        /*
+        // disjoint returns true if the two specified collections have no elements in common.
+        boolean languageResult = !Collections.disjoint(settings.getAcceptedLanguageLocales(),
+                offer.getAcceptedLanguageLocales());
+        if (!languageResult)
+            restrictionsInfo.set("This offer requires that the payments account resides in one of those languages:\n" +
+                    BSFormatter.languageLocalesToString(offer.getAcceptedLanguageLocales()) +
+                    "\n\nThe country of your payments account (" + user.getCurrentBankAccount().getCountry().getName() +
+                    ") is not included in that list.");
 
-        // Apply applyFilter only if there is a valid value set
-        // The requested amount must be lower or equal then the offer amount
-        boolean amountResult = true;
-        if (orderBookInfo.getAmount() != null && orderBookInfo.getAmount().isPositive())
-            amountResult = orderBookInfo.getAmount().compareTo(offer.getAmount()) <= 0;
-
-
-        // Apply applyFilter only if there is a valid value set
-        boolean priceResult = true;
-        if (orderBookInfo.getPrice() != null && orderBookInfo.getPrice().isPositive()) {
-            if (offer.getDirection() == Direction.SELL)
-                priceResult = orderBookInfo.getPrice().compareTo(offer.getPrice()) >= 0;
-            else
-                priceResult = orderBookInfo.getPrice().compareTo(offer.getPrice()) <= 0;
-        }
-    
-        // The arbitrator defined in the offer must match one of the accepted arbitrators defined in the settings
-        // (1 to n)
-        boolean arbitratorResult = arbitratorsInList(offer.getArbitrators(), settings.getAcceptedArbitrators());
-
-        boolean result = countryResult && languageResult && amountResult && priceResult && arbitratorResult;
-       
-        log.debug("getPrice " + orderBookInfo.getPrice());
-        log.debug("getAmount " + orderBookInfo.getAmount());
-        log.debug("countryResult " + countryResult);
-        log.debug("languageResult " + languageResult);
-        log.debug("amountResult " + amountResult);
-        log.debug("priceResult " + priceResult);
-        log.debug("arbitratorResult " + arbitratorResult);
-        log.debug("Offer filter result " + result);*/
+        boolean arbitratorResult = !Collections.disjoint(settings.getAcceptedArbitrators(),
+                offer.getArbitrators());*/
 
         return countryResult;
     }
@@ -250,6 +229,7 @@ public class OrderBookModel extends UIModel {
         applyFilter();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -263,8 +243,7 @@ public class OrderBookModel extends UIModel {
     }
 
     boolean isMyOffer(Offer offer) {
-        return offer.getMessagePublicKey() != null ?
-                offer.getMessagePublicKey().equals(user.getMessagePublicKey()) : false;
+        return offer.getMessagePublicKey() != null && offer.getMessagePublicKey().equals(user.getMessagePublicKey());
     }
 
     Coin getAmountAsCoin() {
@@ -295,6 +274,7 @@ public class OrderBookModel extends UIModel {
         return orderBookInfo;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -309,29 +289,6 @@ public class OrderBookModel extends UIModel {
             fiatCode.set(CurrencyUtil.getDefaultCurrency().getCurrencyCode());
         }
     }
-
-    private boolean languagesInList(List<Locale> list1, List<Locale> list2) {
-        for (Locale locale1 : list2) {
-            for (Locale locale2 : list1) {
-                if (locale1.getLanguage().equals(locale2.getLanguage())) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private boolean arbitratorsInList(List<Arbitrator> list1, List<Arbitrator> list2) {
-        for (Arbitrator arbitrator1 : list2) {
-            for (Arbitrator arbitrator2 : list1) {
-                if (arbitrator1.getId().equals(arbitrator2.getId())) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
 
     void applyFilter() {
         filteredItems.setPredicate(orderBookListItem -> {
@@ -351,12 +308,7 @@ public class OrderBookModel extends UIModel {
                     priceResult = orderBookInfo.getPrice().compareTo(offer.getPrice()) <= 0;
             }
 
-
-            //TODO
-
             return directionResult && amountResult && priceResult;
-
         });
     }
-
 }

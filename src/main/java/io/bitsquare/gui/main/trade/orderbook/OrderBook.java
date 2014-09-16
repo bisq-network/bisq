@@ -31,6 +31,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import javafx.animation.AnimationTimer;
+import javafx.beans.InvalidationListener;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -42,7 +43,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Holds and manages the unsorted and unfiltered orderbook list of both buy and sell offers.
+ * It is handled as singleton by Guice and is used by 2 instances of OrderBookModel (one for Buy one for Sell).
  * As it is used only by the Buy and Sell UIs we treat it as local UI model.
+ * It also use OrderBookListener as the lists items class and we don't want to get any dependency out of the package
+ * for that.
  */
 public class OrderBook {
 
@@ -54,7 +58,7 @@ public class OrderBook {
     private final ObservableList<OrderBookListItem> orderBookListItems = FXCollections.observableArrayList();
     private final OrderBookListener orderBookListener;
     private final ChangeListener<BankAccount> bankAccountChangeListener;
-    private final ChangeListener<Number> invalidationListener;
+    private final InvalidationListener invalidationListener;
     private String fiatCode;
     private AnimationTimer pollingTimer;
     private Country country;
@@ -66,16 +70,13 @@ public class OrderBook {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OrderBook(MessageFacade messageFacade, User user) {
+    OrderBook(MessageFacade messageFacade, User user) {
         this.messageFacade = messageFacade;
         this.user = user;
 
         bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
-        invalidationListener = (ov, oldValue, newValue) -> {
-            log.debug("#### oldValue " + oldValue);
-            log.debug("#### newValue " + newValue);
-            requestOffers();
-        };
+        invalidationListener = (ov) -> requestOffers();
+
         orderBookListener = new OrderBookListener() {
             @Override
             public void onOfferAdded(Offer offer) {
@@ -141,14 +142,12 @@ public class OrderBook {
     }
 
     private void addListeners() {
-        log.trace("addListeners ");
         user.currentBankAccountProperty().addListener(bankAccountChangeListener);
         messageFacade.addOrderBookListener(orderBookListener);
         messageFacade.invalidationTimestampProperty().addListener(invalidationListener);
     }
 
     private void removeListeners() {
-        log.trace("removeListeners ");
         user.currentBankAccountProperty().removeListener(bankAccountChangeListener);
         messageFacade.removeOrderBookListener(orderBookListener);
         messageFacade.invalidationTimestampProperty().removeListener(invalidationListener);
@@ -161,7 +160,6 @@ public class OrderBook {
     }
 
     private void requestOffers() {
-        log.debug("requestOffers");
         messageFacade.getOffers(fiatCode);
     }
 
@@ -175,7 +173,7 @@ public class OrderBook {
         addListeners();
         setBankAccount(user.getCurrentBankAccount());
         pollingTimer = Utilities.setInterval(1000, (animationTimer) -> {
-            messageFacade.getInvalidationTimeStamp(fiatCode);
+            messageFacade.requestInvalidationTimeStamp(fiatCode);
             return null;
         });
 

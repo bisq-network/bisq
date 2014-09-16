@@ -24,16 +24,11 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
 import io.bitsquare.gui.util.validation.OptionalFiatValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.locale.Country;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 
 import com.google.inject.Inject;
 
-import java.util.Comparator;
-
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.transformation.SortedList;
@@ -43,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.gui.util.BSFormatter.*;
 
-public class OrderBookPM extends PresentationModel<OrderBookModel> {
+class OrderBookPM extends PresentationModel<OrderBookModel> {
     private static final Logger log = LoggerFactory.getLogger(OrderBookPM.class);
 
     private final OptionalBtcValidator optionalBtcValidator;
@@ -54,8 +49,6 @@ public class OrderBookPM extends PresentationModel<OrderBookModel> {
     final StringProperty volume = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
     final StringProperty fiatCode = new SimpleStringProperty();
-    final ObjectProperty<Country> bankAccountCountry = new SimpleObjectProperty<>();
-    final ObjectProperty<Comparator<OrderBookListItem>> comparator = new SimpleObjectProperty<>();
     final StringProperty restrictionsInfo = new SimpleStringProperty();
 
 
@@ -64,9 +57,9 @@ public class OrderBookPM extends PresentationModel<OrderBookModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OrderBookPM(OrderBookModel model,
-                       OptionalFiatValidator optionalFiatValidator,
-                       OptionalBtcValidator optionalBtcValidator) {
+    OrderBookPM(OrderBookModel model,
+                OptionalFiatValidator optionalFiatValidator,
+                OptionalBtcValidator optionalBtcValidator) {
         super(model);
 
         this.optionalFiatValidator = optionalFiatValidator;
@@ -84,9 +77,7 @@ public class OrderBookPM extends PresentationModel<OrderBookModel> {
 
         btcCode.bind(model.btcCode);
         fiatCode.bind(model.fiatCode);
-        bankAccountCountry.bind(model.bankAccountCountry);
         restrictionsInfo.bind(model.restrictionsInfo);
-        comparator.bind(model.comparator);
 
         // Bidirectional bindings are used for all input fields: amount, price and volume 
         // We do volume/amount calculation during input, so user has immediate feedback
@@ -201,7 +192,7 @@ public class OrderBookPM extends PresentationModel<OrderBookModel> {
     }
 
     String getDirectionLabel(Offer offer) {
-        // mirror direction
+        // mirror direction!
         Direction direction = offer.getDirection() == Direction.BUY ? Direction.SELL : Direction.BUY;
         return BSFormatter.formatDirection(direction, true);
     }

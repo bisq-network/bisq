@@ -364,10 +364,12 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         volumeDescriptionLabel.textProperty().bind(presentationModel.fiatCode);//Price per Bitcoin in EUR
 
         priceDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                        BSResources.get("createOffer.amountPriceBox.priceDescr", presentationModel.fiatCode.get()),
+                        BSResources.get("createOffer.amountPriceBox.priceDescription",
+                                presentationModel.fiatCode.get()),
                 presentationModel.fiatCode));
         volumeDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                        BSResources.get("createOffer.amountPriceBox.volumeDescr", presentationModel.fiatCode.get()),
+                        BSResources.get("createOffer.amountPriceBox.volumeDescription",
+                                presentationModel.fiatCode.get()),
                 presentationModel.fiatCode));
 
         buyLabel.textProperty().bind(presentationModel.directionLabel);

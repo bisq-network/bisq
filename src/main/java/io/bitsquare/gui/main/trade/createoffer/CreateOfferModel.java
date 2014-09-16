@@ -272,6 +272,7 @@ public class CreateOfferModel extends UIModel {
         return direction;
     }
 
+    @SuppressWarnings("NullableProblems")
     void setDirection(Direction direction) {
         // direction can not be changed once it is initially set
         checkArgument(this.direction == null);

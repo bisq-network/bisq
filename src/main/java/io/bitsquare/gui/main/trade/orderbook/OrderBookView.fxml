@@ -31,7 +31,7 @@
         <Insets bottom="20.0" left="25.0" top="30.0" right="25"/>
     </padding>
 
-    <TitledGroupBg fx:id="priceAmountPane" text="Order book filter" GridPane.rowIndex="0" GridPane.columnIndex="0"
+    <TitledGroupBg text="Order book filter" GridPane.rowIndex="0" GridPane.columnIndex="0"
                    GridPane.rowSpan="5" GridPane.columnSpan="2"/>
 
     <Label text="Filter by amount or price:" GridPane.rowIndex="0" GridPane.valignment="TOP">

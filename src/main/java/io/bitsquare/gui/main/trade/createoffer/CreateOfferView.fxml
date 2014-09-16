@@ -36,7 +36,7 @@
                 AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
                 AnchorPane.bottomAnchor="0.0">
 
-        <GridPane fx:id="gridPane" hgap="5.0" vgap="5.0">
+        <GridPane hgap="5.0" vgap="5.0">
             <padding>
                 <Insets bottom="-10.0" left="25.0" top="30.0" right="25"/>
             </padding>
@@ -65,7 +65,7 @@
                     <Insets right="10.0" top="20.0"/>
                 </GridPane.margin>
                 <VBox spacing="4">
-                    <Label id="input-description-label" text="%createOffer.amountPriceBox.amountDescr"
+                    <Label id="input-description-label" text="%createOffer.amountPriceBox.amountDescription"
                            prefWidth="170"/>
                     <HBox>
                         <InputTextField fx:id="amountTextField" id="text-input-with-currency-text-field"
@@ -116,7 +116,7 @@
                 <GridPane.margin>
                     <Insets right="10.0" top="5.0" bottom="5.0"/>
                 </GridPane.margin>
-                <Label id="input-description-label" text="%createOffer.amountPriceBox.minAmountDescr"
+                <Label id="input-description-label" text="%createOffer.amountPriceBox.minAmountDescription"
                        prefWidth="170.0"/>
                 <HBox>
                     <InputTextField fx:id="minAmountTextField" id="text-input-with-currency-text-field"

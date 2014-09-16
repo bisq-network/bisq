@@ -160,7 +160,7 @@ public class TradeViewCB extends CachedViewCB {
                 createOfferViewCB = loader.getController();
                 createOfferViewCB.setParent(this);
                 createOfferViewCB.initWithOrderBookInfo(orderBookInfo);
-                createOfferViewCB.setCloseListener(() -> onCreateOfferViewRemoved());
+                createOfferViewCB.setCloseListener(this::onCreateOfferViewRemoved);
                 final Tab tab = new Tab("Create offer");
                 tab.setContent(createOfferView);
                 tabPane.getTabs().add(tab);

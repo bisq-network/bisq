@@ -17,27 +17,64 @@
 
 package io.bitsquare.gui.main.orders.pending;
 
-import io.bitsquare.gui.main.trade.orderbook.OrderBookListItem;
+import io.bitsquare.locale.Country;
+import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
+
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // TODO don't use inheritance
-public class PendingTradesListItem extends OrderBookListItem {
+public class PendingTradesListItem {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesListItem.class);
 
-
+    private final Offer offer;
+    private final ObjectProperty<Country> bankAccountCountry = new SimpleObjectProperty<>();
     private final Trade trade;
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public PendingTradesListItem(Trade trade) {
-        super(trade.getOffer(), trade.getOffer().getBankAccountCountry());
         this.trade = trade;
+
+        this.offer = trade.getOffer();
+        setBankAccountCountry(offer.getBankAccountCountry());
     }
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    void setBankAccountCountry(Country bankAccountCountry) {
+        this.bankAccountCountry.set(bankAccountCountry);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public Trade getTrade() {
         return trade;
+    }
+
+    Offer getOffer() {
+        return offer;
+    }
+
+    Country getBankAccountCountry() {
+        return bankAccountCountry.get();
+    }
+
+    ObjectProperty<Country> bankAccountCountryProperty() {
+        return bankAccountCountry;
     }
 
 }
