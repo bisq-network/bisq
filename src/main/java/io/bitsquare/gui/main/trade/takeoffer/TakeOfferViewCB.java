@@ -15,7 +15,8 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.trade.createoffer;
+package io.bitsquare.gui.main.trade.takeoffer;
+
 
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.CloseListener;
@@ -66,14 +67,8 @@ import org.controlsfx.dialog.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static javafx.beans.binding.Bindings.createStringBinding;
-
-// TODO Implement other positioning method in InoutTextField to display it over the field instead of right side
-// priceAmountHBox is too large after redesign as to be used as layoutReference. 
-
-public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
-    private static final Logger log = LoggerFactory.getLogger(CreateOfferViewCB.class);
-
+public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
+    private static final Logger log = LoggerFactory.getLogger(TakeOfferViewCB.class);
 
     private Navigation navigation;
     private OverlayManager overlayManager;
@@ -93,13 +88,15 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     @FXML Label buyLabel, addressLabel,
             balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
             bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel,
-            acceptedCountriesLabel, acceptedCountriesLabelIcon, acceptedLanguagesLabel, acceptedLanguagesLabelIcon,
-            acceptedArbitratorsLabel, acceptedArbitratorsLabelIcon, amountBtcLabel,
-            priceFiatLabel, volumeFiatLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel;
-    @FXML Button showPaymentInfoScreenButton, showAdvancedSettingsButton, placeOfferButton;
+            acceptedCountriesLabel, acceptedLanguagesLabel,
+            acceptedArbitratorsLabel, amountBtcLabel,
+            priceDescriptionLabel, volumeDescriptionLabel;
+    @FXML Button showPaymentInfoScreenButton, showAdvancedSettingsButton, takeOfferButton;
 
-    @FXML InputTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
-    @FXML TextField acceptedArbitratorsTextField, totalToPayTextField, bankAccountTypeTextField,
+    @FXML InputTextField amountTextField;
+    @FXML TextField minAmountTextField, priceTextField, volumeTextField, acceptedArbitratorsTextField,
+            totalToPayTextField,
+            bankAccountTypeTextField,
             bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField,
             acceptedLanguagesTextField;
     @FXML AddressTextField addressTextField;
@@ -111,9 +108,10 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferViewCB(CreateOfferPM presentationModel, Navigation navigation,
-                              OverlayManager overlayManager) {
+    private TakeOfferViewCB(TakeOfferPM presentationModel, Navigation navigation,
+                            OverlayManager overlayManager) {
         super(presentationModel);
+
         this.navigation = navigation;
         this.overlayManager = overlayManager;
     }
@@ -129,8 +127,6 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
         setupListeners();
         setupBindings();
-        balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get());
-        volumeTextField.setPromptText(BSResources.get("createOffer.volume.prompt", presentationModel.fiatCode.get()));
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -165,19 +161,41 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
             imageView.setId("image-buy-large");
         else
             imageView.setId("image-sell-large");
+
+        priceDescriptionLabel.setText(BSResources.get("takeOffer.amountPriceBox.priceDescription",
+                presentationModel.getFiatCode()));
+        volumeDescriptionLabel.setText(BSResources.get("takeOffer.amountPriceBox.volumeDescription",
+                presentationModel.getFiatCode()));
+
+        balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get());
+
+        buyLabel.setText(presentationModel.getDirectionLabel());
+        minAmountTextField.setText(presentationModel.getMinAmount());
+        priceTextField.setText(presentationModel.getPrice());
+        addressTextField.setPaymentLabel(presentationModel.getPaymentLabel());
+        addressTextField.setAddress(presentationModel.getAddressAsString());
+        bankAccountTypeTextField.setText(presentationModel.getBankAccountType());
+        bankAccountTypeTextField.setText(presentationModel.getBankAccountType());
+        bankAccountCurrencyTextField.setText(presentationModel.getBankAccountCurrency());
+        bankAccountCountyTextField.setText(presentationModel.getBankAccountCounty());
+        acceptedCountriesTextField.setText(presentationModel.getAcceptedCountries());
+        acceptedLanguagesTextField.setText(presentationModel.getAcceptedLanguages());
+        acceptedArbitratorsTextField.setText(presentationModel.getAcceptedArbitrators());
     }
 
+    //TODO not used yet
     public void setCloseListener(CloseListener closeListener) {
         this.closeListener = closeListener;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
-    void onPlaceOffer() {
-        presentationModel.placeOffer();
+    void onTakeOffer() {
+        presentationModel.takeOffer();
     }
 
     @FXML
@@ -212,12 +230,12 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     void onToggleShowAdvancedSettings() {
         detailsVisible = !detailsVisible;
         if (detailsVisible) {
-            showAdvancedSettingsButton.setText(BSResources.get("createOffer.fundsBox.hideAdvanced"));
+            showAdvancedSettingsButton.setText(BSResources.get("takeOffer.fundsBox.hideAdvanced"));
             showAdvancedSettingsButton.setGraphic(collapse);
             showDetailsScreen();
         }
         else {
-            showAdvancedSettingsButton.setText(BSResources.get("createOffer.fundsBox.showAdvanced"));
+            showAdvancedSettingsButton.setText(BSResources.get("takeOffer.fundsBox.showAdvanced"));
             showAdvancedSettingsButton.setGraphic(expand);
             hideDetailsScreen();
         }
@@ -225,30 +243,23 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
     @FXML
     void onOpenGeneralHelp() {
-        Help.openWindow(HelpId.CREATE_OFFER_GENERAL);
+        Help.openWindow(HelpId.TAKE_OFFER_GENERAL);
     }
 
     @FXML
     void onOpenFundingHelp() {
-        Help.openWindow(HelpId.CREATE_OFFER_FUNDING);
+        Help.openWindow(HelpId.TAKE_OFFER_FUNDING);
     }
 
     @FXML
     void onOpenAdvancedSettingsHelp() {
-        Help.openWindow(HelpId.CREATE_OFFER_ADVANCED);
+        Help.openWindow(HelpId.TAKE_OFFER_ADVANCED);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void openAccountSettings() {
-        navigation.navigationTo(Navigation.Item.MAIN,
-                Navigation.Item.ACCOUNT,
-                Navigation.Item.ACCOUNT_SETTINGS,
-                Navigation.Item.RESTRICTIONS);
-    }
 
     private void close() {
         TabPane tabPane = ((TabPane) (root.getParent().getParent()));
@@ -269,52 +280,20 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
             amountTextField.setText(presentationModel.amount.get());
         });
 
-        minAmountTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            presentationModel.onFocusOutMinAmountTextField(oldValue, newValue, minAmountTextField.getText());
-            minAmountTextField.setText(presentationModel.minAmount.get());
-        });
-
-        priceTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            presentationModel.onFocusOutPriceTextField(oldValue, newValue, priceTextField.getText());
-            priceTextField.setText(presentationModel.price.get());
-        });
-
-        volumeTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            presentationModel.onFocusOutVolumeTextField(oldValue, newValue, volumeTextField.getText());
-            volumeTextField.setText(presentationModel.volume.get());
-        });
-
         // warnings
         presentationModel.showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 Popups.openWarningPopup(BSResources.get("shared.warning"),
-                        BSResources.get("createOffer.amountPriceBox.warning.invalidBtcDecimalPlaces"));
+                        BSResources.get("takeOffer.amountPriceBox.warning.invalidBtcDecimalPlaces"));
                 presentationModel.showWarningInvalidBtcDecimalPlaces.set(false);
             }
         });
 
-        presentationModel.showWarningInvalidFiatDecimalPlaces.addListener((o, oldValue, newValue) -> {
-            if (newValue) {
-                Popups.openWarningPopup(BSResources.get("shared.warning"),
-                        BSResources.get("createOffer.amountPriceBox.warning.invalidFiatDecimalPlaces"));
-                presentationModel.showWarningInvalidFiatDecimalPlaces.set(false);
-            }
-        });
-
-        presentationModel.showWarningAdjustedVolume.addListener((o, oldValue, newValue) -> {
-            if (newValue) {
-                Popups.openWarningPopup(BSResources.get("shared.warning"),
-                        BSResources.get("createOffer.amountPriceBox.warning.adjustedVolume"));
-                presentationModel.showWarningAdjustedVolume.set(false);
-                volumeTextField.setText(presentationModel.volume.get());
-            }
-        });
-
-        presentationModel.requestPlaceOfferErrorMessage.addListener((o, oldValue, newValue) -> {
+        presentationModel.requestTakeOfferErrorMessage.addListener((o, oldValue, newValue) -> {
             if (newValue != null) {
                 Popups.openErrorPopup(BSResources.get("shared.error"),
-                        BSResources.get("createOffer.amountPriceBox.error.message",
-                                presentationModel.requestPlaceOfferErrorMessage.get()));
+                        BSResources.get("takeOffer.amountPriceBox.error.message",
+                                presentationModel.requestTakeOfferErrorMessage.get()));
             }
         });
 
@@ -347,9 +326,9 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
                     }
                 });
 
-                Popups.openInfo(BSResources.get("createOffer.success.info",
+                Popups.openInfo(BSResources.get("takeOffer.success.info",
                                 presentationModel.transactionId.get()),
-                        BSResources.get("createOffer.success.headline"),
+                        BSResources.get("takeOffer.success.headline"),
                         actions);
             }
         });
@@ -357,49 +336,17 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
     private void setupBindings() {
         amountBtcLabel.textProperty().bind(presentationModel.btcCode);
-        priceFiatLabel.textProperty().bind(presentationModel.fiatCode);
-        volumeFiatLabel.textProperty().bind(presentationModel.fiatCode);
-        minAmountBtcLabel.textProperty().bind(presentationModel.btcCode);
-
-        priceDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                        BSResources.get("createOffer.amountPriceBox.priceDescription",
-                                presentationModel.fiatCode.get()),
-                presentationModel.fiatCode));
-        volumeDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                        BSResources.get("createOffer.amountPriceBox.volumeDescription",
-                                presentationModel.fiatCode.get()),
-                presentationModel.fiatCode));
-
-        buyLabel.textProperty().bind(presentationModel.directionLabel);
-
         amountTextField.textProperty().bindBidirectional(presentationModel.amount);
-        minAmountTextField.textProperty().bindBidirectional(presentationModel.minAmount);
-        priceTextField.textProperty().bindBidirectional(presentationModel.price);
         volumeTextField.textProperty().bindBidirectional(presentationModel.volume);
-
         totalToPayTextField.textProperty().bind(presentationModel.totalToPay);
-
         addressTextField.amountAsCoinProperty().bind(presentationModel.totalToPayAsCoin);
-        addressTextField.paymentLabelProperty().bind(presentationModel.paymentLabel);
-        addressTextField.addressProperty().bind(presentationModel.addressAsString);
-
-        bankAccountTypeTextField.textProperty().bind(presentationModel.bankAccountType);
-        bankAccountCurrencyTextField.textProperty().bind(presentationModel.bankAccountCurrency);
-        bankAccountCountyTextField.textProperty().bind(presentationModel.bankAccountCounty);
-
-        acceptedCountriesTextField.textProperty().bind(presentationModel.acceptedCountries);
-        acceptedLanguagesTextField.textProperty().bind(presentationModel.acceptedLanguages);
-        acceptedArbitratorsTextField.textProperty().bind(presentationModel.acceptedArbitrators);
 
         // Validation
         amountTextField.validationResultProperty().bind(presentationModel.amountValidationResult);
-        minAmountTextField.validationResultProperty().bind(presentationModel.minAmountValidationResult);
-        priceTextField.validationResultProperty().bind(presentationModel.priceValidationResult);
-        volumeTextField.validationResultProperty().bind(presentationModel.volumeValidationResult);
 
         // buttons
-        placeOfferButton.visibleProperty().bind(presentationModel.isPlaceOfferButtonVisible);
-        placeOfferButton.disableProperty().bind(presentationModel.isPlaceOfferButtonDisabled);
+        takeOfferButton.visibleProperty().bind(presentationModel.isTakeOfferButtonVisible);
+        takeOfferButton.disableProperty().bind(presentationModel.isTakeOfferButtonDisabled);
     }
 
     private void showDetailsScreen() {
@@ -408,10 +355,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.layout();
 
-        if (!advancedScreenInited) {
-            initEditIcons();
-            advancedScreenInited = true;
-        }
+        advancedScreenInited = !advancedScreenInited;
 
         toggleDetailsScreen(true);
     }
@@ -436,13 +380,10 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         showDetailsPane.setVisible(visible);
 
         acceptedCountriesLabel.setVisible(visible);
-        acceptedCountriesLabelIcon.setVisible(visible);
         acceptedCountriesTextField.setVisible(visible);
         acceptedLanguagesLabel.setVisible(visible);
-        acceptedLanguagesLabelIcon.setVisible(visible);
         acceptedLanguagesTextField.setVisible(visible);
         acceptedArbitratorsLabel.setVisible(visible);
-        acceptedArbitratorsLabelIcon.setVisible(visible);
         acceptedArbitratorsTextField.setVisible(visible);
 
         bankAccountTypeLabel.setVisible(visible);
@@ -453,23 +394,6 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         bankAccountCountyTextField.setVisible(visible);
 
         advancedInfoDisplay.setVisible(visible);
-    }
-
-    private void initEditIcons() {
-        acceptedCountriesLabelIcon.setId("clickable-icon");
-        AwesomeDude.setIcon(acceptedCountriesLabelIcon, AwesomeIcon.EDIT_SIGN);
-        Tooltip.install(acceptedCountriesLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
-        acceptedCountriesLabelIcon.setOnMouseClicked(e -> openAccountSettings());
-
-        acceptedLanguagesLabelIcon.setId("clickable-icon");
-        AwesomeDude.setIcon(acceptedLanguagesLabelIcon, AwesomeIcon.EDIT_SIGN);
-        Tooltip.install(acceptedLanguagesLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
-        acceptedLanguagesLabelIcon.setOnMouseClicked(e -> openAccountSettings());
-
-        acceptedArbitratorsLabelIcon.setId("clickable-icon");
-        AwesomeDude.setIcon(acceptedArbitratorsLabelIcon, AwesomeIcon.EDIT_SIGN);
-        Tooltip.install(acceptedArbitratorsLabelIcon, new Tooltip(BSResources.get("shared.openSettings")));
-        acceptedArbitratorsLabelIcon.setOnMouseClicked(e -> openAccountSettings());
     }
 
     private void setupTotalToPayInfoIconLabel() {
@@ -491,18 +415,21 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         infoGridPane.setPadding(new Insets(10, 10, 10, 10));
 
         addPayInfoEntry(infoGridPane, 0,
-                presentationModel.collateralLabel.get(),
+                BSResources.get("takeOffer.fundsBox.amount"),
+                presentationModel.amount.get());
+        addPayInfoEntry(infoGridPane, 1,
+                presentationModel.getCollateralLabel(),
                 presentationModel.collateral.get());
-        addPayInfoEntry(infoGridPane, 1, BSResources.get("createOffer.fundsBox.offerFee"),
-                presentationModel.offerFee.get());
-        addPayInfoEntry(infoGridPane, 2, BSResources.get("createOffer.fundsBox.networkFee"),
-                presentationModel.networkFee.get());
+        addPayInfoEntry(infoGridPane, 2, BSResources.get("takeOffer.fundsBox.offerFee"),
+                presentationModel.getOfferFee());
+        addPayInfoEntry(infoGridPane, 3, BSResources.get("takeOffer.fundsBox.networkFee"),
+                presentationModel.getNetworkFee());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
         separator.setStyle("-fx-background: #666;");
-        GridPane.setConstraints(separator, 1, 3);
+        GridPane.setConstraints(separator, 1, 4);
         infoGridPane.getChildren().add(separator);
-        addPayInfoEntry(infoGridPane, 4, BSResources.get("createOffer.fundsBox.total"),
+        addPayInfoEntry(infoGridPane, 5, BSResources.get("takeOffer.fundsBox.total"),
                 presentationModel.totalToPay.get());
         totalToPayInfoPopover = new PopOver(infoGridPane);
         if (totalToPayInfoIconLabel.getScene() != null) {

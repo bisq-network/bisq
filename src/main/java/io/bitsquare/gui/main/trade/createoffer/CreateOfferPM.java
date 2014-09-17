@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 import static io.bitsquare.gui.util.BSFormatter.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-public class CreateOfferPM extends PresentationModel<CreateOfferModel> {
+class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferPM.class);
 
     private final BtcValidator btcValidator;
@@ -154,7 +154,7 @@ public class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // setOrderBookFilter is a one time call
-    void setOrderBookFilter(@NotNull OrderBookInfo orderBookInfo) {
+    void setOrderBookInfo(@NotNull OrderBookInfo orderBookInfo) {
         model.setDirection(orderBookInfo.getDirection());
         directionLabel.set(model.getDirection() == Direction.BUY ? BSResources.get("shared.buy") : BSResources.get
                 ("shared.sell"));
@@ -176,7 +176,7 @@ public class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void onPlaceOffer() {
+    void placeOffer() {
         model.requestPlaceOfferErrorMessage.set(null);
         model.requestPlaceOfferSuccess.set(false);
 

@@ -187,7 +187,7 @@ public class MainViewCB extends ViewCB<MainPM> {
             icon.setId("image-alert-round");
             final Button alertButton = new Button("", icon);
             alertButton.setId("nav-alert-button");
-            alertButton.relocate(36, 19);
+            alertButton.relocate(30, 9);
             alertButton.setOnAction((e) ->
                     navigation.navigationTo(Navigation.Item.MAIN,
                             Navigation.Item.ORDERS,

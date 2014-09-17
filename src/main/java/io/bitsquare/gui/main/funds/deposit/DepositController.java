@@ -50,8 +50,8 @@ public class DepositController extends CachedViewController {
     private final WalletFacade walletFacade;
     private ObservableList<DepositListItem> addressList;
 
-    @FXML private TableView<DepositListItem> tableView;
-    @FXML private TableColumn<String, DepositListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
+    @FXML TableView<DepositListItem> tableView;
+    @FXML TableColumn<String, DepositListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
             confidenceColumn;
 
 

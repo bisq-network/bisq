@@ -65,11 +65,11 @@ public class WithdrawalController extends CachedViewController {
     private final WalletFacade walletFacade;
     private ObservableList<WithdrawalListItem> addressList;
 
-    @FXML private TableView<WithdrawalListItem> tableView;
-    @FXML private TableColumn<String, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
+    @FXML TableView<WithdrawalListItem> tableView;
+    @FXML TableColumn<String, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
             confidenceColumn;
-    @FXML private Button addNewAddressButton;
-    @FXML private TextField withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField;
+    @FXML Button addNewAddressButton;
+    @FXML TextField withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

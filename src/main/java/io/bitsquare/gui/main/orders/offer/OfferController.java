@@ -48,9 +48,9 @@ public class OfferController extends CachedViewController {
     private final TradeManager tradeManager;
     private ObservableList<OfferListItem> offerListItems;
 
-    @FXML private TableColumn<String, OfferListItem> offerIdColumn, dateColumn, amountColumn, priceColumn,
+    @FXML TableColumn<String, OfferListItem> offerIdColumn, dateColumn, amountColumn, priceColumn,
             volumeColumn, removeColumn;
-    @FXML private TableView<OfferListItem> offerTable;
+    @FXML TableView<OfferListItem> offerTable;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

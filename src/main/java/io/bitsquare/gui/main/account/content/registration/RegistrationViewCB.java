@@ -55,10 +55,10 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
 
     private OverlayManager overlayManager;
 
-    @FXML private TextField feeTextField;
-    @FXML private AddressTextField addressTextField;
-    @FXML private BalanceTextField balanceTextField;
-    @FXML private Button payButton;
+    @FXML TextField feeTextField;
+    @FXML AddressTextField addressTextField;
+    @FXML BalanceTextField balanceTextField;
+    @FXML Button payButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -65,8 +65,8 @@ public class ArbitratorBrowserController extends CachedViewController implements
     private ArbitratorProfileController arbitratorProfileController;
     private int index = -1;
 
-    @FXML private Button prevButton, nextButton, selectButton, closeButton;
-    @FXML private Pane arbitratorProfile;
+    @FXML Button prevButton, nextButton, selectButton, closeButton;
+    @FXML Pane arbitratorProfile;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor

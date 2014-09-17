@@ -80,17 +80,17 @@ public class PendingTradeController extends CachedViewController {
 
     private ConfidenceDisplay confidenceDisplay;
 
-    @FXML private TableView openTradesTable;
-    @FXML private TableColumn<String, PendingTradesListItem> directionColumn, countryColumn, bankAccountTypeColumn,
+    @FXML TableView openTradesTable;
+    @FXML TableColumn<String, PendingTradesListItem> directionColumn, countryColumn, bankAccountTypeColumn,
             priceColumn, amountColumn, volumeColumn, statusColumn, selectColumn;
-    @FXML private ConfidenceProgressIndicator progressIndicator;
-    @FXML private Label txTitleLabel, txHeaderLabel, confirmationLabel, txIDCopyIcon, holderNameCopyIcon,
+    @FXML ConfidenceProgressIndicator progressIndicator;
+    @FXML Label txTitleLabel, txHeaderLabel, confirmationLabel, txIDCopyIcon, holderNameCopyIcon,
             primaryBankAccountIDCopyIcon, secondaryBankAccountIDCopyIcon, bankAccountDetailsHeaderLabel,
             bankAccountTypeTitleLabel, holderNameTitleLabel, primaryBankAccountIDTitleLabel,
             secondaryBankAccountIDTitleLabel;
-    @FXML private TextField txTextField, bankAccountTypeTextField, holderNameTextField, primaryBankAccountIDTextField,
+    @FXML TextField txTextField, bankAccountTypeTextField, holderNameTextField, primaryBankAccountIDTextField,
             secondaryBankAccountIDTextField;
-    @FXML private Button bankTransferInitedButton;
+    @FXML Button bankTransferInitedButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

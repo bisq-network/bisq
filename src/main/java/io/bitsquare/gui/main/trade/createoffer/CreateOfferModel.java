@@ -64,7 +64,7 @@ import static io.bitsquare.gui.util.BSFormatter.reduceTo4Decimals;
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
-public class CreateOfferModel extends UIModel {
+class CreateOfferModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferModel.class);
 
     private final TradeManager tradeManager;

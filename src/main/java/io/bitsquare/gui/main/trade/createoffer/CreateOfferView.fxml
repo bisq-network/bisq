@@ -38,7 +38,7 @@
 
         <!--suppress JavaFxUnresolvedFxIdReference -->
         <GridPane fx:id="gridPane" hgap="5.0" vgap="5.0">
-        <padding>
+            <padding>
                 <Insets bottom="-10.0" left="25.0" top="30.0" right="25"/>
             </padding>
 
@@ -195,20 +195,6 @@
             -->
             <TitledGroupBg fx:id="showDetailsPane" text="%createOffer.advancedBox.title" GridPane.columnSpan="3"
                            GridPane.rowIndex="9" GridPane.rowSpan="7" visible="false"/>
-
-            <!--     <Pane fx:id="showDetailsPane" id="form-group-background-active" GridPane.columnSpan="3"
-                     GridPane.rowIndex="9" GridPane.rowSpan="7" visible="false">
-                   <GridPane.margin>
-                       <Insets right="-10" bottom="-10" left="-10" top="-10"/>
-                   </GridPane.margin>
-                   <Label fx:id="showDetailsTitleLabel" text="%createOffer.advancedBox.title" id="form-group-title-active"
-                          layoutX="8"
-                          layoutY="-8">
-                       <padding>
-                           <Insets left="5" right="7"/>
-                       </padding>
-                   </Label>
-               </Pane> -->
 
             <HBox GridPane.rowIndex="9" spacing="4" alignment="CENTER_RIGHT">
                 <Label fx:id="acceptedCountriesLabel" text="%createOffer.advancedBox.countries" visible="false"/>

@@ -57,11 +57,11 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
 
     private static final Logger log = LoggerFactory.getLogger(RestrictionsViewCB.class);
 
-    @FXML private ListView languagesListView, countriesListView, arbitratorsListView;
-    @FXML private ComboBox<Locale> languageComboBox;
-    @FXML private ComboBox<Region> regionComboBox;
-    @FXML private ComboBox<Country> countryComboBox;
-    @FXML private Button completedButton, addAllEuroCountriesButton;
+    @FXML ListView languagesListView, countriesListView, arbitratorsListView;
+    @FXML ComboBox<Locale> languageComboBox;
+    @FXML ComboBox<Region> regionComboBox;
+    @FXML ComboBox<Country> countryComboBox;
+    @FXML Button completedButton, addAllEuroCountriesButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -85,20 +85,20 @@ public class ArbitratorRegistrationController extends CachedViewController {
     private Arbitrator.ID_TYPE idType;
     private ConfidenceDisplay confidenceDisplay;
 
-    @FXML private Accordion accordion;
-    @FXML private TitledPane profileTitledPane, payCollateralTitledPane;
-    @FXML private Button saveProfileButton, paymentDoneButton;
-    @FXML private Label nameLabel, infoLabel, copyIcon, confirmationLabel;
-    @FXML private ComboBox<Locale> languageComboBox;
-    @FXML private ComboBox<Arbitrator.ID_TYPE> idTypeComboBox;
-    @FXML private ComboBox<Arbitrator.METHOD> methodsComboBox;
-    @FXML private ComboBox<Arbitrator.ID_VERIFICATION> idVerificationsComboBox;
-    @FXML private TextField nameTextField, idTypeTextField, languagesTextField, maxTradeVolumeTextField,
+    @FXML Accordion accordion;
+    @FXML TitledPane profileTitledPane, payCollateralTitledPane;
+    @FXML Button saveProfileButton, paymentDoneButton;
+    @FXML Label nameLabel, infoLabel, copyIcon, confirmationLabel;
+    @FXML ComboBox<Locale> languageComboBox;
+    @FXML ComboBox<Arbitrator.ID_TYPE> idTypeComboBox;
+    @FXML ComboBox<Arbitrator.METHOD> methodsComboBox;
+    @FXML ComboBox<Arbitrator.ID_VERIFICATION> idVerificationsComboBox;
+    @FXML TextField nameTextField, idTypeTextField, languagesTextField, maxTradeVolumeTextField,
             passiveServiceFeeTextField, minPassiveServiceFeeTextField, arbitrationFeeTextField,
             minArbitrationFeeTextField, methodsTextField, idVerificationsTextField, webPageTextField,
             collateralAddressTextField, balanceTextField;
-    @FXML private TextArea descriptionTextArea;
-    @FXML private ConfidenceProgressIndicator progressIndicator;
+    @FXML TextArea descriptionTextArea;
+    @FXML ConfidenceProgressIndicator progressIndicator;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

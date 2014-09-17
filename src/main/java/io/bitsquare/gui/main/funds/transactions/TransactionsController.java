@@ -46,10 +46,10 @@ public class TransactionsController extends CachedViewController {
     private final WalletFacade walletFacade;
     private ObservableList<TransactionsListItem> transactionsListItems;
 
-    @FXML private TableView<TransactionsListItem> tableView;
-    @FXML private TableColumn<String, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn,
+    @FXML TableView<TransactionsListItem> tableView;
+    @FXML TableColumn<String, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn,
             confidenceColumn;
-    @FXML private Button addNewAddressButton;
+    @FXML Button addNewAddressButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

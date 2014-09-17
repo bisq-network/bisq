@@ -22,7 +22,7 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferViewCB;
 import io.bitsquare.gui.main.trade.orderbook.OrderBookViewCB;
-import io.bitsquare.gui.main.trade.takeoffer.TakeOfferController;
+import io.bitsquare.gui.main.trade.takeoffer.TakeOfferViewCB;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.util.ViewLoader;
 
@@ -48,8 +48,9 @@ public class TradeViewCB extends CachedViewCB {
     private final OrderBookInfo orderBookInfo = new OrderBookInfo();
     private OrderBookViewCB orderBookViewCB;
     private CreateOfferViewCB createOfferViewCB;
-    private TakeOfferController takeOfferController;
+    private TakeOfferViewCB takeOfferViewCB;
     private Node createOfferView;
+    private Node takeOfferView;
     private Navigation navigation;
     private Navigation.Listener listener;
     private Navigation.Item navigationItem;
@@ -170,21 +171,21 @@ public class TradeViewCB extends CachedViewCB {
                 log.error(e.getMessage());
             }
         }
-        else if (navigationItem == Navigation.Item.TAKE_OFFER && takeOfferController == null) {
+        else if (navigationItem == Navigation.Item.TAKE_OFFER && takeOfferViewCB == null &&
+                orderBookInfo.getOffer() != null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
-            ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
+            ViewLoader loader = new ViewLoader(getClass().getResource(Navigation.Item.TAKE_OFFER.getFxmlUrl()), false);
             try {
-                final Parent view = loader.load();
-                takeOfferController = loader.getController();
-                takeOfferController.setParentController(this);
-                takeOfferController.initWithData(orderBookInfo);
+                takeOfferView = loader.load();
+                takeOfferViewCB = loader.getController();
+                takeOfferViewCB.setParent(this);
+                takeOfferViewCB.initWithOrderBookInfo(orderBookInfo);
                 final Tab tab = new Tab("Take offer");
-                tab.setContent(view);
+                tab.setContent(takeOfferView);
                 tabPane.getTabs().add(tab);
                 tabPane.getSelectionModel().select(tab);
-
-                return takeOfferController;
+                return takeOfferViewCB;
             } catch (IOException e) {
                 log.error(e.getMessage());
             }
@@ -202,7 +203,7 @@ public class TradeViewCB extends CachedViewCB {
 
     //TODO takeOfferController is not updated yet to new UI pattern
     public void onTakeOfferViewRemoved() {
-        takeOfferController = null;
+        takeOfferViewCB = null;
     }
 
 

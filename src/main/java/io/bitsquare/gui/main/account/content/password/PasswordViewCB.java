@@ -40,9 +40,9 @@ public class PasswordViewCB extends CachedViewCB<PasswordPM> implements ContextA
 
     private static final Logger log = LoggerFactory.getLogger(PasswordViewCB.class);
 
-    @FXML private HBox buttonsHBox;
-    @FXML private Button saveButton, skipButton;
-    @FXML private PasswordField oldPasswordField, passwordField, repeatedPasswordField;
+    @FXML HBox buttonsHBox;
+    @FXML Button saveButton, skipButton;
+    @FXML PasswordField oldPasswordField, passwordField, repeatedPasswordField;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

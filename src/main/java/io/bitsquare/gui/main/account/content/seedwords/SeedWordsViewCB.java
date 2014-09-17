@@ -40,8 +40,8 @@ public class SeedWordsViewCB extends CachedViewCB<SeedWordsPM> implements Contex
 
     private static final Logger log = LoggerFactory.getLogger(SeedWordsViewCB.class);
 
-    @FXML private Button completedButton;
-    @FXML private TextArea seedWordsTextArea;
+    @FXML Button completedButton;
+    @FXML TextArea seedWordsTextArea;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

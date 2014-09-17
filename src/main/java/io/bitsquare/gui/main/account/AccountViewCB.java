@@ -30,6 +30,7 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -41,9 +42,10 @@ class AccountViewCB extends CachedViewCB<AccountPM> {
 
     private static final Logger log = LoggerFactory.getLogger(AccountViewCB.class);
 
-    Tab tab;
     private Navigation navigation;
     private Navigation.Listener listener;
+
+    @FXML Tab tab;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
