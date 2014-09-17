@@ -327,7 +327,7 @@ public class MainViewCB extends ViewCB<MainPM> {
 
         addBankAccountComboBox(rightNavPane);
 
-        settingsButton = addNavButton(rightNavPane, "Settings", Navigation.Item.SETTINGS);
+        settingsButton = addNavButton(rightNavPane, "Preferences", Navigation.Item.SETTINGS);
         accountButton = addNavButton(rightNavPane, "Account", Navigation.Item.ACCOUNT);
 
         onMainNavigationAdded();

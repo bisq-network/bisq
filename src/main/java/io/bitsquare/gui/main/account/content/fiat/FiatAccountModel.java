@@ -44,7 +44,7 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FiatAccountModel extends UIModel {
+class FiatAccountModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(FiatAccountModel.class);
 
     private final User user;

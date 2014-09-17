@@ -25,7 +25,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountModel extends UIModel {
+class AccountModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(AccountModel.class);
 
     private final User user;
@@ -73,7 +73,7 @@ public class AccountModel extends UIModel {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean getNeedRegistration() {
+    boolean getNeedRegistration() {
         return user.getAccountId() == null;
 
     }

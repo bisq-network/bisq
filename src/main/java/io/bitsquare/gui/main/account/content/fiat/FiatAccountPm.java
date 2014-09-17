@@ -43,7 +43,7 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FiatAccountPm extends PresentationModel<FiatAccountModel> {
+class FiatAccountPm extends PresentationModel<FiatAccountModel> {
     private static final Logger log = LoggerFactory.getLogger(FiatAccountPm.class);
 
     private final BankAccountNumberValidator bankAccountNumberValidator;

@@ -45,7 +45,7 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RestrictionsModel extends UIModel {
+class RestrictionsModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(RestrictionsModel.class);
 
     private final User user;
@@ -53,12 +53,12 @@ public class RestrictionsModel extends UIModel {
     private final Persistence persistence;
     private final MessageFacade messageFacade;
 
-    public final ObservableList<Locale> languageList = FXCollections.observableArrayList();
-    public final ObservableList<Country> countryList = FXCollections.observableArrayList();
-    public final ObservableList<Arbitrator> arbitratorList = FXCollections.observableArrayList();
-    public final ObservableList<Locale> allLanguages = FXCollections.observableArrayList(LanguageUtil
+    final ObservableList<Locale> languageList = FXCollections.observableArrayList();
+    final ObservableList<Country> countryList = FXCollections.observableArrayList();
+    final ObservableList<Arbitrator> arbitratorList = FXCollections.observableArrayList();
+    final ObservableList<Locale> allLanguages = FXCollections.observableArrayList(LanguageUtil
             .getAllLanguageLocales());
-    public final ObservableList<Region> allRegions = FXCollections.observableArrayList(CountryUtil.getAllRegions());
+    final ObservableList<Region> allRegions = FXCollections.observableArrayList(CountryUtil.getAllRegions());
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -125,28 +125,28 @@ public class RestrictionsModel extends UIModel {
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
+    ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
         return FXCollections.observableArrayList(CountryUtil.getAllCountriesFor(selectedRegion));
     }
 
-    public void updateArbitratorList() {
+    void updateArbitratorList() {
         arbitratorList.setAll(settings.getAcceptedArbitrators());
     }
 
-    public void addLanguage(Locale locale) {
+    void addLanguage(Locale locale) {
         if (locale != null && !languageList.contains(locale)) {
             languageList.add(locale);
             settings.addAcceptedLanguageLocale(locale);
         }
     }
 
-    public void removeLanguage(Locale locale) {
+    void removeLanguage(Locale locale) {
         languageList.remove(locale);
         settings.removeAcceptedLanguageLocale(locale);
         saveSettings();
     }
 
-    public void addCountry(Country country) {
+    void addCountry(Country country) {
         if (!countryList.contains(country) && country != null) {
             countryList.add(country);
             settings.addAcceptedCountry(country);
@@ -154,7 +154,7 @@ public class RestrictionsModel extends UIModel {
         }
     }
 
-    public ObservableList<Country> getListWithAllEuroCountries() {
+    ObservableList<Country> getListWithAllEuroCountries() {
         // TODO use Set instead of List
         // In addAcceptedCountry there is a check to no add duplicates, so it works correctly for now
         CountryUtil.getAllEuroCountries().stream().forEach(settings::addAcceptedCountry);
@@ -163,13 +163,13 @@ public class RestrictionsModel extends UIModel {
         return countryList;
     }
 
-    public void removeCountry(Country country) {
+    void removeCountry(Country country) {
         countryList.remove(country);
         settings.removeAcceptedCountry(country);
         saveSettings();
     }
 
-    public void removeArbitrator(Arbitrator arbitrator) {
+    void removeArbitrator(Arbitrator arbitrator) {
         arbitratorList.remove(arbitrator);
         settings.removeAcceptedArbitrator(arbitrator);
         saveSettings();

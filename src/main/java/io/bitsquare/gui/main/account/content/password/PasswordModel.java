@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PasswordModel extends UIModel {
+class PasswordModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(PasswordModel.class);
 
 
@@ -70,7 +70,7 @@ public class PasswordModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @SuppressWarnings("EmptyMethod")
-    public void savePassword(String password) {
+    void savePassword(String password) {
         //TODO Implement password encryption for wallet
     }
 

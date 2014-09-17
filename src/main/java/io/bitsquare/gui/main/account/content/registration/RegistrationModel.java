@@ -45,7 +45,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RegistrationModel extends UIModel {
+class RegistrationModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(RegistrationModel.class);
 
     private final WalletFacade walletFacade;
@@ -55,9 +55,9 @@ public class RegistrationModel extends UIModel {
     private String transactionId;
     private AddressEntry addressEntry;
 
-    public final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
-    public final BooleanProperty payFeeSuccess = new SimpleBooleanProperty();
-    public final StringProperty payFeeErrorMessage = new SimpleStringProperty();
+    final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
+    final BooleanProperty payFeeSuccess = new SimpleBooleanProperty();
+    final StringProperty payFeeErrorMessage = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +116,7 @@ public class RegistrationModel extends UIModel {
     // Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void payFee() {
+    void payFee() {
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(@Nullable Transaction transaction) {
@@ -151,19 +151,19 @@ public class RegistrationModel extends UIModel {
     // Getters 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public WalletFacade getWalletFacade() {
+    WalletFacade getWalletFacade() {
         return walletFacade;
     }
 
-    public Coin getFeeAsCoin() {
+    Coin getFeeAsCoin() {
         return FeePolicy.REGISTRATION_FEE;
     }
 
-    public String getTransactionId() {
+    String getTransactionId() {
         return transactionId;
     }
 
-    public AddressEntry getAddressEntry() {
+    AddressEntry getAddressEntry() {
         return addressEntry;
     }
 

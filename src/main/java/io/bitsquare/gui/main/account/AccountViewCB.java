@@ -37,11 +37,11 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountViewCB extends CachedViewCB<AccountPM> {
+class AccountViewCB extends CachedViewCB<AccountPM> {
 
     private static final Logger log = LoggerFactory.getLogger(AccountViewCB.class);
 
-    public Tab tab;
+    Tab tab;
     private Navigation navigation;
     private Navigation.Listener listener;
 
@@ -62,7 +62,6 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         listener = navigationItems -> {

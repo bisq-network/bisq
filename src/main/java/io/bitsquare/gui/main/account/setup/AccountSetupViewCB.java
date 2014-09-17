@@ -48,7 +48,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements MultiStepNavigation {
+class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements MultiStepNavigation {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSetupViewCB.class);
 
@@ -130,9 +130,10 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI handlers
+    // MultiStepNavigation implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public void nextStep(ViewCB<? extends PresentationModel> childView) {
         if (childView instanceof SeedWordsViewCB) {
             seedWords.onCompleted();

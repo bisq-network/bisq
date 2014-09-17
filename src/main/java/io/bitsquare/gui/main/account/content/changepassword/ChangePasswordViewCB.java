@@ -36,7 +36,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ChangePasswordViewCB extends CachedViewCB<ChangePasswordPM> implements ContextAware {
+class ChangePasswordViewCB extends CachedViewCB<ChangePasswordPM> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(ChangePasswordViewCB.class);
 
@@ -89,7 +89,7 @@ public class ChangePasswordViewCB extends CachedViewCB<ChangePasswordPM> impleme
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Override 
+    // ContextAware implementation 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

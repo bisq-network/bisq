@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.home;
 
 import io.bitsquare.BitSquare;
-import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.arbitrators.registration.ArbitratorRegistrationController;
 import io.bitsquare.util.ViewLoader;
@@ -36,29 +36,33 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 // home is just hosting the arbiters buttons yet, but that's just for dev, not clear yet what will be in home, 
-// probably overview, event history, new, charts,... -> low prio
-public class HomeController extends CachedViewController {
+// probably overview, event history, news, charts,... -> low prio
+public class HomeController extends CachedViewCB {
     private ArbitratorRegistrationController arbitratorRegistrationController;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void terminate() {
         super.terminate();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();
@@ -70,9 +74,9 @@ public class HomeController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Initializable loadViewAndGetChildController(Navigation.Item item) {
+    protected Initializable loadView(Navigation.Item navigationItem) {
         // don't use caching here, cause exc. -> need to investigate and is rarely called so no caching is better
-        final ViewLoader loader = new ViewLoader(getClass().getResource(item.getFxmlUrl()), false);
+        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
         try {
             final Parent view = loader.load();
             arbitratorRegistrationController = loader.getController();
@@ -107,12 +111,12 @@ public class HomeController extends CachedViewController {
 
     @FXML
     public void onArbitratorRegistration() {
-        loadViewAndGetChildController(Navigation.Item.ARBITRATOR_REGISTRATION);
+        loadView(Navigation.Item.ARBITRATOR_REGISTRATION);
     }
 
     @FXML
     public void onArbitratorEdit() {
-        loadViewAndGetChildController(Navigation.Item.ARBITRATOR_REGISTRATION);
+        loadView(Navigation.Item.ARBITRATOR_REGISTRATION);
         arbitratorRegistrationController.setEditMode(true);
     }
 

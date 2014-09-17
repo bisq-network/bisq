@@ -45,7 +45,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
+class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSettingsViewCB.class);
 

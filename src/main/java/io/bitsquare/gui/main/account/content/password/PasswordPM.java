@@ -31,16 +31,16 @@ import javafx.beans.property.StringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PasswordPM extends PresentationModel<PasswordModel> {
+class PasswordPM extends PresentationModel<PasswordModel> {
     private static final Logger log = LoggerFactory.getLogger(PasswordPM.class);
 
     private final PasswordValidator passwordValidator;
 
     private String errorMessage;
 
-    public final StringProperty passwordField = new SimpleStringProperty();
-    public final StringProperty repeatedPasswordField = new SimpleStringProperty();
-    public final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty(true);
+    final StringProperty passwordField = new SimpleStringProperty();
+    final StringProperty repeatedPasswordField = new SimpleStringProperty();
+    final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty(true);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -89,7 +89,7 @@ public class PasswordPM extends PresentationModel<PasswordModel> {
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean requestSavePassword() {
+    boolean requestSavePassword() {
         if (validate()) {
             model.savePassword(passwordField.get());
             return true;
@@ -97,7 +97,7 @@ public class PasswordPM extends PresentationModel<PasswordModel> {
         return false;
     }
 
-    public String getErrorMessage() {
+    String getErrorMessage() {
         return errorMessage;
     }
 

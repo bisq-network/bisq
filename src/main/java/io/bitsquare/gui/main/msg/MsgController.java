@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.msg;
 
-import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 
 import java.net.URL;
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 
-public class MsgController extends CachedViewController {
+public class MsgController extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(MsgController.class);
 
 
@@ -76,8 +76,8 @@ public class MsgController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Initializable loadViewAndGetChildController(Navigation.Item item) {
-        return null;
+    protected Initializable loadView(Navigation.Item navigationItem) {
+        return super.loadView(navigationItem);
     }
 
 

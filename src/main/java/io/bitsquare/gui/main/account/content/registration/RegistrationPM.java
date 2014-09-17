@@ -38,15 +38,15 @@ import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.gui.util.BSFormatter.formatCoinWithCode;
 
-public class RegistrationPM extends PresentationModel<RegistrationModel> {
+class RegistrationPM extends PresentationModel<RegistrationModel> {
     private static final Logger log = LoggerFactory.getLogger(RegistrationPM.class);
 
-    public final BooleanProperty isPayButtonDisabled = new SimpleBooleanProperty(true);
-    public final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
-    public final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
+    final BooleanProperty isPayButtonDisabled = new SimpleBooleanProperty(true);
+    final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
+    final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
 
     // That is needed for the addressTextField
-    public final ObjectProperty<Address> address = new SimpleObjectProperty<>();
+    final ObjectProperty<Address> address = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -106,7 +106,7 @@ public class RegistrationPM extends PresentationModel<RegistrationModel> {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void payFee() {
+    void payFee() {
         model.payFeeErrorMessage.set(null);
         model.payFeeSuccess.set(false);
 
@@ -120,27 +120,27 @@ public class RegistrationPM extends PresentationModel<RegistrationModel> {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public WalletFacade getWalletFacade() {
+    WalletFacade getWalletFacade() {
         return model.getWalletFacade();
     }
 
-    public Coin getFeeAsCoin() {
+    Coin getFeeAsCoin() {
         return model.getFeeAsCoin();
     }
 
-    public String getAddressAsString() {
+    String getAddressAsString() {
         return model.getAddressEntry() != null ? model.getAddressEntry().getAddress().toString() : "";
     }
 
-    public String getPaymentLabel() {
+    String getPaymentLabel() {
         return BSResources.get("Bitsquare account registration fee");
     }
 
-    public String getFeeAsString() {
+    String getFeeAsString() {
         return formatCoinWithCode(model.getFeeAsCoin());
     }
 
-    public String getTransactionId() {
+    String getTransactionId() {
         return model.getTransactionId();
     }
 

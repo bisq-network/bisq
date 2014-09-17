@@ -28,10 +28,10 @@ import javafx.beans.property.StringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SeedWordsPM extends PresentationModel<SeedWordsModel> {
+class SeedWordsPM extends PresentationModel<SeedWordsModel> {
     private static final Logger log = LoggerFactory.getLogger(SeedWordsPM.class);
 
-    public final StringProperty seedWords = new SimpleStringProperty();
+    final StringProperty seedWords = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

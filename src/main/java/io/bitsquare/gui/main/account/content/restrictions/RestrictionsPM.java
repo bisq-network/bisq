@@ -33,10 +33,10 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RestrictionsPM extends PresentationModel<RestrictionsModel> {
+class RestrictionsPM extends PresentationModel<RestrictionsModel> {
     private static final Logger log = LoggerFactory.getLogger(RestrictionsPM.class);
 
-    public final BooleanProperty doneButtonDisable = new SimpleBooleanProperty(true);
+    final BooleanProperty doneButtonDisable = new SimpleBooleanProperty(true);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -78,32 +78,32 @@ public class RestrictionsPM extends PresentationModel<RestrictionsModel> {
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addLanguage(Locale locale) {
+    void addLanguage(Locale locale) {
         model.addLanguage(locale);
         updateDoneButtonDisableState();
     }
 
-    public void removeLanguage(Locale locale) {
+    void removeLanguage(Locale locale) {
         model.removeLanguage(locale);
         updateDoneButtonDisableState();
     }
 
-    public void addCountry(Country country) {
+    void addCountry(Country country) {
         model.addCountry(country);
         updateDoneButtonDisableState();
     }
 
-    public void removeCountry(Country country) {
+    void removeCountry(Country country) {
         model.removeCountry(country);
         updateDoneButtonDisableState();
     }
 
-    public void removeArbitrator(Arbitrator arbitrator) {
+    void removeArbitrator(Arbitrator arbitrator) {
         model.removeArbitrator(arbitrator);
         updateDoneButtonDisableState();
     }
 
-    public void updateArbitratorList() {
+    void updateArbitratorList() {
         model.updateArbitratorList();
         updateDoneButtonDisableState();
     }
@@ -113,31 +113,31 @@ public class RestrictionsPM extends PresentationModel<RestrictionsModel> {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<Country> getListWithAllEuroCountries() {
+    ObservableList<Country> getListWithAllEuroCountries() {
         return model.getListWithAllEuroCountries();
     }
 
-    public ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
+    ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
         return model.getAllCountriesFor(selectedRegion);
     }
 
-    public ObservableList<Locale> getLanguageList() {
+    ObservableList<Locale> getLanguageList() {
         return model.languageList;
     }
 
-    public ObservableList<Region> getAllRegions() {
+    ObservableList<Region> getAllRegions() {
         return model.allRegions;
     }
 
-    public ObservableList<Locale> getAllLanguages() {
+    ObservableList<Locale> getAllLanguages() {
         return model.allLanguages;
     }
 
-    public ObservableList<Country> getCountryList() {
+    ObservableList<Country> getCountryList() {
         return model.countryList;
     }
 
-    public ObservableList<Arbitrator> getArbitratorList() {
+    ObservableList<Arbitrator> getArbitratorList() {
         return model.arbitratorList;
     }
 

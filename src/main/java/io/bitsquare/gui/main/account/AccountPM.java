@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountPM extends PresentationModel<AccountModel> {
+class AccountPM extends PresentationModel<AccountModel> {
     private static final Logger log = LoggerFactory.getLogger(AccountPM.class);
 
 
@@ -70,7 +70,7 @@ public class AccountPM extends PresentationModel<AccountModel> {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean getNeedRegistration() {
+    boolean getNeedRegistration() {
         return model.getNeedRegistration();
     }
 
