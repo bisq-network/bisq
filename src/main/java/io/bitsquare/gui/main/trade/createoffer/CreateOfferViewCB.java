@@ -29,10 +29,12 @@ import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
-import io.bitsquare.gui.main.trade.OrderBookInfo;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.Direction;
+
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.utils.Fiat;
 
 import java.net.URL;
 
@@ -147,7 +149,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     public void terminate() {
         super.terminate();
 
-        // Inform parent that we gor removed.
+        // Inform parent that we got removed.
         // Needed to reset disable state of createOfferButton in OrderBookController
         if (closeListener != null)
             closeListener.onClosed();
@@ -158,10 +160,10 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     // Public methods (called form other views/CB)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initWithOrderBookInfo(OrderBookInfo orderBookInfo) {
-        presentationModel.setOrderBookInfo(orderBookInfo);
+    public void initWithData(Direction direction, Coin amount, Fiat price) {
+        presentationModel.initWithData(direction, amount, price);
 
-        if (orderBookInfo.getDirection() == Direction.BUY)
+        if (direction == Direction.BUY)
             imageView.setId("image-buy-large");
         else
             imageView.setId("image-sell-large");

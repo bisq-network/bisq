@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.trade.orderbook;
 
 import io.bitsquare.gui.PresentationModel;
-import io.bitsquare.gui.main.trade.OrderBookInfo;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
@@ -26,6 +25,9 @@ import io.bitsquare.gui.util.validation.OptionalFiatValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
+
+import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.utils.Fiat;
 
 import com.google.inject.Inject;
 
@@ -134,16 +136,21 @@ class OrderBookPM extends PresentationModel<OrderBookModel> {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void setOrderBookInfo(OrderBookInfo orderBookInfo) {
-        model.setOrderBookInfo(orderBookInfo);
-    }
-
     void removeOffer(Offer offer) {
         model.removeOffer(offer);
     }
 
     boolean isTradable(Offer offer) {
         return model.isTradable(offer);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    void setDirection(Direction direction) {
+        model.setDirection(direction);
     }
 
 
@@ -176,7 +183,8 @@ class OrderBookPM extends PresentationModel<OrderBookModel> {
     }
 
     String getAmount(OrderBookListItem item) {
-        return (item != null) ? BSFormatter.formatCoin(item.getOffer().getAmount()) : "";
+        return (item != null) ? BSFormatter.formatCoin(item.getOffer().getAmount()) +
+                " (" + BSFormatter.formatCoin(item.getOffer().getMinAmount()) + ")" : "";
     }
 
     String getPrice(OrderBookListItem item) {
@@ -184,7 +192,8 @@ class OrderBookPM extends PresentationModel<OrderBookModel> {
     }
 
     String getVolume(OrderBookListItem item) {
-        return (item != null) ? BSFormatter.formatFiat(item.getOffer().getOfferVolume()) : "";
+        return (item != null) ? BSFormatter.formatFiat(item.getOffer().getOfferVolume()) +
+                " (" + BSFormatter.formatFiat(item.getOffer().getMinOfferVolume()) + ")" : "";
     }
 
     String getBankAccountType(OrderBookListItem item) {
@@ -197,10 +206,17 @@ class OrderBookPM extends PresentationModel<OrderBookModel> {
         return BSFormatter.formatDirection(direction, true);
     }
 
-    OrderBookInfo getOrderBookInfo() {
-        return model.getOrderBookInfo();
+    Direction getDirection() {
+        return model.getDirection();
     }
 
+    Coin getAmountAsCoin() {
+        return model.getAmountAsCoin();
+    }
+
+    Fiat getPriceAsCoin() {
+        return model.getPriceAsFiat();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
@@ -225,6 +241,5 @@ class OrderBookPM extends PresentationModel<OrderBookModel> {
     private void setVolumeToModel() {
         model.setVolume(parseToFiatWith2Decimals(volume.get()));
     }
-
 
 }

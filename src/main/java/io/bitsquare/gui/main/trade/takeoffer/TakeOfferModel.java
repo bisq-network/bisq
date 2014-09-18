@@ -22,8 +22,8 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.UIModel;
-import io.bitsquare.gui.main.trade.OrderBookInfo;
 import io.bitsquare.settings.Settings;
+import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocol;
@@ -59,7 +59,7 @@ class TakeOfferModel extends UIModel {
     private final WalletFacade walletFacade;
     private final Settings settings;
 
-    private OrderBookInfo orderBookInfo;
+    private Offer offer;
     private AddressEntry addressEntry;
 
     final StringProperty requestTakeOfferErrorMessage = new SimpleStringProperty();
@@ -71,8 +71,6 @@ class TakeOfferModel extends UIModel {
     final BooleanProperty useMBTC = new SimpleBooleanProperty();
 
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> minAmountAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> collateralAsCoin = new SimpleObjectProperty<>();
@@ -130,6 +128,32 @@ class TakeOfferModel extends UIModel {
     // Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    void initWithData(Coin amount, Offer offer) {
+        this.offer = offer;
+
+        if (amount != null &&
+                !amount.isGreaterThan(offer.getAmount()) &&
+                !offer.getMinAmount().isGreaterThan(amount)) {
+            amountAsCoin.set(amount);
+        }
+        else {
+            amountAsCoin.set(offer.getAmount());
+        }
+
+        calculateVolume();
+        calculateCollateral();
+        calculateTotalToPay();
+
+        addressEntry = walletFacade.getAddressInfoByTradeID(offer.getId());
+        walletFacade.addBalanceListener(new BalanceListener(addressEntry.getAddress()) {
+            @Override
+            public void onBalanceChanged(@NotNull Coin balance) {
+                updateBalance(balance);
+            }
+        });
+        updateBalance(walletFacade.getBalanceForAddress(addressEntry.getAddress()));
+    }
+
     void takeOffer() {
         // data validation is done in the trade domain
         /*tradeManager.requestPlaceOffer(orderBookInfo.getOffer().getId(),
@@ -181,7 +205,7 @@ class TakeOfferModel extends UIModel {
             }
         };
 
-        tradeManager.takeOffer(amountAsCoin.get(), orderBookInfo.getOffer(), listener);
+        tradeManager.takeOffer(amountAsCoin.get(), offer, listener);
         /*new SellerTakesOfferProtocolListener() {
             @Override
             public void onDepositTxPublished(String depositTxId) {
@@ -245,11 +269,11 @@ class TakeOfferModel extends UIModel {
 
     void calculateVolume() {
         try {
-            if (priceAsFiat.get() != null &&
+            if (offer != null &&
+                    offer.getPrice() != null &&
                     amountAsCoin.get() != null &&
-                    !amountAsCoin.get().isZero() &&
-                    !priceAsFiat.get().isZero()) {
-                volumeAsFiat.set(new ExchangeRate(priceAsFiat.get()).coinToFiat(amountAsCoin.get()));
+                    !amountAsCoin.get().isZero()) {
+                volumeAsFiat.set(new ExchangeRate(offer.getPrice()).coinToFiat(amountAsCoin.get()));
             }
         } catch (Throwable t) {
             // Should be never reached
@@ -272,8 +296,8 @@ class TakeOfferModel extends UIModel {
 
     void calculateCollateral() {
         try {
-            if (amountAsCoin.get() != null && orderBookInfo != null)
-                collateralAsCoin.set(amountAsCoin.get().multiply(orderBookInfo.getOffer().getCollateral()).
+            if (amountAsCoin.get() != null && offer != null)
+                collateralAsCoin.set(amountAsCoin.get().multiply(offer.getCollateral()).
                         divide(1000L));
         } catch (Throwable t) {
             // The multiply might lead to too large numbers, we don't handle it but it should not break the app
@@ -283,8 +307,15 @@ class TakeOfferModel extends UIModel {
 
     boolean isMinAmountLessOrEqualAmount() {
         //noinspection SimplifiableIfStatement
-        if (minAmountAsCoin.get() != null && amountAsCoin.get() != null)
-            return !minAmountAsCoin.get().isGreaterThan(amountAsCoin.get());
+        if (offer != null && offer.getMinAmount() != null && amountAsCoin.get() != null)
+            return !offer.getMinAmount().isGreaterThan(amountAsCoin.get());
+        return true;
+    }
+
+    boolean isAmountLargerThanOfferAmount() {
+        //noinspection SimplifiableIfStatement
+        if (amountAsCoin.get() != null && offer != null)
+            return amountAsCoin.get().isGreaterThan(offer.getAmount());
         return true;
     }
 
@@ -293,17 +324,6 @@ class TakeOfferModel extends UIModel {
     // Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void setOrderBookInfo(@NotNull OrderBookInfo orderBookInfo) {
-        this.orderBookInfo = orderBookInfo;
-        addressEntry = walletFacade.getAddressInfoByTradeID(orderBookInfo.getOffer().getId());
-        walletFacade.addBalanceListener(new BalanceListener(addressEntry.getAddress()) {
-            @Override
-            public void onBalanceChanged(@NotNull Coin balance) {
-                updateBalance(balance);
-            }
-        });
-        updateBalance(walletFacade.getBalanceForAddress(addressEntry.getAddress()));
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter

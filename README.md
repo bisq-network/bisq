@@ -50,7 +50,7 @@ You can generate coins on demand with the Bitcoin QT client with the following c
 **setgenerate true 101**  
 101 is used only for the first start because of the coin maturity of 100 blocks. Later for mining of a single block you can use 1 as number of blocks to be created.
 
-More information about the regtest mode can be found [here](https://bitcoinj.github.io/testing).  
+More information about the regtest mode can be found [here](https://bitcoinj.github.io/testing) or [here](https://bitcoin.org/en/developer-examples#regtest-mode).  
 
 The network mode is defined in the guice module (BitSquareModule) and is default set to regtest.  
 Testnet should also work, but was not tested for a while as for developing regtest is much more convenient.  

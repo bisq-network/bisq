@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.trade.orderbook;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.UIModel;
-import io.bitsquare.gui.main.trade.OrderBookInfo;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
@@ -63,7 +62,7 @@ class OrderBookModel extends UIModel {
 
     private final FilteredList<OrderBookListItem> filteredItems;
     private final SortedList<OrderBookListItem> sortedItems;
-    private OrderBookInfo orderBookInfo;
+    // private OrderBookInfo orderBookInfo;
     private ChangeListener<BankAccount> bankAccountChangeListener;
 
     private final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
@@ -75,6 +74,7 @@ class OrderBookModel extends UIModel {
     final StringProperty btcCode = new SimpleStringProperty();
     final ObjectProperty<Country> bankAccountCountry = new SimpleObjectProperty<>();
     final ObjectProperty<Comparator<OrderBookListItem>> comparator = new SimpleObjectProperty<>();
+    private Direction direction;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -138,10 +138,6 @@ class OrderBookModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void setOrderBookInfo(OrderBookInfo orderBookInfo) {
-        this.orderBookInfo = orderBookInfo;
-    }
 
     void removeOffer(Offer offer) {
         tradeManager.removeOffer(offer);
@@ -211,21 +207,22 @@ class OrderBookModel extends UIModel {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    void setDirection(Direction direction) {
+        this.direction = direction;
+    }
+
     void setAmount(Coin amount) {
         amountAsCoin.set(amount);
-        orderBookInfo.setAmount(amount);
         applyFilter();
     }
 
     void setPrice(Fiat price) {
         priceAsFiat.set(price);
-        orderBookInfo.setPrice(price);
         applyFilter();
     }
 
     void setVolume(Fiat volume) {
         volumeAsFiat.set(volume);
-        orderBookInfo.setVolume(volume);
         applyFilter();
     }
 
@@ -270,10 +267,9 @@ class OrderBookModel extends UIModel {
         return volumeAsFiat;
     }
 
-    OrderBookInfo getOrderBookInfo() {
-        return orderBookInfo;
+    Direction getDirection() {
+        return direction;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
@@ -294,21 +290,23 @@ class OrderBookModel extends UIModel {
         filteredItems.setPredicate(orderBookListItem -> {
             Offer offer = orderBookListItem.getOffer();
 
-            boolean directionResult = offer.getDirection() != orderBookInfo.getDirection();
+            boolean directionResult = offer.getDirection() != direction;
 
             boolean amountResult = true;
-            if (orderBookInfo.getAmount() != null && orderBookInfo.getAmount().isPositive())
-                amountResult = orderBookInfo.getAmount().compareTo(offer.getAmount()) <= 0;
+            if (amountAsCoin.get() != null && amountAsCoin.get().isPositive())
+                amountResult = amountAsCoin.get().compareTo(offer.getAmount()) <= 0 &&
+                        amountAsCoin.get().compareTo(offer.getMinAmount()) >= 0;
 
             boolean priceResult = true;
-            if (orderBookInfo.getPrice() != null && orderBookInfo.getPrice().isPositive()) {
+            if (priceAsFiat.get() != null && priceAsFiat.get().isPositive()) {
                 if (offer.getDirection() == Direction.SELL)
-                    priceResult = orderBookInfo.getPrice().compareTo(offer.getPrice()) >= 0;
+                    priceResult = priceAsFiat.get().compareTo(offer.getPrice()) >= 0;
                 else
-                    priceResult = orderBookInfo.getPrice().compareTo(offer.getPrice()) <= 0;
+                    priceResult = priceAsFiat.get().compareTo(offer.getPrice()) <= 0;
             }
 
             return directionResult && amountResult && priceResult;
         });
     }
+
 }

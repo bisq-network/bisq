@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.trade.createoffer;
 
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.PresentationModel;
-import io.bitsquare.gui.main.trade.OrderBookInfo;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
@@ -29,6 +28,7 @@ import io.bitsquare.trade.Direction;
 
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.utils.Fiat;
 
 import javax.inject.Inject;
 
@@ -40,8 +40,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-
-import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -154,21 +152,21 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // setOrderBookFilter is a one time call
-    void setOrderBookInfo(@NotNull OrderBookInfo orderBookInfo) {
-        model.setDirection(orderBookInfo.getDirection());
+    void initWithData(Direction direction, Coin amount, Fiat price) {
+        model.setDirection(direction);
         directionLabel.set(model.getDirection() == Direction.BUY ? BSResources.get("shared.buy") : BSResources.get
                 ("shared.sell"));
 
         // apply only if valid
-        if (orderBookInfo.getAmount() != null && isBtcInputValid(orderBookInfo.getAmount().toPlainString())
+        if (amount != null && isBtcInputValid(amount.toPlainString())
                 .isValid) {
-            model.amountAsCoin.set(orderBookInfo.getAmount());
-            model.minAmountAsCoin.set(orderBookInfo.getAmount());
+            model.amountAsCoin.set(amount);
+            model.minAmountAsCoin.set(amount);
         }
 
         // apply only if valid
-        if (orderBookInfo.getPrice() != null && isBtcInputValid(orderBookInfo.getPrice().toPlainString()).isValid)
-            model.priceAsFiat.set(parseToFiatWith2Decimals(orderBookInfo.getPrice().toPlainString()));
+        if (price != null && isBtcInputValid(price.toPlainString()).isValid)
+            model.priceAsFiat.set(parseToFiatWith2Decimals(price.toPlainString()));
     }
 
 
@@ -299,25 +297,25 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
             if (isBtcInputValid(newValue).isValid) {
                 setAmountToModel();
                 calculateVolume();
-                model.calculateTotalToPay();
                 model.calculateCollateral();
+                model.calculateTotalToPay();
             }
-            validateInput();
+            updateButtonDisableState();
         });
 
         minAmount.addListener((ov, oldValue, newValue) -> {
             setMinAmountToModel();
-            validateInput();
+            updateButtonDisableState();
         });
 
         price.addListener((ov, oldValue, newValue) -> {
             if (isFiatInputValid(newValue).isValid) {
                 setPriceToModel();
                 calculateVolume();
-                model.calculateTotalToPay();
                 model.calculateCollateral();
+                model.calculateTotalToPay();
             }
-            validateInput();
+            updateButtonDisableState();
         });
 
         volume.addListener((ov, oldValue, newValue) -> {
@@ -325,14 +323,14 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
                 setVolumeToModel();
                 setPriceToModel();
                 model.calculateAmount();
-                model.calculateTotalToPay();
                 model.calculateCollateral();
+                model.calculateTotalToPay();
             }
-            validateInput();
+            updateButtonDisableState();
         });
         model.isWalletFunded.addListener((ov, oldValue, newValue) -> {
             if (newValue)
-                validateInput();
+                updateButtonDisableState();
         });
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
@@ -427,7 +425,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         model.volumeAsFiat.set(parseToFiatWith2Decimals(volume.get()));
     }
 
-    private void validateInput() {
+    private void updateButtonDisableState() {
         isPlaceOfferButtonDisabled.set(!(isBtcInputValid(amount.get()).isValid &&
                         isBtcInputValid(minAmount.get()).isValid &&
                         isBtcInputValid(price.get()).isValid &&

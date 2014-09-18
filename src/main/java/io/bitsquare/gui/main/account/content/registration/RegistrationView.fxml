@@ -62,7 +62,7 @@
         </GridPane.margin>
     </BalanceTextField>
 
-    <InfoDisplay gridPane="$root" onAction="#onOpenHelp" rowIndex="3" prefWidth="570"
+    <InfoDisplay gridPane="$root" onAction="#onOpenHelp" rowIndex="3"
                  text="You need to pay a tiny registration fee which is needed for storing your encrypted account data in the blockchain. That will be used in the trade process for account verification."/>
 
     <Button fx:id="payButton" text="Pay registration fee" onAction="#onPayFee" GridPane.columnIndex="1"

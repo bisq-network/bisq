@@ -43,7 +43,7 @@
               prefWidth="150.0"/>
 
 
-    <InfoDisplay gridPane="$root" onAction="#onOpenLanguagesHelp" rowIndex="2" prefWidth="570"
+    <InfoDisplay gridPane="$root" onAction="#onOpenLanguagesHelp" rowIndex="2"
                  text="Trade with users who have at least 1 shared language."/>
 
     <!-- 
@@ -79,7 +79,7 @@
                 prefWidth="150.0" visible="false"/>
     </HBox>
 
-    <InfoDisplay gridPane="$root" onAction="#onOpenCountriesHelp" rowIndex="5" prefWidth="570"
+    <InfoDisplay gridPane="$root" onAction="#onOpenCountriesHelp" rowIndex="5"
                  text="Restrict trades with these payments account countries."/>
 
 
@@ -107,7 +107,7 @@
     <Button text="Add arbitrator" onAction="#onOpenArbitratorScreen" GridPane.columnIndex="1"
             GridPane.rowIndex="7"/>
 
-    <InfoDisplay gridPane="$root" onAction="#onOpenArbitratorsHelp" rowIndex="8" prefWidth="570"
+    <InfoDisplay gridPane="$root" onAction="#onOpenArbitratorsHelp" rowIndex="8"
                  text="You need to choose at least 3 arbitrators."/>
 
     <Button fx:id="completedButton" text="Completed" onAction="#onCompleted" disable="true" GridPane.columnIndex="1"

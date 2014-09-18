@@ -30,10 +30,12 @@ import io.bitsquare.gui.components.btc.AddressTextField;
 import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
-import io.bitsquare.gui.main.trade.OrderBookInfo;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.Direction;
+import io.bitsquare.trade.Offer;
+
+import com.google.bitcoin.core.Coin;
 
 import java.net.URL;
 
@@ -85,7 +87,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
     @FXML ScrollPane scrollPane;
     @FXML ImageView imageView;
     @FXML TitledGroupBg priceAmountPane, payFundsPane, showDetailsPane;
-    @FXML Label buyLabel, addressLabel,
+    @FXML Label buyLabel, addressLabel, amountRangeTextField,
             balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
             bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel,
             acceptedCountriesLabel, acceptedLanguagesLabel,
@@ -94,7 +96,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
     @FXML Button showPaymentInfoScreenButton, showAdvancedSettingsButton, takeOfferButton;
 
     @FXML InputTextField amountTextField;
-    @FXML TextField minAmountTextField, priceTextField, volumeTextField, acceptedArbitratorsTextField,
+    @FXML TextField priceTextField, volumeTextField, acceptedArbitratorsTextField,
             totalToPayTextField,
             bankAccountTypeTextField,
             bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField,
@@ -143,8 +145,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
     public void terminate() {
         super.terminate();
 
-        // Inform parent that we gor removed.
-        // Needed to reset disable state of createOfferButton in OrderBookController
+        // Inform parent that we got removed.
         if (closeListener != null)
             closeListener.onClosed();
     }
@@ -154,10 +155,10 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
     // Public methods (called form other views/CB)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initWithOrderBookInfo(OrderBookInfo orderBookInfo) {
-        presentationModel.setOrderBookInfo(orderBookInfo);
+    public void initWithData(Direction direction, Coin amount, Offer offer) {
+        presentationModel.initWithData(direction, amount, offer);
 
-        if (orderBookInfo.getDirection() == Direction.BUY)
+        if (direction == Direction.BUY)
             imageView.setId("image-buy-large");
         else
             imageView.setId("image-sell-large");
@@ -170,7 +171,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
         balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get());
 
         buyLabel.setText(presentationModel.getDirectionLabel());
-        minAmountTextField.setText(presentationModel.getMinAmount());
+        amountRangeTextField.setText(presentationModel.getAmountRange());
         priceTextField.setText(presentationModel.getPrice());
         addressTextField.setPaymentLabel(presentationModel.getPaymentLabel());
         addressTextField.setAddress(presentationModel.getAddressAsString());
@@ -183,7 +184,6 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
         acceptedArbitratorsTextField.setText(presentationModel.getAcceptedArbitrators());
     }
 
-    //TODO not used yet
     public void setCloseListener(CloseListener closeListener) {
         this.closeListener = closeListener;
     }

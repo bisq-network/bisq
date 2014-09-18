@@ -22,7 +22,7 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.main.trade.OrderBookInfo;
+import io.bitsquare.gui.main.trade.TradeNavigator;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
 import io.bitsquare.gui.util.validation.OptionalFiatValidator;
@@ -143,7 +143,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
         offerList.comparatorProperty().bind(orderBookTable.comparatorProperty());
 
 
-        priceColumn.setSortType((presentationModel.getOrderBookInfo().getDirection() == Direction.BUY) ?
+        priceColumn.setSortType((presentationModel.getDirection() == Direction.BUY) ?
                 TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
         orderBookTable.sort();
     }
@@ -175,10 +175,9 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     // Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setOrderBookInfo(OrderBookInfo orderBookInfo) {
-        presentationModel.setOrderBookInfo(orderBookInfo);
-        navigationItem = (orderBookInfo.getDirection() == Direction.BUY) ?
-                Navigation.Item.BUY : Navigation.Item.SELL;
+    public void setDirection(Direction direction) {
+        presentationModel.setDirection(direction);
+        navigationItem = (direction == Direction.BUY) ? Navigation.Item.BUY : Navigation.Item.SELL;
 
     }
 
@@ -191,8 +190,8 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     void createOffer() {
         if (presentationModel.isRegistered()) {
             createOfferButton.setDisable(true);
-            navigation.navigationTo(Navigation.Item.MAIN, navigationItem,
-                    Navigation.Item.CREATE_OFFER);
+            ((TradeNavigator) parent).createOffer(presentationModel.getAmountAsCoin(),
+                    presentationModel.getPriceAsCoin());
         }
         else {
             openSetupScreen();
@@ -236,12 +235,10 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                 "You don't have a trading account.", actions);
     }
 
-    //TODO not updated yet
     private void takeOffer(Offer offer) {
         if (presentationModel.isRegistered()) {
-            presentationModel.getOrderBookInfo().setOffer(offer);
-            navigation.navigationTo(Navigation.Item.MAIN, navigationItem,
-                    Navigation.Item.TAKE_OFFER);
+            ((TradeNavigator) parent).takeOffer(presentationModel.getAmountAsCoin(),
+                    presentationModel.getPriceAsCoin(), offer);
         }
         else {
             openSetupScreen();

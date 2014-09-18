@@ -20,23 +20,24 @@ package io.bitsquare.gui.components;
 import io.bitsquare.locale.BSResources;
 
 import javafx.application.Platform;
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.*;
 import javafx.scene.control.*;
-import javafx.scene.image.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.*;
+
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,13 +54,12 @@ public class InfoDisplay extends Parent {
     private final StringProperty text = new SimpleStringProperty();
     private final IntegerProperty rowIndex = new SimpleIntegerProperty(0);
     private final IntegerProperty columnIndex = new SimpleIntegerProperty(0);
-    private final DoubleProperty prefWidth = new SimpleDoubleProperty(740);
     private final ObjectProperty<EventHandler<ActionEvent>> onAction = new SimpleObjectProperty<>();
     private final ObjectProperty<GridPane> gridPane = new SimpleObjectProperty<>();
 
     private boolean useReadMore;
 
-    private final ImageView icon;
+    private final Label icon = AwesomeDude.createIconLabel(AwesomeIcon.INFO_SIGN);
     private final TextFlow textFlow;
     private final Label label;
     private final Hyperlink link;
@@ -70,21 +70,18 @@ public class InfoDisplay extends Parent {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public InfoDisplay() {
-
-        icon = new ImageView();
-        icon.setId("image-info");
-        icon.setPickOnBounds(true);
-        icon.setPreserveRatio(true);
+        icon.setId("non-clickable-icon");
         icon.visibleProperty().bind(visibleProperty());
 
         GridPane.setValignment(icon, VPos.TOP);
-        GridPane.setMargin(icon, new Insets(4, 2, 0, 0));
+        GridPane.setMargin(icon, new Insets(-2, 0, 0, 0));
         GridPane.setRowSpan(icon, 2);
 
         label = new Label();
         label.textProperty().bind(text);
-        label.prefWidthProperty().bind(prefWidth);
         label.setTextOverrun(OverrunStyle.WORD_ELLIPSIS);
+        // width is set a frame later so we hide it first
+        label.setVisible(false);
 
         link = new Hyperlink(BSResources.get("shared.readMore"));
         link.setPadding(new Insets(0, 0, 0, -2));
@@ -109,6 +106,11 @@ public class InfoDisplay extends Parent {
             Platform.runLater(() -> textFlow.getChildren().setAll(label, link));
         });
 
+        // update the width when the window gets resized
+        ChangeListener<Number> listener = (ov2, oldValue2, windowWidth) ->
+                label.setPrefWidth((double) windowWidth - localToScene(0, 0).getX() - 35);
+
+
         // when clicking "Read more..." we expand and change the link to the Help 
         link.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -117,6 +119,8 @@ public class InfoDisplay extends Parent {
 
                     label.setWrapText(true);
                     link.setText(BSResources.get("shared.openHelp"));
+                    getScene().getWindow().widthProperty().removeListener(listener);
+                    label.prefWidthProperty().unbind();
                     label.prefWidthProperty().bind(textFlow.widthProperty());
                     link.setVisited(false);
                     // focus border is a bit confusing here so we remove it
@@ -128,6 +132,18 @@ public class InfoDisplay extends Parent {
                 }
             }
         });
+
+        sceneProperty().addListener((ov, oldValue, newValue) -> {
+            if (oldValue == null && newValue != null) {
+                newValue.getWindow().widthProperty().addListener(listener);
+                // localToScene does deliver 0 instead of the correct x position when scene propery gets set, 
+                // so we delay for 1 render cycle
+                Platform.runLater(() -> {
+                    label.setVisible(true);
+                    label.setPrefWidth(newValue.getWindow().getWidth() - localToScene(0, 0).getX() - 35);
+                });
+            }
+        });
     }
 
 
@@ -137,11 +153,6 @@ public class InfoDisplay extends Parent {
 
     public void setText(String text) {
         this.text.set(text);
-    }
-
-    public void setPrefWidth(double prefWidth) {
-        this.prefWidth.set(prefWidth);
-        //  label.setPrefWidth(getPrefWidth());
     }
 
     public void setGridPane(GridPane gridPane) {
@@ -186,14 +197,6 @@ public class InfoDisplay extends Parent {
 
     public StringProperty textProperty() {
         return text;
-    }
-
-    public double getPrefWidth() {
-        return prefWidth.get();
-    }
-
-    public DoubleProperty prefWidthProperty() {
-        return prefWidth;
     }
 
     public int getColumnIndex() {

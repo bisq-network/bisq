@@ -205,6 +205,10 @@ textfield */
     -fx-font-size: 14;
 }
 
+#non-clickable-icon {
+    -fx-text-fill: #AAAAAA;
+}
+
 #clickable-icon {
     -fx-text-fill: -bs-theme-color;
     -fx-cursor: hand;

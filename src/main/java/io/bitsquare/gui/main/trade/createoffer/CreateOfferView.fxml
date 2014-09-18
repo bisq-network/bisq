@@ -127,7 +127,7 @@
                 </HBox>
             </VBox>
 
-            <InfoDisplay gridPane="$gridPane" onAction="#onOpenGeneralHelp" rowIndex="2" prefWidth="740"
+            <InfoDisplay gridPane="$gridPane" onAction="#onOpenGeneralHelp" rowIndex="2" 
                          text="%createOffer.amountPriceBox.info"/>
 
             <Button fx:id="showPaymentInfoScreenButton" text="%createOffer.amountPriceBox.next" id="show-details-button"
@@ -177,7 +177,7 @@
             </BalanceTextField>
 
             <InfoDisplay fx:id="fundsBoxInfoDisplay" gridPane="$gridPane" onAction="#onOpenFundingHelp" rowIndex="7"
-                         text="%createOffer.fundsBox.info" visible="false" prefWidth="740"/>
+                         text="%createOffer.fundsBox.info" visible="false"/>
 
             <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="8">
                 <Button fx:id="showAdvancedSettingsButton" text="%createOffer.fundsBox.showAdvanced"
@@ -245,7 +245,7 @@
             </TextField>
 
             <InfoDisplay fx:id="advancedInfoDisplay" gridPane="$gridPane" onAction="#onOpenAdvancedSettingsHelp"
-                         rowIndex="15" visible="false" prefWidth="740"
+                         rowIndex="15" visible="false" 
                          text="%createOffer.advancedBox.info">
             </InfoDisplay>
 

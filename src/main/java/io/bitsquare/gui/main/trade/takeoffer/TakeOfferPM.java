@@ -19,12 +19,12 @@ package io.bitsquare.gui.main.trade.takeoffer;
 
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.PresentationModel;
-import io.bitsquare.gui.main.trade.OrderBookInfo;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.Direction;
+import io.bitsquare.trade.Offer;
 
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.Coin;
@@ -38,8 +38,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import org.jetbrains.annotations.NotNull;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +50,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
     private String offerFee;
     private String networkFee;
     private String fiatCode;
-    private String minAmount;
+    private String amountRange;
     private String price;
     private String directionLabel;
     private String collateralLabel;
@@ -143,42 +141,40 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // setOrderBookFilter is a one time call
-    void setOrderBookInfo(@NotNull OrderBookInfo orderBookInfo) {
-        model.setOrderBookInfo(orderBookInfo);
+    void initWithData(Direction direction, Coin amount, Offer offer) {
+        model.initWithData(amount, offer);
 
-        directionLabel = orderBookInfo.getDirection() == Direction.BUY ?
+        directionLabel = direction == Direction.BUY ?
                 BSResources.get("shared.buy") : BSResources.get("shared.sell");
 
-        fiatCode = orderBookInfo.getOffer().getCurrency().getCurrencyCode();
-        model.priceAsFiat.set(orderBookInfo.getOffer().getPrice());
-        model.minAmountAsCoin.set(orderBookInfo.getOffer().getMinAmount());
-        if (orderBookInfo.getAmount() != null &&
-                isBtcInputValid(orderBookInfo.getAmount().toPlainString()).isValid &&
-                !orderBookInfo.getAmount().isGreaterThan(orderBookInfo.getOffer().getAmount())) {
-            model.amountAsCoin.set(orderBookInfo.getAmount());
+        fiatCode = offer.getCurrency().getCurrencyCode();
+        if (!model.isMinAmountLessOrEqualAmount()) {
+            amountValidationResult.set(new InputValidator.ValidationResult(false,
+                    BSResources.get("takeOffer.validation.amountSmallerThanMinAmount")));
         }
-        else {
-            model.amountAsCoin.set(orderBookInfo.getOffer().getAmount());
-        }
-        model.volumeAsFiat.set(orderBookInfo.getOffer().getVolumeByAmount(model.amountAsCoin.get()));
 
-        minAmount = BSFormatter.formatCoinWithCode(orderBookInfo.getOffer().getMinAmount());
-        price = BSFormatter.formatFiatWithCode(orderBookInfo.getOffer().getPrice());
+        updateButtonDisableState();
 
-        paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", orderBookInfo.getOffer().getId());
+        //model.volumeAsFiat.set(offer.getVolumeByAmount(model.amountAsCoin.get()));
+
+        amountRange = BSFormatter.formatCoinWithCode(offer.getMinAmount()) + " - " +
+                BSFormatter.formatCoinWithCode(offer.getAmount());
+        price = BSFormatter.formatFiatWithCode(offer.getPrice());
+
+        paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", offer.getId());
         if (model.getAddressEntry() != null) {
             addressAsString = model.getAddressEntry().getAddress().toString();
             address.set(model.getAddressEntry().getAddress());
         }
         collateralLabel = BSResources.get("takeOffer.fundsBox.collateral",
-                BSFormatter.formatCollateralPercent(orderBookInfo.getOffer().getCollateral()));
+                BSFormatter.formatCollateralPercent(offer.getCollateral()));
 
-        acceptedCountries = BSFormatter.countryLocalesToString(orderBookInfo.getOffer().getAcceptedCountries());
-        acceptedLanguages = BSFormatter.languageLocalesToString(orderBookInfo.getOffer().getAcceptedLanguageLocales());
-        acceptedArbitrators = BSFormatter.arbitratorsToString(orderBookInfo.getOffer().getArbitrators());
-        bankAccountType = BSResources.get(orderBookInfo.getOffer().getBankAccountType().toString());
-        bankAccountCurrency = BSResources.get(orderBookInfo.getOffer().getCurrency().getDisplayName());
-        bankAccountCounty = BSResources.get(orderBookInfo.getOffer().getBankAccountCountry().getName());
+        acceptedCountries = BSFormatter.countryLocalesToString(offer.getAcceptedCountries());
+        acceptedLanguages = BSFormatter.languageLocalesToString(offer.getAcceptedLanguageLocales());
+        acceptedArbitrators = BSFormatter.arbitratorsToString(offer.getArbitrators());
+        bankAccountType = BSResources.get(offer.getBankAccountType().toString());
+        bankAccountCurrency = BSResources.get(offer.getCurrency().getDisplayName());
+        bankAccountCounty = BSResources.get(offer.getBankAccountCountry().getName());
     }
 
 
@@ -217,6 +213,14 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
                 amount.set(formatCoin(model.amountAsCoin.get()));
 
                 calculateVolume();
+
+                if (!model.isMinAmountLessOrEqualAmount())
+                    amountValidationResult.set(new InputValidator.ValidationResult(false,
+                            BSResources.get("takeOffer.validation.amountSmallerThanMinAmount")));
+
+                if (model.isAmountLargerThanOfferAmount())
+                    amountValidationResult.set(new InputValidator.ValidationResult(false,
+                            BSResources.get("takeOffer.validation.amountLargerThanOfferAmount")));
             }
         }
     }
@@ -242,8 +246,8 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
         return fiatCode;
     }
 
-    String getMinAmount() {
-        return minAmount;
+    String getAmountRange() {
+        return amountRange;
     }
 
     String getPrice() {
@@ -302,15 +306,15 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
             if (isBtcInputValid(newValue).isValid) {
                 setAmountToModel();
                 calculateVolume();
-                model.calculateTotalToPay();
                 model.calculateCollateral();
+                model.calculateTotalToPay();
             }
-            validateInput();
+            updateButtonDisableState();
         });
 
         model.isWalletFunded.addListener((ov, oldValue, newValue) -> {
             if (newValue)
-                validateInput();
+                updateButtonDisableState();
         });
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
@@ -349,9 +353,10 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
         model.amountAsCoin.set(parseToCoinWith4Decimals(amount.get()));
     }
 
-    private void validateInput() {
+    private void updateButtonDisableState() {
         isTakeOfferButtonDisabled.set(!(isBtcInputValid(amount.get()).isValid &&
                         model.isMinAmountLessOrEqualAmount() &&
+                        !model.isAmountLargerThanOfferAmount() &&
                         model.isWalletFunded.get())
         );
     }

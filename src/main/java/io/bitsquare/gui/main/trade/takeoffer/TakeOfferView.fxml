@@ -110,13 +110,12 @@
                 <GridPane.margin>
                     <Insets right="10.0" top="5.0" bottom="5.0"/>
                 </GridPane.margin>
-                <Label id="input-description-label" text="%takeOffer.amountPriceBox.minAmountDescription"
-                       prefWidth="170.0"/>
-                <TextField fx:id="minAmountTextField" id="text-input-with-currency-text-field"
-                           prefWidth="170.0" editable="false"/>
+                <Label id="input-description-label" text="%takeOffer.amountPriceBox.amountRangeDescription"
+                       prefWidth="170" textAlignment="CENTER"/>
+                <Label fx:id="amountRangeTextField" id="label-with-background" prefWidth="170" textAlignment="CENTER"/>
             </VBox>
 
-            <InfoDisplay gridPane="$gridPane" onAction="#onOpenGeneralHelp" rowIndex="2" prefWidth="740"
+            <InfoDisplay gridPane="$gridPane" onAction="#onOpenGeneralHelp" rowIndex="2"
                          text="%takeOffer.amountPriceBox.info"/>
 
             <Button fx:id="showPaymentInfoScreenButton" text="%takeOffer.amountPriceBox.next" id="show-details-button"
@@ -166,7 +165,7 @@
             </BalanceTextField>
 
             <InfoDisplay fx:id="fundsBoxInfoDisplay" gridPane="$gridPane" onAction="#onOpenFundingHelp" rowIndex="7"
-                         text="%takeOffer.fundsBox.info" visible="false" prefWidth="740"/>
+                         text="%takeOffer.fundsBox.info" visible="false"/>
 
             <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="8">
                 <Button fx:id="showAdvancedSettingsButton" text="%takeOffer.fundsBox.showAdvanced"
@@ -229,7 +228,7 @@
             </TextField>
 
             <InfoDisplay fx:id="advancedInfoDisplay" gridPane="$gridPane" onAction="#onOpenAdvancedSettingsHelp"
-                         rowIndex="15" visible="false" prefWidth="740"
+                         rowIndex="15" visible="false"
                          text="%takeOffer.advancedBox.info">
             </InfoDisplay>
 
