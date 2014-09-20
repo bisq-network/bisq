@@ -22,6 +22,7 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.main.account.content.ContextAware;
+import io.bitsquare.gui.util.Colors;
 import io.bitsquare.util.ViewLoader;
 
 import java.io.IOException;
@@ -45,7 +46,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
+public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSettingsViewCB.class);
 
@@ -219,7 +220,7 @@ class MenuItem extends ToggleButton {
         selectedProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue) {
                 setId("account-settings-item-background-selected");
-                icon.setTextFill(Paint.valueOf("#0096c9"));
+                icon.setTextFill(Colors.BLUE);
             }
             else {
                 setId("account-settings-item-background-active");

@@ -23,9 +23,9 @@
             prefHeight="660.0" prefWidth="1000.0"
             xmlns:fx="http://javafx.com/fxml">
 
-    <VBox fx:id="leftVBox" spacing="5" prefWidth="200" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="20"
+    <VBox fx:id="leftVBox" spacing="5" prefWidth="200" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="15"
           AnchorPane.topAnchor="20"/>
-    <AnchorPane fx:id="content" AnchorPane.bottomAnchor="10" AnchorPane.rightAnchor="30" AnchorPane.leftAnchor="250"
+    <AnchorPane fx:id="content" AnchorPane.bottomAnchor="10" AnchorPane.rightAnchor="25" AnchorPane.leftAnchor="250"
                 AnchorPane.topAnchor="30" prefWidth="720"/>
 </AnchorPane>
 

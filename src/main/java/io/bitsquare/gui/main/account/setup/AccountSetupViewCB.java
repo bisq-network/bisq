@@ -48,7 +48,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements MultiStepNavigation {
+public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements MultiStepNavigation {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSetupViewCB.class);
 

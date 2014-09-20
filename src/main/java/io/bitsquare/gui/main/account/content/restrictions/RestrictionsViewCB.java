@@ -241,6 +241,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
+                        label.setLayoutY(5);
                         removeButton.setId("icon-button");
                         AnchorPane.setRightAnchor(removeButton, 0d);
                     }
@@ -299,6 +300,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
+                        label.setLayoutY(5);
                         removeButton.setId("icon-button");
                         AnchorPane.setRightAnchor(removeButton, 0d);
                     }
@@ -343,10 +345,10 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
+                        label.setLayoutY(5);
                         removeButton.setId("icon-button");
                         AnchorPane.setRightAnchor(removeButton, 0d);
                     }
-
 
                     @Override
                     public void updateItem(final Arbitrator item, boolean empty) {

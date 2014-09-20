@@ -5,6 +5,12 @@ logo colors:
 blue: 0096c9
 dark grey: #333333
 
+new blue: 0f87c3
+new grey: 666666
+
+00abff
+
+
 main bg grey: dddddd
 content bg grey: f4f4f4
 tab pane upper bg gradient color mid dark grey to bright grey: cfcfcf -> dddddd
@@ -15,11 +21,15 @@ lower gradient color on tab: dddddd
 */
 
 .root {
-    -bs-theme-color: #0096c9;
     -bs-dark-grey: #333333;
     -bs-bg-grey: #dddddd;
+   
+    -fx-accent: #0f87c3;
+    -fx-default-button: derive(-fx-accent,100%);
+    -fx-focus-color: -fx-accent;
+    -fx-faint-focus-color: #0f87c322;
+    -fx-selection-bar: derive(-fx-accent,50%);
 }
-    
 
 /* Splash */
 #splash {
@@ -71,6 +81,7 @@ lower gradient color on tab: dddddd
 #nav-button:selected .text {
     -fx-font-size: 11; 
     -fx-font-weight: bold;
+    -fx-fill: -fx-accent;
 }
 
 #nav-alert-button {
@@ -109,7 +120,7 @@ lower gradient color on tab: dddddd
 }
 
 .copy-icon {
-    -fx-text-fill: -bs-theme-color;
+    -fx-text-fill: -fx-accent;
     -fx-cursor: hand;
 }
 
@@ -117,9 +128,22 @@ lower gradient color on tab: dddddd
     -fx-text-fill: black;
 }
 
+
+/*******************************************************************************
+ *                                                                             *
+ * Tooltip                                                                     *
+ *                                                                             *
+ ******************************************************************************/
+
 .tooltip {
-    -fx-background-color: white;
+    -fx-background: rgba(30,30,30);
     -fx-text-fill: black;
+    -fx-background-color: rgba(100,100,100,0.8);
+    -fx-background-radius: 6px;
+    -fx-background-insets: 0;
+    -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.5) , 10, 0.0 , 0 , 3 );
+    -fx-font-size: 0.85em;
 }
 
 
@@ -133,7 +157,7 @@ textfield */
 
 #address-text-field {
     -fx-cursor: hand;
-    -fx-text-fill: -bs-theme-color;
+    -fx-text-fill: -fx-accent;
 }
 #address-text-field:hover {
     -fx-text-fill: black;
@@ -169,7 +193,7 @@ textfield */
 }
 
 .table-view .table-row-cell .copy-icon .text {
-    -fx-fill: -bs-theme-color;
+    -fx-fill: -fx-accent;
 }
 
 .table-view .table-row-cell .copy-icon .text:hover {
@@ -185,7 +209,7 @@ textfield */
 }
 
 .table-view .table-row-cell .hyperlink .text {
-    -fx-fill: -bs-theme-color;
+    -fx-fill: -fx-accent;
 }
 
 .table-view .table-row-cell .hyperlink .text:hover {
@@ -200,6 +224,8 @@ textfield */
     -fx-fill: black;
 }
 
+
+
 #form-header-text {
     -fx-font-weight: bold;
     -fx-font-size: 14;
@@ -210,7 +236,7 @@ textfield */
 }
 
 #clickable-icon {
-    -fx-text-fill: -bs-theme-color;
+    -fx-text-fill: -fx-accent;
     -fx-cursor: hand;
 }
 
@@ -395,7 +421,7 @@ textfield */
 #wizard-title-selected {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: -bs-theme-color;
+    -fx-text-fill: -fx-accent;
 }
 
 #account-settings-item-background-disabled {
@@ -442,7 +468,7 @@ textfield */
 #titled-group-bg-label-active {
     -fx-font-weight: bold;
     -fx-font-size: 14;
-    -fx-text-fill: -bs-theme-color;
+    -fx-text-fill: -fx-accent;
     -fx-background-color: #f4f4f4;
 }
 #titled-group-bg {
