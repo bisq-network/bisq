@@ -25,6 +25,7 @@ import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
@@ -34,10 +35,13 @@ import com.google.inject.Inject;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 
 import org.slf4j.Logger;
@@ -58,9 +62,8 @@ class MainModel extends UIModel {
     final BooleanProperty backendInited = new SimpleBooleanProperty();
     final DoubleProperty networkSyncProgress = new SimpleDoubleProperty();
     final BooleanProperty networkSyncComplete = new SimpleBooleanProperty();
-    final BooleanProperty takeOfferRequested = new SimpleBooleanProperty();
     final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
-
+    final IntegerProperty numPendingTrades = new SimpleIntegerProperty(0);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -171,9 +174,14 @@ class MainModel extends UIModel {
             }
         });
 
-        tradeManager.addTakeOfferRequestListener((offerId, sender) -> takeOfferRequested.set(true));
+        tradeManager.getTrades().addListener((MapChangeListener<String, Trade>) change -> updateNumPendingTrades());
+        updateNumPendingTrades();
 
         backendInited.set(true);
+    }
+
+    private void updateNumPendingTrades() {
+        numPendingTrades.set(tradeManager.getTrades().size());
     }
 
     private void updateBalance(Coin balance) {

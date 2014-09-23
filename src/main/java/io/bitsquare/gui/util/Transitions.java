@@ -87,7 +87,7 @@ public class Transitions {
             darken.setBrightness(0.0);
             blur.setInput(darken);
 
-            KeyValue kv2 = new KeyValue(darken.brightnessProperty(), -0.3);
+            KeyValue kv2 = new KeyValue(darken.brightnessProperty(), -0.1);
             KeyFrame kf2 = new KeyFrame(Duration.millis(duration), kv2);
             timeline.getKeyFrames().addAll(kf1, kf2);
         }

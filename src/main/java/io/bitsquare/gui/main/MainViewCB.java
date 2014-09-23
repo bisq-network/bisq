@@ -42,8 +42,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.*;
 import javafx.scene.control.*;
+import javafx.scene.effect.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
+import javafx.scene.paint.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +66,7 @@ public class MainViewCB extends ViewCB<MainPM> {
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton,
             accountButton;
     private Pane ordersButtonButtonPane;
+    private Label numPendingTradesLabel;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -179,25 +182,44 @@ public class MainViewCB extends ViewCB<MainPM> {
         addMainNavigation();
     }
 
+    private void applyPendingTradesInfoIcon(int numPendingTrades) {
+        log.debug("numPendingTrades " + numPendingTrades);
+        if (numPendingTrades > 0) {
+            if (ordersButtonButtonPane.getChildren().size() == 1) {
+                ImageView icon = new ImageView();
+                icon.setLayoutX(0.5);
+                icon.setId("image-alert-round");
+
+                numPendingTradesLabel = new Label(String.valueOf(numPendingTrades));
+                numPendingTradesLabel.relocate(5, 1);
+                numPendingTradesLabel.setId("nav-alert-label");
+
+                Pane alert = new Pane();
+                alert.relocate(30, 9);
+                alert.setMouseTransparent(true);
+                alert.setEffect(new DropShadow(4, 1, 2, Color.GREY));
+                alert.getChildren().addAll(icon, numPendingTradesLabel);
+                ordersButtonButtonPane.getChildren().add(alert);
+
+                AWTSystemTray.setAlertIcon();
+            }
+            else {
+                numPendingTradesLabel.setText(String.valueOf(numPendingTrades));
+            }
+        }
+        else {
+            if (ordersButtonButtonPane.getChildren().size() > 1)
+                ordersButtonButtonPane.getChildren().remove(1);
+            AWTSystemTray.setIcon();
+        }
+    }
+
     private void onMainNavigationAdded() {
         Profiler.printMsgWithTime("MainController.ondMainNavigationAdded");
 
-        presentationModel.takeOfferRequested.addListener((ov, olaValue, newValue) -> {
-            ImageView icon = new ImageView();
-            icon.setId("image-alert-round");
-            final Button alertButton = new Button("", icon);
-            alertButton.setId("nav-alert-button");
-            alertButton.relocate(30, 9);
-            alertButton.setOnAction((e) ->
-                    navigation.navigationTo(Navigation.Item.MAIN,
-                            Navigation.Item.ORDERS,
-                            Navigation.Item.PENDING_TRADES));
-            Tooltip.install(alertButton, new Tooltip("Your offer has been accepted"));
-            ordersButtonButtonPane.getChildren().add(alertButton);
-
-            AWTSystemTray.setAlertIcon();
-        });
-
+        presentationModel.numPendingTrades.addListener((ov, olaValue, newValue) -> applyPendingTradesInfoIcon((int)
+                newValue));
+        applyPendingTradesInfoIcon(presentationModel.numPendingTrades.get());
         navigation.navigateToLastStoredItem();
         onContentAdded();
     }

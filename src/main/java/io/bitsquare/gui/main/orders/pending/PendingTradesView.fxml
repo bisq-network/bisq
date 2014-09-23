@@ -140,8 +140,8 @@
         </GridPane.margin>
     </TitledGroupBg>
 
-    <Label fx:id="btcLabel" text="You have bought:" GridPane.rowIndex="5" visible="false">
-        <GridPane.margin>
+    <Label fx:id="btcLabel" GridPane.rowIndex="5" visible="false">
+    <GridPane.margin>
             <Insets top="60.0"/>
         </GridPane.margin>
     </Label>
@@ -152,7 +152,7 @@
         </GridPane.margin>
     </TextField>
 
-    <Label fx:id="fiatLabel" text="You have paid:" GridPane.rowIndex="6" visible="false"/>
+    <Label fx:id="fiatLabel" GridPane.rowIndex="6" visible="false"/>
     <TextField fx:id="fiatTextField" GridPane.rowIndex="6" GridPane.columnIndex="1" editable="false" visible="false"/>
 
     <Label fx:id="feesLabel" text="Total fees paid:" GridPane.rowIndex="7" visible="false"/>

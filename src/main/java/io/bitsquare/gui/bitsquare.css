@@ -85,12 +85,6 @@ lower gradient color on tab: dddddd
     -fx-fill: -fx-accent;
 }
 
-#nav-alert-button {
-    -fx-background-color: transparent;
-    -fx-cursor: hand;
-    -fx-border-style: none;
-}
-
 #nav-button-label {
     -fx-font-size: 10;  
 }
@@ -99,7 +93,11 @@ lower gradient color on tab: dddddd
     -fx-font-weight: bold;
     -fx-alignment: center;
 }
-
+#nav-alert-label {
+     -fx-font-weight: bold;
+     -fx-font-size: 11;  
+     -fx-text-fill: white;
+}
 .text-field:readonly {
     -fx-text-fill: #000000;
     -fx-background-color: #FAFAFA;
@@ -302,10 +300,6 @@ textfield */
        -fx-background-insets: 0 0 0 0,0,1;
 }
 
-#content-pane-label {
-    -fx-font-size: 14;
-     -fx-text-fill: black;
-}
 #info-icon-label {
     -fx-font-size:16; 
     -fx-text-fill: #333000;
@@ -356,22 +350,22 @@ textfield */
 #wizard-title-active {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: black;
+    -fx-text-fill: #333333;
 }
 #wizard-title-completed {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: black;
+    -fx-text-fill: #333333;
 }
 
 #wizard-sub-title-deactivated {
     -fx-text-fill: #CCCCCC;
 }
 #wizard-sub-title-active {
-    -fx-text-fill: black;
+    -fx-text-fill: #333333;
 }
 #wizard-sub-title-completed {
-    -fx-text-fill: black;
+    -fx-text-fill: #333333;
 }
 
 #wizard-item-background-deactivated {
@@ -417,7 +411,7 @@ textfield */
 #wizard-title-active {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: black;
+    -fx-text-fill: #333333;
 }
 #wizard-title-selected {
     -fx-font-weight: bold;

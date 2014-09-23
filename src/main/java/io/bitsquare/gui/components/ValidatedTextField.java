@@ -55,7 +55,7 @@ public class ValidatedTextField extends TextField {
     private final IntegerProperty minLength;
     private final IntegerProperty maxLength;
 
-    private Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
+    private Effect invalidEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.RED, 4, 0.0, 0, 0);
 
     public ValidatedTextField() {
         super();

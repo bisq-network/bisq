@@ -71,6 +71,10 @@ public class ProcessStepBar<T> extends Control {
             ((ProcessStepBarSkin) getSkin()).setSelectedIndex(selectedIndex);
     }
 
+    public void reset() {
+        if (getSkin() != null)
+            ((ProcessStepBarSkin) getSkin()).reset();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -86,4 +90,6 @@ public class ProcessStepBar<T> extends Control {
     public IntegerProperty selectedIndexProperty() {
         return selectedIndex;
     }
+
+
 }

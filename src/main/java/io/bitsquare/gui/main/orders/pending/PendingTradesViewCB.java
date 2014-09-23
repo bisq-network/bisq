@@ -127,10 +127,31 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         super.activate();
 
         if (!presentationModel.getPendingTrades().isEmpty()) {
+            titledGroupBg.setVisible(true);
+            processBar.setVisible(true);
+            statusLabel.setVisible(true);
+            statusTextField.setVisible(true);
+            txIdLabel.setVisible(true);
+            txIdTextField.setVisible(true);
+            infoDisplay.setVisible(true);
+
             if (presentationModel.isOfferer())
                 setupScreenForOfferer();
             else
                 setupScreenForTaker();
+
+            presentationModel.txId.addListener((ov, oldValue, newValue) ->
+                    txIdTextField.setup(presentationModel.getWalletFacade(), newValue));
+            txIdTextField.setup(presentationModel.getWalletFacade(), presentationModel.txId.get());
+        }
+        else {
+            titledGroupBg.setVisible(false);
+            processBar.setVisible(false);
+            statusLabel.setVisible(false);
+            statusTextField.setVisible(false);
+            txIdLabel.setVisible(false);
+            txIdTextField.setVisible(false);
+            infoDisplay.setVisible(false);
         }
     }
 
@@ -185,15 +206,6 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     private void setupScreenForOfferer() {
         log.debug("setupScreenForOfferer");
 
-        titledGroupBg.setVisible(true);
-        processBar.setVisible(true);
-        statusLabel.setVisible(true);
-        statusTextField.setVisible(true);
-        txIdLabel.setVisible(true);
-        txIdTextField.setVisible(true);
-        infoDisplay.setVisible(true);
-
-        log.debug("setupScreenForTaker");
         if (processBar.getProcessStepItems() == null) {
             List<ProcessStepItem> items = new ArrayList<>();
             items.add(new ProcessStepItem("Wait for block chain confirmation"));
@@ -203,38 +215,35 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
             processBar.setProcessStepItems(items);
         }
 
-        txIdTextField.setup(presentationModel.getWalletFacade(), presentationModel.getTxID());
-
         presentationModel.state.addListener((ov, oldValue, newValue) -> applyOffererState(newValue));
         applyOffererState(presentationModel.state.get());
     }
 
     private void applyOffererState(PendingTradesPM.State state) {
+        paymentsGroupBg.setVisible(false);
+        paymentMethodLabel.setVisible(false);
+        holderNameLabel.setVisible(false);
+        primaryIdLabel.setVisible(false);
+        secondaryIdLabel.setVisible(false);
+        paymentMethodTextField.setVisible(false);
+        paymentsInfoDisplay.setVisible(false);
+        paymentsButton.setVisible(false);
+        holderNameTextField.setVisible(false);
+        primaryIdTextField.setVisible(false);
+        secondaryIdTextField.setVisible(false);
+
+        summaryGroupBg.setVisible(false);
+        btcLabel.setVisible(false);
+        btcTextField.setVisible(false);
+        fiatLabel.setVisible(false);
+        fiatTextField.setVisible(false);
+        feesLabel.setVisible(false);
+        feesTextField.setVisible(false);
+        collateralLabel.setVisible(false);
+        collateralTextField.setVisible(false);
+        summaryInfoDisplay.setVisible(false);
+
         if (state != null) {
-            paymentsGroupBg.setVisible(false);
-            paymentMethodLabel.setVisible(false);
-            holderNameLabel.setVisible(false);
-            primaryIdLabel.setVisible(false);
-            secondaryIdLabel.setVisible(false);
-            paymentMethodTextField.setVisible(false);
-            paymentsInfoDisplay.setVisible(false);
-            paymentsButton.setVisible(false);
-            holderNameTextField.setVisible(false);
-            primaryIdTextField.setVisible(false);
-            secondaryIdTextField.setVisible(false);
-
-            summaryGroupBg.setVisible(false);
-            btcLabel.setVisible(false);
-            btcTextField.setVisible(false);
-            fiatLabel.setVisible(false);
-            fiatTextField.setVisible(false);
-            feesLabel.setVisible(false);
-            feesTextField.setVisible(false);
-            collateralLabel.setVisible(false);
-            collateralTextField.setVisible(false);
-            summaryInfoDisplay.setVisible(false);
-
-
             switch (state) {
                 case OFFERER_BUYER_WAIT_TX_CONF:
                     processBar.setSelectedIndex(0);
@@ -300,6 +309,8 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     collateralTextField.setVisible(true);
                     summaryInfoDisplay.setVisible(true);
 
+                    btcLabel.setText("You have bought:");
+                    fiatLabel.setText("You have paid:");
                     btcTextField.setText(presentationModel.getTradeVolume());
                     fiatTextField.setText(presentationModel.getFiatVolume());
                     feesTextField.setText(presentationModel.getTotalFees());
@@ -308,16 +319,30 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     break;
             }
         }
+        else {
+            processBar.reset();
+        }
     }
 
     private void setupScreenForTaker() {
-        titledGroupBg.setVisible(true);
-        processBar.setVisible(true);
-        statusLabel.setVisible(true);
-        statusTextField.setVisible(true);
-        txIdLabel.setVisible(true);
-        txIdTextField.setVisible(true);
-        infoDisplay.setVisible(true);
+        log.debug("setupScreenForTaker");
+        if (processBar.getProcessStepItems() == null) {
+            List<ProcessStepItem> items = new ArrayList<>();
+            items.add(new ProcessStepItem("Wait for block chain confirmation"));
+            items.add(new ProcessStepItem("Wait for payment started"));
+            items.add(new ProcessStepItem("Confirm  payment"));
+            items.add(new ProcessStepItem("Trade successful completed"));
+            processBar.setProcessStepItems(items);
+        }
+
+        presentationModel.state.addListener((ov, oldValue, newValue) -> applyTakerState(newValue));
+        applyTakerState(presentationModel.state.get());
+    }
+
+    private void applyTakerState(PendingTradesPM.State state) {
+        log.debug("#### state " + state);
+
+        confirmPaymentReceiptButton.setVisible(false);
 
         summaryGroupBg.setVisible(false);
         btcLabel.setVisible(false);
@@ -330,26 +355,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         collateralTextField.setVisible(false);
         summaryInfoDisplay.setVisible(false);
 
-        log.debug("setupScreenForTaker");
-        if (processBar.getProcessStepItems() == null) {
-            List<ProcessStepItem> items = new ArrayList<>();
-            items.add(new ProcessStepItem("Wait for block chain confirmation"));
-            items.add(new ProcessStepItem("Wait for payment started"));
-            items.add(new ProcessStepItem("Confirm  payment"));
-            items.add(new ProcessStepItem("Trade successful completed"));
-            processBar.setProcessStepItems(items);
-        }
-
-        txIdTextField.setup(presentationModel.getWalletFacade(), presentationModel.getTxID());
-
-        presentationModel.state.addListener((ov, oldValue, newValue) -> applyTakerState(newValue));
-        applyTakerState(presentationModel.state.get());
-    }
-
-    private void applyTakerState(PendingTradesPM.State state) {
-        log.debug("#### state " + state);
         if (state != null) {
-            confirmPaymentReceiptButton.setVisible(false);
             switch (state) {
                 case TAKER_SELLER_WAIT_TX_CONF:
                     processBar.setSelectedIndex(0);
@@ -392,6 +398,8 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     collateralTextField.setVisible(true);
                     summaryInfoDisplay.setVisible(true);
 
+                    btcLabel.setText("You have sold:");
+                    fiatLabel.setText("You have received:");
                     btcTextField.setText(presentationModel.getTradeVolume());
                     fiatTextField.setText(presentationModel.getFiatVolume());
                     feesTextField.setText(presentationModel.getTotalFees());
@@ -399,6 +407,9 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     summaryInfoDisplay.setText("You can open that summary any time in the closed orders section.");
                     break;
             }
+        }
+        else {
+            processBar.reset();
         }
     }
 

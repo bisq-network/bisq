@@ -69,10 +69,11 @@ public class BSFormatter {
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
     private static CoinFormat coinFormat = CoinFormat.BTC.repeatOptionalDecimals(2, 1);
 
-    // format is like: 1,00  never more then 2 decimals 
-    private static final CoinFormat fiatFormat = CoinFormat.FIAT.repeatOptionalDecimals(0, 0);
-
     private static String currencyCode = Currency.getInstance(Locale.getDefault()).getCurrencyCode();
+
+    // format is like: 1,00  never more then 2 decimals 
+    private static final CoinFormat fiatFormat = CoinFormat.FIAT.repeatOptionalDecimals(0, 0).code(0, currencyCode);
+
 
     @Inject
     public BSFormatter(User user) {
@@ -115,6 +116,7 @@ public class BSFormatter {
 
     public static void setFiatCurrencyCode(String currencyCode) {
         BSFormatter.currencyCode = currencyCode;
+        fiatFormat.code(0, currencyCode);
     }
 
 

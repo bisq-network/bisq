@@ -24,8 +24,10 @@ import io.bitsquare.gui.util.BSFormatter;
 import com.google.inject.Inject;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ListChangeListener;
@@ -44,7 +46,7 @@ class MainPM extends PresentationModel<MainModel> {
     final BooleanProperty bankAccountsComboBoxDisable = new SimpleBooleanProperty();
     final StringProperty splashScreenInfoText = new SimpleStringProperty();
     final BooleanProperty networkSyncComplete = new SimpleBooleanProperty();
-    final BooleanProperty takeOfferRequested = new SimpleBooleanProperty();
+    final IntegerProperty numPendingTrades = new SimpleIntegerProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +70,7 @@ class MainPM extends PresentationModel<MainModel> {
 
         backendInited.bind(model.backendInited);
         networkSyncComplete.bind(model.networkSyncComplete);
-        takeOfferRequested.bind(model.takeOfferRequested);
+        numPendingTrades.bind(model.numPendingTrades);
 
         model.networkSyncProgress.addListener((ov, oldValue, newValue) -> {
             if ((double) newValue > 0)

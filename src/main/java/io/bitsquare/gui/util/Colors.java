@@ -21,9 +21,9 @@ import javafx.scene.paint.*;
 
 public class Colors {
     public static final Paint BLUE = Color.valueOf("#0f87c3");
-    public static final Paint LIGHT_GREY = Color.valueOf("#AAAAAA");
+    public static final Paint LIGHT_GREY = Color.valueOf("#CCCCCC");
     public static final Paint MID_GREY = Color.valueOf("#666666");
     public static final Paint DARK_GREY = Color.valueOf("#333333");
-    public static final Paint GREEN = Color.valueOf("#00AA00");
+    public static final Paint GREEN = Color.valueOf("#009900");
 
 }

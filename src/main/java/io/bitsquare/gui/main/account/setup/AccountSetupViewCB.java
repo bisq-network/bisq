@@ -109,6 +109,7 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
 
         // triggers navigationTo
         childController = seedWords.show();
+
     }
 
     @Override
@@ -230,6 +231,7 @@ class WizardItem extends HBox {
         imageView.setId("image-arrow-blue");
         titleLabel.setId("wizard-title-active");
         subTitleLabel.setId("wizard-sub-title-active");
+
         return childController;
     }
 

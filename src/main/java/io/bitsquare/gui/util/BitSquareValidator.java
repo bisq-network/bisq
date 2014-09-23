@@ -29,7 +29,7 @@ import javafx.scene.paint.*;
 //TODO to be removed
 @Deprecated
 public class BitSquareValidator {
-    private static final Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
+    private static final Effect invalidEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.RED, 4, 0.0, 0, 0);
     private static final String invalidStyle = "-fx-border-color: red";
 
     public static boolean tradeAmountOutOfRange(Coin tradeAmount, Offer offer) {

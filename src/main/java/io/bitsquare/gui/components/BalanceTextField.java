@@ -42,8 +42,8 @@ public class BalanceTextField extends AnchorPane {
     private final Tooltip progressIndicatorTooltip;
     private final ConfidenceProgressIndicator progressIndicator;
 
-    private final Effect fundedEffect = new DropShadow(BlurType.GAUSSIAN, Color.GREEN, 4, 0.0, 0, 0);
-    private final Effect notFundedEffect = new DropShadow(BlurType.GAUSSIAN, Color.ORANGERED, 4, 0.0, 0, 0);
+    private final Effect fundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.GREEN, 4, 0.0, 0, 0);
+    private final Effect notFundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.ORANGERED, 4, 0.0, 0, 0);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

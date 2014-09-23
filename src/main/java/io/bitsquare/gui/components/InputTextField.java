@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 public class InputTextField extends TextField {
     private static final Logger log = LoggerFactory.getLogger(InputTextField.class);
 
-    private final Effect invalidEffect = new DropShadow(BlurType.GAUSSIAN, Color.RED, 4, 0.0, 0, 0);
+    private final Effect invalidEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.RED, 4, 0.0, 0, 0);
 
     private final ObjectProperty<InputValidator.ValidationResult> validationResult = new SimpleObjectProperty<>
             (new InputValidator.ValidationResult(true));

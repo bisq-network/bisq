@@ -35,6 +35,8 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
@@ -55,6 +57,7 @@ public class PendingTradesModel extends UIModel {
 
     final ObjectProperty<Trade.State> tradeState = new SimpleObjectProperty<>();
     final ObjectProperty<Throwable> fault = new SimpleObjectProperty<>();
+    final StringProperty txId = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -121,6 +124,9 @@ public class PendingTradesModel extends UIModel {
             currentItem = item;
             isOfferer = tradeManager.isTradeMyOffer(currentItem.getTrade());
 
+            // we want to re-trigger a change if the state is the same but different trades
+            tradeState.set(null);
+
             selectedIndex.set(pendingTrades.indexOf(item));
             Trade currentTrade = currentItem.getTrade();
             if (currentTrade.getDepositTx() != null) {
@@ -134,6 +140,11 @@ public class PendingTradesModel extends UIModel {
                 updateConfidence(walletFacade.getConfidenceForTxId(currentItem.getTrade().getDepositTx()
                         .getHashAsString()));
             }
+
+            if (currentItem.getTrade().getDepositTx() != null)
+                txId.set(currentItem.getTrade().getDepositTx().getHashAsString());
+            else
+                txId.set("");
 
             currentTrade.stateProperty().addListener((ov, oldValue, newValue) -> tradeState.set(newValue));
             tradeState.set(currentTrade.stateProperty().get());
@@ -172,13 +183,6 @@ public class PendingTradesModel extends UIModel {
         return currentItem.getTrade();
     }
 
-    public String getTxID() {
-        if (currentItem.getTrade().getDepositTx() != null)
-            return currentItem.getTrade().getDepositTx().getHashAsString();
-        else
-            return null;
-    }
-
     public Coin getTotalFees() {
         Coin tradeFee = isOfferer() ? FeePolicy.CREATE_OFFER_FEE : FeePolicy.TAKE_OFFER_FEE;
         return tradeFee.add(FeePolicy.TX_FEE);
@@ -193,7 +197,9 @@ public class PendingTradesModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateConfidence(TransactionConfidence confidence) {
-        if (confidence != null && confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
+        if (confidence != null &&
+                confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING
+                && currentItem.getTrade().getState() == Trade.State.DEPOSIT_PUBLISHED)
             currentItem.getTrade().setState(Trade.State.DEPOSIT_CONFIRMED);
     }
 

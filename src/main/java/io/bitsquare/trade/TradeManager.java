@@ -20,8 +20,8 @@ package io.bitsquare.trade;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.msg.listeners.TakeOfferRequestListener;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.handlers.ErrorMessageHandler;
@@ -48,9 +48,7 @@ import com.google.bitcoin.utils.Fiat;
 
 import java.io.IOException;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -79,8 +77,6 @@ public class TradeManager {
     private final BlockChainFacade blockChainFacade;
     private final WalletFacade walletFacade;
     private final CryptoFacade cryptoFacade;
-
-    private final List<TakeOfferRequestListener> takeOfferRequestListeners = new ArrayList<>();
 
     //TODO store TakerAsSellerProtocol in trade
     private final Map<String, SellerTakesOfferProtocol> takerAsSellerProtocolMap = new HashMap<>();
@@ -129,19 +125,6 @@ public class TradeManager {
 
     public void cleanup() {
         messageFacade.removeIncomingTradeMessageListener(this::onIncomingTradeMessage);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Event Listeners
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void addTakeOfferRequestListener(TakeOfferRequestListener listener) {
-        takeOfferRequestListeners.add(listener);
-    }
-
-    public void removeTakeOfferRequestListener(TakeOfferRequestListener listener) {
-        takeOfferRequestListeners.remove(listener);
     }
 
 
@@ -404,9 +387,16 @@ public class TradeManager {
     // If the user has shut down the app we lose the offererAsBuyerProtocolMap
     // Also we don't support yet offline messaging (mail box)
     public void bankTransferInited(String tradeId) {
-        offererAsBuyerProtocolMap.get(tradeId).onUIEventBankTransferInited();
-        trades.get(tradeId).setState(Trade.State.PAYMENT_STARTED);
-        persistTrades();
+        if (offererAsBuyerProtocolMap.get(tradeId) != null) {
+            offererAsBuyerProtocolMap.get(tradeId).onUIEventBankTransferInited();
+            trades.get(tradeId).setState(Trade.State.PAYMENT_STARTED);
+            persistTrades();
+        }
+        else {
+            // For usability tests we don't want to crash
+            Popups.openWarningPopup("Sorry, you cannot continue. You have restarted the application in the meantime. " +
+                    "Interruption of the trade process is not supported yet. Will need more time to be implemented.");
+        }
     }
 
     public void onFiatReceived(String tradeId) {
@@ -428,7 +418,6 @@ public class TradeManager {
 
         if (tradeMessage instanceof RequestTakeOfferMessage) {
             createOffererAsBuyerProtocol(tradeId, sender);
-            takeOfferRequestListeners.stream().forEach(e -> e.onTakeOfferRequested(tradeId, sender));
         }
         else if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
             takerAsSellerProtocolMap.get(tradeId).onRespondToTakeOfferRequestMessage(

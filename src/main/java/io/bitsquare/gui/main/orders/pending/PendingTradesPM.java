@@ -63,6 +63,7 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     final ObjectProperty<State> state = new SimpleObjectProperty<>();
     final ObjectProperty<Trade.State> tradeState = new SimpleObjectProperty<>();
     final ObjectProperty<Throwable> fault = new SimpleObjectProperty<>();
+    final StringProperty txId = new SimpleStringProperty();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -83,11 +84,11 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     @Override
     public void initialize() {
         selectedIndex.bind(model.selectedIndex);
-        tradeState.addListener((ov, oldValue, newValue) -> {
+        txId.bind(model.txId);
+        model.tradeState.addListener((ov, oldValue, newValue) -> {
             updateState();
         });
         fault.bind(model.fault);
-
 
         super.initialize();
     }
@@ -141,10 +142,6 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
 
     public boolean isOfferer() {
         return model.isOfferer();
-    }
-
-    public String getTxID() {
-        return model.getTxID();
     }
 
     public WalletFacade getWalletFacade() {
@@ -244,6 +241,9 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
                     log.warn("unhandled state " + state);
                     break;
             }
+        }
+        else {
+            state.set(null);
         }
     }
 
