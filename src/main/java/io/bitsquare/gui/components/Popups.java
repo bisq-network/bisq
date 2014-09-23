@@ -169,6 +169,8 @@ public class Popups {
     // Support handling of uncaught exception from any thread (also non gui thread)
     public static void handleUncaughtExceptions(Throwable throwable) {
         // while dev
+        log.error(throwable.getMessage());
+        log.error(throwable.toString());
         throwable.printStackTrace();
 
         Runnable runnable = () -> {

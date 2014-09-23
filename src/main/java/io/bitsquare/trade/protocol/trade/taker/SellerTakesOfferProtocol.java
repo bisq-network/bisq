@@ -197,6 +197,7 @@ public class SellerTakesOfferProtocol {
 
         if (message.isTakeOfferRequestAccepted()) {
             state = State.PayTakeOfferFee;
+            listener.onTakeOfferRequestAccepted(trade);
             PayTakeOfferFee.run(this::onResultPayTakeOfferFee, this::onFault, walletFacade, tradeId);
         }
         else {
@@ -319,7 +320,9 @@ public class SellerTakesOfferProtocol {
         log.debug("state " + state);
         checkState(state.ordinal() >= State.SendSignedTakerDepositTxAsHex.ordinal());
         checkArgument(tradeId.equals(message.getTradeId()));
-        listener.onDepositTxPublished(walletFacade.takerCommitDepositTx(message.getDepositTxAsHex()));
+        //TODO takerCommitDepositTx should be in task as well, but will be probably changed anyway when akka is used...
+        Transaction tx = walletFacade.takerCommitDepositTx(message.getDepositTxAsHex());
+        listener.onDepositTxPublished(tx);
     }
 
 
@@ -378,9 +381,9 @@ public class SellerTakesOfferProtocol {
                 offererPayoutAddress);
     }
 
-    public void onResultSignAndPublishPayoutTx(String transactionId, String payoutTxAsHex) {
+    public void onResultSignAndPublishPayoutTx(Transaction transaction, String payoutTxAsHex) {
         log.debug("onResultSignAndPublishPayoutTx called " + step++);
-        listener.onPayoutTxPublished(trade, transactionId);
+        listener.onPayoutTxPublished(trade, transaction);
 
         state = State.SendPayoutTxToOfferer;
         SendPayoutTxToOfferer.run(this::onResultSendPayoutTxToOfferer, this::onFault, peerAddress, messageFacade,

@@ -81,15 +81,14 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        direction = (this instanceof BuyViewCB) ? Direction.BUY : Direction.SELL;
+        navigationItem = (direction == Direction.BUY) ? Navigation.Item.BUY : Navigation.Item.SELL;
+
         listener = navigationItems -> {
             if (navigationItems != null && navigationItems.length == 3 && navigationItems[1] == navigationItem) {
                 loadView(navigationItems[2]);
             }
         };
-
-        direction = (this instanceof BuyViewCB) ? Direction.BUY : Direction.SELL;
-        // orderBookInfo.setDirection(direction);
-        navigationItem = (direction == Direction.BUY) ? Navigation.Item.BUY : Navigation.Item.SELL;
 
         super.initialize(url, rb);
     }
@@ -126,6 +125,8 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
     @Override
     public void deactivate() {
         super.deactivate();
+
+        navigation.removeListener(listener);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -224,9 +225,6 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
             } catch (IOException e) {
                 log.error(e.getMessage());
             }
-        }
-        else {
-            log.error("navigationItem not supported: " + navigationItem);
         }
         return null;
     }

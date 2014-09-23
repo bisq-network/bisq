@@ -75,7 +75,7 @@ public class CreateOfferUITestRunner extends Application {
             refreshStylesheets();
         } catch (IOException e) {
             e.printStackTrace();
-            log.error(e.getStackTrace().toString());
+            e.printStackTrace();
         }
     }
 

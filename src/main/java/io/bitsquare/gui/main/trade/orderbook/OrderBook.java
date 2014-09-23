@@ -31,7 +31,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 import javafx.animation.AnimationTimer;
-import javafx.beans.InvalidationListener;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -58,7 +57,7 @@ public class OrderBook {
     private final ObservableList<OrderBookListItem> orderBookListItems = FXCollections.observableArrayList();
     private final OrderBookListener orderBookListener;
     private final ChangeListener<BankAccount> bankAccountChangeListener;
-    private final InvalidationListener invalidationListener;
+    private final ChangeListener<Number> invalidationListener;
     private String fiatCode;
     private AnimationTimer pollingTimer;
     private Country country;
@@ -75,7 +74,10 @@ public class OrderBook {
         this.user = user;
 
         bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
-        invalidationListener = (ov) -> requestOffers();
+        invalidationListener = (ov, oldValue, newValue) -> {
+            log.debug("#### invalidationListener " + newValue);
+            requestOffers();
+        };
 
         orderBookListener = new OrderBookListener() {
             @Override
@@ -142,12 +144,14 @@ public class OrderBook {
     }
 
     private void addListeners() {
+        log.debug("addListeners ");
         user.currentBankAccountProperty().addListener(bankAccountChangeListener);
         messageFacade.addOrderBookListener(orderBookListener);
         messageFacade.invalidationTimestampProperty().addListener(invalidationListener);
     }
 
     private void removeListeners() {
+        log.debug("removeListeners ");
         user.currentBankAccountProperty().removeListener(bankAccountChangeListener);
         messageFacade.removeOrderBookListener(orderBookListener);
         messageFacade.invalidationTimestampProperty().removeListener(invalidationListener);
@@ -160,6 +164,7 @@ public class OrderBook {
     }
 
     private void requestOffers() {
+        log.debug("#### requestOffers");
         messageFacade.getOffers(fiatCode);
     }
 
@@ -173,7 +178,7 @@ public class OrderBook {
         addListeners();
         setBankAccount(user.getCurrentBankAccount());
         pollingTimer = Utilities.setInterval(1000, (animationTimer) -> {
-            messageFacade.requestInvalidationTimeStamp(fiatCode);
+            messageFacade.requestInvalidationTimeStampFromDHT(fiatCode);
             return null;
         });
 

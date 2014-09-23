@@ -49,6 +49,9 @@ import javafx.stage.Stage;
 import net.tomp2p.peers.Number640;
 import net.tomp2p.storage.Data;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * TODO remove tomp2p dependencies
  * import net.tomp2p.peers.Number160;
@@ -57,6 +60,8 @@ import net.tomp2p.storage.Data;
  * Arbitration is not much developed yet
  */
 public class ArbitratorBrowserController extends CachedViewController implements ArbitratorListener {
+    private static final Logger log = LoggerFactory.getLogger(ArbitratorBrowserController.class);
+
     private final Settings settings;
     private final Persistence persistence;
 

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bitsquare.
+  ~
+  ~ Bitsquare is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+
+<?import io.bitsquare.gui.components.processbar.ProcessStepBar?>
+<?import io.bitsquare.gui.components.TitledGroupBg?>
+<?import io.bitsquare.gui.components.TitledSeparator?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.orders.pending.uimock.PendingTradesControllerUIMock"
+          hgap="5.0" vgap="5" stylesheets="@../../../../../../../../../main/java/io/bitsquare/gui/bitsquare.css"
+          xmlns:fx="http://javafx.com/fxml">
+    <padding>
+        <Insets bottom="20.0" left="25.0" top="30.0" right="25"/>
+    </padding>
+
+    <TitledSeparator text="Pending trades" GridPane.rowIndex="0" GridPane.columnIndex="0"
+                     GridPane.columnSpan="2"/>
+
+    <TableView fx:id="orderBookTable" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"
+               prefHeight="150">
+        <GridPane.margin>
+            <Insets top="10.0" left="-10" right="-10"/>
+        </GridPane.margin>
+        <columns>
+            <TableColumn text="Amount in BTC (Min.)" fx:id="amountColumn" minWidth="130"/>
+            <TableColumn text="Price" fx:id="priceColumn" minWidth="130"/>
+            <TableColumn text="Amount in EUR (Min.)" fx:id="volumeColumn" minWidth="130"/>
+            <TableColumn text="Country" fx:id="countryColumn" minWidth="60"/>
+            <TableColumn text="Bank transfer type" fx:id="bankAccountTypeColumn" minWidth="130"/>
+            <TableColumn text="" fx:id="directionColumn" minWidth="80" sortable="false"/>
+
+        </columns>
+    </TableView>
+
+
+    <ProcessStepBar fx:id="processBar" GridPane.columnSpan="2" GridPane.rowIndex="1" snapToPixel="true">
+        <GridPane.margin>
+            <Insets top="30.0" bottom="-10" left="-10" right="-10"/>
+        </GridPane.margin>
+    </ProcessStepBar>
+
+    <TitledGroupBg fx:id="priceAmountPane" text="Pending trade"
+                   GridPane.rowSpan="2" GridPane.columnSpan="2" GridPane.rowIndex="2">
+        <GridPane.margin>
+            <Insets top="40.0" bottom="-10" left="-10" right="-10"/>
+        </GridPane.margin>
+    </TitledGroupBg>
+
+
+    <Label text="Status:" GridPane.rowIndex="2">
+        <GridPane.margin>
+            <Insets top="50.0"/>
+        </GridPane.margin>
+    </Label>
+    <TextField disable="true" GridPane.rowIndex="2" GridPane.columnIndex="1" text="Blabal">
+        <GridPane.margin>
+            <Insets top="50.0"/>
+        </GridPane.margin>
+    </TextField>
+
+    <Label text="Deposit transaction ID:" GridPane.rowIndex="3"/>
+    <TextField disable="true" GridPane.rowIndex="3" GridPane.columnIndex="1" text="324dsfsdffdafsdfasdf324"/>
+
+    <!--
+    <InfoDisplay gridPane="root"  rowIndex="3"
+                 text="%createOffer.amountPriceBox.info"/>
+                 -->
+
+    <columnConstraints>
+        <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="200"/>
+        <ColumnConstraints hgrow="ALWAYS"/>
+    </columnConstraints>
+
+    <rowConstraints>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+    </rowConstraints>
+
+</GridPane>

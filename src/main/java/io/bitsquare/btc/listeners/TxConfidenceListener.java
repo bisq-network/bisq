@@ -17,18 +17,17 @@
 
 package io.bitsquare.btc.listeners;
 
-import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.TransactionConfidence;
 
-public class ConfidenceListener {
-    private final Address address;
+public class TxConfidenceListener {
+    private final String txID;
 
-    public ConfidenceListener(Address address) {
-        this.address = address;
+    public TxConfidenceListener(String txID) {
+        this.txID = txID;
     }
 
-    public Address getAddress() {
-        return address;
+    public String getTxID() {
+        return txID;
     }
 
     public void onTransactionConfidenceChanged(TransactionConfidence confidence) {

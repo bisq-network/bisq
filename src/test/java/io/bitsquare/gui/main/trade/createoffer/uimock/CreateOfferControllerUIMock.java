@@ -72,7 +72,7 @@ public class CreateOfferControllerUIMock implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-
+/*
         paymentInfoPane.setVisible(false);
         collateralLabel.setVisible(false);
         collateralTextField.setVisible(false);
@@ -114,7 +114,7 @@ public class CreateOfferControllerUIMock implements Initializable {
         bankAccountCountyLabel.setVisible(false);
         bankAccountCountyTextField.setVisible(false);
         showDetailsInfoIcon.setVisible(false);
-        showDetailsInfoLabel.setVisible(false);
+        showDetailsInfoLabel.setVisible(false);*/
     }
 
    /* @FXML

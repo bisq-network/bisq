@@ -68,7 +68,7 @@ public class CreateOfferUIMockRunner extends Application {
         log.debug("re load");
         pane.getChildren().removeAll();
         ViewLoader loader = new ViewLoader(
-                getUrl("/io/bitsquare/gui/trade/createoffer/uimock/CreateOfferViewUIMock.fxml"), false);
+                getUrl("/io/bitsquare/gui/main/trade/createoffer/uimock/CreateOfferViewUIMock.fxml"), false);
 
         try {
             view = loader.load();

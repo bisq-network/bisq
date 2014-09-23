@@ -26,8 +26,6 @@ import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocol;
-import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocolListener;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.utils.ExchangeRate;
@@ -155,116 +153,24 @@ class TakeOfferModel extends UIModel {
     }
 
     void takeOffer() {
-        // data validation is done in the trade domain
-        /*tradeManager.requestPlaceOffer(orderBookInfo.getOffer().getId(),
-                orderBookInfo.getOffer().getDirection(),
-                priceAsFiat.get(),
-                amountAsCoin.get(),
-                minAmountAsCoin.get(),
-                (transaction) -> {
-                    transactionId.set(transaction.getHashAsString());
+        Trade trade = tradeManager.takeOffer(amountAsCoin.get(), offer);
+        trade.stateProperty().addListener((ov, oldValue, newValue) -> {
+            switch (newValue) {
+                case DEPOSIT_PUBLISHED:
+                    transactionId.set(trade.getDepositTx().getHashAsString());
                     requestTakeOfferSuccess.set(true);
-                },
-                requestTakeOfferErrorMessage::set
-        );*/
-        SellerTakesOfferProtocolListener listener = new SellerTakesOfferProtocolListener() {
-            @Override
-            public void onDepositTxPublished(String depositTxId) {
-                transactionId.set(depositTxId);
-                requestTakeOfferSuccess.set(true);
-            }
-
-            @Override
-            public void onBankTransferInited(String tradeId) {
+                    break;
+                case FAULT:
+                    requestTakeOfferErrorMessage.set("An error occurred. Error: " + trade.getFault().getMessage());
+                    break;
+                case OFFERER_REJECTED:
+                    requestTakeOfferErrorMessage.set("Take offer request got rejected.");
+                    break;
 
             }
 
-            @Override
-            public void onPayoutTxPublished(Trade trade, String hashAsString) {
 
-            }
-
-            @Override
-            public void onFault(Throwable throwable, SellerTakesOfferProtocol.State state) {
-                requestTakeOfferErrorMessage.set("An error occurred. Error: " + throwable.getMessage());
-            }
-
-            @Override
-            public void onWaitingForPeerResponse(SellerTakesOfferProtocol.State state) {
-
-            }
-
-            @Override
-            public void onCompleted(SellerTakesOfferProtocol.State state) {
-
-            }
-
-            @Override
-            public void onTakeOfferRequestRejected(Trade trade) {
-                requestTakeOfferErrorMessage.set("Take offer request got rejected.");
-            }
-        };
-
-        tradeManager.takeOffer(amountAsCoin.get(), offer, listener);
-        /*new SellerTakesOfferProtocolListener() {
-            @Override
-            public void onDepositTxPublished(String depositTxId) {
-                setDepositTxId(depositTxId);
-                accordion.setExpandedPane(waitBankTxTitledPane);
-                infoLabel.setText("Deposit transaction published by offerer.\n" +
-                        "As soon as the offerer starts the \n" +
-                        "Bank transfer, you will be informed.");
-                depositTxIdTextField.setText(depositTxId);
-            }
-
-            @Override
-            public void onBankTransferInited(String tradeId) {
-                setTradeId(tradeId);
-                headLineLabel.setText("Bank transfer initiated");
-                infoLabel.setText("Check your bank account and continue \n" + "when you have received the money.");
-                receivedFiatButton.setDisable(false);
-            }
-
-            @Override
-            public void onPayoutTxPublished(Trade trade, String payoutTxId) {
-                accordion.setExpandedPane(summaryTitledPane);
-
-                summaryPaidTextField.setText(BSFormatter.formatCoinWithCode(trade.getTradeAmount()));
-                summaryReceivedTextField.setText(BSFormatter.formatFiat(trade.getTradeVolume()));
-                summaryFeesTextField.setText(BSFormatter.formatCoinWithCode(
-                        FeePolicy.TAKE_OFFER_FEE.add(FeePolicy.TX_FEE)));
-                summaryCollateralTextField.setText(BSFormatter.formatCoinWithCode(
-                        trade.getCollateralAmount()));
-                summaryDepositTxIdTextField.setText(depositTxId);
-                summaryPayoutTxIdTextField.setText(payoutTxId);
-            }
-
-            @Override
-            public void onFault(Throwable throwable, SellerTakesOfferProtocol.State state) {
-                log.error("Error while executing trade process at state: " + state + " / " + throwable);
-                Popups.openErrorPopup("Error while executing trade process",
-                        "Error while executing trade process at state: " + state + " / " + throwable);
-            }
-
-            @Override
-            public void onWaitingForPeerResponse(SellerTakesOfferProtocol.State state) {
-                log.debug("Waiting for peers response at state " + state);
-            }
-
-            @Override
-            public void onCompleted(SellerTakesOfferProtocol.State state) {
-                log.debug("Trade protocol completed at state " + state);
-            }
-
-            @Override
-            public void onTakeOfferRequestRejected(Trade trade) {
-                log.error("Take offer request rejected");
-                Popups.openErrorPopup("Take offer request rejected",
-                        "Your take offer request has been rejected. It might be that the offerer got another " +
-                                "request shortly before your request arrived.");
-            }
-        });*/
-
+        });
     }
 
     void calculateVolume() {

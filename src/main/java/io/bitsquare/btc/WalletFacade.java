@@ -18,8 +18,9 @@
 package io.bitsquare.btc;
 
 import io.bitsquare.BitSquare;
+import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.listeners.ConfidenceListener;
+import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.persistence.Persistence;
 
@@ -104,7 +105,8 @@ public class WalletFacade {
     private final CryptoFacade cryptoFacade;
     private final Persistence persistence;
     private final List<DownloadListener> downloadListeners = new ArrayList<>();
-    private final List<ConfidenceListener> confidenceListeners = new ArrayList<>();
+    private final List<AddressConfidenceListener> addressConfidenceListeners = new ArrayList<>();
+    private final List<TxConfidenceListener> txConfidenceListeners = new ArrayList<>();
     private final List<BalanceListener> balanceListeners = new ArrayList<>();
     private Wallet wallet;
     private WalletEventListener walletEventListener;
@@ -268,13 +270,22 @@ public class WalletFacade {
         downloadListeners.remove(listener);
     }
 
-    public ConfidenceListener addConfidenceListener(ConfidenceListener listener) {
-        confidenceListeners.add(listener);
+    public AddressConfidenceListener addAddressConfidenceListener(AddressConfidenceListener listener) {
+        addressConfidenceListeners.add(listener);
         return listener;
     }
 
-    public void removeConfidenceListener(ConfidenceListener listener) {
-        confidenceListeners.remove(listener);
+    public void removeAddressConfidenceListener(AddressConfidenceListener listener) {
+        addressConfidenceListeners.remove(listener);
+    }
+
+    public TxConfidenceListener addTxConfidenceListener(TxConfidenceListener listener) {
+        txConfidenceListeners.add(listener);
+        return listener;
+    }
+
+    public void removeTxConfidenceListener(TxConfidenceListener listener) {
+        txConfidenceListeners.remove(listener);
     }
 
     public BalanceListener addBalanceListener(BalanceListener listener) {
@@ -354,16 +365,31 @@ public class WalletFacade {
         return getMostRecentConfidence(transactionConfidenceList);
     }
 
-    private void notifyConfidenceListeners(Transaction tx) {
-        for (ConfidenceListener confidenceListener : confidenceListeners) {
-            List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
-            transactionConfidenceList.add(getTransactionConfidence(tx, confidenceListener.getAddress()));
-
-            TransactionConfidence transactionConfidence = getMostRecentConfidence(transactionConfidenceList);
-            confidenceListener.onTransactionConfidenceChanged(transactionConfidence);
+    public TransactionConfidence getConfidenceForTxId(String txId) {
+        if (wallet != null) {
+            Set<Transaction> transactions = wallet.getTransactions(true);
+            for (Transaction tx : transactions) {
+                if (tx.getHashAsString().equals(txId))
+                    return tx.getConfidence();
+            }
         }
+        return null;
     }
 
+    private void notifyConfidenceListeners(Transaction tx) {
+        for (AddressConfidenceListener addressConfidenceListener : addressConfidenceListeners) {
+            List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
+            transactionConfidenceList.add(getTransactionConfidence(tx, addressConfidenceListener.getAddress()));
+
+            TransactionConfidence transactionConfidence = getMostRecentConfidence(transactionConfidenceList);
+            addressConfidenceListener.onTransactionConfidenceChanged(transactionConfidence);
+        }
+
+        for (TxConfidenceListener txConfidenceListener : txConfidenceListeners) {
+            if (tx.getHashAsString().equals(txConfidenceListener.getTxID()))
+                txConfidenceListener.onTransactionConfidenceChanged(tx.getConfidence());
+        }
+    }
 
     private TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
         List<TransactionOutput> mergedOutputs = getOutputsWithConnectedOutputs(tx);
@@ -924,7 +950,7 @@ public class WalletFacade {
     }
 
     // 4 step deposit tx: Offerer send deposit tx to taker
-    public String takerCommitDepositTx(String depositTxAsHex) {
+    public Transaction takerCommitDepositTx(String depositTxAsHex) {
         log.trace("takerCommitDepositTx");
         log.trace("inputs: ");
         log.trace("depositTxID=" + depositTxAsHex);
@@ -941,7 +967,7 @@ public class WalletFacade {
             throw new RuntimeException(e); // Cannot happen, we already called multisigContract.verify()
         }
 
-        return depositTx.getHashAsString();
+        return depositTx;
 
     }
 

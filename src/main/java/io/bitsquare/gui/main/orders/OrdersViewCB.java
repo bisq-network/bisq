@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.account;
+package io.bitsquare.gui.main.orders;
 
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
@@ -38,14 +38,13 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountViewCB extends CachedViewCB<AccountPM> {
-
-    private static final Logger log = LoggerFactory.getLogger(AccountViewCB.class);
+public class OrdersViewCB extends CachedViewCB {
+    private static final Logger log = LoggerFactory.getLogger(OrdersViewCB.class);
 
     private Navigation navigation;
     private Navigation.Listener listener;
 
-    @FXML Tab tab;
+    @FXML Tab offersTab, pendingTradesTab, closedTradesTab;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -53,8 +52,8 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountViewCB(AccountPM presentationModel, Navigation navigation) {
-        super(presentationModel);
+    OrdersViewCB(Navigation navigation) {
+        super();
 
         this.navigation = navigation;
     }
@@ -67,32 +66,23 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         listener = navigationItems -> {
-            if (navigationItems != null &&
-                    navigationItems.length == 3 &&
-                    navigationItems[1] == Navigation.Item.ACCOUNT)
+            if (navigationItems != null && navigationItems.length == 3 && navigationItems[1] == Navigation.Item.ORDERS)
                 loadView(navigationItems[2]);
         };
 
         super.initialize(url, rb);
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();
 
         navigation.addListener(listener);
-
-        if (navigation.getCurrentItems().length == 2 &&
-                navigation.getCurrentItems()[1] == Navigation.Item.ACCOUNT) {
-            if (presentationModel.getNeedRegistration())
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
-                        Navigation.Item.ACCOUNT_SETUP);
-            else
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
-                        Navigation.Item.ACCOUNT_SETTINGS);
-        }
+        navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.PENDING_TRADES);
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
@@ -115,11 +105,23 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
 
-        tab.setText((navigationItem == Navigation.Item.ACCOUNT_SETUP) ? "Account setup" : "Account settings");
         final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
-            AnchorPane view = loader.load();
+            GridPane view = loader.load();
+            Tab tab = null;
+            switch (navigationItem) {
+                case OFFERS:
+                    tab = offersTab;
+                    break;
+                case PENDING_TRADES:
+                    tab = pendingTradesTab;
+                    break;
+                case CLOSED_TRADES:
+                    tab = closedTradesTab;
+                    break;
+            }
             tab.setContent(view);
+            ((TabPane) root).getSelectionModel().select(tab);
             Initializable childController = loader.getController();
             ((ViewCB) childController).setParent(this);
 
@@ -129,11 +131,6 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
         }
         return childController;
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
 
 }

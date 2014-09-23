@@ -141,7 +141,7 @@ public class MainViewCB extends ViewCB<MainPM> {
 
             return childController;
         } catch (IOException e) {
-            e.getStackTrace();
+            e.printStackTrace();
             log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
         }
         return null;
@@ -191,7 +191,7 @@ public class MainViewCB extends ViewCB<MainPM> {
             alertButton.setOnAction((e) ->
                     navigation.navigationTo(Navigation.Item.MAIN,
                             Navigation.Item.ORDERS,
-                            Navigation.Item.PENDING_TRADE));
+                            Navigation.Item.PENDING_TRADES));
             Tooltip.install(alertButton, new Tooltip("Your offer has been accepted"));
             ordersButtonButtonPane.getChildren().add(alertButton);
 

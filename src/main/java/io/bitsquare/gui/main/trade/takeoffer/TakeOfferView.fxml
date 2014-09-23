@@ -17,8 +17,8 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import io.bitsquare.gui.components.btc.AddressTextField?>
-<?import io.bitsquare.gui.components.btc.BalanceTextField?>
+<?import io.bitsquare.gui.components.AddressTextField?>
+<?import io.bitsquare.gui.components.BalanceTextField?>
 <?import io.bitsquare.gui.components.InfoDisplay?>
 <?import io.bitsquare.gui.components.InputTextField?>
 <?import io.bitsquare.gui.components.TitledGroupBg?>
@@ -77,7 +77,7 @@
                 </VBox>
                 <Label text="x">
                     <font>
-                        <Font name="Helvetica" size="20.0"/>
+                        <Font name="Helvetica-Bold" size="20.0"/>
                     </font>
                     <padding>
                         <Insets top="14.0" left="3" right="3"/>
@@ -92,7 +92,7 @@
 
                 <Label text="=">
                     <font>
-                        <Font name="Helvetica" size="20.0"/>
+                        <Font name="Helvetica-Bold" size="20.0"/>
                     </font>
                     <padding>
                         <Insets top="14.0" left="2" right="2"/>

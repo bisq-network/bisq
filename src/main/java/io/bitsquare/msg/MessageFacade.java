@@ -191,7 +191,7 @@ public class MessageFacade implements MessageBroker {
                             });
 
                             // TODO will be removed when we don't use polling anymore
-                            updateInvalidationTimestamp(locationKey);
+                            writeInvalidationTimestampToDHT(locationKey);
                             log.trace("Add offer to DHT was successful. Added data: [locationKey: " + locationKey +
                                     ", value: " + offerData + "]");
                         });
@@ -246,7 +246,7 @@ public class MessageFacade implements MessageBroker {
                                     log.error("Remove offer from DHT failed. Error: " + e.getMessage());
                                 }
                             });
-                            updateInvalidationTimestamp(locationKey);
+                            writeInvalidationTimestampToDHT(locationKey);
                         });
 
                         log.trace("Remove offer from DHT was successful. Removed data: [key: " + locationKey + ", " +
@@ -448,7 +448,7 @@ public class MessageFacade implements MessageBroker {
     // Polling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void updateInvalidationTimestamp(Number160 locationKey) {
+    private void writeInvalidationTimestampToDHT(Number160 locationKey) {
         invalidationTimestamp.set(System.currentTimeMillis());
         try {
             FuturePut putFuture = p2pNode.putData(getInvalidatedLocationKey(locationKey),
@@ -477,7 +477,7 @@ public class MessageFacade implements MessageBroker {
         return invalidationTimestamp;
     }
 
-    public void requestInvalidationTimeStamp(String currencyCode) {
+    public void requestInvalidationTimeStampFromDHT(String currencyCode) {
         Number160 locationKey = Number160.createHash(currencyCode);
         try {
             FutureGet getFuture = p2pNode.getData(getInvalidatedLocationKey(locationKey));
@@ -490,14 +490,18 @@ public class MessageFacade implements MessageBroker {
                             final Object object = data.object();
                             Platform.runLater(() -> {
                                 Long timeStamp = (Long) object;
-                                // log.trace("Get invalidationTimestamp from DHT was successful. TimeStamp=" + 
-                                // timeStamp);
+                                log.trace("Get invalidationTimestamp from DHT was successful. TimeStamp=" +
+                                        timeStamp);
                                 invalidationTimestamp.set(timeStamp);
                             });
                         }
                         else {
                             log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
                         }
+                    }
+                    else if (getFuture.data() == null) {
+                        // OK as nothing is set at the moment
+                        log.trace("Get invalidationTimestamp from DHT returns null. That is ok for the startup.");
                     }
                     else {
                         log.error("Get invalidationTimestamp from DHT failed with reason:" + getFuture.failedReason());

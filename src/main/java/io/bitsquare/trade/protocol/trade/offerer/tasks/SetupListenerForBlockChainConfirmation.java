@@ -40,9 +40,6 @@ public class SetupListenerForBlockChainConfirmation {
             @Override
             public void onConfidenceChanged(Transaction tx, ChangeReason reason) {
                 log.trace("onConfidenceChanged " + tx.getConfidence());
-                if (reason == ChangeReason.SEEN_PEERS) {
-                    listener.onDepositTxConfirmedUpdate(tx.getConfidence());
-                }
                 if (reason == ChangeReason.TYPE &&
                         tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
                     listener.onDepositTxConfirmedInBlockchain();

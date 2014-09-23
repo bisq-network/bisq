@@ -23,7 +23,7 @@
 <?import javafx.scene.layout.*?>
 <GridPane hgap="5.0" vgap="5.0" fx:id="root"
           fx:controller="io.bitsquare.gui.main.settings.uimock.BankAccountSettingsControllerUIMock"
-          stylesheets="@../../../../../../../main/java/io/bitsquare/gui/bitsquare.css"
+          stylesheets="@../../../../../../../../main/java/io/bitsquare/gui/bitsquare.css"
           AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
           AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">

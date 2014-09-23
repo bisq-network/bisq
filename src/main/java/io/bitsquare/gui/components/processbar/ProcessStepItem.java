@@ -14,25 +14,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
+package io.bitsquare.gui.components.processbar;
 
-package io.bitsquare.trade.protocol.trade.offerer;
+public class ProcessStepItem {
+    private final String label;
 
-import io.bitsquare.trade.Offer;
+    public ProcessStepItem(String label) {
+        this.label = label;
+    }
 
-import com.google.bitcoin.core.Transaction;
+    String getLabel() {
+        return label;
+    }
 
-public interface BuyerAcceptsOfferProtocolListener {
-    void onOfferAccepted(Offer offer);
-
-    void onDepositTxPublished(Transaction depositTx);
-
-    void onDepositTxConfirmedInBlockchain();
-
-    void onPayoutTxPublished(Transaction payoutTx);
-
-    void onFault(Throwable throwable, BuyerAcceptsOfferProtocol.State state);
-
-    void onWaitingForPeerResponse(BuyerAcceptsOfferProtocol.State state);
-
-    void onWaitingForUserInteraction(BuyerAcceptsOfferProtocol.State state);
 }

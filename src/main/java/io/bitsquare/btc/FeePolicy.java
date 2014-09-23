@@ -63,7 +63,7 @@ public class FeePolicy {
         try {
             return new Address(params, registrationFeeAddress);
         } catch (AddressFormatException e) {
-            e.printStackTrace();
+             e.printStackTrace();
             return null;
         }
     }*/

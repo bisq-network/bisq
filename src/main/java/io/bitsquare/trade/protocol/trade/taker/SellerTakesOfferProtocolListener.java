@@ -19,12 +19,14 @@ package io.bitsquare.trade.protocol.trade.taker;
 
 import io.bitsquare.trade.Trade;
 
+import com.google.bitcoin.core.Transaction;
+
 public interface SellerTakesOfferProtocolListener {
-    void onDepositTxPublished(String depositTxId);
+    void onDepositTxPublished(Transaction depositTx);
 
     void onBankTransferInited(String tradeId);
 
-    void onPayoutTxPublished(Trade trade, String hashAsString);
+    void onPayoutTxPublished(Trade trade, Transaction payoutTx);
 
     void onFault(Throwable throwable, SellerTakesOfferProtocol.State state);
 
@@ -32,5 +34,8 @@ public interface SellerTakesOfferProtocolListener {
 
     void onCompleted(SellerTakesOfferProtocol.State state);
 
+    void onTakeOfferRequestAccepted(Trade trade);
+
     void onTakeOfferRequestRejected(Trade trade);
+
 }

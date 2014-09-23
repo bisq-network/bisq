@@ -23,13 +23,32 @@ import com.google.bitcoin.utils.Fiat;
 
 import java.io.Serializable;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
 //TODO flatten down?
 
 public class Trade implements Serializable {
     private static final long serialVersionUID = -8275323072940974077L;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Enum
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static enum State {
+        OPEN,
+        OFFERER_ACCEPTED,
+        OFFERER_REJECTED, /* For taker only*/
+        DEPOSIT_PUBLISHED,
+        DEPOSIT_CONFIRMED,
+        PAYMENT_STARTED,
+        PAYMENT_RECEIVED,  /* For taker only*/
+        PAYOUT_PUBLISHED,
+        FAULT
+    }
+
 
     private final Offer offer;
     private String takeOfferFeeTxID;
@@ -37,30 +56,29 @@ public class Trade implements Serializable {
     private Contract contract;
     private String contractAsJson;
     private String takerSignature;
-    private Transaction depositTransaction;
-    private Transaction payoutTransaction;
-    private State state = State.OPEN;
+    private Transaction depositTx;
+    private Transaction payoutTx;
+    private State state;
+    private Throwable fault;
 
-    // The Property fields are not serialized and therefore not initialized when read from disc.
-    // We need to access then with the getter to be sure it is not null.
-    // Don't access them directly, use the getter method
-    transient private SimpleBooleanProperty _depositTxChangedProperty;
-    transient private SimpleBooleanProperty _payoutTxChangedProperty;
-    transient private SimpleBooleanProperty _contractChangedProperty;
-    transient private SimpleStringProperty _stateChangedProperty;
+    // When serialized those transient properties are not instantiated, so we instantiate them in the getters at first 
+    // access. Only use the accessor not the private field.
+    // TODO use ObjectPropertys instead of BooleanProperty
+    transient private BooleanProperty _payoutTxChanged;
+    transient private BooleanProperty _contractChanged;
+    transient private ObjectProperty<Transaction> _depositTx;
+    transient private ObjectProperty<State> _state;
+    transient private ObjectProperty<Throwable> _fault;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Trade(Offer offer) {
         this.offer = offer;
-
-        _depositTxChangedProperty = new SimpleBooleanProperty();
-        _payoutTxChangedProperty = new SimpleBooleanProperty();
-        _contractChangedProperty = new SimpleBooleanProperty();
-        _stateChangedProperty = new SimpleStringProperty();
+        state = State.OPEN;
     }
 
-    public Fiat getTradeVolume() {
-        return offer.getVolumeByAmount(tradeAmount);
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
@@ -86,9 +104,65 @@ public class Trade implements Serializable {
         return contract;
     }
 
+    public void setContractAsJson(String contractAsJson) {
+        this.contractAsJson = contractAsJson;
+    }
+
     public void setContract(Contract contract) {
         this.contract = contract;
-        _contractChangedProperty.set(!_contractChangedProperty.get());
+        contractChangedProperty().set(!contractChangedProperty().get());
+    }
+
+    public void setDepositTx(Transaction tx) {
+        this.depositTx = tx;
+        depositTxProperty().set(tx);
+    }
+
+    public void setPayoutTx(Transaction tx) {
+        this.payoutTx = tx;
+        payoutTxChangedProperty().set(!payoutTxChangedProperty().get());
+    }
+
+    public void setState(State state) {
+        this.state = state;
+        stateProperty().set(state);
+    }
+
+    public void setFault(Throwable fault) {
+        this.fault = fault;
+        faultProperty().set(fault);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Fiat getTradeVolume() {
+        return offer.getVolumeByAmount(tradeAmount);
+    }
+
+    public String getTakerSignature() {
+        return takerSignature;
+    }
+
+    public Transaction getDepositTx() {
+        return depositTx;
+    }
+
+    public Transaction getPayoutTx() {
+        return payoutTx;
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public Throwable getFault() {
+        return fault;
+    }
+
+    public Coin getCollateralAmount() {
+        return tradeAmount.multiply(offer.getCollateral()).divide(1000L);
     }
 
     public String getId() {
@@ -107,99 +181,40 @@ public class Trade implements Serializable {
         return contractAsJson;
     }
 
+    // When serialized those transient properties are not instantiated, so we need to instantiate them at first access
+    public ObjectProperty<Transaction> depositTxProperty() {
+        if (_depositTx == null)
+            _depositTx = new SimpleObjectProperty<>(depositTx);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setContractAsJson(String contractAsJson) {
-        this.contractAsJson = contractAsJson;
+        return _depositTx;
     }
 
-    public String getTakerSignature() {
-        return takerSignature;
+    public BooleanProperty contractChangedProperty() {
+        if (_contractChanged == null)
+            _contractChanged = new SimpleBooleanProperty();
+
+        return _contractChanged;
     }
 
-    public Transaction getDepositTransaction() {
-        return depositTransaction;
+    public BooleanProperty payoutTxChangedProperty() {
+        if (_payoutTxChanged == null)
+            _payoutTxChanged = new SimpleBooleanProperty();
+
+        return _payoutTxChanged;
     }
 
-    public void setDepositTransaction(Transaction depositTransaction) {
-        this.depositTransaction = depositTransaction;
-        depositTxChangedProperty().set(!depositTxChangedProperty().get());
+    public ObjectProperty<State> stateProperty() {
+        if (_state == null)
+            _state = new SimpleObjectProperty<>(state);
+
+        return _state;
     }
 
-    public Transaction getPayoutTransaction() {
-        return payoutTransaction;
-    }
-
-    public void setPayoutTransaction(Transaction payoutTransaction) {
-        this.payoutTransaction = payoutTransaction;
-        payoutTxChangedProperty().set(!payoutTxChangedProperty().get());
-    }
-
-    public State getState() {
-        return state;
-    }
-
-    public void setState(State state) {
-        this.state = state;
-        stateChangedProperty().set(state.toString());
-    }
-
-    // The Property fields are not serialized and therefore not initialized when read from disc.
-    // We need to access then with the getter to be sure it is not null.
-    public SimpleBooleanProperty depositTxChangedProperty() {
-        if (_depositTxChangedProperty == null) _depositTxChangedProperty = new SimpleBooleanProperty();
-
-        return _depositTxChangedProperty;
+    public ObjectProperty<Throwable> faultProperty() {
+        if (_fault == null)
+            _fault = new SimpleObjectProperty<>(fault);
+        return _fault;
     }
 
 
-    public SimpleBooleanProperty contractChangedProperty() {
-        if (_contractChangedProperty == null) _contractChangedProperty = new SimpleBooleanProperty();
-        return _contractChangedProperty;
-    }
-
-
-    public SimpleBooleanProperty payoutTxChangedProperty() {
-        if (_payoutTxChangedProperty == null) _payoutTxChangedProperty = new SimpleBooleanProperty();
-        return _payoutTxChangedProperty;
-    }
-
-
-    public SimpleStringProperty stateChangedProperty() {
-        if (_stateChangedProperty == null) _stateChangedProperty = new SimpleStringProperty();
-        return _stateChangedProperty;
-    }
-
-    public Coin getCollateralAmount() {
-        return tradeAmount.multiply(offer.getCollateral()).divide(1000L);
-    }
-
-
-    @Override
-    public String toString() {
-        return "Trade{" +
-                "offer=" + offer +
-                ", takeOfferFeeTxID='" + takeOfferFeeTxID + '\'' +
-                ", tradeAmount=" + tradeAmount +
-                ", contract=" + contract +
-                ", contractAsJson='" + contractAsJson + '\'' +
-                ", takerSignature='" + takerSignature + '\'' +
-                ", depositTransaction=" + depositTransaction +
-                ", state=" + state +
-                '}';
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // toString
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public static enum State {
-        OPEN,
-        ACCEPTED,
-        COMPLETED
-    }
 }

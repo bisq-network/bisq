@@ -17,16 +17,15 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import io.bitsquare.gui.components.CachingTabPane?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<CachingTabPane fx:id="root" fx:controller="io.bitsquare.gui.main.orders.OrdersController"
-                AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-                AnchorPane.topAnchor="0.0"
-                xmlns:fx="http://javafx.com/fxml">
+<TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.orders.OrdersViewCB"
+         AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+         AnchorPane.topAnchor="0.0"
+         xmlns:fx="http://javafx.com/fxml">
 
-    <Tab text="Open offers" closable="false"/>
-    <Tab text="Pending trades" closable="false"/>
-    <Tab text="Closed trades" closable="false"/>
+    <Tab fx:id="offersTab" text="Open offers" closable="false"/>
+    <Tab fx:id="pendingTradesTab" text="Pending trades" closable="false"/>
+    <Tab fx:id="closedTradesTab" text="Closed trades" closable="false"/>
 
-</CachingTabPane>
+</TabPane>

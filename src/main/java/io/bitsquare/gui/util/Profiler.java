@@ -22,6 +22,7 @@ import com.google.common.base.Stopwatch;
 import java.util.concurrent.TimeUnit;
 
 import javafx.animation.AnimationTimer;
+import javafx.scene.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,11 +60,21 @@ public class Profiler {
                 counter++;
                 long elapsed = (System.currentTimeMillis() - lastFPSTime);
                 if (elapsed > 19)
-                    log.trace("FPS: elapsed: {}ms / FPS total counter: {}", elapsed, counter);
+                    log.trace("Profiler: last frame used {}ms", elapsed);
 
                 lastFPSTime = System.currentTimeMillis();
             }
         };
         fpsTimer.start();
+    }
+
+    public static void initScene(Scene scene) {
+       /* PerformanceTracker tracker = PerformanceTracker.getSceneTracker(scene);
+        Timeline timeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), t -> {
+                    log.trace("FPS (tracker.getAverageFPS) = " + tracker.getAverageFPS());
+                }));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();*/
     }
 }

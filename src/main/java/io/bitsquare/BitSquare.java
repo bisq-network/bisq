@@ -128,6 +128,9 @@ public class BitSquare extends Application {
             primaryStage.setMinWidth(750);
             primaryStage.setMinHeight(500);
 
+            Profiler.initScene(primaryStage.getScene());
+
+
             primaryStage.show();
         } catch (IOException e) {
             log.error(e.getMessage());

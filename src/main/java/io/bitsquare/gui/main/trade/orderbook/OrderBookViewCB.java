@@ -351,7 +351,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                         OrderBookListItem>>() {
                     @Override
                     public TableCell<OrderBookListItem, OrderBookListItem> call(
-                            TableColumn<OrderBookListItem, OrderBookListItem> directionColumn) {
+                            TableColumn<OrderBookListItem, OrderBookListItem> column) {
                         return new TableCell<OrderBookListItem, OrderBookListItem>() {
                             @Override
                             public void updateItem(final OrderBookListItem item, boolean empty) {
@@ -370,7 +370,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                         OrderBookListItem>>() {
                     @Override
                     public TableCell<OrderBookListItem, OrderBookListItem> call(
-                            TableColumn<OrderBookListItem, OrderBookListItem> directionColumn) {
+                            TableColumn<OrderBookListItem, OrderBookListItem> column) {
                         return new TableCell<OrderBookListItem, OrderBookListItem>() {
                             @Override
                             public void updateItem(final OrderBookListItem item, boolean empty) {
@@ -389,7 +389,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                         OrderBookListItem>>() {
                     @Override
                     public TableCell<OrderBookListItem, OrderBookListItem> call(
-                            TableColumn<OrderBookListItem, OrderBookListItem> directionColumn) {
+                            TableColumn<OrderBookListItem, OrderBookListItem> column) {
                         return new TableCell<OrderBookListItem, OrderBookListItem>() {
                             @Override
                             public void updateItem(final OrderBookListItem item, boolean empty) {
@@ -409,7 +409,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
                     @Override
                     public TableCell<OrderBookListItem, OrderBookListItem> call(
-                            TableColumn<OrderBookListItem, OrderBookListItem> directionColumn) {
+                            TableColumn<OrderBookListItem, OrderBookListItem> column) {
                         return new TableCell<OrderBookListItem, OrderBookListItem>() {
                             final ImageView iconView = new ImageView();
                             final Button button = new Button();
@@ -493,7 +493,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
                     @Override
                     public TableCell<OrderBookListItem, OrderBookListItem> call(
-                            TableColumn<OrderBookListItem, OrderBookListItem> directionColumn) {
+                            TableColumn<OrderBookListItem, OrderBookListItem> column) {
                         return new TableCell<OrderBookListItem, OrderBookListItem>() {
                             final HBox hBox = new HBox();
 
@@ -527,7 +527,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                         OrderBookListItem>>() {
                     @Override
                     public TableCell<OrderBookListItem, OrderBookListItem> call(
-                            TableColumn<OrderBookListItem, OrderBookListItem> directionColumn) {
+                            TableColumn<OrderBookListItem, OrderBookListItem> column) {
                         return new TableCell<OrderBookListItem, OrderBookListItem>() {
                             @Override
                             public void updateItem(final OrderBookListItem orderBookListItem, boolean empty) {

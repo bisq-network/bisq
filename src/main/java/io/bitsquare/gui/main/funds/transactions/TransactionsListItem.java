@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.funds.transactions;
 
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.btc.listeners.ConfidenceListener;
+import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 
@@ -47,7 +47,7 @@ public class TransactionsListItem {
 
     private final Tooltip tooltip;
     private String addressString;
-    private ConfidenceListener confidenceListener;
+    private AddressConfidenceListener confidenceListener;
 
     public TransactionsListItem(Transaction transaction, WalletFacade walletFacade) {
         this.walletFacade = walletFacade;
@@ -135,7 +135,7 @@ public class TransactionsListItem {
         Tooltip.install(progressIndicator, tooltip);
 
         if (address != null) {
-            confidenceListener = walletFacade.addConfidenceListener(new ConfidenceListener(address) {
+            confidenceListener = walletFacade.addAddressConfidenceListener(new AddressConfidenceListener(address) {
                 @Override
                 public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                     updateConfidence(confidence);
@@ -148,7 +148,7 @@ public class TransactionsListItem {
 
 
     public void cleanup() {
-        walletFacade.removeConfidenceListener(confidenceListener);
+        walletFacade.removeAddressConfidenceListener(confidenceListener);
     }
 
     private void updateConfidence(TransactionConfidence confidence) {

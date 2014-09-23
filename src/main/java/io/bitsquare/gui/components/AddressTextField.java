@@ -15,10 +15,9 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.components.btc;
+package io.bitsquare.gui.components;
 
 import io.bitsquare.gui.OverlayManager;
-import io.bitsquare.gui.components.Popups;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.uri.BitcoinURI;
@@ -77,14 +76,13 @@ public class AddressTextField extends AnchorPane {
                 Desktop.getDesktop().browse(URI.create(getBitcoinURI()));
             } catch (IOException e) {
                 log.warn(e.getMessage());
-                Popups.openWarningPopup("Information", "Opening a system Bitcoin wallet application has failed. " +
+                Popups.openWarningPopup("Warning", "Opening a system Bitcoin wallet application has failed. " +
                         "Perhaps you don't have one installed?");
             }
         });
         addressLabel.focusTraversableProperty().set(focusTraversableProperty().get());
         focusedProperty().addListener((ov, oldValue, newValue) -> {
             addressLabel.requestFocus();
-            log.debug("foc");
         });
 
         Label copyIcon = new Label();

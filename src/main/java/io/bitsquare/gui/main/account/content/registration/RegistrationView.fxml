@@ -17,8 +17,8 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import io.bitsquare.gui.components.btc.AddressTextField?>
-<?import io.bitsquare.gui.components.btc.BalanceTextField?>
+<?import io.bitsquare.gui.components.AddressTextField?>
+<?import io.bitsquare.gui.components.BalanceTextField?>
 <?import io.bitsquare.gui.components.InfoDisplay?>
 <?import io.bitsquare.gui.components.TitledGroupBg?>
 <?import javafx.geometry.Insets?>

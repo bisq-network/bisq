@@ -15,24 +15,22 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.offerer;
+package io.bitsquare.btc.listeners;
 
-import io.bitsquare.trade.Offer;
+import com.google.bitcoin.core.Address;
+import com.google.bitcoin.core.TransactionConfidence;
 
-import com.google.bitcoin.core.Transaction;
+public class AddressConfidenceListener {
+    private final Address address;
 
-public interface BuyerAcceptsOfferProtocolListener {
-    void onOfferAccepted(Offer offer);
+    public AddressConfidenceListener(Address address) {
+        this.address = address;
+    }
 
-    void onDepositTxPublished(Transaction depositTx);
+    public Address getAddress() {
+        return address;
+    }
 
-    void onDepositTxConfirmedInBlockchain();
-
-    void onPayoutTxPublished(Transaction payoutTx);
-
-    void onFault(Throwable throwable, BuyerAcceptsOfferProtocol.State state);
-
-    void onWaitingForPeerResponse(BuyerAcceptsOfferProtocol.State state);
-
-    void onWaitingForUserInteraction(BuyerAcceptsOfferProtocol.State state);
+    public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
+    }
 }

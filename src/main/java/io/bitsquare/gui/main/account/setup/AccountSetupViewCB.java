@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.account.setup;
 
-import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.ViewCB;
@@ -48,7 +47,10 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements MultiStepNavigation {
+/**
+ * This UI is not cached as it is normally only needed once.
+ */
+public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSetupViewCB.class);
 
@@ -65,8 +67,8 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountSetupViewCB(AccountSetupPM presentationModel, Navigation navigation) {
-        super(presentationModel);
+    private AccountSetupViewCB(Navigation navigation) {
+        super();
         this.navigation = navigation;
     }
 
@@ -102,12 +104,6 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
         leftVBox.getChildren().addAll(seedWords, password, restrictions, fiatAccount, registration);
 
         super.initialize(url, rb);
-    }
-
-
-    @Override
-    public void activate() {
-        super.activate();
 
         navigation.addListener(listener);
 
@@ -116,16 +112,9 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
-
-        navigation.removeListener(listener);
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
     public void terminate() {
         super.terminate();
+        navigation.removeListener(listener);
     }
 
 
@@ -176,7 +165,7 @@ public class AccountSetupViewCB extends CachedViewCB<AccountSetupPM> implements 
             return childController;
         } catch (IOException e) {
             log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            e.getStackTrace();
+            e.printStackTrace();
         }
         return null;
     }

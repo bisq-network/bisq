@@ -57,7 +57,7 @@ public class SignAndPublishPayoutTx {
                         public void onSuccess(Transaction transaction) {
                             log.debug("takerSignsAndSendsTx " + transaction);
                             String payoutTxAsHex = Utils.HEX.encode(transaction.bitcoinSerialize());
-                            resultHandler.onResult(transaction.getHashAsString(), payoutTxAsHex);
+                            resultHandler.onResult(transaction, payoutTxAsHex);
                         }
 
                         @Override
@@ -73,7 +73,7 @@ public class SignAndPublishPayoutTx {
     }
 
     public interface ResultHandler {
-        void onResult(String transactionId, String payoutTxAsHex);
+        void onResult(Transaction transaction, String payoutTxAsHex);
     }
 
 }

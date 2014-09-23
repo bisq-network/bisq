@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bitsquare.
+  ~
+  ~ Bitsquare is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+
+<?import io.bitsquare.gui.components.InfoDisplay?>
+<?import io.bitsquare.gui.components.processbar.ProcessStepBar?>
+<?import io.bitsquare.gui.components.TextFieldWithCopyIcon?>
+<?import io.bitsquare.gui.components.TitledGroupBg?>
+<?import io.bitsquare.gui.components.TitledSeparator?>
+<?import io.bitsquare.gui.components.TxIdTextField?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.orders.pending.PendingTradesViewCB"
+          hgap="5.0" vgap="5"
+          xmlns:fx="http://javafx.com/fxml">
+    <padding>
+        <Insets bottom="20.0" left="25.0" top="30.0" right="25"/>
+    </padding>
+
+    <TitledSeparator text="Pending trades" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+
+    <TableView fx:id="table" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"
+               minHeight="120" prefHeight="120">
+        <GridPane.margin>
+            <Insets top="10.0" left="-10" right="-10" bottom="-15"/>
+        </GridPane.margin>
+        <columns>
+            <TableColumn text="Amount in BTC (Min.)" fx:id="amountColumn" minWidth="130"/>
+            <TableColumn text="Price" fx:id="priceColumn" minWidth="130"/>
+            <TableColumn text="Amount in EUR (Min.)" fx:id="volumeColumn" minWidth="130"/>
+            <TableColumn text="Country" fx:id="countryColumn" minWidth="60"/>
+            <TableColumn text="Bank transfer type" fx:id="bankAccountTypeColumn" minWidth="130"/>
+            <TableColumn text="Trade tye" fx:id="directionColumn" minWidth="80" sortable="false"/>
+            <TableColumn fx:id="selectColumn" minWidth="60" sortable="false" text=""/>
+        </columns>
+    </TableView>
+
+    <TitledGroupBg fx:id="titledGroupBg" text="Trade status" GridPane.rowIndex="1" GridPane.rowSpan="4"
+                   GridPane.columnSpan="2" visible="false">
+        <GridPane.margin>
+            <Insets top="40.0" bottom="-10" left="-10" right="-10"/>
+        </GridPane.margin>
+    </TitledGroupBg>
+
+    <ProcessStepBar fx:id="processBar" GridPane.rowIndex="1" GridPane.columnSpan="2" snapToPixel="true" visible="false">
+        <GridPane.margin>
+            <Insets top="60.0"/>
+        </GridPane.margin>
+    </ProcessStepBar>
+
+
+    <Label fx:id="statusLabel" text="Status:" GridPane.rowIndex="2" visible="false">
+        <GridPane.margin>
+            <Insets top="20.0"/>
+        </GridPane.margin>
+    </Label>
+    <TextField fx:id="statusTextField" GridPane.rowIndex="2" GridPane.columnIndex="1" editable="false" visible="false">
+        <GridPane.margin>
+            <Insets top="20.0"/>
+        </GridPane.margin>
+    </TextField>
+
+    <Label fx:id="txIdLabel" text="Deposit transaction ID:" GridPane.rowIndex="3" visible="false"/>
+    <TxIdTextField fx:id="txIdTextField" GridPane.rowIndex="3" GridPane.columnIndex="1" visible="false"/>
+
+    <InfoDisplay fx:id="infoDisplay" onAction="#onOpenHelp" rowIndex="4" gridPane="$root" visible="false"/>
+
+    <Button fx:id="confirmPaymentReceiptButton" text="Confirm payment receipt" onAction="#onConfirmPaymentReceipt"
+            GridPane.rowIndex="5" GridPane.columnIndex="1" defaultButton="true" visible="false">
+        <GridPane.margin>
+            <Insets top="-5"/>
+        </GridPane.margin>
+    </Button>
+
+    <!-- 
+    Payments
+    -->
+    <TitledGroupBg fx:id="paymentsGroupBg" text="Payments details" GridPane.rowIndex="5" GridPane.rowSpan="5"
+                   GridPane.columnSpan="2" visible="false">
+        <GridPane.margin>
+            <Insets top="40.0" bottom="-10" left="-10" right="-10"/>
+        </GridPane.margin>
+    </TitledGroupBg>
+
+    <Label fx:id="paymentMethodLabel" text="Payments method:" GridPane.rowIndex="5" visible="false">
+        <GridPane.margin>
+            <Insets top="60.0"/>
+        </GridPane.margin>
+    </Label>
+    <TextField fx:id="paymentMethodTextField" GridPane.rowIndex="5" GridPane.columnIndex="1" editable="false"
+               visible="false">
+        <GridPane.margin>
+            <Insets top="60.0"/>
+        </GridPane.margin>
+    </TextField>
+
+    <Label fx:id="holderNameLabel" text="Holder name:" GridPane.rowIndex="6" visible="false"/>
+    <TextFieldWithCopyIcon fx:id="holderNameTextField" GridPane.rowIndex="6" GridPane.columnIndex="1" visible="false"/>
+
+    <Label fx:id="primaryIdLabel" text="Primary ID:" GridPane.rowIndex="7" visible="false"/>
+    <TextFieldWithCopyIcon fx:id="primaryIdTextField" GridPane.rowIndex="7" GridPane.columnIndex="1" visible="false"/>
+
+    <Label fx:id="secondaryIdLabel" text="Secondary ID:" GridPane.rowIndex="8" visible="false"/>
+    <TextFieldWithCopyIcon fx:id="secondaryIdTextField" GridPane.rowIndex="8" GridPane.columnIndex="1" visible="false"/>
+
+    <InfoDisplay fx:id="paymentsInfoDisplay" onAction="#onOpenPaymentsHelp" rowIndex="9" gridPane="$root"
+                 visible="false"/>
+
+    <Button fx:id="paymentsButton" text="Payment started" onAction="#onPaymentStarted" GridPane.rowIndex="10"
+            GridPane.columnIndex="1" defaultButton="true" visible="false">
+        <GridPane.margin>
+            <Insets top="15"/>
+        </GridPane.margin>
+    </Button>
+
+    <!-- 
+    Summary
+    -->
+    <TitledGroupBg fx:id="summaryGroupBg" text="Summary" GridPane.rowIndex="5" GridPane.rowSpan="5"
+                   GridPane.columnSpan="2" visible="false">
+        <GridPane.margin>
+            <Insets top="40.0" bottom="-10" left="-10" right="-10"/>
+        </GridPane.margin>
+    </TitledGroupBg>
+
+    <Label fx:id="btcLabel" text="You have bought:" GridPane.rowIndex="5" visible="false">
+        <GridPane.margin>
+            <Insets top="60.0"/>
+        </GridPane.margin>
+    </Label>
+    <TextField fx:id="btcTextField" GridPane.rowIndex="5" GridPane.columnIndex="1" editable="false"
+               visible="false">
+        <GridPane.margin>
+            <Insets top="60.0"/>
+        </GridPane.margin>
+    </TextField>
+
+    <Label fx:id="fiatLabel" text="You have paid:" GridPane.rowIndex="6" visible="false"/>
+    <TextField fx:id="fiatTextField" GridPane.rowIndex="6" GridPane.columnIndex="1" editable="false" visible="false"/>
+
+    <Label fx:id="feesLabel" text="Total fees paid:" GridPane.rowIndex="7" visible="false"/>
+    <TextField fx:id="feesTextField" GridPane.rowIndex="7" GridPane.columnIndex="1" editable="false" visible="false"/>
+
+    <Label fx:id="collateralLabel" text="Refunded collateral:" GridPane.rowIndex="8" visible="false"/>
+    <TextField fx:id="collateralTextField" GridPane.rowIndex="8" GridPane.columnIndex="1" editable="false"
+               visible="false"/>
+
+    <InfoDisplay fx:id="summaryInfoDisplay" onAction="#onOpenSummaryHelp" rowIndex="9" gridPane="$root"
+                 visible="false"/>
+
+    <columnConstraints>
+        <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="200"/>
+        <ColumnConstraints hgrow="ALWAYS"/>
+    </columnConstraints>
+
+    <rowConstraints>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints/>
+    </rowConstraints>
+
+</GridPane>

@@ -23,7 +23,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <AnchorPane fx:id="root" prefHeight="630.0" prefWidth="1000.0" style="-fx-background-color: f4f4f4;"
-            stylesheets="@../../../../../../../../main/java/io/bitsquare/gui/bitsquare.css"
+            stylesheets="@../../../../../../../../../main/java/io/bitsquare/gui/bitsquare.css"
             AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0"
             AnchorPane.topAnchor="10.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="io.bitsquare.gui.main.trade.createoffer.uimock.CreateOfferControllerUIMock">
@@ -52,7 +52,8 @@
                             <children>
                                 <ImageView fitHeight="54.0" fitWidth="62.0" pickOnBounds="true" preserveRatio="true">
                                     <image>
-                                        <Image url="@../../../../../../../../main/resources/images/buy_black_62_54.png"/>
+                                        <Image
+                                                url="@../../../../../../../../../main/resources/images/buy_large.png"/>
                                     </image>
                                 </ImageView>
                                 <Label fx:id="buyLabel" alignment="CENTER"
@@ -87,7 +88,7 @@
                                 </VBox>
                                 <Label text="x">
                                     <font>
-                                        <Font name="Helvetica" size="20.0"/>
+                                        <Font name="Helvetica-Bold" size="20.0"/>
                                     </font>
                                     <padding>
                                         <Insets top="14.0"/>
@@ -111,7 +112,7 @@
 
                                 <Label text="=">
                                     <font>
-                                        <Font name="Helvetica" size="20.0"/>
+                                        <Font name="Helvetica-Bold" size="20.0"/>
                                     </font>
                                     <padding>
                                         <Insets top="14.0"/>
@@ -161,7 +162,7 @@
                                    preserveRatio="true" GridPane.rowIndex="2" GridPane.valignment="TOP">
                             <image>
                                 <Image fx:id="infoIcon"
-                                       url="@../../../../../../../../main/resources/images/info.png"/>
+                                       url="@../../../../../../../../../main/resources/images/info.png"/>
                             </image>
                             <GridPane.margin>
                                 <Insets right="2.0" top="4.0"/>

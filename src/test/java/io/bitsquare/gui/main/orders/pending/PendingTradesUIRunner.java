@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.settings;
+package io.bitsquare.gui.main.orders.pending;
 
 import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.util.ViewLoader;
@@ -40,10 +40,10 @@ import org.slf4j.LoggerFactory;
 /**
  * For testing single isolated UI screens
  */
-public class PasswordUITestRunner extends Application {
-    private static final Logger log = LoggerFactory.getLogger(PasswordUITestRunner.class);
+public class PendingTradesUIRunner extends Application {
+    private static final Logger log = LoggerFactory.getLogger(PendingTradesUIRunner.class);
     private Scene scene;
-    private Pane view;
+    private Parent view;
     private Pane pane;
     private boolean devTest = true;
 
@@ -68,15 +68,16 @@ public class PasswordUITestRunner extends Application {
         log.debug("re load");
         pane.getChildren().removeAll();
         ViewLoader loader = new ViewLoader(
-                getUrl("/io/bitsquare/gui/account/content/PasswordView.fxml"), false);
+                getUrl("/io/bitsquare/gui/main/orders/pending/PendingTradesView.fxml"), false);
+
         try {
             view = loader.load();
-            pane.getChildren().setAll(view);
-            refreshStylesheets();
         } catch (IOException e) {
             e.printStackTrace();
-            e.printStackTrace();
         }
+
+        pane.getChildren().setAll(view);
+        refreshStylesheets();
     }
 
     private void refreshStylesheets() {
@@ -98,4 +99,6 @@ public class PasswordUITestRunner extends Application {
             return getClass().getResource(subPath);
         }
     }
+
+
 }

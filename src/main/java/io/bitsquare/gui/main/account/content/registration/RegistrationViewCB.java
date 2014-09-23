@@ -19,9 +19,9 @@ package io.bitsquare.gui.main.account.content.registration;
 
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.OverlayManager;
+import io.bitsquare.gui.components.AddressTextField;
+import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.components.btc.AddressTextField;
-import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;

@@ -36,7 +36,7 @@ public class HandleTakeOfferRequest {
         log.trace("Run task");
         boolean takeOfferRequestAccepted = tradeState == Trade.State.OPEN;
         if (!takeOfferRequestAccepted) {
-            log.info("Received take offer request but the offer not marked as open anymore.");
+            log.warn("Received take offer request but the offer not marked as open anymore.");
         }
         RespondToTakeOfferRequestMessage tradeMessage =
                 new RespondToTakeOfferRequestMessage(tradeId, takeOfferRequestAccepted);

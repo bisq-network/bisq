@@ -46,7 +46,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
+public class AccountSettingsViewCB extends CachedViewCB {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSettingsViewCB.class);
 
@@ -63,8 +63,8 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountSettingsViewCB(AccountSettingsPM presentationModel, Navigation navigation) {
-        super(presentationModel);
+    private AccountSettingsViewCB(Navigation navigation) {
+        super();
 
         this.navigation = navigation;
     }
@@ -156,7 +156,7 @@ public class AccountSettingsViewCB extends CachedViewCB<AccountSettingsPM> {
             return childController;
         } catch (IOException e) {
             log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            e.getStackTrace();
+            e.printStackTrace();
         }
         return null;
     }

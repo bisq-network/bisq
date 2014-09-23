@@ -52,7 +52,7 @@
         </VBox>
         <Label text="x">
             <font>
-                <Font name="Helvetica" size="20.0"/>
+                <Font name="Helvetica-Bold" size="20.0"/>
             </font>
             <padding>
                 <Insets top="14.0" left="3" right="3"/>
@@ -71,7 +71,7 @@
 
         <Label text="=">
             <font>
-                <Font name="Helvetica" size="20.0"/>
+                <Font name="Helvetica-Bold" size="20.0"/>
             </font>
             <padding>
                 <Insets top="14.0" left="2" right="2"/>

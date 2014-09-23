@@ -15,41 +15,33 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.orders;
+package io.bitsquare.gui.main.orders.pending.uimock;
 
 import io.bitsquare.gui.CachedViewController;
-import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.components.CachingTabPane;
-import io.bitsquare.persistence.Persistence;
+import io.bitsquare.gui.components.processbar.ProcessStepBar;
+import io.bitsquare.gui.components.processbar.ProcessStepItem;
 
 import java.net.URL;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
-import javafx.fxml.Initializable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OrdersController extends CachedViewController {
-    private static final Logger log = LoggerFactory.getLogger(OrdersController.class);
-    private static OrdersController INSTANCE;
-    private final Persistence persistence;
-
-    @Inject
-    private OrdersController(Persistence persistence) {
-        this.persistence = persistence;
-        INSTANCE = this;
-    }
+public class PendingTradesControllerUIMock extends CachedViewController {
+    private static final Logger log = LoggerFactory.getLogger(PendingTradesControllerUIMock.class);
+    public ProcessStepBar processBar;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static OrdersController GET_INSTANCE() {
-        return INSTANCE;
+    @Inject
+    public PendingTradesControllerUIMock() {
     }
 
 
@@ -61,8 +53,13 @@ public class OrdersController extends CachedViewController {
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
-        ((CachingTabPane) root).initialize(this, persistence, Navigation.Item.OFFER.getFxmlUrl(),
-                Navigation.Item.PENDING_TRADE.getFxmlUrl(), Navigation.Item.CLOSED_TRADE.getFxmlUrl());
+        List<ProcessStepItem> items = new ArrayList<>();
+        items.add(new ProcessStepItem("Deposit TX published"));
+        items.add(new ProcessStepItem("Waiting for other trader"));
+        items.add(new ProcessStepItem("Waiting for payment"));
+        items.add(new ProcessStepItem("Payment received"));
+        processBar.setProcessStepItems(items);
+        // processBar.next();
     }
 
     @Override
@@ -77,25 +74,14 @@ public class OrdersController extends CachedViewController {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Navigation
+    // GUI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public Initializable loadViewAndGetChildController(Navigation.Item item) {
-        childController = ((CachingTabPane) root).loadViewAndGetChildController(item.getFxmlUrl());
-        return childController;
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public Methods
+    // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setSelectedTabIndex(int index) {
-        log.trace("setSelectedTabIndex " + index);
-        ((CachingTabPane) root).setSelectedTabIndex(index);
-        persistence.write(this, "selectedTabIndex", index);
-    }
 
 }
 

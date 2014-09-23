@@ -134,12 +134,13 @@ public class InfoDisplay extends Parent {
         });
 
         sceneProperty().addListener((ov, oldValue, newValue) -> {
-            if (oldValue == null && newValue != null) {
+            if (oldValue == null && newValue != null && newValue.getWindow() != null) {
                 newValue.getWindow().widthProperty().addListener(listener);
                 // localToScene does deliver 0 instead of the correct x position when scene propery gets set, 
                 // so we delay for 1 render cycle
                 Platform.runLater(() -> {
                     label.setVisible(true);
+                    label.prefWidthProperty().unbind();
                     label.setPrefWidth(newValue.getWindow().getWidth() - localToScene(0, 0).getX() - 35);
                 });
             }

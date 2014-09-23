@@ -19,8 +19,8 @@ package io.bitsquare.gui.main.funds.withdrawal;
 
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.listeners.ConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 
 import com.google.bitcoin.core.Address;
@@ -42,7 +42,7 @@ public class WithdrawalListItem {
     private final AddressEntry addressEntry;
 
     private final WalletFacade walletFacade;
-    private final ConfidenceListener confidenceListener;
+    private final AddressConfidenceListener confidenceListener;
 
     private final ConfidenceProgressIndicator progressIndicator;
 
@@ -63,7 +63,7 @@ public class WithdrawalListItem {
         progressIndicator.setPrefSize(24, 24);
         Tooltip.install(progressIndicator, tooltip);
 
-        confidenceListener = walletFacade.addConfidenceListener(new ConfidenceListener(getAddress()) {
+        confidenceListener = walletFacade.addAddressConfidenceListener(new AddressConfidenceListener(getAddress()) {
             @Override
             public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                 updateConfidence(confidence);
@@ -86,7 +86,7 @@ public class WithdrawalListItem {
     }
 
     public void cleanup() {
-        walletFacade.removeConfidenceListener(confidenceListener);
+        walletFacade.removeAddressConfidenceListener(confidenceListener);
         walletFacade.removeBalanceListener(balanceListener);
     }
 

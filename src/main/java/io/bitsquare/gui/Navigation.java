@@ -178,9 +178,9 @@ public class Navigation {
         TAKE_OFFER("/io/bitsquare/gui/main/trade/takeoffer/TakeOfferView.fxml"),
 
         // orders
-        OFFER("/io/bitsquare/gui/main/orders/offer/OfferView.fxml"),
-        PENDING_TRADE("/io/bitsquare/gui/main/orders/pending/PendingTradeView.fxml"),
-        CLOSED_TRADE("/io/bitsquare/gui/main/orders/closed/ClosedTradeView.fxml"),
+        OFFERS("/io/bitsquare/gui/main/orders/offer/OffersView.fxml"),
+        PENDING_TRADES("/io/bitsquare/gui/main/orders/pending/PendingTradesView.fxml"),
+        CLOSED_TRADES("/io/bitsquare/gui/main/orders/closed/ClosedTradesView.fxml"),
 
         // funds
         DEPOSIT("/io/bitsquare/gui/main/funds/deposit/DepositView.fxml"),

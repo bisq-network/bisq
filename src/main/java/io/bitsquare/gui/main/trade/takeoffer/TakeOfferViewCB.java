@@ -22,12 +22,12 @@ import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.CloseListener;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
+import io.bitsquare.gui.components.AddressTextField;
+import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.TitledGroupBg;
-import io.bitsquare.gui.components.btc.AddressTextField;
-import io.bitsquare.gui.components.btc.BalanceTextField;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.ImageUtil;
@@ -318,6 +318,8 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
                     public void handle(ActionEvent actionEvent) {
                         try {
                             close();
+                            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS,
+                                    Navigation.Item.PENDING_TRADES);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
