@@ -6,7 +6,7 @@ It allows to trade fiat money (USD, EURO, ...) for Bitcoins without relying on a
 Instead, all participants form a peer to peer market.
 
 ## Dependencies
-The project use **Java 8** and **Maven**.  
+The project use **Java 8** and **Gradle**.  
 We use the **BitcoinJ** library and **TomP2P** for DHT and direct messaging.
 
 ## Development setup
