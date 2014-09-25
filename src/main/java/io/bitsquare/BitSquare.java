@@ -130,6 +130,7 @@ public class BitSquare extends Application {
 
             Profiler.initScene(primaryStage.getScene());
 
+            // primaryStage.setOnCloseRequest(observable -> stop());
 
             primaryStage.show();
         } catch (IOException e) {

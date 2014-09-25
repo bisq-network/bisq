@@ -176,10 +176,10 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
 
         public void past() {
             log.debug("deSelect " + processStepItem.getLabel());
-            BorderStroke borderStroke = new BorderStroke(Colors.DARK_GREY, BorderStrokeStyle.SOLID, null,
+            BorderStroke borderStroke = new BorderStroke(Colors.GREEN, BorderStrokeStyle.SOLID, null,
                     new BorderWidths(borderWidth, borderWidth, borderWidth, borderWidth), Insets.EMPTY);
             this.setBorder(new Border(borderStroke));
-            setTextFill(Colors.DARK_GREY);
+            setTextFill(Colors.GREEN);
         }
 
         public double getArrowWidth() {

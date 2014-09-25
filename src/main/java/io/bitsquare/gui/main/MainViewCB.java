@@ -17,13 +17,14 @@
 
 package io.bitsquare.gui.main;
 
+import io.bitsquare.BitSquare;
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.gui.AWTSystemTray;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.util.ViewLoader;
@@ -200,17 +201,16 @@ public class MainViewCB extends ViewCB<MainPM> {
                 alert.setEffect(new DropShadow(4, 1, 2, Color.GREY));
                 alert.getChildren().addAll(icon, numPendingTradesLabel);
                 ordersButtonButtonPane.getChildren().add(alert);
-
-                AWTSystemTray.setAlertIcon();
             }
             else {
                 numPendingTradesLabel.setText(String.valueOf(numPendingTrades));
             }
+
+            SystemNotification.openInfoNotification(BitSquare.getAppName(), "You got a new trade message.");
         }
         else {
             if (ordersButtonButtonPane.getChildren().size() > 1)
                 ordersButtonButtonPane.getChildren().remove(1);
-            AWTSystemTray.setIcon();
         }
     }
 

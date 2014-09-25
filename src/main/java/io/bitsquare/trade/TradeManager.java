@@ -272,7 +272,6 @@ public class TradeManager {
                             persistTrades();
                         }
 
-
                         @Override
                         public void onPayoutTxPublished(Transaction payoutTx) {
                             trade.setPayoutTx(payoutTx);
