@@ -65,6 +65,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -104,10 +105,10 @@ public class WalletFacade {
     private final FeePolicy feePolicy;
     private final CryptoFacade cryptoFacade;
     private final Persistence persistence;
-    private final List<DownloadListener> downloadListeners = new ArrayList<>();
-    private final List<AddressConfidenceListener> addressConfidenceListeners = new ArrayList<>();
-    private final List<TxConfidenceListener> txConfidenceListeners = new ArrayList<>();
-    private final List<BalanceListener> balanceListeners = new ArrayList<>();
+    private final List<DownloadListener> downloadListeners = new CopyOnWriteArrayList<>();
+    private final List<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArrayList<>();
+    private final List<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArrayList<>();
+    private final List<BalanceListener> balanceListeners = new CopyOnWriteArrayList<>();
     private Wallet wallet;
     private WalletEventListener walletEventListener;
     private AddressEntry registrationAddressEntry;

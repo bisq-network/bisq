@@ -20,7 +20,6 @@ package io.bitsquare.trade;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
-import io.bitsquare.gui.components.Popups;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
@@ -393,8 +392,11 @@ public class TradeManager {
         }
         else {
             // For usability tests we don't want to crash
-            Popups.openWarningPopup("Sorry, you cannot continue. You have restarted the application in the meantime. " +
-                    "Interruption of the trade process is not supported yet. Will need more time to be implemented.");
+            //TODO move to gui package
+           /* Popups.openWarningPopup("Sorry, you cannot continue. You have restarted the application in the meantime
+           . " +
+         
+                    "Interruption of the trade process is not supported yet. Will need more time to be implemented.");*/
         }
     }
 

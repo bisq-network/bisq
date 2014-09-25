@@ -67,6 +67,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     private ChangeListener<PendingTradesPM.State> offererStateChangeListener;
     private ChangeListener<PendingTradesPM.State> takerStateChangeListener;
     private ChangeListener<Throwable> faultChangeListener;
+    private ChangeListener<PendingTradesListItem> listItemChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -136,6 +137,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
 
         txIdTextField.setup(presentationModel.getWalletFacade(), presentationModel.txId.get());
         table.getSelectionModel().select(presentationModel.getSelectedItem());
+        table.getSelectionModel().selectedItemProperty().addListener(selectedItemChangeListener);
 
         // TODO Set focus does not work yet...
        /* table.requestFocus();
@@ -553,7 +555,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
             }
 
             private void showTradeDetails(PendingTradesListItem item) {
-                presentationModel.selectPendingTrade(item);
+                table.getSelectionModel().select(item);
             }
         });
     }
