@@ -40,8 +40,7 @@ public class OfferListItem {
 
         this.amount.set(BSFormatter.formatCoin(
                 offer.getAmount()) + " (" + BSFormatter.formatCoin(offer.getMinAmount()) + ")");
-        this.volume.set(BSFormatter.formatVolumeWithMinVolume(
-                offer.getOfferVolume(), offer.getMinOfferVolume()));
+        this.volume.set(BSFormatter.formatVolumeWithMinVolume(offer));
         this.offerId = offer.getId();
     }
 

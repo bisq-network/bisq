@@ -201,9 +201,7 @@ class OrderBookPM extends PresentationModel<OrderBookModel> {
     }
 
     String getDirectionLabel(Offer offer) {
-        // mirror direction!
-        Direction direction = offer.getDirection() == Direction.BUY ? Direction.SELL : Direction.BUY;
-        return BSFormatter.formatDirection(direction, true);
+        return BSFormatter.formatDirection(offer.getMirroredDirection());
     }
 
     Direction getDirection() {

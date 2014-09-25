@@ -141,8 +141,6 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
         SortedList<OrderBookListItem> offerList = presentationModel.getOfferList();
         orderBookTable.setItems(offerList);
         offerList.comparatorProperty().bind(orderBookTable.comparatorProperty());
-
-
         priceColumn.setSortType((presentationModel.getDirection() == Direction.BUY) ?
                 TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
         orderBookTable.sort();

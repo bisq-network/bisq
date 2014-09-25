@@ -23,6 +23,7 @@ import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.user.User;
 
 import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.TransactionConfidence;
@@ -31,12 +32,11 @@ import com.google.inject.Inject;
 
 import java.util.Optional;
 
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
@@ -44,20 +44,26 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PendingTradesModel extends UIModel {
+class PendingTradesModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesModel.class);
 
     private final TradeManager tradeManager;
-    private WalletFacade walletFacade;
-    private final ObservableList<PendingTradesListItem> pendingTrades = FXCollections.observableArrayList();
+    private final WalletFacade walletFacade;
+    private final User user;
 
-    private PendingTradesListItem currentItem;
+    private final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
+
+    private PendingTradesListItem selectedItem;
     private boolean isOfferer;
-    final IntegerProperty selectedIndex = new SimpleIntegerProperty(-1);
 
+    private TxConfidenceListener txConfidenceListener;
+    private ChangeListener<Trade.State> stateChangeListener;
+    private ChangeListener<Throwable> faultChangeListener;
+    private MapChangeListener<String, Trade> mapChangeListener;
+
+    final StringProperty txId = new SimpleStringProperty();
     final ObjectProperty<Trade.State> tradeState = new SimpleObjectProperty<>();
     final ObjectProperty<Throwable> fault = new SimpleObjectProperty<>();
-    final StringProperty txId = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,9 +71,10 @@ public class PendingTradesModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesModel(TradeManager tradeManager, WalletFacade walletFacade) {
+    PendingTradesModel(TradeManager tradeManager, WalletFacade walletFacade, User user) {
         this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
+        this.user = user;
     }
 
 
@@ -77,35 +84,51 @@ public class PendingTradesModel extends UIModel {
 
     @Override
     public void initialize() {
-        super.initialize();
-        // transform trades to list of PendingTradesListItems and keep it updated
-        tradeManager.getTrades().values().stream().forEach(e -> pendingTrades.add(new PendingTradesListItem(e)));
-        tradeManager.getTrades().addListener((MapChangeListener<String, Trade>) change -> {
+        stateChangeListener = (ov, oldValue, newValue) -> tradeState.set(newValue);
+        faultChangeListener = (ov, oldValue, newValue) -> fault.set(newValue);
+
+        mapChangeListener = change -> {
             if (change.wasAdded())
-                pendingTrades.add(new PendingTradesListItem(change.getValueAdded()));
-            else if (change.wasAdded())
-                pendingTrades.remove(new PendingTradesListItem(change.getValueRemoved()));
-        });
+                list.add(new PendingTradesListItem(change.getValueAdded()));
+            else if (change.wasRemoved())
+                list.remove(new PendingTradesListItem(change.getValueRemoved()));
+        };
+
+        super.initialize();
     }
 
     @Override
     public void activate() {
         super.activate();
 
-        // TODO Check if we can really use tradeManager.getPendingTrade() 
-        Optional<PendingTradesListItem> currentTradeItemOptional = pendingTrades.stream().filter((e) ->
-                tradeManager.getCurrentPendingTrade() != null &&
-                        e.getTrade().getId().equals(tradeManager.getCurrentPendingTrade().getId())).findFirst();
+        list.clear();
+        // transform trades to list of PendingTradesListItems and keep it updated
+        tradeManager.getTrades().values().stream()
+                .filter(e -> e.getState() != Trade.State.CLOSED)
+                .forEach(e -> list.add(new PendingTradesListItem(e)));
+        tradeManager.getTrades().addListener(mapChangeListener);
+
+        // we sort by date
+        list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
+
+        // select either currentPendingTrade or first in the list
+        Optional<PendingTradesListItem> currentTradeItemOptional = list.stream()
+                .filter((e) -> tradeManager.getCurrentPendingTrade() != null &&
+                        tradeManager.getCurrentPendingTrade().getId().equals(e.getTrade().getId()))
+                .findFirst();
         if (currentTradeItemOptional.isPresent())
             selectPendingTrade(currentTradeItemOptional.get());
-        else if (pendingTrades.size() > 0)
-            selectPendingTrade(pendingTrades.get(0));
+        else if (list.size() > 0)
+            selectPendingTrade(list.get(0));
     }
 
     @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
+
+        tradeManager.getTrades().removeListener(mapChangeListener);
+        selectPendingTrade(null);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -119,78 +142,86 @@ public class PendingTradesModel extends UIModel {
     // Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void selectPendingTrade(PendingTradesListItem item) {
-        if (item != null) {
-            currentItem = item;
-            isOfferer = tradeManager.isTradeMyOffer(currentItem.getTrade());
+    void selectPendingTrade(PendingTradesListItem item) {
+        // clean up previous selectedItem
+        if (selectedItem != null) {
+            Trade trade = getTrade();
+            trade.stateProperty().removeListener(stateChangeListener);
+            trade.faultProperty().removeListener(faultChangeListener);
+
+            if (txConfidenceListener != null)
+                walletFacade.removeTxConfidenceListener(txConfidenceListener);
+        }
+
+        selectedItem = item;
+
+        if (selectedItem != null) {
+            isOfferer = getTrade().getOffer().getMessagePublicKey().equals(user.getMessagePublicKey());
 
             // we want to re-trigger a change if the state is the same but different trades
             tradeState.set(null);
 
-            selectedIndex.set(pendingTrades.indexOf(item));
-            Trade currentTrade = currentItem.getTrade();
-            if (currentTrade.getDepositTx() != null) {
-                walletFacade.addTxConfidenceListener(new TxConfidenceListener(currentItem.getTrade()
-                        .getDepositTx().getHashAsString()) {
-                    @Override
-                    public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                        updateConfidence(confidence);
-                    }
-                });
-                updateConfidence(walletFacade.getConfidenceForTxId(currentItem.getTrade().getDepositTx()
-                        .getHashAsString()));
-            }
+            Trade trade = getTrade();
+            txId.set(trade.getDepositTx().getHashAsString());
 
-            if (currentItem.getTrade().getDepositTx() != null)
-                txId.set(currentItem.getTrade().getDepositTx().getHashAsString());
-            else
-                txId.set("");
+            txConfidenceListener = new TxConfidenceListener(txId.get()) {
+                @Override
+                public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
+                    updateConfidence(confidence);
+                }
+            };
+            walletFacade.addTxConfidenceListener(txConfidenceListener);
+            updateConfidence(walletFacade.getConfidenceForTxId(txId.get()));
 
-            currentTrade.stateProperty().addListener((ov, oldValue, newValue) -> tradeState.set(newValue));
-            tradeState.set(currentTrade.stateProperty().get());
+            trade.stateProperty().addListener(stateChangeListener);
+            tradeState.set(trade.stateProperty().get());
 
-            currentTrade.faultProperty().addListener((ov, oldValue, newValue) -> fault.set(newValue));
-            fault.set(currentTrade.faultProperty().get());
+            trade.faultProperty().addListener(faultChangeListener);
+            fault.set(trade.faultProperty().get());
+        }
+        else {
+            txId.set(null);
+            tradeState.set(null);
         }
     }
 
-    public void paymentStarted() {
-        tradeManager.bankTransferInited(currentItem.getTrade().getId());
+    void fiatPaymentStarted() {
+        tradeManager.fiatPaymentStarted(getTrade().getId());
     }
 
-    public void paymentReceived() {
-        tradeManager.onFiatReceived(currentItem.getTrade().getId());
+    void fiatPaymentReceived() {
+        tradeManager.fiatPaymentReceived(getTrade().getId());
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    ObservableList<PendingTradesListItem> getPendingTrades() {
-        return pendingTrades;
+    ObservableList<PendingTradesListItem> getList() {
+        return list;
     }
 
-    public boolean isOfferer() {
+    boolean isOfferer() {
         return isOfferer;
     }
 
-    public Trade getTrade() {
-        return currentItem.getTrade();
+    Trade getTrade() {
+        return selectedItem.getTrade();
     }
 
-    public Coin getTotalFees() {
-        Coin tradeFee = isOfferer() ? FeePolicy.CREATE_OFFER_FEE : FeePolicy.TAKE_OFFER_FEE;
-        return tradeFee.add(FeePolicy.TX_FEE);
+    Coin getTotalFees() {
+        return FeePolicy.TX_FEE.add(isOfferer() ? FeePolicy.CREATE_OFFER_FEE : FeePolicy.TAKE_OFFER_FEE);
     }
 
-    public WalletFacade getWalletFacade() {
+    WalletFacade getWalletFacade() {
         return walletFacade;
     }
+
+    PendingTradesListItem getSelectedItem() {
+        return selectedItem;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -199,8 +230,12 @@ public class PendingTradesModel extends UIModel {
     private void updateConfidence(TransactionConfidence confidence) {
         if (confidence != null &&
                 confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING
-                && currentItem.getTrade().getState() == Trade.State.DEPOSIT_PUBLISHED)
-            currentItem.getTrade().setState(Trade.State.DEPOSIT_CONFIRMED);
+                && getTrade().getState() == Trade.State.DEPOSIT_PUBLISHED) {
+            // only set it once when actual state is DEPOSIT_PUBLISHED, and remove listener afterwards
+            getTrade().setState(Trade.State.DEPOSIT_CONFIRMED);
+            walletFacade.removeTxConfidenceListener(txConfidenceListener);
+            txConfidenceListener = null;
+        }
     }
 
 }

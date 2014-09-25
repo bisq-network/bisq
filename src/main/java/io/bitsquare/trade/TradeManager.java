@@ -86,7 +86,7 @@ public class TradeManager {
     private final ObservableMap<String, Offer> offers = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> trades = FXCollections.observableHashMap();
 
-    // TODO There might be multiple pending trades
+    // the latest pending trade
     private Trade currentPendingTrade;
 
 
@@ -385,7 +385,7 @@ public class TradeManager {
     //TODO we don't support interruptions yet. 
     // If the user has shut down the app we lose the offererAsBuyerProtocolMap
     // Also we don't support yet offline messaging (mail box)
-    public void bankTransferInited(String tradeId) {
+    public void fiatPaymentStarted(String tradeId) {
         if (offererAsBuyerProtocolMap.get(tradeId) != null) {
             offererAsBuyerProtocolMap.get(tradeId).onUIEventBankTransferInited();
             trades.get(tradeId).setState(Trade.State.PAYMENT_STARTED);
@@ -398,7 +398,7 @@ public class TradeManager {
         }
     }
 
-    public void onFiatReceived(String tradeId) {
+    public void fiatPaymentReceived(String tradeId) {
         takerAsSellerProtocolMap.get(tradeId).onUIEventFiatReceived();
         trades.get(tradeId).setState(Trade.State.PAYMENT_RECEIVED);
         persistTrades();
@@ -454,9 +454,6 @@ public class TradeManager {
         return trades.containsKey(offer.getId());
     }
 
-    public boolean isTradeMyOffer(Trade trade) {
-        return trade.getOffer().getMessagePublicKey().equals(user.getMessagePublicKey());
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

@@ -135,6 +135,10 @@ public class Offer implements Serializable {
         return direction;
     }
 
+    public Direction getMirroredDirection() {
+        return direction == Direction.BUY ? Direction.SELL : Direction.BUY;
+    }
+
     public BankAccountType getBankAccountType() {
         return bankAccountType;
     }

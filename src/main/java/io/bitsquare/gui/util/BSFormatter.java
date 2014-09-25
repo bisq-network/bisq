@@ -21,6 +21,7 @@ import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.trade.Direction;
+import io.bitsquare.trade.Offer;
 import io.bitsquare.user.User;
 
 import com.google.bitcoin.core.Coin;
@@ -261,6 +262,10 @@ public class BSFormatter {
         }
     }
 
+    public static String formatDirection(Direction direction) {
+        return formatDirection(direction, true);
+    }
+
     public static String formatDirection(Direction direction, boolean allUpperCase) {
         String result = (direction == Direction.BUY) ? "Buy" : "Sell";
         if (allUpperCase) {
@@ -269,6 +274,14 @@ public class BSFormatter {
         return result;
     }
 
+    public static String formatAmountWithMinAmount(Offer offer) {
+        return formatCoin(offer.getAmount()) + " (" + BSFormatter.formatCoin(offer.getMinAmount()) + ")";
+    }
+
+    public static String formatVolumeWithMinVolume(Offer offer) {
+        return BSFormatter.formatFiat(offer.getOfferVolume()) +
+                " (" + BSFormatter.formatFiat(offer.getMinOfferVolume()) + ")";
+    }
 
     public static String countryLocalesToString(List<Country> countries) {
         return countries.stream().map(e -> e.getName()).collect(Collectors.joining(", "));
@@ -315,10 +328,6 @@ public class BSFormatter {
         decimalFormat.setMaximumFractionDigits(1);
         decimalFormat.setGroupingUsed(false);
         return decimalFormat.format(value / 100) + " %";
-    }
-
-    public static String formatVolumeWithMinVolume(Fiat volume, Fiat minVolume) {
-        return formatFiat(volume) + " (" + formatFiat(minVolume) + ")";
     }
 
     private static String cleanInput(String input) {

@@ -23,6 +23,8 @@ import com.google.bitcoin.utils.Fiat;
 
 import java.io.Serializable;
 
+import java.util.Date;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -46,11 +48,13 @@ public class Trade implements Serializable {
         PAYMENT_STARTED,
         PAYMENT_RECEIVED,  /* For taker only*/
         PAYOUT_PUBLISHED,
-        FAULT
+        FAULT,
+        CLOSED
     }
 
 
     private final Offer offer;
+    private final Date date;
     private String takeOfferFeeTxID;
     private Coin tradeAmount;
     private Contract contract;
@@ -76,6 +80,7 @@ public class Trade implements Serializable {
 
     public Trade(Offer offer) {
         this.offer = offer;
+        date = new Date();
         state = State.OPEN;
     }
 
@@ -133,6 +138,7 @@ public class Trade implements Serializable {
         faultProperty().set(fault);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -179,6 +185,10 @@ public class Trade implements Serializable {
 
     public String getContractAsJson() {
         return contractAsJson;
+    }
+
+    public Date getDate() {
+        return date;
     }
 
     // When serialized those transient properties are not instantiated, so we need to instantiate them at first access
