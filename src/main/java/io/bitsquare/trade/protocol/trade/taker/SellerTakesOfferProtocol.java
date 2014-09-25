@@ -392,7 +392,6 @@ public class SellerTakesOfferProtocol {
 
     public void onResultSendPayoutTxToOfferer() {
         log.debug("onResultSendPayoutTxToOfferer called " + step++);
-        listener.onCompleted(state);
     }
 
 

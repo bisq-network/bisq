@@ -17,46 +17,41 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
+<?import io.bitsquare.gui.components.TitledSeparator?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.cell.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="root" fx:controller="io.bitsquare.gui.main.orders.offer.OfferController"
-      spacing="10" xmlns:fx="http://javafx.com/fxml">
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.orders.offer.OffersViewCB"
+          hgap="5.0" vgap="5"
+          xmlns:fx="http://javafx.com/fxml">
     <padding>
-        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+        <Insets bottom="20.0" left="25.0" top="30.0" right="25"/>
     </padding>
 
-    <TableView fx:id="offerTable" VBox.vgrow="ALWAYS">
-        <columns>
+    <TitledSeparator text="Open offers" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
 
-            <TableColumn text="Offer ID" fx:id="offerIdColumn" minWidth="100" sortable="false">
-                <cellValueFactory>
-                    <PropertyValueFactory property="offerId"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn text="Date" fx:id="dateColumn" minWidth="100" sortable="false">
-                <cellValueFactory>
-                    <PropertyValueFactory property="date"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn text="Amount in BTC (Min.)" fx:id="amountColumn" minWidth="70" sortable="false">
-                <cellValueFactory>
-                    <PropertyValueFactory property="amount"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn text="Price" fx:id="priceColumn" minWidth="70" sortable="false">
-                <cellValueFactory>
-                    <PropertyValueFactory property="price"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn text="Amount in EUR (Min.)" fx:id="volumeColumn" minWidth="70" sortable="false">
-                <cellValueFactory>
-                    <PropertyValueFactory property="volume"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn text="" fx:id="removeColumn" minWidth="50" sortable="false"/>
+    <TableView fx:id="table" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2">
+        <GridPane.margin>
+            <Insets top="10.0" left="-10" right="-10" bottom="-15"/>
+        </GridPane.margin>
+        <columns>
+            <TableColumn text="Offer ID" fx:id="offerIdColumn" minWidth="100" sortable="false"/>
+            <TableColumn text="Date" fx:id="dateColumn" minWidth="130"/>
+            <TableColumn text="Amount in BTC (Min.)" fx:id="amountColumn" minWidth="130" sortable="false"/>
+            <TableColumn text="Price" fx:id="priceColumn" minWidth="80" sortable="false"/>
+            <TableColumn text="Amount in EUR (Min.)" fx:id="volumeColumn" minWidth="130" sortable="false"/>
+            <TableColumn text="Trade type" fx:id="directionColumn" minWidth="70" sortable="false"/>
+            <TableColumn text="" fx:id="removeItemColumn" minWidth="100" sortable="false"/>
         </columns>
     </TableView>
 
-</VBox>
+    <columnConstraints>
+        <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="200"/>
+        <ColumnConstraints hgrow="ALWAYS"/>
+    </columnConstraints>
+
+    <rowConstraints>
+        <RowConstraints vgrow="ALWAYS"/>
+    </rowConstraints>
+
+</GridPane>

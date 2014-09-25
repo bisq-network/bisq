@@ -89,17 +89,14 @@ import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
  * Wait until steve's akka version to see how to continue here
  */
 public class WalletFacade {
+    private static final Logger log = LoggerFactory.getLogger(WalletFacade.class);
+
     public static final String MAIN_NET = "MAIN_NET";
     public static final String TEST_NET = "TEST_NET";
     public static final String REG_TEST_NET = "REG_TEST_NET";
-
     public static final String WALLET_PREFIX = BitSquare.getAppName();
 
-    private static final Logger log = LoggerFactory.getLogger(WalletFacade.class);
-
     private final ReentrantLock lock = Threading.lock("lock");
-
-
     private final NetworkParameters params;
     private WalletAppKit walletAppKit;
     private final FeePolicy feePolicy;

@@ -83,7 +83,8 @@ public class TradeManager {
     private final Map<String, CreateOfferCoordinator> createOfferCoordinatorMap = new HashMap<>();
 
     private final ObservableMap<String, Offer> offers = FXCollections.observableHashMap();
-    private final ObservableMap<String, Trade> trades = FXCollections.observableHashMap();
+    private final ObservableMap<String, Trade> pendingTrades = FXCollections.observableHashMap();
+    private final ObservableMap<String, Trade> closedTrades = FXCollections.observableHashMap();
 
     // the latest pending trade
     private Trade currentPendingTrade;
@@ -109,9 +110,14 @@ public class TradeManager {
             offers.putAll((Map<String, Offer>) offersObject);
         }
 
-        Object tradesObject = persistence.read(this, "trades");
-        if (tradesObject instanceof HashMap) {
-            trades.putAll((Map<String, Trade>) tradesObject);
+        Object pendingTradesObject = persistence.read(this, "pendingTrades");
+        if (pendingTradesObject instanceof HashMap) {
+            pendingTrades.putAll((Map<String, Trade>) pendingTradesObject);
+        }
+
+        Object closedTradesObject = persistence.read(this, "closedTrades");
+        if (closedTradesObject instanceof HashMap) {
+            closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
 
         messageFacade.addIncomingTradeMessageListener(this::onIncomingTradeMessage);
@@ -210,22 +216,25 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Trade createTrade(Offer offer) {
-        if (trades.containsKey(offer.getId()))
+        if (pendingTrades.containsKey(offer.getId()))
             log.error("trades contains already an trade with the ID " + offer.getId());
 
         Trade trade = new Trade(offer);
-        trades.put(offer.getId(), trade);
-        persistTrades();
+        pendingTrades.put(offer.getId(), trade);
+        persistPendingTrades();
 
         return trade;
     }
 
-    public void removeTrade(Trade trade) {
-        if (!trades.containsKey(trade.getId()))
+    public void closeTrade(Trade trade) {
+        if (!pendingTrades.containsKey(trade.getId()))
             log.error("trades does not contain the trade with the ID " + trade.getId());
 
-        trades.remove(trade.getId());
-        persistTrades();
+        pendingTrades.remove(trade.getId());
+        persistPendingTrades();
+
+        closedTrades.put(trade.getId(), trade);
+        persistClosedTrades();
     }
 
 
@@ -252,7 +261,7 @@ public class TradeManager {
                         @Override
                         public void onOfferAccepted(Offer offer) {
                             trade.setState(Trade.State.OFFERER_ACCEPTED);
-                            persistTrades();
+                            persistPendingTrades();
                             removeOffer(offer);
                         }
 
@@ -260,7 +269,7 @@ public class TradeManager {
                         public void onDepositTxPublished(Transaction depositTx) {
                             trade.setDepositTx(depositTx);
                             trade.setState(Trade.State.DEPOSIT_PUBLISHED);
-                            persistTrades();
+                            persistPendingTrades();
                             log.trace("trading onDepositTxPublishedMessage " + depositTx.getHashAsString());
                         }
 
@@ -268,14 +277,15 @@ public class TradeManager {
                         public void onDepositTxConfirmedInBlockchain() {
                             log.trace("trading onDepositTxConfirmedInBlockchain");
                             trade.setState(Trade.State.DEPOSIT_CONFIRMED);
-                            persistTrades();
+                            persistPendingTrades();
                         }
 
                         @Override
                         public void onPayoutTxPublished(Transaction payoutTx) {
                             trade.setPayoutTx(payoutTx);
-                            trade.setState(Trade.State.PAYOUT_PUBLISHED);
-                            persistTrades();
+                            trade.setState(Trade.State.COMPLETED);
+                            closeTrade(trade);
+
                             log.debug("trading onPayoutTxPublishedMessage");
                         }
 
@@ -283,8 +293,8 @@ public class TradeManager {
                         public void onFault(Throwable throwable, BuyerAcceptsOfferProtocol.State state) {
                             log.error("Error while executing trade process at state: " + state + " / " + throwable);
                             trade.setFault(throwable);
-                            trade.setState(Trade.State.FAULT);
-                            persistTrades();
+                            trade.setState(Trade.State.FAILED);
+                            persistPendingTrades();
                         }
 
                         // probably not needed
@@ -325,33 +335,33 @@ public class TradeManager {
             @Override
             public void onTakeOfferRequestAccepted(Trade trade) {
                 trade.setState(Trade.State.OFFERER_ACCEPTED);
-                persistTrades();
+                persistPendingTrades();
             }
 
             @Override
             public void onTakeOfferRequestRejected(Trade trade) {
                 trade.setState(Trade.State.OFFERER_REJECTED);
-                persistTrades();
+                persistPendingTrades();
             }
 
             @Override
             public void onDepositTxPublished(Transaction depositTx) {
                 trade.setDepositTx(depositTx);
                 trade.setState(Trade.State.DEPOSIT_PUBLISHED);
-                persistTrades();
+                persistPendingTrades();
             }
 
             @Override
             public void onBankTransferInited(String tradeId) {
                 trade.setState(Trade.State.PAYMENT_STARTED);
-                persistTrades();
+                persistPendingTrades();
             }
 
             @Override
             public void onPayoutTxPublished(Trade trade, Transaction payoutTx) {
-                trade.setState(Trade.State.PAYOUT_PUBLISHED);
                 trade.setPayoutTx(payoutTx);
-                persistTrades();
+                trade.setState(Trade.State.COMPLETED);
+                closeTrade(trade);
             }
 
             @Override
@@ -362,12 +372,6 @@ public class TradeManager {
             // probably not needed
             @Override
             public void onWaitingForPeerResponse(SellerTakesOfferProtocol.State state) {
-            }
-
-            @Override
-            public void onCompleted(SellerTakesOfferProtocol.State state) {
-                trade.setState(Trade.State.PAYMENT_RECEIVED);
-                persistTrades();
             }
 
         };
@@ -387,8 +391,8 @@ public class TradeManager {
     public void fiatPaymentStarted(String tradeId) {
         if (offererAsBuyerProtocolMap.get(tradeId) != null) {
             offererAsBuyerProtocolMap.get(tradeId).onUIEventBankTransferInited();
-            trades.get(tradeId).setState(Trade.State.PAYMENT_STARTED);
-            persistTrades();
+            pendingTrades.get(tradeId).setState(Trade.State.PAYMENT_STARTED);
+            persistPendingTrades();
         }
         else {
             // For usability tests we don't want to crash
@@ -402,8 +406,6 @@ public class TradeManager {
 
     public void fiatPaymentReceived(String tradeId) {
         takerAsSellerProtocolMap.get(tradeId).onUIEventFiatReceived();
-        trades.get(tradeId).setState(Trade.State.PAYMENT_RECEIVED);
-        persistTrades();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -436,7 +438,7 @@ public class TradeManager {
                     (RequestOffererPublishDepositTxMessage) tradeMessage);
         }
         else if (tradeMessage instanceof DepositTxPublishedMessage) {
-            persistTrades();
+            persistPendingTrades();
             takerAsSellerProtocolMap.get(tradeId).onDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
         }
         else if (tradeMessage instanceof BankTransferInitedMessage) {
@@ -453,7 +455,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean isOfferAlreadyInTrades(Offer offer) {
-        return trades.containsKey(offer.getId());
+        return pendingTrades.containsKey(offer.getId());
     }
 
 
@@ -461,16 +463,16 @@ public class TradeManager {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableMap<String, Trade> getTrades() {
-        return trades;
-    }
-
-    public Map<String, Offer> getOffers() {
+    public ObservableMap<String, Offer> getOffers() {
         return offers;
     }
 
-    public Offer getOffer(String offerId) {
-        return offers.get(offerId);
+    public ObservableMap<String, Trade> getPendingTrades() {
+        return pendingTrades;
+    }
+
+    public ObservableMap<String, Trade> getClosedTrades() {
+        return closedTrades;
     }
 
     public Trade getCurrentPendingTrade() {
@@ -486,14 +488,19 @@ public class TradeManager {
         persistence.write(this, "offers", (Map<String, Offer>) new HashMap<>(offers));
     }
 
-    private void persistTrades() {
-        persistence.write(this, "trades", (Map<String, Trade>) new HashMap<>(trades));
+    private void persistPendingTrades() {
+        persistence.write(this, "pendingTrades", (Map<String, Trade>) new HashMap<>(pendingTrades));
     }
+
+    private void persistClosedTrades() {
+        persistence.write(this, "closedTrades", (Map<String, Trade>) new HashMap<>(closedTrades));
+    }
+
 
     @Nullable
     public Trade getTrade(String tradeId) {
-        if (trades.containsKey(tradeId)) {
-            return trades.get(tradeId);
+        if (pendingTrades.containsKey(tradeId)) {
+            return pendingTrades.get(tradeId);
         }
         else {
             return null;

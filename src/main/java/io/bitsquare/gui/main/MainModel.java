@@ -174,14 +174,15 @@ class MainModel extends UIModel {
             }
         });
 
-        tradeManager.getTrades().addListener((MapChangeListener<String, Trade>) change -> updateNumPendingTrades());
+        tradeManager.getPendingTrades().addListener((MapChangeListener<String, 
+                Trade>) change -> updateNumPendingTrades());
         updateNumPendingTrades();
 
         backendInited.set(true);
     }
 
     private void updateNumPendingTrades() {
-        numPendingTrades.set(tradeManager.getTrades().size());
+        numPendingTrades.set(tradeManager.getPendingTrades().size());
     }
 
     private void updateBalance(Coin balance) {

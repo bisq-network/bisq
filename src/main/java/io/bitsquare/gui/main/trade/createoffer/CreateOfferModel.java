@@ -127,8 +127,6 @@ class CreateOfferModel extends UIModel {
 
     @Override
     public void initialize() {
-        super.initialize();
-
         // static data
         offerFeeAsCoin.set(FeePolicy.CREATE_OFFER_FEE);
         networkFeeAsCoin.set(FeePolicy.TX_FEE);
@@ -153,6 +151,11 @@ class CreateOfferModel extends UIModel {
 
         if (settings != null)
             btcCode.bind(settings.btcDenominationProperty());
+
+        // we need to set it here already as initWithData is called before activate
+        collateralAsLong.set(settings.getCollateral());
+
+        super.initialize();
     }
 
     @Override
@@ -161,7 +164,9 @@ class CreateOfferModel extends UIModel {
 
         // might be changed after screen change
         if (settings != null) {
+            // set it here again to cover the case of an collateral change after a screen change
             collateralAsLong.set(settings.getCollateral());
+
             acceptedCountries.setAll(settings.getAcceptedCountries());
             acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
             acceptedArbitrators.setAll(settings.getAcceptedArbitrators());

@@ -55,6 +55,7 @@ class PendingTradesModel extends UIModel {
 
     private PendingTradesListItem selectedItem;
     private boolean isOfferer;
+    private Trade closedTrade;
 
     private TxConfidenceListener txConfidenceListener;
     private ChangeListener<Trade.State> stateChangeListener;
@@ -88,10 +89,13 @@ class PendingTradesModel extends UIModel {
         faultChangeListener = (ov, oldValue, newValue) -> fault.set(newValue);
 
         mapChangeListener = change -> {
+            log.debug("######## " + change);
+            log.debug("######## " + change.getValueAdded());
+            log.debug("######## " + change.getValueRemoved());
             if (change.wasAdded())
                 list.add(new PendingTradesListItem(change.getValueAdded()));
             else if (change.wasRemoved())
-                list.remove(new PendingTradesListItem(change.getValueRemoved()));
+                closedTrade = change.getValueRemoved();
         };
 
         super.initialize();
@@ -103,10 +107,9 @@ class PendingTradesModel extends UIModel {
 
         list.clear();
         // transform trades to list of PendingTradesListItems and keep it updated
-        tradeManager.getTrades().values().stream()
-                .filter(e -> e.getState() != Trade.State.CLOSED)
+        tradeManager.getPendingTrades().values().stream()
                 .forEach(e -> list.add(new PendingTradesListItem(e)));
-        tradeManager.getTrades().addListener(mapChangeListener);
+        tradeManager.getPendingTrades().addListener(mapChangeListener);
 
         // we sort by date
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
@@ -117,18 +120,17 @@ class PendingTradesModel extends UIModel {
                         tradeManager.getCurrentPendingTrade().getId().equals(e.getTrade().getId()))
                 .findFirst();
         if (currentTradeItemOptional.isPresent())
-            selectPendingTrade(currentTradeItemOptional.get());
+            selectTrade(currentTradeItemOptional.get());
         else if (list.size() > 0)
-            selectPendingTrade(list.get(0));
+            selectTrade(list.get(0));
     }
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
 
-        tradeManager.getTrades().removeListener(mapChangeListener);
-        selectPendingTrade(null);
+        tradeManager.getPendingTrades().removeListener(mapChangeListener);
+        selectTrade(null);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -142,7 +144,7 @@ class PendingTradesModel extends UIModel {
     // Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void selectPendingTrade(PendingTradesListItem item) {
+    void selectTrade(PendingTradesListItem item) {
         // clean up previous selectedItem
         if (selectedItem != null) {
             Trade trade = getTrade();
@@ -162,7 +164,8 @@ class PendingTradesModel extends UIModel {
             tradeState.set(null);
 
             Trade trade = getTrade();
-            txId.set(trade.getDepositTx().getHashAsString());
+            if (trade.getDepositTx() != null)
+                txId.set(trade.getDepositTx().getHashAsString());
 
             txConfidenceListener = new TxConfidenceListener(txId.get()) {
                 @Override
@@ -178,6 +181,11 @@ class PendingTradesModel extends UIModel {
 
             trade.faultProperty().addListener(faultChangeListener);
             fault.set(trade.faultProperty().get());
+
+            if (closedTrade != null) {
+                list.removeIf(e -> e.getTrade().getId().equals(closedTrade.getId()));
+                closedTrade = null;
+            }
         }
         else {
             txId.set(null);
@@ -193,6 +201,12 @@ class PendingTradesModel extends UIModel {
         tradeManager.fiatPaymentReceived(getTrade().getId());
     }
 
+    void closeSummary() {
+        if (closedTrade != null) {
+            list.removeIf(e -> e.getTrade().getId().equals(closedTrade.getId()));
+            closedTrade = null;
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

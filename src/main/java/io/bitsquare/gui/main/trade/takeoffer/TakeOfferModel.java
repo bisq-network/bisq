@@ -160,7 +160,7 @@ class TakeOfferModel extends UIModel {
                     transactionId.set(trade.getDepositTx().getHashAsString());
                     requestTakeOfferSuccess.set(true);
                     break;
-                case FAULT:
+                case FAILED:
                     requestTakeOfferErrorMessage.set("An error occurred. Error: " + trade.getFault().getMessage());
                     break;
                 case OFFERER_REJECTED:

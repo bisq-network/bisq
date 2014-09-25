@@ -32,8 +32,6 @@ public interface SellerTakesOfferProtocolListener {
 
     void onWaitingForPeerResponse(SellerTakesOfferProtocol.State state);
 
-    void onCompleted(SellerTakesOfferProtocol.State state);
-
     void onTakeOfferRequestAccepted(Trade trade);
 
     void onTakeOfferRequestRejected(Trade trade);

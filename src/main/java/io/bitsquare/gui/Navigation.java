@@ -22,7 +22,6 @@ import io.bitsquare.persistence.Persistence;
 import com.google.inject.Inject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -58,34 +57,32 @@ public class Navigation {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void navigationTo(Item... items) {
-        if (items != null)
-            log.trace("navigationTo " + Arrays.asList(items).toString());
         List<Item> temp = new ArrayList<>();
-        for (int i = 0; i < items.length; i++) {
-            Item item = items[i];
-            temp.add(item);
-            if (currentItems == null ||
-                    (currentItems != null &&
-                            currentItems.length > i &&
-                            item != currentItems[i] &&
-                            i != items.length - 1)) {
-                List<Item> temp2 = new ArrayList<>(temp);
-                for (int n = i + 1; n < items.length; n++) {
-                    Item[] newTemp = new Item[i + 1];
-                    currentItems = temp2.toArray(newTemp);
-                    navigationTo(currentItems);
-                    item = items[n];
-                    temp2.add(item);
+        if (items != null) {
+            for (int i = 0; i < items.length; i++) {
+                Item item = items[i];
+                temp.add(item);
+                if (currentItems == null ||
+                        (currentItems != null &&
+                                currentItems.length > i &&
+                                item != currentItems[i] &&
+                                i != items.length - 1)) {
+                    List<Item> temp2 = new ArrayList<>(temp);
+                    for (int n = i + 1; n < items.length; n++) {
+                        Item[] newTemp = new Item[i + 1];
+                        currentItems = temp2.toArray(newTemp);
+                        navigationTo(currentItems);
+                        item = items[n];
+                        temp2.add(item);
+                    }
                 }
             }
-        }
-        currentItems = items;
 
-        persistence.write(this, "navigationItems", items);
-        if (items != null)
-            log.trace("navigationTo notify listeners " + Arrays.asList(items).toString() + " / " + listeners
-                    .size());
-        listeners.stream().forEach((e) -> e.onNavigationRequested(items));
+            currentItems = items;
+
+            persistence.write(this, "navigationItems", items);
+            listeners.stream().forEach((e) -> e.onNavigationRequested(items));
+        }
     }
 
     public void navigateToLastStoredItem() {

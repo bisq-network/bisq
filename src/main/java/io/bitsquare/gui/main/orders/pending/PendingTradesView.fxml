@@ -48,7 +48,7 @@
             <TableColumn text="Price" fx:id="priceColumn" minWidth="100" sortable="false"/>
             <TableColumn text="Amount in EUR (Min.)" fx:id="volumeColumn" minWidth="130" sortable="false"/>
             <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80" sortable="false"/>
-            <TableColumn fx:id="selectColumn" minWidth="60" sortable="false" text=""/>
+            <TableColumn text="" fx:id="selectColumn" minWidth="60" sortable="false"/>
         </columns>
     </TableView>
 
@@ -142,7 +142,7 @@
 
     <Label fx:id="btcLabel" GridPane.rowIndex="5" visible="false">
         <GridPane.margin>
-        <Insets top="60.0"/>
+            <Insets top="60.0"/>
         </GridPane.margin>
     </Label>
     <TextField fx:id="btcTextField" GridPane.rowIndex="5" GridPane.columnIndex="1" editable="false"
@@ -165,12 +165,20 @@
     <InfoDisplay fx:id="summaryInfoDisplay" onAction="#onOpenSummaryHelp" rowIndex="9" gridPane="$root"
                  visible="false"/>
 
+    <Button fx:id="closeSummaryButton" text="Close summary" onAction="#onCloseSummary" GridPane.rowIndex="10"
+            GridPane.columnIndex="1" defaultButton="true" visible="false">
+        <GridPane.margin>
+            <Insets top="15"/>
+        </GridPane.margin>
+    </Button>
+
     <columnConstraints>
         <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="200"/>
         <ColumnConstraints hgrow="ALWAYS"/>
     </columnConstraints>
 
     <rowConstraints>
+        <RowConstraints/>
         <RowConstraints/>
         <RowConstraints/>
         <RowConstraints/>

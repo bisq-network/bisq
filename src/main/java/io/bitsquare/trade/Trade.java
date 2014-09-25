@@ -46,10 +46,8 @@ public class Trade implements Serializable {
         DEPOSIT_PUBLISHED,
         DEPOSIT_CONFIRMED,
         PAYMENT_STARTED,
-        PAYMENT_RECEIVED,  /* For taker only*/
-        PAYOUT_PUBLISHED,
-        FAULT,
-        CLOSED
+        FAILED,
+        COMPLETED
     }
 
 

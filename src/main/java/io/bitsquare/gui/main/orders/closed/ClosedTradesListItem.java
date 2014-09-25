@@ -17,60 +17,31 @@
 
 package io.bitsquare.gui.main.orders.closed;
 
-import io.bitsquare.gui.CachedViewController;
-
-import java.net.URL;
-
-import java.util.ResourceBundle;
-
-import javax.inject.Inject;
+import io.bitsquare.trade.Trade;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//TODO impl. missing yet
-public class ClosedTradeController extends CachedViewController {
-    private static final Logger log = LoggerFactory.getLogger(ClosedTradeController.class);
+public class ClosedTradesListItem {
+    private static final Logger log = LoggerFactory.getLogger(ClosedTradesListItem.class);
+
+    private final Trade trade;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
-    private ClosedTradeController() {
+    ClosedTradesListItem(Trade trade) {
+        this.trade = trade;
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
+    // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
+    Trade getTrade() {
+        return trade;
     }
-
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @Override
-    public void activate() {
-        super.activate();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // GUI Event handlers
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
 }
-

@@ -56,7 +56,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
             collateralTextField;
     @FXML TxIdTextField txIdTextField;
     @FXML InfoDisplay infoDisplay, paymentsInfoDisplay, summaryInfoDisplay;
-    @FXML Button confirmPaymentReceiptButton, paymentsButton;
+    @FXML Button confirmPaymentReceiptButton, paymentsButton, closeSummaryButton;
     @FXML TextFieldWithCopyIcon holderNameTextField, secondaryIdTextField, primaryIdTextField;
     @FXML TableView<PendingTradesListItem> table;
     @FXML TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, amountColumn, volumeColumn,
@@ -102,7 +102,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         selectedItemChangeListener = (obsValue, oldValue, newValue) -> {
             if (oldValue != newValue) {
                 if (oldValue != null && newValue != null)
-                    presentationModel.selectPendingTrade(newValue);
+                    presentationModel.selectTrade(newValue);
                 else if (newValue == null)
                     table.getSelectionModel().clearSelection();
             }
@@ -178,6 +178,12 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     @FXML
     void onConfirmPaymentReceipt() {
         presentationModel.fiatPaymentReceived();
+    }
+
+    @FXML
+    void onCloseSummary() {
+        presentationModel.closeSummary();
+        setSummaryControlsVisible(false);
     }
 
     @FXML
@@ -367,7 +373,13 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
 
     private void onFault(Throwable fault) {
         // TODO
-        log.error(fault.toString());
+        if (fault != null)
+            log.error(fault.toString());
+    }
+
+    private void openOfferDetails(PendingTradesListItem item) {
+        // TODO Open popup with details view
+        log.debug("Trade details " + item);
     }
 
     private void setPaymentsControlsVisible(boolean visible) {
@@ -395,12 +407,46 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         collateralLabel.setVisible(visible);
         collateralTextField.setVisible(visible);
         summaryInfoDisplay.setVisible(visible);
+        closeSummaryButton.setVisible(visible);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // CellFactories
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void setTradeIdColumnCellFactory() {
+        tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper(offerListItem.getValue()));
+        tradeIdColumn.setCellFactory(
+                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>,
+                        TableCell<PendingTradesListItem, PendingTradesListItem>>() {
+
+                    @Override
+                    public TableCell<PendingTradesListItem, PendingTradesListItem> call
+                            (TableColumn<PendingTradesListItem,
+                                    PendingTradesListItem> column) {
+                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                            Hyperlink hyperlink;
+
+                            @Override
+                            public void updateItem(final PendingTradesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    hyperlink = new Hyperlink(presentationModel.getTradeId(item));
+                                    Tooltip.install(hyperlink, new Tooltip(presentationModel.getTradeId(item)));
+                                    hyperlink.setOnAction(event -> openOfferDetails(item));
+                                    setGraphic(hyperlink);
+                                }
+                                else {
+                                    setGraphic(null);
+                                    setId(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
 
     private void setDateColumnCellFactory() {
         dateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -418,32 +464,6 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                                     setText(presentationModel.getDate(item));
                                 else
                                     setText("");
-                            }
-                        };
-                    }
-                });
-    }
-
-    private void setTradeIdColumnCellFactory() {
-        tradeIdColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        tradeIdColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
-                        PendingTradesListItem>>() {
-                    @Override
-                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(
-                            TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
-
-                            @Override
-                            public void updateItem(final PendingTradesListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null) {
-                                    setText(presentationModel.getTradeId(item));
-                                    Tooltip.install(this, new Tooltip(presentationModel.getTradeId(item)));
-                                }
-                                else {
-                                    setText("");
-                                }
                             }
                         };
                     }
@@ -559,5 +579,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
             }
         });
     }
+
+
 }
 

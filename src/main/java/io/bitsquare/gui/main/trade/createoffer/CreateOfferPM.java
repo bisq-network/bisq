@@ -157,16 +157,24 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         directionLabel.set(model.getDirection() == Direction.BUY ? BSResources.get("shared.buy") : BSResources.get
                 ("shared.sell"));
 
-        // apply only if valid
+        // apply only if valid 
+        boolean amountValid = false;
         if (amount != null && isBtcInputValid(amount.toPlainString())
                 .isValid) {
             model.amountAsCoin.set(amount);
             model.minAmountAsCoin.set(amount);
+            amountValid = true;
         }
 
         // apply only if valid
-        if (price != null && isBtcInputValid(price.toPlainString()).isValid)
+        boolean priceValid = false;
+        if (price != null && isBtcInputValid(price.toPlainString()).isValid) {
             model.priceAsFiat.set(parseToFiatWith2Decimals(price.toPlainString()));
+            priceValid = true;
+        }
+
+        if (amountValid && priceValid)
+            model.calculateTotalToPay();
     }
 
 

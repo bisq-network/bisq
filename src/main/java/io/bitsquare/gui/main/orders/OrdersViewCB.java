@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.orders;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewCB;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.util.ViewLoader;
 
 import java.io.IOException;
@@ -30,6 +31,7 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -42,9 +44,11 @@ public class OrdersViewCB extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(OrdersViewCB.class);
 
     private Navigation navigation;
-    private Navigation.Listener listener;
+    private TradeManager tradeManager;
+    private Navigation.Listener navigationListener;
 
     @FXML Tab offersTab, pendingTradesTab, closedTradesTab;
+    private ChangeListener<Tab> tabChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -52,10 +56,11 @@ public class OrdersViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OrdersViewCB(Navigation navigation) {
+    OrdersViewCB(Navigation navigation, TradeManager tradeManager) {
         super();
 
         this.navigation = navigation;
+        this.tradeManager = tradeManager;
     }
 
 
@@ -65,29 +70,47 @@ public class OrdersViewCB extends CachedViewCB {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        listener = navigationItems -> {
-            if (navigationItems != null && navigationItems.length == 3 && navigationItems[1] == Navigation.Item.ORDERS)
+        navigationListener = navigationItems -> {
+            if (navigationItems != null && navigationItems.length == 3 && navigationItems[1] == Navigation.Item
+                    .ORDERS) {
+                log.debug("####  Orders " + navigationItems[2]);
                 loadView(navigationItems[2]);
+            }
+        };
+
+        tabChangeListener = (ov, oldValue, newValue) -> {
+
+            log.debug("####  newValue " + newValue.getText());
+            if (newValue == offersTab)
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.OFFERS);
+            else if (newValue == pendingTradesTab)
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.PENDING_TRADES);
+            else if (newValue == closedTradesTab)
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.CLOSED_TRADES);
         };
 
         super.initialize(url, rb);
     }
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();
 
-        navigation.addListener(listener);
-        navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.PENDING_TRADES);
+        ((TabPane) root).getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
+        navigation.addListener(navigationListener);
+
+        if (tradeManager.getPendingTrades().size() == 0)
+            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.OFFERS);
+        else
+            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.PENDING_TRADES);
     }
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
 
-        navigation.removeListener(listener);
+        ((TabPane) root).getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
+        navigation.removeListener(navigationListener);
     }
 
     @SuppressWarnings("EmptyMethod")

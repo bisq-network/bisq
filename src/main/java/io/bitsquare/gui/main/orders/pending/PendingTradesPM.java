@@ -30,7 +30,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,8 +112,8 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     // Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void selectPendingTrade(PendingTradesListItem item) {
-        model.selectPendingTrade(item);
+    void selectTrade(PendingTradesListItem item) {
+        model.selectTrade(item);
     }
 
     void fiatPaymentStarted() {
@@ -125,13 +124,16 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         model.fiatPaymentReceived();
     }
 
+    void closeSummary() {
+        model.closeSummary();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     ObservableList<PendingTradesListItem> getList() {
-        return new SortedList<>(model.getList());
+        return model.getList();
     }
 
     boolean isOfferer() {
@@ -144,6 +146,11 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
 
     PendingTradesListItem getSelectedItem() {
         return model.getSelectedItem();
+    }
+
+    // columns
+    String getTradeId(PendingTradesListItem item) {
+        return item.getTrade().getId();
     }
 
     String getAmount(PendingTradesListItem item) {
@@ -162,6 +169,11 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         return (item != null) ? BSFormatter.formatDirection(item.getTrade().getOffer().getMirroredDirection()) : "";
     }
 
+    String getDate(PendingTradesListItem item) {
+        return formatter.formatDateTime(item.getTrade().getDate());
+    }
+
+    // payment
     String getPaymentMethod() {
         return BSResources.get(model.getTrade().getContract().getTakerBankAccount().getBankAccountType().toString());
     }
@@ -178,14 +190,7 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         return model.getTrade().getContract().getTakerBankAccount().getAccountSecondaryID();
     }
 
-    String getDate(PendingTradesListItem item) {
-        return formatter.formatDateTime(item.getTrade().getDate());
-    }
-
-    String getTradeId(PendingTradesListItem item) {
-        return item.getTrade().getId();
-    }
-
+    // summary
     String getTradeVolume() {
         return formatter.formatCoinWithCode(model.getTrade().getTradeAmount());
     }
@@ -221,11 +226,10 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
                     state.set(model.isOfferer() ? State.OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED :
                             State.TAKER_SELLER_CONFIRM_RECEIVE_PAYMENT);
                     break;
-                case PAYMENT_RECEIVED:
-                case PAYOUT_PUBLISHED:
+                case COMPLETED:
                     state.set(model.isOfferer() ? State.OFFERER_BUYER_COMPLETED : State.TAKER_SELLER_COMPLETED);
                     break;
-                case FAULT:
+                case FAILED:
                     // TODO
                     break;
                 default:
