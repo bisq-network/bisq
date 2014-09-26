@@ -24,7 +24,6 @@
                 AnchorPane.topAnchor="0.0"
                 xmlns:fx="http://javafx.com/fxml">
 
-    <Tab text="Deposit" closable="false"/>
     <Tab text="Withdrawal" closable="false"/>
     <Tab text="Transactions" closable="false"/>
 

@@ -180,7 +180,6 @@ public class Navigation {
         CLOSED_TRADES("/io/bitsquare/gui/main/orders/closed/ClosedTradesView.fxml"),
 
         // funds
-        DEPOSIT("/io/bitsquare/gui/main/funds/deposit/DepositView.fxml"),
         WITHDRAWAL("/io/bitsquare/gui/main/funds/withdrawal/WithdrawalView.fxml"),
         TRANSACTIONS("/io/bitsquare/gui/main/funds/transactions/TransactionsView.fxml"),
 
