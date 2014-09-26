@@ -18,9 +18,10 @@
 package io.bitsquare.gui.main.arbitrators.browser;
 
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.main.arbitrators.profile.ArbitratorProfileController;
+import io.bitsquare.gui.ViewCB;
+import io.bitsquare.gui.main.arbitrators.profile.ArbitratorProfileViewCB;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.ArbitratorListener;
@@ -51,15 +52,15 @@ import org.slf4j.LoggerFactory;
 /**
  * Arbitration is not much developed yet
  */
-public class ArbitratorBrowserController extends CachedViewController implements ArbitratorListener {
-    private static final Logger log = LoggerFactory.getLogger(ArbitratorBrowserController.class);
+public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorListener {
+    private static final Logger log = LoggerFactory.getLogger(ArbitratorBrowserViewCB.class);
 
     private final Settings settings;
     private final Persistence persistence;
 
     private final List<Arbitrator> allArbitrators = new ArrayList<>();
     private Arbitrator currentArbitrator;
-    private ArbitratorProfileController arbitratorProfileController;
+    private ArbitratorProfileViewCB arbitratorProfileViewCB;
     private int index = -1;
 
     @FXML Button prevButton, nextButton, selectButton, closeButton;
@@ -70,7 +71,7 @@ public class ArbitratorBrowserController extends CachedViewController implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorBrowserController(Settings settings, Persistence persistence, MessageFacade messageFacade) {
+    public ArbitratorBrowserViewCB(Settings settings, Persistence persistence, MessageFacade messageFacade) {
 
         this.settings = settings;
         this.persistence = persistence;
@@ -88,23 +89,26 @@ public class ArbitratorBrowserController extends CachedViewController implements
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
-        loadViewAndGetChildController(Navigation.Item.ARBITRATOR_PROFILE);
+        loadView(Navigation.Item.ARBITRATOR_PROFILE);
         checkButtonState();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
-    public void terminate() {
-        super.terminate();
+    public void activate() {
+        super.activate();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
-    public void activate() {
-        super.activate();
+    public void terminate() {
+        super.terminate();
     }
 
 
@@ -112,27 +116,43 @@ public class ArbitratorBrowserController extends CachedViewController implements
     // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public void setParentController(Initializable parentController) {
-        super.setParentController(parentController);
-    }
-
-    @Override
-    public Initializable loadViewAndGetChildController(Navigation.Item item) {
+   /* public Initializable loadViewAndGetChildController(Navigation.Item item) {
         final ViewLoader loader = new ViewLoader(getClass().getResource(item.getFxmlUrl()));
         try {
             final Node view = loader.load();
-            arbitratorProfileController = loader.getController();
-            arbitratorProfileController.setParentController(this);
+            arbitratorProfileViewCB = loader.getController();
+            arbitratorProfileViewCB.setParentController(this);
             ((Pane) root).getChildren().set(0, view);
 
-            return arbitratorProfileController;
+            return arbitratorProfileViewCB;
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
-    }
+    }*/
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Navigation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected Initializable loadView(Navigation.Item navigationItem) {
+        super.loadView(navigationItem);
+
+        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        try {
+            Node view = loader.load();
+            ((Pane) root).getChildren().set(0, view);
+            Initializable childController = arbitratorProfileViewCB = loader.getController();
+            ((ViewCB) childController).setParent(this);
+
+        } catch (IOException e) {
+            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
+            e.printStackTrace();
+        }
+        return childController;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface implementation: ArbitratorListener
@@ -150,7 +170,7 @@ public class ArbitratorBrowserController extends CachedViewController implements
         if (!allArbitrators.isEmpty()) {
             index = 0;
             currentArbitrator = allArbitrators.get(index);
-            arbitratorProfileController.applyArbitrator(currentArbitrator);
+            arbitratorProfileViewCB.applyArbitrator(currentArbitrator);
             checkButtonState();
         }
     }
@@ -169,7 +189,7 @@ public class ArbitratorBrowserController extends CachedViewController implements
         if (index > 0) {
             index--;
             currentArbitrator = allArbitrators.get(index);
-            arbitratorProfileController.applyArbitrator(currentArbitrator);
+            arbitratorProfileViewCB.applyArbitrator(currentArbitrator);
         }
         checkButtonState();
     }
@@ -179,7 +199,7 @@ public class ArbitratorBrowserController extends CachedViewController implements
         if (index < allArbitrators.size() - 1) {
             index++;
             currentArbitrator = allArbitrators.get(index);
-            arbitratorProfileController.applyArbitrator(currentArbitrator);
+            arbitratorProfileViewCB.applyArbitrator(currentArbitrator);
         }
         checkButtonState();
     }

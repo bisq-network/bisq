@@ -15,12 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.orders;
+package io.bitsquare.gui.main.funds;
 
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewCB;
-import io.bitsquare.trade.TradeManager;
 import io.bitsquare.util.ViewLoader;
 
 import java.io.IOException;
@@ -34,22 +33,21 @@ import javax.inject.Inject;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.*;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OrdersViewCB extends CachedViewCB {
-    private static final Logger log = LoggerFactory.getLogger(OrdersViewCB.class);
+public class FundsViewCB extends CachedViewCB {
+    private static final Logger log = LoggerFactory.getLogger(FundsViewCB.class);
 
     private final Navigation navigation;
-    private final TradeManager tradeManager;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 
-    @FXML Tab offersTab, pendingTradesTab, closedTradesTab;
+    @FXML Tab withdrawalTab, transactionsTab;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -57,11 +55,10 @@ public class OrdersViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OrdersViewCB(Navigation navigation, TradeManager tradeManager) {
+    FundsViewCB(Navigation navigation) {
         super();
 
         this.navigation = navigation;
-        this.tradeManager = tradeManager;
     }
 
 
@@ -73,17 +70,15 @@ public class OrdersViewCB extends CachedViewCB {
     public void initialize(URL url, ResourceBundle rb) {
         navigationListener = navigationItems -> {
             if (navigationItems != null && navigationItems.length == 3
-                    && navigationItems[1] == Navigation.Item.ORDERS)
+                    && navigationItems[1] == Navigation.Item.FUNDS)
                 loadView(navigationItems[2]);
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue == offersTab)
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.OFFERS);
-            else if (newValue == pendingTradesTab)
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.PENDING_TRADES);
-            else if (newValue == closedTradesTab)
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.CLOSED_TRADES);
+            if (newValue == withdrawalTab)
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.FUNDS, Navigation.Item.WITHDRAWAL);
+            else if (newValue == transactionsTab)
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.FUNDS, Navigation.Item.TRANSACTIONS);
         };
 
         super.initialize(url, rb);
@@ -96,10 +91,10 @@ public class OrdersViewCB extends CachedViewCB {
         ((TabPane) root).getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
-        if (tradeManager.getPendingTrades().size() == 0)
-            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.OFFERS);
+        if (((TabPane) root).getSelectionModel().getSelectedItem() == transactionsTab)
+            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.FUNDS, Navigation.Item.TRANSACTIONS);
         else
-            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.PENDING_TRADES);
+            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.FUNDS, Navigation.Item.WITHDRAWAL);
     }
 
     @Override
@@ -127,17 +122,14 @@ public class OrdersViewCB extends CachedViewCB {
 
         final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
-            GridPane view = loader.load();
+            Node view = loader.load();
             Tab tab = null;
             switch (navigationItem) {
-                case OFFERS:
-                    tab = offersTab;
+                case WITHDRAWAL:
+                    tab = withdrawalTab;
                     break;
-                case PENDING_TRADES:
-                    tab = pendingTradesTab;
-                    break;
-                case CLOSED_TRADES:
-                    tab = closedTradesTab;
+                case TRANSACTIONS:
+                    tab = transactionsTab;
                     break;
             }
             tab.setContent(view);
@@ -151,5 +143,6 @@ public class OrdersViewCB extends CachedViewCB {
         }
         return childController;
     }
+
 }
 

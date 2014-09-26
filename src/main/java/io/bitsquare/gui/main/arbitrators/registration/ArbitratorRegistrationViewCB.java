@@ -20,10 +20,9 @@ package io.bitsquare.gui.main.arbitrators.registration;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.CachedViewController;
-import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
-import io.bitsquare.gui.main.arbitrators.profile.ArbitratorProfileController;
+import io.bitsquare.gui.main.arbitrators.profile.ArbitratorProfileViewCB;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.LanguageUtil;
@@ -51,7 +50,6 @@ import javax.inject.Inject;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.stage.Stage;
@@ -64,8 +62,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // Arbitration is not much developed yet
-public class ArbitratorRegistrationController extends CachedViewController {
-    private static final Logger log = LoggerFactory.getLogger(ArbitratorRegistrationController.class);
+public class ArbitratorRegistrationViewCB extends CachedViewCB {
+    private static final Logger log = LoggerFactory.getLogger(ArbitratorRegistrationViewCB.class);
 
     private final Persistence persistence;
     private final WalletFacade walletFacade;
@@ -73,7 +71,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
     private final User user;
     private BSFormatter formatter;
     private Arbitrator arbitrator = new Arbitrator();
-    private ArbitratorProfileController arbitratorProfileController;
+    private ArbitratorProfileViewCB arbitratorProfileViewCB;
     private boolean isEditMode;
 
     private List<Locale> languageList = new ArrayList<>();
@@ -104,8 +102,8 @@ public class ArbitratorRegistrationController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ArbitratorRegistrationController(Persistence persistence, WalletFacade walletFacade,
-                                             MessageFacade messageFacade, User user, BSFormatter formatter) {
+    private ArbitratorRegistrationViewCB(Persistence persistence, WalletFacade walletFacade,
+                                         MessageFacade messageFacade, User user, BSFormatter formatter) {
         this.persistence = persistence;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
@@ -197,36 +195,23 @@ public class ArbitratorRegistrationController extends CachedViewController {
         });
     }
 
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Navigation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
+    @SuppressWarnings("EmptyMethod")
     @Override
-    public void setParentController(Initializable parentController) {
-        super.setParentController(parentController);
+    public void deactivate() {
+        super.deactivate();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
-    public Initializable loadViewAndGetChildController(Navigation.Item item) {
-        return null;
+    public void terminate() {
+        super.terminate();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public Methods

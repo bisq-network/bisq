@@ -18,8 +18,7 @@
 package io.bitsquare.gui.main.arbitrators.profile;
 
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.CachedViewController;
-import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
@@ -31,11 +30,10 @@ import java.util.ResourceBundle;
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
 // Arbitration is not much developed yet
-public class ArbitratorProfileController extends CachedViewController {
+public class ArbitratorProfileViewCB extends CachedViewCB {
 
     private final Settings settings;
 
@@ -56,7 +54,7 @@ public class ArbitratorProfileController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorProfileController(Settings settings, Persistence persistence, BSFormatter formatter) {
+    public ArbitratorProfileViewCB(Settings settings, Persistence persistence, BSFormatter formatter) {
         this.settings = settings;
         this.persistence = persistence;
 
@@ -70,39 +68,28 @@ public class ArbitratorProfileController extends CachedViewController {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
     }
 
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Navigation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
+    @SuppressWarnings("EmptyMethod")
     @Override
-    public void setParentController(Initializable parentController) {
-        super.setParentController(parentController);
+    public void deactivate() {
+        super.deactivate();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
-    public Initializable loadViewAndGetChildController(Navigation.Item item) {
-        return null;
+    public void terminate() {
+        super.terminate();
     }
 
 

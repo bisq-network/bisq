@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.orders.pending.uimock;
 
-import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.components.processbar.ProcessStepBar;
 import io.bitsquare.gui.components.processbar.ProcessStepItem;
 
@@ -32,7 +32,7 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PendingTradesControllerUIMock extends CachedViewController {
+public class PendingTradesControllerUIMock extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesControllerUIMock.class);
     public ProcessStepBar processBar;
 

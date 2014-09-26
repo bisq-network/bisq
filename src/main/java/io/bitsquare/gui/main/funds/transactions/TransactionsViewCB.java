@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.funds.transactions;
 
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.bitcoin.core.Transaction;
@@ -41,8 +41,8 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TransactionsController extends CachedViewController {
-    private static final Logger log = LoggerFactory.getLogger(TransactionsController.class);
+public class TransactionsViewCB extends CachedViewCB {
+    private static final Logger log = LoggerFactory.getLogger(TransactionsViewCB.class);
 
     private final WalletFacade walletFacade;
     private BSFormatter formatter;
@@ -58,7 +58,7 @@ public class TransactionsController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TransactionsController(WalletFacade walletFacade, BSFormatter formatter) {
+    private TransactionsViewCB(WalletFacade walletFacade, BSFormatter formatter) {
         this.walletFacade = walletFacade;
         this.formatter = formatter;
     }
@@ -96,6 +96,12 @@ public class TransactionsController extends CachedViewController {
                 new TransactionsListItem(transaction, walletFacade, formatter)).collect(Collectors.toList()));
 
         tableView.setItems(transactionsListItems);
+    }
+
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void terminate() {
+        super.terminate();
     }
 
 

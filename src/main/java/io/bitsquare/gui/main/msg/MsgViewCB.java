@@ -15,13 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.funds;
+package io.bitsquare.gui.main.msg;
 
-import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.ViewController;
-import io.bitsquare.gui.components.CachingTabPane;
-import io.bitsquare.persistence.Persistence;
 
 import java.net.URL;
 
@@ -34,10 +31,11 @@ import javafx.fxml.Initializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FundsController extends CachedViewController {
-    private static final Logger log = LoggerFactory.getLogger(FundsController.class);
-    private final Persistence persistence;
-    private ViewController childController;
+// will be probably only used for arbitration communication, will be renamed and the icon changed
+
+
+public class MsgViewCB extends CachedViewCB {
+    private static final Logger log = LoggerFactory.getLogger(MsgViewCB.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -45,29 +43,32 @@ public class FundsController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private FundsController(Persistence persistence) {
-        this.persistence = persistence;
+    private MsgViewCB() {
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
-
-        ((CachingTabPane) root).initialize(
-                this, persistence, Navigation.Item.WITHDRAWAL.getFxmlUrl(),
-                Navigation.Item.TRANSACTIONS.getFxmlUrl());
     }
 
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void terminate() {
+        super.terminate();
+    }
+
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();
@@ -79,10 +80,20 @@ public class FundsController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Initializable loadViewAndGetChildController(Navigation.Item item) {
-        childController = ((CachingTabPane) root).loadViewAndGetChildController(item.getFxmlUrl());
-        return childController;
+    protected Initializable loadView(Navigation.Item navigationItem) {
+        return super.loadView(navigationItem);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // GUI Event handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
 
 }
 

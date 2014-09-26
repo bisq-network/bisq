@@ -21,7 +21,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 
@@ -59,8 +59,8 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WithdrawalController extends CachedViewController {
-    private static final Logger log = LoggerFactory.getLogger(WithdrawalController.class);
+public class WithdrawalViewCB extends CachedViewCB {
+    private static final Logger log = LoggerFactory.getLogger(WithdrawalViewCB.class);
 
 
     private final WalletFacade walletFacade;
@@ -79,7 +79,7 @@ public class WithdrawalController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private WithdrawalController(WalletFacade walletFacade, BSFormatter formatter) {
+    private WithdrawalViewCB(WalletFacade walletFacade, BSFormatter formatter) {
         this.walletFacade = walletFacade;
         this.formatter = formatter;
     }
@@ -90,14 +90,14 @@ public class WithdrawalController extends CachedViewController {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         setLabelColumnCellFactory();
         setBalanceColumnCellFactory();
         setCopyColumnCellFactory();
         setConfidenceColumnCellFactory();
+
+        super.initialize(url, rb);
     }
 
     @Override
@@ -135,6 +135,12 @@ public class WithdrawalController extends CachedViewController {
                 new WithdrawalListItem(anAddressEntryList, walletFacade, formatter)).collect(Collectors.toList()));
 
         tableView.setItems(addressList);
+    }
+
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void terminate() {
+        super.terminate();
     }
 
 
