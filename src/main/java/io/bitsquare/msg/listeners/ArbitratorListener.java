@@ -17,16 +17,15 @@
 
 package io.bitsquare.msg.listeners;
 
-import java.util.Map;
+import io.bitsquare.arbitrator.Arbitrator;
 
-import net.tomp2p.peers.Number640;
-import net.tomp2p.storage.Data;
+import java.util.List;
 
 // Arbitration is not much developed yet
 public interface ArbitratorListener {
-    void onArbitratorAdded(Data offerData, boolean success);
+    void onArbitratorAdded(Arbitrator arbitrator);
 
-    void onArbitratorsReceived(Map<Number640, Data> dataMap, boolean success);
+    void onArbitratorsReceived(List<Arbitrator> arbitrators);
 
-    void onArbitratorRemoved(Data data, boolean success);
+    void onArbitratorRemoved(Arbitrator arbitrator);
 }

@@ -34,7 +34,6 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 import javax.inject.Inject;
@@ -46,17 +45,10 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
-import net.tomp2p.peers.Number640;
-import net.tomp2p.storage.Data;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * TODO remove tomp2p dependencies
- * import net.tomp2p.peers.Number160;
- * import net.tomp2p.storage.Data;
- * <p>
  * Arbitration is not much developed yet
  */
 public class ArbitratorBrowserController extends CachedViewController implements ArbitratorListener {
@@ -147,29 +139,13 @@ public class ArbitratorBrowserController extends CachedViewController implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onArbitratorAdded(Data offerData, boolean success) {
+    public void onArbitratorAdded(Arbitrator arbitrator) {
     }
 
     @Override
-    public void onArbitratorsReceived(Map<Number640, Data> dataMap, boolean success) {
-        if (success && dataMap != null) {
-            allArbitrators.clear();
-
-            for (Data arbitratorData : dataMap.values()) {
-                try {
-                    Object arbitratorDataObject = arbitratorData.object();
-                    if (arbitratorDataObject instanceof Arbitrator) {
-                        Arbitrator arbitrator = (Arbitrator) arbitratorDataObject;
-                        allArbitrators.add(arbitrator);
-                    }
-                } catch (ClassNotFoundException | IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        else {
-            allArbitrators.clear();
-        }
+    public void onArbitratorsReceived(List<Arbitrator> arbitrators) {
+        allArbitrators.clear();
+        allArbitrators.addAll(arbitrators);
 
         if (!allArbitrators.isEmpty()) {
             index = 0;
@@ -180,7 +156,7 @@ public class ArbitratorBrowserController extends CachedViewController implements
     }
 
     @Override
-    public void onArbitratorRemoved(Data data, boolean success) {
+    public void onArbitratorRemoved(Arbitrator arbitrator) {
     }
 
 

@@ -138,7 +138,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         table.getSelectionModel().select(presentationModel.getSelectedItem());
         table.getSelectionModel().selectedItemProperty().addListener(selectedItemChangeListener);
 
-        // TODO Set focus does not work yet...
+        // TODO Set focus to row does not work yet...
        /* table.requestFocus();
         table.getFocusModel().focus( table.getSelectionModel().getSelectedIndex());*/
 
@@ -371,7 +371,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     }
 
     private void onFault(Throwable fault) {
-        // TODO
+        // TODO error handling not implemented yet
         if (fault != null)
             log.error(fault.toString());
     }

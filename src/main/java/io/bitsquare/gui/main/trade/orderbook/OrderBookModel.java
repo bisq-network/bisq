@@ -184,7 +184,7 @@ class OrderBookModel extends UIModel {
                     "\n\nThe country of your payments account (" + user.getCurrentBankAccount().getCountry().getName() +
                     ") is not included in that list.");
 
-        // TODO Leave that for now as it is not so clear how the restrictions will be handled
+        // TODO Not so clear how the restrictions will be handled
         // we might get rid of languages (handles viy arbitrators)
         /*
         // disjoint returns true if the two specified collections have no elements in common.

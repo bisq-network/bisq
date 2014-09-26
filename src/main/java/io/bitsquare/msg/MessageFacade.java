@@ -349,7 +349,18 @@ public class MessageFacade implements MessageBroker {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
                     Platform.runLater(() -> arbitratorListeners.stream().forEach(listener ->
-                            listener.onArbitratorAdded(arbitratorData, addFuture.isSuccess())));
+                    {
+                        try {
+                            Object arbitratorDataObject = arbitratorData.object();
+                            if (arbitratorDataObject instanceof Arbitrator) {
+                                listener.onArbitratorAdded((Arbitrator) arbitratorDataObject);
+                            }
+                        } catch (ClassNotFoundException | IOException e) {
+                            e.printStackTrace();
+                            log.error(e.toString());
+                        }
+                    }));
+
                     if (addFuture.isSuccess()) {
                         log.trace("Add arbitrator to DHT was successful. Stored data: [key: " + locationKey + ", " +
                                 "values: " + arbitratorData + "]");
@@ -372,7 +383,19 @@ public class MessageFacade implements MessageBroker {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 Platform.runLater(() -> arbitratorListeners.stream().forEach(listener ->
-                        listener.onArbitratorRemoved(arbitratorData, removeFuture.isSuccess())));
+                {
+                    for (Data arbitratorData : removeFuture.dataMap().values()) {
+                        try {
+                            Object arbitratorDataObject = arbitratorData.object();
+                            if (arbitratorDataObject instanceof Arbitrator) {
+                                Arbitrator arbitrator = (Arbitrator) arbitratorDataObject;
+                                listener.onArbitratorRemoved(arbitrator);
+                            }
+                        } catch (ClassNotFoundException | IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }));
                 if (removeFuture.isSuccess()) {
                     log.trace("Remove arbitrator from DHT was successful. Stored data: [key: " + locationKey + ", " +
                             "values: " + arbitratorData + "]");
@@ -390,8 +413,22 @@ public class MessageFacade implements MessageBroker {
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture baseFuture) throws Exception {
-                Platform.runLater(() -> arbitratorListeners.stream().forEach(listener -> listener
-                        .onArbitratorsReceived(futureGet.dataMap(), baseFuture.isSuccess())));
+                Platform.runLater(() -> arbitratorListeners.stream().forEach(listener ->
+                {
+                    List<Arbitrator> arbitrators = new ArrayList<>();
+                    for (Data arbitratorData : futureGet.dataMap().values()) {
+                        try {
+                            Object arbitratorDataObject = arbitratorData.object();
+                            if (arbitratorDataObject instanceof Arbitrator) {
+                                arbitrators.add((Arbitrator) arbitratorDataObject);
+                            }
+                        } catch (ClassNotFoundException | IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    listener.onArbitratorsReceived(arbitrators);
+                }));
                 if (baseFuture.isSuccess()) {
                     log.trace("Get arbitrators from DHT was successful. Stored data: [key: " + locationKey + ", " +
                             "values: " + futureGet.dataMap() + "]");

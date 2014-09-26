@@ -183,7 +183,7 @@ public class AddressTextField extends AnchorPane {
         this.paymentLabel.set(paymentLabel);
     }
 
-    // TODO find better solution
+    // TODO find better solution without OverlayManager dependency
     public void setOverlayManager(OverlayManager overlayManager) {
         this.overlayManager = overlayManager;
     }

@@ -230,7 +230,7 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
                     state.set(model.isOfferer() ? State.OFFERER_BUYER_COMPLETED : State.TAKER_SELLER_COMPLETED);
                     break;
                 case FAILED:
-                    // TODO
+                    // TODO error states not implemented yet
                     break;
                 default:
                     log.warn("unhandled state " + state);

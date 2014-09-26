@@ -161,7 +161,7 @@ class MainModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onFacadesInitialised() {
-        // TODO Consider to use version from Mike Hearn
+        // TODO Consider to use version sync notification pane from Mike Hearn
         walletFacade.addDownloadListener(new WalletFacade.DownloadListener() {
             @Override
             public void progress(double percent) {

@@ -22,7 +22,6 @@ import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.components.ConfidenceDisplay;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.main.arbitrators.profile.ArbitratorProfileController;
 import io.bitsquare.gui.util.BSFormatter;
@@ -83,7 +82,6 @@ public class ArbitratorRegistrationController extends CachedViewController {
 
     private List<Arbitrator.ID_VERIFICATION> idVerificationList = new ArrayList<>();
     private Arbitrator.ID_TYPE idType;
-    private ConfidenceDisplay confidenceDisplay;
 
     @FXML Accordion accordion;
     @FXML TitledPane profileTitledPane, payCollateralTitledPane;
@@ -374,8 +372,6 @@ public class ArbitratorRegistrationController extends CachedViewController {
             clipboard.setContent(content);
         });
 
-        confidenceDisplay = new ConfidenceDisplay(
-                walletFacade.getWallet(), confirmationLabel, balanceTextField, progressIndicator);
         paymentDoneButton.setDisable(walletFacade.getArbitratorDepositBalance().isZero());
         log.debug("getArbitratorDepositBalance " + walletFacade.getArbitratorDepositBalance());
         walletFacade.getWallet().addEventListener(new WalletEventListener() {
