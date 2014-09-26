@@ -24,7 +24,6 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.BitSquareValidator;
 
 import com.google.bitcoin.core.AddressFormatException;
 import com.google.bitcoin.core.Coin;
@@ -113,8 +112,6 @@ public class WithdrawalController extends CachedViewController {
 
         tableView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
             if (newValue != null) {
-                BitSquareValidator.resetTextFields(
-                        withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField);
 
                 if (Coin.ZERO.compareTo(newValue.getBalance()) <= 0) {
                     amountTextField.setText(newValue.getBalance().toPlainString());
@@ -145,63 +142,53 @@ public class WithdrawalController extends CachedViewController {
 
     @FXML
     public void onWithdraw() {
-        try {
-            BitSquareValidator.textFieldsNotEmpty(
-                    amountTextField, withdrawFromTextField, withdrawToTextField, changeAddressTextField);
-            BitSquareValidator.textFieldsHasDoubleValueWithReset(amountTextField);
-
-            Coin amount = BSFormatter.parseToCoin(amountTextField.getText());
-            if (Restrictions.isMinSpendableAmount(amount)) {
-                FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
-                    @Override
-                    public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
-                        BitSquareValidator.resetTextFields(
-                                withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField);
-                        if (transaction != null) {
-                            log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(@NotNull Throwable t) {
-                        log.debug("onWithdraw onFailure");
-                    }
-                };
-
-                Action response = Popups.openConfirmPopup(
-                        "Withdrawal request", "Confirm your request",
-                        "Your withdrawal request:\n\n" + "Amount: " + amountTextField.getText() + " BTC\n" + "Sending" +
-                                " address: " + withdrawFromTextField.getText() + "\n" + "Receiving address: " +
-                                withdrawToTextField.getText() + "\n" + "Transaction fee: " +
-                                BSFormatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
-                                "You receive in total: " +
-                                BSFormatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
-                                "Are you sure you withdraw that amount?");
-                if (response == Dialog.Actions.OK) {
-                    try {
-                        walletFacade.sendFunds(
-                                withdrawFromTextField.getText(), withdrawToTextField.getText(),
-                                changeAddressTextField.getText(), amount, callback);
-                    } catch (AddressFormatException e) {
-                        Popups.openErrorPopup("Address invalid",
-                                "The address is not correct. Please check the address format.");
-
-                    } catch (InsufficientMoneyException e) {
-                        Popups.openInsufficientMoneyPopup();
-                    } catch (IllegalArgumentException e) {
-                        Popups.openErrorPopup("Wrong inputs", "Please check the inputs.");
+        Coin amount = BSFormatter.parseToCoin(amountTextField.getText());
+        if (Restrictions.isMinSpendableAmount(amount)) {
+            FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
+                @Override
+                public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
+                    if (transaction != null) {
+                        log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
                     }
                 }
 
-            }
-            else {
-                Popups.openErrorPopup("Insufficient amount",
-                        "The amount to transfer is lower the the transaction fee and the min. possible tx value.");
+                @Override
+                public void onFailure(@NotNull Throwable t) {
+                    log.debug("onWithdraw onFailure");
+                }
+            };
+
+            Action response = Popups.openConfirmPopup(
+                    "Withdrawal request", "Confirm your request",
+                    "Your withdrawal request:\n\n" + "Amount: " + amountTextField.getText() + " BTC\n" + "Sending" +
+                            " address: " + withdrawFromTextField.getText() + "\n" + "Receiving address: " +
+                            withdrawToTextField.getText() + "\n" + "Transaction fee: " +
+                            BSFormatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
+                            "You receive in total: " +
+                            BSFormatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
+                            "Are you sure you withdraw that amount?");
+            if (response == Dialog.Actions.OK) {
+                try {
+                    walletFacade.sendFunds(
+                            withdrawFromTextField.getText(), withdrawToTextField.getText(),
+                            changeAddressTextField.getText(), amount, callback);
+                } catch (AddressFormatException e) {
+                    Popups.openErrorPopup("Address invalid",
+                            "The address is not correct. Please check the address format.");
+
+                } catch (InsufficientMoneyException e) {
+                    Popups.openInsufficientMoneyPopup();
+                } catch (IllegalArgumentException e) {
+                    Popups.openErrorPopup("Wrong inputs", "Please check the inputs.");
+                }
             }
 
-        } catch (BitSquareValidator.ValidationException e) {
-            log.trace(e.toString());
         }
+        else {
+            Popups.openErrorPopup("Insufficient amount",
+                    "The amount to transfer is lower the the transaction fee and the min. possible tx value.");
+        }
+
     }
 
 

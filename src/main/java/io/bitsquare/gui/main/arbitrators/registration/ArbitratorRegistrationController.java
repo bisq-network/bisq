@@ -25,7 +25,6 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.main.arbitrators.profile.ArbitratorProfileController;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.BitSquareValidator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.msg.MessageFacade;
@@ -451,44 +450,34 @@ public class ArbitratorRegistrationController extends CachedViewController {
 
 
     private Arbitrator getEditedArbitrator() {
-        try {
-            BitSquareValidator.textFieldsNotEmptyWithReset(
-                    nameTextField, idTypeTextField, languagesTextField, methodsTextField, idVerificationsTextField);
-            BitSquareValidator.textFieldsHasDoubleValueWithReset(
-                    maxTradeVolumeTextField, passiveServiceFeeTextField, minPassiveServiceFeeTextField,
-                    arbitrationFeeTextField, minArbitrationFeeTextField);
+        String pubKeyAsHex = walletFacade.getArbitratorDepositAddressEntry().getPubKeyAsHexString();
+        String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
+        String name = nameTextField.getText();
 
-            String pubKeyAsHex = walletFacade.getArbitratorDepositAddressEntry().getPubKeyAsHexString();
-            String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
-            String name = nameTextField.getText();
+        double maxTradeVolume = BSFormatter.parseToDouble(maxTradeVolumeTextField.getText());
+        double passiveServiceFee = BSFormatter.parseToDouble(passiveServiceFeeTextField.getText());
+        double minPassiveServiceFee = BSFormatter.parseToDouble(minPassiveServiceFeeTextField.getText());
+        double arbitrationFee = BSFormatter.parseToDouble(arbitrationFeeTextField.getText());
+        double minArbitrationFee = BSFormatter.parseToDouble(minArbitrationFeeTextField.getText());
 
-            double maxTradeVolume = BSFormatter.parseToDouble(maxTradeVolumeTextField.getText());
-            double passiveServiceFee = BSFormatter.parseToDouble(passiveServiceFeeTextField.getText());
-            double minPassiveServiceFee = BSFormatter.parseToDouble(minPassiveServiceFeeTextField.getText());
-            double arbitrationFee = BSFormatter.parseToDouble(arbitrationFeeTextField.getText());
-            double minArbitrationFee = BSFormatter.parseToDouble(minArbitrationFeeTextField.getText());
+        String webUrl = webPageTextField.getText();
+        String description = descriptionTextArea.getText();
 
-            String webUrl = webPageTextField.getText();
-            String description = descriptionTextArea.getText();
-
-            return new Arbitrator(pubKeyAsHex,
-                    messagePubKeyAsHex,
-                    name,
-                    idType,
-                    languageList,
-                    new Reputation(),
-                    maxTradeVolume,
-                    passiveServiceFee,
-                    minPassiveServiceFee,
-                    arbitrationFee,
-                    minArbitrationFee,
-                    methodList,
-                    idVerificationList,
-                    webUrl,
-                    description);
-        } catch (BitSquareValidator.ValidationException e) {
-            return null;
-        }
+        return new Arbitrator(pubKeyAsHex,
+                messagePubKeyAsHex,
+                name,
+                idType,
+                languageList,
+                new Reputation(),
+                maxTradeVolume,
+                passiveServiceFee,
+                minPassiveServiceFee,
+                arbitrationFee,
+                minArbitrationFee,
+                methodList,
+                idVerificationList,
+                webUrl,
+                description);
     }
 
     private void close() {

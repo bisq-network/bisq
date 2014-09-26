@@ -56,8 +56,7 @@ public class TransactionsListItem {
         Coin valueSentFromMe = transaction.getValueSentFromMe(walletFacade.getWallet());
         Address address = null;
         if (valueSentToMe.isZero()) {
-            //TODO use BSFormatter
-            amount.set("-" + valueSentFromMe.toFriendlyString());
+            amount.set("-" + BSFormatter.formatCoin(valueSentFromMe));
 
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                 if (!transactionOutput.isMine(walletFacade.getWallet())) {
@@ -76,8 +75,7 @@ public class TransactionsListItem {
             }
         }
         else if (valueSentFromMe.isZero()) {
-            //TODO use BSFormatter
-            amount.set(valueSentToMe.toFriendlyString());
+            amount.set(BSFormatter.formatCoin(valueSentToMe));
             type.set("Received with");
 
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
@@ -95,9 +93,7 @@ public class TransactionsListItem {
             }
         }
         else {
-            //TODO use BSFormatter
-            amount.set(valueSentToMe.subtract(valueSentFromMe).toFriendlyString());
-
+            amount.set(BSFormatter.formatCoin(valueSentToMe.subtract(valueSentFromMe)));
             boolean outgoing = false;
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                 if (!transactionOutput.isMine(walletFacade.getWallet())) {

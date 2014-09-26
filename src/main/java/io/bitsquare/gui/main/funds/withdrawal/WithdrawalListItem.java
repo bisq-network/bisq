@@ -22,6 +22,7 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.Coin;
@@ -93,8 +94,7 @@ public class WithdrawalListItem {
     private void updateBalance(Coin balance) {
         this.balance = balance;
         if (balance != null) {
-            //TODO use BSFormatter
-            balanceLabel.setText(balance.toFriendlyString());
+            balanceLabel.setText(BSFormatter.formatCoin(balance));
         }
     }
 
