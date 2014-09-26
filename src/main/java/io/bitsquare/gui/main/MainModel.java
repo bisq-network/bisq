@@ -174,7 +174,7 @@ class MainModel extends UIModel {
             }
         });
 
-        tradeManager.getPendingTrades().addListener((MapChangeListener<String, 
+        tradeManager.getPendingTrades().addListener((MapChangeListener<String,
                 Trade>) change -> updateNumPendingTrades());
         updateNumPendingTrades();
 

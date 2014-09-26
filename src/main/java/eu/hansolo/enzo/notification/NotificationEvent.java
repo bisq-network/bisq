@@ -35,7 +35,7 @@ public class NotificationEvent extends Event {
 
 
     // ******************** Constructors **************************************
-    public NotificationEvent(final Notification NOTIFICATION, final Object SOURCE, final EventTarget TARGET, 
+    public NotificationEvent(final Notification NOTIFICATION, final Object SOURCE, final EventTarget TARGET,
                              EventType<NotificationEvent> TYPE) {
         super(SOURCE, TARGET, TYPE);
         this.NOTIFICATION = NOTIFICATION;
