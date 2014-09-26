@@ -153,7 +153,8 @@ class CreateOfferModel extends UIModel {
             btcCode.bind(settings.btcDenominationProperty());
 
         // we need to set it here already as initWithData is called before activate
-        collateralAsLong.set(settings.getCollateral());
+        if (settings != null)
+            collateralAsLong.set(settings.getCollateral());
 
         super.initialize();
     }
@@ -165,7 +166,8 @@ class CreateOfferModel extends UIModel {
         // might be changed after screen change
         if (settings != null) {
             // set it here again to cover the case of an collateral change after a screen change
-            collateralAsLong.set(settings.getCollateral());
+            if (settings != null)
+                collateralAsLong.set(settings.getCollateral());
 
             acceptedCountries.setAll(settings.getAcceptedCountries());
             acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
