@@ -424,6 +424,7 @@ public class MessageFacade implements MessageBroker {
                             }
                         } catch (ClassNotFoundException | IOException e) {
                             e.printStackTrace();
+                            log.error("Get arbitrators from DHT failed with exception:" + e.getMessage());
                         }
                     }
 

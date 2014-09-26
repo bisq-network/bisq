@@ -17,19 +17,22 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.home.HomeViewCB"
-         AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
-         AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
-         xmlns:fx="http://javafx.com/fxml">
-    <Tab text="Overview" closable="false">
-        <VBox spacing="20">
-            <padding>
-                <Insets left="10" top="10" right="10"/>
-            </padding>
-            <Label text="TODO: Overview"/>
-        </VBox>
-    </Tab>
-</TabPane>
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.account.arbitrator.ArbitratorSettingsViewCB"
+            prefHeight="660.0" prefWidth="1000.0"
+            xmlns:fx="http://javafx.com/fxml">
+    <VBox spacing="20">
+        <padding>
+            <Insets left="10" top="10" right="10"/>
+        </padding>
+        <Label text="TODO: Just very basic prototype yet..."/>
+        <Button text="Register yourself as an arbitrator" onAction="#onArbitratorRegistration"/>
+        <Button text="Edit my arbitrator details" onAction="#onArbitratorEdit"/>
+    </VBox>
+</AnchorPane>
+
+
+

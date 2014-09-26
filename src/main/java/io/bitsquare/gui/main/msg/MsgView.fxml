@@ -30,7 +30,7 @@
             <padding>
                 <Insets left="10" top="10" right="10"/>
             </padding>
-            <Label text="TODO: Communication tools with arbitrators..."/>
+            <Label text="TODO: Communication tools with arbitrators, Mailbox for trade messages if client was offline"/>
         </VBox>
     </Tab>
 </TabPane>

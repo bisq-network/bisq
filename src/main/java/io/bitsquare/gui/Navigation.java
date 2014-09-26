@@ -186,6 +186,7 @@ public class Navigation {
         // account
         ACCOUNT_SETUP("/io/bitsquare/gui/main/account/setup/AccountSetupView.fxml"),
         ACCOUNT_SETTINGS("/io/bitsquare/gui/main/account/settings/AccountSettingsView.fxml"),
+        ARBITRATOR_SETTINGS("/io/bitsquare/gui/main/account/arbitrator/ArbitratorSettingsView.fxml"),
 
 
         ///////////////////////////////////////////////////////////////////////////////////////////
@@ -206,9 +207,11 @@ public class Navigation {
         ///////////////////////////////////////////////////////////////////////////////////////////
 
         // arbitrator
-        ARBITRATOR_PROFILE("/io/bitsquare/gui/main/arbitrators/profile/ArbitratorProfileView.fxml"),
-        ARBITRATOR_BROWSER("/io/bitsquare/gui/main/arbitrators/browser/ArbitratorBrowserView.fxml"),
-        ARBITRATOR_REGISTRATION("/io/bitsquare/gui/main/arbitrators/registration/ArbitratorRegistrationView.fxml");
+
+        ARBITRATOR_PROFILE("/io/bitsquare/gui/main/account/arbitrator/profile/ArbitratorProfileView.fxml"),
+        ARBITRATOR_BROWSER("/io/bitsquare/gui/main/account/arbitrator/browser/ArbitratorBrowserView.fxml"),
+        ARBITRATOR_REGISTRATION("/io/bitsquare/gui/main/account/arbitrator/registration/ArbitratorRegistrationView" +
+                ".fxml");
 
 
         private final String fxmlUrl;

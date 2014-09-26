@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.arbitrators.profile;
+package io.bitsquare.gui.main.account.arbitrator.profile;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedViewCB;
@@ -32,7 +32,7 @@ import javax.inject.Inject;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-// Arbitration is not much developed yet
+// TODO Arbitration is very basic yet
 public class ArbitratorProfileViewCB extends CachedViewCB {
 
     private final Settings settings;
@@ -98,7 +98,7 @@ public class ArbitratorProfileViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void applyArbitrator(Arbitrator arbitrator) {
-        if (arbitrator != null) {
+        if (arbitrator != null && arbitrator.getIdType() != null) {
             String name = "";
             switch (arbitrator.getIdType()) {
                 case REAL_LIFE_ID:

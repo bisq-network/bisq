@@ -15,14 +15,14 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.arbitrators.registration;
+package io.bitsquare.gui.main.account.arbitrator.registration;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
-import io.bitsquare.gui.main.arbitrators.profile.ArbitratorProfileViewCB;
+import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileViewCB;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.LanguageUtil;
@@ -61,7 +61,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// Arbitration is not much developed yet
+// TODO Arbitration is very basic yet
 public class ArbitratorRegistrationViewCB extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorRegistrationViewCB.class);
 

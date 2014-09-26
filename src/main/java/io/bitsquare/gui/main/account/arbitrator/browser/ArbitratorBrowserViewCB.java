@@ -15,13 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.arbitrators.browser;
+package io.bitsquare.gui.main.account.arbitrator.browser;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewCB;
-import io.bitsquare.gui.main.arbitrators.profile.ArbitratorProfileViewCB;
+import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileViewCB;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.ArbitratorListener;
@@ -49,14 +49,13 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Arbitration is not much developed yet
- */
+// TODO Arbitration is very basic yet
 public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorListener {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorBrowserViewCB.class);
 
     private final Settings settings;
     private final Persistence persistence;
+    private MessageFacade messageFacade;
 
     private final List<Arbitrator> allArbitrators = new ArrayList<>();
     private Arbitrator currentArbitrator;
@@ -72,12 +71,9 @@ public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorL
 
     @Inject
     public ArbitratorBrowserViewCB(Settings settings, Persistence persistence, MessageFacade messageFacade) {
-
         this.settings = settings;
         this.persistence = persistence;
-
-        messageFacade.addArbitratorListener(this);
-        messageFacade.getArbitrators(LanguageUtil.getDefaultLanguageLocale());
+        this.messageFacade = messageFacade;
     }
 
 
@@ -87,10 +83,14 @@ public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorL
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
+        messageFacade.addArbitratorListener(this);
+        messageFacade.getArbitrators(LanguageUtil.getDefaultLanguageLocale());
 
         loadView(Navigation.Item.ARBITRATOR_PROFILE);
         checkButtonState();
+
+        super.initialize(url, rb);
+
     }
 
     @SuppressWarnings("EmptyMethod")

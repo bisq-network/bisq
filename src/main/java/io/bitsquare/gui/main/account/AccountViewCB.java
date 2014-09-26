@@ -30,10 +30,11 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.*;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,9 +44,11 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     private static final Logger log = LoggerFactory.getLogger(AccountViewCB.class);
 
     private final Navigation navigation;
-    private Navigation.Listener listener;
+    private Navigation.Listener navigationListener;
 
-    @FXML Tab tab;
+    private ChangeListener<Tab> tabChangeListener;
+
+    @FXML Tab accountSettingsTab, arbitratorSettingsTab;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -66,11 +69,21 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        listener = navigationItems -> {
+        navigationListener = navigationItems -> {
             if (navigationItems != null &&
                     navigationItems.length == 3 &&
                     navigationItems[1] == Navigation.Item.ACCOUNT)
                 loadView(navigationItems[2]);
+        };
+
+        tabChangeListener = (ov, oldValue, newValue) -> {
+            if (newValue == accountSettingsTab)
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
+                        Navigation.Item.ACCOUNT_SETTINGS);
+            else
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
+                        Navigation.Item.ARBITRATOR_SETTINGS);
+
         };
 
         super.initialize(url, rb);
@@ -80,16 +93,23 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     public void activate() {
         super.activate();
 
-        navigation.addListener(listener);
+        navigation.addListener(navigationListener);
+        ((TabPane) root).getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
         if (navigation.getCurrentItems().length == 2 &&
                 navigation.getCurrentItems()[1] == Navigation.Item.ACCOUNT) {
-            if (presentationModel.getNeedRegistration())
+            if (presentationModel.getNeedRegistration()) {
                 navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
                         Navigation.Item.ACCOUNT_SETUP);
-            else
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
-                        Navigation.Item.ACCOUNT_SETTINGS);
+            }
+            else {
+                if (((TabPane) root).getSelectionModel().getSelectedItem() == accountSettingsTab)
+                    navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
+                            Navigation.Item.ACCOUNT_SETTINGS);
+                else
+                    navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
+                            Navigation.Item.ARBITRATOR_SETTINGS);
+            }
         }
     }
 
@@ -97,7 +117,8 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     public void deactivate() {
         super.deactivate();
 
-        navigation.removeListener(listener);
+        navigation.removeListener(navigationListener);
+        ((TabPane) root).getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -115,11 +136,25 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
 
-        tab.setText((navigationItem == Navigation.Item.ACCOUNT_SETUP) ? "Account setup" : "Account settings");
         final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
-            AnchorPane view = loader.load();
+            Node view = loader.load();
+            Tab tab = null;
+            switch (navigationItem) {
+                case ACCOUNT_SETTINGS:
+                    tab = accountSettingsTab;
+                    tab.setText("Account settings");
+                case ACCOUNT_SETUP:
+                    tab = accountSettingsTab;
+                    tab.setText("Account setup");
+                    break;
+                case ARBITRATOR_SETTINGS:
+                    tab = arbitratorSettingsTab;
+                    break;
+            }
+
             tab.setContent(view);
+            ((TabPane) root).getSelectionModel().select(tab);
             Initializable childController = loader.getController();
             ((ViewCB) childController).setParent(this);
 
