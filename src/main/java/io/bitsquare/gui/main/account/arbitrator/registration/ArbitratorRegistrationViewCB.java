@@ -61,6 +61,8 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.*;
+
 // TODO Arbitration is very basic yet
 public class ArbitratorRegistrationViewCB extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorRegistrationViewCB.class);
@@ -441,11 +443,11 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
         String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
         String name = nameTextField.getText();
 
-        double maxTradeVolume = formatter.parseToDouble(maxTradeVolumeTextField.getText());
-        double passiveServiceFee = formatter.parseToDouble(passiveServiceFeeTextField.getText());
-        double minPassiveServiceFee = formatter.parseToDouble(minPassiveServiceFeeTextField.getText());
-        double arbitrationFee = formatter.parseToDouble(arbitrationFeeTextField.getText());
-        double minArbitrationFee = formatter.parseToDouble(minArbitrationFeeTextField.getText());
+        double maxTradeVolume = parseToDouble(maxTradeVolumeTextField.getText());
+        double passiveServiceFee = parseToDouble(passiveServiceFeeTextField.getText());
+        double minPassiveServiceFee = parseToDouble(minPassiveServiceFeeTextField.getText());
+        double arbitrationFee = parseToDouble(arbitrationFeeTextField.getText());
+        double minArbitrationFee = parseToDouble(minArbitrationFeeTextField.getText());
 
         String webUrl = webPageTextField.getText();
         String description = descriptionTextArea.getText();
@@ -472,6 +474,15 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
         stage.close();
     }
 
-
+    private double parseToDouble(String input) {
+        try {
+            checkNotNull(input);
+            checkArgument(input.length() > 0);
+            input = input.replace(",", ".").trim();
+            return Double.parseDouble(input);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
 }
 

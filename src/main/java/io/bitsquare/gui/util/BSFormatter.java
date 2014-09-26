@@ -44,8 +44,6 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.*;
-
 //TODO convert to non static
 
 /**
@@ -245,22 +243,6 @@ public class BSFormatter {
     // Other
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * @param input String to be converted to a double. Both decimal points "." and ",
-     *              " are supported. Thousands separator is not supported.
-     * @return Returns a double value. Any invalid value returns Double.NEGATIVE_INFINITY.
-     */
-    @Deprecated //TODO use Fiat or Btc if possible
-    public double parseToDouble(String input) {
-        try {
-            checkNotNull(input);
-            checkArgument(input.length() > 0);
-            input = input.replace(",", ".").trim();
-            return Double.parseDouble(input);
-        } catch (Exception e) {
-            return 0;
-        }
-    }
 
     public String formatDirection(Direction direction) {
         return formatDirection(direction, true);
