@@ -93,14 +93,7 @@ public class CreateOfferPMTest {
         assertEquals(Fiat.valueOf("USD", 300 * 10000), model.priceAsFiat.get());
         assertEquals(Fiat.valueOf("USD", 9999900), model.volumeAsFiat.get());
 
-
-        model.collateralAsLong.set(100);
-        assertEquals("Refundable collateral (10.0 %):", presenter.collateralLabel.get());
-
-        model.collateralAsLong.set(0);
-        assertEquals("Refundable collateral (0.0 %):", presenter.collateralLabel.get());
-
-
+        
         model.bankAccountType.set(BankAccountType.SEPA.toString());
         assertEquals("Sepa", presenter.bankAccountType.get());
 
