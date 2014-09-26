@@ -172,7 +172,7 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
                     new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
             try {
                 final Parent view = orderBookLoader.load();
-                final Tab tab = new Tab("Orderbook");
+                final Tab tab = new Tab(direction == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
                 tab.setClosable(false);
                 tab.setContent(view);
                 tabPane.getTabs().add(tab);

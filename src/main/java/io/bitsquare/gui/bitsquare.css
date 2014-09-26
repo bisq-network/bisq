@@ -92,6 +92,7 @@ lower gradient color on tab: dddddd
 #nav-balance-label {
     -fx-font-weight: bold;
     -fx-alignment: center;
+     -fx-background-color: #dddddd;
 }
 #nav-alert-label {
      -fx-font-weight: bold;
@@ -172,7 +173,7 @@ textfield */
 }
 
 .table-view .column-header .label {
-    -fx-alignment-alignment: center;
+    -fx-alignment: center;
 }
 
 .table-view .focus {

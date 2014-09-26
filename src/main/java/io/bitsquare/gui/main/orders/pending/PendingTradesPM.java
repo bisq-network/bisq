@@ -151,6 +151,10 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         return model.getSelectedItem();
     }
 
+    String getCurrencyCode() {
+        return model.getCurrencyCode();
+    }
+
     // columns
     String getTradeId(PendingTradesListItem item) {
         return item.getTrade().getId();
@@ -169,7 +173,15 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     }
 
     String getDirectionLabel(PendingTradesListItem item) {
-        return (item != null) ? formatter.formatDirection(item.getTrade().getOffer().getMirroredDirection()) : "";
+        if (item != null) {
+            if (model.isOfferer())
+                return formatter.formatDirection(item.getTrade().getOffer().getDirection()) + " Bitcoin";
+            else
+                return formatter.formatDirection(item.getTrade().getOffer().getMirroredDirection()) + " Bitcoin";
+        }
+        else {
+            return "";
+        }
     }
 
     String getDate(PendingTradesListItem item) {

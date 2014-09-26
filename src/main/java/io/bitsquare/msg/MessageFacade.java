@@ -522,8 +522,7 @@ public class MessageFacade implements MessageBroker {
                         final Object object = data.object();
                         Platform.runLater(() -> {
                             Long timeStamp = (Long) object;
-                            log.trace("Get invalidationTimestamp from DHT was successful. TimeStamp=" +
-                                    timeStamp);
+                            //log.trace("Get invalidationTimestamp from DHT was successful. TimeStamp=" + timeStamp);
                             invalidationTimestamp.set(timeStamp);
                         });
                     }

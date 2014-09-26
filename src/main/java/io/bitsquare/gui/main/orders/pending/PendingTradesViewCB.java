@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.orders.pending;
 
 import io.bitsquare.gui.CachedViewCB;
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
@@ -26,6 +27,7 @@ import io.bitsquare.gui.components.processbar.ProcessStepBar;
 import io.bitsquare.gui.components.processbar.ProcessStepItem;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
+import io.bitsquare.locale.BSResources;
 
 import java.net.URL;
 
@@ -35,6 +37,7 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
@@ -63,11 +66,12 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
             collateralTextField;
     @FXML TxIdTextField txIdTextField;
     @FXML InfoDisplay infoDisplay, paymentsInfoDisplay, summaryInfoDisplay;
-    @FXML Button confirmPaymentReceiptButton, paymentsButton, closeSummaryButton;
+    @FXML Button confirmPaymentReceiptButton, paymentsButton, openWithdrawalButton;
     @FXML TextFieldWithCopyIcon holderNameTextField, secondaryIdTextField, primaryIdTextField;
     @FXML TableView<PendingTradesListItem> table;
     @FXML TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, tradeIdColumn, selectColumn;
+    private Navigation navigation;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -75,8 +79,10 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    PendingTradesViewCB(PendingTradesPM presentationModel) {
+    PendingTradesViewCB(PendingTradesPM presentationModel, Navigation navigation) {
         super(presentationModel);
+
+        this.navigation = navigation;
     }
 
 
@@ -95,6 +101,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         setSelectColumnCellFactory();
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setPlaceholder(new Label("No pending trades available"));
 
         txIdChangeListener = (ov, oldValue, newValue) ->
                 txIdTextField.setup(presentationModel.getWalletFacade(), newValue);
@@ -176,9 +183,12 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     }
 
     @FXML
-    void onCloseSummary() {
-        presentationModel.closeSummary();
+    void onOpenWithdrawal() {
         setSummaryControlsVisible(false);
+        presentationModel.closeSummary();
+
+        Platform.runLater(() ->
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.FUNDS, Navigation.Item.WITHDRAWAL));
     }
 
     @FXML
@@ -258,43 +268,58 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
             switch (state) {
                 case OFFERER_BUYER_WAIT_TX_CONF:
                     processBar.setSelectedIndex(0);
-                    statusTextField.setText("Deposit transaction is published. Waiting " +
-                            "for at least 1 confirmation");
-                    infoDisplay.setText("Deposit transaction has bee published. You need to wait for at least one " +
-                            "block chain confirmation. After that you need to make the payments transfer.");
+
+                    statusTextField.setText("Deposit transaction has been published. You need to wait for at least " +
+                            "one block chain confirmation.");
+                    infoDisplay.setText("The Bitcoin buyer needs to wait for at least one block chain confirmation to" +
+                            " be sure that the deposit funding has not been double spent. For higher trade volumes we" +
+                            " recommend to wait up to 6 confirmations.");
+                    infoDisplay.layout();
                     break;
                 case OFFERER_BUYER_START_PAYMENT:
                     processBar.setSelectedIndex(1);
 
                     setPaymentsControlsVisible(true);
 
-                    statusTextField.setText("Deposit transaction has at least 1 confirmation. Start payment.");
-                    infoDisplay.setText("Deposit transaction has at least one blockchain confirmation. You need to " +
-                            "start the payment.");
+                    statusTextField.setText("Deposit transaction has at least one block chain confirmation. " +
+                            "Please start now the payment.");
+                    infoDisplay.setText("You are now safe to start the payment. You can wait for up to 6 block chain " +
+                            "confirmations if you want more security.");
+                    infoDisplay.layout();
 
                     paymentMethodTextField.setText(presentationModel.getPaymentMethod());
                     holderNameTextField.setText(presentationModel.getHolderName());
                     primaryIdTextField.setText(presentationModel.getPrimaryId());
                     secondaryIdTextField.setText(presentationModel.getSecondaryId());
-                    paymentsInfoDisplay.setText("Copy and paste the payments accounts data to your payments " +
-                            "accounts web page and transfer the payment to the other trader. When the transfer is " +
-                            "done confirm it with the 'Payment started' button.");
+                    paymentsInfoDisplay.setText(BSResources.get("Copy and paste the payment account data to your " +
+                                    "internet banking web page and transfer the {0} amount to the other traders " +
+                                    "payment account. When the transfer is completed inform the other trader by " +
+                                    "clicking the button below.",
+                            presentationModel.getCurrencyCode()));
+                    paymentsInfoDisplay.layout();
                     break;
                 case OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED:
                     processBar.setSelectedIndex(2);
 
-                    statusTextField.setText("Waiting until the other trader has received your payment.");
-                    infoDisplay.setText("Waiting until the other trader has confirmed that he has received your " +
-                            "payment.");
+                    statusTextField.setText(BSResources.get("Waiting for the Bitcoin sellers confirmation " +
+                                    "that the {0} payment has arrived.",
+                            presentationModel.getCurrencyCode()));
+                    infoDisplay.setText(BSResources.get("When the confirmation that the {0} payment arrived at the " +
+                                    "Bitcoin sellers payment account, the payout transaction will be published.",
+                            presentationModel.getCurrencyCode()));
+                    infoDisplay.layout();
                     break;
                 case OFFERER_BUYER_COMPLETED:
                     processBar.setSelectedIndex(3);
 
                     setSummaryControlsVisible(true);
 
-                    statusTextField.setText("Trade has successfully completed.");
-                    infoDisplay.setText("Trade has successfully completed. You can find the details to that trade" +
-                            " in the closed trades section.");
+                    statusTextField.setText("Congratulations! Trade has successfully completed.");
+                    infoDisplay.setText("The trade is now completed and you can withdraw your Bitcoin to any external" +
+                            "wallet. To protect your privacy you should take care that your trades are not merged " +
+                            "in " +
+                            "that external wallet. For more information about privacy see our help pages.");
+                    infoDisplay.layout();
 
                     btcLabel.setText("You have bought:");
                     fiatLabel.setText("You have paid:");
@@ -302,7 +327,9 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     fiatTextField.setText(presentationModel.getFiatVolume());
                     feesTextField.setText(presentationModel.getTotalFees());
                     collateralTextField.setText(presentationModel.getCollateral());
-                    summaryInfoDisplay.setText("You can open that summary any time in the closed orders section.");
+                    summaryInfoDisplay.setText("Your trade bond has been refunded to you. " +
+                            "You can review the details to that trade any time in the closed trades section.");
+                    summaryInfoDisplay.layout();
                     break;
             }
         }
@@ -321,28 +348,41 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                 case TAKER_SELLER_WAIT_TX_CONF:
                     processBar.setSelectedIndex(0);
 
-                    statusTextField.setText("Deposit transaction is published. Waiting for at least 1 confirmation");
-                    infoDisplay.setText("Deposit transaction has bee published. He needs to wait for at least one " +
-                            "blockchain confirmation.");
+                    statusTextField.setText("Deposit transaction has been published. " +
+                            "The Bitcoin buyer need to wait for at least one block chain confirmation.");
+                    infoDisplay.setText(BSResources.get("The Bitcoin buyer needs to wait for at least one " +
+                                    "block chain confirmation before starting the {0} payment. " +
+                                    "That is needed to assure that the deposit input funding has not been " +
+                                    "double-spent. " +
+                                    "For higher trade volumes it is recommended to wait up to 6 confirmations.",
+                            presentationModel.getCurrencyCode()));
+                    infoDisplay.layout();
                     break;
                 case TAKER_SELLER_WAIT_PAYMENT_STARTED:
                     processBar.setSelectedIndex(1);
 
-                    statusTextField.setText("Deposit transaction has at least 1 confirmation. Waiting that other " +
-                            "trader starts payment.");
-                    infoDisplay.setText("Deposit transaction has at least one blockchain " +
-                            "confirmation. The other trader need to start the payment. You will get informed when " +
-                            "that been done.");
+                    statusTextField.setText(BSResources.get("Deposit transaction has at least one block chain " +
+                                    "confirmation. " +
+                                    "Waiting that other trader starts the {0} payment.",
+                            presentationModel.getCurrencyCode()));
+                    infoDisplay.setText(BSResources.get("You will get informed when the other trader has indicated " +
+                                    "the {0} payment has been started.",
+                            presentationModel.getCurrencyCode()));
+                    infoDisplay.layout();
                     break;
                 case TAKER_SELLER_CONFIRM_RECEIVE_PAYMENT:
                     processBar.setSelectedIndex(2);
 
                     confirmPaymentReceiptButton.setVisible(true);
 
-                    statusTextField.setText("Payment is on the way. Check your payments account and confirm when you " +
-                            "have received the payment.");
-                    infoDisplay.setText("The other trader has started the payment. You need to check your payments " +
-                            "account and confirm the payment when the money has arrived there.");
+                    statusTextField.setText(BSResources.get("The Bitcoin buyer has started the {0} payment." +
+                                    "Check your payments account and confirm when you have received the payment.",
+                            presentationModel.getCurrencyCode()));
+                    infoDisplay.setText(BSResources.get("It is important that you confirm when you have received the " +
+                                    "{0} payment as this will publish the payout transaction where you get returned " +
+                                    "your trade bond and the Bitcoin buyer receive the Bitcoin amount you sold.",
+                            presentationModel.getCurrencyCode()));
+                    infoDisplay.layout();
 
                     break;
                 case TAKER_SELLER_COMPLETED:
@@ -350,9 +390,13 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
 
                     setSummaryControlsVisible(true);
 
-                    statusTextField.setText("Trade has successfully completed.");
-                    infoDisplay.setText("Trade has successfully completed. You can find the details to that trade" +
-                            " in the closed trades section.");
+
+                    statusTextField.setText("Congratulations! Trade has successfully completed.");
+                    infoDisplay.setText("The trade is now completed and you can withdraw the refunded Bitcoin from " +
+                            "the trade bond to any external wallet. " +
+                            "To protect your privacy you should take care that your coins are not merged in " +
+                            "that external wallet. For more information about privacy see our help pages.");
+                    infoDisplay.layout();
 
                     btcLabel.setText("You have sold:");
                     fiatLabel.setText("You have received:");
@@ -360,7 +404,9 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     fiatTextField.setText(presentationModel.getFiatVolume());
                     feesTextField.setText(presentationModel.getTotalFees());
                     collateralTextField.setText(presentationModel.getCollateral());
-                    summaryInfoDisplay.setText("You can open that summary any time in the closed orders section.");
+                    summaryInfoDisplay.setText("Your trade bond has been refunded to you. " +
+                            "You can review the details to that trade any time in the closed trades section.");
+                    summaryInfoDisplay.layout();
                     break;
             }
         }
@@ -402,7 +448,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         collateralLabel.setVisible(visible);
         collateralTextField.setVisible(visible);
         summaryInfoDisplay.setVisible(visible);
-        closeSummaryButton.setVisible(visible);
+        openWithdrawalButton.setVisible(visible);
     }
 
 
@@ -421,7 +467,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                             (TableColumn<PendingTradesListItem,
                                     PendingTradesListItem> column) {
                         return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
-                            Hyperlink hyperlink;
+                            private Hyperlink hyperlink;
 
                             @Override
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
@@ -429,6 +475,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
 
                                 if (item != null && !empty) {
                                     hyperlink = new Hyperlink(presentationModel.getTradeId(item));
+                                    hyperlink.setId("id-link");
                                     Tooltip.install(hyperlink, new Tooltip(presentationModel.getTradeId(item)));
                                     hyperlink.setOnAction(event -> openOfferDetails(item));
                                     setGraphic(hyperlink);

@@ -67,11 +67,12 @@ public class AddressTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public AddressTextField() {
-        TextField addressLabel = new TextField();
-        addressLabel.setId("address-text-field");
-        addressLabel.setEditable(false);
-        addressLabel.textProperty().bind(address);
-        addressLabel.setOnMouseClicked(mouseEvent -> {
+        TextField textField = new TextField();
+        textField.setId("address-text-field");
+        textField.setEditable(false);
+        textField.textProperty().bind(address);
+        Tooltip.install(textField, new Tooltip("Open your default Bitcoin wallet with that address."));
+        textField.setOnMouseClicked(mouseEvent -> {
             try {
                 Desktop.getDesktop().browse(URI.create(getBitcoinURI()));
             } catch (IOException e) {
@@ -80,8 +81,8 @@ public class AddressTextField extends AnchorPane {
                         "Perhaps you don't have one installed?");
             }
         });
-        addressLabel.focusTraversableProperty().set(focusTraversableProperty().get());
-        focusedProperty().addListener((ov, oldValue, newValue) -> addressLabel.requestFocus());
+        textField.focusTraversableProperty().set(focusTraversableProperty().get());
+        focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());
 
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
@@ -136,10 +137,10 @@ public class AddressTextField extends AnchorPane {
 
         AnchorPane.setRightAnchor(qrCode, 5.0);
         AnchorPane.setRightAnchor(copyIcon, 30.0);
-        AnchorPane.setRightAnchor(addressLabel, 55.0);
-        AnchorPane.setLeftAnchor(addressLabel, 0.0);
+        AnchorPane.setRightAnchor(textField, 55.0);
+        AnchorPane.setLeftAnchor(textField, 0.0);
 
-        getChildren().addAll(addressLabel, copyIcon, qrCode);
+        getChildren().addAll(textField, copyIcon, qrCode);
     }
 
 

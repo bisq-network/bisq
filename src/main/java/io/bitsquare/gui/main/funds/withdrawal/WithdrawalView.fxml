@@ -27,7 +27,7 @@
         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
     </padding>
 
-    <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
+    <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn text="Label" fx:id="labelColumn" minWidth="100" sortable="false"/>
             <TableColumn text="Address" fx:id="addressColumn" minWidth="240" sortable="false">

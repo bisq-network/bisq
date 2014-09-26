@@ -181,7 +181,6 @@ class PendingTradesModel extends UIModel {
 
             if (closedTrade != null) {
                 list.removeIf(e -> e.getTrade().getId().equals(closedTrade.getId()));
-                closedTrade = null;
             }
         }
         else {
@@ -201,7 +200,6 @@ class PendingTradesModel extends UIModel {
     void closeSummary() {
         if (closedTrade != null) {
             list.removeIf(e -> e.getTrade().getId().equals(closedTrade.getId()));
-            closedTrade = null;
         }
     }
 
@@ -234,6 +232,9 @@ class PendingTradesModel extends UIModel {
         return selectedItem;
     }
 
+    String getCurrencyCode() {
+        return selectedItem.getTrade().getOffer().getCurrency().getCurrencyCode();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

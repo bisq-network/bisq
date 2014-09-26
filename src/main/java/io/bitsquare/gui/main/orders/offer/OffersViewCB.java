@@ -67,6 +67,7 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
         setRemoveColumnCellFactory();
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setPlaceholder(new Label("No open offers available"));
 
         super.initialize(url, rb);
     }
@@ -118,7 +119,7 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
                     public TableCell<OfferListItem, OfferListItem> call(TableColumn<OfferListItem,
                             OfferListItem> column) {
                         return new TableCell<OfferListItem, OfferListItem>() {
-                            Hyperlink hyperlink;
+                            private Hyperlink hyperlink;
 
                             @Override
                             public void updateItem(final OfferListItem item, boolean empty) {
@@ -126,6 +127,7 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
 
                                 if (item != null && !empty) {
                                     hyperlink = new Hyperlink(presentationModel.getTradeId(item));
+                                    hyperlink.setId("id-link");
                                     Tooltip.install(hyperlink, new Tooltip(presentationModel.getTradeId(item)));
                                     hyperlink.setOnAction(event -> openOfferDetails(item));
                                     setGraphic(hyperlink);

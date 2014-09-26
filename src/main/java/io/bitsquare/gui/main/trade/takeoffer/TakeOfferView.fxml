@@ -112,7 +112,8 @@
                 </GridPane.margin>
                 <Label id="input-description-label" text="%takeOffer.amountPriceBox.amountRangeDescription"
                        prefWidth="170" textAlignment="CENTER"/>
-                <Label fx:id="amountRangeTextField" id="label-with-background" prefWidth="170" textAlignment="CENTER"/>
+                <Label fx:id="amountRangeTextField" id="label-with-background" prefWidth="170"
+                       style=" -fx-alignment: center;"/>
             </VBox>
 
             <InfoDisplay gridPane="$gridPane" onAction="#onOpenGeneralHelp" rowIndex="2"

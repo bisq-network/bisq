@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 public class TxIdTextField extends AnchorPane {
     private static final Logger log = LoggerFactory.getLogger(TxIdTextField.class);
 
-    private final TextField txIdLabel;
+    private final TextField textField;
     private final Tooltip progressIndicatorTooltip;
     private final ConfidenceProgressIndicator progressIndicator;
     private final Label copyIcon;
@@ -73,20 +73,21 @@ public class TxIdTextField extends AnchorPane {
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         AnchorPane.setRightAnchor(copyIcon, 30.0);
 
-        txIdLabel = new TextField();
-        txIdLabel.setId("address-text-field");
-        txIdLabel.setEditable(false);
-        AnchorPane.setRightAnchor(txIdLabel, 55.0);
-        AnchorPane.setLeftAnchor(txIdLabel, 0.0);
-        txIdLabel.focusTraversableProperty().set(focusTraversableProperty().get());
-        focusedProperty().addListener((ov, oldValue, newValue) -> txIdLabel.requestFocus());
+        textField = new TextField();
+        textField.setId("address-text-field");
+        textField.setEditable(false);
+        Tooltip.install(textField, new Tooltip("Open a blockchain explorer with that transactions ID"));
+        AnchorPane.setRightAnchor(textField, 55.0);
+        AnchorPane.setLeftAnchor(textField, 0.0);
+        textField.focusTraversableProperty().set(focusTraversableProperty().get());
+        focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());
 
-        getChildren().addAll(txIdLabel, copyIcon, progressIndicator);
+        getChildren().addAll(textField, copyIcon, progressIndicator);
     }
 
     public void setup(WalletFacade walletFacade, String txID) {
-        txIdLabel.setText(txID);
-        txIdLabel.setOnMouseClicked(mouseEvent -> {
+        textField.setText(txID);
+        textField.setOnMouseClicked(mouseEvent -> {
             try {
                 Desktop.getDesktop().browse(URI.create("https://blockchain.info/address/" + txID));
             } catch (IOException e) {

@@ -251,6 +251,10 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
         return fiatCode;
     }
 
+    String getAmount() {
+        return formatter.formatCoinWithCode(model.amountAsCoin.get());
+    }
+
     String getAmountRange() {
         return amountRange;
     }

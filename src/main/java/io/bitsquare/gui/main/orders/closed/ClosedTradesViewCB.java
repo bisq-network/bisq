@@ -65,6 +65,7 @@ public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
         setDateColumnCellFactory();
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setPlaceholder(new Label("No closed trades available"));
 
         super.initialize(url, rb);
     }
@@ -113,7 +114,7 @@ public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
                     public TableCell<ClosedTradesListItem, ClosedTradesListItem> call(TableColumn<ClosedTradesListItem,
                             ClosedTradesListItem> column) {
                         return new TableCell<ClosedTradesListItem, ClosedTradesListItem>() {
-                            Hyperlink hyperlink;
+                            private Hyperlink hyperlink;
 
                             @Override
                             public void updateItem(final ClosedTradesListItem item, boolean empty) {
@@ -121,6 +122,7 @@ public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
 
                                 if (item != null && !empty) {
                                     hyperlink = new Hyperlink(presentationModel.getTradeId(item));
+                                    hyperlink.setId("id-link");
                                     Tooltip.install(hyperlink, new Tooltip(presentationModel.getTradeId(item)));
                                     hyperlink.setOnAction(event -> openOfferDetails(item));
                                     setGraphic(hyperlink);

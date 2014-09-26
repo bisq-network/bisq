@@ -67,7 +67,7 @@ public class WithdrawalViewCB extends CachedViewCB {
     private BSFormatter formatter;
     private ObservableList<WithdrawalListItem> addressList;
 
-    @FXML TableView<WithdrawalListItem> tableView;
+    @FXML TableView<WithdrawalListItem> table;
     @FXML TableColumn<WithdrawalListItem, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
             confidenceColumn;
     @FXML Button addNewAddressButton;
@@ -90,7 +90,8 @@ public class WithdrawalViewCB extends CachedViewCB {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setPlaceholder(new Label("No funded wallets for withdrawal available"));
 
         setLabelColumnCellFactory();
         setBalanceColumnCellFactory();
@@ -112,7 +113,7 @@ public class WithdrawalViewCB extends CachedViewCB {
     public void activate() {
         super.activate();
 
-        tableView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
+        table.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
             if (newValue != null) {
 
                 if (Coin.ZERO.compareTo(newValue.getBalance()) <= 0) {
@@ -134,7 +135,7 @@ public class WithdrawalViewCB extends CachedViewCB {
         addressList.addAll(addressEntryList.stream().map(anAddressEntryList ->
                 new WithdrawalListItem(anAddressEntryList, walletFacade, formatter)).collect(Collectors.toList()));
 
-        tableView.setItems(addressList);
+        table.setItems(addressList);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -220,7 +221,7 @@ public class WithdrawalViewCB extends CachedViewCB {
                     WithdrawalListItem> column) {
                 return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
 
-                    Hyperlink hyperlink;
+                    private Hyperlink hyperlink;
 
                     @Override
                     public void updateItem(final WithdrawalListItem item, boolean empty) {

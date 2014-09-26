@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 public class BalanceTextField extends AnchorPane {
     private static final Logger log = LoggerFactory.getLogger(BalanceTextField.class);
 
-    private final TextField balanceTextField;
+    private final TextField textField;
     private final Tooltip progressIndicatorTooltip;
     private final ConfidenceProgressIndicator progressIndicator;
 
@@ -52,9 +52,9 @@ public class BalanceTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BalanceTextField() {
-        balanceTextField = new TextField();
-        balanceTextField.setFocusTraversable(false);
-        balanceTextField.setEditable(false);
+        textField = new TextField();
+        textField.setFocusTraversable(false);
+        textField.setEditable(false);
 
         progressIndicator = new ConfidenceProgressIndicator();
         progressIndicator.setFocusTraversable(false);
@@ -68,10 +68,10 @@ public class BalanceTextField extends AnchorPane {
         Tooltip.install(progressIndicator, progressIndicatorTooltip);
 
         AnchorPane.setRightAnchor(progressIndicator, 0.0);
-        AnchorPane.setRightAnchor(balanceTextField, 55.0);
-        AnchorPane.setLeftAnchor(balanceTextField, 0.0);
+        AnchorPane.setRightAnchor(textField, 55.0);
+        AnchorPane.setLeftAnchor(textField, 0.0);
 
-        getChildren().addAll(balanceTextField, progressIndicator);
+        getChildren().addAll(textField, progressIndicator);
     }
 
     public void setup(WalletFacade walletFacade, Address address, BSFormatter formatter) {
@@ -123,17 +123,17 @@ public class BalanceTextField extends AnchorPane {
             if (progressIndicator.getProgress() != 0) {
                 progressIndicator.setVisible(true);
                 AnchorPane.setRightAnchor(progressIndicator, 0.0);
-                AnchorPane.setRightAnchor(balanceTextField, 35.0);
+                AnchorPane.setRightAnchor(textField, 35.0);
             }
         }
     }
 
     private void updateBalance(Coin balance) {
-        balanceTextField.setText(formatter.formatCoinWithCode(balance));
+        textField.setText(formatter.formatCoinWithCode(balance));
         if (balance.isPositive())
-            balanceTextField.setEffect(fundedEffect);
+            textField.setEffect(fundedEffect);
         else
-            balanceTextField.setEffect(notFundedEffect);
+            textField.setEffect(notFundedEffect);
     }
 
 }

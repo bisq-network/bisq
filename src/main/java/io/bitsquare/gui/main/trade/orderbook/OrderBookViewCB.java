@@ -80,7 +80,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     @FXML Label amountBtcLabel, priceDescriptionLabel, priceFiatLabel, volumeDescriptionLabel,
             volumeFiatLabel, extendedButton1Label, extendedButton2Label, extendedCheckBoxLabel;
     @FXML InputTextField volumeTextField, amountTextField, priceTextField;
-    @FXML TableView<OrderBookListItem> orderBookTable;
+    @FXML TableView<OrderBookListItem> table;
     @FXML Button createOfferButton, showAdvancedSettingsButton, extendedButton1, extendedButton2;
     @FXML TableColumn<OrderBookListItem, OrderBookListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, countryColumn, bankAccountTypeColumn;
@@ -118,8 +118,11 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
         setBankAccountTypeColumnCellFactory();
         setDirectionColumnCellFactory();
 
-        orderBookTable.getSortOrder().add(priceColumn);
-        orderBookTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.getSortOrder().add(priceColumn);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        Label placeholder = new Label("No offers available.\nTry to change your filter or account settings.");
+        placeholder.setWrapText(true);
+        table.setPlaceholder(placeholder);
 
         setupBindings();
         setupValidators();
@@ -138,11 +141,11 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
         // setOrderBookInfo has been called before
         SortedList<OrderBookListItem> offerList = presentationModel.getOfferList();
-        orderBookTable.setItems(offerList);
-        offerList.comparatorProperty().bind(orderBookTable.comparatorProperty());
+        table.setItems(offerList);
+        offerList.comparatorProperty().bind(table.comparatorProperty());
         priceColumn.setSortType((presentationModel.getDirection() == Direction.BUY) ?
                 TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
-        orderBookTable.sort();
+        table.sort();
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -255,7 +258,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                     Navigation.Item.ACCOUNT_SETTINGS,
                     Navigation.Item.RESTRICTIONS);
         else
-            orderBookTable.getSelectionModel().clearSelection();
+            table.getSelectionModel().clearSelection();
     }
 
     private void showDetailsScreen() {

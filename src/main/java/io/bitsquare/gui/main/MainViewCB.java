@@ -214,6 +214,7 @@ public class MainViewCB extends ViewCB<MainPM> {
                 numPendingTradesLabel.setText(String.valueOf(numPendingTrades));
             }
 
+            log.trace("openInfoNotification " + BitSquare.getAppName());
             SystemNotification.openInfoNotification(BitSquare.getAppName(), "You got a new trade message.");
         }
         else {
@@ -225,8 +226,11 @@ public class MainViewCB extends ViewCB<MainPM> {
     private void onMainNavigationAdded() {
         Profiler.printMsgWithTime("MainController.ondMainNavigationAdded");
 
-        presentationModel.numPendingTrades.addListener((ov, olaValue, newValue) -> applyPendingTradesInfoIcon((int)
-                newValue));
+        presentationModel.numPendingTrades.addListener((ov, oldValue, newValue) ->
+        {
+            if ((int) newValue > (int) oldValue)
+                applyPendingTradesInfoIcon((int) newValue);
+        });
         applyPendingTradesInfoIcon(presentationModel.numPendingTrades.get());
         navigation.navigateToLastStoredItem();
         onContentAdded();

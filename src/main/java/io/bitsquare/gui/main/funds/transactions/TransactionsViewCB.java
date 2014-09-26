@@ -48,7 +48,7 @@ public class TransactionsViewCB extends CachedViewCB {
     private BSFormatter formatter;
     private ObservableList<TransactionsListItem> transactionsListItems;
 
-    @FXML TableView<TransactionsListItem> tableView;
+    @FXML TableView<TransactionsListItem> table;
     @FXML TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn,
             confidenceColumn;
 
@@ -72,7 +72,8 @@ public class TransactionsViewCB extends CachedViewCB {
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setPlaceholder(new Label("No transactions available"));
 
         setAddressColumnCellFactory();
         setConfidenceColumnCellFactory();
@@ -95,7 +96,7 @@ public class TransactionsViewCB extends CachedViewCB {
         transactionsListItems.addAll(transactions.stream().map(transaction ->
                 new TransactionsListItem(transaction, walletFacade, formatter)).collect(Collectors.toList()));
 
-        tableView.setItems(transactionsListItems);
+        table.setItems(transactionsListItems);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -129,7 +130,7 @@ public class TransactionsViewCB extends CachedViewCB {
                     public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
                             TransactionsListItem> column) {
                         return new TableCell<TransactionsListItem, TransactionsListItem>() {
-                            Hyperlink hyperlink;
+                            private Hyperlink hyperlink;
 
                             @Override
                             public void updateItem(final TransactionsListItem item, boolean empty) {

@@ -164,7 +164,8 @@
     <InfoDisplay fx:id="summaryInfoDisplay" onAction="#onOpenSummaryHelp" rowIndex="9" gridPane="$root"
                  visible="false"/>
 
-    <Button fx:id="closeSummaryButton" text="Close summary" onAction="#onCloseSummary" GridPane.rowIndex="10"
+    <Button fx:id="openWithdrawalButton" text="Open withdrawal screen" onAction="#onOpenWithdrawal"
+            GridPane.rowIndex="10"
             GridPane.columnIndex="1" defaultButton="true" visible="false">
         <GridPane.margin>
             <Insets top="15"/>
@@ -177,7 +178,6 @@
     </columnConstraints>
 
     <rowConstraints>
-        <RowConstraints/>
         <RowConstraints/>
         <RowConstraints/>
         <RowConstraints/>
