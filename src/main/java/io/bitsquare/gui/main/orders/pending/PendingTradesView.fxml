@@ -17,7 +17,6 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-
 <?import io.bitsquare.gui.components.InfoDisplay?>
 <?import io.bitsquare.gui.components.processbar.ProcessStepBar?>
 <?import io.bitsquare.gui.components.TextFieldWithCopyIcon?>

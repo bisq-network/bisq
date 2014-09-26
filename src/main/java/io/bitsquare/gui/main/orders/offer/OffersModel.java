@@ -73,6 +73,10 @@ class OffersModel extends UIModel {
 
         list.clear();
         list.addAll(tradeManager.getOffers().values().stream().map(OfferListItem::new).collect(Collectors.toList()));
+
+        // we sort by date, earliest first
+        list.sort((o1, o2) -> o2.getOffer().getCreationDate().compareTo(o1.getOffer().getCreationDate()));
+
         tradeManager.getOffers().addListener(offerMapChangeListener);
     }
 

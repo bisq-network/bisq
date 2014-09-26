@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 public class OffersViewCB extends CachedViewCB<OffersPM> {
     private static final Logger log = LoggerFactory.getLogger(OffersViewCB.class);
 
-
     @FXML TableColumn<OfferListItem, OfferListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, offerIdColumn, removeItemColumn;
     @FXML TableView<OfferListItem> table;

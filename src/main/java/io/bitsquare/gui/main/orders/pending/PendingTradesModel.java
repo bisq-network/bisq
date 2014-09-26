@@ -108,7 +108,7 @@ class PendingTradesModel extends UIModel {
                 .forEach(e -> list.add(new PendingTradesListItem(e)));
         tradeManager.getPendingTrades().addListener(mapChangeListener);
 
-        // we sort by date
+        // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
 
         // select either currentPendingTrade or first in the list
@@ -204,6 +204,7 @@ class PendingTradesModel extends UIModel {
             closedTrade = null;
         }
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

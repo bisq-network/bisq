@@ -181,7 +181,6 @@ public class BuyerAcceptsOfferProtocol {
         log.debug("onResultHandleTakeOfferRequest called " + step++);
         if (takeOfferRequestAccepted) {
             trade.setState(Trade.State.OFFERER_ACCEPTED);
-            messageFacade.removeOffer(offer);
             listener.onOfferAccepted(offer);
             listener.onWaitingForPeerResponse(state);
         }

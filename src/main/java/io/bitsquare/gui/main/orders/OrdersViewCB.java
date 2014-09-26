@@ -145,12 +145,10 @@ public class OrdersViewCB extends CachedViewCB {
             ((ViewCB) childController).setParent(this);
 
         } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + Navigation.Item.ACCOUNT_SETUP.getFxmlUrl());
+            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
             e.printStackTrace();
         }
         return childController;
     }
-
-
 }
 

@@ -29,7 +29,9 @@ import org.slf4j.LoggerFactory;
 
 class ClosedTradesPM extends PresentationModel<ClosedTradesModel> {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradesPM.class);
+
     private final BSFormatter formatter;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -41,6 +43,7 @@ class ClosedTradesPM extends PresentationModel<ClosedTradesModel> {
 
         this.formatter = formatter;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
@@ -70,14 +73,14 @@ class ClosedTradesPM extends PresentationModel<ClosedTradesModel> {
         super.terminate();
     }
 
-    public ObservableList<ClosedTradesListItem> getList() {
-        return model.getList();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public ObservableList<ClosedTradesListItem> getList() {
+        return model.getList();
+    }
 
     String getTradeId(ClosedTradesListItem item) {
         return item.getTrade().getId();
@@ -102,16 +105,5 @@ class ClosedTradesPM extends PresentationModel<ClosedTradesModel> {
     String getDate(ClosedTradesListItem item) {
         return formatter.formatDateTime(item.getTrade().getDate());
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
 
 }

@@ -48,6 +48,13 @@ import org.slf4j.LoggerFactory;
 public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesViewCB.class);
 
+    private ChangeListener<PendingTradesListItem> selectedItemChangeListener;
+    private ListChangeListener<PendingTradesListItem> listChangeListener;
+    private ChangeListener<String> txIdChangeListener;
+    private ChangeListener<PendingTradesPM.State> offererStateChangeListener;
+    private ChangeListener<PendingTradesPM.State> takerStateChangeListener;
+    private ChangeListener<Throwable> faultChangeListener;
+
     @FXML TitledGroupBg titledGroupBg, paymentsGroupBg, summaryGroupBg;
     @FXML ProcessStepBar processBar;
     @FXML Label statusLabel, txIdLabel, paymentMethodLabel, holderNameLabel, primaryIdLabel, secondaryIdLabel,
@@ -61,12 +68,6 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     @FXML TableView<PendingTradesListItem> table;
     @FXML TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, tradeIdColumn, selectColumn;
-    private ChangeListener<PendingTradesListItem> selectedItemChangeListener;
-    private ListChangeListener<PendingTradesListItem> listChangeListener;
-    private ChangeListener<String> txIdChangeListener;
-    private ChangeListener<PendingTradesPM.State> offererStateChangeListener;
-    private ChangeListener<PendingTradesPM.State> takerStateChangeListener;
-    private ChangeListener<Throwable> faultChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -99,15 +100,10 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                 txIdTextField.setup(presentationModel.getWalletFacade(), newValue);
 
         selectedItemChangeListener = (obsValue, oldValue, newValue) -> {
-            if (oldValue != newValue) {
-                if (oldValue != null && newValue != null)
-                    presentationModel.selectTrade(newValue);
-                else if (newValue == null)
-                    table.getSelectionModel().clearSelection();
-            }
-            else {
-                log.warn("should never happen!");
-            }
+            if (oldValue != null && newValue != null)
+                presentationModel.selectTrade(newValue);
+            else if (newValue == null)
+                table.getSelectionModel().clearSelection();
         };
 
         listChangeListener = change -> {
@@ -578,7 +574,5 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
             }
         });
     }
-
-
 }
 

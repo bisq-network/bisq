@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradesViewCB.class);
 
-
     @FXML TableColumn<ClosedTradesListItem, ClosedTradesListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, tradeIdColumn;
     @FXML TableView<ClosedTradesListItem> table;

@@ -36,8 +36,6 @@ import org.slf4j.LoggerFactory;
 
 public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesPM.class);
-    private final BSFormatter formatter;
-    private InvalidationListener stateChangeListener;
 
     enum State {
         TAKER_SELLER_WAIT_TX_CONF,
@@ -50,6 +48,10 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED,
         OFFERER_BUYER_COMPLETED,
     }
+
+    private final BSFormatter formatter;
+
+    private InvalidationListener stateChangeListener;
 
     final StringProperty txId = new SimpleStringProperty();
     final ObjectProperty<State> state = new SimpleObjectProperty<>();
@@ -127,6 +129,7 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     void closeSummary() {
         model.closeSummary();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

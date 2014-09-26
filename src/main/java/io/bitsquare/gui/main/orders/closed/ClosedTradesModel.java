@@ -74,7 +74,7 @@ class ClosedTradesModel extends UIModel {
                 .forEach(e -> list.add(new ClosedTradesListItem(e)));
         tradeManager.getClosedTrades().addListener(mapChangeListener);
 
-        // we sort by date
+        // We sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
     }
 

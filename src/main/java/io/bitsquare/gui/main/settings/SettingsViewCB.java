@@ -31,8 +31,8 @@ import javafx.fxml.Initializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SettingsController extends CachedViewCB {
-    private static final Logger log = LoggerFactory.getLogger(SettingsController.class);
+public class SettingsViewCB extends CachedViewCB {
+    private static final Logger log = LoggerFactory.getLogger(SettingsViewCB.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -40,26 +40,35 @@ public class SettingsController extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SettingsController() {
+    public SettingsViewCB() {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();
+    }
+
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void terminate() {
+        super.terminate();
     }
 
 
