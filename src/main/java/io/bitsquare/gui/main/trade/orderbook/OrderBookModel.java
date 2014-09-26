@@ -47,7 +47,6 @@ import javafx.collections.transformation.SortedList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.gui.util.BSFormatter.reduceTo4Decimals;
 
 /**
  * It holds the scope specific domain data for either a buy or sell UI screen.
@@ -58,6 +57,7 @@ class OrderBookModel extends UIModel {
     private final User user;
     private final OrderBook orderBook;
     private final Settings settings;
+    private BSFormatter formatter;
     private final TradeManager tradeManager;
 
     private final FilteredList<OrderBookListItem> filteredItems;
@@ -85,11 +85,13 @@ class OrderBookModel extends UIModel {
     OrderBookModel(User user,
                    TradeManager tradeManager,
                    OrderBook orderBook,
-                   Settings settings) {
+                   Settings settings,
+                   BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.user = user;
         this.orderBook = orderBook;
         this.settings = settings;
+        this.formatter = formatter;
 
         filteredItems = new FilteredList<>(orderBook.getOrderBookListItems());
         sortedItems = new SortedList<>(filteredItems);
@@ -164,7 +166,8 @@ class OrderBookModel extends UIModel {
                     !volumeAsFiat.get().isZero() &&
                     !priceAsFiat.get().isZero()) {
                 // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
-                amountAsCoin.set(reduceTo4Decimals(new ExchangeRate(priceAsFiat.get()).fiatToCoin(volumeAsFiat.get())));
+                amountAsCoin.set(formatter.reduceTo4Decimals(new ExchangeRate(priceAsFiat.get()).fiatToCoin
+                        (volumeAsFiat.get())));
             }
         } catch (Throwable t) {
             // Should be never reached
@@ -180,7 +183,7 @@ class OrderBookModel extends UIModel {
         boolean countryResult = offer.getAcceptedCountries().contains(user.getCurrentBankAccount().getCountry());
         if (!countryResult)
             restrictionsInfo.set("This offer requires that the payments account resides in one of those countries:\n" +
-                    BSFormatter.countryLocalesToString(offer.getAcceptedCountries()) +
+                    formatter.countryLocalesToString(offer.getAcceptedCountries()) +
                     "\n\nThe country of your payments account (" + user.getCurrentBankAccount().getCountry().getName() +
                     ") is not included in that list.");
 

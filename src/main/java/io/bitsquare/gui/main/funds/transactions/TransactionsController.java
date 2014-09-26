@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.funds.transactions;
 
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewController;
+import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.bitcoin.core.Transaction;
 
@@ -44,6 +45,7 @@ public class TransactionsController extends CachedViewController {
     private static final Logger log = LoggerFactory.getLogger(TransactionsController.class);
 
     private final WalletFacade walletFacade;
+    private BSFormatter formatter;
     private ObservableList<TransactionsListItem> transactionsListItems;
 
     @FXML TableView<TransactionsListItem> tableView;
@@ -56,8 +58,9 @@ public class TransactionsController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TransactionsController(WalletFacade walletFacade) {
+    private TransactionsController(WalletFacade walletFacade, BSFormatter formatter) {
         this.walletFacade = walletFacade;
+        this.formatter = formatter;
     }
 
 
@@ -90,7 +93,7 @@ public class TransactionsController extends CachedViewController {
         List<Transaction> transactions = walletFacade.getWallet().getRecentTransactions(10000, true);
         transactionsListItems = FXCollections.observableArrayList();
         transactionsListItems.addAll(transactions.stream().map(transaction ->
-                new TransactionsListItem(transaction, walletFacade)).collect(Collectors.toList()));
+                new TransactionsListItem(transaction, walletFacade, formatter)).collect(Collectors.toList()));
 
         tableView.setItems(transactionsListItems);
     }

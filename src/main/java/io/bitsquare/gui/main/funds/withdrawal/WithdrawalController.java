@@ -64,6 +64,7 @@ public class WithdrawalController extends CachedViewController {
 
 
     private final WalletFacade walletFacade;
+    private BSFormatter formatter;
     private ObservableList<WithdrawalListItem> addressList;
 
     @FXML TableView<WithdrawalListItem> tableView;
@@ -78,8 +79,9 @@ public class WithdrawalController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private WithdrawalController(WalletFacade walletFacade) {
+    private WithdrawalController(WalletFacade walletFacade, BSFormatter formatter) {
         this.walletFacade = walletFacade;
+        this.formatter = formatter;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +132,7 @@ public class WithdrawalController extends CachedViewController {
         List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
         addressList = FXCollections.observableArrayList();
         addressList.addAll(addressEntryList.stream().map(anAddressEntryList ->
-                new WithdrawalListItem(anAddressEntryList, walletFacade)).collect(Collectors.toList()));
+                new WithdrawalListItem(anAddressEntryList, walletFacade, formatter)).collect(Collectors.toList()));
 
         tableView.setItems(addressList);
     }
@@ -142,7 +144,7 @@ public class WithdrawalController extends CachedViewController {
 
     @FXML
     public void onWithdraw() {
-        Coin amount = BSFormatter.parseToCoin(amountTextField.getText());
+        Coin amount = formatter.parseToCoin(amountTextField.getText());
         if (Restrictions.isMinSpendableAmount(amount)) {
             FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
                 @Override
@@ -163,9 +165,9 @@ public class WithdrawalController extends CachedViewController {
                     "Your withdrawal request:\n\n" + "Amount: " + amountTextField.getText() + " BTC\n" + "Sending" +
                             " address: " + withdrawFromTextField.getText() + "\n" + "Receiving address: " +
                             withdrawToTextField.getText() + "\n" + "Transaction fee: " +
-                            BSFormatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
+                            formatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
                             "You receive in total: " +
-                            BSFormatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
+                            formatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
                             "Are you sure you withdraw that amount?");
             if (response == Dialog.Actions.OK) {
                 try {

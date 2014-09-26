@@ -154,19 +154,19 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     }
 
     String getAmount(PendingTradesListItem item) {
-        return (item != null) ? BSFormatter.formatAmountWithMinAmount(item.getTrade().getOffer()) : "";
+        return (item != null) ? formatter.formatAmountWithMinAmount(item.getTrade().getOffer()) : "";
     }
 
     String getPrice(PendingTradesListItem item) {
-        return (item != null) ? BSFormatter.formatFiat(item.getTrade().getOffer().getPrice()) : "";
+        return (item != null) ? formatter.formatFiat(item.getTrade().getOffer().getPrice()) : "";
     }
 
     String getVolume(PendingTradesListItem item) {
-        return (item != null) ? BSFormatter.formatVolumeWithMinVolume(item.getTrade().getOffer()) : "";
+        return (item != null) ? formatter.formatVolumeWithMinVolume(item.getTrade().getOffer()) : "";
     }
 
     String getDirectionLabel(PendingTradesListItem item) {
-        return (item != null) ? BSFormatter.formatDirection(item.getTrade().getOffer().getMirroredDirection()) : "";
+        return (item != null) ? formatter.formatDirection(item.getTrade().getOffer().getMirroredDirection()) : "";
     }
 
     String getDate(PendingTradesListItem item) {

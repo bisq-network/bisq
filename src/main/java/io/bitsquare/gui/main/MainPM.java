@@ -47,6 +47,7 @@ class MainPM extends PresentationModel<MainModel> {
     final StringProperty splashScreenInfoText = new SimpleStringProperty();
     final BooleanProperty networkSyncComplete = new SimpleBooleanProperty();
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty();
+    private BSFormatter formatter;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -54,8 +55,9 @@ class MainPM extends PresentationModel<MainModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MainPM(MainModel model) {
+    private MainPM(MainModel model, BSFormatter formatter) {
         super(model);
+        this.formatter = formatter;
     }
 
 
@@ -74,7 +76,7 @@ class MainPM extends PresentationModel<MainModel> {
 
         model.networkSyncProgress.addListener((ov, oldValue, newValue) -> {
             if ((double) newValue > 0)
-                splashScreenInfoText.set("Synchronise with network " + BSFormatter.formatToPercent((double) newValue));
+                splashScreenInfoText.set("Synchronise with network " + formatter.formatToPercent((double) newValue));
             else if ((double) newValue == 1)
                 splashScreenInfoText.set("Synchronise with network completed.");
             else
@@ -82,7 +84,7 @@ class MainPM extends PresentationModel<MainModel> {
 
         });
 
-        model.balance.addListener((ov, oldValue, newValue) -> balance.set(BSFormatter.formatCoinWithCode
+        model.balance.addListener((ov, oldValue, newValue) -> balance.set(formatter.formatCoinWithCode
                 (newValue)));
 
         model.getBankAccounts().addListener((ListChangeListener<BankAccount>) change -> {

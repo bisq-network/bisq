@@ -57,9 +57,9 @@ import static com.google.common.base.Preconditions.*;
 public class BSFormatter {
     private static final Logger log = LoggerFactory.getLogger(BSFormatter.class);
 
-    private static Locale locale = Locale.getDefault();
-    private static boolean useMilliBit;
-    private static int scale = 3;
+    private Locale locale = Locale.getDefault();
+    private boolean useMilliBit;
+    private int scale = 3;
 
     // Format use 2 min decimal places and 2 more optional: 1.00 or 1.0010  
     // There are not more then 4 decimals allowed.
@@ -68,12 +68,12 @@ public class BSFormatter {
     // Input of a group separator (1,123,45) lead to an validation error.
     // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit, 
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
-    private static CoinFormat coinFormat = CoinFormat.BTC.repeatOptionalDecimals(2, 1);
+    private CoinFormat coinFormat = CoinFormat.BTC.repeatOptionalDecimals(2, 1);
 
-    private static String currencyCode = Currency.getInstance(Locale.getDefault()).getCurrencyCode();
+    private String currencyCode = Currency.getInstance(Locale.getDefault()).getCurrencyCode();
 
     // format is like: 1,00  never more then 2 decimals 
-    private static final CoinFormat fiatFormat = CoinFormat.FIAT.repeatOptionalDecimals(0, 0).code(0, currencyCode);
+    private final CoinFormat fiatFormat = CoinFormat.FIAT.repeatOptionalDecimals(0, 0).code(0, currencyCode);
 
 
     @Inject
@@ -95,8 +95,8 @@ public class BSFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public static void useMilliBitFormat(boolean useMilliBit) {
-        BSFormatter.useMilliBit = useMilliBit;
+    public void useMilliBitFormat(boolean useMilliBit) {
+        this.useMilliBit = useMilliBit;
         coinFormat = getCoinFormat();
         scale = useMilliBit ? 0 : 3;
     }
@@ -104,19 +104,19 @@ public class BSFormatter {
     /**
      * Note that setting the locale does not set the currency as it might be independent.
      */
-    public static void setLocale(Locale locale) {
-        BSFormatter.locale = locale;
+    public void setLocale(Locale locale) {
+        this.locale = locale;
     }
 
-    private static CoinFormat getCoinFormat() {
+    private CoinFormat getCoinFormat() {
         if (useMilliBit)
             return CoinFormat.MBTC.repeatOptionalDecimals(2, 1);
         else
             return CoinFormat.BTC.repeatOptionalDecimals(2, 1);
     }
 
-    public static void setFiatCurrencyCode(String currencyCode) {
-        BSFormatter.currencyCode = currencyCode;
+    public void setFiatCurrencyCode(String currencyCode) {
+        this.currencyCode = currencyCode;
         fiatFormat.code(0, currencyCode);
     }
 
@@ -125,7 +125,7 @@ public class BSFormatter {
     // BTC
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static String formatCoin(Coin coin) {
+    public String formatCoin(Coin coin) {
         try {
             return coinFormat.noCode().format(coin).toString();
         } catch (Throwable t) {
@@ -134,7 +134,7 @@ public class BSFormatter {
         }
     }
 
-    public static String formatCoinWithCode(Coin coin) {
+    public String formatCoinWithCode(Coin coin) {
         try {
             // we don't use the code feature from coinFormat as it does automatic switching between mBTC and BTC and 
             // pre and post fixing
@@ -146,7 +146,7 @@ public class BSFormatter {
     }
 
 
-    public static Coin parseToCoin(String input) {
+    public Coin parseToCoin(String input) {
         try {
             return coinFormat.parse(cleanInput(input));
         } catch (Throwable t) {
@@ -163,7 +163,7 @@ public class BSFormatter {
      * @param input
      * @return
      */
-    public static Coin parseToCoinWith4Decimals(String input) {
+    public Coin parseToCoinWith4Decimals(String input) {
         try {
             return Coin.valueOf(new BigDecimal(parseToCoin(cleanInput(input)).value).setScale(-scale - 1,
                     BigDecimal.ROUND_HALF_UP).setScale(scale + 1).toBigInteger().longValue());
@@ -173,7 +173,7 @@ public class BSFormatter {
         }
     }
 
-    public static boolean hasBtcValidDecimals(String input) {
+    public boolean hasBtcValidDecimals(String input) {
         return parseToCoin(input).equals(parseToCoinWith4Decimals(input));
     }
 
@@ -183,7 +183,7 @@ public class BSFormatter {
      * @param coin The coin which should be transformed
      * @return The transformed coin
      */
-    public static Coin reduceTo4Decimals(Coin coin) {
+    public Coin reduceTo4Decimals(Coin coin) {
         return parseToCoin(formatCoin(coin));
     }
 
@@ -192,7 +192,7 @@ public class BSFormatter {
     // FIAT
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static String formatFiat(Fiat fiat) {
+    public String formatFiat(Fiat fiat) {
         try {
             return fiatFormat.noCode().format(fiat).toString();
         } catch (Throwable t) {
@@ -201,7 +201,7 @@ public class BSFormatter {
         }
     }
 
-    public static String formatFiatWithCode(Fiat fiat) {
+    public String formatFiatWithCode(Fiat fiat) {
         try {
             return fiatFormat.postfixCode().format(fiat).toString();
         } catch (Throwable t) {
@@ -210,7 +210,7 @@ public class BSFormatter {
         }
     }
 
-    public static Fiat parseToFiat(String input) {
+    public Fiat parseToFiat(String input) {
         try {
             return Fiat.parseFiat(currencyCode, cleanInput(input));
         } catch (Exception e) {
@@ -226,7 +226,7 @@ public class BSFormatter {
      * @param input
      * @return
      */
-    public static Fiat parseToFiatWith2Decimals(String input) {
+    public Fiat parseToFiatWith2Decimals(String input) {
         try {
             return parseToFiat(new BigDecimal(cleanInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
         } catch (Throwable t) {
@@ -236,7 +236,7 @@ public class BSFormatter {
 
     }
 
-    public static boolean hasFiatValidDecimals(String input) {
+    public boolean hasFiatValidDecimals(String input) {
         return parseToFiat(input).equals(parseToFiatWith2Decimals(input));
     }
 
@@ -251,7 +251,7 @@ public class BSFormatter {
      * @return Returns a double value. Any invalid value returns Double.NEGATIVE_INFINITY.
      */
     @Deprecated //TODO use Fiat or Btc if possible
-    public static double parseToDouble(String input) {
+    public double parseToDouble(String input) {
         try {
             checkNotNull(input);
             checkArgument(input.length() > 0);
@@ -262,11 +262,11 @@ public class BSFormatter {
         }
     }
 
-    public static String formatDirection(Direction direction) {
+    public String formatDirection(Direction direction) {
         return formatDirection(direction, true);
     }
 
-    public static String formatDirection(Direction direction, boolean allUpperCase) {
+    public String formatDirection(Direction direction, boolean allUpperCase) {
         String result = (direction == Direction.BUY) ? "Buy" : "Sell";
         if (allUpperCase) {
             result = result.toUpperCase();
@@ -274,47 +274,47 @@ public class BSFormatter {
         return result;
     }
 
-    public static String formatAmountWithMinAmount(Offer offer) {
-        return formatCoin(offer.getAmount()) + " (" + BSFormatter.formatCoin(offer.getMinAmount()) + ")";
+    public String formatAmountWithMinAmount(Offer offer) {
+        return formatCoin(offer.getAmount()) + " (" + formatCoin(offer.getMinAmount()) + ")";
     }
 
-    public static String formatVolumeWithMinVolume(Offer offer) {
-        return BSFormatter.formatFiat(offer.getOfferVolume()) +
-                " (" + BSFormatter.formatFiat(offer.getMinOfferVolume()) + ")";
+    public String formatVolumeWithMinVolume(Offer offer) {
+        return formatFiat(offer.getOfferVolume()) +
+                " (" + formatFiat(offer.getMinOfferVolume()) + ")";
     }
 
-    public static String countryLocalesToString(List<Country> countries) {
+    public String countryLocalesToString(List<Country> countries) {
         return countries.stream().map(Country::getName).collect(Collectors.joining(", "));
     }
 
-    public static String arbitratorsToString(List<Arbitrator> arbitrators) {
+    public String arbitratorsToString(List<Arbitrator> arbitrators) {
         return arbitrators.stream().map(Arbitrator::getName).collect(Collectors.joining(", "));
     }
 
-    public static String languageLocalesToString(List<Locale> languageLocales) {
+    public String languageLocalesToString(List<Locale> languageLocales) {
         return languageLocales.stream().map(e -> e.getDisplayLanguage()).collect(Collectors.joining(", "));
     }
 
-    public static String arbitrationMethodsToString(List<Arbitrator.METHOD> methods) {
+    public String arbitrationMethodsToString(List<Arbitrator.METHOD> methods) {
         return methods.stream().map(e -> BSResources.get(e.toString())).collect(Collectors.joining(", "));
     }
 
-    public static String arbitrationIDVerificationsToString(List<Arbitrator.ID_VERIFICATION> items) {
+    public String arbitrationIDVerificationsToString(List<Arbitrator.ID_VERIFICATION> items) {
         return items.stream().map(e -> BSResources.get(e.toString())).collect(Collectors.joining(", "));
     }
 
-    public static String mnemonicCodeToString(List<String> mnemonicCode) {
+    public String mnemonicCodeToString(List<String> mnemonicCode) {
         return mnemonicCode.stream().collect(Collectors.joining(" "));
     }
 
 
-    public static String formatDateTime(Date date) {
+    public String formatDateTime(Date date) {
         DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
         DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
         return dateFormatter.format(date) + " " + timeFormatter.format(date);
     }
 
-    public static String formatCollateralPercent(long collateral) {
+    public String formatCollateralPercent(long collateral) {
         DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(locale);
         decimalFormat.setMinimumFractionDigits(1);
         decimalFormat.setMaximumFractionDigits(1);
@@ -322,7 +322,7 @@ public class BSFormatter {
         return decimalFormat.format(collateral / 10) + " %";
     }
 
-    public static String formatToPercent(double value) {
+    public String formatToPercent(double value) {
         DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(locale);
         decimalFormat.setMinimumFractionDigits(1);
         decimalFormat.setMaximumFractionDigits(1);
@@ -330,7 +330,7 @@ public class BSFormatter {
         return decimalFormat.format(value / 100) + " %";
     }
 
-    private static String cleanInput(String input) {
+    private String cleanInput(String input) {
         input = input.replace(",", ".");
         // don't use String.valueOf(Double.parseDouble(input)) as return value as it gives scientific 
         // notation (1.0E-6) which screw up coinFormat.parse

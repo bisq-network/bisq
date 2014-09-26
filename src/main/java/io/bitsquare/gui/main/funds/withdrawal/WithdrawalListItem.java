@@ -43,6 +43,7 @@ public class WithdrawalListItem {
     private final AddressEntry addressEntry;
 
     private final WalletFacade walletFacade;
+    private BSFormatter formatter;
     private final AddressConfidenceListener confidenceListener;
 
     private final ConfidenceProgressIndicator progressIndicator;
@@ -51,9 +52,10 @@ public class WithdrawalListItem {
 
     private Coin balance;
 
-    public WithdrawalListItem(AddressEntry addressEntry, WalletFacade walletFacade) {
+    public WithdrawalListItem(AddressEntry addressEntry, WalletFacade walletFacade, BSFormatter formatter) {
         this.addressEntry = addressEntry;
         this.walletFacade = walletFacade;
+        this.formatter = formatter;
         this.addressString.set(getAddress().toString());
 
         // confidence
@@ -94,7 +96,7 @@ public class WithdrawalListItem {
     private void updateBalance(Coin balance) {
         this.balance = balance;
         if (balance != null) {
-            balanceLabel.setText(BSFormatter.formatCoin(balance));
+            balanceLabel.setText(formatter.formatCoin(balance));
         }
     }
 

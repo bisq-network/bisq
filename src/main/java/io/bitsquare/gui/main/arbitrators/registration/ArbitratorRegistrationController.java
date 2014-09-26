@@ -71,6 +71,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
     private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
     private final User user;
+    private BSFormatter formatter;
     private Arbitrator arbitrator = new Arbitrator();
     private ArbitratorProfileController arbitratorProfileController;
     private boolean isEditMode;
@@ -104,11 +105,12 @@ public class ArbitratorRegistrationController extends CachedViewController {
 
     @Inject
     private ArbitratorRegistrationController(Persistence persistence, WalletFacade walletFacade,
-                                             MessageFacade messageFacade, User user) {
+                                             MessageFacade messageFacade, User user, BSFormatter formatter) {
         this.persistence = persistence;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
         this.user = user;
+        this.formatter = formatter;
     }
 
 
@@ -129,7 +131,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
         }
         else {
             languageList.add(LanguageUtil.getDefaultLanguageLocale());
-            languagesTextField.setText(BSFormatter.languageLocalesToString(languageList));
+            languagesTextField.setText(formatter.languageLocalesToString(languageList));
         }
 
         languageComboBox.setItems(FXCollections.observableArrayList(LanguageUtil.getAllLanguageLocales()));
@@ -274,7 +276,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
         Locale item = languageComboBox.getSelectionModel().getSelectedItem();
         if (!languageList.contains(item) && item != null) {
             languageList.add(item);
-            languagesTextField.setText(BSFormatter.languageLocalesToString(languageList));
+            languagesTextField.setText(formatter.languageLocalesToString(languageList));
             languageComboBox.getSelectionModel().clearSelection();
         }
     }
@@ -290,7 +292,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
         Arbitrator.METHOD item = methodsComboBox.getSelectionModel().getSelectedItem();
         if (!methodList.contains(item) && item != null) {
             methodList.add(item);
-            methodsTextField.setText(BSFormatter.arbitrationMethodsToString(methodList));
+            methodsTextField.setText(formatter.arbitrationMethodsToString(methodList));
             methodsComboBox.getSelectionModel().clearSelection();
         }
     }
@@ -309,7 +311,7 @@ public class ArbitratorRegistrationController extends CachedViewController {
             if (!idVerificationList.contains(idVerification)) {
                 idVerificationList.add(idVerification);
                 idVerificationsTextField.setText(
-                        BSFormatter.arbitrationIDVerificationsToString(idVerificationList));
+                        formatter.arbitrationIDVerificationsToString(idVerificationList));
             }
         }
 
@@ -429,15 +431,15 @@ public class ArbitratorRegistrationController extends CachedViewController {
 
             nameTextField.setText(arbitrator.getName());
             idTypeTextField.setText(BSResources.get(arbitrator.getIdType().toString()));
-            languagesTextField.setText(BSFormatter.languageLocalesToString(arbitrator.getLanguages()));
+            languagesTextField.setText(formatter.languageLocalesToString(arbitrator.getLanguages()));
             maxTradeVolumeTextField.setText(String.valueOf(arbitrator.getMaxTradeVolume()));
             passiveServiceFeeTextField.setText(String.valueOf(arbitrator.getPassiveServiceFee()));
             minPassiveServiceFeeTextField.setText(String.valueOf(arbitrator.getMinPassiveServiceFee()));
             arbitrationFeeTextField.setText(String.valueOf(arbitrator.getArbitrationFee()));
             minArbitrationFeeTextField.setText(String.valueOf(arbitrator.getMinArbitrationFee()));
-            methodsTextField.setText(BSFormatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
+            methodsTextField.setText(formatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
             idVerificationsTextField.setText(
-                    BSFormatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));
+                    formatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));
             webPageTextField.setText(arbitrator.getWebUrl());
             descriptionTextArea.setText(arbitrator.getDescription());
 
@@ -454,11 +456,11 @@ public class ArbitratorRegistrationController extends CachedViewController {
         String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
         String name = nameTextField.getText();
 
-        double maxTradeVolume = BSFormatter.parseToDouble(maxTradeVolumeTextField.getText());
-        double passiveServiceFee = BSFormatter.parseToDouble(passiveServiceFeeTextField.getText());
-        double minPassiveServiceFee = BSFormatter.parseToDouble(minPassiveServiceFeeTextField.getText());
-        double arbitrationFee = BSFormatter.parseToDouble(arbitrationFeeTextField.getText());
-        double minArbitrationFee = BSFormatter.parseToDouble(minArbitrationFeeTextField.getText());
+        double maxTradeVolume = formatter.parseToDouble(maxTradeVolumeTextField.getText());
+        double passiveServiceFee = formatter.parseToDouble(passiveServiceFeeTextField.getText());
+        double minPassiveServiceFee = formatter.parseToDouble(minPassiveServiceFeeTextField.getText());
+        double arbitrationFee = formatter.parseToDouble(arbitrationFeeTextField.getText());
+        double minArbitrationFee = formatter.parseToDouble(minArbitrationFeeTextField.getText());
 
         String webUrl = webPageTextField.getText();
         String description = descriptionTextArea.getText();

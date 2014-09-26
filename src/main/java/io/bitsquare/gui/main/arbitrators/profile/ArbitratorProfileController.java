@@ -40,6 +40,7 @@ public class ArbitratorProfileController extends CachedViewController {
     private final Settings settings;
 
     private final Persistence persistence;
+    private BSFormatter formatter;
     private Arbitrator arbitrator;
 
 
@@ -55,12 +56,13 @@ public class ArbitratorProfileController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorProfileController(Settings settings, Persistence persistence) {
+    public ArbitratorProfileController(Settings settings, Persistence persistence, BSFormatter formatter) {
         this.settings = settings;
         this.persistence = persistence;
 
         //  Settings persistedSettings = (Settings) storage.read(settings.getClass().getName());
         // settings.applyPersistedSettings(persistedSettings);
+        this.formatter = formatter;
     }
 
 
@@ -125,16 +127,16 @@ public class ArbitratorProfileController extends CachedViewController {
             nameLabel.setText(name);
 
             nameTextField.setText(arbitrator.getName());
-            languagesTextField.setText(BSFormatter.languageLocalesToString(arbitrator.getLanguages()));
+            languagesTextField.setText(formatter.languageLocalesToString(arbitrator.getLanguages()));
             reputationTextField.setText(arbitrator.getReputation().toString());
             maxTradeVolumeTextField.setText(String.valueOf(arbitrator.getMaxTradeVolume()) + " BTC");
             passiveServiceFeeTextField.setText(String.valueOf(arbitrator.getPassiveServiceFee()) + " % (Min. " +
                     String.valueOf(arbitrator.getMinPassiveServiceFee()) + " BTC)");
             arbitrationFeeTextField.setText(String.valueOf(arbitrator.getArbitrationFee()) + " % (Min. " + String
                     .valueOf(arbitrator.getMinArbitrationFee()) + " BTC)");
-            methodsTextField.setText(BSFormatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
+            methodsTextField.setText(formatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
             idVerificationsTextField.setText(
-                    BSFormatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));
+                    formatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));
             webPageTextField.setText(arbitrator.getWebUrl());
             descriptionTextArea.setText(arbitrator.getDescription());
         }

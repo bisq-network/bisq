@@ -44,6 +44,7 @@ public class BalanceTextField extends AnchorPane {
 
     private final Effect fundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.GREEN, 4, 0.0, 0, 0);
     private final Effect notFundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.ORANGERED, 4, 0.0, 0, 0);
+    private BSFormatter formatter;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +74,8 @@ public class BalanceTextField extends AnchorPane {
         getChildren().addAll(balanceTextField, progressIndicator);
     }
 
-    public void setup(WalletFacade walletFacade, Address address) {
+    public void setup(WalletFacade walletFacade, Address address, BSFormatter formatter) {
+        this.formatter = formatter;
         walletFacade.addAddressConfidenceListener(new AddressConfidenceListener(address) {
             @Override
             public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
@@ -127,7 +129,7 @@ public class BalanceTextField extends AnchorPane {
     }
 
     private void updateBalance(Coin balance) {
-        balanceTextField.setText(BSFormatter.formatCoinWithCode(balance));
+        balanceTextField.setText(formatter.formatCoinWithCode(balance));
         if (balance.isPositive())
             balanceTextField.setEffect(fundedEffect);
         else

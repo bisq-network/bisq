@@ -44,13 +44,13 @@ import javafx.beans.property.StringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.gui.util.BSFormatter.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferPM.class);
 
     private final BtcValidator btcValidator;
+    private BSFormatter formatter;
     private final FiatValidator fiatValidator;
 
     final StringProperty amount = new SimpleStringProperty();
@@ -100,11 +100,13 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
 
     // non private for testing
     @Inject
-    CreateOfferPM(CreateOfferModel model, FiatValidator fiatValidator, BtcValidator btcValidator) {
+    CreateOfferPM(CreateOfferModel model, FiatValidator fiatValidator, BtcValidator btcValidator,
+                  BSFormatter formatter) {
         super(model);
 
         this.fiatValidator = fiatValidator;
         this.btcValidator = btcValidator;
+        this.formatter = formatter;
     }
 
 
@@ -169,7 +171,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         // apply only if valid
         boolean priceValid = false;
         if (price != null && isBtcInputValid(price.toPlainString()).isValid) {
-            model.priceAsFiat.set(parseToFiatWith2Decimals(price.toPlainString()));
+            model.priceAsFiat.set(formatter.parseToFiatWith2Decimals(price.toPlainString()));
             priceValid = true;
         }
 
@@ -206,11 +208,11 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
             InputValidator.ValidationResult result = isBtcInputValid(amount.get());
             amountValidationResult.set(result);
             if (result.isValid) {
-                showWarningInvalidBtcDecimalPlaces.set(!hasBtcValidDecimals(userInput));
+                showWarningInvalidBtcDecimalPlaces.set(!formatter.hasBtcValidDecimals(userInput));
                 // only allow max 4 decimal places for btc values
                 setAmountToModel();
                 // reformat input
-                amount.set(formatCoin(model.amountAsCoin.get()));
+                amount.set(formatter.formatCoin(model.amountAsCoin.get()));
 
                 calculateVolume();
 
@@ -233,9 +235,9 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
             InputValidator.ValidationResult result = isBtcInputValid(minAmount.get());
             minAmountValidationResult.set(result);
             if (result.isValid) {
-                showWarningInvalidBtcDecimalPlaces.set(!hasBtcValidDecimals(userInput));
+                showWarningInvalidBtcDecimalPlaces.set(!formatter.hasBtcValidDecimals(userInput));
                 setMinAmountToModel();
-                minAmount.set(formatCoin(model.minAmountAsCoin.get()));
+                minAmount.set(formatter.formatCoin(model.minAmountAsCoin.get()));
 
                 if (!model.isMinAmountLessOrEqualAmount()) {
                     minAmountValidationResult.set(new InputValidator.ValidationResult(false,
@@ -256,9 +258,9 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
             boolean isValid = result.isValid;
             priceValidationResult.set(result);
             if (isValid) {
-                showWarningInvalidFiatDecimalPlaces.set(!hasFiatValidDecimals(userInput));
+                showWarningInvalidFiatDecimalPlaces.set(!formatter.hasFiatValidDecimals(userInput));
                 setPriceToModel();
-                price.set(formatFiat(model.priceAsFiat.get()));
+                price.set(formatter.formatFiat(model.priceAsFiat.get()));
 
                 calculateVolume();
             }
@@ -270,16 +272,17 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
             InputValidator.ValidationResult result = isBtcInputValid(volume.get());
             volumeValidationResult.set(result);
             if (result.isValid) {
-                showWarningInvalidFiatDecimalPlaces.set(!hasFiatValidDecimals(userInput));
+                showWarningInvalidFiatDecimalPlaces.set(!formatter.hasFiatValidDecimals(userInput));
                 setVolumeToModel();
-                volume.set(formatFiat(model.volumeAsFiat.get()));
+                volume.set(formatter.formatFiat(model.volumeAsFiat.get()));
 
                 calculateAmount();
 
                 // must be placed after calculateAmount (btc value has been adjusted in case the calculation leads to 
                 // invalid decimal places for the amount value
-                showWarningAdjustedVolume.set(!formatFiat(parseToFiatWith2Decimals(userInput)).equals(volume
-                        .get()));
+                showWarningAdjustedVolume.set(!formatter.formatFiat(formatter.parseToFiatWith2Decimals(userInput))
+                        .equals(volume
+                                .get()));
             }
         }
     }
@@ -293,6 +296,9 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         return model.getWalletFacade();
     }
 
+    BSFormatter getFormatter() {
+        return formatter;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -342,10 +348,10 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         });
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
-        model.amountAsCoin.addListener((ov, oldValue, newValue) -> amount.set(formatCoin(newValue)));
-        model.minAmountAsCoin.addListener((ov, oldValue, newValue) -> minAmount.set(formatCoin(newValue)));
-        model.priceAsFiat.addListener((ov, oldValue, newValue) -> price.set(formatFiat(newValue)));
-        model.volumeAsFiat.addListener((ov, oldValue, newValue) -> volume.set(formatFiat(newValue)));
+        model.amountAsCoin.addListener((ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue)));
+        model.minAmountAsCoin.addListener((ov, oldValue, newValue) -> minAmount.set(formatter.formatCoin(newValue)));
+        model.priceAsFiat.addListener((ov, oldValue, newValue) -> price.set(formatter.formatFiat(newValue)));
+        model.volumeAsFiat.addListener((ov, oldValue, newValue) -> volume.set(formatter.formatFiat(newValue)));
 
         model.requestPlaceOfferErrorMessage.addListener((ov, oldValue, newValue) -> {
             if (newValue != null)
@@ -355,29 +361,29 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
                 (!newValue));
 
         // ObservableLists
-        model.acceptedCountries.addListener((Observable o) -> acceptedCountries.set(BSFormatter
+        model.acceptedCountries.addListener((Observable o) -> acceptedCountries.set(formatter
                 .countryLocalesToString(model.acceptedCountries)));
-        model.acceptedLanguages.addListener((Observable o) -> acceptedLanguages.set(BSFormatter
+        model.acceptedLanguages.addListener((Observable o) -> acceptedLanguages.set(formatter
                 .languageLocalesToString(model.acceptedLanguages)));
-        model.acceptedArbitrators.addListener((Observable o) -> acceptedArbitrators.set(BSFormatter
+        model.acceptedArbitrators.addListener((Observable o) -> acceptedArbitrators.set(formatter
                 .arbitratorsToString(model.acceptedArbitrators)));
     }
 
     private void setupBindings() {
-        totalToPay.bind(createStringBinding(() -> formatCoinWithCode(model.totalToPayAsCoin.get()),
+        totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.totalToPayAsCoin.get()),
                 model.totalToPayAsCoin));
-        collateral.bind(createStringBinding(() -> formatCoinWithCode(model.collateralAsCoin.get()),
+        collateral.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.collateralAsCoin.get()),
                 model.collateralAsCoin));
 
         collateralLabel.bind(Bindings.createStringBinding(() ->
                         BSResources.get("createOffer.fundsBox.collateral",
-                                BSFormatter.formatCollateralPercent(model.collateralAsLong.get())),
+                                formatter.formatCollateralPercent(model.collateralAsLong.get())),
                 model.collateralAsLong));
         totalToPayAsCoin.bind(model.totalToPayAsCoin);
 
-        offerFee.bind(createStringBinding(() -> formatCoinWithCode(model.offerFeeAsCoin.get()),
+        offerFee.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.offerFeeAsCoin.get()),
                 model.offerFeeAsCoin));
-        networkFee.bind(createStringBinding(() -> formatCoinWithCode(model.networkFeeAsCoin.get()),
+        networkFee.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.networkFeeAsCoin.get()),
                 model.offerFeeAsCoin));
 
         bankAccountType.bind(Bindings.createStringBinding(() -> BSResources.get(model.bankAccountType.get()),
@@ -418,19 +424,19 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     }
 
     private void setAmountToModel() {
-        model.amountAsCoin.set(parseToCoinWith4Decimals(amount.get()));
+        model.amountAsCoin.set(formatter.parseToCoinWith4Decimals(amount.get()));
     }
 
     private void setMinAmountToModel() {
-        model.minAmountAsCoin.set(parseToCoinWith4Decimals(minAmount.get()));
+        model.minAmountAsCoin.set(formatter.parseToCoinWith4Decimals(minAmount.get()));
     }
 
     private void setPriceToModel() {
-        model.priceAsFiat.set(parseToFiatWith2Decimals(price.get()));
+        model.priceAsFiat.set(formatter.parseToFiatWith2Decimals(price.get()));
     }
 
     private void setVolumeToModel() {
-        model.volumeAsFiat.set(parseToFiatWith2Decimals(volume.get()));
+        model.volumeAsFiat.set(formatter.parseToFiatWith2Decimals(volume.get()));
     }
 
     private void updateButtonDisableState() {

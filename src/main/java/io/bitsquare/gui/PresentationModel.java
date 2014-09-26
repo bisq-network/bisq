@@ -12,7 +12,6 @@ public class PresentationModel<T extends UIModel> {
         this.model = model;
     }
 
-    // TODO Still open question if we enforce a model or not? For small UIs it might be too much overhead.
     public PresentationModel() {
     }
 

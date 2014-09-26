@@ -32,6 +32,7 @@ class SeedWordsPM extends PresentationModel<SeedWordsModel> {
     private static final Logger log = LoggerFactory.getLogger(SeedWordsPM.class);
 
     final StringProperty seedWords = new SimpleStringProperty();
+    private BSFormatter formatter;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -39,8 +40,9 @@ class SeedWordsPM extends PresentationModel<SeedWordsModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private SeedWordsPM(SeedWordsModel model) {
+    private SeedWordsPM(SeedWordsModel model, BSFormatter formatter) {
         super(model);
+        this.formatter = formatter;
     }
 
 
@@ -54,7 +56,7 @@ class SeedWordsPM extends PresentationModel<SeedWordsModel> {
         super.initialize();
 
         if (model.getMnemonicCode() != null)
-            seedWords.set(BSFormatter.mnemonicCodeToString(model.getMnemonicCode()));
+            seedWords.set(formatter.mnemonicCodeToString(model.getMnemonicCode()));
     }
 
     @SuppressWarnings("EmptyMethod")

@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.account.content.registration;
 
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
 
 import com.google.bitcoin.core.Address;
@@ -36,7 +37,6 @@ import javafx.beans.property.StringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.gui.util.BSFormatter.formatCoinWithCode;
 
 class RegistrationPM extends PresentationModel<RegistrationModel> {
     private static final Logger log = LoggerFactory.getLogger(RegistrationPM.class);
@@ -47,6 +47,7 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
 
     // That is needed for the addressTextField
     final ObjectProperty<Address> address = new SimpleObjectProperty<>();
+    private BSFormatter formatter;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -54,8 +55,9 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private RegistrationPM(RegistrationModel model) {
+    private RegistrationPM(RegistrationModel model, BSFormatter formatter) {
         super(model);
+        this.formatter = formatter;
     }
 
 
@@ -124,6 +126,10 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
         return model.getWalletFacade();
     }
 
+    BSFormatter getFormatter() {
+        return formatter;
+    }
+
     Coin getFeeAsCoin() {
         return model.getFeeAsCoin();
     }
@@ -137,7 +143,7 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
     }
 
     String getFeeAsString() {
-        return formatCoinWithCode(model.getFeeAsCoin());
+        return formatter.formatCoinWithCode(model.getFeeAsCoin());
     }
 
     String getTransactionId() {
@@ -152,5 +158,6 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
     private void validateInput() {
         isPayButtonDisabled.set(!(model.isWalletFunded.get()));
     }
+
 
 }

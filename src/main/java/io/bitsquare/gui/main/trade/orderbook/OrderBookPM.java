@@ -38,12 +38,11 @@ import javafx.collections.transformation.SortedList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.gui.util.BSFormatter.*;
-
 class OrderBookPM extends PresentationModel<OrderBookModel> {
     private static final Logger log = LoggerFactory.getLogger(OrderBookPM.class);
 
     private final OptionalBtcValidator optionalBtcValidator;
+    private BSFormatter formatter;
     private final OptionalFiatValidator optionalFiatValidator;
 
     final StringProperty amount = new SimpleStringProperty();
@@ -61,11 +60,13 @@ class OrderBookPM extends PresentationModel<OrderBookModel> {
     @Inject
     OrderBookPM(OrderBookModel model,
                 OptionalFiatValidator optionalFiatValidator,
-                OptionalBtcValidator optionalBtcValidator) {
+                OptionalBtcValidator optionalBtcValidator,
+                BSFormatter formatter) {
         super(model);
 
         this.optionalFiatValidator = optionalFiatValidator;
         this.optionalBtcValidator = optionalBtcValidator;
+        this.formatter = formatter;
     }
 
 
@@ -108,9 +109,11 @@ class OrderBookPM extends PresentationModel<OrderBookModel> {
         });
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
-        model.amountAsCoinProperty().addListener((ov, oldValue, newValue) -> amount.set(formatCoin(newValue)));
-        model.priceAsFiatProperty().addListener((ov, oldValue, newValue) -> price.set(formatFiat(newValue)));
-        model.volumeAsFiatProperty().addListener((ov, oldValue, newValue) -> volume.set(formatFiat(newValue)));
+        model.amountAsCoinProperty().addListener((ov, oldValue, newValue) -> amount.set(formatter.formatCoin
+                (newValue)));
+        model.priceAsFiatProperty().addListener((ov, oldValue, newValue) -> price.set(formatter.formatFiat(newValue)));
+        model.volumeAsFiatProperty().addListener((ov, oldValue, newValue) -> volume.set(formatter.formatFiat
+                (newValue)));
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -183,17 +186,17 @@ class OrderBookPM extends PresentationModel<OrderBookModel> {
     }
 
     String getAmount(OrderBookListItem item) {
-        return (item != null) ? BSFormatter.formatCoin(item.getOffer().getAmount()) +
-                " (" + BSFormatter.formatCoin(item.getOffer().getMinAmount()) + ")" : "";
+        return (item != null) ? formatter.formatCoin(item.getOffer().getAmount()) +
+                " (" + formatter.formatCoin(item.getOffer().getMinAmount()) + ")" : "";
     }
 
     String getPrice(OrderBookListItem item) {
-        return (item != null) ? BSFormatter.formatFiat(item.getOffer().getPrice()) : "";
+        return (item != null) ? formatter.formatFiat(item.getOffer().getPrice()) : "";
     }
 
     String getVolume(OrderBookListItem item) {
-        return (item != null) ? BSFormatter.formatFiat(item.getOffer().getOfferVolume()) +
-                " (" + BSFormatter.formatFiat(item.getOffer().getMinOfferVolume()) + ")" : "";
+        return (item != null) ? formatter.formatFiat(item.getOffer().getOfferVolume()) +
+                " (" + formatter.formatFiat(item.getOffer().getMinOfferVolume()) + ")" : "";
     }
 
     String getBankAccountType(OrderBookListItem item) {
@@ -201,7 +204,7 @@ class OrderBookPM extends PresentationModel<OrderBookModel> {
     }
 
     String getDirectionLabel(Offer offer) {
-        return BSFormatter.formatDirection(offer.getMirroredDirection());
+        return formatter.formatDirection(offer.getMirroredDirection());
     }
 
     Direction getDirection() {
@@ -229,15 +232,15 @@ class OrderBookPM extends PresentationModel<OrderBookModel> {
     }
 
     private void setAmountToModel() {
-        model.setAmount(parseToCoinWith4Decimals(amount.get()));
+        model.setAmount(formatter.parseToCoinWith4Decimals(amount.get()));
     }
 
     private void setPriceToModel() {
-        model.setPrice(parseToFiatWith2Decimals(price.get()));
+        model.setPrice(formatter.parseToFiatWith2Decimals(price.get()));
     }
 
     private void setVolumeToModel() {
-        model.setVolume(parseToFiatWith2Decimals(volume.get()));
+        model.setVolume(formatter.parseToFiatWith2Decimals(volume.get()));
     }
 
 }

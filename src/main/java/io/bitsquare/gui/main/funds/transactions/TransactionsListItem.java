@@ -49,14 +49,14 @@ public class TransactionsListItem {
     private String addressString;
     private AddressConfidenceListener confidenceListener;
 
-    public TransactionsListItem(Transaction transaction, WalletFacade walletFacade) {
+    public TransactionsListItem(Transaction transaction, WalletFacade walletFacade, BSFormatter formatter) {
         this.walletFacade = walletFacade;
 
         Coin valueSentToMe = transaction.getValueSentToMe(walletFacade.getWallet());
         Coin valueSentFromMe = transaction.getValueSentFromMe(walletFacade.getWallet());
         Address address = null;
         if (valueSentToMe.isZero()) {
-            amount.set("-" + BSFormatter.formatCoin(valueSentFromMe));
+            amount.set("-" + formatter.formatCoin(valueSentFromMe));
 
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                 if (!transactionOutput.isMine(walletFacade.getWallet())) {
@@ -75,7 +75,7 @@ public class TransactionsListItem {
             }
         }
         else if (valueSentFromMe.isZero()) {
-            amount.set(BSFormatter.formatCoin(valueSentToMe));
+            amount.set(formatter.formatCoin(valueSentToMe));
             type.set("Received with");
 
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
@@ -93,7 +93,7 @@ public class TransactionsListItem {
             }
         }
         else {
-            amount.set(BSFormatter.formatCoin(valueSentToMe.subtract(valueSentFromMe)));
+            amount.set(formatter.formatCoin(valueSentToMe.subtract(valueSentFromMe)));
             boolean outgoing = false;
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                 if (!transactionOutput.isMine(walletFacade.getWallet())) {
@@ -119,7 +119,7 @@ public class TransactionsListItem {
             }
         }
 
-        date.set(BSFormatter.formatDateTime(transaction.getUpdateTime()));
+        date.set(formatter.formatDateTime(transaction.getUpdateTime()));
 
         // confidence
         progressIndicator = new ConfidenceProgressIndicator();

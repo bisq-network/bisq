@@ -24,6 +24,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
@@ -57,7 +58,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static io.bitsquare.gui.util.BSFormatter.reduceTo4Decimals;
 
 /**
  * Domain for that UI element.
@@ -71,6 +71,7 @@ class CreateOfferModel extends UIModel {
     private final WalletFacade walletFacade;
     private final Settings settings;
     private final User user;
+    private BSFormatter formatter;
 
     private final String offerId;
 
@@ -111,11 +112,13 @@ class CreateOfferModel extends UIModel {
 
     // non private for testing
     @Inject
-    public CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user) {
+    public CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user,
+                            BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
         this.settings = settings;
         this.user = user;
+        this.formatter = formatter;
 
         offerId = UUID.randomUUID().toString();
     }
@@ -228,7 +231,8 @@ class CreateOfferModel extends UIModel {
                     !volumeAsFiat.get().isZero() &&
                     !priceAsFiat.get().isZero()) {
                 // If we got a btc value with more then 4 decimals we convert it to max 4 decimals
-                amountAsCoin.set(reduceTo4Decimals(new ExchangeRate(priceAsFiat.get()).fiatToCoin(volumeAsFiat.get())));
+                amountAsCoin.set(formatter.reduceTo4Decimals(new ExchangeRate(priceAsFiat.get()).fiatToCoin
+                        (volumeAsFiat.get())));
 
                 calculateTotalToPay();
                 calculateCollateral();

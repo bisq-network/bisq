@@ -93,19 +93,19 @@ class OffersPM extends PresentationModel<OffersModel> {
     }
 
     String getAmount(OfferListItem item) {
-        return (item != null) ? BSFormatter.formatAmountWithMinAmount(item.getOffer()) : "";
+        return (item != null) ? formatter.formatAmountWithMinAmount(item.getOffer()) : "";
     }
 
     String getPrice(OfferListItem item) {
-        return (item != null) ? BSFormatter.formatFiat(item.getOffer().getPrice()) : "";
+        return (item != null) ? formatter.formatFiat(item.getOffer().getPrice()) : "";
     }
 
     String getVolume(OfferListItem item) {
-        return (item != null) ? BSFormatter.formatVolumeWithMinVolume(item.getOffer()) : "";
+        return (item != null) ? formatter.formatVolumeWithMinVolume(item.getOffer()) : "";
     }
 
     String getDirectionLabel(OfferListItem item) {
-        return (item != null) ? BSFormatter.formatDirection(item.getOffer().getMirroredDirection()) : "";
+        return (item != null) ? formatter.formatDirection(item.getOffer().getMirroredDirection()) : "";
     }
 
     String getDate(OfferListItem item) {

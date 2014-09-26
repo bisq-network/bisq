@@ -41,7 +41,6 @@ import javafx.beans.property.StringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.gui.util.BSFormatter.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 class TakeOfferPM extends PresentationModel<TakeOfferModel> {
@@ -67,6 +66,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
     final ObjectProperty<Address> address = new SimpleObjectProperty<>();
 
     private final BtcValidator btcValidator;
+    private BSFormatter formatter;
 
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty volume = new SimpleStringProperty();
@@ -94,10 +94,11 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
 
     // non private for testing
     @Inject
-    TakeOfferPM(TakeOfferModel model, BtcValidator btcValidator) {
+    TakeOfferPM(TakeOfferModel model, BtcValidator btcValidator, BSFormatter formatter) {
         super(model);
 
         this.btcValidator = btcValidator;
+        this.formatter = formatter;
     }
 
 
@@ -110,8 +111,8 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
         super.initialize();
 
         // static
-        offerFee = formatCoinWithCode(model.offerFeeAsCoin.get());
-        networkFee = formatCoinWithCode(model.networkFeeAsCoin.get());
+        offerFee = formatter.formatCoinWithCode(model.offerFeeAsCoin.get());
+        networkFee = formatter.formatCoinWithCode(model.networkFeeAsCoin.get());
 
         setupBindings();
         setupListeners();
@@ -157,9 +158,9 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
 
         //model.volumeAsFiat.set(offer.getVolumeByAmount(model.amountAsCoin.get()));
 
-        amountRange = BSFormatter.formatCoinWithCode(offer.getMinAmount()) + " - " +
-                BSFormatter.formatCoinWithCode(offer.getAmount());
-        price = BSFormatter.formatFiatWithCode(offer.getPrice());
+        amountRange = formatter.formatCoinWithCode(offer.getMinAmount()) + " - " +
+                formatter.formatCoinWithCode(offer.getAmount());
+        price = formatter.formatFiatWithCode(offer.getPrice());
 
         paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", offer.getId());
         if (model.getAddressEntry() != null) {
@@ -167,11 +168,11 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
             address.set(model.getAddressEntry().getAddress());
         }
         collateralLabel = BSResources.get("takeOffer.fundsBox.collateral",
-                BSFormatter.formatCollateralPercent(offer.getCollateral()));
+                formatter.formatCollateralPercent(offer.getCollateral()));
 
-        acceptedCountries = BSFormatter.countryLocalesToString(offer.getAcceptedCountries());
-        acceptedLanguages = BSFormatter.languageLocalesToString(offer.getAcceptedLanguageLocales());
-        acceptedArbitrators = BSFormatter.arbitratorsToString(offer.getArbitrators());
+        acceptedCountries = formatter.countryLocalesToString(offer.getAcceptedCountries());
+        acceptedLanguages = formatter.languageLocalesToString(offer.getAcceptedLanguageLocales());
+        acceptedArbitrators = formatter.arbitratorsToString(offer.getArbitrators());
         bankAccountType = BSResources.get(offer.getBankAccountType().toString());
         bankAccountCurrency = BSResources.get(offer.getCurrency().getDisplayName());
         bankAccountCounty = BSResources.get(offer.getBankAccountCountry().getName());
@@ -206,11 +207,11 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
             InputValidator.ValidationResult result = isBtcInputValid(amount.get());
             amountValidationResult.set(result);
             if (result.isValid) {
-                showWarningInvalidBtcDecimalPlaces.set(!hasBtcValidDecimals(userInput));
+                showWarningInvalidBtcDecimalPlaces.set(!formatter.hasBtcValidDecimals(userInput));
                 // only allow max 4 decimal places for btc values
                 setAmountToModel();
                 // reformat input
-                amount.set(formatCoin(model.amountAsCoin.get()));
+                amount.set(formatter.formatCoin(model.amountAsCoin.get()));
 
                 calculateVolume();
 
@@ -232,6 +233,10 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
 
     WalletFacade getWalletFacade() {
         return model.getWalletFacade();
+    }
+
+    BSFormatter getFormatter() {
+        return formatter;
     }
 
     String getOfferFee() {
@@ -318,7 +323,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
         });
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
-        model.amountAsCoin.addListener((ov, oldValue, newValue) -> amount.set(formatCoin(newValue)));
+        model.amountAsCoin.addListener((ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue)));
 
         model.requestTakeOfferErrorMessage.addListener((ov, oldValue, newValue) -> {
             if (newValue != null)
@@ -329,10 +334,11 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
     }
 
     private void setupBindings() {
-        volume.bind(createStringBinding(() -> formatFiatWithCode(model.volumeAsFiat.get()), model.volumeAsFiat));
-        totalToPay.bind(createStringBinding(() -> formatCoinWithCode(model.totalToPayAsCoin.get()),
+        volume.bind(createStringBinding(() -> formatter.formatFiatWithCode(model.volumeAsFiat.get()),
+                model.volumeAsFiat));
+        totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.totalToPayAsCoin.get()),
                 model.totalToPayAsCoin));
-        collateral.bind(createStringBinding(() -> formatCoinWithCode(model.collateralAsCoin.get()),
+        collateral.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.collateralAsCoin.get()),
                 model.collateralAsCoin));
 
         totalToPayAsCoin.bind(model.totalToPayAsCoin);
@@ -350,7 +356,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
     }
 
     private void setAmountToModel() {
-        model.amountAsCoin.set(parseToCoinWith4Decimals(amount.get()));
+        model.amountAsCoin.set(formatter.parseToCoinWith4Decimals(amount.get()));
     }
 
     private void updateButtonDisableState() {
@@ -364,4 +370,5 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
     private InputValidator.ValidationResult isBtcInputValid(String input) {
         return btcValidator.validate(input);
     }
+
 }

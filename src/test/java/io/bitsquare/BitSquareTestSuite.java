@@ -20,7 +20,6 @@ package io.bitsquare;
 import io.bitsquare.btc.RestrictionsTest;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferPMTest;
 import io.bitsquare.gui.util.BSFormatterTest;
-import io.bitsquare.gui.util.BitSquareConverterTest;
 import io.bitsquare.gui.util.validation.BtcValidatorTest;
 import io.bitsquare.gui.util.validation.FiatValidatorTest;
 import io.bitsquare.msg.P2PNodeTest;
@@ -31,7 +30,6 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         RestrictionsTest.class,
-        BitSquareConverterTest.class,
         P2PNodeTest.class,
         FiatValidatorTest.class,
         RestrictionsTest.class,

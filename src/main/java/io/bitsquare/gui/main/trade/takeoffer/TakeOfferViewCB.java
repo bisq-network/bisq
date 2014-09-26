@@ -168,7 +168,8 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
         volumeDescriptionLabel.setText(BSResources.get("takeOffer.amountPriceBox.volumeDescription",
                 presentationModel.getFiatCode()));
 
-        balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get());
+        balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get(),
+                presentationModel.getFormatter());
 
         buyLabel.setText(presentationModel.getDirectionLabel());
         amountRangeTextField.setText(presentationModel.getAmountRange());

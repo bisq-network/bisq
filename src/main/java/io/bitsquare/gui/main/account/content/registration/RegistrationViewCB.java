@@ -88,7 +88,8 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
         // TODO find better solution
         addressTextField.setOverlayManager(overlayManager);
 
-        balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get());
+        balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get(),
+                presentationModel.getFormatter());
 
         payButton.disableProperty().bind(presentationModel.isPayButtonDisabled);
 
