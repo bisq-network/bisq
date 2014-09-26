@@ -42,7 +42,7 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
 
     private static final Logger log = LoggerFactory.getLogger(AccountViewCB.class);
 
-    private Navigation navigation;
+    private final Navigation navigation;
     private Navigation.Listener listener;
 
     @FXML Tab tab;

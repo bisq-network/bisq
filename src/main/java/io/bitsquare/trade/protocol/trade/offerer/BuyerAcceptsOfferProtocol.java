@@ -347,7 +347,7 @@ public class BuyerAcceptsOfferProtocol {
 
         state = State.SetupListenerForBlockChainConfirmation;
         SetupListenerForBlockChainConfirmation.run(this::onResultSetupListenerForBlockChainConfirmation,
-                this::onFault, trade.getDepositTx(), listener);
+                trade.getDepositTx(), listener);
     }
 
     public void onResultSetupListenerForBlockChainConfirmation() {

@@ -70,7 +70,6 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     private final OptionalBtcValidator optionalBtcValidator;
     private final OptionalFiatValidator optionalFiatValidator;
 
-    private Navigation.Item navigationItem;
     private boolean detailsVisible;
     private boolean advancedScreenInited;
 
@@ -175,8 +174,6 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
     public void setDirection(Direction direction) {
         presentationModel.setDirection(direction);
-        navigationItem = (direction == Direction.BUY) ? Navigation.Item.BUY : Navigation.Item.SELL;
-
     }
 
 

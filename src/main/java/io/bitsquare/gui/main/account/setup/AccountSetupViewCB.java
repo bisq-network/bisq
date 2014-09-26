@@ -55,7 +55,7 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
     private static final Logger log = LoggerFactory.getLogger(AccountSetupViewCB.class);
 
     private WizardItem seedWords, password, fiatAccount, restrictions, registration;
-    private Navigation navigation;
+    private final Navigation navigation;
     private Navigation.Listener listener;
 
     @FXML VBox leftVBox;
@@ -83,8 +83,6 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
             if (navigationItems != null &&
                     navigationItems.length == 4 &&
                     navigationItems[2] == Navigation.Item.ACCOUNT_SETUP) {
-                log.debug("### " + navigationItems[3]);
-                //loadView(navigationItems[3]);
                 switch (navigationItems[3]) {
                     case SEED_WORDS:
                         childController = seedWords.show();
@@ -115,17 +113,17 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
             }
         };
 
-        seedWords = new WizardItem(navigation, this, "Backup wallet seed", "Write down the seed word for your wallet",
+        seedWords = new WizardItem(this, "Backup wallet seed", "Write down the seed word for your wallet",
                 Navigation.Item.SEED_WORDS);
-        password = new WizardItem(navigation, this, "Setup password", "Protect your wallet with a password",
+        password = new WizardItem(this, "Setup password", "Protect your wallet with a password",
                 Navigation.Item.ADD_PASSWORD);
-        restrictions = new WizardItem(navigation, this, "Setup your preferences",
+        restrictions = new WizardItem(this, "Setup your preferences",
                 "Define your preferences with whom you want to trade",
                 Navigation.Item.RESTRICTIONS);
-        fiatAccount = new WizardItem(navigation, this, " Setup Payments account(s)",
+        fiatAccount = new WizardItem(this, " Setup Payments account(s)",
                 "You need to add a payments account to your trading account",
                 Navigation.Item.FIAT_ACCOUNT);
-        registration = new WizardItem(navigation, this, "Register your account",
+        registration = new WizardItem(this, "Register your account",
                 "Pay in the registration fee of 0.0002 BTC and store your account in the BTC block chain",
                 Navigation.Item.REGISTRATION);
 
@@ -134,7 +132,6 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
         super.initialize(url, rb);
 
         navigation.addListener(listener);
-
         childController = seedWords.show();
     }
 
@@ -209,13 +206,11 @@ class WizardItem extends HBox {
     private final ImageView imageView;
     private final Label titleLabel;
     private final Label subTitleLabel;
-    private AccountSetupViewCB host;
+    private final AccountSetupViewCB host;
     private final Navigation.Item navigationItem;
-    private final Navigation navigation;
 
-    WizardItem(Navigation navigation, AccountSetupViewCB host, String title, String subTitle,
+    WizardItem(AccountSetupViewCB host, String title, String subTitle,
                Navigation.Item navigationItem) {
-        this.navigation = navigation;
         this.host = host;
         this.navigationItem = navigationItem;
 

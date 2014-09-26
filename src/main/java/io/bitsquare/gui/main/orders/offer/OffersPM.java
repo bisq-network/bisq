@@ -27,9 +27,9 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffersPM extends PresentationModel<OffersModel> {
+class OffersPM extends PresentationModel<OffersModel> {
     private static final Logger log = LoggerFactory.getLogger(OffersPM.class);
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -46,23 +46,22 @@ public class OffersPM extends PresentationModel<OffersModel> {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize() {
-
         super.initialize();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();
-
     }
 
     @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
-
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -88,9 +87,9 @@ public class OffersPM extends PresentationModel<OffersModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
-    
+
     String getTradeId(OfferListItem item) {
-        return item.getOfferId();
+        return item.getOffer().getId();
     }
 
     String getAmount(OfferListItem item) {

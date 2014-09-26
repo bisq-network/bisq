@@ -36,13 +36,13 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ChangePasswordViewCB extends CachedViewCB<ChangePasswordPM> implements ContextAware {
+public class ChangePasswordViewCB extends CachedViewCB<ChangePasswordPM> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(ChangePasswordViewCB.class);
 
     @FXML HBox buttonsHBox;
     @FXML Button saveButton, skipButton;
-    @FXML PasswordField passwordField, repeatedPasswordField;
+    @FXML PasswordField oldPasswordField, passwordField, repeatedPasswordField;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

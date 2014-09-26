@@ -284,11 +284,11 @@ public class BSFormatter {
     }
 
     public static String countryLocalesToString(List<Country> countries) {
-        return countries.stream().map(e -> e.getName()).collect(Collectors.joining(", "));
+        return countries.stream().map(Country::getName).collect(Collectors.joining(", "));
     }
 
     public static String arbitratorsToString(List<Arbitrator> arbitrators) {
-        return arbitrators.stream().map(e -> e.getName()).collect(Collectors.joining(", "));
+        return arbitrators.stream().map(Arbitrator::getName).collect(Collectors.joining(", "));
     }
 
     public static String languageLocalesToString(List<Locale> languageLocales) {
@@ -334,6 +334,7 @@ public class BSFormatter {
         input = input.replace(",", ".");
         // don't use String.valueOf(Double.parseDouble(input)) as return value as it gives scientific 
         // notation (1.0E-6) which screw up coinFormat.parse
+        //noinspection ResultOfMethodCallIgnored
         Double.parseDouble(input);
         return input;
     }

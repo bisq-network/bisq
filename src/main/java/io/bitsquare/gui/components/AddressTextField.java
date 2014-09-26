@@ -58,7 +58,7 @@ public class AddressTextField extends AnchorPane {
 
     private final StringProperty address = new SimpleStringProperty();
     private final StringProperty paymentLabel = new SimpleStringProperty();
-    public final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
+    private final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     private OverlayManager overlayManager;
 
 
@@ -81,9 +81,7 @@ public class AddressTextField extends AnchorPane {
             }
         });
         addressLabel.focusTraversableProperty().set(focusTraversableProperty().get());
-        focusedProperty().addListener((ov, oldValue, newValue) -> {
-            addressLabel.requestFocus();
-        });
+        focusedProperty().addListener((ov, oldValue, newValue) -> addressLabel.requestFocus());
 
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);

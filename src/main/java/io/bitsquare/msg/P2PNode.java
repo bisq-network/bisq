@@ -139,39 +139,37 @@ public class P2PNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // The data and the domain are protected by that key pair.
-    public FuturePut putDomainProtectedData(Number160 locationKey, Data data)
-            throws IOException, ClassNotFoundException {
+    public FuturePut putDomainProtectedData(Number160 locationKey, Data data) {
         data.protectEntry(keyPair);
         final Number160 ownerKeyHash = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
         return peerDHT.put(locationKey).data(data).keyPair(keyPair).domainKey(ownerKeyHash).protectDomain().start();
     }
 
     // No protection, everybody can write.
-    public FuturePut putData(Number160 locationKey, Data data) throws IOException, ClassNotFoundException {
+    public FuturePut putData(Number160 locationKey, Data data) {
         return peerDHT.put(locationKey).data(data).start();
     }
 
     // Not public readable. Only users with the public key of the peer who stored the data can read that data
-    public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey)
-            throws IOException, ClassNotFoundException {
+    public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey) {
         final Number160 ownerKeyHash = Utils.makeSHAHash(publicKey.getEncoded());
         return peerDHT.get(locationKey).domainKey(ownerKeyHash).start();
     }
 
     // No protection, everybody can read.
-    public FutureGet getData(Number160 locationKey) throws IOException, ClassNotFoundException {
+    public FutureGet getData(Number160 locationKey) {
         return peerDHT.get(locationKey).start();
     }
 
     // No domain protection, but entry protection
-    public FuturePut addProtectedData(Number160 locationKey, Data data) throws IOException, ClassNotFoundException {
+    public FuturePut addProtectedData(Number160 locationKey, Data data) {
         data.protectEntry(keyPair);
         log.trace("addProtectedData with contentKey " + data.hash().toString());
         return peerDHT.add(locationKey).data(data).keyPair(keyPair).start();
     }
 
     // No domain protection, but entry protection
-    public FutureRemove removeFromDataMap(Number160 locationKey, Data data) throws IOException, ClassNotFoundException {
+    public FutureRemove removeFromDataMap(Number160 locationKey, Data data) {
         Number160 contentKey = data.hash();
         log.trace("removeFromDataMap with contentKey " + contentKey.toString());
         return peerDHT.remove(locationKey).contentKey(contentKey).keyPair(keyPair).start();
@@ -242,7 +240,7 @@ public class P2PNode {
                     else {
                         log.error("peerDHT is null");
                     }
-                } catch (IOException | ClassNotFoundException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                     log.error(e.toString());
                 }
@@ -275,7 +273,7 @@ public class P2PNode {
                 if (peerDHT != null && !storedPeerAddress.equals(peerDHT.peerAddress())) {
                     try {
                         storePeerAddress();
-                    } catch (IOException | ClassNotFoundException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                         log.error(e.toString());
                     }
@@ -284,7 +282,7 @@ public class P2PNode {
         }, checkIfIPChangedPeriod, checkIfIPChangedPeriod);
     }
 
-    private FuturePut storePeerAddress() throws IOException, ClassNotFoundException {
+    private FuturePut storePeerAddress() throws IOException {
         Number160 locationKey = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
         Data data = new Data(peerDHT.peerAddress());
         return putDomainProtectedData(locationKey, data);

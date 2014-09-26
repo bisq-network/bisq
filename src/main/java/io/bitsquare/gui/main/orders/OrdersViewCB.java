@@ -43,8 +43,8 @@ import org.slf4j.LoggerFactory;
 public class OrdersViewCB extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(OrdersViewCB.class);
 
-    private Navigation navigation;
-    private TradeManager tradeManager;
+    private final Navigation navigation;
+    private final TradeManager tradeManager;
     private Navigation.Listener navigationListener;
 
     @FXML Tab offersTab, pendingTradesTab, closedTradesTab;
@@ -71,16 +71,12 @@ public class OrdersViewCB extends CachedViewCB {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         navigationListener = navigationItems -> {
-            if (navigationItems != null && navigationItems.length == 3 && navigationItems[1] == Navigation.Item
-                    .ORDERS) {
-                log.debug("####  Orders " + navigationItems[2]);
+            if (navigationItems != null && navigationItems.length == 3
+                    && navigationItems[1] == Navigation.Item.ORDERS)
                 loadView(navigationItems[2]);
-            }
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-
-            log.debug("####  newValue " + newValue.getText());
             if (newValue == offersTab)
                 navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.OFFERS);
             else if (newValue == pendingTradesTab)

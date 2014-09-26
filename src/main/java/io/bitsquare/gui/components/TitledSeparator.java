@@ -30,8 +30,7 @@ public class TitledSeparator extends Pane {
     private static final Logger log = LoggerFactory.getLogger(TitledSeparator.class);
 
     private final Label label;
-    private final Separator separator;
-    private StringProperty text = new SimpleStringProperty();
+    private final StringProperty text = new SimpleStringProperty();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -41,7 +40,7 @@ public class TitledSeparator extends Pane {
         GridPane.setMargin(this, new Insets(-10, -10, -10, -10));
         GridPane.setColumnSpan(this, 2);
 
-        separator = new Separator();
+        Separator separator = new Separator();
         separator.prefWidthProperty().bind(widthProperty());
         separator.setLayoutX(0);
         separator.setLayoutY(6);

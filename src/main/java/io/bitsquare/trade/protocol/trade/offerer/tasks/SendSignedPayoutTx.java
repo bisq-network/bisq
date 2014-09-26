@@ -51,7 +51,7 @@ public class SendSignedPayoutTx {
         log.trace("Run task");
         try {
             Coin offererPaybackAmount = tradeAmount.add(collateral);
-            Coin takerPaybackAmount = collateral;
+            @SuppressWarnings("UnnecessaryLocalVariable") Coin takerPaybackAmount = collateral;
 
             Pair<ECKey.ECDSASignature, String> result = walletFacade.offererCreatesAndSignsPayoutTx(
                     depositTransactionId, offererPaybackAmount, takerPaybackAmount, takerPayoutAddress, tradeId);

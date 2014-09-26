@@ -58,3 +58,15 @@ public class NetworkSyncPane extends HBox {
         fade.setOnFinished(e -> getChildren().clear());
     }
 }
+
+class HSpacer extends Pane {
+    public HSpacer(double width) {
+        setPrefWidth(width);
+    }
+
+    @Override
+    protected double computePrefWidth(double width) {
+        return getPrefWidth();
+    }
+}
+

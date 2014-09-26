@@ -60,9 +60,7 @@ public class TextFieldWithCopyIcon extends AnchorPane {
         AnchorPane.setRightAnchor(txIdLabel, 30.0);
         AnchorPane.setLeftAnchor(txIdLabel, 0.0);
         txIdLabel.focusTraversableProperty().set(focusTraversableProperty().get());
-        focusedProperty().addListener((ov, oldValue, newValue) -> {
-            txIdLabel.requestFocus();
-        });
+        focusedProperty().addListener((ov, oldValue, newValue) -> txIdLabel.requestFocus());
 
         getChildren().addAll(txIdLabel, copyIcon);
     }

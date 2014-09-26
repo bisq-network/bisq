@@ -30,7 +30,7 @@ public class TitledGroupBg extends Pane {
     private static final Logger log = LoggerFactory.getLogger(TitledGroupBg.class);
 
     private final Label label;
-    private StringProperty text = new SimpleStringProperty();
+    private final StringProperty text = new SimpleStringProperty();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor

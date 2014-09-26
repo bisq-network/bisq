@@ -89,9 +89,6 @@ class PendingTradesModel extends UIModel {
         faultChangeListener = (ov, oldValue, newValue) -> fault.set(newValue);
 
         mapChangeListener = change -> {
-            log.debug("######## " + change);
-            log.debug("######## " + change.getValueAdded());
-            log.debug("######## " + change.getValueRemoved());
             if (change.wasAdded())
                 list.add(new PendingTradesListItem(change.getValueAdded()));
             else if (change.wasRemoved())

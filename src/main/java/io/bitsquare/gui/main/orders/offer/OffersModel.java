@@ -32,12 +32,12 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffersModel extends UIModel {
+class OffersModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(OffersModel.class);
 
-    private TradeManager tradeManager;
+    private final TradeManager tradeManager;
 
-    private ObservableList<OfferListItem> list = FXCollections.observableArrayList();
+    private final ObservableList<OfferListItem> list = FXCollections.observableArrayList();
     private MapChangeListener<String, Offer> offerMapChangeListener;
 
 
@@ -61,7 +61,7 @@ public class OffersModel extends UIModel {
             if (change.wasAdded())
                 list.add(new OfferListItem(change.getValueAdded()));
             else if (change.wasRemoved())
-                list.removeIf(e -> e.getOfferId().equals(change.getValueRemoved().getId()));
+                list.removeIf(e -> e.getOffer().getId().equals(change.getValueRemoved().getId()));
         };
 
         super.initialize();

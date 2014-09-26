@@ -47,9 +47,8 @@ public class TransactionsController extends CachedViewController {
     private ObservableList<TransactionsListItem> transactionsListItems;
 
     @FXML TableView<TransactionsListItem> tableView;
-    @FXML TableColumn<String, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn,
+    @FXML TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn,
             confidenceColumn;
-    @FXML Button addNewAddressButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -112,14 +111,15 @@ public class TransactionsController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setAddressColumnCellFactory() {
-        addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
+        addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         addressColumn.setCellFactory(
-                new Callback<TableColumn<String, TransactionsListItem>, TableCell<String, TransactionsListItem>>() {
+                new Callback<TableColumn<TransactionsListItem, TransactionsListItem>, TableCell<TransactionsListItem,
+                        TransactionsListItem>>() {
 
                     @Override
-                    public TableCell<String, TransactionsListItem> call(TableColumn<String,
+                    public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
                             TransactionsListItem> column) {
-                        return new TableCell<String, TransactionsListItem>() {
+                        return new TableCell<TransactionsListItem, TransactionsListItem>() {
                             Hyperlink hyperlink;
 
                             @Override
@@ -145,14 +145,15 @@ public class TransactionsController extends CachedViewController {
 
     private void setConfidenceColumnCellFactory() {
         confidenceColumn.setCellValueFactory((addressListItem) ->
-                new ReadOnlyObjectWrapper(addressListItem.getValue()));
+                new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         confidenceColumn.setCellFactory(
-                new Callback<TableColumn<String, TransactionsListItem>, TableCell<String, TransactionsListItem>>() {
+                new Callback<TableColumn<TransactionsListItem, TransactionsListItem>, TableCell<TransactionsListItem,
+                        TransactionsListItem>>() {
 
                     @Override
-                    public TableCell<String, TransactionsListItem> call(TableColumn<String,
+                    public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
                             TransactionsListItem> column) {
-                        return new TableCell<String, TransactionsListItem>() {
+                        return new TableCell<TransactionsListItem, TransactionsListItem>() {
 
                             @Override
                             public void updateItem(final TransactionsListItem item, boolean empty) {

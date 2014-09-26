@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 
+
 public class MsgController extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(MsgController.class);
 
@@ -49,22 +50,25 @@ public class MsgController extends CachedViewCB {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void terminate() {
         super.terminate();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();

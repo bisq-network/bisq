@@ -40,8 +40,7 @@ public class DSAKeyUtil {
         try {
             final KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA");
             keyGen.initialize(1024);
-            KeyPair generatedKeyPair = keyGen.genKeyPair();
-            return generatedKeyPair;
+            return keyGen.genKeyPair();
         } catch (NoSuchAlgorithmException e) {
             log.error(e.toString());
         }

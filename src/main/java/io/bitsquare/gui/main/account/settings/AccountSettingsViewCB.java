@@ -51,7 +51,7 @@ public class AccountSettingsViewCB extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(AccountSettingsViewCB.class);
 
     private MenuItem seedWords, password, restrictions, fiatAccount, registration;
-    private Navigation navigation;
+    private final Navigation navigation;
     private Navigation.Listener listener;
 
     @FXML VBox leftVBox;
@@ -117,8 +117,7 @@ public class AccountSettingsViewCB extends CachedViewCB {
                     Navigation.Item.ACCOUNT_SETTINGS, Navigation.Item.SEED_WORDS);
         }
         else {
-            if (items != null &&
-                    items.length == 4 &&
+            if (items.length == 4 &&
                     items[2] == Navigation.Item.ACCOUNT_SETTINGS) {
                 loadView(items[3]);
                 selectMainMenuButton(items[3]);

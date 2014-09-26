@@ -260,6 +260,7 @@ class CreateOfferModel extends UIModel {
         }
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean isMinAmountLessOrEqualAmount() {
         //noinspection SimplifiableIfStatement
         if (minAmountAsCoin.get() != null && amountAsCoin.get() != null)

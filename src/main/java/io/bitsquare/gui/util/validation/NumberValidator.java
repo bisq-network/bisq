@@ -44,6 +44,7 @@ public abstract class NumberValidator extends InputValidator {
 
     protected ValidationResult validateIfNumber(String input) {
         try {
+            //noinspection ResultOfMethodCallIgnored
             Double.parseDouble(input);
             return new ValidationResult(true);
         } catch (Exception e) {

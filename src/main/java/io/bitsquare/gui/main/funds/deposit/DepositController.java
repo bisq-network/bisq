@@ -51,7 +51,7 @@ public class DepositController extends CachedViewController {
     private ObservableList<DepositListItem> addressList;
 
     @FXML TableView<DepositListItem> tableView;
-    @FXML TableColumn<String, DepositListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
+    @FXML TableColumn<DepositListItem, DepositListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
             confidenceColumn;
 
 
@@ -117,13 +117,15 @@ public class DepositController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setLabelColumnCellFactory() {
-        labelColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        labelColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String,
-                DepositListItem>>() {
+        labelColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        labelColumn.setCellFactory(new Callback<TableColumn<DepositListItem, DepositListItem>,
+                TableCell<DepositListItem,
+                        DepositListItem>>() {
 
             @Override
-            public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
-                return new TableCell<String, DepositListItem>() {
+            public TableCell<DepositListItem, DepositListItem> call(TableColumn<DepositListItem,
+                    DepositListItem> column) {
+                return new TableCell<DepositListItem, DepositListItem>() {
 
                     Hyperlink hyperlink;
 
@@ -154,13 +156,15 @@ public class DepositController extends CachedViewController {
     }
 
     private void setBalanceColumnCellFactory() {
-        balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
+        balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         balanceColumn.setCellFactory(
-                new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>() {
+                new Callback<TableColumn<DepositListItem, DepositListItem>, TableCell<DepositListItem,
+                        DepositListItem>>() {
 
                     @Override
-                    public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
-                        return new TableCell<String, DepositListItem>() {
+                    public TableCell<DepositListItem, DepositListItem> call(TableColumn<DepositListItem,
+                            DepositListItem> column) {
+                        return new TableCell<DepositListItem, DepositListItem>() {
                             @Override
                             public void updateItem(final DepositListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -178,13 +182,15 @@ public class DepositController extends CachedViewController {
     }
 
     private void setCopyColumnCellFactory() {
-        copyColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
+        copyColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         copyColumn.setCellFactory(
-                new Callback<TableColumn<String, DepositListItem>, TableCell<String, DepositListItem>>() {
+                new Callback<TableColumn<DepositListItem, DepositListItem>, TableCell<DepositListItem,
+                        DepositListItem>>() {
 
                     @Override
-                    public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
-                        return new TableCell<String, DepositListItem>() {
+                    public TableCell<DepositListItem, DepositListItem> call(TableColumn<DepositListItem,
+                            DepositListItem> column) {
+                        return new TableCell<DepositListItem, DepositListItem>() {
                             final Label copyIcon = new Label();
 
                             {
@@ -217,14 +223,16 @@ public class DepositController extends CachedViewController {
     }
 
     private void setConfidenceColumnCellFactory() {
-        confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue
+        confidenceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue
                 ()));
-        confidenceColumn.setCellFactory(new Callback<TableColumn<String, DepositListItem>, TableCell<String,
-                DepositListItem>>() {
+        confidenceColumn.setCellFactory(new Callback<TableColumn<DepositListItem, DepositListItem>,
+                TableCell<DepositListItem,
+                        DepositListItem>>() {
 
             @Override
-            public TableCell<String, DepositListItem> call(TableColumn<String, DepositListItem> column) {
-                return new TableCell<String, DepositListItem>() {
+            public TableCell<DepositListItem, DepositListItem> call(TableColumn<DepositListItem,
+                    DepositListItem> column) {
+                return new TableCell<DepositListItem, DepositListItem>() {
 
                     @Override
                     public void updateItem(final DepositListItem item, boolean empty) {

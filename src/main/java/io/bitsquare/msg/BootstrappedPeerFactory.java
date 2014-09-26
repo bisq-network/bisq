@@ -292,7 +292,7 @@ public class BootstrappedPeerFactory {
                     log.debug("Start setup relay was successful.");
                     futureRelay.relays().forEach(e -> log.debug("remotePeer = " + e.remotePeer()));
 
-                    findNeighbors2(peerDHT, nodeBehindNat, bootstrapAddress);
+                    findNeighbors2(peerDHT, bootstrapAddress);
                 }
                 else {
                     log.error("setupRelay failed. Reason: " + futureRelay.failedReason());
@@ -314,7 +314,7 @@ public class BootstrappedPeerFactory {
         });
     }
 
-    private void findNeighbors2(PeerDHT peerDHT, PeerNAT nodeBehindNat, PeerAddress bootstrapAddress) {
+    private void findNeighbors2(PeerDHT peerDHT, PeerAddress bootstrapAddress) {
         // find neighbors again
         FutureBootstrap futureBootstrap2 = peerDHT.peer().bootstrap().peerAddress(bootstrapAddress).start();
         BootstrappedPeerFactory ref = this;

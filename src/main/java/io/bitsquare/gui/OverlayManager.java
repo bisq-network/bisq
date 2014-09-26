@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 public class OverlayManager {
     private static final Logger log = LoggerFactory.getLogger(OverlayManager.class);
 
-    private List<OverlayListener> listeners = new ArrayList<>();
+    private final List<OverlayListener> listeners = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -40,11 +40,11 @@ public class OverlayManager {
     }
 
     public void blurContent() {
-        listeners.stream().forEach((e) -> e.onBlurContentRequested());
+        listeners.stream().forEach(OverlayListener::onBlurContentRequested);
     }
 
     public void removeBlurContent() {
-        listeners.stream().forEach((e) -> e.onRemoveBlurContentRequested());
+        listeners.stream().forEach(OverlayListener::onRemoveBlurContentRequested);
     }
 
     public void addListener(OverlayListener listener) {

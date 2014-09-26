@@ -22,7 +22,10 @@ import io.bitsquare.trade.Trade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ClosedTradesListItem {
+/**
+ * We could remove that wrapper if it is not needed for additional UI only fields.
+ */
+class ClosedTradesListItem {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradesListItem.class);
 
     private final Trade trade;

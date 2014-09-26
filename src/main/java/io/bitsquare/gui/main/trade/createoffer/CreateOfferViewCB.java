@@ -77,8 +77,8 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferViewCB.class);
 
 
-    private Navigation navigation;
-    private OverlayManager overlayManager;
+    private final Navigation navigation;
+    private final OverlayManager overlayManager;
     private CloseListener closeListener;
 
     private boolean detailsVisible;

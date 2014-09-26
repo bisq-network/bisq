@@ -55,6 +55,8 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 
+import org.jetbrains.annotations.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +68,7 @@ public class WithdrawalController extends CachedViewController {
     private ObservableList<WithdrawalListItem> addressList;
 
     @FXML TableView<WithdrawalListItem> tableView;
-    @FXML TableColumn<String, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
+    @FXML TableColumn<WithdrawalListItem, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
             confidenceColumn;
     @FXML Button addNewAddressButton;
     @FXML TextField withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField;
@@ -156,12 +158,12 @@ public class WithdrawalController extends CachedViewController {
                         BitSquareValidator.resetTextFields(
                                 withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField);
                         if (transaction != null) {
-                            log.info("onWithdraw onSuccess txid:" + transaction.getHashAsString());
+                            log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
                         }
                     }
 
                     @Override
-                    public void onFailure(Throwable t) {
+                    public void onFailure(@NotNull Throwable t) {
                         log.debug("onWithdraw onFailure");
                     }
                 };
@@ -213,13 +215,15 @@ public class WithdrawalController extends CachedViewController {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setLabelColumnCellFactory() {
-        labelColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
-        labelColumn.setCellFactory(new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String,
-                WithdrawalListItem>>() {
+        labelColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        labelColumn.setCellFactory(new Callback<TableColumn<WithdrawalListItem, WithdrawalListItem>,
+                TableCell<WithdrawalListItem,
+                        WithdrawalListItem>>() {
 
             @Override
-            public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column) {
-                return new TableCell<String, WithdrawalListItem>() {
+            public TableCell<WithdrawalListItem, WithdrawalListItem> call(TableColumn<WithdrawalListItem,
+                    WithdrawalListItem> column) {
+                return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
 
                     Hyperlink hyperlink;
 
@@ -250,13 +254,15 @@ public class WithdrawalController extends CachedViewController {
     }
 
     private void setBalanceColumnCellFactory() {
-        balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
+        balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         balanceColumn.setCellFactory(
-                new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>() {
+                new Callback<TableColumn<WithdrawalListItem, WithdrawalListItem>, TableCell<WithdrawalListItem,
+                        WithdrawalListItem>>() {
 
                     @Override
-                    public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column) {
-                        return new TableCell<String, WithdrawalListItem>() {
+                    public TableCell<WithdrawalListItem, WithdrawalListItem> call(TableColumn<WithdrawalListItem,
+                            WithdrawalListItem> column) {
+                        return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
                             @Override
                             public void updateItem(final WithdrawalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -268,13 +274,15 @@ public class WithdrawalController extends CachedViewController {
     }
 
     private void setCopyColumnCellFactory() {
-        copyColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper(addressListItem.getValue()));
+        copyColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         copyColumn.setCellFactory(
-                new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>() {
+                new Callback<TableColumn<WithdrawalListItem, WithdrawalListItem>, TableCell<WithdrawalListItem,
+                        WithdrawalListItem>>() {
 
                     @Override
-                    public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column) {
-                        return new TableCell<String, WithdrawalListItem>() {
+                    public TableCell<WithdrawalListItem, WithdrawalListItem> call(TableColumn<WithdrawalListItem,
+                            WithdrawalListItem> column) {
+                        return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
                             final Label copyIcon = new Label();
 
                             {
@@ -308,13 +316,15 @@ public class WithdrawalController extends CachedViewController {
 
     private void setConfidenceColumnCellFactory() {
         confidenceColumn.setCellValueFactory((addressListItem) ->
-                new ReadOnlyObjectWrapper(addressListItem.getValue()));
+                new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         confidenceColumn.setCellFactory(
-                new Callback<TableColumn<String, WithdrawalListItem>, TableCell<String, WithdrawalListItem>>() {
+                new Callback<TableColumn<WithdrawalListItem, WithdrawalListItem>, TableCell<WithdrawalListItem,
+                        WithdrawalListItem>>() {
 
                     @Override
-                    public TableCell<String, WithdrawalListItem> call(TableColumn<String, WithdrawalListItem> column) {
-                        return new TableCell<String, WithdrawalListItem>() {
+                    public TableCell<WithdrawalListItem, WithdrawalListItem> call(TableColumn<WithdrawalListItem,
+                            WithdrawalListItem> column) {
+                        return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
 
                             @Override
                             public void updateItem(final WithdrawalListItem item, boolean empty) {

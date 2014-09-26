@@ -30,12 +30,12 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ClosedTradesModel extends UIModel {
+class ClosedTradesModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradesModel.class);
 
-    private TradeManager tradeManager;
+    private final TradeManager tradeManager;
 
-    private ObservableList<ClosedTradesListItem> list = FXCollections.observableArrayList();
+    private final ObservableList<ClosedTradesListItem> list = FXCollections.observableArrayList();
     private MapChangeListener<String, Trade> mapChangeListener;
 
 

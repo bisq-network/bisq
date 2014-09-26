@@ -67,6 +67,7 @@ class PasswordPM extends PresentationModel<PasswordModel> {
         super.initialize();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();

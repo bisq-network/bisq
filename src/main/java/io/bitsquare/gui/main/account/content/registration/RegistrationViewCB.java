@@ -53,7 +53,7 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
 
     private static final Logger log = LoggerFactory.getLogger(RegistrationViewCB.class);
 
-    private OverlayManager overlayManager;
+    private final OverlayManager overlayManager;
 
     @FXML TextField feeTextField;
     @FXML AddressTextField addressTextField;

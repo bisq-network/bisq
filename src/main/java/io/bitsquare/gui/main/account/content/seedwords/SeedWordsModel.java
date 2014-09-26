@@ -54,6 +54,7 @@ class SeedWordsModel extends UIModel {
         super.initialize();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();

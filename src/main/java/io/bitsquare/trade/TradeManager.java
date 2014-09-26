@@ -45,13 +45,13 @@ import com.google.bitcoin.core.Coin;
 import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.utils.Fiat;
 
-import java.io.IOException;
-
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Inject;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 
@@ -88,6 +88,7 @@ public class TradeManager {
 
     // the latest pending trade
     private Trade currentPendingTrade;
+    final StringProperty featureNotImplementedWarning = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -106,17 +107,17 @@ public class TradeManager {
         this.cryptoFacade = cryptoFacade;
 
         Object offersObject = persistence.read(this, "offers");
-        if (offersObject instanceof HashMap) {
+        if (offersObject instanceof Map) {
             offers.putAll((Map<String, Offer>) offersObject);
         }
 
         Object pendingTradesObject = persistence.read(this, "pendingTrades");
-        if (pendingTradesObject instanceof HashMap) {
+        if (pendingTradesObject instanceof Map) {
             pendingTrades.putAll((Map<String, Trade>) pendingTradesObject);
         }
 
         Object closedTradesObject = persistence.read(this, "closedTrades");
-        if (closedTradesObject instanceof HashMap) {
+        if (closedTradesObject instanceof Map) {
             closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
 
@@ -192,7 +193,7 @@ public class TradeManager {
         }
     }
 
-    private void addOffer(Offer offer) throws IOException {
+    private void addOffer(Offer offer) {
         if (offers.containsKey(offer.getId()))
             log.error("An offer with the id " + offer.getId() + " already exists. ");
 
@@ -395,12 +396,9 @@ public class TradeManager {
             persistPendingTrades();
         }
         else {
-            // For usability tests we don't want to crash
-            //TODO move to gui package
-           /* Popups.openWarningPopup("Sorry, you cannot continue. You have restarted the application in the meantime
-           . " +
-         
-                    "Interruption of the trade process is not supported yet. Will need more time to be implemented.");*/
+            featureNotImplementedWarning.set("Sorry, you cannot continue. You have restarted the application in the " +
+                    "meantime. Interruption of the trade process is not supported yet. Will need more time to be " +
+                    "implemented.");
         }
     }
 
@@ -460,6 +458,15 @@ public class TradeManager {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setFeatureNotImplementedWarning(String featureNotImplementedWarning) {
+        this.featureNotImplementedWarning.set(featureNotImplementedWarning);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -479,6 +486,13 @@ public class TradeManager {
         return currentPendingTrade;
     }
 
+    public String getFeatureNotImplementedWarning() {
+        return featureNotImplementedWarning.get();
+    }
+
+    public StringProperty featureNotImplementedWarningProperty() {
+        return featureNotImplementedWarning;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

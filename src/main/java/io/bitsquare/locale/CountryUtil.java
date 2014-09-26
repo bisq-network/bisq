@@ -88,8 +88,8 @@ public class CountryUtil {
         List<Country> allEuroCountries = new ArrayList<>();
         String[] code = {"BE", "DE", "EE", "FI", "FR", "GR", "IE", "IT", "LV", "LU", "MT", "NL", "PT", "SK", "SI",
                 "ES", "AT", "CY"};
-        for (int i = 0; i < code.length; i++) {
-            Locale locale = new Locale("", code[i], "");
+        for (String aCode : code) {
+            Locale locale = new Locale("", aCode, "");
             String regionCode = getRegionCode(locale.getCountry());
             final Region region = new Region(regionCode, getRegionName(regionCode));
             final Country country = new Country(locale.getCountry(), locale.getDisplayCountry(), region);

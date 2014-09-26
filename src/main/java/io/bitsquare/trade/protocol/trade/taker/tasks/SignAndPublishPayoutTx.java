@@ -26,6 +26,8 @@ import com.google.bitcoin.core.Utils;
 
 import com.google.common.util.concurrent.FutureCallback;
 
+import org.jetbrains.annotations.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +63,7 @@ public class SignAndPublishPayoutTx {
                         }
 
                         @Override
-                        public void onFailure(Throwable t) {
+                        public void onFailure(@NotNull Throwable t) {
                             log.error("Exception at takerSignsAndSendsTx " + t);
                             exceptionHandler.onError(t);
                         }

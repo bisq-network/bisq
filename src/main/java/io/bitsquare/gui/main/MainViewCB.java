@@ -27,6 +27,7 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.util.ViewLoader;
 
 import java.io.IOException;
@@ -76,11 +77,18 @@ public class MainViewCB extends ViewCB<MainPM> {
 
     @Inject
     private MainViewCB(MainPM presentationModel, Navigation navigation,
-                       OverlayManager overlayManager) {
+                       OverlayManager overlayManager, TradeManager tradeManager) {
         super(presentationModel);
 
         this.navigation = navigation;
         this.overlayManager = overlayManager;
+
+        tradeManager.featureNotImplementedWarningProperty().addListener((ov, oldValue, newValue) -> {
+            if (oldValue == null && newValue != null) {
+                Popups.openWarningPopup(newValue);
+                tradeManager.setFeatureNotImplementedWarning(null);
+            }
+        });
     }
 
 

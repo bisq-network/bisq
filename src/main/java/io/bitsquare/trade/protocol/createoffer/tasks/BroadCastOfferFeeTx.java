@@ -21,7 +21,6 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
 
-import com.google.bitcoin.core.InsufficientMoneyException;
 import com.google.bitcoin.core.Transaction;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -59,9 +58,6 @@ public class BroadCastOfferFeeTx {
                     faultHandler.onFault("Offer fee payment failed with an exception.", t);
                 }
             });
-        } catch (InsufficientMoneyException e) {
-            faultHandler.onFault(
-                    "Offer fee payment failed because there is insufficient money in the trade wallet.", e);
         } catch (Throwable t) {
             faultHandler.onFault("Offer fee payment failed because an exception occurred.", t);
         }

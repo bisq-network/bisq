@@ -38,7 +38,7 @@ public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
 
 
     @FXML TableColumn<ClosedTradesListItem, ClosedTradesListItem> priceColumn, amountColumn, volumeColumn,
-            directionColumn, dateColumn, tradeIdColumn, removeItemColumn;
+            directionColumn, dateColumn, tradeIdColumn;
     @FXML TableView<ClosedTradesListItem> table;
 
 
@@ -77,6 +77,7 @@ public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
         table.setItems(presentationModel.getList());
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
@@ -104,7 +105,7 @@ public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setTradeIdColumnCellFactory() {
-        tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper(offerListItem.getValue()));
+        tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         tradeIdColumn.setCellFactory(
                 new Callback<TableColumn<ClosedTradesListItem, ClosedTradesListItem>, TableCell<ClosedTradesListItem,
                         ClosedTradesListItem>>() {

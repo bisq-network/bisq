@@ -88,8 +88,8 @@ public class BitSquareModule extends AbstractModule {
         bind(NetworkParameters.class).toProvider(NetworkParametersProvider.class).asEagerSingleton();
 
         // we will probably later disc storage instead of memory storage for TomP2P
-        // bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(new Boolean(true));
-        bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(new Boolean(false));
+        // bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(true);
+        bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(false);
 
         // might be better in a config file?
         bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(

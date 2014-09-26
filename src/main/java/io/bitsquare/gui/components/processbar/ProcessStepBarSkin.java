@@ -43,7 +43,6 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
     private final ProcessStepBar<T> controller;
     private LabelWithBorder currentLabelWithBorder;
     private LabelWithBorder prevLabelWithBorder;
-    private int index;
     private final List<LabelWithBorder> labelWithBorders = new ArrayList<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -66,8 +65,8 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
 
     public void reset() {
         prevLabelWithBorder = null;
-        for (int i = 0; i < labelWithBorders.size(); i++) {
-            currentLabelWithBorder = labelWithBorders.get(i);
+        for (LabelWithBorder labelWithBorder : labelWithBorders) {
+            currentLabelWithBorder = labelWithBorder;
             currentLabelWithBorder.open();
         }
     }
@@ -97,8 +96,6 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
     }
 
     public void setSelectedIndex(int index) {
-        this.index = index;
-
         if (index < labelWithBorders.size()) {
             for (int i = 0; i <= index; i++) {
 

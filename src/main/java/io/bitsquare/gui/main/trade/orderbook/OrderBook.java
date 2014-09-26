@@ -74,10 +74,7 @@ public class OrderBook {
         this.user = user;
 
         bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
-        invalidationListener = (ov, oldValue, newValue) -> {
-            log.debug("#### invalidationListener " + newValue);
-            requestOffers();
-        };
+        invalidationListener = (ov, oldValue, newValue) -> requestOffers();
 
         orderBookListener = new OrderBookListener() {
             @Override
@@ -89,7 +86,7 @@ public class OrderBook {
             public void onOffersReceived(List<Offer> offers) {
                 //TODO use deltas instead replacing the whole list
                 orderBookListItems.clear();
-                offers.stream().forEach(offer -> addOfferToOrderBookListItems(offer));
+                offers.stream().forEach(e -> addOfferToOrderBookListItems(e));
             }
 
             @Override
@@ -164,7 +161,6 @@ public class OrderBook {
     }
 
     private void requestOffers() {
-        log.debug("#### requestOffers");
         messageFacade.getOffers(fiatCode);
     }
 

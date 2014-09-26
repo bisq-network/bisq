@@ -48,6 +48,7 @@ class AccountPM extends PresentationModel<AccountModel> {
         super.initialize();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();

@@ -55,7 +55,7 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
     private TakeOfferViewCB takeOfferViewCB;
     private Node createOfferView;
     private Node takeOfferView;
-    private Navigation navigation;
+    private final Navigation navigation;
     private Navigation.Listener listener;
     private Navigation.Item navigationItem;
     private Direction direction;

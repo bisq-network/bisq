@@ -105,8 +105,8 @@ public class SeedNode extends Thread {
         }
     }
 
-    public Peer startupPeer() {
-        Peer peer = null;
+    public void startupPeer() {
+        Peer peer;
         try {
             peer = new PeerBuilder(
                     Number160.createHash(seedNodeAddress.getId())).ports(seedNodeAddress.getPort()).start();
@@ -139,7 +139,6 @@ public class SeedNode extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return peer;
     }
 
     private void ping(Peer peer) {

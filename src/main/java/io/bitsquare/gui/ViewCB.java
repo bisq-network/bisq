@@ -27,11 +27,11 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
 
     @FXML protected Parent root;
 
-    public ViewCB(T presentationModel) {
+    protected ViewCB(T presentationModel) {
         this.presentationModel = presentationModel;
     }
 
-    public ViewCB() {
+    protected ViewCB() {
     }
 
     /**

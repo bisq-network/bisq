@@ -26,7 +26,7 @@ import javafx.scene.control.*;
 public class ProcessStepBar<T> extends Control {
 
     private List<ProcessStepItem> processStepItems;
-    private IntegerProperty selectedIndex = new SimpleIntegerProperty(0);
+    private final IntegerProperty selectedIndex = new SimpleIntegerProperty(0);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

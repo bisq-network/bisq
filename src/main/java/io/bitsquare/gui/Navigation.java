@@ -34,8 +34,8 @@ public class Navigation {
 
     // New listeners can be added during iteration so we use CopyOnWriteArrayList to prevent invalid array 
     // modification 
-    private List<Listener> listeners = new CopyOnWriteArrayList<>();
-    private Persistence persistence;
+    private final List<Listener> listeners = new CopyOnWriteArrayList<>();
+    private final Persistence persistence;
     private Item[] currentItems;
 
     // Used for returning to the last important view

@@ -17,61 +17,20 @@
 
 package io.bitsquare.gui.main.orders.offer;
 
-import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.trade.Offer;
 
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-
-public class OfferListItem {
-    private final StringProperty price = new SimpleStringProperty();
-    private final StringProperty amount = new SimpleStringProperty();
-    private final StringProperty date = new SimpleStringProperty();
-    private final StringProperty volume = new SimpleStringProperty();
+/**
+ * We could remove that wrapper if it is not needed for additional UI only fields.
+ */
+class OfferListItem {
 
     private final Offer offer;
-    private final String offerId;
 
     public OfferListItem(Offer offer) {
         this.offer = offer;
-
-        this.date.set(BSFormatter.formatDateTime(offer.getCreationDate()));
-        this.price.set(BSFormatter.formatFiat(offer.getPrice()));
-
-        this.amount.set(BSFormatter.formatCoin(
-                offer.getAmount()) + " (" + BSFormatter.formatCoin(offer.getMinAmount()) + ")");
-        this.volume.set(BSFormatter.formatVolumeWithMinVolume(offer));
-        this.offerId = offer.getId();
     }
-
 
     public Offer getOffer() {
         return offer;
-    }
-
-    // called form table columns
-
-
-    public final StringProperty dateProperty() {
-        return this.date;
-    }
-
-
-    public final StringProperty priceProperty() {
-        return this.price;
-    }
-
-
-    public final StringProperty amountProperty() {
-        return this.amount;
-    }
-
-
-    public final StringProperty volumeProperty() {
-        return this.volume;
-    }
-
-    public String getOfferId() {
-        return offerId;
     }
 }

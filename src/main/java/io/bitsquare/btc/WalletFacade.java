@@ -383,10 +383,9 @@ public class WalletFacade {
             addressConfidenceListener.onTransactionConfidenceChanged(transactionConfidence);
         }
 
-        for (TxConfidenceListener txConfidenceListener : txConfidenceListeners) {
-            if (tx.getHashAsString().equals(txConfidenceListener.getTxID()))
-                txConfidenceListener.onTransactionConfidenceChanged(tx.getConfidence());
-        }
+        txConfidenceListeners.stream().filter(txConfidenceListener -> tx.getHashAsString().equals
+                (txConfidenceListener.getTxID())).forEach(txConfidenceListener -> txConfidenceListener
+                .onTransactionConfidenceChanged(tx.getConfidence()));
     }
 
     private TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
@@ -571,8 +570,7 @@ public class WalletFacade {
         return tx;
     }
 
-    public void broadcastCreateOfferFeeTx(Transaction tx, FutureCallback<Transaction> callback) throws
-            InsufficientMoneyException {
+    public void broadcastCreateOfferFeeTx(Transaction tx, FutureCallback<Transaction> callback) {
         log.trace("broadcast tx");
         ListenableFuture<Transaction> future = walletAppKit.peerGroup().broadcastTransaction(tx);
         Futures.addCallback(future, callback);

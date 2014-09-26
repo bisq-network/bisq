@@ -27,9 +27,9 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ClosedTradesPM extends PresentationModel<ClosedTradesModel> {
+class ClosedTradesPM extends PresentationModel<ClosedTradesModel> {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradesPM.class);
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -46,23 +46,22 @@ public class ClosedTradesPM extends PresentationModel<ClosedTradesModel> {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize() {
-
         super.initialize();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();
-
     }
 
     @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
-
     }
 
     @SuppressWarnings("EmptyMethod")

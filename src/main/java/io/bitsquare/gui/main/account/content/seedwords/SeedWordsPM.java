@@ -57,6 +57,7 @@ class SeedWordsPM extends PresentationModel<SeedWordsModel> {
             seedWords.set(BSFormatter.mnemonicCodeToString(model.getMnemonicCode()));
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();

@@ -146,6 +146,7 @@ public class BitSquareValidator {
     public static boolean validateStringAsDouble(String input) {
         try {
             input = input.replace(",", ".");
+            //noinspection ResultOfMethodCallIgnored
             Double.parseDouble(input);
             return true;
         } catch (NumberFormatException | NullPointerException e) {

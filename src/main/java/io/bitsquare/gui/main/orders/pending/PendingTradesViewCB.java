@@ -67,7 +67,6 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     private ChangeListener<PendingTradesPM.State> offererStateChangeListener;
     private ChangeListener<PendingTradesPM.State> takerStateChangeListener;
     private ChangeListener<Throwable> faultChangeListener;
-    private ChangeListener<PendingTradesListItem> listItemChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -416,7 +415,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setTradeIdColumnCellFactory() {
-        tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper(offerListItem.getValue()));
+        tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         tradeIdColumn.setCellFactory(
                 new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>,
                         TableCell<PendingTradesListItem, PendingTradesListItem>>() {

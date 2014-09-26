@@ -79,6 +79,7 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
         table.setItems(presentationModel.getList());
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
@@ -110,7 +111,7 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setOfferIdColumnCellFactory() {
-        offerIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper(offerListItem.getValue()));
+        offerIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         offerIdColumn.setCellFactory(
                 new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
 
@@ -244,7 +245,7 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
 
 
     private void setRemoveColumnCellFactory() {
-        removeItemColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper(offerListItem.getValue()));
+        removeItemColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         removeItemColumn.setCellFactory(
                 new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
                     @Override
