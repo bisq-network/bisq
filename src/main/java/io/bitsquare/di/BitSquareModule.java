@@ -39,6 +39,7 @@ import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
+import io.bitsquare.util.ConfigLoader;
 
 import com.google.bitcoin.core.NetworkParameters;
 import com.google.bitcoin.params.MainNetParams;
@@ -50,9 +51,15 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
+import java.util.Properties;
+
 import javax.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class BitSquareModule extends AbstractModule {
+    private static final Logger log = LoggerFactory.getLogger(BitSquareModule.class);
 
     @Override
     protected void configure() {
@@ -100,16 +107,24 @@ public class BitSquareModule extends AbstractModule {
 }
 
 class NetworkParametersProvider implements Provider<NetworkParameters> {
-    private final String networkType;
+    private static final Logger log = LoggerFactory.getLogger(NetworkParametersProvider.class);
+    private String networkType;
 
     @Inject
     public NetworkParametersProvider(@Named("networkType") String networkType) {
         this.networkType = networkType;
     }
 
-
     public NetworkParameters get() {
         NetworkParameters result = null;
+
+        //If config is available we override the networkType defined in Guice with the one from the config file
+        Properties properties = ConfigLoader.loadConfig();
+        log.info("networkType = " + properties.getProperty("networkType"));
+        String networkTypeFromConfig = properties.getProperty("networkType");
+
+        if (networkTypeFromConfig != null)
+            networkType = networkTypeFromConfig;
 
         switch (networkType) {
             case WalletFacade.MAIN_NET:

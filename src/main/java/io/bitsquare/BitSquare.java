@@ -63,7 +63,9 @@ public class BitSquare extends Application {
     public static void main(String[] args) {
         Profiler.init();
         Profiler.printMsgWithTime("BitSquare.main called with args " + Arrays.asList(args).toString());
-        if (args.length > 0) APP_NAME = APP_NAME + "_" + args[0];
+
+        if (args.length > 0)
+            APP_NAME = APP_NAME + "_" + args[0];
 
         launch(args);
     }
@@ -107,7 +109,6 @@ public class BitSquare extends Application {
 
         User persistedUser = (User) persistence.read(user);
         user.applyPersistedUser(persistedUser);
-        //persistence.write(user);
 
         settings.applyPersistedSettings((Settings) persistence.read(settings.getClass().getName()));
 

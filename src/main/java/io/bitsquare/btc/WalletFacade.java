@@ -91,9 +91,9 @@ import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
 public class WalletFacade {
     private static final Logger log = LoggerFactory.getLogger(WalletFacade.class);
 
-    public static final String MAIN_NET = "MAIN_NET";
-    public static final String TEST_NET = "TEST_NET";
-    public static final String REG_TEST_NET = "REG_TEST_NET";
+    public static final String MAIN_NET = "mainnet";
+    public static final String TEST_NET = "testnet";
+    public static final String REG_TEST_NET = "regtest";
     public static final String WALLET_PREFIX = BitSquare.getAppName();
 
     private final ReentrantLock lock = Threading.lock("lock");
