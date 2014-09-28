@@ -354,10 +354,10 @@ public class MainViewCB extends ViewCB<MainPM> {
         fundsButton = addNavButton(leftNavPane, "Funds", Navigation.Item.FUNDS);
 
         final Pane msgButtonHolder = new Pane();
-        msgButton = addNavButton(msgButtonHolder, "Message", Navigation.Item.MSG);
+        msgButton = addNavButton(msgButtonHolder, "Messages", Navigation.Item.MSG);
         leftNavPane.getChildren().add(msgButtonHolder);
 
-        addBalanceInfo(rightNavPane);
+        //addBalanceInfo(rightNavPane);
 
         addBankAccountComboBox(rightNavPane);
 
@@ -404,7 +404,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         return toggleButton;
     }
 
-    private void addBalanceInfo(Pane parent) {
+    /*private void addBalanceInfo(Pane parent) {
         final TextField balanceTextField = new TextField();
         balanceTextField.setEditable(false);
         balanceTextField.setPrefWidth(110);
@@ -424,7 +424,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         vBox.getChildren().setAll(balanceTextField, titleLabel);
         vBox.setAlignment(Pos.CENTER);
         parent.getChildren().add(vBox);
-    }
+    }*/
 
     private void addBankAccountComboBox(Pane parent) {
         final ComboBox<BankAccount> comboBox = new ComboBox<>(presentationModel.getBankAccounts());

@@ -33,8 +33,6 @@ public class ImageUtil {
     // System tray use AWT and there is no CSS support for loading retina supported images
     public static final String SYS_TRAY = "/images/system_tray_icon.png";
     public static final String SYS_TRAY_HI_RES = "/images/system_tray_icon@2x.png";
-    public static final String SYS_TRAY_ALERT = "/images/system_tray_icon_alert.png";
-    public static final String SYS_TRAY_ALERT_HI_RES = "/images/system_tray_icon_alert@2x.png";
 
 
     public static final String REMOVE_ICON = "image-remove";

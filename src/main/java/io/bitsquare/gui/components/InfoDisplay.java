@@ -154,6 +154,7 @@ public class InfoDisplay extends Parent {
 
     public void setText(String text) {
         this.text.set(text);
+        layout();
     }
 
     public void setGridPane(GridPane gridPane) {

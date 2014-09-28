@@ -19,7 +19,6 @@ package io.bitsquare.gui.main;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.msg.MessageFacade;
@@ -28,8 +27,6 @@ import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
-
-import com.google.bitcoin.core.Coin;
 
 import com.google.inject.Inject;
 
@@ -40,7 +37,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 
@@ -62,7 +58,7 @@ class MainModel extends UIModel {
     final BooleanProperty backendInited = new SimpleBooleanProperty();
     final DoubleProperty networkSyncProgress = new SimpleDoubleProperty();
     final BooleanProperty networkSyncComplete = new SimpleBooleanProperty();
-    final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
+    //  final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty(0);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -122,13 +118,13 @@ class MainModel extends UIModel {
                 onFacadesInitialised();
 
 
-            walletFacade.addBalanceListener(new BalanceListener() {
+          /*  walletFacade.addBalanceListener(new BalanceListener() {
                 @Override
                 public void onBalanceChanged(Coin balance) {
                     updateBalance(balance);
                 }
             });
-            updateBalance(walletFacade.getWalletBalance());
+            updateBalance(walletFacade.getWalletBalance());*/
         });
     }
 
@@ -185,7 +181,7 @@ class MainModel extends UIModel {
         numPendingTrades.set(tradeManager.getPendingTrades().size());
     }
 
-    private void updateBalance(Coin balance) {
+   /* private void updateBalance(Coin balance) {
         this.balance.set(balance);
-    }
+    }*/
 }

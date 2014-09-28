@@ -151,7 +151,7 @@ class FiatAccountModel extends UIModel {
         persistence.write(user);
 
         if (bankAccount != null) {
-            title.set(bankAccount.getAccountTitle());
+            title.set(bankAccount.getNameOfBank());
             holderName.set(bankAccount.getAccountHolderName());
             primaryID.set(bankAccount.getAccountPrimaryID());
             secondaryID.set(bankAccount.getAccountSecondaryID());

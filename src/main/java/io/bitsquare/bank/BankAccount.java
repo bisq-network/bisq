@@ -35,24 +35,24 @@ public class BankAccount implements Serializable {
     private final String accountSecondaryID; // like BIC
     private final String accountHolderName;
     private final Country country;     // where bank is registered
+    private final String nameOfBank;
 
     // The main currency if account support multiple currencies.
     // The user can create multiple bank accounts with same bank account but other currency if his bank account
     // support that.
     private final Currency currency;
-    private final String accountTitle;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BankAccount(BankAccountType bankAccountType, Currency currency, Country country, String accountTitle,
+    public BankAccount(BankAccountType bankAccountType, Currency currency, Country country, String nameOfBank,
                        String accountHolderName, String accountPrimaryID, String accountSecondaryID) {
         this.bankAccountType = bankAccountType;
         this.currency = currency;
         this.country = country;
-        this.accountTitle = accountTitle;
+        this.nameOfBank = nameOfBank;
         this.accountHolderName = accountHolderName;
         this.accountPrimaryID = accountPrimaryID;
         this.accountSecondaryID = accountSecondaryID;
@@ -89,11 +89,11 @@ public class BankAccount implements Serializable {
 
     // we use the accountTitle as unique id
     public String getUid() {
-        return accountTitle;
+        return nameOfBank;
     }
 
-    public String getAccountTitle() {
-        return accountTitle;
+    public String getNameOfBank() {
+        return nameOfBank;
     }
 
 
@@ -103,7 +103,7 @@ public class BankAccount implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(accountTitle);
+        return Objects.hashCode(nameOfBank);
     }
 
     @Override
@@ -112,7 +112,7 @@ public class BankAccount implements Serializable {
         if (obj == this) return true;
 
         final BankAccount other = (BankAccount) obj;
-        return accountTitle.equals(other.getUid());
+        return nameOfBank.equals(other.getUid());
     }
 
     @Override
@@ -124,7 +124,7 @@ public class BankAccount implements Serializable {
                 ", accountHolderName='" + accountHolderName + '\'' +
                 ", country=" + country +
                 ", currency=" + currency +
-                ", accountTitle='" + accountTitle + '\'' +
+                ", accountTitle='" + nameOfBank + '\'' +
                 '}';
     }
 }

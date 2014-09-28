@@ -22,6 +22,7 @@ import io.bitsquare.di.BitSquareModule;
 import io.bitsquare.gui.AWTSystemTray;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.persistence.Persistence;
@@ -40,6 +41,7 @@ import java.util.Arrays;
 
 import javafx.application.Application;
 import javafx.scene.*;
+import javafx.scene.image.*;
 import javafx.scene.input.*;
 import javafx.stage.Stage;
 
@@ -110,6 +112,12 @@ public class BitSquare extends Application {
         settings.applyPersistedSettings((Settings) persistence.read(settings.getClass().getName()));
 
         primaryStage.setTitle("BitSquare (" + APP_NAME + ")");
+        if (ImageUtil.isRetina())
+            primaryStage.getIcons().add(new Image(BitSquare.class.getResourceAsStream
+                    ("/images/window_icon@2x.png")));
+        else
+            primaryStage.getIcons().add(new Image(BitSquare.class.getResourceAsStream
+                    ("/images/window_icon.png")));
 
         ViewLoader.setInjector(injector);
 
@@ -135,8 +143,6 @@ public class BitSquare extends Application {
             primaryStage.setMinHeight(750);
 
             Profiler.initScene(primaryStage.getScene());
-
-            // primaryStage.setOnCloseRequest(observable -> stop());
 
             primaryStage.show();
         } catch (IOException e) {

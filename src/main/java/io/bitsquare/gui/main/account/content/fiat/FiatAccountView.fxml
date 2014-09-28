@@ -47,30 +47,30 @@
         </GridPane.margin>
     </ComboBox>
 
-    <Label text="Account name:" GridPane.rowIndex="1"/>
-    <InputTextField fx:id="titleTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+    <Label text="Name of Bank:" GridPane.rowIndex="1"/>
+    <InputTextField fx:id="nameOfBankTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-    <Label text="Holder name:" GridPane.rowIndex="2"/>
-    <InputTextField fx:id="holderNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-
-    <Label text="Primary ID:" GridPane.rowIndex="3"/>
-    <InputTextField fx:id="primaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-
-    <Label text="Secondary ID:" GridPane.rowIndex="4"/>
-    <InputTextField fx:id="secondaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
-
-    <Label text="Currency:" GridPane.rowIndex="5"/>
-    <ComboBox fx:id="currencyComboBox" promptText="Select currency"
-              onAction="#onSelectCurrency" GridPane.columnIndex="1"
-              GridPane.rowIndex="5"/>
-
-    <Label text="Country of payments account:" GridPane.rowIndex="6"/>
-    <HBox GridPane.columnIndex="1" GridPane.rowIndex="6" spacing="10">
+    <Label text="Location of Bank:" GridPane.rowIndex="2"/>
+    <HBox GridPane.columnIndex="1" GridPane.rowIndex="2" spacing="10">
         <ComboBox fx:id="regionComboBox" promptText="Select region"
                   onAction="#onSelectRegion" prefWidth="150.0"/>
         <ComboBox fx:id="countryComboBox" promptText="Select country" onAction="#onSelectCountry"
                   visible="false" prefWidth="150.0"/>
     </HBox>
+
+    <Label text="Your name:" GridPane.rowIndex="3"/>
+    <InputTextField fx:id="holderNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+    <Label text="IBAN:" GridPane.rowIndex="4"/>
+    <InputTextField fx:id="primaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+
+    <Label text="BIC:" GridPane.rowIndex="5"/>
+    <InputTextField fx:id="secondaryIDTextField" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+
+    <Label text="Currency:" GridPane.rowIndex="6"/>
+    <ComboBox fx:id="currencyComboBox" promptText="Select currency"
+              onAction="#onSelectCurrency" GridPane.columnIndex="1"
+              GridPane.rowIndex="6"/>
 
     <InfoDisplay gridPane="$root" onAction="#onOpenSetupHelp" rowIndex="7"
                  text="The payments account data will be saved in a encrypted form to the Bitcoin block chain and will be used in the trade process for account verification."/>

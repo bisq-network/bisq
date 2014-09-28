@@ -97,20 +97,6 @@ public class AWTSystemTray {
         }
     }
 
-    public static void setAlertIcon() {
-        if (ImageUtil.isRetina())
-            trayIcon.setImage(getImage(ImageUtil.SYS_TRAY_ALERT_HI_RES));
-        else
-            trayIcon.setImage(getImage(ImageUtil.SYS_TRAY_ALERT));
-    }
-
-    public static void setIcon() {
-        if (ImageUtil.isRetina())
-            trayIcon.setImage(getImage(ImageUtil.SYS_TRAY_HI_RES));
-        else
-            trayIcon.setImage(getImage(ImageUtil.SYS_TRAY));
-    }
-
     public static void setStageHidden() {
         stage.hide();
         isStageVisible = false;

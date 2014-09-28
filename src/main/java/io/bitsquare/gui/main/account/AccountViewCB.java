@@ -144,9 +144,12 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
                 case ACCOUNT_SETTINGS:
                     tab = accountSettingsTab;
                     tab.setText("Account settings");
+                    arbitratorSettingsTab.setDisable(false);
+                    break;
                 case ACCOUNT_SETUP:
                     tab = accountSettingsTab;
                     tab.setText("Account setup");
+                    arbitratorSettingsTab.setDisable(true);
                     break;
                 case ARBITRATOR_SETTINGS:
                     tab = arbitratorSettingsTab;

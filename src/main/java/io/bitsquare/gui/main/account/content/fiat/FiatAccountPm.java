@@ -170,7 +170,7 @@ class FiatAccountPm extends PresentationModel<FiatAccountModel> {
         return new StringConverter<BankAccount>() {
             @Override
             public String toString(BankAccount bankAccount) {
-                return bankAccount.getAccountTitle();
+                return bankAccount.getNameOfBank();
             }
 
             @Override

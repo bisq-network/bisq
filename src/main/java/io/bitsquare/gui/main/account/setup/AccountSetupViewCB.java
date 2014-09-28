@@ -121,10 +121,10 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
                 "Define your preferences with whom you want to trade",
                 Navigation.Item.RESTRICTIONS);
         fiatAccount = new WizardItem(this, " Setup Payments account(s)",
-                "You need to add a payments account to your trading account",
+                "You need to setup at least one payment account",
                 Navigation.Item.FIAT_ACCOUNT);
         registration = new WizardItem(this, "Register your account",
-                "Pay in the registration fee of 0.0002 BTC and store your account in the BTC block chain",
+                "The registration in the Blockchain requires a payment of 0.0002 BTC",
                 Navigation.Item.REGISTRATION);
 
         leftVBox.getChildren().addAll(seedWords, password, restrictions, fiatAccount, registration);

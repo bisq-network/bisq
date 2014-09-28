@@ -59,7 +59,7 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
     @FXML HBox buttonsHBox;
     @FXML ComboBox<Region> regionComboBox;
     @FXML ComboBox<Country> countryComboBox;
-    @FXML InputTextField titleTextField, holderNameTextField, primaryIDTextField, secondaryIDTextField;
+    @FXML InputTextField nameOfBankTextField, holderNameTextField, primaryIDTextField, secondaryIDTextField;
     @FXML Button saveButton, completedButton, removeBankAccountButton;
     @FXML ComboBox<BankAccount> selectionComboBox;
     @FXML ComboBox<BankAccountType> typesComboBox;
@@ -91,7 +91,7 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
         regionComboBox.setConverter(presentationModel.getRegionConverter());
         countryComboBox.setConverter(presentationModel.getCountryConverter());
 
-        titleTextField.setValidator(presentationModel.getBankAccountNumberValidator());
+        nameOfBankTextField.setValidator(presentationModel.getBankAccountNumberValidator());
         holderNameTextField.setValidator(presentationModel.getBankAccountNumberValidator());
         primaryIDTextField.setValidator(presentationModel.getBankAccountNumberValidator());
         secondaryIDTextField.setValidator(presentationModel.getBankAccountNumberValidator());
@@ -252,7 +252,7 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
 
     private void setupBindings() {
         // input
-        titleTextField.textProperty().bindBidirectional(presentationModel.title);
+        nameOfBankTextField.textProperty().bindBidirectional(presentationModel.title);
         holderNameTextField.textProperty().bindBidirectional(presentationModel.holderName);
         primaryIDTextField.textProperty().bindBidirectional(presentationModel.primaryID);
         secondaryIDTextField.textProperty().bindBidirectional(presentationModel.secondaryID);

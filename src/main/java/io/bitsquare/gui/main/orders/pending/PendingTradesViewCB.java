@@ -271,10 +271,9 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
 
                     statusTextField.setText("Deposit transaction has been published. You need to wait for at least " +
                             "one block chain confirmation.");
-                    infoDisplay.setText("The Bitcoin buyer needs to wait for at least one block chain confirmation to" +
+                    infoDisplay.setText("You need to wait for at least one block chain confirmation to" +
                             " be sure that the deposit funding has not been double spent. For higher trade volumes we" +
                             " recommend to wait up to 6 confirmations.");
-                    infoDisplay.layout();
                     break;
                 case OFFERER_BUYER_START_PAYMENT:
                     processBar.setSelectedIndex(1);
@@ -285,7 +284,6 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                             "Please start now the payment.");
                     infoDisplay.setText("You are now safe to start the payment. You can wait for up to 6 block chain " +
                             "confirmations if you want more security.");
-                    infoDisplay.layout();
 
                     paymentMethodTextField.setText(presentationModel.getPaymentMethod());
                     holderNameTextField.setText(presentationModel.getHolderName());
@@ -296,7 +294,6 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                                     "payment account. When the transfer is completed inform the other trader by " +
                                     "clicking the button below.",
                             presentationModel.getCurrencyCode()));
-                    paymentsInfoDisplay.layout();
                     break;
                 case OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED:
                     processBar.setSelectedIndex(2);
@@ -307,7 +304,6 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     infoDisplay.setText(BSResources.get("When the confirmation that the {0} payment arrived at the " +
                                     "Bitcoin sellers payment account, the payout transaction will be published.",
                             presentationModel.getCurrencyCode()));
-                    infoDisplay.layout();
                     break;
                 case OFFERER_BUYER_COMPLETED:
                     processBar.setSelectedIndex(3);
@@ -327,9 +323,8 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     fiatTextField.setText(presentationModel.getFiatVolume());
                     feesTextField.setText(presentationModel.getTotalFees());
                     collateralTextField.setText(presentationModel.getCollateral());
-                    summaryInfoDisplay.setText("Your trade bond has been refunded to you. " +
+                    summaryInfoDisplay.setText("Your security deposit has been refunded to you. " +
                             "You can review the details to that trade any time in the closed trades section.");
-                    summaryInfoDisplay.layout();
                     break;
             }
         }
@@ -356,7 +351,6 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                                     "double-spent. " +
                                     "For higher trade volumes it is recommended to wait up to 6 confirmations.",
                             presentationModel.getCurrencyCode()));
-                    infoDisplay.layout();
                     break;
                 case TAKER_SELLER_WAIT_PAYMENT_STARTED:
                     processBar.setSelectedIndex(1);
@@ -368,7 +362,6 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     infoDisplay.setText(BSResources.get("You will get informed when the other trader has indicated " +
                                     "the {0} payment has been started.",
                             presentationModel.getCurrencyCode()));
-                    infoDisplay.layout();
                     break;
                 case TAKER_SELLER_CONFIRM_RECEIVE_PAYMENT:
                     processBar.setSelectedIndex(2);
@@ -380,9 +373,8 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                             presentationModel.getCurrencyCode()));
                     infoDisplay.setText(BSResources.get("It is important that you confirm when you have received the " +
                                     "{0} payment as this will publish the payout transaction where you get returned " +
-                                    "your trade bond and the Bitcoin buyer receive the Bitcoin amount you sold.",
+                                    "your security deposit and the Bitcoin buyer receive the Bitcoin amount you sold.",
                             presentationModel.getCurrencyCode()));
-                    infoDisplay.layout();
 
                     break;
                 case TAKER_SELLER_COMPLETED:
@@ -393,10 +385,9 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
 
                     statusTextField.setText("Congratulations! Trade has successfully completed.");
                     infoDisplay.setText("The trade is now completed and you can withdraw the refunded Bitcoin from " +
-                            "the trade bond to any external wallet. " +
+                            "the security deposit to any external wallet. " +
                             "To protect your privacy you should take care that your coins are not merged in " +
                             "that external wallet. For more information about privacy see our help pages.");
-                    infoDisplay.layout();
 
                     btcLabel.setText("You have sold:");
                     fiatLabel.setText("You have received:");
@@ -404,9 +395,8 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     fiatTextField.setText(presentationModel.getFiatVolume());
                     feesTextField.setText(presentationModel.getTotalFees());
                     collateralTextField.setText(presentationModel.getCollateral());
-                    summaryInfoDisplay.setText("Your trade bond has been refunded to you. " +
+                    summaryInfoDisplay.setText("Your security deposit has been refunded to you. " +
                             "You can review the details to that trade any time in the closed trades section.");
-                    summaryInfoDisplay.layout();
                     break;
             }
         }
