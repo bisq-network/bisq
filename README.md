@@ -58,7 +58,7 @@ Please don't use main net with real money, as the software is under heavy develo
 
 ## Communication channels:
 * [Mailing list](https://groups.google.com/forum/#!forum/bitsquare)
-* [IRC](https://webchat.freenode.net/?channels=bitsquare.io)
+* [IRC](https://webchat.freenode.net/?channels=bitsquare)
 * [Bitcoin forum](https://bitcointalk.org/index.php?topic=647457)
 * [Twitter](https://twitter.com/bitsquare_)
 * [Email](mailto:team@bitsquare.io)
