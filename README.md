@@ -6,23 +6,13 @@ It allows to trade fiat money (USD, EURO, ...) for Bitcoins without relying on a
 Instead, all participants form a peer to peer market.
 
 ## Dependencies
-The project use **Java 8** and **Gradle**.  
-We use the **BitcoinJ** library and **TomP2P** for DHT and direct messaging.
+
+ - [JDK 8](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 
 ## Development setup
 
-### Build the 2 master branches of the external libraries:
-
-We use [that fork](https://github.com/bitsquare/TomP2P) from the actual TomP2P master branch.  
-You need to check that branch out and deploy it to the local maven repository.  
-Build the project with:  
-**mvn clean install -DskipTests**  (DskipTests because some unit tests are failing in the master branch)
-
-We use also [that fork](https://github.com/bitsquare/bitcoinj) of the latest BitcoinJ master branch.  
-You need to check that branch out as well and deploy it to the local maven repository.  
-Build the project with:  
-**mvn clean install**
-
+    git clone https://github.com/bitsquare/bitsquare.git
+    ./gradlew build
 
 ### Regtest mode for local testing  
 For local testing it is best to use the **regtest** mode from the Bitcoin QT client.  

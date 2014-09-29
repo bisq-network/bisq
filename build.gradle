@@ -24,12 +24,12 @@ task executableJar(type: OneJar) {
 
 repositories {
     jcenter()
-    mavenLocal()
+    maven { url 'http://partnerdemo.artifactoryonline.com/partnerdemo/libs-snapshots-local' }
 }
 
 dependencies {
-    compile 'com.google:bitcoinj:0.12-SNAPSHOT'
-    compile 'net.tomp2p:tomp2p-all:5.0-Alpha24-SNAPSHOT'
+    compile 'com.google:bitcoinj:0.12.308de4e-SNAPSHOT'
+    compile 'net.tomp2p:tomp2p-all:5.0-Alpha24.805623c-SNAPSHOT'
     compile 'org.slf4j:slf4j-api:1.7.7'
     compile 'ch.qos.logback:logback-core:1.1.2'
     compile 'ch.qos.logback:logback-classic:1.1.2'
