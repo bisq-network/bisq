@@ -163,7 +163,12 @@ public class WalletFacade {
             // in the checkpoints file and then download the rest from the network. It makes things much faster.
             // Checkpoint files are made using the BuildCheckpoints tool and usually we have to download the
             // last months worth or more (takes a few seconds).
-            walletAppKit.setCheckpoints(getClass().getResourceAsStream("checkpoints"));
+            try {
+                walletAppKit.setCheckpoints(getClass().getClassLoader().getResourceAsStream("wallet/checkpoints"));
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.error(e.toString());
+            }
             // As an example!
             // walletAppKit.useTor();
         }
@@ -181,9 +186,11 @@ public class WalletFacade {
         wallet.allowSpendingUnconfirmedTransactions();
         //walletAppKit.peerGroup().setMaxConnections(11);
 
-        if (params == RegTestParams.get()) {
+        if (params == RegTestParams.get())
             walletAppKit.peerGroup().setMinBroadcastConnections(1);
-        }
+        else
+            walletAppKit.peerGroup().setMinBroadcastConnections(3);
+
 
         walletEventListener = new WalletEventListener() {
             @Override

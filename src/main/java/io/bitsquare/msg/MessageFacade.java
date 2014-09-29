@@ -532,7 +532,7 @@ public class MessageFacade implements MessageBroker {
                 }
                 else if (getFuture.data() == null) {
                     // OK as nothing is set at the moment
-                    log.trace("Get invalidationTimestamp from DHT returns null. That is ok for the startup.");
+                    // log.trace("Get invalidationTimestamp from DHT returns null. That is ok for the startup.");
                 }
                 else {
                     log.error("Get invalidationTimestamp from DHT failed with reason:" + getFuture.failedReason());

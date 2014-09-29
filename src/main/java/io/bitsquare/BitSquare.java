@@ -147,6 +147,7 @@ public class BitSquare extends Application {
 
             primaryStage.show();
         } catch (IOException e) {
+            e.printStackTrace();
             log.error(e.getMessage());
         }
     }

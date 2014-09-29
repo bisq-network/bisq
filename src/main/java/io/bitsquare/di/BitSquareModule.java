@@ -48,18 +48,17 @@ import com.google.bitcoin.params.TestNet3Params;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import java.util.Properties;
-
-import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BitSquareModule extends AbstractModule {
     private static final Logger log = LoggerFactory.getLogger(BitSquareModule.class);
+
+    static Properties properties;
 
     @Override
     protected void configure() {
@@ -88,40 +87,58 @@ public class BitSquareModule extends AbstractModule {
         bind(InputValidator.class).asEagerSingleton();
         bind(PasswordValidator.class).asEagerSingleton();
 
-        //bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.MAIN_NET);
-        // how to use reg test see description in the readme file
-        bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.REG_TEST_NET);
-        //bind(String.class).annotatedWith(Names.named("networkType")).toInstance(WalletFacade.TEST_NET);
         bind(NetworkParameters.class).toProvider(NetworkParametersProvider.class).asEagerSingleton();
 
         // we will probably later disc storage instead of memory storage for TomP2P
         // bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(true);
         bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(false);
 
-        // might be better in a config file?
-        bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(
-                Names.named("defaultSeedNode")).toInstance(SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST);
-        // bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(Names.named("defaultSeedNode"))
-        // .toInstance(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN);
+        bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(Names.named("defaultSeedNode"))
+                .toProvider(StaticSeedNodeAddressesProvider.class).asEagerSingleton();
+    }
+}
+
+class StaticSeedNodeAddressesProvider implements Provider<SeedNodeAddress.StaticSeedNodeAddresses> {
+    private static final Logger log = LoggerFactory.getLogger(StaticSeedNodeAddressesProvider.class);
+
+    public SeedNodeAddress.StaticSeedNodeAddresses get() {
+        if (BitSquareModule.properties == null)
+            BitSquareModule.properties = ConfigLoader.loadConfig();
+
+        log.info("defaultSeedNode = " + BitSquareModule.properties.getProperty("defaultSeedNode"));
+        String defaultSeedNodeFromConfig = BitSquareModule.properties.getProperty("defaultSeedNode");
+
+        // Set default 
+        SeedNodeAddress.StaticSeedNodeAddresses defaultSeedNode = SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST;
+          /*  SeedNodeAddress.StaticSeedNodeAddresses defaultSeedNode = SeedNodeAddress.StaticSeedNodeAddresses
+                    .DIGITAL_OCEAN;*/
+
+        // if defined in config we override the above
+        if (defaultSeedNodeFromConfig != null)
+            defaultSeedNode = defaultSeedNodeFromConfig.equals("localhost") ?
+                    SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST :
+                    SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN;
+        return defaultSeedNode;
     }
 }
 
 class NetworkParametersProvider implements Provider<NetworkParameters> {
     private static final Logger log = LoggerFactory.getLogger(NetworkParametersProvider.class);
-    private String networkType;
-
-    @Inject
-    public NetworkParametersProvider(@Named("networkType") String networkType) {
-        this.networkType = networkType;
-    }
 
     public NetworkParameters get() {
         NetworkParameters result = null;
 
         //If config is available we override the networkType defined in Guice with the one from the config file
-        Properties properties = ConfigLoader.loadConfig();
-        log.info("networkType = " + properties.getProperty("networkType"));
-        String networkTypeFromConfig = properties.getProperty("networkType");
+        if (BitSquareModule.properties == null)
+            BitSquareModule.properties = ConfigLoader.loadConfig();
+
+        log.info("networkType = " + BitSquareModule.properties.getProperty("networkType"));
+        String networkTypeFromConfig = BitSquareModule.properties.getProperty("networkType");
+
+        // Set default
+        // String networkType= WalletFacade.MAIN_NET;
+        // String networkType= WalletFacade.TEST_NET;
+        String networkType = WalletFacade.REG_TEST_NET;
 
         if (networkTypeFromConfig != null)
             networkType = networkTypeFromConfig;
