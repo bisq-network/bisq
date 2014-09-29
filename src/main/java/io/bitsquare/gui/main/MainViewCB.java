@@ -333,6 +333,10 @@ public class MainViewCB extends ViewCB<MainPM> {
         AnchorPane.setLeftAnchor(networkSyncPane, 0d);
         AnchorPane.setBottomAnchor(networkSyncPane, 5d);
 
+        // TODO sometimes it keeps running... deactivate ti for the moment and replace it with the notification pane 
+        // from Mike Hearn later
+        networkSyncPane.setVisible(false);
+
         presentationModel.networkSyncComplete.addListener((ov, old, newValue) -> {
             if (newValue)
                 networkSyncPane.downloadComplete();

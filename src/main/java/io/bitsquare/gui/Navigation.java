@@ -87,8 +87,9 @@ public class Navigation {
 
     public void navigateToLastStoredItem() {
         Item[] items = (Item[]) persistence.read(this, "navigationItems");
+        // TODO we set BUY as default yet, should be HOME later
         if (items == null || items.length == 0)
-            items = new Item[]{Item.MAIN, Item.HOME};
+            items = new Item[]{Item.MAIN, Item.BUY};
 
         navigationTo(items);
     }

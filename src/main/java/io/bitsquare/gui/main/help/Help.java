@@ -43,7 +43,8 @@ public class Help {
 
     public static void openWindow(HelpId id) {
         try {
-            URL url = new URL("https://github.com/bitsquare/bitsquare/wiki/?" + id);
+            URL url = new URL("http://bitsquare.io/help.html?" + id);
+            // URL url = new URL("https://github.com/bitsquare/bitsquare/wiki/?" + id);
             WebView webView;
             if (helpWindow == null) {
                 helpWindow = new Stage();
