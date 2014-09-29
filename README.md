@@ -1,4 +1,4 @@
-![Bitsquare Logo](http://bitsquare.io/images/logo_with_title_border_240_240.png)
+![Bitsquare Logo](http://bitsquare.io/images/logo_240.png)
 
 [![Build Status](https://travis-ci.org/bitsquare/bitsquare.svg?branch=master)](https://travis-ci.org/bitsquare/bitsquare)
 
