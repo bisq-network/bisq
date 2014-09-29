@@ -293,7 +293,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         ImageView logo = new ImageView();
         logo.setId("image-splash-logo");
 
-        Label subTitle = new Label("The decentralized Bitcoin exchange");
+        Label subTitle = new Label("The decentralized bitcoin exchange");
         subTitle.setAlignment(Pos.CENTER);
         subTitle.setId("logo-sub-title-label");
 
