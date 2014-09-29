@@ -46,4 +46,4 @@ dependencies {
     testCompile 'org.mockito:mockito-all:1.9.5'
 }
 
-wrapper.gradleVersion = '2.0'
+wrapper.gradleVersion = '2.1'
