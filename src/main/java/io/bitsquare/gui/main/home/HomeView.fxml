@@ -27,9 +27,9 @@
     <Tab text="Overview" closable="false">
         <VBox spacing="20">
             <padding>
-                <Insets left="10" top="10" right="10"/>
+                <Insets left="20" top="20" right="20"/>
             </padding>
-            <Label text="TODO: Overview"/>
+            <Label text="Overview not implemented yet. It will contain latest activities, market and price information and notifications."/>
         </VBox>
     </Tab>
 </TabPane>

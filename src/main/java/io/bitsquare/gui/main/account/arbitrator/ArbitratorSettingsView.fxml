@@ -26,9 +26,9 @@
             xmlns:fx="http://javafx.com/fxml">
     <VBox spacing="20">
         <padding>
-            <Insets left="10" top="10" right="10"/>
+            <Insets left="20" top="20" right="20"/>
         </padding>
-        <Label text="TODO: Just very basic prototype yet..."/>
+        <Label text="Arbitration system is not implemented yet. At the moment there are just very basic UI screens for the registration and editing."/>
         <Button text="Register yourself as an arbitrator" onAction="#onArbitratorRegistration"/>
         <Button text="Edit my arbitrator details" onAction="#onArbitratorEdit"/>
     </VBox>

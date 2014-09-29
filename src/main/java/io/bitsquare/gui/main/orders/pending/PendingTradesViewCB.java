@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.orders.pending;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.InfoDisplay;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.TxIdTextField;
@@ -206,6 +207,12 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         Help.openWindow(HelpId.PENDING_TRADE_SUMMARY);
     }
 
+    private void openOfferDetails(PendingTradesListItem item) {
+        // TODO Open popup with details view
+        log.debug("Trade details " + item);
+        Popups.openWarningPopup("Under construction", "This will open a " +
+                "details popup but that is not implemented yet.");
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
@@ -406,11 +413,6 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         // TODO error handling not implemented yet
         if (fault != null)
             log.error(fault.toString());
-    }
-
-    private void openOfferDetails(PendingTradesListItem item) {
-        // TODO Open popup with details view
-        log.debug("Trade details " + item);
     }
 
     private void setPaymentsControlsVisible(boolean visible) {

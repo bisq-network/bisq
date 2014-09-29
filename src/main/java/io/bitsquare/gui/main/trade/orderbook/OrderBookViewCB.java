@@ -76,12 +76,12 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     private ImageView expand;
     private ImageView collapse;
 
-    @FXML CheckBox extendedCheckBox;
+    @FXML CheckBox showOnlyMatchingCheckBox;
     @FXML Label amountBtcLabel, priceDescriptionLabel, priceFiatLabel, volumeDescriptionLabel,
             volumeFiatLabel, extendedButton1Label, extendedButton2Label, extendedCheckBoxLabel;
     @FXML InputTextField volumeTextField, amountTextField, priceTextField;
     @FXML TableView<OrderBookListItem> table;
-    @FXML Button createOfferButton, showAdvancedSettingsButton, extendedButton1, extendedButton2;
+    @FXML Button createOfferButton, showAdvancedSettingsButton, openCountryFilterButton, openPaymentMethodsFilterButton;
     @FXML TableColumn<OrderBookListItem, OrderBookListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, countryColumn, bankAccountTypeColumn;
 
@@ -187,9 +187,15 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     @FXML
     void createOffer() {
         if (presentationModel.isRegistered()) {
-            createOfferButton.setDisable(true);
-            ((TradeNavigator) parent).createOffer(presentationModel.getAmountAsCoin(),
-                    presentationModel.getPriceAsCoin());
+            if (presentationModel.getDirection() == Direction.BUY) {
+                createOfferButton.setDisable(true);
+                ((TradeNavigator) parent).createOffer(presentationModel.getAmountAsCoin(),
+                        presentationModel.getPriceAsCoin());
+            }
+            else {
+                Popups.openWarningPopup("Under construction", "At the moment only the creation of buy offers is " +
+                        "implemented.");
+            }
         }
         else {
             openSetupScreen();
@@ -211,6 +217,21 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
         }
     }
 
+    @FXML
+    void onShowOnlyMatching() {
+        Popups.openWarningPopup("Under construction", "This feature is not implemented yet.");
+    }
+
+    @FXML
+    void onOpenCountryFilter() {
+        Popups.openWarningPopup("Under construction", "This feature is not implemented yet.");
+    }
+
+    @FXML
+    void onOpenPaymentMethodsFilter() {
+        Popups.openWarningPopup("Under construction", "This feature is not implemented yet.");
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
@@ -285,14 +306,14 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
         extendedCheckBoxLabel.setVisible(visible);
         extendedCheckBoxLabel.setManaged(visible);
 
-        extendedButton1.setVisible(visible);
-        extendedButton1.setManaged(visible);
+        openCountryFilterButton.setVisible(visible);
+        openCountryFilterButton.setManaged(visible);
 
-        extendedButton2.setVisible(visible);
-        extendedButton2.setManaged(visible);
+        openPaymentMethodsFilterButton.setVisible(visible);
+        openPaymentMethodsFilterButton.setManaged(visible);
 
-        extendedCheckBox.setVisible(visible);
-        extendedCheckBox.setManaged(visible);
+        showOnlyMatchingCheckBox.setVisible(visible);
+        showOnlyMatchingCheckBox.setManaged(visible);
     }
 
 
@@ -536,6 +557,5 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                     }
                 });
     }
-
 }
 

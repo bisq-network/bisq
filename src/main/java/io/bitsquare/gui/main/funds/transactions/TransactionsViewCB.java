@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.funds.transactions;
 
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewCB;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.bitcoin.core.Transaction;
@@ -115,6 +116,13 @@ public class TransactionsViewCB extends CachedViewCB {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void openTxDetails(TransactionsListItem item) {
+        // TODO Open popup with details view
+        log.debug("openTxDetails " + item);
+        Popups.openWarningPopup("Under construction",
+                "This will open a details popup but that is not implemented yet.");
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Cell factories
@@ -139,8 +147,7 @@ public class TransactionsViewCB extends CachedViewCB {
                                 if (item != null && !empty) {
                                     hyperlink = new Hyperlink(item.getAddressString());
                                     hyperlink.setId("id-link");
-                                    hyperlink.setOnAction(event -> log.info("Show trade details " + item
-                                            .getAddressString()));
+                                    hyperlink.setOnAction(event -> openTxDetails(item));
                                     setGraphic(hyperlink);
                                 }
                                 else {

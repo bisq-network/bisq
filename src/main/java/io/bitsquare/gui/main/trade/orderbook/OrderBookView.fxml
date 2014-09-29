@@ -93,17 +93,20 @@
 
     <Label fx:id="extendedCheckBoxLabel" text="Show only matching offers:" GridPane.columnIndex="0"
            GridPane.rowIndex="2" visible="false" managed="false"/>
-    <CheckBox fx:id="extendedCheckBox" visible="false" managed="false" GridPane.columnIndex="1"
+    <CheckBox fx:id="showOnlyMatchingCheckBox" onAction="#onShowOnlyMatching" visible="false" managed="false"
+              GridPane.columnIndex="1"
               GridPane.rowIndex="2"/>
 
     <Label fx:id="extendedButton1Label" text="Payments account countries:" GridPane.columnIndex="0"
            GridPane.rowIndex="3" visible="false" managed="false"/>
-    <Button fx:id="extendedButton1" text="Open countries filter" GridPane.columnIndex="1"
+    <Button fx:id="openCountryFilterButton" text="Open countries filter"
+            onAction="#onOpenCountryFilter" GridPane.columnIndex="1"
             GridPane.rowIndex="3" visible="false" managed="false"/>
 
     <Label fx:id="extendedButton2Label" text="Payments account methods:" GridPane.columnIndex="0"
            GridPane.rowIndex="4" visible="false" managed="false"/>
-    <Button fx:id="extendedButton2" text="Open payment methods filter" GridPane.columnIndex="1"
+    <Button fx:id="openPaymentMethodsFilterButton" text="Open payment methods filter"
+            onAction="#onOpenPaymentMethodsFilter" GridPane.columnIndex="1"
             GridPane.rowIndex="4" visible="false" managed="false">
         <GridPane.margin>
             <Insets bottom="-5"/>

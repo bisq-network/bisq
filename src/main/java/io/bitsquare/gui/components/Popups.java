@@ -59,7 +59,7 @@ public class Popups {
 
     // Information
     public static void openInfo(String message) {
-        openInfo(message, null, null);
+        openInfo(message, null);
     }
 
     // Supports blurring the content background

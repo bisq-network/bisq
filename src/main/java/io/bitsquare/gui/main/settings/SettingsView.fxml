@@ -28,9 +28,9 @@
     <Tab text="Preferences" closable="false">
         <VBox spacing="20">
             <padding>
-                <Insets left="10" top="10" right="10"/>
+                <Insets left="20" top="20" right="20"/>
             </padding>
-            <Label text="TODO: Application preferences"/>
+            <Label text="Preferences not implemented yet."/>
         </VBox>
     </Tab>
 

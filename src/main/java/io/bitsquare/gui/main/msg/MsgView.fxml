@@ -28,9 +28,9 @@
     <Tab text="Message" closable="false">
         <VBox spacing="20">
             <padding>
-                <Insets left="10" top="10" right="10"/>
+                <Insets left="20" top="20" right="20"/>
             </padding>
-            <Label text="TODO: Communication tools with arbitrators, Mailbox for trade messages if client was offline"/>
+            <Label text="Messages not implemented yet. It will contain communication tools with arbitrators, mailbox for trade messages if client was offline and notifications."/>
         </VBox>
     </Tab>
 </TabPane>

@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.orders.offer;
 
 import io.bitsquare.gui.CachedViewCB;
+import io.bitsquare.gui.components.Popups;
 
 import java.net.URL;
 
@@ -103,6 +104,8 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
     private void openOfferDetails(OfferListItem item) {
         // TODO Open popup with details view
         log.debug("openOfferDetails " + item);
+        Popups.openWarningPopup("Under construction",
+                "This will open a details popup but that is not implemented yet.");
     }
 
 
