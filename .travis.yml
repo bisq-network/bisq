@@ -3,12 +3,12 @@ jdk: oraclejdk8
 
 notifications:
   irc:
-    channels: chat.freenode.net#bitsquare.io
+    channels: chat.freenode.net#bitsquare
     template:
       - '%{message} (%{repository}#%{build_number}, %{duration})'
       - '%{repository}/%{branch} %{commit} %{author}: %{commit_message}'
       - '%{build_url}'
-    on_success: always
+    on_success: change
     on_failure: always
     use_notice: true
-    skip_join: false
+    skip_join: true
