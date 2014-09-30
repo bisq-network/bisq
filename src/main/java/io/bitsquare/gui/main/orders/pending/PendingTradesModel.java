@@ -230,7 +230,6 @@ class PendingTradesModel extends UIModel {
 
         AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(getTrade().getId());
         String fromAddress = addressEntry.getAddressString();
-
         try {
             walletFacade.sendFunds(fromAddress, toAddress, getAmountToWithdraw(), callback);
         } catch (AddressFormatException e) {
@@ -308,8 +307,15 @@ class PendingTradesModel extends UIModel {
     }
 
     Coin getAmountToWithdraw() {
-        AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(getTrade().getId());
+        /*
+         AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(getTrade().getId());
         return walletFacade.getBalanceForAddress(addressEntry.getAddress());
+         */
+        // TODO handle overpaid collateral
+        if (isOfferer())
+            return getTrade().getTradeAmount().add(getTrade().getCollateralAmount());
+        else
+            return getTrade().getCollateralAmount();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

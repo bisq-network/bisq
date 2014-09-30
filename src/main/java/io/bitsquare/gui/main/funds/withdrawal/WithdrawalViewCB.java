@@ -21,6 +21,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
@@ -102,14 +103,6 @@ public class WithdrawalViewCB extends CachedViewCB {
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
-
-        for (WithdrawalListItem anAddressList : addressList)
-            anAddressList.cleanup();
-    }
-
-    @Override
     public void activate() {
         super.activate();
 
@@ -131,6 +124,21 @@ public class WithdrawalViewCB extends CachedViewCB {
 
         fillList();
         table.setItems(addressList);
+
+        walletFacade.addBalanceListener(new BalanceListener() {
+            @Override
+            public void onBalanceChanged(Coin balance) {
+                fillList();
+            }
+        });
+    }
+
+    @Override
+    public void deactivate() {
+        super.deactivate();
+
+        for (WithdrawalListItem item : addressList)
+            item.cleanup();
     }
 
     @SuppressWarnings("EmptyMethod")
