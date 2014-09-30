@@ -7,6 +7,12 @@ install:
   - "sudo apt-get update"
   - "sudo apt-get install oracle-java8-installer"
 
+os:
+  - linux
+  - osx
+
+after_success: "ls -l build/distributions"
+
 notifications:
   irc:
     channels: chat.freenode.net#bitsquare
