@@ -11,6 +11,12 @@ Instead, all participants form a peer to peer market.
 
  - [JDK 8](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 
+For installing Java 8 on Linux user that:  
+sudo apt-get purge openjdk*  
+sudo add-apt-repository -y ppa:webupd8team/java  
+sudo apt-get update  
+sudo apt-get install oracle-java8-installer  
+
 ## Development setup
 
     git clone https://github.com/bitsquare/bitsquare.git
