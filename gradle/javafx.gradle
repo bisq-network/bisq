@@ -12,19 +12,19 @@ import org.gradle.api.GradleException;
 
 buildscript {
     repositories {
-        mavenLocal()
         maven {
-            name = 'BinTray'
+            name = 'JavaFX Gradle plugin'
             url = 'http://dl.bintray.com/content/shemnon/javafx-gradle/'
         }
         maven {
-            name = 'CloudBees Snapshot'
+            name = 'CloudBees snapshots'
             url = 'http://repository-javafx-gradle-plugin.forge.cloudbees.com/snapshot'
         }
         ivy {
+            name = 'CloudBees snapshots'
             url = 'http://repository-javafx-gradle-plugin.forge.cloudbees.com/snapshot'
         }
-        mavenCentral()
+        jcenter()
     }
     dependencies {
         try {
