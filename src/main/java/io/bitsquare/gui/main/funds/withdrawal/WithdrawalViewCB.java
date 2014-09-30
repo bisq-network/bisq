@@ -65,13 +65,13 @@ public class WithdrawalViewCB extends CachedViewCB {
 
     private final WalletFacade walletFacade;
     private BSFormatter formatter;
-    private ObservableList<WithdrawalListItem> addressList;
+    private final ObservableList<WithdrawalListItem> addressList = FXCollections.observableArrayList();
 
     @FXML TableView<WithdrawalListItem> table;
     @FXML TableColumn<WithdrawalListItem, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
             confidenceColumn;
     @FXML Button addNewAddressButton;
-    @FXML TextField withdrawFromTextField, withdrawToTextField, amountTextField, changeAddressTextField;
+    @FXML TextField withdrawFromTextField, withdrawToTextField, amountTextField;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -119,7 +119,6 @@ public class WithdrawalViewCB extends CachedViewCB {
                 if (Coin.ZERO.compareTo(newValue.getBalance()) <= 0) {
                     amountTextField.setText(newValue.getBalance().toPlainString());
                     withdrawFromTextField.setText(newValue.getAddressEntry().getAddressString());
-                    changeAddressTextField.setText(newValue.getAddressEntry().getAddressString());
                 }
                 else {
                     withdrawFromTextField.setText("");
@@ -130,11 +129,7 @@ public class WithdrawalViewCB extends CachedViewCB {
             }
         });
 
-        List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
-        addressList = FXCollections.observableArrayList();
-        addressList.addAll(addressEntryList.stream().map(anAddressEntryList ->
-                new WithdrawalListItem(anAddressEntryList, walletFacade, formatter)).collect(Collectors.toList()));
-
+        fillList();
         table.setItems(addressList);
     }
 
@@ -180,7 +175,9 @@ public class WithdrawalViewCB extends CachedViewCB {
                 try {
                     walletFacade.sendFunds(
                             withdrawFromTextField.getText(), withdrawToTextField.getText(),
-                            changeAddressTextField.getText(), amount, callback);
+                            amount, callback);
+
+                    fillList();
                 } catch (AddressFormatException e) {
                     Popups.openErrorPopup("Address invalid",
                             "The address is not correct. Please check the address format.");
@@ -205,6 +202,14 @@ public class WithdrawalViewCB extends CachedViewCB {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void fillList() {
+        addressList.clear();
+        List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
+        addressList.addAll(addressEntryList.stream()
+                .filter(e -> walletFacade.getBalanceForAddress(e.getAddress()).isPositive())
+                .map(anAddressEntryList -> new WithdrawalListItem(anAddressEntryList, walletFacade, formatter))
+                .collect(Collectors.toList()));
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Cell factories

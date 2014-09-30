@@ -39,8 +39,7 @@
     </Label>
     <TextField fx:id="feeTextField"
                GridPane.columnIndex="1"
-               GridPane.rowIndex="0"
-               editable="false" focusTraversable="false">
+               GridPane.rowIndex="0" mouseTransparent="true" editable="false" focusTraversable="false">
         <GridPane.margin>
             <Insets top="10.0"/>
         </GridPane.margin>

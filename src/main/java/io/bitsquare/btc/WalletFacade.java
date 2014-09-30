@@ -612,7 +612,6 @@ public class WalletFacade {
 
     public String sendFunds(String withdrawFromAddress,
                             String withdrawToAddress,
-                            String changeAddress,
                             Coin amount,
                             FutureCallback<Transaction> callback) throws AddressFormatException,
             InsufficientMoneyException, IllegalArgumentException {

@@ -26,6 +26,6 @@
 
     <Tab fx:id="offersTab" text="Open offers" closable="false"/>
     <Tab fx:id="pendingTradesTab" text="Pending trades" closable="false"/>
-    <Tab fx:id="closedTradesTab" text="Closed trades" closable="false"/>
+    <Tab fx:id="closedTradesTab" text="History" closable="false"/>
 
 </TabPane>

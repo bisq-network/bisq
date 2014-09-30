@@ -87,7 +87,8 @@
                 <VBox spacing="4">
                     <Label fx:id="priceDescriptionLabel" id="input-description-label" prefWidth="170"/>
                     <TextField fx:id="priceTextField" id="text-input-with-currency-text-field"
-                               prefWidth="170" alignment="CENTER_RIGHT" editable="false"/>
+                               prefWidth="170" alignment="CENTER_RIGHT" mouseTransparent="true" editable="false"
+                               focusTraversable="false"/>
                 </VBox>
 
                 <Label text="=">
@@ -102,7 +103,8 @@
                 <VBox spacing="4">
                     <Label fx:id="volumeDescriptionLabel" id="input-description-label" prefWidth="170"/>
                     <TextField fx:id="volumeTextField" id="text-input-with-currency-text-field"
-                               prefWidth="170" alignment="CENTER_RIGHT" editable="false"/>
+                               prefWidth="170" alignment="CENTER_RIGHT" mouseTransparent="true" editable="false"
+                               focusTraversable="false"/>
                 </VBox>
             </HBox>
 
@@ -141,9 +143,8 @@
                 </GridPane.margin>
             </HBox>
             <TextField fx:id="totalToPayTextField" promptText="%takeOffer.fundsBox.totalsNeeded.prompt"
-                       GridPane.columnIndex="1"
-                       GridPane.rowIndex="4"
-                       editable="false" focusTraversable="false" visible="false">
+                       GridPane.columnIndex="1" GridPane.rowIndex="4" mouseTransparent="true" editable="false"
+                       focusTraversable="false" visible="false">
                 <GridPane.margin>
                     <Insets top="10.0"/>
                 </GridPane.margin>
@@ -192,28 +193,27 @@
                 </GridPane.margin>
             </Label>
             <TextField fx:id="acceptedCountriesTextField" GridPane.columnIndex="1" GridPane.rowIndex="9"
-                       visible="false"
-                       editable="false" focusTraversable="false"/>
+                       mouseTransparent="true" visible="false" editable="false" focusTraversable="false"/>
 
             <Label fx:id="acceptedLanguagesLabel" text="%takeOffer.advancedBox.languages" GridPane.rowIndex="10"
                    visible="false"/>
             <TextField fx:id="acceptedLanguagesTextField" GridPane.columnIndex="1" GridPane.rowIndex="10"
-                       editable="false" focusTraversable="false" visible="false"/>
+                       mouseTransparent="true" editable="false" focusTraversable="false" visible="false"/>
 
             <Label fx:id="acceptedArbitratorsLabel" text="%takeOffer.advancedBox.arbitrators" GridPane.rowIndex="11"
                    visible="false"/>
             <TextField fx:id="acceptedArbitratorsTextField" GridPane.columnIndex="1" GridPane.rowIndex="11"
-                       editable="false" focusTraversable="false" visible="false"/>
+                       mouseTransparent="true" editable="false" focusTraversable="false" visible="false"/>
 
             <Label fx:id="bankAccountTypeLabel" text="%takeOffer.advancedBox.txType" GridPane.rowIndex="12"
                    visible="false"/>
             <TextField fx:id="bankAccountTypeTextField" GridPane.columnIndex="1" GridPane.rowIndex="12" editable="false"
-                       focusTraversable="false" visible="false"/>
+                       mouseTransparent="true" focusTraversable="false" visible="false"/>
 
             <Label fx:id="bankAccountCurrencyLabel" text="%takeOffer.advancedBox.currency" GridPane.rowIndex="13"
                    visible="false"/>
             <TextField fx:id="bankAccountCurrencyTextField" GridPane.rowIndex="13" GridPane.columnIndex="1"
-                       editable="false" focusTraversable="false" visible="false"/>
+                       mouseTransparent="true" editable="false" focusTraversable="false" visible="false"/>
 
             <Label fx:id="bankAccountCountyLabel" text="%takeOffer.advancedBox.county" GridPane.rowIndex="14"
                    visible="false">
@@ -222,7 +222,7 @@
                 </GridPane.margin>
             </Label>
             <TextField fx:id="bankAccountCountyTextField" GridPane.rowIndex="14" GridPane.columnIndex="1"
-                       editable="false" focusTraversable="false" visible="false">
+                       mouseTransparent="true" editable="false" focusTraversable="false" visible="false">
                 <GridPane.margin>
                     <Insets bottom="5.0"/>
                 </GridPane.margin>

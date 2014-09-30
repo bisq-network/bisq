@@ -87,7 +87,7 @@ class ClosedTradesPM extends PresentationModel<ClosedTradesModel> {
     }
 
     String getAmount(ClosedTradesListItem item) {
-        return (item != null) ? formatter.formatAmountWithMinAmount(item.getTrade().getOffer()) : "";
+        return (item != null) ? formatter.formatCoinWithCode(item.getTrade().getTradeAmount()) : "";
     }
 
     String getPrice(ClosedTradesListItem item) {
@@ -95,11 +95,11 @@ class ClosedTradesPM extends PresentationModel<ClosedTradesModel> {
     }
 
     String getVolume(ClosedTradesListItem item) {
-        return (item != null) ? formatter.formatVolumeWithMinVolume(item.getTrade().getOffer()) : "";
+        return (item != null) ? formatter.formatFiatWithCode(item.getTrade().getTradeVolume()) : "";
     }
 
     String getDirectionLabel(ClosedTradesListItem item) {
-        return (item != null) ? formatter.formatDirection(item.getTrade().getOffer().getMirroredDirection()) : "";
+        return (item != null) ? formatter.formatDirection(model.getDirection(item.getTrade().getOffer())) : "";
     }
 
     String getDate(ClosedTradesListItem item) {

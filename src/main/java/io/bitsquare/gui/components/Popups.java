@@ -34,7 +34,6 @@ import javafx.event.ActionEvent;
 import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
-import org.controlsfx.dialog.DialogStyle;
 import org.controlsfx.dialog.Dialogs;
 
 import org.slf4j.Logger;
@@ -86,7 +85,6 @@ public class Popups {
                 .message(message)
                 .masthead(masthead)
                 .actions(actions)
-                .style(DialogStyle.UNDECORATED)
                 .showInformation();
     }
 

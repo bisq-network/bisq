@@ -28,8 +28,6 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.trade.createoffer.CreateOfferViewCB"
-            AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0"
-            AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
             xmlns:fx="http://javafx.com/fxml">
 
     <ScrollPane fx:id="scrollPane" hbarPolicy="NEVER" vbarPolicy="NEVER" fitToWidth="true" fitToHeight="true"
@@ -152,9 +150,8 @@
                 </GridPane.margin>
             </HBox>
             <TextField fx:id="totalToPayTextField" promptText="%createOffer.fundsBox.totalsNeeded.prompt"
-                       GridPane.columnIndex="1"
-                       GridPane.rowIndex="4"
-                       editable="false" focusTraversable="false" visible="false">
+                       GridPane.columnIndex="1" GridPane.rowIndex="4"
+                       mouseTransparent="true" editable="false" focusTraversable="false" visible="false">
                 <GridPane.margin>
                     <Insets top="10.0"/>
                 </GridPane.margin>
@@ -205,31 +202,31 @@
             </HBox>
             <TextField fx:id="acceptedCountriesTextField" GridPane.columnIndex="1" GridPane.rowIndex="9"
                        visible="false"
-                       editable="false" focusTraversable="false"/>
+                       mouseTransparent="true" editable="false" focusTraversable="false"/>
 
             <HBox GridPane.rowIndex="10" spacing="4" alignment="CENTER_RIGHT">
                 <Label fx:id="acceptedLanguagesLabel" text="%createOffer.advancedBox.languages" visible="false"/>
                 <Label fx:id="acceptedLanguagesLabelIcon" visible="false"/>
             </HBox>
             <TextField fx:id="acceptedLanguagesTextField" GridPane.columnIndex="1" GridPane.rowIndex="10"
-                       editable="false" focusTraversable="false" visible="false"/>
+                       mouseTransparent="true" editable="false" focusTraversable="false" visible="false"/>
 
             <HBox GridPane.rowIndex="11" spacing="4" alignment="CENTER_RIGHT">
                 <Label fx:id="acceptedArbitratorsLabel" text="%createOffer.advancedBox.arbitrators" visible="false"/>
                 <Label fx:id="acceptedArbitratorsLabelIcon" visible="false"/>
             </HBox>
             <TextField fx:id="acceptedArbitratorsTextField" GridPane.columnIndex="1" GridPane.rowIndex="11"
-                       editable="false" focusTraversable="false" visible="false"/>
+                       mouseTransparent="true" editable="false" focusTraversable="false" visible="false"/>
 
             <Label fx:id="bankAccountTypeLabel" text="%createOffer.advancedBox.txType" GridPane.rowIndex="12"
                    visible="false"/>
-            <TextField fx:id="bankAccountTypeTextField" GridPane.columnIndex="1" GridPane.rowIndex="12" editable="false"
-                       focusTraversable="false" visible="false"/>
+            <TextField fx:id="bankAccountTypeTextField" GridPane.columnIndex="1" GridPane.rowIndex="12"
+                       mouseTransparent="true" editable="false" focusTraversable="false" visible="false"/>
 
             <Label fx:id="bankAccountCurrencyLabel" text="%createOffer.advancedBox.currency" GridPane.rowIndex="13"
                    visible="false"/>
             <TextField fx:id="bankAccountCurrencyTextField" GridPane.rowIndex="13" GridPane.columnIndex="1"
-                       editable="false" focusTraversable="false" visible="false"/>
+                       mouseTransparent="true" editable="false" focusTraversable="false" visible="false"/>
 
             <Label fx:id="bankAccountCountyLabel" text="%createOffer.advancedBox.county" GridPane.rowIndex="14"
                    visible="false">
@@ -238,7 +235,7 @@
                 </GridPane.margin>
             </Label>
             <TextField fx:id="bankAccountCountyTextField" GridPane.rowIndex="14" GridPane.columnIndex="1"
-                       editable="false" focusTraversable="false" visible="false">
+                       mouseTransparent="true" editable="false" focusTraversable="false" visible="false">
                 <GridPane.margin>
                     <Insets bottom="5.0"/>
                 </GridPane.margin>

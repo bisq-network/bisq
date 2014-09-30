@@ -26,8 +26,7 @@ public enum BankAccountType {
     INTERNATIONAL("primary ID", "secondary ID"),
     OK_PAY("primary ID", "secondary ID"),
     NET_TELLER("primary ID", "secondary ID"),
-    PERFECT_MONEY("primary ID", "secondary ID"),
-    OTHER("primary ID", "secondary ID");
+    PERFECT_MONEY("primary ID", "secondary ID");
 
     private final String primaryId;
     private final String secondaryId;

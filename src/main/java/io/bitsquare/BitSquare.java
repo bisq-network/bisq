@@ -127,7 +127,7 @@ public class BitSquare extends Application {
         try {
             final Parent view = loader.load();
 
-            final Scene scene = new Scene(view, 1000, 750);
+            final Scene scene = new Scene(view, 1000, 800);
             scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm(),
                     getClass().getResource("/io/bitsquare/gui/images.css").toExternalForm());
 
@@ -136,12 +136,12 @@ public class BitSquare extends Application {
             primaryStage.setScene(scene);
 
             // TODO resizing not fully supported yet
-            /*
-            primaryStage.setMinWidth(750);
-            primaryStage.setMinHeight(500);*/
 
-            primaryStage.setMinWidth(1000);
-            primaryStage.setMinHeight(750);
+            primaryStage.setMinWidth(75);
+            primaryStage.setMinHeight(50);
+
+          /*  primaryStage.setMinWidth(1000);
+            primaryStage.setMinHeight(750);*/
 
             Profiler.initScene(primaryStage.getScene());
 
