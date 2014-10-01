@@ -7,6 +7,9 @@ install:
   - "sudo apt-get update"
   - "sudo apt-get install oracle-java8-installer"
 
+before_deploy:
+  - ./gradlew assemble
+
 os:
   - linux
 
