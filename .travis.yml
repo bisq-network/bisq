@@ -9,9 +9,10 @@ install:
 
 os:
   - linux
-  - osx
 
-after_success: "ls -l build/distributions"
+after_success:
+  - pwd
+  - ls -l build
 
 notifications:
   irc:
