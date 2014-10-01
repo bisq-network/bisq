@@ -37,5 +37,5 @@ deploy:
   skip_cleanup: true
   on:
     repo: bitsquare/bitsquare
-    branch: native
+    all_branches: true
     tags: true
