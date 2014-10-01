@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.orders.pending;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.InfoDisplay;
+import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
@@ -44,6 +45,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.util.Callback;
 
 import org.slf4j.Logger;
@@ -52,27 +54,32 @@ import org.slf4j.LoggerFactory;
 public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesViewCB.class);
 
+
     private ChangeListener<PendingTradesListItem> selectedItemChangeListener;
     private ListChangeListener<PendingTradesListItem> listChangeListener;
     private ChangeListener<String> txIdChangeListener;
     private ChangeListener<PendingTradesPM.State> offererStateChangeListener;
     private ChangeListener<PendingTradesPM.State> takerStateChangeListener;
     private ChangeListener<Throwable> faultChangeListener;
+    private Navigation navigation;
 
-    @FXML TitledGroupBg titledGroupBg, paymentsGroupBg, summaryGroupBg;
+    @FXML ScrollPane scrollPane;
+    @FXML GridPane gridPane;
+    @FXML TitledGroupBg titledGroupBg, paymentsGroupBg, summaryGroupBg, withdrawGroupBg;
     @FXML ProcessStepBar processBar;
-    @FXML Label statusLabel, txIdLabel, paymentMethodLabel, holderNameLabel, primaryIdLabel, secondaryIdLabel,
-            btcLabel, fiatLabel, feesLabel, collateralLabel;
-    @FXML TextField statusTextField, paymentMethodTextField, btcTextField, fiatTextField, feesTextField,
-            collateralTextField;
+    @FXML Label statusLabel, txIdLabel, paymentMethodLabel, fiatAmountLabel, holderNameLabel, primaryIdLabel,
+            secondaryIdLabel, btcTradeAmountLabel, fiatTradeAmountLabel, feesLabel, collateralLabel,
+            withdrawAmountLabel, withdrawAddressLabel;
+    @FXML TextField statusTextField, paymentMethodTextField, btcTradeAmountTextField, fiatTradeAmountTextField,
+            feesTextField, collateralTextField, withdrawAmountTextField;
+    @FXML InputTextField withdrawAddressTextField;
     @FXML TxIdTextField txIdTextField;
     @FXML InfoDisplay infoDisplay, paymentsInfoDisplay, summaryInfoDisplay;
-    @FXML Button confirmPaymentReceiptButton, paymentsButton, openWithdrawalButton;
-    @FXML TextFieldWithCopyIcon holderNameTextField, secondaryIdTextField, primaryIdTextField;
+    @FXML Button confirmPaymentReceiptButton, paymentsButton, withdrawButton;
+    @FXML TextFieldWithCopyIcon fiatAmountTextField, holderNameTextField, secondaryIdTextField, primaryIdTextField;
     @FXML TableView<PendingTradesListItem> table;
     @FXML TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, amountColumn, volumeColumn,
-            directionColumn, dateColumn, tradeIdColumn, selectColumn;
-    private Navigation navigation;
+            directionColumn, dateColumn, tradeIdColumn;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -99,7 +106,13 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         setPriceColumnCellFactory();
         setVolumeColumnCellFactory();
         setDateColumnCellFactory();
-        setSelectColumnCellFactory();
+
+        scrollPane.vvalueProperty().addListener((ov, oldValue, newValue) -> {
+            log.debug("#### vvalueProperty " + newValue);
+        });
+        scrollPane.viewportBoundsProperty().addListener((ov, oldValue, newValue) -> {
+            log.debug("#### viewportBoundsProperty " + newValue);
+        });
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No pending trades available"));
@@ -125,6 +138,8 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         takerStateChangeListener = (ov, oldValue, newValue) -> applyTakerState(newValue);
         faultChangeListener = (ov, oldValue, newValue) -> onFault(newValue);
 
+        withdrawAddressTextField.setValidator(presentationModel.getBtcAddressValidator());
+        withdrawButton.disableProperty().bind(presentationModel.withdrawalButtonDisable);
         super.initialize(url, rb);
     }
 
@@ -146,6 +161,10 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
        /* table.requestFocus();
         table.getFocusModel().focus( table.getSelectionModel().getSelectedIndex());*/
 
+        withdrawAddressTextField.focusedProperty().addListener((ov, oldValue, newValue) -> {
+            if (oldValue && !newValue)
+                presentationModel.withdrawAddressFocusOut(withdrawAddressTextField.getText());
+        });
         updateScreen();
     }
 
@@ -184,12 +203,12 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     }
 
     @FXML
-    void onOpenWithdrawal() {
+    public void onWithdraw() {
         setSummaryControlsVisible(false);
-        presentationModel.closeSummary();
-
+        presentationModel.removePendingTrade();
+        presentationModel.withdraw(withdrawAddressTextField.getText());
         Platform.runLater(() ->
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.FUNDS, Navigation.Item.WITHDRAWAL));
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.CLOSED_TRADES));
     }
 
     @FXML
@@ -227,6 +246,14 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         txIdLabel.setVisible(dataAvailable);
         txIdTextField.setVisible(dataAvailable);
         infoDisplay.setVisible(dataAvailable);
+
+        titledGroupBg.setManaged(dataAvailable);
+        processBar.setManaged(dataAvailable);
+        statusLabel.setManaged(dataAvailable);
+        statusTextField.setManaged(dataAvailable);
+        txIdLabel.setManaged(dataAvailable);
+        txIdTextField.setManaged(dataAvailable);
+        infoDisplay.setManaged(dataAvailable);
 
         if (dataAvailable) {
             if (presentationModel.isOfferer())
@@ -293,6 +320,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                             "confirmations if you want more security.");
 
                     paymentMethodTextField.setText(presentationModel.getPaymentMethod());
+                    fiatAmountTextField.setText(presentationModel.getFiatAmount());
                     holderNameTextField.setText(presentationModel.getHolderName());
                     primaryIdTextField.setText(presentationModel.getPrimaryId());
                     secondaryIdTextField.setText(presentationModel.getSecondaryId());
@@ -314,7 +342,6 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     break;
                 case OFFERER_BUYER_COMPLETED:
                     processBar.setSelectedIndex(3);
-
                     setSummaryControlsVisible(true);
 
                     statusTextField.setText("Congratulations! Trade has successfully completed.");
@@ -322,16 +349,17 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                             "wallet. To protect your privacy you should take care that your trades are not merged " +
                             "in " +
                             "that external wallet. For more information about privacy see our help pages.");
-                    infoDisplay.layout();
 
-                    btcLabel.setText("You have bought:");
-                    fiatLabel.setText("You have paid:");
-                    btcTextField.setText(presentationModel.getTradeVolume());
-                    fiatTextField.setText(presentationModel.getFiatVolume());
+                    btcTradeAmountLabel.setText("You have bought:");
+                    fiatTradeAmountLabel.setText("You have paid:");
+                    btcTradeAmountTextField.setText(presentationModel.getTradeVolume());
+                    fiatTradeAmountTextField.setText(presentationModel.getFiatVolume());
                     feesTextField.setText(presentationModel.getTotalFees());
                     collateralTextField.setText(presentationModel.getCollateral());
                     summaryInfoDisplay.setText("Your security deposit has been refunded to you. " +
                             "You can review the details to that trade any time in the closed trades section.");
+
+                    withdrawAmountTextField.setText(presentationModel.getAmountToWithdraw());
                     break;
             }
         }
@@ -340,6 +368,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
 
     private void applyTakerState(PendingTradesPM.State state) {
         confirmPaymentReceiptButton.setVisible(false);
+        confirmPaymentReceiptButton.setManaged(false);
 
         setSummaryControlsVisible(false);
 
@@ -374,6 +403,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     processBar.setSelectedIndex(2);
 
                     confirmPaymentReceiptButton.setVisible(true);
+                    confirmPaymentReceiptButton.setManaged(true);
 
                     statusTextField.setText(BSResources.get("The Bitcoin buyer has started the {0} payment." +
                                     "Check your payments account and confirm when you have received the payment.",
@@ -389,21 +419,22 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
 
                     setSummaryControlsVisible(true);
 
-
                     statusTextField.setText("Congratulations! Trade has successfully completed.");
                     infoDisplay.setText("The trade is now completed and you can withdraw the refunded Bitcoin from " +
                             "the security deposit to any external wallet. " +
                             "To protect your privacy you should take care that your coins are not merged in " +
                             "that external wallet. For more information about privacy see our help pages.");
 
-                    btcLabel.setText("You have sold:");
-                    fiatLabel.setText("You have received:");
-                    btcTextField.setText(presentationModel.getTradeVolume());
-                    fiatTextField.setText(presentationModel.getFiatVolume());
+                    btcTradeAmountLabel.setText("You have sold:");
+                    fiatTradeAmountLabel.setText("You have received:");
+                    btcTradeAmountTextField.setText(presentationModel.getTradeVolume());
+                    fiatTradeAmountTextField.setText(presentationModel.getFiatVolume());
                     feesTextField.setText(presentationModel.getTotalFees());
                     collateralTextField.setText(presentationModel.getCollateral());
                     summaryInfoDisplay.setText("Your security deposit has been refunded to you. " +
                             "You can review the details to that trade any time in the closed trades section.");
+
+                    withdrawAmountTextField.setText(presentationModel.getAmountToWithdraw());
                     break;
             }
         }
@@ -418,29 +449,85 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     private void setPaymentsControlsVisible(boolean visible) {
         paymentsGroupBg.setVisible(visible);
         paymentMethodLabel.setVisible(visible);
+        fiatAmountLabel.setVisible(visible);
         holderNameLabel.setVisible(visible);
         primaryIdLabel.setVisible(visible);
         secondaryIdLabel.setVisible(visible);
         paymentMethodTextField.setVisible(visible);
         paymentsInfoDisplay.setVisible(visible);
         paymentsButton.setVisible(visible);
+        fiatAmountTextField.setVisible(visible);
         holderNameTextField.setVisible(visible);
         primaryIdTextField.setVisible(visible);
         secondaryIdTextField.setVisible(visible);
+
+        paymentsGroupBg.setManaged(visible);
+        paymentMethodLabel.setManaged(visible);
+        fiatAmountLabel.setManaged(visible);
+        holderNameLabel.setManaged(visible);
+        primaryIdLabel.setManaged(visible);
+        secondaryIdLabel.setManaged(visible);
+        paymentMethodTextField.setManaged(visible);
+        paymentsInfoDisplay.setManaged(visible);
+        paymentsButton.setManaged(visible);
+        fiatAmountTextField.setManaged(visible);
+        holderNameTextField.setManaged(visible);
+        primaryIdTextField.setManaged(visible);
+        secondaryIdTextField.setManaged(visible);
+
+        if (visible)
+            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        else
+            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.layout();
     }
 
     private void setSummaryControlsVisible(boolean visible) {
         summaryGroupBg.setVisible(visible);
-        btcLabel.setVisible(visible);
-        btcTextField.setVisible(visible);
-        fiatLabel.setVisible(visible);
-        fiatTextField.setVisible(visible);
+        btcTradeAmountLabel.setVisible(visible);
+        btcTradeAmountTextField.setVisible(visible);
+        fiatTradeAmountLabel.setVisible(visible);
+        fiatTradeAmountTextField.setVisible(visible);
         feesLabel.setVisible(visible);
         feesTextField.setVisible(visible);
         collateralLabel.setVisible(visible);
         collateralTextField.setVisible(visible);
         summaryInfoDisplay.setVisible(visible);
-        openWithdrawalButton.setVisible(visible);
+
+        withdrawGroupBg.setVisible(visible);
+        withdrawAmountLabel.setVisible(visible);
+        withdrawAmountTextField.setVisible(visible);
+        withdrawAddressLabel.setVisible(visible);
+        withdrawAddressTextField.setVisible(visible);
+        withdrawButton.setVisible(visible);
+
+        summaryGroupBg.setManaged(visible);
+        btcTradeAmountLabel.setManaged(visible);
+        btcTradeAmountTextField.setManaged(visible);
+        fiatTradeAmountLabel.setManaged(visible);
+        fiatTradeAmountTextField.setManaged(visible);
+        feesLabel.setManaged(visible);
+        feesTextField.setManaged(visible);
+        collateralLabel.setManaged(visible);
+        collateralTextField.setManaged(visible);
+        summaryInfoDisplay.setManaged(visible);
+
+        withdrawGroupBg.setManaged(visible);
+        withdrawAmountLabel.setManaged(visible);
+        withdrawAmountTextField.setManaged(visible);
+        withdrawAddressLabel.setManaged(visible);
+        withdrawAddressTextField.setManaged(visible);
+        withdrawButton.setManaged(visible);
+
+        if (visible) {
+            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+            withdrawAddressTextField.requestFocus();
+            scrollPane.setVvalue(scrollPane.getVmax());
+        }
+        else {
+            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        }
+        scrollPane.layout();
     }
 
 
@@ -583,35 +670,5 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                 });
     }
 
-    private void setSelectColumnCellFactory() {
-        selectColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        selectColumn.setCellFactory(new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>,
-                TableCell<PendingTradesListItem, PendingTradesListItem>>() {
-            @Override
-            public TableCell<PendingTradesListItem, PendingTradesListItem> call(
-                    TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
-                return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
-                    final Button button = new Button("Select");
-
-                    @Override
-                    public void updateItem(final PendingTradesListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        if (item != null) {
-                            button.setOnAction(event -> showTradeDetails(item));
-                            setGraphic(button);
-                        }
-                        else {
-                            setGraphic(null);
-                        }
-                    }
-                };
-            }
-
-            private void showTradeDetails(PendingTradesListItem item) {
-                table.getSelectionModel().select(item);
-            }
-        });
-    }
 }
 

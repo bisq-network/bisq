@@ -18,8 +18,11 @@
 package io.bitsquare.gui.main.orders.closed;
 
 import io.bitsquare.gui.UIModel;
+import io.bitsquare.trade.Direction;
+import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
@@ -34,6 +37,7 @@ class ClosedTradesModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradesModel.class);
 
     private final TradeManager tradeManager;
+    private User user;
 
     private final ObservableList<ClosedTradesListItem> list = FXCollections.observableArrayList();
     private MapChangeListener<String, Trade> mapChangeListener;
@@ -44,8 +48,9 @@ class ClosedTradesModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ClosedTradesModel(TradeManager tradeManager) {
+    public ClosedTradesModel(TradeManager tradeManager, User user) {
         this.tradeManager = tradeManager;
+        this.user = user;
     }
 
 
@@ -98,6 +103,11 @@ class ClosedTradesModel extends UIModel {
 
     public ObservableList<ClosedTradesListItem> getList() {
         return list;
+    }
+
+    public Direction getDirection(Offer offer) {
+        return offer.getMessagePublicKey().equals(user.getMessagePublicKey()) ?
+                offer.getDirection() : offer.getMirroredDirection();
     }
 
 }

@@ -17,16 +17,24 @@
 
 package io.bitsquare.gui.main.orders.pending;
 
+import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.gui.UIModel;
+import io.bitsquare.trade.Direction;
+import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
+import com.google.bitcoin.core.AddressFormatException;
 import com.google.bitcoin.core.Coin;
+import com.google.bitcoin.core.InsufficientMoneyException;
+import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.TransactionConfidence;
+
+import com.google.common.util.concurrent.FutureCallback;
 
 import com.google.inject.Inject;
 
@@ -40,6 +48,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
+
+import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -197,10 +207,65 @@ class PendingTradesModel extends UIModel {
         tradeManager.fiatPaymentReceived(getTrade().getId());
     }
 
-    void closeSummary() {
+    void removePendingTrade() {
         if (closedTrade != null) {
             list.removeIf(e -> e.getTrade().getId().equals(closedTrade.getId()));
         }
+    }
+
+    void withdraw(String toAddress) {
+        FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
+            @Override
+            public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
+                if (transaction != null) {
+                    log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable t) {
+                log.debug("onWithdraw onFailure");
+            }
+        };
+
+        AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(getTrade().getId());
+        String fromAddress = addressEntry.getAddressString();
+        try {
+            walletFacade.sendFunds(fromAddress, toAddress, getAmountToWithdraw(), callback);
+        } catch (AddressFormatException e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+        } catch (InsufficientMoneyException e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+        }
+
+/*
+        Action response = Popups.openConfirmPopup(
+                "Withdrawal request", "Confirm your request",
+                "Your withdrawal request:\n\n" + "Amount: " + amountTextField.getText() + " BTC\n" + "Sending" +
+                        " address: " + withdrawFromTextField.getText() + "\n" + "Receiving address: " +
+                        withdrawToTextField.getText() + "\n" + "Transaction fee: " +
+                        formatter.formatCoinWithCode(FeePolicy.TX_FEE) + "\n" +
+                        "You receive in total: " +
+                        formatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
+                        "Are you sure you withdraw that amount?");
+
+        if (response == Dialog.Actions.OK) {
+            try {
+                walletFacade.sendFunds(
+                        withdrawFromTextField.getText(), withdrawToTextField.getText(),
+                        changeAddressTextField.getText(), amount, callback);
+            } catch (AddressFormatException e) {
+                Popups.openErrorPopup("Address invalid",
+                        "The address is not correct. Please check the address format.");
+
+            } catch (InsufficientMoneyException e) {
+                Popups.openInsufficientMoneyPopup();
+            } catch (IllegalArgumentException e) {
+                Popups.openErrorPopup("Wrong inputs", "Please check the inputs.");
+            }
+        }*/
     }
 
 
@@ -234,6 +299,23 @@ class PendingTradesModel extends UIModel {
 
     String getCurrencyCode() {
         return selectedItem.getTrade().getOffer().getCurrency().getCurrencyCode();
+    }
+
+    public Direction getDirection(Offer offer) {
+        return offer.getMessagePublicKey().equals(user.getMessagePublicKey()) ?
+                offer.getDirection() : offer.getMirroredDirection();
+    }
+
+    Coin getAmountToWithdraw() {
+        /*
+         AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(getTrade().getId());
+        return walletFacade.getBalanceForAddress(addressEntry.getAddress());
+         */
+        // TODO handle overpaid collateral
+        if (isOfferer())
+            return getTrade().getTradeAmount().add(getTrade().getCollateralAmount());
+        else
+            return getTrade().getCollateralAmount();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

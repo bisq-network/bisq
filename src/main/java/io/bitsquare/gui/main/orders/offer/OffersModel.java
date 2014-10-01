@@ -18,8 +18,10 @@
 package io.bitsquare.gui.main.orders.offer;
 
 import io.bitsquare.gui.UIModel;
+import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
@@ -36,6 +38,7 @@ class OffersModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(OffersModel.class);
 
     private final TradeManager tradeManager;
+    private User user;
 
     private final ObservableList<OfferListItem> list = FXCollections.observableArrayList();
     private MapChangeListener<String, Offer> offerMapChangeListener;
@@ -46,8 +49,9 @@ class OffersModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OffersModel(TradeManager tradeManager) {
+    public OffersModel(TradeManager tradeManager, User user) {
         this.tradeManager = tradeManager;
+        this.user = user;
     }
 
 
@@ -111,4 +115,8 @@ class OffersModel extends UIModel {
         return list;
     }
 
+    public Direction getDirection(Offer offer) {
+        return offer.getMessagePublicKey().equals(user.getMessagePublicKey()) ?
+                offer.getDirection() : offer.getMirroredDirection();
+    }
 }

@@ -48,7 +48,7 @@ public class Profiler {
             @Override
             public void handle(long l) {
                 long elapsed = (System.currentTimeMillis() - lastFPSTime);
-                if (elapsed > 19)
+                if (elapsed > 50)
                     log.trace("Profiler: last frame used {}ms", elapsed);
 
                 lastFPSTime = System.currentTimeMillis();

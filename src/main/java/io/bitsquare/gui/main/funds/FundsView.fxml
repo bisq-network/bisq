@@ -23,7 +23,7 @@
          AnchorPane.topAnchor="0.0"
          xmlns:fx="http://javafx.com/fxml">
 
-    <Tab fx:id="withdrawalTab" text="Withdrawal" closable="false"/>
-    <Tab fx:id="transactionsTab" text="Transactions" closable="false"/>
+    <Tab fx:id="withdrawalTab" text="Open for withdrawal" closable="false"/>
+    <Tab fx:id="transactionsTab" text="History" closable="false"/>
 
 </TabPane>

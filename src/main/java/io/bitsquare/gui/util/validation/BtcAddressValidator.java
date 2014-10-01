@@ -17,11 +17,11 @@
 
 package io.bitsquare.gui.util.validation;
 
-import io.bitsquare.locale.BSResources;
-
+import com.google.bitcoin.core.Address;
+import com.google.bitcoin.core.AddressFormatException;
 import com.google.bitcoin.core.NetworkParameters;
 
-import java.math.BigDecimal;
+import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +31,19 @@ import org.slf4j.LoggerFactory;
  * <p>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
-public final class BtcValidator extends NumberValidator {
-    private static final Logger log = LoggerFactory.getLogger(BtcValidator.class);
+public final class BtcAddressValidator extends InputValidator {
+    private static final Logger log = LoggerFactory.getLogger(BtcAddressValidator.class);
+    private NetworkParameters networkParameters;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Inject
+    public BtcAddressValidator(NetworkParameters networkParameters) {
+        this.networkParameters = networkParameters;
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -41,20 +52,12 @@ public final class BtcValidator extends NumberValidator {
 
     @Override
     public ValidationResult validate(String input) {
+
         ValidationResult result = validateIfNotEmpty(input);
-        if (result.isValid) {
-            input = cleanInput(input);
-            result = validateIfNumber(input);
-        }
-
-        if (result.isValid) {
-            result = validateIfNotZero(input)
-                    .and(validateIfNotNegative(input))
-                    .and(validateIfNotFractionalBtcValue(input))
-                    .and(validateIfNotExceedsMaxBtcValue(input));
-        }
-
-        return result;
+        if (result.isValid)
+            return validateBtcAddress(input);
+        else
+            return result;
     }
 
 
@@ -62,21 +65,12 @@ public final class BtcValidator extends NumberValidator {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private ValidationResult validateIfNotFractionalBtcValue(String input) {
-        BigDecimal bd = new BigDecimal(input);
-        final BigDecimal satoshis = bd.movePointRight(8);
-        if (satoshis.scale() > 0)
-            return new ValidationResult(false, BSResources.get("validation.btc.toSmall"));
-        else
+    private ValidationResult validateBtcAddress(String input) {
+        try {
+            new Address(networkParameters, input);
             return new ValidationResult(true);
-    }
-
-    private ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
-        BigDecimal bd = new BigDecimal(input);
-        final BigDecimal satoshis = bd.movePointRight(8);
-        if (satoshis.longValue() > NetworkParameters.MAX_MONEY.longValue())
-            return new ValidationResult(false, BSResources.get("validation.btc.toLarge"));
-        else
-            return new ValidationResult(true);
+        } catch (AddressFormatException e) {
+            return new ValidationResult(false, "Bitcoin address is a valid format");
+        }
     }
 }

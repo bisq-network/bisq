@@ -228,8 +228,8 @@ public class MainViewCB extends ViewCB<MainPM> {
 
         presentationModel.numPendingTrades.addListener((ov, oldValue, newValue) ->
         {
-            if ((int) newValue > (int) oldValue)
-                applyPendingTradesInfoIcon((int) newValue);
+            //if ((int) newValue > (int) oldValue)
+            applyPendingTradesInfoIcon((int) newValue);
         });
         applyPendingTradesInfoIcon(presentationModel.numPendingTrades.get());
         navigation.navigateToLastStoredItem();

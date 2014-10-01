@@ -185,6 +185,17 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
     @FXML
     void onShowPayFundsScreen() {
+        Popups.openInfo("To ensure that both traders are behaving fair you need to put in a security deposit to an " +
+                "offer. That will be refunded to you after the trade has successful completed.");
+        /*
+          Popups.openInfo("To ensure that both traders are behaving fair you need to put in a security deposit to an " +
+                "offer. That will be refunded to you after the trade has successful completed. In case of a " +
+                "dispute and the arbitrator will take the security deposit from the dishonest trader as his payment " +
+                "for the dispute resolution. The security deposit will be included in the deposit transaction at the " +
+                "moment when a trader accept your offer. As long as your offer is not taken by another trader, " +
+                "the security deposit will not leave your trading wallet, and will be refunded when you cancel your " +
+                "offer.");
+         */
         priceAmountPane.setInactive();
 
         showPaymentInfoScreenButton.setVisible(false);

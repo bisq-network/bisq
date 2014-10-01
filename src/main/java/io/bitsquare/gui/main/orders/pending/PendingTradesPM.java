@@ -19,13 +19,17 @@ package io.bitsquare.gui.main.orders.pending;
 
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
 
 import com.google.inject.Inject;
 
 import javafx.beans.InvalidationListener;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -50,12 +54,13 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     }
 
     private final BSFormatter formatter;
-
     private InvalidationListener stateChangeListener;
+    private BtcAddressValidator btcAddressValidator;
 
     final StringProperty txId = new SimpleStringProperty();
     final ObjectProperty<State> state = new SimpleObjectProperty<>();
     final ObjectProperty<Throwable> fault = new SimpleObjectProperty<>();
+    final BooleanProperty withdrawalButtonDisable = new SimpleBooleanProperty(true);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -63,10 +68,12 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    PendingTradesPM(PendingTradesModel model, BSFormatter formatter) {
+    PendingTradesPM(PendingTradesModel model, BSFormatter formatter,
+                    BtcAddressValidator btcAddressValidator) {
         super(model);
 
         this.formatter = formatter;
+        this.btcAddressValidator = btcAddressValidator;
     }
 
 
@@ -126,10 +133,25 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         model.fiatPaymentReceived();
     }
 
-    void closeSummary() {
-        model.closeSummary();
+    void removePendingTrade() {
+        model.removePendingTrade();
     }
 
+    void withdraw(String withdrawToAddress) {
+        // TODO address validation
+        if (withdrawToAddress != null && withdrawToAddress.length() > 0)
+            model.withdraw(withdrawToAddress);
+        else
+            Popups.openWarningPopup("Please fill in a withdrawal address where you want to send your bitcoins.");
+    }
+
+    void withdrawAddressFocusOut(String text) {
+        withdrawalButtonDisable.set(!btcAddressValidator.validate(text).isValid);
+    }
+
+    String getAmountToWithdraw() {
+        return formatter.formatCoinWithCode(model.getAmountToWithdraw());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -161,7 +183,7 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     }
 
     String getAmount(PendingTradesListItem item) {
-        return (item != null) ? formatter.formatAmountWithMinAmount(item.getTrade().getOffer()) : "";
+        return (item != null) ? formatter.formatCoinWithCode(item.getTrade().getTradeAmount()) : "";
     }
 
     String getPrice(PendingTradesListItem item) {
@@ -169,19 +191,11 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     }
 
     String getVolume(PendingTradesListItem item) {
-        return (item != null) ? formatter.formatVolumeWithMinVolume(item.getTrade().getOffer()) : "";
+        return (item != null) ? formatter.formatFiatWithCode(item.getTrade().getTradeVolume()) : "";
     }
 
     String getDirectionLabel(PendingTradesListItem item) {
-        if (item != null) {
-            if (model.isOfferer())
-                return formatter.formatDirection(item.getTrade().getOffer().getDirection()) + " Bitcoin";
-            else
-                return formatter.formatDirection(item.getTrade().getOffer().getMirroredDirection()) + " Bitcoin";
-        }
-        else {
-            return "";
-        }
+        return (item != null) ? formatter.formatDirection(model.getDirection(item.getTrade().getOffer())) : "";
     }
 
     String getDate(PendingTradesListItem item) {
@@ -191,6 +205,10 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     // payment
     String getPaymentMethod() {
         return BSResources.get(model.getTrade().getContract().getTakerBankAccount().getBankAccountType().toString());
+    }
+
+    String getFiatAmount() {
+        return formatter.formatFiatWithCode(model.getTrade().getTradeVolume());
     }
 
     String getHolderName() {
@@ -222,6 +240,9 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         return formatter.formatCoinWithCode(model.getTrade().getCollateralAmount());
     }
 
+    BtcAddressValidator getBtcAddressValidator() {
+        return btcAddressValidator;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

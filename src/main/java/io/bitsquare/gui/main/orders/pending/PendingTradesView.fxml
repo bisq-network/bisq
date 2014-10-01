@@ -18,6 +18,7 @@
   -->
 
 <?import io.bitsquare.gui.components.InfoDisplay?>
+<?import io.bitsquare.gui.components.InputTextField?>
 <?import io.bitsquare.gui.components.processbar.ProcessStepBar?>
 <?import io.bitsquare.gui.components.TextFieldWithCopyIcon?>
 <?import io.bitsquare.gui.components.TitledGroupBg?>
@@ -26,169 +27,227 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.orders.pending.PendingTradesViewCB"
-          hgap="5.0" vgap="5"
-          xmlns:fx="http://javafx.com/fxml">
-    <padding>
-        <Insets bottom="20.0" left="25.0" top="30.0" right="25"/>
-    </padding>
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.orders.pending.PendingTradesViewCB"
+            xmlns:fx="http://javafx.com/fxml">
 
-    <TitledSeparator text="Pending trades" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+    <ScrollPane fx:id="scrollPane" fitToWidth="true" fitToHeight="true"
+                AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
+                AnchorPane.bottomAnchor="0.0">
 
-    <TableView fx:id="table" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"
-               minHeight="120" prefHeight="120">
-        <GridPane.margin>
-            <Insets top="10.0" left="-10" right="-10" bottom="-15"/>
-        </GridPane.margin>
-        <columns>
-            <TableColumn text="Trade ID" fx:id="tradeIdColumn" minWidth="100" sortable="false"/>
-            <TableColumn text="Date" fx:id="dateColumn" minWidth="130"/>
-            <TableColumn text="Amount in BTC (Min.)" fx:id="amountColumn" minWidth="130" sortable="false"/>
-            <TableColumn text="Price" fx:id="priceColumn" minWidth="100" sortable="false"/>
-            <TableColumn text="Amount in EUR (Min.)" fx:id="volumeColumn" minWidth="130" sortable="false"/>
-            <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80" sortable="false"/>
-            <TableColumn text="" fx:id="selectColumn" minWidth="60" sortable="false"/>
-        </columns>
-    </TableView>
+        <GridPane fx:id="gridPane" hgap="5.0" vgap="5" minWidth="980">
+            <padding>
+                <Insets bottom="-10.0" left="25.0" top="30.0" right="25"/>
+            </padding>
 
-    <TitledGroupBg fx:id="titledGroupBg" text="Trade status" GridPane.rowIndex="1" GridPane.rowSpan="4"
-                   GridPane.columnSpan="2" visible="false">
-        <GridPane.margin>
-            <Insets top="40.0" bottom="-10" left="-10" right="-10"/>
-        </GridPane.margin>
-    </TitledGroupBg>
+            <TitledSeparator text="Pending trades" GridPane.rowIndex="0" GridPane.columnIndex="0"
+                             GridPane.columnSpan="2"/>
 
-    <ProcessStepBar fx:id="processBar" GridPane.rowIndex="1" GridPane.columnSpan="2" snapToPixel="true" visible="false">
-        <GridPane.margin>
-            <Insets top="60.0"/>
-        </GridPane.margin>
-    </ProcessStepBar>
+            <TableView fx:id="table" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"
+                       minHeight="120" prefHeight="120">
+                <GridPane.margin>
+                    <Insets top="10.0" left="-10" right="-10" bottom="-15"/>
+                </GridPane.margin>
+                <columns>
+                    <TableColumn text="Trade ID" fx:id="tradeIdColumn" minWidth="100" sortable="false"/>
+                    <TableColumn text="Date" fx:id="dateColumn" minWidth="130"/>
+                    <TableColumn text="Trade amount in BTC" fx:id="amountColumn" minWidth="130" sortable="false"/>
+                    <TableColumn text="Price" fx:id="priceColumn" minWidth="100" sortable="false"/>
+                    <TableColumn text="Trade amount in EUR" fx:id="volumeColumn" minWidth="130" sortable="false"/>
+                    <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80" sortable="false"/>
+                </columns>
+            </TableView>
+
+            <TitledGroupBg fx:id="titledGroupBg" text="Trade status" GridPane.rowIndex="1" GridPane.rowSpan="4"
+                           GridPane.columnSpan="2" managed="false" visible="false">
+                <GridPane.margin>
+                    <Insets top="40.0" bottom="-10" left="-10" right="-10"/>
+                </GridPane.margin>
+            </TitledGroupBg>
+
+            <ProcessStepBar fx:id="processBar" GridPane.rowIndex="1" GridPane.columnSpan="2" snapToPixel="true"
+                            managed="false" visible="false">
+                <GridPane.margin>
+                    <Insets top="60.0"/>
+                </GridPane.margin>
+            </ProcessStepBar>
 
 
-    <Label fx:id="statusLabel" text="Status:" GridPane.rowIndex="2" visible="false">
-        <GridPane.margin>
-            <Insets top="20.0"/>
-        </GridPane.margin>
-    </Label>
-    <TextField fx:id="statusTextField" GridPane.rowIndex="2" GridPane.columnIndex="1" editable="false" visible="false">
-        <GridPane.margin>
-            <Insets top="20.0"/>
-        </GridPane.margin>
-    </TextField>
+            <Label fx:id="statusLabel" text="Status:" GridPane.rowIndex="2" managed="false" visible="false">
+                <GridPane.margin>
+                    <Insets top="20.0"/>
+                </GridPane.margin>
+            </Label>
+            <TextField fx:id="statusTextField" GridPane.rowIndex="2" GridPane.columnIndex="1" editable="false"
+                       focusTraversable="false" mouseTransparent="true" managed="false" visible="false">
+                <GridPane.margin>
+                    <Insets top="20.0"/>
+                </GridPane.margin>
+            </TextField>
 
-    <Label fx:id="txIdLabel" text="Deposit transaction ID:" GridPane.rowIndex="3" visible="false"/>
-    <TxIdTextField fx:id="txIdTextField" GridPane.rowIndex="3" GridPane.columnIndex="1" visible="false"/>
+            <Label fx:id="txIdLabel" text="Deposit transaction ID:" GridPane.rowIndex="3" managed="false"
+                   visible="false"/>
+            <TxIdTextField fx:id="txIdTextField" GridPane.rowIndex="3" GridPane.columnIndex="1" managed="false"
+                           visible="false"/>
 
-    <InfoDisplay fx:id="infoDisplay" onAction="#onOpenHelp" rowIndex="4" gridPane="$root" visible="false"/>
+            <InfoDisplay fx:id="infoDisplay" onAction="#onOpenHelp" rowIndex="4" gridPane="$gridPane" managed="false"
+                         visible="false"/>
 
-    <Button fx:id="confirmPaymentReceiptButton" text="Confirm payment receipt" onAction="#onConfirmPaymentReceipt"
-            GridPane.rowIndex="5" GridPane.columnIndex="1" defaultButton="true" visible="false">
-        <GridPane.margin>
-            <Insets top="-5"/>
-        </GridPane.margin>
-    </Button>
+            <Button fx:id="confirmPaymentReceiptButton" text="Confirm payment receipt"
+                    onAction="#onConfirmPaymentReceipt" GridPane.rowIndex="5" GridPane.columnIndex="1"
+                    defaultButton="true" managed="false" visible="false">
+                <GridPane.margin>
+                    <Insets top="15"/>
+                </GridPane.margin>
+            </Button>
 
-    <!-- 
-    Payments
-    -->
-    <TitledGroupBg fx:id="paymentsGroupBg" text="Payments details" GridPane.rowIndex="5" GridPane.rowSpan="5"
-                   GridPane.columnSpan="2" visible="false">
-        <GridPane.margin>
-            <Insets top="40.0" bottom="-10" left="-10" right="-10"/>
-        </GridPane.margin>
-    </TitledGroupBg>
+            <!-- 
+            Payments
+            -->
+            <TitledGroupBg fx:id="paymentsGroupBg" text="Payments details" GridPane.rowIndex="5" GridPane.rowSpan="6"
+                           GridPane.columnSpan="2" managed="false" visible="false">
+                <GridPane.margin>
+                    <Insets top="40.0" bottom="-10" left="-10" right="-10"/>
+                </GridPane.margin>
+            </TitledGroupBg>
 
-    <Label fx:id="paymentMethodLabel" text="Payments method:" GridPane.rowIndex="5" visible="false">
-        <GridPane.margin>
-            <Insets top="60.0"/>
-        </GridPane.margin>
-    </Label>
-    <TextField fx:id="paymentMethodTextField" GridPane.rowIndex="5" GridPane.columnIndex="1" editable="false"
-               visible="false">
-        <GridPane.margin>
-            <Insets top="60.0"/>
-        </GridPane.margin>
-    </TextField>
+            <Label fx:id="fiatAmountLabel" text="Amount to transfer:" GridPane.rowIndex="5" managed="false"
+                   visible="false">
+                <GridPane.margin>
+                    <Insets top="60.0"/>
+                </GridPane.margin>
+            </Label>
+            <TextFieldWithCopyIcon fx:id="fiatAmountTextField" GridPane.rowIndex="5" GridPane.columnIndex="1"
+                                   managed="false" visible="false">
+                <GridPane.margin>
+                    <Insets top="60.0"/>
+                </GridPane.margin>
+            </TextFieldWithCopyIcon>
 
-    <Label fx:id="holderNameLabel" text="Holder name:" GridPane.rowIndex="6" visible="false"/>
-    <TextFieldWithCopyIcon fx:id="holderNameTextField" GridPane.rowIndex="6" GridPane.columnIndex="1" visible="false"/>
+            <Label fx:id="paymentMethodLabel" text="Payments method:" GridPane.rowIndex="6" managed="false"
+                   visible="false"/>
 
-    <Label fx:id="primaryIdLabel" text="Primary ID:" GridPane.rowIndex="7" visible="false"/>
-    <TextFieldWithCopyIcon fx:id="primaryIdTextField" GridPane.rowIndex="7" GridPane.columnIndex="1" visible="false"/>
+            <TextField fx:id="paymentMethodTextField" GridPane.rowIndex="6" GridPane.columnIndex="1" editable="false"
+                       focusTraversable="false" mouseTransparent="true" managed="false" visible="false"/>
 
-    <Label fx:id="secondaryIdLabel" text="Secondary ID:" GridPane.rowIndex="8" visible="false"/>
-    <TextFieldWithCopyIcon fx:id="secondaryIdTextField" GridPane.rowIndex="8" GridPane.columnIndex="1" visible="false"/>
+            <Label fx:id="holderNameLabel" text="Receiver name:" GridPane.rowIndex="7" managed="false" visible="false"/>
+            <TextFieldWithCopyIcon fx:id="holderNameTextField" GridPane.rowIndex="7" GridPane.columnIndex="1"
+                                   managed="false" visible="false"/>
 
-    <InfoDisplay fx:id="paymentsInfoDisplay" onAction="#onOpenPaymentsHelp" rowIndex="9" gridPane="$root"
-                 visible="false"/>
+            <Label fx:id="primaryIdLabel" text="IBAN:" GridPane.rowIndex="8" managed="false" visible="false"/>
+            <TextFieldWithCopyIcon fx:id="primaryIdTextField" GridPane.rowIndex="8" GridPane.columnIndex="1"
+                                   managed="false" visible="false"/>
 
-    <Button fx:id="paymentsButton" text="Payment started" onAction="#onPaymentStarted" GridPane.rowIndex="10"
-            GridPane.columnIndex="1" defaultButton="true" visible="false">
-        <GridPane.margin>
-            <Insets top="15"/>
-        </GridPane.margin>
-    </Button>
+            <Label fx:id="secondaryIdLabel" text="BIC:" GridPane.rowIndex="9" managed="false" visible="false"/>
+            <TextFieldWithCopyIcon fx:id="secondaryIdTextField" GridPane.rowIndex="9" GridPane.columnIndex="1"
+                                   managed="false" visible="false"/>
 
-    <!-- 
-    Summary
-    -->
-    <TitledGroupBg fx:id="summaryGroupBg" text="Summary" GridPane.rowIndex="5" GridPane.rowSpan="5"
-                   GridPane.columnSpan="2" visible="false">
-        <GridPane.margin>
-            <Insets top="40.0" bottom="-10" left="-10" right="-10"/>
-        </GridPane.margin>
-    </TitledGroupBg>
+            <InfoDisplay fx:id="paymentsInfoDisplay" onAction="#onOpenPaymentsHelp" rowIndex="10" gridPane="$gridPane"
+                         managed="false" visible="false"/>
 
-    <Label fx:id="btcLabel" GridPane.rowIndex="5" visible="false">
-        <GridPane.margin>
-            <Insets top="60.0"/>
-        </GridPane.margin>
-    </Label>
-    <TextField fx:id="btcTextField" GridPane.rowIndex="5" GridPane.columnIndex="1" editable="false"
-               visible="false">
-        <GridPane.margin>
-            <Insets top="60.0"/>
-        </GridPane.margin>
-    </TextField>
+            <Button fx:id="paymentsButton" text="Payment started" onAction="#onPaymentStarted" GridPane.rowIndex="11"
+                    GridPane.columnIndex="1" defaultButton="true" managed="false" visible="false">
+                <GridPane.margin>
+                    <Insets top="15" bottom="40"/>
+                </GridPane.margin>
+            </Button>
 
-    <Label fx:id="fiatLabel" GridPane.rowIndex="6" visible="false"/>
-    <TextField fx:id="fiatTextField" GridPane.rowIndex="6" GridPane.columnIndex="1" editable="false" visible="false"/>
+            <!-- 
+            Summary
+            -->
+            <TitledGroupBg fx:id="summaryGroupBg" text="Summary" GridPane.rowIndex="5" GridPane.rowSpan="5"
+                           GridPane.columnSpan="2" managed="false" visible="false">
+                <GridPane.margin>
+                    <Insets top="40.0" bottom="-10" left="-10" right="-10"/>
+                </GridPane.margin>
+            </TitledGroupBg>
 
-    <Label fx:id="feesLabel" text="Total fees paid:" GridPane.rowIndex="7" visible="false"/>
-    <TextField fx:id="feesTextField" GridPane.rowIndex="7" GridPane.columnIndex="1" editable="false" visible="false"/>
+            <Label fx:id="btcTradeAmountLabel" GridPane.rowIndex="5" managed="false" visible="false">
+                <GridPane.margin>
+                    <Insets top="60.0"/>
+                </GridPane.margin>
+            </Label>
+            <TextField fx:id="btcTradeAmountTextField" GridPane.rowIndex="5" GridPane.columnIndex="1" editable="false"
+                       focusTraversable="false" mouseTransparent="true" managed="false" visible="false">
+                <GridPane.margin>
+                    <Insets top="60.0"/>
+                </GridPane.margin>
+            </TextField>
 
-    <Label fx:id="collateralLabel" text="Refunded collateral:" GridPane.rowIndex="8" visible="false"/>
-    <TextField fx:id="collateralTextField" GridPane.rowIndex="8" GridPane.columnIndex="1" editable="false"
-               visible="false"/>
+            <Label fx:id="fiatTradeAmountLabel" GridPane.rowIndex="6" managed="false" visible="false"/>
+            <TextField fx:id="fiatTradeAmountTextField" GridPane.rowIndex="6" GridPane.columnIndex="1" editable="false"
+                       focusTraversable="false" mouseTransparent="true" managed="false" visible="false"/>
 
-    <InfoDisplay fx:id="summaryInfoDisplay" onAction="#onOpenSummaryHelp" rowIndex="9" gridPane="$root"
-                 visible="false"/>
+            <Label fx:id="feesLabel" text="Total fees paid:" GridPane.rowIndex="7" managed="false" visible="false"/>
+            <TextField fx:id="feesTextField" GridPane.rowIndex="7" GridPane.columnIndex="1" editable="false"
+                       focusTraversable="false" mouseTransparent="true" managed="false" visible="false"/>
 
-    <Button fx:id="openWithdrawalButton" text="Open withdrawal screen" onAction="#onOpenWithdrawal"
-            GridPane.rowIndex="10"
-            GridPane.columnIndex="1" defaultButton="true" visible="false">
-        <GridPane.margin>
-            <Insets top="15"/>
-        </GridPane.margin>
-    </Button>
+            <Label fx:id="collateralLabel" text="Refunded collateral:" GridPane.rowIndex="8" managed="false"
+                   visible="false"/>
+            <TextField fx:id="collateralTextField" GridPane.rowIndex="8" GridPane.columnIndex="1" editable="false"
+                       focusTraversable="false" mouseTransparent="true" managed="false" visible="false"/>
 
-    <columnConstraints>
-        <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="200"/>
-        <ColumnConstraints hgrow="ALWAYS"/>
-    </columnConstraints>
+            <InfoDisplay fx:id="summaryInfoDisplay" onAction="#onOpenSummaryHelp" rowIndex="9" gridPane="$gridPane"
+                         managed="false" visible="false"/>
 
-    <rowConstraints>
-        <RowConstraints/>
-        <RowConstraints/>
-        <RowConstraints/>
-        <RowConstraints/>
-        <RowConstraints/>
-        <RowConstraints/>
-        <RowConstraints/>
-        <RowConstraints/>
-        <RowConstraints/>
-        <RowConstraints/>
-        <RowConstraints/>
-    </rowConstraints>
+            <!-- 
+            Withdraw
+            -->
+            <TitledGroupBg fx:id="withdrawGroupBg" text="Withdraw your bitcoins" GridPane.rowIndex="10"
+                           GridPane.rowSpan="2"
+                           GridPane.columnSpan="2" managed="false" visible="false">
+                <GridPane.margin>
+                    <Insets top="40.0" bottom="-10" left="-10" right="-10"/>
+                </GridPane.margin>
+            </TitledGroupBg>
 
-</GridPane>
+            <Label fx:id="withdrawAmountLabel" text="Amount to withdraw:" GridPane.rowIndex="10"
+                   managed="false" visible="false">
+                <GridPane.margin>
+                    <Insets top="60.0"/>
+                </GridPane.margin>
+            </Label>
+            <TextField fx:id="withdrawAmountTextField" GridPane.rowIndex="10" GridPane.columnIndex="1" editable="false"
+                       focusTraversable="false" mouseTransparent="true" managed="false" visible="false">
+                <GridPane.margin>
+                    <Insets top="60.0"/>
+                </GridPane.margin>
+            </TextField>
+
+            <Label fx:id="withdrawAddressLabel" text="Withdraw to address:" GridPane.rowIndex="11" managed="false"
+                   visible="false"/>
+            <InputTextField fx:id="withdrawAddressTextField" GridPane.rowIndex="11" GridPane.columnIndex="1"
+                            managed="false" visible="false"/>
+
+            <Button fx:id="withdrawButton" text="Withdrawal to external wallet" onAction="#onWithdraw"
+                    GridPane.rowIndex="12" GridPane.columnIndex="1" defaultButton="true" managed="false"
+                    visible="false">
+                <GridPane.margin>
+                    <Insets top="15" bottom="40"/>
+                </GridPane.margin>
+            </Button>
+
+            <columnConstraints>
+                <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="200"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+
+            <rowConstraints>
+                <RowConstraints/>
+                <RowConstraints/>
+                <RowConstraints/>
+                <RowConstraints/>
+                <RowConstraints/>
+                <RowConstraints/>
+                <RowConstraints/>
+                <RowConstraints/>
+                <RowConstraints/>
+                <RowConstraints/>
+                <RowConstraints/>
+                <RowConstraints/>
+                <RowConstraints/>
+            </rowConstraints>
+
+        </GridPane>
+    </ScrollPane>
+</AnchorPane>
+   

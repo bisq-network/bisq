@@ -96,19 +96,17 @@ public class InfoDisplay extends Parent {
         textFlow.getChildren().addAll(testLabel);
 
         testLabel.widthProperty().addListener((ov, o, n) -> {
-            if ((double) n > textFlow.getWidth()) {
-                link.setText(BSResources.get("shared.readMore"));
-                useReadMore = true;
-            }
-            else {
-                link.setText(BSResources.get("shared.openHelp"));
-            }
+            useReadMore = (double) n > textFlow.getWidth();
+            link.setText(BSResources.get(useReadMore ? "shared.readMore" : "shared.openHelp"));
             Platform.runLater(() -> textFlow.getChildren().setAll(label, link));
         });
 
         // update the width when the window gets resized
-        ChangeListener<Number> listener = (ov2, oldValue2, windowWidth) ->
-                label.setPrefWidth((double) windowWidth - localToScene(0, 0).getX() - 35);
+        ChangeListener<Number> listener = (ov2, oldValue2, windowWidth) -> {
+            if (label.prefWidthProperty().isBound())
+                label.prefWidthProperty().unbind();
+            label.setPrefWidth((double) windowWidth - localToScene(0, 0).getX() - 35);
+        };
 
 
         // when clicking "Read more..." we expand and change the link to the Help 
@@ -120,12 +118,14 @@ public class InfoDisplay extends Parent {
                     label.setWrapText(true);
                     link.setText(BSResources.get("shared.openHelp"));
                     getScene().getWindow().widthProperty().removeListener(listener);
-                    label.prefWidthProperty().unbind();
+                    if (label.prefWidthProperty().isBound())
+                        label.prefWidthProperty().unbind();
                     label.prefWidthProperty().bind(textFlow.widthProperty());
                     link.setVisited(false);
                     // focus border is a bit confusing here so we remove it
                     link.setStyle("-fx-focus-color: transparent;");
                     link.setOnAction(onAction.get());
+                    getParent().layout();
                 }
                 else {
                     onAction.get().handle(actionEvent);
@@ -154,7 +154,13 @@ public class InfoDisplay extends Parent {
 
     public void setText(String text) {
         this.text.set(text);
-        layout();
+        if (getScene() != null) {
+            Platform.runLater(() -> {
+                label.setVisible(true);
+                label.prefWidthProperty().unbind();
+                label.setPrefWidth(getScene().getWindow().getWidth() - localToScene(0, 0).getX() - 35);
+            });
+        }
     }
 
     public void setGridPane(GridPane gridPane) {

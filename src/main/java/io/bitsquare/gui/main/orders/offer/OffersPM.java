@@ -108,7 +108,7 @@ class OffersPM extends PresentationModel<OffersModel> {
     }
 
     String getDirectionLabel(OfferListItem item) {
-        return (item != null) ? formatter.formatDirection(item.getOffer().getMirroredDirection()) : "";
+        return (item != null) ? formatter.formatDirection(model.getDirection(item.getOffer())) : "";
     }
 
     String getDate(OfferListItem item) {

@@ -34,8 +34,8 @@ import javax.inject.Inject;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.*;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,7 +127,7 @@ public class OrdersViewCB extends CachedViewCB {
 
         final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
         try {
-            GridPane view = loader.load();
+            Parent view = loader.load();
             Tab tab = null;
             switch (navigationItem) {
                 case OFFERS:
