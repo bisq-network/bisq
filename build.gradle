@@ -11,6 +11,23 @@ javafx {
     appID 'Bitsquare'
     appName 'Bitsquare'
     mainClass 'io.bitsquare.BitSquare'
+
+    profiles {
+        // not every possible platform override, but ones that have a known impact
+        windows {
+            //id = 'c533f663-1efd-489f-b910-4c7ec20c7fd0'
+            //category = 'JavaFX Demos'
+            javaRuntime = 'C:/Program Files/Java/jdk1.8.0_20/jre'
+
+            bundleArguments = [
+                // for EXE and MSI bundles
+                //'win.menuGroup' : 'Gradle Samples',	 //If menuHint is set, then this is the menu group to install the application into.
+
+                // fir MSI bundles, they have stricter version numbering rules
+                'win.msi.productVersion' : '0.1.0'
+            ]
+        }
+    }
 }
 
 repositories {
