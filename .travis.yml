@@ -28,3 +28,12 @@ notifications:
     on_failure: always
     use_notice: true
     skip_join: true
+
+deploy:
+  provider: releases
+  api_key:
+    secure: PyA8sGzvjlYJSqh3V4bO9pBhiMMJ2OwClkJS/gunsscCmX3T9FRbx8ueutpOxRRFtapS50l+SB7qwq+X63EqTMGMOf8h59uul2ktA5wHJX+G8l4rtLa9yLnJM8tU3IL5e7Banm8d7VcLSVYVcpC/buI+Z1yh8o7ldB87b1E8E24=
+  file: build/distributions/bitsquare-0.1.0-SNAPSHOT.deb
+  on:
+    repo: bitsquare/bitsquare
+    branch: native
