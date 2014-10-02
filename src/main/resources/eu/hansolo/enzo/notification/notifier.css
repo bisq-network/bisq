@@ -1,0 +1,40 @@
+/*
+ * Copyright (c) 2013 by Gerrit Grunwald
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/*
+.root {
+    -fx-background-color: transparent;
+    -fx-fill            : transparent;
+}
+.notification {
+    -fx-background-color : rgba(15, 15, 15, 0.8);
+    -fx-background-radius: 5;
+    -fx-effect           : innershadow(two-pass-box, rgba(255, 255, 255, 0.6), 5.0, 0.25, 0, 0);    
+    -foreground-color    : white;
+    -icon-color          : white;
+}
+
+.notification .title {
+    -fx-font-size  : 1.083333em;
+    -fx-font-weight: bold;
+    -fx-text-fill  : -foreground-color;
+}
+.notification .message {
+    -fx-font-size       : 1.0em;
+    -fx-content-display : left;
+    -fx-graphic-text-gap: 10;
+    -fx-text-fill       : -foreground-color;
+}
+*/
