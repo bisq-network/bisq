@@ -26,8 +26,8 @@ import io.bitsquare.locale.BSResources;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 
-import com.google.bitcoin.core.Address;
-import com.google.bitcoin.core.Coin;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 

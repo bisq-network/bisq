@@ -41,10 +41,10 @@ import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDep
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
 import io.bitsquare.user.User;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.Utils;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.Utils;
 
 import java.security.PublicKey;
 

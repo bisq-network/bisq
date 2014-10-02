@@ -19,8 +19,8 @@ package io.bitsquare.gui.components;
 
 import io.bitsquare.gui.OverlayManager;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.uri.BitcoinURI;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.uri.BitcoinURI;
 
 import java.awt.*;
 

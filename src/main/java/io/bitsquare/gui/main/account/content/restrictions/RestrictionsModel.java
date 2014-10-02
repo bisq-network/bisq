@@ -30,8 +30,8 @@ import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Utils;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Utils;
 
 import com.google.inject.Inject;
 

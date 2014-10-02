@@ -17,11 +17,11 @@
 
 package io.bitsquare.btc;
 
-import com.google.bitcoin.core.Address;
-import com.google.bitcoin.core.AddressFormatException;
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.NetworkParameters;
-import com.google.bitcoin.core.Transaction;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 

@@ -41,9 +41,9 @@ import io.bitsquare.trade.protocol.trade.taker.tasks.SignAndPublishPayoutTx;
 import io.bitsquare.trade.protocol.trade.taker.tasks.VerifyOffererAccount;
 import io.bitsquare.user.User;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Transaction;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Transaction;
 
 import java.security.PublicKey;
 

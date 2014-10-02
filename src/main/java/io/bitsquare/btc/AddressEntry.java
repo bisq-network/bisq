@@ -17,10 +17,10 @@
 
 package io.bitsquare.btc;
 
-import com.google.bitcoin.core.Address;
-import com.google.bitcoin.core.NetworkParameters;
-import com.google.bitcoin.core.Utils;
-import com.google.bitcoin.crypto.DeterministicKey;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Utils;
+import org.bitcoinj.crypto.DeterministicKey;
 
 import java.io.Serializable;
 

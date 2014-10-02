@@ -17,9 +17,9 @@
 
 package io.bitsquare.trade;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.utils.Fiat;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.utils.Fiat;
 
 import java.io.Serializable;
 

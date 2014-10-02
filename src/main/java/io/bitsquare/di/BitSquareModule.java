@@ -41,10 +41,10 @@ import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 import io.bitsquare.util.ConfigLoader;
 
-import com.google.bitcoin.core.NetworkParameters;
-import com.google.bitcoin.params.MainNetParams;
-import com.google.bitcoin.params.RegTestParams;
-import com.google.bitcoin.params.TestNet3Params;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.TestNet3Params;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;

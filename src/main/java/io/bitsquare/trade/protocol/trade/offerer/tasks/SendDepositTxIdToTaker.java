@@ -23,8 +23,8 @@ import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
 
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.Utils;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.Utils;
 
 import net.tomp2p.peers.PeerAddress;
 

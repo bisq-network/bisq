@@ -21,7 +21,7 @@ import io.bitsquare.BitSquare;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.locale.BSResources;
 
-import com.google.bitcoin.store.BlockStoreException;
+import org.bitcoinj.store.BlockStoreException;
 
 import com.google.common.base.Throwables;
 

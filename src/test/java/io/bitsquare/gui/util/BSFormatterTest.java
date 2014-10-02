@@ -19,7 +19,7 @@ package io.bitsquare.gui.util;
 
 import io.bitsquare.user.User;
 
-import com.google.bitcoin.core.Coin;
+import org.bitcoinj.core.Coin;
 
 import java.util.Locale;
 

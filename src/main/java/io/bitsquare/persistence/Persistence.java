@@ -20,7 +20,7 @@ package io.bitsquare.persistence;
 import io.bitsquare.BitSquare;
 import io.bitsquare.util.FileUtil;
 
-import com.google.bitcoin.utils.Threading;
+import org.bitcoinj.utils.Threading;
 
 import java.io.File;
 import java.io.FileInputStream;

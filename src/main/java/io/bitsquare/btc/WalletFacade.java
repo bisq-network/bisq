@@ -24,31 +24,31 @@ import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.persistence.Persistence;
 
-import com.google.bitcoin.core.Address;
-import com.google.bitcoin.core.AddressFormatException;
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.InsufficientMoneyException;
-import com.google.bitcoin.core.NetworkParameters;
-import com.google.bitcoin.core.ScriptException;
-import com.google.bitcoin.core.Sha256Hash;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.TransactionConfidence;
-import com.google.bitcoin.core.TransactionInput;
-import com.google.bitcoin.core.TransactionOutPoint;
-import com.google.bitcoin.core.TransactionOutput;
-import com.google.bitcoin.core.Utils;
-import com.google.bitcoin.core.VerificationException;
-import com.google.bitcoin.core.Wallet;
-import com.google.bitcoin.core.WalletEventListener;
-import com.google.bitcoin.crypto.DeterministicKey;
-import com.google.bitcoin.crypto.TransactionSignature;
-import com.google.bitcoin.kits.WalletAppKit;
-import com.google.bitcoin.params.MainNetParams;
-import com.google.bitcoin.params.RegTestParams;
-import com.google.bitcoin.script.Script;
-import com.google.bitcoin.script.ScriptBuilder;
-import com.google.bitcoin.utils.Threading;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.ScriptException;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutPoint;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.core.Utils;
+import org.bitcoinj.core.VerificationException;
+import org.bitcoinj.core.Wallet;
+import org.bitcoinj.core.WalletEventListener;
+import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.crypto.TransactionSignature;
+import org.bitcoinj.kits.WalletAppKit;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.script.Script;
+import org.bitcoinj.script.ScriptBuilder;
+import org.bitcoinj.utils.Threading;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
@@ -81,7 +81,7 @@ import org.slf4j.LoggerFactory;
 
 import lighthouse.files.AppDirectory;
 
-import static com.google.bitcoin.script.ScriptOpCodes.OP_RETURN;
+import static org.bitcoinj.script.ScriptOpCodes.OP_RETURN;
 
 /**
  * TODO: use walletextension (with protobuffer) instead of saving addressEntryList via storage
@@ -802,7 +802,7 @@ public class WalletFacade {
         }
 
         log.trace("check if it can be correctly spent for input 1");
-        input.getScriptSig().correctlySpends(tx, 1, scriptPubKey, false);
+        input.getScriptSig().correctlySpends(tx, 1, scriptPubKey);
 
         log.trace("verify tx");
         tx.verify();
@@ -917,12 +917,12 @@ public class WalletFacade {
             throw new ScriptException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
         }
 
-        input.getScriptSig().correctlySpends(tx, 0, scriptPubKey, false);
+        input.getScriptSig().correctlySpends(tx, 0, scriptPubKey);
         log.trace("check if it can be correctly spent for input 0 OK");
 
         TransactionInput input1 = tx.getInput(1);
         scriptPubKey = input1.getConnectedOutput().getScriptPubKey();
-        input1.getScriptSig().correctlySpends(tx, 1, scriptPubKey, false);
+        input1.getScriptSig().correctlySpends(tx, 1, scriptPubKey);
         log.trace("check if it can be correctly spent for input 1 OK");
 
          /*
@@ -1053,7 +1053,7 @@ public class WalletFacade {
         tx.verify();
 
         log.trace("check if it can be correctly spent for ms input");
-        tx.getInput(0).getScriptSig().correctlySpends(tx, 0, multiSigScript, false);
+        tx.getInput(0).getScriptSig().correctlySpends(tx, 0, multiSigScript);
 
         log.trace("verify multiSigOutput");
         tx.getInput(0).verify(multiSigOutput);
@@ -1140,7 +1140,7 @@ public class WalletFacade {
         void downloadComplete();
     }
 
-    private class BlockChainDownloadListener extends com.google.bitcoin.core.DownloadListener {
+    private class BlockChainDownloadListener extends org.bitcoinj.core.DownloadListener {
         @Override
         protected void progress(double percent, int blocksSoFar, Date date) {
             super.progress(percent, blocksSoFar, date);

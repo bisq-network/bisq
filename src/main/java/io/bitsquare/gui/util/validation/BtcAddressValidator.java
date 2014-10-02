@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.util.validation;
 
-import com.google.bitcoin.core.Address;
-import com.google.bitcoin.core.AddressFormatException;
-import com.google.bitcoin.core.NetworkParameters;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.NetworkParameters;
 
 import javax.inject.Inject;
 

@@ -27,8 +27,8 @@ import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.util.ViewLoader;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.utils.Fiat;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 
 import java.io.IOException;
 

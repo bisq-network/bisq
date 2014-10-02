@@ -22,7 +22,7 @@ import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 
-import com.google.bitcoin.core.Transaction;
+import org.bitcoinj.core.Transaction;
 
 import java.net.URL;
 

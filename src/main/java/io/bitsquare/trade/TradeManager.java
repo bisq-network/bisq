@@ -41,9 +41,9 @@ import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
 import io.bitsquare.user.User;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.utils.Fiat;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.utils.Fiat;
 
 import java.util.HashMap;
 import java.util.Map;

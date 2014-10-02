@@ -25,9 +25,9 @@ import io.bitsquare.gui.UIModel;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.InsufficientMoneyException;
-import com.google.bitcoin.core.Transaction;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.Transaction;
 
 import com.google.common.util.concurrent.FutureCallback;
 

@@ -17,7 +17,7 @@
 
 package io.bitsquare.util;
 
-import com.google.bitcoin.core.Coin;
+import org.bitcoinj.core.Coin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

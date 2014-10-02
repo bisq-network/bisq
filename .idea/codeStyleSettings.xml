@@ -18,7 +18,7 @@
           <value>
             <package name="io.bitsquare" withSubpackages="true" static="false" />
             <emptyLine />
-            <package name="com.google.bitcoin" withSubpackages="true" static="false" />
+            <package name="org.bitcoinj" withSubpackages="true" static="false" />
             <emptyLine />
             <package name="com.google.common" withSubpackages="true" static="false" />
             <emptyLine />
