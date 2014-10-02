@@ -17,7 +17,7 @@
 
 package io.bitsquare.btc.listeners;
 
-import com.google.bitcoin.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionConfidence;
 
 public class TxConfidenceListener {
     private final String txID;

@@ -24,8 +24,8 @@ import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.locale.Country;
 import io.bitsquare.user.User;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.utils.Fiat;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 
 import java.util.Locale;
 

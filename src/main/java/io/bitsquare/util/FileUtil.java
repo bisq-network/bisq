@@ -17,7 +17,7 @@
 
 package io.bitsquare.util;
 
-import com.google.bitcoin.core.Utils;
+import org.bitcoinj.core.Utils;
 
 import java.io.File;
 import java.io.IOException;

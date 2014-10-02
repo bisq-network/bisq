@@ -63,7 +63,7 @@ public class Utilities {
         Object result = null;
         try {
             ByteArrayInputStream byteInputStream =
-                    new ByteArrayInputStream(com.google.bitcoin.core.Utils.parseAsHexOrBase58(serializedHexString));
+                    new ByteArrayInputStream(org.bitcoinj.core.Utils.parseAsHexOrBase58(serializedHexString));
 
             try (ObjectInputStream objectInputStream = new ObjectInputStream(byteInputStream)) {
                 result = objectInputStream.readObject();
@@ -88,7 +88,7 @@ public class Utilities {
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
             objectOutputStream.writeObject(serializable);
 
-            result = com.google.bitcoin.core.Utils.HEX.encode(byteArrayOutputStream.toByteArray());
+            result = org.bitcoinj.core.Utils.HEX.encode(byteArrayOutputStream.toByteArray());
             byteArrayOutputStream.close();
             objectOutputStream.close();
 

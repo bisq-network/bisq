@@ -19,8 +19,8 @@ package io.bitsquare.gui.main.trade;
 
 import io.bitsquare.trade.Offer;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.utils.Fiat;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 
 public interface TradeNavigator {
     void createOffer(Coin amount, Fiat price);

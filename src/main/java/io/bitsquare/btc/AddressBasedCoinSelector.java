@@ -17,15 +17,15 @@
 
 package io.bitsquare.btc;
 
-import com.google.bitcoin.core.Address;
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.NetworkParameters;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.TransactionConfidence;
-import com.google.bitcoin.core.TransactionOutput;
-import com.google.bitcoin.params.RegTestParams;
-import com.google.bitcoin.wallet.CoinSelection;
-import com.google.bitcoin.wallet.DefaultCoinSelector;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.wallet.CoinSelection;
+import org.bitcoinj.wallet.DefaultCoinSelector;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class implements a {@link com.google.bitcoin.wallet.CoinSelector} which attempts to get the highest priority
+ * This class implements a {@link org.bitcoinj.wallet.CoinSelector} which attempts to get the highest priority
  * possible. This means that the transaction is the most likely to get confirmed. Note that this means we may end up
  * "spending" more priority than would be required to get the transaction we are creating confirmed.
  */

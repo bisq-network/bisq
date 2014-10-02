@@ -24,8 +24,8 @@ import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.ECKey;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 
 import javafx.util.Pair;
 

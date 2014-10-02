@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.taker;
 
 import io.bitsquare.trade.Trade;
 
-import com.google.bitcoin.core.Transaction;
+import org.bitcoinj.core.Transaction;
 
 public interface SellerTakesOfferProtocolListener {
     void onDepositTxPublished(Transaction depositTx);

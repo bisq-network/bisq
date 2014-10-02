@@ -17,10 +17,10 @@
 
 package io.bitsquare.crypto;
 
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Sha256Hash;
-import com.google.bitcoin.core.Utils;
-import com.google.bitcoin.crypto.KeyCrypterException;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.Utils;
+import org.bitcoinj.crypto.KeyCrypterException;
 
 import com.google.common.base.Charsets;
 

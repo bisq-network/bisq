@@ -19,7 +19,7 @@ package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.locale.BSResources;
 
-import com.google.bitcoin.core.NetworkParameters;
+import org.bitcoinj.core.NetworkParameters;
 
 import java.math.BigDecimal;
 

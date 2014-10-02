@@ -21,7 +21,7 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
 
-import com.google.bitcoin.core.Transaction;
+import org.bitcoinj.core.Transaction;
 
 import com.google.common.util.concurrent.FutureCallback;
 

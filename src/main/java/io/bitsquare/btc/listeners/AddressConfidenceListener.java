@@ -17,8 +17,8 @@
 
 package io.bitsquare.btc.listeners;
 
-import com.google.bitcoin.core.Address;
-import com.google.bitcoin.core.TransactionConfidence;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.TransactionConfidence;
 
 public class AddressConfidenceListener {
     private final Address address;

@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.trade.handlers.ExceptionHandler;
 
-import com.google.bitcoin.core.Transaction;
+import org.bitcoinj.core.Transaction;
 
 import com.google.common.util.concurrent.FutureCallback;
 
