@@ -207,8 +207,8 @@
                 </GridPane.margin>
             </Label>
             <TextField fx:id="withdrawAmountTextField" GridPane.rowIndex="10" GridPane.columnIndex="1" editable="false"
-                       focusTraversable="false" mouseTransparent="true" managed="false" visible="false">
-                <GridPane.margin>
+                       focusTraversable="false" managed="false" visible="false">
+            <GridPane.margin>
                     <Insets top="60.0"/>
                 </GridPane.margin>
             </TextField>

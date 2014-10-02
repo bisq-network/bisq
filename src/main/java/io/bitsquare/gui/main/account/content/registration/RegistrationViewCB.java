@@ -96,8 +96,8 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
         presentationModel.requestPlaceOfferErrorMessage.addListener((o, oldValue, newValue) -> {
             if (newValue != null) {
                 Popups.openErrorPopup(BSResources.get("shared.error"),
-                        BSResources.get("createOffer.amountPriceBox.error.message",
-                                presentationModel.requestPlaceOfferErrorMessage.get()));
+                        BSResources.get("An error occurred when paying the registration fee"),
+                        newValue);
             }
         });
 
@@ -129,10 +129,10 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
                     }
                 });
 
-                Popups.openInfo(BSResources.get("The Transaction ID for the offer payment is:\n" +
+                Popups.openInfo(BSResources.get("You have been successfully registered."),
+                        BSResources.get("The transaction ID for the registration fee payment is:\n\n" +
                                 presentationModel.getTransactionId() +
                                 "\n\n You can now start trading."),
-                        BSResources.get("You have been successfully registered."),
                         actions);
             }
         });

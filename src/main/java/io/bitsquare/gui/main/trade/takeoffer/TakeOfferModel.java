@@ -155,6 +155,7 @@ class TakeOfferModel extends UIModel {
     void takeOffer() {
         Trade trade = tradeManager.takeOffer(amountAsCoin.get(), offer);
         trade.stateProperty().addListener((ov, oldValue, newValue) -> {
+            log.debug("trade state = " + newValue);
             switch (newValue) {
                 case DEPOSIT_PUBLISHED:
                     transactionId.set(trade.getDepositTx().getHashAsString());
@@ -166,10 +167,10 @@ class TakeOfferModel extends UIModel {
                 case OFFERER_REJECTED:
                     requestTakeOfferErrorMessage.set("Take offer request got rejected.");
                     break;
-
+                default:
+                    log.error("Unhandled trade state: " + newValue);
+                    break;
             }
-
-
         });
     }
 

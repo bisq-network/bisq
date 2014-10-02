@@ -237,7 +237,7 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     }
 
     String getCollateral() {
-        return formatter.formatCoinWithCode(model.getTrade().getCollateralAmount());
+        return formatter.formatCoinWithCode(model.getTrade().getOffer().getCollateralAmount());
     }
 
     BtcAddressValidator getBtcAddressValidator() {

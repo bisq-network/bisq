@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.account.content.fiat;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.gui.CachedViewCB;
+import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
@@ -27,6 +28,7 @@ import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.validation.InputValidator;
+import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
 
@@ -40,10 +42,12 @@ import java.util.ResourceBundle;
 import javax.inject.Inject;
 
 import javafx.collections.ListChangeListener;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
+import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 
@@ -64,6 +68,7 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
     @FXML ComboBox<BankAccount> selectionComboBox;
     @FXML ComboBox<BankAccountType> typesComboBox;
     @FXML ComboBox<Currency> currencyComboBox;
+    private OverlayManager overlayManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -71,8 +76,10 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    FiatAccountViewCB(FiatAccountPm presentationModel) {
+    FiatAccountViewCB(FiatAccountPm presentationModel, OverlayManager overlayManager) {
         super(presentationModel);
+
+        this.overlayManager = overlayManager;
     }
 
 
@@ -170,8 +177,8 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
         InputValidator.ValidationResult result = presentationModel.requestSaveBankAccount();
         if (result.isValid) {
             selectionComboBox.getSelectionModel().select(null);
-            Popups.openInfo("You can add more accounts or continue to the next step.",
-                    "Your payments account has been saved.");
+            Popups.openInfo("Your payments account has been saved.",
+                    "You can add more accounts or continue to the next step.");
         }
     }
 
@@ -219,8 +226,13 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
 
         presentationModel.country.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                regionComboBox.getSelectionModel().select(regionComboBox.getItems().indexOf(newValue.getRegion()));
-                countryComboBox.getSelectionModel().select(countryComboBox.getItems().indexOf(newValue));
+                int regionIndex = regionComboBox.getItems().indexOf(newValue.getRegion());
+                if (regionIndex >= 0 && regionIndex < regionComboBox.getItems().size())
+                    regionComboBox.getSelectionModel().select(regionComboBox.getItems().indexOf(newValue.getRegion()));
+
+                int countryIndex = countryComboBox.getItems().indexOf(newValue);
+                if (countryIndex >= 0 && countryIndex < countryComboBox.getItems().size())
+                    countryComboBox.getSelectionModel().select(countryIndex);
             }
             else {
                 regionComboBox.getSelectionModel().clearSelection();
@@ -230,14 +242,27 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
 
         presentationModel.getCountryNotInAcceptedCountriesList().addListener((ov, oldValue, newValue) -> {
             if (newValue) {
+                overlayManager.blurContent();
                 List<Action> actions = new ArrayList<>();
-                actions.add(Dialog.Actions.YES);
-                actions.add(Dialog.Actions.NO);
+                actions.add(new AbstractAction(BSResources.get("shared.no")) {
+                    @Override
+                    public void handle(ActionEvent actionEvent) {
+                        Dialog.Actions.NO.handle(actionEvent);
+                        overlayManager.removeBlurContent();
+                    }
+                });
 
-                Action response = Popups.openConfirmPopup("Warning",
-                        "The country of your bank account is not included in the accepted countries in the " +
-                                "general settings.\n\nDo you want to add it automatically?",
-                        null,
+                actions.add(new AbstractAction(BSResources.get("shared.yes")) {
+                    @Override
+                    public void handle(ActionEvent actionEvent) {
+                        Dialog.Actions.YES.handle(actionEvent);
+                        overlayManager.removeBlurContent();
+                    }
+                });
+
+                Action response = Popups.openConfirmPopup("Warning", null,
+                        "The country of your payments account is not included in your list of accepted countries" +
+                                ".\n\nDo you want to add it automatically?",
                         actions);
 
                 if (response == Dialog.Actions.YES)
