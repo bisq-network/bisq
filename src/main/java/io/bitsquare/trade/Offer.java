@@ -190,6 +190,10 @@ public class Offer implements Serializable {
         return collateral;
     }
 
+    public Coin getCollateralAmount() {
+        return amount.multiply(collateral).divide(1000L);
+    }
+
     public String getBankAccountId() {
         return bankAccountUID;
     }

@@ -25,6 +25,7 @@ import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
+import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.trade.TradeManager;
@@ -221,6 +222,13 @@ public class MainViewCB extends ViewCB<MainPM> {
             if (ordersButtonButtonPane.getChildren().size() > 1)
                 ordersButtonButtonPane.getChildren().remove(1);
         }
+
+        if (ImageUtil.isRetina())
+            BitSquare.getPrimaryStage().getIcons().add(new Image(getClass().getResourceAsStream
+                    ("/images/window_icon@2x.png")));
+        else
+            BitSquare.getPrimaryStage().getIcons().add(new Image(getClass().getResourceAsStream("/images/window_icon" +
+                    ".png")));
     }
 
     private void onMainNavigationAdded() {

@@ -307,15 +307,19 @@ class PendingTradesModel extends UIModel {
     }
 
     Coin getAmountToWithdraw() {
-        /*
-         AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(getTrade().getId());
-        return walletFacade.getBalanceForAddress(addressEntry.getAddress());
-         */
+        AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(getTrade().getId());
+        log.debug("trade id " + getTrade().getId());
+        log.debug("getAddressString " + addressEntry.getAddressString());
+        log.debug("funds  " + walletFacade.getBalanceForAddress(addressEntry.getAddress()).subtract(FeePolicy
+                .TX_FEE).toString());
+        // return walletFacade.getBalanceForAddress(addressEntry.getAddress()).subtract(FeePolicy.TX_FEE);
+
         // TODO handle overpaid collateral
         if (isOfferer())
-            return getTrade().getTradeAmount().add(getTrade().getCollateralAmount());
+            return getTrade().getTradeAmount().add(getTrade().getOffer().getCollateralAmount()).subtract(FeePolicy
+                    .TX_FEE);
         else
-            return getTrade().getCollateralAmount();
+            return getTrade().getCollateralAmount().subtract(FeePolicy.TX_FEE);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -133,11 +133,13 @@ public class SeedNode extends Thread {
 
                 @Override
                 public void peerUpdated(PeerAddress peerAddress, PeerStatatistic peerStatistics) {
-                    log.debug("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
+                    // log.debug("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
                 }
             });
         } catch (IOException e) {
-            e.printStackTrace();
+            log.info("If the second client has been started that message is ok, as we cannot start the seed node twice."
+                    + e.getMessage());
+            // e.printStackTrace();
         }
     }
 

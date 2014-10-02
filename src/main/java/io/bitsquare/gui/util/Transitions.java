@@ -34,6 +34,7 @@ public class Transitions {
     private static final Logger log = LoggerFactory.getLogger(Transitions.class);
 
     public static final int DURATION = 400;
+    private static Timeline removeBlurTimeline;
 
     public static void fadeIn(Node node) {
         fadeIn(node, DURATION);
@@ -77,6 +78,9 @@ public class Transitions {
     }
 
     public static Timeline blur(Node node, int duration, boolean useDarken, boolean removeNode) {
+        if (removeBlurTimeline != null)
+            removeBlurTimeline.stop();
+
         GaussianBlur blur = new GaussianBlur(0.0);
         Timeline timeline = new Timeline();
         KeyValue kv1 = new KeyValue(blur.radiusProperty(), 15.0);
@@ -108,25 +112,29 @@ public class Transitions {
     public static void removeBlur(Node node, int duration, boolean useDarken) {
         if (node != null) {
             GaussianBlur blur = (GaussianBlur) node.getEffect();
-            Timeline timeline = new Timeline();
+            if (blur != null) {
+                removeBlurTimeline = new Timeline();
+                KeyValue kv1 = new KeyValue(blur.radiusProperty(), 0.0);
+                KeyFrame kf1 = new KeyFrame(Duration.millis(DURATION), kv1);
 
-            KeyValue kv1 = new KeyValue(blur.radiusProperty(), 0.0);
-            KeyFrame kf1 = new KeyFrame(Duration.millis(DURATION), kv1);
 
+                if (useDarken) {
+                    ColorAdjust darken = (ColorAdjust) blur.getInput();
 
-            if (useDarken) {
-                ColorAdjust darken = (ColorAdjust) blur.getInput();
+                    KeyValue kv2 = new KeyValue(darken.brightnessProperty(), 0.0);
+                    KeyFrame kf2 = new KeyFrame(Duration.millis(duration), kv2);
+                    removeBlurTimeline.getKeyFrames().addAll(kf1, kf2);
+                }
+                else {
+                    removeBlurTimeline.getKeyFrames().addAll(kf1);
+                }
 
-                KeyValue kv2 = new KeyValue(darken.brightnessProperty(), 0.0);
-                KeyFrame kf2 = new KeyFrame(Duration.millis(duration), kv2);
-                timeline.getKeyFrames().addAll(kf1, kf2);
+                removeBlurTimeline.setOnFinished(actionEvent -> {
+                    node.setEffect(null);
+                    removeBlurTimeline = null;
+                });
+                removeBlurTimeline.play();
             }
-            else {
-                timeline.getKeyFrames().addAll(kf1);
-            }
-
-            timeline.setOnFinished(actionEvent -> node.setEffect(null));
-            timeline.play();
         }
     }
 }

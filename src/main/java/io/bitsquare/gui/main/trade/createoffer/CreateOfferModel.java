@@ -26,6 +26,7 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
+import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.TradeManager;
@@ -71,6 +72,7 @@ class CreateOfferModel extends UIModel {
     private final WalletFacade walletFacade;
     private final Settings settings;
     private final User user;
+    private Persistence persistence;
     private BSFormatter formatter;
 
     private final String offerId;
@@ -113,11 +115,12 @@ class CreateOfferModel extends UIModel {
     // non private for testing
     @Inject
     public CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user,
-                            BSFormatter formatter) {
+                            Persistence persistence, BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
         this.settings = settings;
         this.user = user;
+        this.persistence = persistence;
         this.formatter = formatter;
 
         offerId = UUID.randomUUID().toString();
@@ -192,7 +195,7 @@ class CreateOfferModel extends UIModel {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public
+    // Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void placeOffer() {
@@ -274,6 +277,10 @@ class CreateOfferModel extends UIModel {
         return true;
     }
 
+    void securityDepositInfoDisplayed() {
+        persistence.write("displaySecurityDepositInfo", false);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter/Getter
@@ -297,6 +304,14 @@ class CreateOfferModel extends UIModel {
 
     String getOfferId() {
         return offerId;
+    }
+
+    Boolean displaySecurityDepositInfo() {
+        Object securityDepositInfoDisplayedObject = persistence.read("displaySecurityDepositInfo");
+        if (securityDepositInfoDisplayedObject instanceof Boolean)
+            return (Boolean) securityDepositInfoDisplayedObject;
+        else
+            return true;
     }
 
 

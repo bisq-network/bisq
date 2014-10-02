@@ -31,16 +31,18 @@ lower gradient color on tab: dddddd
     -fx-selection-bar: derive(-fx-accent,50%);
 }
 
+
 /* Splash */
 #splash {
     -fx-background-color: #ffffff;
 }
 
+
 /* Main UI */
 #logo-sub-title-label {
     -fx-font-weight: bold;
     -fx-font-size: 24;
-    -fx-text-fill: -bs-grey;
+    -fx-text-fill: #333333;
 }
 
 #base-content-container {
@@ -68,8 +70,8 @@ lower gradient color on tab: dddddd
     -fx-fill: red;
 }
 
-/* main nav */
 
+/* Main navigation */
 #nav-button {
     -fx-cursor: hand;
     -fx-background-color: transparent;

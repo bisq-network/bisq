@@ -373,6 +373,7 @@ public class TradeManager {
             // probably not needed
             @Override
             public void onWaitingForPeerResponse(SellerTakesOfferProtocol.State state) {
+                log.error("onWaitingForPeerResponse");
             }
 
         };

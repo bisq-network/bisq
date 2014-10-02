@@ -171,7 +171,7 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
             if (navigation.getItemsForReturning() != null)
                 navigation.navigationTo(navigation.getItemsForReturning());
             else
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.HOME);
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.BUY);
         }
     }
 
