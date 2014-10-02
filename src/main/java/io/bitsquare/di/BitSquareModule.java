@@ -105,20 +105,19 @@ class StaticSeedNodeAddressesProvider implements Provider<SeedNodeAddress.Static
         if (BitSquareModule.properties == null)
             BitSquareModule.properties = ConfigLoader.loadConfig();
 
-        log.info("defaultSeedNode = " + BitSquareModule.properties.getProperty("defaultSeedNode"));
-        String defaultSeedNodeFromConfig = BitSquareModule.properties.getProperty("defaultSeedNode");
+        log.info("seedNode from config file: " + BitSquareModule.properties.getProperty("defaultSeedNode"));
+        String seedNodeFromConfig = BitSquareModule.properties.getProperty("defaultSeedNode");
 
         // Set default 
-        SeedNodeAddress.StaticSeedNodeAddresses defaultSeedNode = SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST;
-          /*  SeedNodeAddress.StaticSeedNodeAddresses defaultSeedNode = SeedNodeAddress.StaticSeedNodeAddresses
-                    .DIGITAL_OCEAN;*/
+        SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST;
+        // SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN;
 
         // if defined in config we override the above
-        if (defaultSeedNodeFromConfig != null)
-            defaultSeedNode = defaultSeedNodeFromConfig.equals("localhost") ?
+        if (seedNodeFromConfig != null)
+            seedNode = seedNodeFromConfig.equals("localhost") ?
                     SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST :
                     SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN;
-        return defaultSeedNode;
+        return seedNode;
     }
 }
 
@@ -132,12 +131,12 @@ class NetworkParametersProvider implements Provider<NetworkParameters> {
         if (BitSquareModule.properties == null)
             BitSquareModule.properties = ConfigLoader.loadConfig();
 
-        log.info("networkType = " + BitSquareModule.properties.getProperty("networkType"));
+        log.info("networkType from config file: " + BitSquareModule.properties.getProperty("networkType"));
         String networkTypeFromConfig = BitSquareModule.properties.getProperty("networkType");
 
         // Set default
         // String networkType= WalletFacade.MAIN_NET;
-        // String networkType= WalletFacade.TEST_NET;
+        // String networkType = WalletFacade.TEST_NET;
         String networkType = WalletFacade.REG_TEST_NET;
 
         if (networkTypeFromConfig != null)

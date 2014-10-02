@@ -287,6 +287,10 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         }
     }
 
+    void securityDepositInfoDisplayed() {
+        model.securityDepositInfoDisplayed();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -298,6 +302,10 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
 
     BSFormatter getFormatter() {
         return formatter;
+    }
+
+    Boolean displaySecurityDepositInfo() {
+        return model.displaySecurityDepositInfo();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -458,6 +466,5 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
 
         return fiatValidator.validate(input);
     }
-
 
 }

@@ -231,7 +231,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     void onOpenPaymentMethodsFilter() {
         Popups.openWarningPopup("Under construction", "This feature is not implemented yet.");
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
@@ -250,8 +250,9 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                         Navigation.Item.ACCOUNT_SETUP);
             }
         });
-        Popups.openInfo("You need to setup your trading account before you can trade.",
-                "You don't have a trading account.", actions);
+        Popups.openInfo("You don't have setup a trading account.",
+                "You need to setup your trading account before you can trade.",
+                actions);
     }
 
     private void takeOffer(Offer offer) {
@@ -265,13 +266,26 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     }
 
     private void openRestrictionsWarning(String restrictionsInfo) {
+        overlayManager.blurContent();
         List<Action> actions = new ArrayList<>();
-        actions.add(Dialog.Actions.YES);
-        actions.add(Dialog.Actions.CLOSE);
+        actions.add(new AbstractAction(BSResources.get("shared.yes")) {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                Dialog.Actions.YES.handle(actionEvent);
+                overlayManager.removeBlurContent();
+            }
+        });
+        actions.add(new AbstractAction(BSResources.get("shared.no")) {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                Dialog.Actions.NO.handle(actionEvent);
+                overlayManager.removeBlurContent();
+            }
+        });
 
         Action response = Popups.openConfirmPopup("Information",
+                "You do not fulfill the requirements for that offer.",
                 restrictionsInfo,
-                "You do not fulfill the requirements of that offer.",
                 actions);
 
         if (response == Dialog.Actions.YES)

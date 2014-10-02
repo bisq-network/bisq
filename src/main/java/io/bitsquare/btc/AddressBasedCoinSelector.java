@@ -91,11 +91,18 @@ class AddressBasedCoinSelector extends DefaultCoinSelector {
         // Pick chain-included transactions and transactions that are pending.
         TransactionConfidence confidence = tx.getConfidence();
         TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
-        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) || type.equals(TransactionConfidence
-                .ConfidenceType.PENDING) &&
-                // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
-                // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
-                (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
+
+        // TODO It might be risky to accept 0 confirmation tx from the network with only > 1 numBroadcastPeers
+        // Need to be tested in testnet and mainnet
+        // We need to handle cases when malleability happens or tx get lost and have not been successful propagated
+        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
+                type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
+                        // we accept network tx without confirmations and numBroadcastPeers > 0
+                        /*confidence.getSource().equals(TransactionConfidence.Source.SELF) &&*/
+                        // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
+                        // TODO: The value 1 below dates from a time when transactions we broadcast *to* were 
+                        // counted, set to 0
+                        (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
     }
 
     private static boolean isInBlockChain(Transaction tx) {

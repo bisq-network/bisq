@@ -329,9 +329,8 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
                     }
                 });
 
-                Popups.openInfo(BSResources.get("takeOffer.success.info",
-                                presentationModel.transactionId.get()),
-                        BSResources.get("takeOffer.success.headline"),
+                Popups.openInfo(BSResources.get("takeOffer.success.headline"),
+                        BSResources.get("takeOffer.success.info", presentationModel.transactionId.get()),
                         actions);
             }
         });

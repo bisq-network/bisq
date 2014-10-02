@@ -185,8 +185,22 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
     @FXML
     void onShowPayFundsScreen() {
-        Popups.openInfo("To ensure that both traders are behaving fair you need to put in a security deposit to an " +
-                "offer. That will be refunded to you after the trade has successful completed.");
+        if (presentationModel.displaySecurityDepositInfo()) {
+            overlayManager.blurContent();
+            List<Action> actions = new ArrayList<>();
+            actions.add(new AbstractAction(BSResources.get("shared.close")) {
+                @Override
+                public void handle(ActionEvent actionEvent) {
+                    Dialog.Actions.CLOSE.handle(actionEvent);
+                    overlayManager.removeBlurContent();
+                }
+            });
+            Popups.openInfo("To ensure that both traders behave fair they need to pay a security deposit.",
+                    "The deposit will stay in your local trading wallet until the offer gets accepted by " +
+                            "another trader. " +
+                            "\nIt will be refunded to you after the trade has successfully completed.",
+                    actions);
+        
         /*
           Popups.openInfo("To ensure that both traders are behaving fair you need to put in a security deposit to an " +
                 "offer. That will be refunded to you after the trade has successful completed. In case of a " +
@@ -196,6 +210,10 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
                 "the security deposit will not leave your trading wallet, and will be refunded when you cancel your " +
                 "offer.");
          */
+        }
+
+        presentationModel.securityDepositInfoDisplayed();
+
         priceAmountPane.setInactive();
 
         showPaymentInfoScreenButton.setVisible(false);
@@ -361,9 +379,8 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
                     }
                 });
 
-                Popups.openInfo(BSResources.get("createOffer.success.info",
-                                presentationModel.transactionId.get()),
-                        BSResources.get("createOffer.success.headline"),
+                Popups.openInfo(BSResources.get("createOffer.success.headline"),
+                        BSResources.get("createOffer.success.info", presentationModel.transactionId.get()),
                         actions);
             }
         });

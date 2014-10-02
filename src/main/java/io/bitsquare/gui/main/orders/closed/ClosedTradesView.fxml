@@ -37,9 +37,9 @@
         <columns>
             <TableColumn text="Trade ID" fx:id="tradeIdColumn" minWidth="100" sortable="false"/>
             <TableColumn text="Date" fx:id="dateColumn" minWidth="130"/>
-            <TableColumn text="Amount in BTC (Min.)" fx:id="amountColumn" minWidth="130" sortable="false"/>
+            <TableColumn text="Trade amount in BTC" fx:id="amountColumn" minWidth="130" sortable="false"/>
             <TableColumn text="Price" fx:id="priceColumn" minWidth="100" sortable="false"/>
-            <TableColumn text="Amount in EUR (Min.)" fx:id="volumeColumn" minWidth="130" sortable="false"/>
+            <TableColumn text="Trade amount in EUR" fx:id="volumeColumn" minWidth="130" sortable="false"/>
             <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80" sortable="false"/>
         </columns>
     </TableView>
