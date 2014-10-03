@@ -316,10 +316,9 @@ class PendingTradesModel extends UIModel {
 
         // TODO handle overpaid collateral
         if (isOfferer())
-            return getTrade().getTradeAmount().add(getTrade().getOffer().getCollateralAmount()).subtract(FeePolicy
-                    .TX_FEE);
+            return getTrade().getTradeAmount().add(getTrade().getOffer().getCollateralAmount());
         else
-            return getTrade().getCollateralAmount().subtract(FeePolicy.TX_FEE);
+            return getTrade().getCollateralAmount();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

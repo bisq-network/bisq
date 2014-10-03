@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.orders.pending;
 
+import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.components.Popups;
@@ -150,7 +151,7 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     }
 
     String getAmountToWithdraw() {
-        return formatter.formatCoinWithCode(model.getAmountToWithdraw());
+        return formatter.formatCoinWithCode(model.getAmountToWithdraw().subtract(FeePolicy.TX_FEE));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
