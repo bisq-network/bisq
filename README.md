@@ -8,7 +8,7 @@ What is Bitsquare?
 
 Bitsquare is a cross-platform desktop application that allows users to trade fiat money (dollars, euros, etc) for bitcoin without relying on centralized exchanges such as Coinbase, Bitstamp or (the former) Mt. Gox.
 
-By running Bitsquare on their local machine, users form a peer-to-peer network. Offers to buy and sell bitcoin are broadcast to that network, and through the process of offering and accepting these trades, a market is established.
+By running Bitsquare on their local machines, users form a peer-to-peer network. Offers to buy and sell bitcoin are broadcast to that network, and through the process of offering and accepting these trades via the Bitsquare UI, a market is established.
 
 There are no central points of control or failure in the Bitsquare network. There are no trusted third parties. When two parties agree to trade fiat money for bitcoin, the bitcoin to be bought or sold is held in escrow using multisignature transaction capabilities native to the bitcoin protocol.
 
