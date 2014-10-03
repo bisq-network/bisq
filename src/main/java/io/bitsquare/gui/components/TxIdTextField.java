@@ -21,7 +21,7 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 
-import com.google.bitcoin.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionConfidence;
 
 import java.awt.*;
 

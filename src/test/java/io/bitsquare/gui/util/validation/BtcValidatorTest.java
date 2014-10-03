@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.util.validation;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.NetworkParameters;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
 
 import org.junit.Test;
 

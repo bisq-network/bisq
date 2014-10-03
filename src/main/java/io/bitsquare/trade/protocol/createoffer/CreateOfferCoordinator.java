@@ -28,7 +28,7 @@ import io.bitsquare.trade.protocol.createoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.trade.protocol.createoffer.tasks.PublishOfferToDHT;
 import io.bitsquare.trade.protocol.createoffer.tasks.VerifyOffer;
 
-import com.google.bitcoin.core.Transaction;
+import org.bitcoinj.core.Transaction;
 
 import java.io.Serializable;
 

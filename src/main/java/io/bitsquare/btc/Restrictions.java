@@ -17,8 +17,8 @@
 
 package io.bitsquare.btc;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.Transaction;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 // Lets see if we get more restriction otherwise move it to other class
 public class Restrictions {

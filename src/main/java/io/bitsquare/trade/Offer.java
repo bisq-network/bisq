@@ -21,9 +21,9 @@ import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.locale.Country;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.utils.ExchangeRate;
-import com.google.bitcoin.utils.Fiat;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.ExchangeRate;
+import org.bitcoinj.utils.Fiat;
 
 import java.io.Serializable;
 

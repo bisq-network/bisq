@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer;
 
 import io.bitsquare.trade.Offer;
 
-import com.google.bitcoin.core.Transaction;
+import org.bitcoinj.core.Transaction;
 
 public interface BuyerAcceptsOfferProtocolListener {
     void onOfferAccepted(Offer offer);

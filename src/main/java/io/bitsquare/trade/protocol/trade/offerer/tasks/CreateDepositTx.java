@@ -20,10 +20,10 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.trade.handlers.ExceptionHandler;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.InsufficientMoneyException;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.Utils;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

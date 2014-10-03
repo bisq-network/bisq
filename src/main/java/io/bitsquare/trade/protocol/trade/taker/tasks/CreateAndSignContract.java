@@ -24,8 +24,8 @@ import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.util.Utilities;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.core.ECKey;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 
 import java.security.PublicKey;
 

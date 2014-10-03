@@ -25,7 +25,7 @@
 
     <logger name="io.bitsquare" level="TRACE"/>
 
-    <logger name="com.google.bitcoin" level="WARN"/>
+    <logger name="org.bitcoinj" level="WARN"/>
     <logger name="net.tomp2p" level="WARN"/>
 
     <logger name="io.netty.util" level="WARN"/>
@@ -37,16 +37,16 @@
     <logger name="io.bitsquare.gui.util.Profiler" level="TRACE"/>
 
     <!--
-    <logger name="com.google.bitcoin.core.Wallet" level="OFF"/>
-    <logger name="com.google.bitcoin.core.MemoryPool" level="OFF"/>
-    <logger name="com.google.bitcoin.net.discovery.DnsDiscovery" level="OFF"/>
-    <logger name="com.google.bitcoin.core.DownloadListener" level="OFF"/>
-    <logger name="com.google.bitcoin.core.TransactionOutput" level="OFF"/>
-    <logger name="com.google.bitcoin.core.BitcoinSerializer" level="OFF"/>
-    <logger name="com.google.bitcoin.core.Peer" level="OFF"/>
-    <logger name="com.google.bitcoin.core.PeerGroup" level="OFF"/>
-    <logger name="com.google.bitcoin.core.PeerSocketHandler" level="OFF"/>
-    <logger name="com.google.bitcoin.net.NioClientManager" level="OFF"/>
-    <logger name="com.google.bitcoin.net.ConnectionHandler" level="OFF"/>
+    <logger name="org.bitcoinj.core.Wallet" level="OFF"/>
+    <logger name="org.bitcoinj.core.MemoryPool" level="OFF"/>
+    <logger name="org.bitcoinj.net.discovery.DnsDiscovery" level="OFF"/>
+    <logger name="org.bitcoinj.core.DownloadListener" level="OFF"/>
+    <logger name="org.bitcoinj.core.TransactionOutput" level="OFF"/>
+    <logger name="org.bitcoinj.core.BitcoinSerializer" level="OFF"/>
+    <logger name="org.bitcoinj.core.Peer" level="OFF"/>
+    <logger name="org.bitcoinj.core.PeerGroup" level="OFF"/>
+    <logger name="org.bitcoinj.core.PeerSocketHandler" level="OFF"/>
+    <logger name="org.bitcoinj.net.NioClientManager" level="OFF"/>
+    <logger name="org.bitcoinj.net.ConnectionHandler" level="OFF"/>
     -->
 </configuration>

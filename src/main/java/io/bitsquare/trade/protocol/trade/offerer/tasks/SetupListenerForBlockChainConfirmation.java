@@ -20,8 +20,8 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.trade.handlers.ResultHandler;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocolListener;
 
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.TransactionConfidence;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

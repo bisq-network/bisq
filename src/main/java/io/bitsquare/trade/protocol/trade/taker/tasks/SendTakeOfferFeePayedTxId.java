@@ -23,7 +23,7 @@ import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
 
-import com.google.bitcoin.core.Coin;
+import org.bitcoinj.core.Coin;
 
 import net.tomp2p.peers.PeerAddress;
 

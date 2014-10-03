@@ -20,7 +20,7 @@ package io.bitsquare.trade;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.util.DSAKeyUtil;
 
-import com.google.bitcoin.core.Coin;
+import org.bitcoinj.core.Coin;
 
 import java.io.Serializable;
 

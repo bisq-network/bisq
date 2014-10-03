@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.handlers;
 
-import com.google.bitcoin.core.Transaction;
+import org.bitcoinj.core.Transaction;
 
 public interface TransactionResultHandler {
     void onResult(Transaction transaction);

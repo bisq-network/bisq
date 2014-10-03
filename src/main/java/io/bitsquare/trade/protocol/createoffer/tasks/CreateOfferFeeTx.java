@@ -21,7 +21,7 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 
-import com.google.bitcoin.core.InsufficientMoneyException;
+import org.bitcoinj.core.InsufficientMoneyException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

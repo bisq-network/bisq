@@ -24,9 +24,9 @@ import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.user.User;
 
-import com.google.bitcoin.core.Coin;
-import com.google.bitcoin.utils.CoinFormat;
-import com.google.bitcoin.utils.Fiat;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
+import org.bitcoinj.utils.MonetaryFormat;
 
 import java.math.BigDecimal;
 
@@ -59,19 +59,19 @@ public class BSFormatter {
     private boolean useMilliBit;
     private int scale = 3;
 
-    // Format use 2 min decimal places and 2 more optional: 1.00 or 1.0010  
+    // Format use 2 min decimal places and 2 more optional: 1.00 or 1.0010
     // There are not more then 4 decimals allowed.
     // We don't support localized formatting. Format is always using "." as decimal mark and no grouping separator.
     // Input of "," as decimal mark (like in german locale) will be replaced with ".".
     // Input of a group separator (1,123,45) lead to an validation error.
-    // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit, 
+    // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit,
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
-    private CoinFormat coinFormat = CoinFormat.BTC.repeatOptionalDecimals(2, 1);
+    private MonetaryFormat coinFormat = MonetaryFormat.BTC.repeatOptionalDecimals(2, 1);
 
     private String currencyCode = Currency.getInstance(Locale.getDefault()).getCurrencyCode();
 
-    // format is like: 1,00  never more then 2 decimals 
-    private final CoinFormat fiatFormat = CoinFormat.FIAT.repeatOptionalDecimals(0, 0).code(0, currencyCode);
+    // format is like: 1,00  never more then 2 decimals
+    private final MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0).code(0, currencyCode);
 
 
     @Inject
@@ -95,7 +95,7 @@ public class BSFormatter {
 
     public void useMilliBitFormat(boolean useMilliBit) {
         this.useMilliBit = useMilliBit;
-        coinFormat = getCoinFormat();
+        coinFormat = getMonetaryFormat();
         scale = useMilliBit ? 0 : 3;
     }
 
@@ -106,11 +106,11 @@ public class BSFormatter {
         this.locale = locale;
     }
 
-    private CoinFormat getCoinFormat() {
+    private MonetaryFormat getMonetaryFormat() {
         if (useMilliBit)
-            return CoinFormat.MBTC.repeatOptionalDecimals(2, 1);
+            return MonetaryFormat.MBTC.repeatOptionalDecimals(2, 1);
         else
-            return CoinFormat.BTC.repeatOptionalDecimals(2, 1);
+            return MonetaryFormat.BTC.repeatOptionalDecimals(2, 1);
     }
 
     public void setFiatCurrencyCode(String currencyCode) {
@@ -134,7 +134,7 @@ public class BSFormatter {
 
     public String formatCoinWithCode(Coin coin) {
         try {
-            // we don't use the code feature from coinFormat as it does automatic switching between mBTC and BTC and 
+            // we don't use the code feature from coinFormat as it does automatic switching between mBTC and BTC and
             // pre and post fixing
             return coinFormat.postfixCode().format(coin).toString();
         } catch (Throwable t) {
@@ -314,7 +314,7 @@ public class BSFormatter {
 
     private String cleanInput(String input) {
         input = input.replace(",", ".");
-        // don't use String.valueOf(Double.parseDouble(input)) as return value as it gives scientific 
+        // don't use String.valueOf(Double.parseDouble(input)) as return value as it gives scientific
         // notation (1.0E-6) which screw up coinFormat.parse
         //noinspection ResultOfMethodCallIgnored
         Double.parseDouble(input);

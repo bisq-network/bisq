@@ -20,7 +20,7 @@ package io.bitsquare.settings;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.locale.Country;
 
-import com.google.bitcoin.utils.CoinFormat;
+import org.bitcoinj.utils.MonetaryFormat;
 
 import java.io.Serializable;
 
@@ -42,8 +42,8 @@ public class Settings implements Serializable {
     // which will be used for multiplying with the amount to get the collateral size in BTC.
 
 
-    private String btcDenominationString = CoinFormat.CODE_BTC;
-    final transient StringProperty btcDenomination = new SimpleStringProperty(CoinFormat.CODE_BTC);
+    private String btcDenominationString = MonetaryFormat.CODE_BTC;
+    final transient StringProperty btcDenomination = new SimpleStringProperty(MonetaryFormat.CODE_BTC);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
