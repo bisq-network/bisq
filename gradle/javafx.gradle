@@ -1,0 +1,95 @@
+/*
+ * Bootstrap script for the Gradle JavaFX Plugin.
+ * (based on http://plugins.jasoft.fi/vaadin.plugin)
+ *
+ * The script will add the plugin to the build script
+ * dependencies and apply the plugin to the project. If you do not want
+ * this behavior you can copy and paste the below configuration into your
+ * own build script and define your own repository and version for the plugin.
+ */
+
+import org.gradle.api.GradleException;
+
+buildscript {
+    repositories {
+        maven {
+            name = 'JavaFX Gradle plugin'
+            url = 'http://dl.bintray.com/content/shemnon/javafx-gradle/'
+        }
+        maven {
+            name = 'CloudBees snapshots'
+            url = 'http://repository-javafx-gradle-plugin.forge.cloudbees.com/snapshot'
+        }
+        ivy {
+            name = 'CloudBees snapshots'
+            url = 'http://repository-javafx-gradle-plugin.forge.cloudbees.com/snapshot'
+        }
+        jcenter()
+    }
+    dependencies {
+        try {
+            assert (jfxrtDir != null)
+        } catch (RuntimeException re) {
+            ext.jfxrtDir = "."
+        }
+
+        ext.searchFile = {Map<String, Closure> places, List<String> searchPaths, String searchID ->
+            File result = null;
+            places.each { k, v ->
+                if (result != null) return;
+                project.logger.debug("Looking for $searchID in $k")
+                def dir = v()
+                if (dir == null) {
+                    project.logger.debug("$k not set")
+                } else {
+                    project.logger.debug("$k is $dir")
+                    searchPaths.each { s ->
+                        if (result != null) return;
+                        File f = new File(dir, s);
+                        project.logger.debug("Trying $f.path")
+                        if (f.exists() && f.file) {
+                            project.logger.debug("found $searchID as $result")
+                            result = f;
+                        }
+                    }
+                }
+            }
+            if (!result?.file) {
+                throw new GradleException("Could not find $searchID, please set one of ${places.keySet()}");
+            } else {
+                project.logger.info("$searchID: ${result}")
+                return result
+            }
+        }
+        ext.findJFXJar = {
+            return searchFile([
+                    'jfxrtDir in Gradle Properties': {jfxrtDir},
+                    'JFXRT_HOME in System Environment': {System.env['JFXRT_HOME']},
+                    'JAVA_HOME in System Environment': {System.env['JAVA_HOME']},
+                    'java.home in JVM properties': {System.properties['java.home']}
+            ],
+                    ['jfxrt.jar', 'lib/jfxrt.jar', 'lib/ext/jfxrt.jar', 'jre/lib/jfxrt.jar', 'jre/lib/ext/jfxrt.jar'],
+                    'JavaFX Runtime Jar')
+        }
+
+        ext.findAntJavaFXJar = {
+            return searchFile([
+                    'jfxrtDir in Gradle Properties': {jfxrtDir},
+                    'JFXRT_HOME in System Environment': {System.env['JFXRT_HOME']},
+                    'JAVA_HOME in System Environment': {System.env['JAVA_HOME']},
+                    'java.home in JVM properties': {System.properties['java.home']}
+            ],
+                    ['ant-javafx.jar', 'lib/ant-javafx.jar', '../lib/ant-javafx.jar'],
+                    'JavaFX Packager Tools')
+        }
+
+
+        classpath 'org.bitbucket.shemnon.javafxplugin:gradle-javafx-plugin:8.1.1'
+        classpath project.files(findAntJavaFXJar())
+        classpath project.files(findJFXJar())
+    }
+}
+
+if (!project.plugins.findPlugin(org.bitbucket.shemnon.javafxplugin.JavaFXPlugin)) {
+    project.apply(plugin: org.bitbucket.shemnon.javafxplugin.JavaFXPlugin)
+}
