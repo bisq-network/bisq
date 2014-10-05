@@ -18,6 +18,7 @@
 package io.bitsquare.di;
 
 
+import io.bitsquare.BitSquare;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
@@ -32,9 +33,11 @@ import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PasswordValidator;
 import io.bitsquare.msg.BootstrappedPeerFactory;
+import io.bitsquare.msg.DHTSeedService;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.P2PNode;
 import io.bitsquare.msg.SeedNodeAddress;
+import io.bitsquare.msg.actor.DHTManager;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeManager;
@@ -54,6 +57,8 @@ import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import akka.actor.ActorSystem;
 
 public class BitSquareModule extends AbstractModule {
     private static final Logger log = LoggerFactory.getLogger(BitSquareModule.class);
@@ -95,6 +100,11 @@ public class BitSquareModule extends AbstractModule {
 
         bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(Names.named("defaultSeedNode"))
                 .toProvider(StaticSeedNodeAddressesProvider.class).asEagerSingleton();
+
+        // Actor Related Classes to Inject
+        bind(ActorSystem.class).toProvider(ActorSystemProvider.class).asEagerSingleton();
+
+        bind(DHTSeedService.class);
     }
 }
 
@@ -154,5 +164,18 @@ class NetworkParametersProvider implements Provider<NetworkParameters> {
                 break;
         }
         return result;
+    }
+}
+
+class ActorSystemProvider implements Provider<ActorSystem> {
+
+    @Override
+    public ActorSystem get() {
+        ActorSystem system = ActorSystem.create(BitSquare.getAppName());
+
+        // create top level actors
+        system.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
+
+        return system;
     }
 }

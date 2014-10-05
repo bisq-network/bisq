@@ -23,6 +23,8 @@ import io.bitsquare.gui.util.ImageUtil;
 
 import java.awt.*;
 
+import java.util.concurrent.TimeoutException;
+
 import javax.swing.*;
 
 import javafx.application.Platform;
@@ -30,6 +32,9 @@ import javafx.stage.Stage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import akka.actor.ActorSystem;
+import scala.concurrent.duration.Duration;
 
 /**
  * There is no JavaFX support yet, so we need to use AWT.
@@ -40,10 +45,13 @@ public class AWTSystemTray {
     private static boolean isStageVisible = true;
     private static MenuItem showGuiItem;
     private static Stage stage;
+    private static ActorSystem actorSystem;
     private static TrayIcon trayIcon;
 
-    public static void createSystemTray(Stage stage) {
+    public static void createSystemTray(Stage stage, ActorSystem actorSystem) {
         AWTSystemTray.stage = stage;
+        AWTSystemTray.actorSystem = actorSystem;
+
         if (SystemTray.isSupported()) {
             // prevent exiting the app when the last window get closed
             Platform.setImplicitExit(false);
@@ -82,6 +90,15 @@ public class AWTSystemTray {
             });
             exitItem.addActionListener(e -> {
                 systemTray.remove(trayIcon);
+                actorSystem.shutdown();
+                try {
+                    actorSystem.awaitTermination(Duration.create(5L, "seconds"));
+                } catch (Exception ex) {
+                    if (ex instanceof TimeoutException)
+                        log.error("ActorSystem did not shutdown properly.");
+                    else
+                        log.error(ex.getMessage());
+                }
                 System.exit(0);
             });
 

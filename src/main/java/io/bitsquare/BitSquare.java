@@ -50,6 +50,7 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import akka.actor.ActorSystem;
 import lighthouse.files.AppDirectory;
 
 public class BitSquare extends Application {
@@ -120,10 +121,10 @@ public class BitSquare extends Application {
             log.error(e.getMessage());
         }
 
-        // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
-        AWTSystemTray.createSystemTray(primaryStage);
-
         final Injector injector = Guice.createInjector(new BitSquareModule());
+
+        // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
+        AWTSystemTray.createSystemTray(primaryStage, injector.getInstance(ActorSystem.class));
 
         walletFacade = injector.getInstance(WalletFacade.class);
         messageFacade = injector.getInstance(MessageFacade.class);
