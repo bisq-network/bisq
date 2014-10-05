@@ -68,7 +68,7 @@ public class BitSquare extends Application {
         Profiler.printMsgWithTime("BitSquare.main called with args " + Arrays.asList(args).toString());
 
         if (args.length > 0)
-            APP_NAME = APP_NAME + "_" + args[0];
+            APP_NAME = APP_NAME + "-" + args[0];
 
         /*Thread seedNodeThread = new Thread(new Runnable() {
             @Override
