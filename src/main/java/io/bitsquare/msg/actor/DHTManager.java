@@ -17,15 +17,21 @@
 
 package io.bitsquare.msg.actor;
 
+import io.bitsquare.msg.SeedNodeAddress;
 import io.bitsquare.msg.actor.command.InitializePeer;
 import io.bitsquare.msg.actor.event.PeerInitialized;
 
-import net.tomp2p.connection.Ports;
+import java.util.List;
+
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
-import net.tomp2p.futures.FutureBootstrap;
+import net.tomp2p.nat.PeerBuilderNAT;
+import net.tomp2p.nat.PeerNAT;
 import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
+import net.tomp2p.peers.Number160;
+import net.tomp2p.relay.FutureRelay;
+import net.tomp2p.relay.RelayRPC;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
@@ -52,25 +58,46 @@ public class DHTManager extends AbstractActor {
     private PeerDHT peerDHT;
 
     public DHTManager() {
-
         receive(ReceiveBuilder
                         .match(InitializePeer.class, ip -> {
                             log.debug("Received message: {}", ip);
 
-                            peer = new PeerBuilder(ip.getPeerId())
-                                    .ports(ip.getPort() != null ? ip.getPort() : new Ports().tcpPort()).start();
-                            peerDHT = new PeerBuilderDHT(peer).start();
+                            try {
+                                List<SeedNodeAddress.StaticSeedNodeAddresses> staticSedNodeAddresses = SeedNodeAddress
+                                        .StaticSeedNodeAddresses.getAllSeedNodeAddresses();
+                                SeedNodeAddress seedNodeAddress = new SeedNodeAddress(staticSedNodeAddresses.get(0));
 
-                            // TODO add code to discover non-local peers
-                            // FutureDiscover futureDiscover = peer.discover().peerAddress(bootstrapPeers.).start();
-                            // futureDiscover.awaitUninterruptibly();
+                                peer = new PeerBuilder(
+                                        Number160.createHash(seedNodeAddress.getId())).ports(seedNodeAddress.getPort
+                                        ()).start();
 
-                            if (ip.getBootstrapPeers() != null) {
-                                FutureBootstrap futureBootstrap = peer.bootstrap()
-                                        .bootstrapTo(ip.getBootstrapPeers()).start();
-                                futureBootstrap.awaitUninterruptibly(bootstrapTimeout);
-                            }
-                            sender().tell(new PeerInitialized(peer.peerID()), self());
+                                // Need to add all features the clients will use (otherwise msg type is UNKNOWN_ID)
+                                new PeerBuilderDHT(peer).start();
+                                PeerNAT nodeBehindNat = new PeerBuilderNAT(peer).start();
+                                new RelayRPC(peer);
+                                //new PeerBuilderTracker(peer);
+                                nodeBehindNat.startSetupRelay(new FutureRelay());
+                                
+                                
+                               /* peer = new PeerBuilder(ip.getPeerId())
+                                        .ports(ip.getPort() != null ? ip.getPort() : new Ports().tcpPort()).start();
+                                peerDHT = new PeerBuilderDHT(peer).start();*/
+
+                                // TODO add code to discover non-local peers
+                                // FutureDiscover futureDiscover = peer.discover().peerAddress(bootstrapPeers.).start();
+                                // futureDiscover.awaitUninterruptibly();
+
+                               /* if (ip.getBootstrapPeers() != null) {
+                                    FutureBootstrap futureBootstrap = peer.bootstrap()
+                                            .bootstrapTo(ip.getBootstrapPeers()).start();
+                                    futureBootstrap.awaitUninterruptibly(bootstrapTimeout);
+                                }*/
+                                sender().tell(new PeerInitialized(peer.peerID()), self());
+                            } catch (Throwable t) {
+                                log.info("The second instance has been started. If that happens at the first instance" +
+                                        " we are in trouble... " + t.getMessage());
+                                sender().tell(new PeerInitialized(null), self());
+                            } 
                         })
                         .matchAny(o -> log.info("received unknown message")).build()
         );
@@ -79,7 +106,8 @@ public class DHTManager extends AbstractActor {
     @Override
     public void postStop() throws Exception {
         log.debug("postStop");
-        peerDHT.shutdown();
+        if (peerDHT != null)
+            peerDHT.shutdown();
         super.postStop();
     }
 }
