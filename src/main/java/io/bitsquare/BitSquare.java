@@ -24,11 +24,13 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Profiler;
+import io.bitsquare.msg.DHTSeedService;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.msg.SeedNodeAddress;
+import io.bitsquare.msg.actor.event.PeerInitialized;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
+import io.bitsquare.util.BitsquareArgumentParser;
 import io.bitsquare.util.ViewLoader;
 
 import com.google.common.base.Throwables;
@@ -39,7 +41,6 @@ import com.google.inject.Injector;
 import java.io.IOException;
 
 import java.util.Arrays;
-import java.util.List;
 
 import javafx.application.Application;
 import javafx.scene.*;
@@ -52,6 +53,8 @@ import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorSystem;
 import lighthouse.files.AppDirectory;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.Namespace;
 
 public class BitSquare extends Application {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
@@ -59,6 +62,7 @@ public class BitSquare extends Application {
     public static final boolean fillFormsWithDummyData = true;
 
     private static String APP_NAME = "Bitsquare";
+    private static Injector injector;
     private static Stage primaryStage;
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
@@ -67,36 +71,67 @@ public class BitSquare extends Application {
         Profiler.init();
         Profiler.printMsgWithTime("BitSquare.main called with args " + Arrays.asList(args).toString());
 
-        if (args.length > 0)
-            APP_NAME = APP_NAME + "-" + args[0];
+        injector = Guice.createInjector(new BitSquareModule());
 
-        /*Thread seedNodeThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                startSeedNode();
-            }
-        });
-        seedNodeThread.start();*/
-
-        launch(args);
-    }
-
-    private static void startSeedNode() {
-        List<SeedNodeAddress.StaticSeedNodeAddresses> staticSedNodeAddresses = SeedNodeAddress
-                .StaticSeedNodeAddresses.getAllSeedNodeAddresses();
-        SeedNode seedNode = new SeedNode(new SeedNodeAddress(staticSedNodeAddresses.get(0)));
-        seedNode.setDaemon(true);
-        seedNode.start();
-
+        BitsquareArgumentParser parser = new BitsquareArgumentParser();
+        Namespace namespace = null;
         try {
-            // keep main thread up
-            Thread.sleep(Long.MAX_VALUE);
-            log.debug("Localhost seed node started");
-        } catch (InterruptedException e) {
-            log.error(e.toString());
+            //System.out.println(parser.parseArgs(args));
+            namespace = parser.parseArgs(args);
+        } catch (ArgumentParserException e) {
+            parser.handleError(e);
+            System.exit(1);
+        }
+        if (namespace != null) {
+
+            if (namespace.getString(BitsquareArgumentParser.NAME_FLAG) != null) {
+                APP_NAME = APP_NAME + "-" + namespace.getString(BitsquareArgumentParser.NAME_FLAG);
+            }
+
+            Integer port = BitsquareArgumentParser.PORT_DEFAULT;
+            if (namespace.getString(BitsquareArgumentParser.PORT_FLAG) != null) {
+                port = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
+            }
+            if (namespace.getBoolean(BitsquareArgumentParser.SEED_FLAG) == true) {
+                DHTSeedService dhtSeed = injector.getInstance(DHTSeedService.class);
+                dhtSeed.setHandler(m -> {
+                    if (m instanceof PeerInitialized) {
+                        System.out.println("Seed Peer Initialized on port " + ((PeerInitialized) m).getPort
+                                ());
+                    }
+                });
+                dhtSeed.initializePeer("localhost", port);
+            }
+            else {
+                launch(args);
+            }
         }
 
+//        Thread seedNodeThread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                startSeedNode();
+//            }
+//        });
+//        seedNodeThread.start();
+
     }
+
+//    private static void startSeedNode() {
+//        List<SeedNodeAddress.StaticSeedNodeAddresses> staticSedNodeAddresses = SeedNodeAddress
+//                .StaticSeedNodeAddresses.getAllSeedNodeAddresses();
+//        SeedNode seedNode = new SeedNode(new SeedNodeAddress(staticSedNodeAddresses.get(0)));
+//        seedNode.setDaemon(true);
+//        seedNode.start();
+//
+//        try {
+//            // keep main thread up
+//            Thread.sleep(Long.MAX_VALUE);
+//            log.debug("Localhost seed node started");
+//        } catch (InterruptedException e) {
+//            log.error(e.toString());
+//        }
+//    }
 
 
     public static Stage getPrimaryStage() {
@@ -121,7 +156,7 @@ public class BitSquare extends Application {
             log.error(e.getMessage());
         }
 
-        final Injector injector = Guice.createInjector(new BitSquareModule());
+//        final Injector injector = Guice.createInjector(new BitSquareModule());
 
         // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
         AWTSystemTray.createSystemTray(primaryStage, injector.getInstance(ActorSystem.class));

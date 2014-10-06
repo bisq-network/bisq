@@ -26,13 +26,18 @@ import net.tomp2p.peers.Number160;
 public class PeerInitialized {
 
     private final Number160 peerId;
+    private final Integer port;
 
-    public PeerInitialized(Number160 peerId) {
+    public PeerInitialized(Number160 peerId, Integer port) {
         this.peerId = peerId;
+        this.port = port;
     }
 
     public Number160 getPeerId() {
         return peerId;
     }
 
+    public Integer getPort() {
+        return port;
+    }
 }

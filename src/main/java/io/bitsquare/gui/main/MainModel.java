@@ -104,27 +104,6 @@ class MainModel extends UIModel {
 
         // For testing with the serverside seednode we need the BootstrappedPeerFactory which gets started form 
         // messageFacade.init
-        
-        /*dhtSeedService.setHandler(m -> {
-            if (m instanceof PeerInitialized) {
-                log.debug("dht seed initialized. ");
-                // init messageFacade after seed node initialized
-                messageFacade.init(new BootstrapListener() {
-                    @Override
-                    public void onCompleted() {
-                        messageFacadeInited = true;
-                        if (walletFacadeInited) onFacadesInitialised();
-                    }
-
-                    @Override
-                    public void onFailed(Throwable throwable) {
-                        log.error(throwable.toString());
-                    }
-                });
-            }
-        });
-
-        dhtSeedService.initializePeer();*/
 
         messageFacade.init(new BootstrapListener() {
             @Override

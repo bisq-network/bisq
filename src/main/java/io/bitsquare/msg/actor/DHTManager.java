@@ -67,12 +67,11 @@ public class DHTManager extends AbstractActor {
                                         .StaticSeedNodeAddresses.getAllSeedNodeAddresses();
                                 SeedNodeAddress seedNodeAddress = new SeedNodeAddress(staticSedNodeAddresses.get(0));
 
-                                peer = new PeerBuilder(
-                                        Number160.createHash(seedNodeAddress.getId())).ports(seedNodeAddress.getPort
-                                        ()).start();
+                                peer = new PeerBuilder(ip.getPeerId()).ports(ip.getPort())
+                                        .start();
 
                                 // Need to add all features the clients will use (otherwise msg type is UNKNOWN_ID)
-                                new PeerBuilderDHT(peer).start();
+                                peerDHT = new PeerBuilderDHT(peer).start();
                                 PeerNAT nodeBehindNat = new PeerBuilderNAT(peer).start();
                                 new RelayRPC(peer);
                                 //new PeerBuilderTracker(peer);
@@ -92,11 +91,11 @@ public class DHTManager extends AbstractActor {
                                             .bootstrapTo(ip.getBootstrapPeers()).start();
                                     futureBootstrap.awaitUninterruptibly(bootstrapTimeout);
                                 }*/
-                                sender().tell(new PeerInitialized(peer.peerID()), self());
+                                sender().tell(new PeerInitialized(peer.peerID(), ip.getPort()), self());
                             } catch (Throwable t) {
                                 log.info("The second instance has been started. If that happens at the first instance" +
                                         " we are in trouble... " + t.getMessage());
-                                sender().tell(new PeerInitialized(null), self());
+                                sender().tell(new PeerInitialized(null, null), self());
                             } 
                         })
                         .matchAny(o -> log.info("received unknown message")).build()
