@@ -196,6 +196,11 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
 
     @FXML
     void onTakeOffer() {
+        presentationModel.takeOffer();
+    }
+
+    @FXML
+    void onShowPayFundsScreen() {
         if (presentationModel.displaySecurityDepositInfo()) {
             overlayManager.blurContent();
             List<Action> actions = new ArrayList<>();
@@ -213,11 +218,6 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
                     actions);
         }
         
-        presentationModel.takeOffer();
-    }
-
-    @FXML
-    void onShowPayFundsScreen() {
         priceAmountPane.setInactive();
 
         showPaymentInfoScreenButton.setVisible(false);
