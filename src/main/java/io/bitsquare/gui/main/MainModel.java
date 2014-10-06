@@ -23,6 +23,7 @@ import io.bitsquare.gui.UIModel;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.msg.DHTSeedService;
 import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.actor.event.PeerInitialized;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
@@ -104,8 +105,8 @@ class MainModel extends UIModel {
 
         // For testing with the serverside seednode we need the BootstrappedPeerFactory which gets started form 
         // messageFacade.init
-        
-        /*dhtSeedService.setHandler(m -> {
+
+        dhtSeedService.setHandler(m -> {
             if (m instanceof PeerInitialized) {
                 log.debug("dht seed initialized. ");
                 // init messageFacade after seed node initialized
@@ -124,9 +125,9 @@ class MainModel extends UIModel {
             }
         });
 
-        dhtSeedService.initializePeer();*/
+        dhtSeedService.initializePeer();
 
-        messageFacade.init(new BootstrapListener() {
+       /* messageFacade.init(new BootstrapListener() {
             @Override
             public void onCompleted() {
                 messageFacadeInited = true;
@@ -137,7 +138,7 @@ class MainModel extends UIModel {
             public void onFailed(Throwable throwable) {
                 log.error(throwable.toString());
             }
-        });
+        });*/
 
         Profiler.printMsgWithTime("MainModel.initFacades");
 
