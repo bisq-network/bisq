@@ -166,11 +166,11 @@ public class BitSquare extends Application {
 
             // TODO resizing not fully supported yet
 
-            primaryStage.setMinWidth(75);
-            primaryStage.setMinHeight(50);
+           /* primaryStage.setMinWidth(75);
+            primaryStage.setMinHeight(50);*/
 
-          /*  primaryStage.setMinWidth(1000);
-            primaryStage.setMinHeight(750);*/
+            primaryStage.setMinWidth(1000);
+            primaryStage.setMinHeight(750);
 
             Profiler.initScene(primaryStage.getScene());
 
