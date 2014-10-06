@@ -174,7 +174,7 @@ class ActorSystemProvider implements Provider<ActorSystem> {
         ActorSystem system = ActorSystem.create(BitSquare.getAppName());
 
         // create top level actors
-        system.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
+        //system.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
 
         return system;
     }

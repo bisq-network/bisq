@@ -24,8 +24,9 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Profiler;
-import io.bitsquare.msg.DHTSeedService;
 import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.actor.DHTManager;
+import io.bitsquare.msg.actor.command.InitializePeer;
 import io.bitsquare.msg.actor.event.PeerInitialized;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
@@ -48,13 +49,18 @@ import javafx.scene.image.*;
 import javafx.scene.input.*;
 import javafx.stage.Stage;
 
+import net.tomp2p.peers.Number160;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.Inbox;
 import lighthouse.files.AppDirectory;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
+import scala.concurrent.duration.FiniteDuration;
 
 public class BitSquare extends Application {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
@@ -76,7 +82,6 @@ public class BitSquare extends Application {
         BitsquareArgumentParser parser = new BitsquareArgumentParser();
         Namespace namespace = null;
         try {
-            //System.out.println(parser.parseArgs(args));
             namespace = parser.parseArgs(args);
         } catch (ArgumentParserException e) {
             parser.handleError(e);
@@ -93,46 +98,35 @@ public class BitSquare extends Application {
                 port = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
             }
             if (namespace.getBoolean(BitsquareArgumentParser.SEED_FLAG) == true) {
-                DHTSeedService dhtSeed = injector.getInstance(DHTSeedService.class);
-                dhtSeed.setHandler(m -> {
-                    if (m instanceof PeerInitialized) {
-                        System.out.println("Seed Peer Initialized on port " + ((PeerInitialized) m).getPort
-                                ());
+                ActorSystem system = injector.getInstance(ActorSystem.class);
+                ActorRef seedNode = system.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
+                Inbox inbox = Inbox.create(system);
+                inbox.send(seedNode, new InitializePeer(Number160.createHash("localhost"), port, null));
+                //dhtManager.tell(new InitializePeer(Number160.createHash("localhost"), port, null), null);
+                Boolean quit = false;
+                Thread seedNodeThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (!quit) {
+                            try {
+                                Object m = inbox.receive(FiniteDuration.create(5L, "seconds"));
+                                if (m instanceof PeerInitialized) {
+                                    System.out.println("Seed Peer Initialized on port " + ((PeerInitialized) m)
+                                            .getPort());
+                                }
+                            } catch (Exception e) {
+                                // do nothing
+                            }
+                        }
                     }
                 });
-                dhtSeed.initializePeer("localhost", port);
+                seedNodeThread.start();
             }
             else {
                 launch(args);
             }
         }
-
-//        Thread seedNodeThread = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                startSeedNode();
-//            }
-//        });
-//        seedNodeThread.start();
-
     }
-
-//    private static void startSeedNode() {
-//        List<SeedNodeAddress.StaticSeedNodeAddresses> staticSedNodeAddresses = SeedNodeAddress
-//                .StaticSeedNodeAddresses.getAllSeedNodeAddresses();
-//        SeedNode seedNode = new SeedNode(new SeedNodeAddress(staticSedNodeAddresses.get(0)));
-//        seedNode.setDaemon(true);
-//        seedNode.start();
-//
-//        try {
-//            // keep main thread up
-//            Thread.sleep(Long.MAX_VALUE);
-//            log.debug("Localhost seed node started");
-//        } catch (InterruptedException e) {
-//            log.error(e.toString());
-//        }
-//    }
-
 
     public static Stage getPrimaryStage() {
         return primaryStage;
