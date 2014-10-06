@@ -53,7 +53,7 @@ public class BSResources {
         }
     }
 
-    public static String get(String key, String... arguments) {
+    public static String get(String key, Object... arguments) {
         return MessageFormat.format(BSResources.get(key), arguments);
     }
 }
