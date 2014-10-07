@@ -46,6 +46,7 @@ import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.utils.Threading;
@@ -54,13 +55,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.Service;
 
 import java.io.Serializable;
 
 import java.math.BigInteger;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -102,7 +103,7 @@ public class WalletFacade {
     private final FeePolicy feePolicy;
     private final CryptoFacade cryptoFacade;
     private final Persistence persistence;
-    private final List<DownloadListener> downloadListeners = new CopyOnWriteArrayList<>();
+    //  private final List<DownloadListener> downloadListeners = new CopyOnWriteArrayList<>();
     private final List<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArrayList<>();
     private final List<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArrayList<>();
     private final List<BalanceListener> balanceListeners = new CopyOnWriteArrayList<>();
@@ -132,7 +133,7 @@ public class WalletFacade {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(StartupListener startupListener) {
+    public void initialize(org.bitcoinj.core.DownloadListener downloadListener, StartupListener startupListener) {
         // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
         // we cannot forget to switch threads when adding event handlers. Unfortunately, the DownloadListener
         // we give to the app kit is currently an exception and runs on a library thread. It'll get fixed in
@@ -164,7 +165,7 @@ public class WalletFacade {
             // Checkpoint files are made using the BuildCheckpoints tool and usually we have to download the
             // last months worth or more (takes a few seconds).
             try {
-                walletAppKit.setCheckpoints(getClass().getClassLoader().getResourceAsStream("wallet/checkpoints"));
+                walletAppKit.setCheckpoints(getClass().getResourceAsStream("wallet/checkpoints"));
             } catch (Exception e) {
                 e.printStackTrace();
                 log.error(e.toString());
@@ -172,24 +173,40 @@ public class WalletFacade {
             // As an example!
             // walletAppKit.useTor();
         }
-        walletAppKit.setDownloadListener(new BlockChainDownloadListener())
+        else if (params == TestNet3Params.get()) {
+            walletAppKit.setCheckpoints(getClass().getResourceAsStream("wallet/checkpoints.testnet"));
+            //walletAppKit.useTor();
+        }
+        walletAppKit.setDownloadListener(downloadListener)
                 .setBlockingStartup(false)
-                .restoreWalletFromSeed(null)
                 .setUserAgent("BitSquare", "0.1");
+        
+        /* 
+        // TODO restore from DeterministicSeed
+        if (seed != null)
+            walletAppKit.restoreWalletFromSeed(seed);
+            */
 
+        walletAppKit.addListener(new Service.Listener() {
+            @Override
+            public void failed(Service.State from, Throwable failure) {
+                walletAppKit = null;
+                // TODO show error popup
+                //crashAlert(failure);
+            }
+        }, Threading.SAME_THREAD);
         walletAppKit.startAsync();
     }
 
     private void initWallet() {
         wallet = walletAppKit.wallet();
 
-        wallet.allowSpendingUnconfirmedTransactions();
         //walletAppKit.peerGroup().setMaxConnections(11);
 
-        if (params == RegTestParams.get())
+       /* if (params == RegTestParams.get())
             walletAppKit.peerGroup().setMinBroadcastConnections(1);
         else
-            walletAppKit.peerGroup().setMinBroadcastConnections(3);
+            walletAppKit.peerGroup().setMinBroadcastConnections(3);*/
 
 
         walletEventListener = new WalletEventListener() {
@@ -266,14 +283,14 @@ public class WalletFacade {
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public DownloadListener addDownloadListener(DownloadListener listener) {
+ /*   public DownloadListener addDownloadListener(DownloadListener listener) {
         downloadListeners.add(listener);
         return listener;
     }
 
     public void removeDownloadListener(DownloadListener listener) {
         downloadListeners.remove(listener);
-    }
+    }*/
 
     public AddressConfidenceListener addAddressConfidenceListener(AddressConfidenceListener listener) {
         addressConfidenceListeners.add(listener);
@@ -1140,7 +1157,7 @@ public class WalletFacade {
         void downloadComplete();
     }
 
-    private class BlockChainDownloadListener extends org.bitcoinj.core.DownloadListener {
+   /* private class BlockChainDownloadListener extends org.bitcoinj.core.DownloadListener {
         @Override
         protected void progress(double percent, int blocksSoFar, Date date) {
             super.progress(percent, blocksSoFar, date);
@@ -1164,6 +1181,6 @@ public class WalletFacade {
                 downloadListener.downloadComplete();
             }
         }
-    }
+    }*/
 
 }

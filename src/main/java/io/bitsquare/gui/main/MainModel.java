@@ -30,8 +30,13 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
+import org.bitcoinj.core.DownloadListener;
+
 import com.google.inject.Inject;
 
+import java.util.Date;
+
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
@@ -60,8 +65,6 @@ class MainModel extends UIModel {
 
     final BooleanProperty backendInited = new SimpleBooleanProperty();
     final DoubleProperty networkSyncProgress = new SimpleDoubleProperty();
-    final BooleanProperty networkSyncComplete = new SimpleBooleanProperty();
-    //  final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty(0);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -142,19 +145,24 @@ class MainModel extends UIModel {
 
         Profiler.printMsgWithTime("MainModel.initFacades");
 
-        walletFacade.initialize(() -> {
+        DownloadListener downloadListener = new DownloadListener() {
+            @Override
+            protected void progress(double percent, int blocksLeft, Date date) {
+                super.progress(percent, blocksLeft, date);
+                Platform.runLater(() -> networkSyncProgress.set(percent / 100.0));
+            }
+
+            @Override
+            protected void doneDownload() {
+                super.doneDownload();
+                Platform.runLater(() -> networkSyncProgress.set(1.0));
+            }
+        };
+
+        walletFacade.initialize(downloadListener, () -> {
             walletFacadeInited = true;
             if (messageFacadeInited)
                 onFacadesInitialised();
-
-
-          /*  walletFacade.addBalanceListener(new BalanceListener() {
-                @Override
-                public void onBalanceChanged(Coin balance) {
-                    updateBalance(balance);
-                }
-            });
-            updateBalance(walletFacade.getWalletBalance());*/
         });
     }
 
@@ -187,19 +195,6 @@ class MainModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onFacadesInitialised() {
-        // TODO Consider to use version sync notification pane from Mike Hearn
-        walletFacade.addDownloadListener(new WalletFacade.DownloadListener() {
-            @Override
-            public void progress(double percent) {
-                networkSyncProgress.set(percent);
-            }
-
-            @Override
-            public void downloadComplete() {
-                networkSyncComplete.set(true);
-            }
-        });
-
         tradeManager.getPendingTrades().addListener((MapChangeListener<String,
                 Trade>) change -> updateNumPendingTrades());
         updateNumPendingTrades();
@@ -211,7 +206,4 @@ class MainModel extends UIModel {
         numPendingTrades.set(tradeManager.getPendingTrades().size());
     }
 
-   /* private void updateBalance(Coin balance) {
-        this.balance.set(balance);
-    }*/
 }

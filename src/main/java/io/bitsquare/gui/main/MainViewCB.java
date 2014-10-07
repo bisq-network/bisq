@@ -52,6 +52,8 @@ import javafx.scene.paint.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import wallettemplate.controls.NotificationBarPane;
+
 public class MainViewCB extends ViewCB<MainPM> {
     private static final Logger log = LoggerFactory.getLogger(MainViewCB.class);
 
@@ -61,7 +63,7 @@ public class MainViewCB extends ViewCB<MainPM> {
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
 
     private BorderPane baseApplicationContainer;
-    private VBox baseOverlayContainer;
+    private StackPane baseOverlayContainer;
     private AnchorPane contentContainer;
     private HBox leftNavPane, rightNavPane;
     private NetworkSyncPane networkSyncPane;
@@ -69,6 +71,7 @@ public class MainViewCB extends ViewCB<MainPM> {
             accountButton;
     private Pane ordersButtonButtonPane;
     private Label numPendingTradesLabel;
+    private NotificationBarPane notificationBarPane;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -166,10 +169,24 @@ public class MainViewCB extends ViewCB<MainPM> {
 
     private void startup() {
         baseApplicationContainer = getBaseApplicationContainer();
-        baseOverlayContainer = getSplashScreen();
-        ((StackPane) root).getChildren().addAll(baseApplicationContainer, baseOverlayContainer);
+        baseOverlayContainer = new StackPane();
 
-        onBaseContainersCreated();
+        // TODO remove dependency of NotificationBarPane with getSplashScreen (borderPane content)
+        notificationBarPane = new NotificationBarPane(getSplashScreen());
+        baseOverlayContainer.getChildren().add(notificationBarPane);
+
+        final NotificationBarPane.Item syncItem = notificationBarPane.pushItem("Synchronising with the Bitcoin network",
+                presentationModel.networkSyncProgress);
+
+        presentationModel.networkSyncProgress.addListener((ov, oldValue, newValue) -> {
+            if ((double) newValue >= 1.0) {
+                log.debug("### networkSyncProgress " + newValue);
+                syncItem.cancel();
+                onBaseContainersCreated();
+            }
+        });
+
+        ((StackPane) root).getChildren().addAll(baseApplicationContainer, baseOverlayContainer);
     }
 
     private void onBaseContainersCreated() {
@@ -284,7 +301,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         return borderPane;
     }
 
-    private VBox getSplashScreen() {
+    private BorderPane getSplashScreen() {
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.CENTER);
         vBox.setSpacing(10);
@@ -303,7 +320,9 @@ public class MainViewCB extends ViewCB<MainPM> {
         loadingLabel.textProperty().bind(presentationModel.splashScreenInfoText);
 
         vBox.getChildren().addAll(logo, subTitle, loadingLabel);
-        return vBox;
+
+        BorderPane borderPane = new BorderPane(vBox);
+        return borderPane;
     }
 
     private AnchorPane getApplicationContainer() {
@@ -333,15 +352,6 @@ public class MainViewCB extends ViewCB<MainPM> {
         AnchorPane.setLeftAnchor(networkSyncPane, 0d);
         AnchorPane.setBottomAnchor(networkSyncPane, 5d);
 
-        // TODO sometimes it keeps running... deactivate ti for the moment and replace it with the notification pane 
-        // from Mike Hearn later
-        networkSyncPane.setVisible(false);
-
-        presentationModel.networkSyncComplete.addListener((ov, old, newValue) -> {
-            if (newValue)
-                networkSyncPane.downloadComplete();
-        });
-
         anchorPane.getChildren().addAll(leftNavPane, rightNavPane, contentContainer, networkSyncPane);
         return anchorPane;
     }
@@ -360,8 +370,6 @@ public class MainViewCB extends ViewCB<MainPM> {
         final Pane msgButtonHolder = new Pane();
         msgButton = addNavButton(msgButtonHolder, "Messages", Navigation.Item.MSG);
         leftNavPane.getChildren().add(msgButtonHolder);
-
-        //addBalanceInfo(rightNavPane);
 
         addBankAccountComboBox(rightNavPane);
 
@@ -407,28 +415,6 @@ public class MainViewCB extends ViewCB<MainPM> {
         parent.getChildren().add(toggleButton);
         return toggleButton;
     }
-
-    /*private void addBalanceInfo(Pane parent) {
-        final TextField balanceTextField = new TextField();
-        balanceTextField.setEditable(false);
-        balanceTextField.setPrefWidth(110);
-        balanceTextField.setId("nav-balance-label");
-        balanceTextField.textProperty().bind(presentationModel.balance);
-
-
-        final Label titleLabel = new Label("Balance");
-        titleLabel.setMouseTransparent(true);
-        titleLabel.setId("nav-button-label");
-        balanceTextField.widthProperty().addListener((ov, o, n) ->
-                titleLabel.setLayoutX(((double) n - titleLabel.getWidth()) / 2));
-
-        final VBox vBox = new VBox();
-        vBox.setPadding(new Insets(12, 5, 0, 0));
-        vBox.setSpacing(2);
-        vBox.getChildren().setAll(balanceTextField, titleLabel);
-        vBox.setAlignment(Pos.CENTER);
-        parent.getChildren().add(vBox);
-    }*/
 
     private void addBankAccountComboBox(Pane parent) {
         final ComboBox<BankAccount> comboBox = new ComboBox<>(presentationModel.getBankAccounts());

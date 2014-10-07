@@ -25,7 +25,7 @@
 
     <logger name="io.bitsquare" level="TRACE"/>
 
-    <logger name="org.bitcoinj" level="WARN"/>
+    <logger name="org.bitcoinj" level="DEBUG"/>
     <logger name="net.tomp2p" level="WARN"/>
 
     <logger name="io.netty.util" level="WARN"/>
@@ -35,6 +35,10 @@
     <logger name="io.bitsquare.gui.ViewController" level="OFF"/>
     <logger name="io.bitsquare.gui.CachedViewController" level="OFF"/>
     <logger name="io.bitsquare.gui.util.Profiler" level="TRACE"/>
+
+
+    <logger name=" org.bitcoinj.core.BitcoinSerializer" level="WARN"/>
+    <logger name=" org.bitcoinj.core.AbstractBlockChain" level="WARN"/>
 
     <!--
     <logger name="org.bitcoinj.core.Wallet" level="OFF"/>
