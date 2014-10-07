@@ -63,9 +63,10 @@ class MainModel extends UIModel {
     private boolean messageFacadeInited;
     private boolean walletFacadeInited;
 
-    final BooleanProperty backendInited = new SimpleBooleanProperty();
-    final DoubleProperty networkSyncProgress = new SimpleDoubleProperty();
+    final BooleanProperty backendReady = new SimpleBooleanProperty();
+    final DoubleProperty networkSyncProgress = new SimpleDoubleProperty(-1);
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty(0);
+    private boolean facadesInitialised;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -117,7 +118,8 @@ class MainModel extends UIModel {
                     @Override
                     public void onCompleted() {
                         messageFacadeInited = true;
-                        if (walletFacadeInited) onFacadesInitialised();
+                        if (walletFacadeInited)
+                            onFacadesInitialised();
                     }
 
                     @Override
@@ -149,13 +151,23 @@ class MainModel extends UIModel {
             @Override
             protected void progress(double percent, int blocksLeft, Date date) {
                 super.progress(percent, blocksLeft, date);
-                Platform.runLater(() -> networkSyncProgress.set(percent / 100.0));
+                Platform.runLater(() -> {
+                    networkSyncProgress.set(percent / 100.0);
+
+                    if (facadesInitialised && percent >= 100.0)
+                        backendReady.set(true);
+                });
             }
 
             @Override
             protected void doneDownload() {
                 super.doneDownload();
-                Platform.runLater(() -> networkSyncProgress.set(1.0));
+                Platform.runLater(() -> {
+                    networkSyncProgress.set(1.0);
+
+                    if (facadesInitialised)
+                        backendReady.set(true);
+                });
             }
         };
 
@@ -199,7 +211,10 @@ class MainModel extends UIModel {
                 Trade>) change -> updateNumPendingTrades());
         updateNumPendingTrades();
 
-        backendInited.set(true);
+        facadesInitialised = true;
+
+        if (networkSyncProgress.get() >= 1.0)
+            backendReady.set(true);
     }
 
     private void updateNumPendingTrades() {

@@ -44,7 +44,7 @@ class MainPM extends PresentationModel<MainModel> {
 
     private BSFormatter formatter;
 
-    final BooleanProperty backendInited = new SimpleBooleanProperty();
+    final BooleanProperty backendReady = new SimpleBooleanProperty();
     final StringProperty bankAccountsComboBoxPrompt = new SimpleStringProperty();
     final BooleanProperty bankAccountsComboBoxDisable = new SimpleBooleanProperty();
     final StringProperty splashScreenInfoText = new SimpleStringProperty();
@@ -71,19 +71,20 @@ class MainPM extends PresentationModel<MainModel> {
     public void initialize() {
         super.initialize();
 
-        backendInited.bind(model.backendInited);
+        backendReady.bind(model.backendReady);
         networkSyncProgress.bind(model.networkSyncProgress);
         numPendingTrades.bind(model.numPendingTrades);
 
         model.networkSyncProgress.addListener((ov, oldValue, newValue) -> {
-            if ((double) newValue > 0)
-                splashScreenInfoText.set("Synchronise with network " + formatter.formatToPercent((double) newValue));
+            if ((double) newValue > 0.0)
+                splashScreenInfoText.set("Synchronise with network " + formatter.formatToPercent((double)
+                        newValue));
             else if ((double) newValue == 1)
                 splashScreenInfoText.set("Synchronise with network completed.");
             else
                 splashScreenInfoText.set("Synchronise with network...");
-
         });
+        splashScreenInfoText.set("Synchronise with network...");
 
         model.getBankAccounts().addListener((ListChangeListener<BankAccount>) change -> {
             bankAccountsComboBoxDisable.set(change.getList().isEmpty());

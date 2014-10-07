@@ -165,7 +165,7 @@ public class WalletFacade {
             // Checkpoint files are made using the BuildCheckpoints tool and usually we have to download the
             // last months worth or more (takes a few seconds).
             try {
-                walletAppKit.setCheckpoints(getClass().getResourceAsStream("wallet/checkpoints"));
+                walletAppKit.setCheckpoints(getClass().getResourceAsStream("/wallet/checkpoints"));
             } catch (Exception e) {
                 e.printStackTrace();
                 log.error(e.toString());
@@ -174,7 +174,7 @@ public class WalletFacade {
             // walletAppKit.useTor();
         }
         else if (params == TestNet3Params.get()) {
-            walletAppKit.setCheckpoints(getClass().getResourceAsStream("wallet/checkpoints.testnet"));
+            walletAppKit.setCheckpoints(getClass().getResourceAsStream("/wallet/checkpoints.testnet"));
             //walletAppKit.useTor();
         }
         walletAppKit.setDownloadListener(downloadListener)

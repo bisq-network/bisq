@@ -22,7 +22,6 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.ViewCB;
-import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.util.Profiler;
@@ -39,6 +38,7 @@ import java.util.ResourceBundle;
 import javax.inject.Inject;
 
 import javafx.animation.Interpolator;
+import javafx.application.Platform;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -52,8 +52,6 @@ import javafx.scene.paint.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import wallettemplate.controls.NotificationBarPane;
-
 public class MainViewCB extends ViewCB<MainPM> {
     private static final Logger log = LoggerFactory.getLogger(MainViewCB.class);
 
@@ -63,15 +61,13 @@ public class MainViewCB extends ViewCB<MainPM> {
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
 
     private BorderPane baseApplicationContainer;
-    private StackPane baseOverlayContainer;
+    private VBox splashScreen;
     private AnchorPane contentContainer;
     private HBox leftNavPane, rightNavPane;
-    private NetworkSyncPane networkSyncPane;
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton,
             accountButton;
     private Pane ordersButtonButtonPane;
     private Label numPendingTradesLabel;
-    private NotificationBarPane notificationBarPane;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -169,41 +165,22 @@ public class MainViewCB extends ViewCB<MainPM> {
 
     private void startup() {
         baseApplicationContainer = getBaseApplicationContainer();
-        baseOverlayContainer = new StackPane();
+        splashScreen = getSplashScreen();
+        ((StackPane) root).getChildren().addAll(baseApplicationContainer, splashScreen);
+        baseApplicationContainer.setCenter(getApplicationContainer());
 
-        // TODO remove dependency of NotificationBarPane with getSplashScreen (borderPane content)
-        notificationBarPane = new NotificationBarPane(getSplashScreen());
-        baseOverlayContainer.getChildren().add(notificationBarPane);
-
-        final NotificationBarPane.Item syncItem = notificationBarPane.pushItem("Synchronising with the Bitcoin network",
-                presentationModel.networkSyncProgress);
-
-        presentationModel.networkSyncProgress.addListener((ov, oldValue, newValue) -> {
-            if ((double) newValue >= 1.0) {
-                log.debug("### networkSyncProgress " + newValue);
-                syncItem.cancel();
-                onBaseContainersCreated();
-            }
-        });
-
-        ((StackPane) root).getChildren().addAll(baseApplicationContainer, baseOverlayContainer);
+        Platform.runLater(() -> onSplashScreenAdded());
     }
 
-    private void onBaseContainersCreated() {
-        Profiler.printMsgWithTime("MainController.onBaseContainersCreated");
-
-        AnchorPane applicationContainer = getApplicationContainer();
-        baseApplicationContainer.setCenter(applicationContainer);
-
-        presentationModel.backendInited.addListener((ov, oldValue, newValue) -> {
+    private void onSplashScreenAdded() {
+        presentationModel.backendReady.addListener((ov, oldValue, newValue) -> {
             if (newValue)
-                onBackendInited();
+                onBackendReady();
         });
-
         presentationModel.initBackend();
     }
 
-    private void onBackendInited() {
+    private void onBackendReady() {
         Profiler.printMsgWithTime("MainController.onBackendInited");
         addMainNavigation();
     }
@@ -255,7 +232,7 @@ public class MainViewCB extends ViewCB<MainPM> {
 
     private void onContentAdded() {
         Profiler.printMsgWithTime("MainController.onContentAdded");
-        Transitions.fadeOutAndRemove(baseOverlayContainer, 1500).setInterpolator(Interpolator.EASE_IN);
+        Transitions.fadeOutAndRemove(splashScreen, 1500).setInterpolator(Interpolator.EASE_IN);
     }
 
 
@@ -301,7 +278,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         return borderPane;
     }
 
-    private BorderPane getSplashScreen() {
+    private VBox getSplashScreen() {
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.CENTER);
         vBox.setSpacing(10);
@@ -319,10 +296,13 @@ public class MainViewCB extends ViewCB<MainPM> {
         loadingLabel.setPadding(new Insets(80, 0, 0, 0));
         loadingLabel.textProperty().bind(presentationModel.splashScreenInfoText);
 
-        vBox.getChildren().addAll(logo, subTitle, loadingLabel);
+        ProgressBar progressBar = new ProgressBar();
+        progressBar.setPrefWidth(200);
+        progressBar.progressProperty().bind(presentationModel.networkSyncProgress);
 
-        BorderPane borderPane = new BorderPane(vBox);
-        return borderPane;
+        vBox.getChildren().addAll(logo, subTitle, loadingLabel, progressBar);
+
+        return vBox;
     }
 
     private AnchorPane getApplicationContainer() {
@@ -346,13 +326,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         AnchorPane.setTopAnchor(contentContainer, 60d);
         AnchorPane.setBottomAnchor(contentContainer, 25d);
 
-        networkSyncPane = new NetworkSyncPane();
-        networkSyncPane.setSpacing(10);
-        networkSyncPane.setPrefHeight(20);
-        AnchorPane.setLeftAnchor(networkSyncPane, 0d);
-        AnchorPane.setBottomAnchor(networkSyncPane, 5d);
-
-        anchorPane.getChildren().addAll(leftNavPane, rightNavPane, contentContainer, networkSyncPane);
+        anchorPane.getChildren().addAll(leftNavPane, rightNavPane, contentContainer);
         return anchorPane;
     }
 

@@ -23,7 +23,6 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
-import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.wallet.CoinSelection;
 import org.bitcoinj.wallet.DefaultCoinSelector;
 
@@ -105,10 +104,10 @@ class AddressBasedCoinSelector extends DefaultCoinSelector {
                         (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());*/
 
         log.debug("numBroadcastPeers = " + confidence.numBroadcastPeers());
-        // TODO at testnet we got confidence.numBroadcastPeers()=1
+        // TODO at testnet we got confidence.numBroadcastPeers()=0 -> probably because we use chained unconfirmed tx
+        // investigate further
         return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
-                type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
-                        (confidence.numBroadcastPeers() > 0 || tx.getParams() == RegTestParams.get());
+                type.equals(TransactionConfidence.ConfidenceType.PENDING);
     }
 
     private static boolean isInBlockChain(Transaction tx) {

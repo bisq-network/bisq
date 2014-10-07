@@ -171,7 +171,7 @@ class TakeOfferModel extends UIModel {
                     requestTakeOfferErrorMessage.set("Take offer request got rejected.");
                     break;
                 default:
-                    log.error("Unhandled trade state: " + newValue);
+                    log.warn("Unhandled trade state: " + newValue);
                     break;
             }
         });
