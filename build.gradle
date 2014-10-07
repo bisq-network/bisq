@@ -10,7 +10,7 @@ sourceSets.main.resources.srcDirs += 'src/main/java'
 javafx {
     appID 'Bitsquare'
     appName 'Bitsquare'
-    mainClass 'io.bitsquare.BitSquare'
+    mainClass 'io.bitsquare.BitSquareUI'
 
     profiles {
         windows {
