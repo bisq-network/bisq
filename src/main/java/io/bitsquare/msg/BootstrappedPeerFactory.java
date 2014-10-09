@@ -35,6 +35,10 @@ import javax.annotation.concurrent.Immutable;
 
 import javax.inject.Inject;
 
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 import net.tomp2p.connection.Ports;
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
@@ -76,6 +80,7 @@ public class BootstrappedPeerFactory {
     private final Persistence persistence;
 
     private final SettableFuture<PeerDHT> settableFuture = SettableFuture.create();
+    public final StringProperty connectionState = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -194,6 +199,9 @@ public class BootstrappedPeerFactory {
                     log.debug("We are not behind a NAT and reachable to other peers: My address visible to the " +
                             "outside is " + futureDiscover.peerAddress());
                     requestBootstrapPeerMap();
+                    setConnectionState("We are not behind a NAT and reachable to other peers: My address visible to " +
+                            "the " +
+                            "outside is " + futureDiscover.peerAddress());
                     settableFuture.set(peerDHT);
 
                     persistence.write(ref, "lastSuccessfulBootstrap", "default");
@@ -201,6 +209,10 @@ public class BootstrappedPeerFactory {
                 else {
                     log.warn("Discover has failed. Reason: " + futureDiscover.failedReason());
                     log.warn("We are probably behind a NAT and not reachable to other peers. We try port forwarding " +
+                            "as next step.");
+
+                    setConnectionState("We are probably behind a NAT and not reachable to other peers. We try port " +
+                            "forwarding " +
                             "as next step.");
 
                     bootstrapWithPortForwarding(peerDHT, futureDiscover);
@@ -230,6 +242,8 @@ public class BootstrappedPeerFactory {
                     log.debug("Port forwarding was successful. My address visible to the outside is " +
                             futureNAT.peerAddress());
                     requestBootstrapPeerMap();
+                    setConnectionState("Port forwarding was successful. My address visible to the outside is " +
+                            futureNAT.peerAddress());
                     settableFuture.set(peerDHT);
 
                     persistence.write(ref, "lastSuccessfulBootstrap", "portForwarding");
@@ -237,6 +251,8 @@ public class BootstrappedPeerFactory {
                 else {
                     log.warn("Port forwarding has failed. Reason: " + futureNAT.failedReason());
                     log.warn("We try to use a relay as next step.");
+
+                    setConnectionState("We try to use a relay as next step.");
 
                     bootstrapWithRelay(peerDHT, nodeBehindNat);
                 }
@@ -324,6 +340,8 @@ public class BootstrappedPeerFactory {
                 if (future.isSuccess()) {
                     log.debug("Final bootstrap was successful. bootstrapTo  = " + futureBootstrap2.bootstrapTo());
                     requestBootstrapPeerMap();
+                    setConnectionState("Final bootstrap was successful. bootstrapTo  = " + futureBootstrap2
+                            .bootstrapTo());
                     settableFuture.set(peerDHT);
 
                     persistence.write(ref, "lastSuccessfulBootstrap", "relay");
@@ -347,5 +365,9 @@ public class BootstrappedPeerFactory {
     // The seed node should only be used if no other known peers are available
     private void requestBootstrapPeerMap() {
         log.debug("getBootstrapPeerMap");
+    }
+
+    private void setConnectionState(String state) {
+        Platform.runLater(() -> connectionState.set(state));
     }
 }
