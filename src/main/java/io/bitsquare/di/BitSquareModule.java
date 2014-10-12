@@ -146,7 +146,7 @@ class NetworkParametersProvider implements Provider<NetworkParameters> {
 
         // Set default
         // String networkType= WalletFacade.MAIN_NET;
-        // String networkType = WalletFacade.TEST_NET;
+        //String networkType = WalletFacade.TEST_NET;
         String networkType = WalletFacade.REG_TEST_NET;
 
         if (networkTypeFromConfig != null)

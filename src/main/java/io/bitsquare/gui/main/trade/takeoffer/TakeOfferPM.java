@@ -303,6 +303,10 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
         return paymentLabel;
     }
 
+    Boolean displaySecurityDepositInfo() {
+        return model.displaySecurityDepositInfo();
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

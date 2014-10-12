@@ -285,6 +285,8 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     private void close() {
         TabPane tabPane = ((TabPane) (root.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
+
+        navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS, Navigation.Item.OFFERS);
     }
 
 

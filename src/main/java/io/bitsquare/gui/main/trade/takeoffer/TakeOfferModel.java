@@ -22,6 +22,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.UIModel;
+import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
@@ -56,6 +57,7 @@ class TakeOfferModel extends UIModel {
     private final TradeManager tradeManager;
     private final WalletFacade walletFacade;
     private final Settings settings;
+    private Persistence persistence;
 
     private Offer offer;
     private AddressEntry addressEntry;
@@ -81,10 +83,11 @@ class TakeOfferModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    TakeOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings) {
+    TakeOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, Persistence persistence) {
         this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
         this.settings = settings;
+        this.persistence = persistence;
     }
 
 
@@ -168,7 +171,7 @@ class TakeOfferModel extends UIModel {
                     requestTakeOfferErrorMessage.set("Take offer request got rejected.");
                     break;
                 default:
-                    log.error("Unhandled trade state: " + newValue);
+                    log.warn("Unhandled trade state: " + newValue);
                     break;
             }
         });
@@ -227,6 +230,13 @@ class TakeOfferModel extends UIModel {
         return true;
     }
 
+    Boolean displaySecurityDepositInfo() {
+        Object securityDepositInfoDisplayedObject = persistence.read("displaySecurityDepositInfo");
+        if (securityDepositInfoDisplayedObject instanceof Boolean)
+            return (Boolean) securityDepositInfoDisplayedObject;
+        else
+            return true;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter

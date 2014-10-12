@@ -36,6 +36,10 @@
     <logger name="io.bitsquare.gui.CachedViewController" level="OFF"/>
     <logger name="io.bitsquare.gui.util.Profiler" level="TRACE"/>
 
+
+    <logger name=" org.bitcoinj.core.BitcoinSerializer" level="WARN"/>
+    <logger name=" org.bitcoinj.core.AbstractBlockChain" level="WARN"/>
+
     <!--
     <logger name="org.bitcoinj.core.Wallet" level="OFF"/>
     <logger name="org.bitcoinj.core.MemoryPool" level="OFF"/>

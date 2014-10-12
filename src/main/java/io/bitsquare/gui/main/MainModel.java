@@ -23,14 +23,20 @@ import io.bitsquare.gui.UIModel;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.msg.DHTSeedService;
 import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.actor.event.PeerInitialized;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
+import org.bitcoinj.core.DownloadListener;
+
 import com.google.inject.Inject;
 
+import java.util.Date;
+
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
@@ -57,11 +63,10 @@ class MainModel extends UIModel {
     private boolean messageFacadeInited;
     private boolean walletFacadeInited;
 
-    final BooleanProperty backendInited = new SimpleBooleanProperty();
-    final DoubleProperty networkSyncProgress = new SimpleDoubleProperty();
-    final BooleanProperty networkSyncComplete = new SimpleBooleanProperty();
-    //  final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
+    final BooleanProperty backendReady = new SimpleBooleanProperty();
+    final DoubleProperty networkSyncProgress = new SimpleDoubleProperty(-1);
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty(0);
+    private boolean facadesInitialised;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -120,19 +125,34 @@ class MainModel extends UIModel {
 
         Profiler.printMsgWithTime("MainModel.initFacades");
 
-        walletFacade.initialize(() -> {
+        DownloadListener downloadListener = new DownloadListener() {
+            @Override
+            protected void progress(double percent, int blocksLeft, Date date) {
+                super.progress(percent, blocksLeft, date);
+                Platform.runLater(() -> {
+                    networkSyncProgress.set(percent / 100.0);
+
+                    if (facadesInitialised && percent >= 100.0)
+                        backendReady.set(true);
+                });
+            }
+
+            @Override
+            protected void doneDownload() {
+                super.doneDownload();
+                Platform.runLater(() -> {
+                    networkSyncProgress.set(1.0);
+
+                    if (facadesInitialised)
+                        backendReady.set(true);
+                });
+            }
+        };
+
+        walletFacade.initialize(downloadListener, () -> {
             walletFacadeInited = true;
             if (messageFacadeInited)
                 onFacadesInitialised();
-
-
-          /*  walletFacade.addBalanceListener(new BalanceListener() {
-                @Override
-                public void onBalanceChanged(Coin balance) {
-                    updateBalance(balance);
-                }
-            });
-            updateBalance(walletFacade.getWalletBalance());*/
         });
     }
 

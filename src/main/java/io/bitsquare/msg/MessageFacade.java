@@ -177,6 +177,7 @@ public class MessageFacade implements MessageBroker {
                                 try {
                                     Object offerDataObject = offerData.object();
                                     if (offerDataObject instanceof Offer) {
+                                        log.error("Added offer to DHT with ID: " + ((Offer) offerDataObject).getId());
                                         listener.onOfferAdded((Offer) offerDataObject);
                                     }
                                 } catch (ClassNotFoundException | IOException e) {

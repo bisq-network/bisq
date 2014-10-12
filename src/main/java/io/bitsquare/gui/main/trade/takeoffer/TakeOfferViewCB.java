@@ -201,6 +201,23 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
 
     @FXML
     void onShowPayFundsScreen() {
+        if (presentationModel.displaySecurityDepositInfo()) {
+            overlayManager.blurContent();
+            List<Action> actions = new ArrayList<>();
+            actions.add(new AbstractAction(BSResources.get("shared.close")) {
+                @Override
+                public void handle(ActionEvent actionEvent) {
+                    Dialog.Actions.CLOSE.handle(actionEvent);
+                    overlayManager.removeBlurContent();
+                }
+            });
+            Popups.openInfo("To ensure that both traders behave fair they need to pay a security deposit.",
+                    "The deposit will stay in your local trading wallet until the offer gets accepted by " +
+                            "another trader. " +
+                            "\nIt will be refunded to you after the trade has successfully completed.",
+                    actions);
+        }
+        
         priceAmountPane.setInactive();
 
         showPaymentInfoScreenButton.setVisible(false);

@@ -22,7 +22,6 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.ViewCB;
-import io.bitsquare.gui.components.NetworkSyncPane;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.util.Profiler;
@@ -39,6 +38,7 @@ import java.util.ResourceBundle;
 import javax.inject.Inject;
 
 import javafx.animation.Interpolator;
+import javafx.application.Platform;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -61,10 +61,9 @@ public class MainViewCB extends ViewCB<MainPM> {
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
 
     private BorderPane baseApplicationContainer;
-    private VBox baseOverlayContainer;
+    private VBox splashScreen;
     private AnchorPane contentContainer;
     private HBox leftNavPane, rightNavPane;
-    private NetworkSyncPane networkSyncPane;
     private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton,
             accountButton;
     private Pane ordersButtonButtonPane;
@@ -166,27 +165,22 @@ public class MainViewCB extends ViewCB<MainPM> {
 
     private void startup() {
         baseApplicationContainer = getBaseApplicationContainer();
-        baseOverlayContainer = getSplashScreen();
-        ((StackPane) root).getChildren().addAll(baseApplicationContainer, baseOverlayContainer);
+        splashScreen = getSplashScreen();
+        ((StackPane) root).getChildren().addAll(baseApplicationContainer, splashScreen);
+        baseApplicationContainer.setCenter(getApplicationContainer());
 
-        onBaseContainersCreated();
+        Platform.runLater(() -> onSplashScreenAdded());
     }
 
-    private void onBaseContainersCreated() {
-        Profiler.printMsgWithTime("MainController.onBaseContainersCreated");
-
-        AnchorPane applicationContainer = getApplicationContainer();
-        baseApplicationContainer.setCenter(applicationContainer);
-
-        presentationModel.backendInited.addListener((ov, oldValue, newValue) -> {
+    private void onSplashScreenAdded() {
+        presentationModel.backendReady.addListener((ov, oldValue, newValue) -> {
             if (newValue)
-                onBackendInited();
+                onBackendReady();
         });
-
         presentationModel.initBackend();
     }
 
-    private void onBackendInited() {
+    private void onBackendReady() {
         Profiler.printMsgWithTime("MainController.onBackendInited");
         addMainNavigation();
     }
@@ -238,7 +232,7 @@ public class MainViewCB extends ViewCB<MainPM> {
 
     private void onContentAdded() {
         Profiler.printMsgWithTime("MainController.onContentAdded");
-        Transitions.fadeOutAndRemove(baseOverlayContainer, 1500).setInterpolator(Interpolator.EASE_IN);
+        Transitions.fadeOutAndRemove(splashScreen, 1500).setInterpolator(Interpolator.EASE_IN);
     }
 
 
@@ -302,7 +296,12 @@ public class MainViewCB extends ViewCB<MainPM> {
         loadingLabel.setPadding(new Insets(80, 0, 0, 0));
         loadingLabel.textProperty().bind(presentationModel.splashScreenInfoText);
 
-        vBox.getChildren().addAll(logo, subTitle, loadingLabel);
+        ProgressBar progressBar = new ProgressBar();
+        progressBar.setPrefWidth(200);
+        progressBar.progressProperty().bind(presentationModel.networkSyncProgress);
+
+        vBox.getChildren().addAll(logo, subTitle, loadingLabel, progressBar);
+
         return vBox;
     }
 
@@ -327,22 +326,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         AnchorPane.setTopAnchor(contentContainer, 60d);
         AnchorPane.setBottomAnchor(contentContainer, 25d);
 
-        networkSyncPane = new NetworkSyncPane();
-        networkSyncPane.setSpacing(10);
-        networkSyncPane.setPrefHeight(20);
-        AnchorPane.setLeftAnchor(networkSyncPane, 0d);
-        AnchorPane.setBottomAnchor(networkSyncPane, 5d);
-
-        // TODO sometimes it keeps running... deactivate ti for the moment and replace it with the notification pane 
-        // from Mike Hearn later
-        networkSyncPane.setVisible(false);
-
-        presentationModel.networkSyncComplete.addListener((ov, old, newValue) -> {
-            if (newValue)
-                networkSyncPane.downloadComplete();
-        });
-
-        anchorPane.getChildren().addAll(leftNavPane, rightNavPane, contentContainer, networkSyncPane);
+        anchorPane.getChildren().addAll(leftNavPane, rightNavPane, contentContainer);
         return anchorPane;
     }
 
@@ -360,8 +344,6 @@ public class MainViewCB extends ViewCB<MainPM> {
         final Pane msgButtonHolder = new Pane();
         msgButton = addNavButton(msgButtonHolder, "Messages", Navigation.Item.MSG);
         leftNavPane.getChildren().add(msgButtonHolder);
-
-        //addBalanceInfo(rightNavPane);
 
         addBankAccountComboBox(rightNavPane);
 
@@ -407,28 +389,6 @@ public class MainViewCB extends ViewCB<MainPM> {
         parent.getChildren().add(toggleButton);
         return toggleButton;
     }
-
-    /*private void addBalanceInfo(Pane parent) {
-        final TextField balanceTextField = new TextField();
-        balanceTextField.setEditable(false);
-        balanceTextField.setPrefWidth(110);
-        balanceTextField.setId("nav-balance-label");
-        balanceTextField.textProperty().bind(presentationModel.balance);
-
-
-        final Label titleLabel = new Label("Balance");
-        titleLabel.setMouseTransparent(true);
-        titleLabel.setId("nav-button-label");
-        balanceTextField.widthProperty().addListener((ov, o, n) ->
-                titleLabel.setLayoutX(((double) n - titleLabel.getWidth()) / 2));
-
-        final VBox vBox = new VBox();
-        vBox.setPadding(new Insets(12, 5, 0, 0));
-        vBox.setSpacing(2);
-        vBox.getChildren().setAll(balanceTextField, titleLabel);
-        vBox.setAlignment(Pos.CENTER);
-        parent.getChildren().add(vBox);
-    }*/
 
     private void addBankAccountComboBox(Pane parent) {
         final ComboBox<BankAccount> comboBox = new ComboBox<>(presentationModel.getBankAccounts());

@@ -24,9 +24,11 @@ import io.bitsquare.gui.util.BSFormatter;
 import com.google.inject.Inject;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -40,15 +42,14 @@ import org.slf4j.LoggerFactory;
 class MainPM extends PresentationModel<MainModel> {
     private static final Logger log = LoggerFactory.getLogger(MainPM.class);
 
-    final BooleanProperty backendInited = new SimpleBooleanProperty();
-    // final StringProperty balance = new SimpleStringProperty();
+    private BSFormatter formatter;
+
+    final BooleanProperty backendReady = new SimpleBooleanProperty();
     final StringProperty bankAccountsComboBoxPrompt = new SimpleStringProperty();
     final BooleanProperty bankAccountsComboBoxDisable = new SimpleBooleanProperty();
     final StringProperty splashScreenInfoText = new SimpleStringProperty();
-    final BooleanProperty networkSyncComplete = new SimpleBooleanProperty();
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty();
-    private BSFormatter formatter;
-
+    final DoubleProperty networkSyncProgress = new SimpleDoubleProperty();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -70,22 +71,20 @@ class MainPM extends PresentationModel<MainModel> {
     public void initialize() {
         super.initialize();
 
-        backendInited.bind(model.backendInited);
-        networkSyncComplete.bind(model.networkSyncComplete);
+        backendReady.bind(model.backendReady);
+        networkSyncProgress.bind(model.networkSyncProgress);
         numPendingTrades.bind(model.numPendingTrades);
 
         model.networkSyncProgress.addListener((ov, oldValue, newValue) -> {
-            if ((double) newValue > 0)
-                splashScreenInfoText.set("Synchronise with network " + formatter.formatToPercent((double) newValue));
+            if ((double) newValue > 0.0)
+                splashScreenInfoText.set("Synchronise with network " + formatter.formatToPercent((double)
+                        newValue));
             else if ((double) newValue == 1)
                 splashScreenInfoText.set("Synchronise with network completed.");
             else
                 splashScreenInfoText.set("Synchronise with network...");
-
         });
-
-        /*model.balance.addListener((ov, oldValue, newValue) -> balance.set(formatter.formatCoinWithCode
-                (newValue)));*/
+        splashScreenInfoText.set("Synchronise with network...");
 
         model.getBankAccounts().addListener((ListChangeListener<BankAccount>) change -> {
             bankAccountsComboBoxDisable.set(change.getList().isEmpty());

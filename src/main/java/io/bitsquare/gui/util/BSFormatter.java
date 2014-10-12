@@ -309,7 +309,7 @@ public class BSFormatter {
         decimalFormat.setMinimumFractionDigits(1);
         decimalFormat.setMaximumFractionDigits(1);
         decimalFormat.setGroupingUsed(false);
-        return decimalFormat.format(value / 100) + " %";
+        return decimalFormat.format(value * 100.0) + " %";
     }
 
     private String cleanInput(String input) {

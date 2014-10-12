@@ -22,6 +22,9 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.TestNet3Params;
 
 import javax.inject.Inject;
 
@@ -46,14 +49,29 @@ public class FeePolicy {
     // Not used at the moment
     // private static final String registrationFeeAddress = "mvkDXt4QmN4Nq9dRUsRigBCaovde9nLkZR";
 
-    private static final String createOfferFeeAddress = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";
-    private static final String takeOfferFeeAddress = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";
+    // 
+    private static String createOfferFeeAddress;
+    private static String takeOfferFeeAddress;
 
     private final NetworkParameters params;
 
     @Inject
     public FeePolicy(NetworkParameters params) {
         this.params = params;
+
+        if (params.equals(TestNet3Params.get())) {
+            createOfferFeeAddress = "n3LLZ9ngKdxms3gCbHhNPibHTh7DmHigtE";
+            takeOfferFeeAddress = "n3LLZ9ngKdxms3gCbHhNPibHTh7DmHigtE";
+        }
+        else if (params.equals(MainNetParams.get())) {
+            // bitsquare donation address used for the moment...
+            createOfferFeeAddress = "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7";
+            takeOfferFeeAddress = "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7";
+        }
+        else if (params.equals(RegTestParams.get())) {
+            createOfferFeeAddress = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";
+            takeOfferFeeAddress = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";
+        }
     }
 
     //TODO who is receiver? other users or dev address? use donation option list?
