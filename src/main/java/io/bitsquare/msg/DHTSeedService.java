@@ -39,9 +39,9 @@ public class DHTSeedService extends ActorService {
         super(system, "/user/" + DHTManager.SEED_NAME);
     }
 
-    public void initializePeer() {
+    public void initializePeer(String id, Integer port) {
 
         // TODO hard coded seed peer config for now, should read from config properties file
-        send(new InitializePeer(new Number160(5001), 5001, null));
+        send(new InitializePeer(Number160.createHash(id), port, null));
     }
 }

@@ -21,9 +21,7 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.gui.util.Profiler;
-import io.bitsquare.msg.DHTSeedService;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.msg.actor.event.PeerInitialized;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
@@ -54,7 +52,6 @@ class MainModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(MainModel.class);
 
     private final User user;
-    private final DHTSeedService dhtSeedService;
     private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
     private final TradeManager tradeManager;
@@ -73,10 +70,9 @@ class MainModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MainModel(User user, DHTSeedService dhtSeedService, WalletFacade walletFacade, MessageFacade messageFacade,
+    private MainModel(User user, WalletFacade walletFacade, MessageFacade messageFacade,
                       TradeManager tradeManager, Persistence persistence) {
         this.user = user;
-        this.dhtSeedService = dhtSeedService;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
         this.tradeManager = tradeManager;
@@ -110,29 +106,7 @@ class MainModel extends UIModel {
         // For testing with the serverside seednode we need the BootstrappedPeerFactory which gets started form 
         // messageFacade.init
 
-        dhtSeedService.setHandler(m -> {
-            if (m instanceof PeerInitialized) {
-                log.debug("dht seed initialized. ");
-                // init messageFacade after seed node initialized
-                messageFacade.init(new BootstrapListener() {
-                    @Override
-                    public void onCompleted() {
-                        messageFacadeInited = true;
-                        if (walletFacadeInited)
-                            onFacadesInitialised();
-                    }
-
-                    @Override
-                    public void onFailed(Throwable throwable) {
-                        log.error(throwable.toString());
-                    }
-                });
-            }
-        });
-
-        dhtSeedService.initializePeer();
-
-       /* messageFacade.init(new BootstrapListener() {
+        messageFacade.init(new BootstrapListener() {
             @Override
             public void onCompleted() {
                 messageFacadeInited = true;
@@ -143,7 +117,7 @@ class MainModel extends UIModel {
             public void onFailed(Throwable throwable) {
                 log.error(throwable.toString());
             }
-        });*/
+        });
 
         Profiler.printMsgWithTime("MainModel.initFacades");
 

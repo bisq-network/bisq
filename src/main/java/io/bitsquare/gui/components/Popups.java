@@ -18,6 +18,7 @@
 package io.bitsquare.gui.components;
 
 import io.bitsquare.BitSquare;
+import io.bitsquare.BitSquareUI;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.locale.BSResources;
 
@@ -69,7 +70,7 @@ public class Popups {
 
     public static void openInfo(String masthead, String message, List<Action> actions) {
         Dialogs.create()
-                .owner(BitSquare.getPrimaryStage())
+                .owner(BitSquareUI.getPrimaryStage())
                 .message(message)
                 .masthead(masthead)
                 .actions(actions)
@@ -103,7 +104,7 @@ public class Popups {
 
     public static Action openConfirmPopup(String title, String masthead, String message, List<Action> actions) {
         return Dialogs.create()
-                .owner(BitSquare.getPrimaryStage())
+                .owner(BitSquareUI.getPrimaryStage())
                 .title(title)
                 .message(message)
                 .masthead(masthead)
@@ -135,7 +136,7 @@ public class Popups {
 
     private static void openWarningPopup(String title, String masthead, String message, List<Action> actions) {
         Dialogs.create()
-                .owner(BitSquare.getPrimaryStage())
+                .owner(BitSquareUI.getPrimaryStage())
                 .title(title)
                 .message(message)
                 .masthead(masthead)
@@ -167,7 +168,7 @@ public class Popups {
 
     private static Action openErrorPopup(String title, String masthead, String message, List<Action> actions) {
         return Dialogs.create()
-                .owner(BitSquare.getPrimaryStage())
+                .owner(BitSquareUI.getPrimaryStage())
                 .title(title)
                 .message(message)
                 .masthead(masthead)
@@ -195,7 +196,7 @@ public class Popups {
             }
         });
         return Dialogs.create()
-                .owner(BitSquare.getPrimaryStage())
+                .owner(BitSquareUI.getPrimaryStage())
                 .title(title)
                 .message(message)
                 .masthead(masthead)

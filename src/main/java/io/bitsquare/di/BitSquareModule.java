@@ -119,14 +119,15 @@ class StaticSeedNodeAddressesProvider implements Provider<SeedNodeAddress.Static
         String seedNodeFromConfig = BitSquareModule.properties.getProperty("defaultSeedNode");
 
         // Set default 
-        SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST;
-        // SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN;
+        //SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST;
+         SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1;
 
         // if defined in config we override the above
-        if (seedNodeFromConfig != null)
-            seedNode = seedNodeFromConfig.equals("localhost") ?
-                    SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST :
-                    SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN;
+//        if (seedNodeFromConfig != null)
+//            seedNode = seedNodeFromConfig.equals("localhost") ?
+//                    SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST :
+//                    SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN;
+
         return seedNode;
     }
 }
@@ -174,7 +175,7 @@ class ActorSystemProvider implements Provider<ActorSystem> {
         ActorSystem system = ActorSystem.create(BitSquare.getAppName());
 
         // create top level actors
-        system.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
+        //system.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
 
         return system;
     }

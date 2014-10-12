@@ -34,20 +34,39 @@ public class ConfigLoader {
     private static final String configFilePath = AppDirectory.dir() + "/bitsquare.conf";
 
     public static Properties loadConfig() {
-        Properties properties = new Properties();
         InputStream inputStream = null;
+
+        // load default properties from class path
+        Properties defaultProperties = new Properties();
+        try {
+            InputStream is = ConfigLoader.class.getResourceAsStream("/bitsquare.properties");
+            defaultProperties.load(is);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                }
+            }
+        }
+
+        // load properties file from config file path
+        Properties properties = new Properties(defaultProperties);
         if (new File(configFilePath).exists()) {
             try {
                 inputStream = new FileInputStream(configFilePath);
                 properties.load(inputStream);
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
             } finally {
                 if (inputStream != null) {
                     try {
                         inputStream.close();
-                    } catch (IOException e2) {
-                        e2.printStackTrace();
+                    } catch (IOException ioe) {
+                        ioe.printStackTrace();
                     }
                 }
             }
