@@ -21,9 +21,7 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.gui.util.Profiler;
-import io.bitsquare.msg.DHTSeedService;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.msg.actor.event.PeerInitialized;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
@@ -54,7 +52,6 @@ class MainModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(MainModel.class);
 
     private final User user;
-    private final DHTSeedService dhtSeedService;
     private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
     private final TradeManager tradeManager;
@@ -73,10 +70,9 @@ class MainModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MainModel(User user, DHTSeedService dhtSeedService, WalletFacade walletFacade, MessageFacade messageFacade,
+    private MainModel(User user, WalletFacade walletFacade, MessageFacade messageFacade,
                       TradeManager tradeManager, Persistence persistence) {
         this.user = user;
-        this.dhtSeedService = dhtSeedService;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
         this.tradeManager = tradeManager;
@@ -185,31 +181,18 @@ class MainModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onFacadesInitialised() {
-        // TODO Consider to use version sync notification pane from Mike Hearn
-        walletFacade.addDownloadListener(new WalletFacade.DownloadListener() {
-            @Override
-            public void progress(double percent) {
-                networkSyncProgress.set(percent);
-            }
-
-            @Override
-            public void downloadComplete() {
-                networkSyncComplete.set(true);
-            }
-        });
-
         tradeManager.getPendingTrades().addListener((MapChangeListener<String,
                 Trade>) change -> updateNumPendingTrades());
         updateNumPendingTrades();
 
-        backendInited.set(true);
+        facadesInitialised = true;
+
+        if (networkSyncProgress.get() >= 1.0)
+            backendReady.set(true);
     }
 
     private void updateNumPendingTrades() {
         numPendingTrades.set(tradeManager.getPendingTrades().size());
     }
 
-   /* private void updateBalance(Coin balance) {
-        this.balance.set(balance);
-    }*/
 }
