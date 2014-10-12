@@ -23,6 +23,7 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.wallet.CoinSelection;
 import org.bitcoinj.wallet.DefaultCoinSelector;
 
@@ -94,20 +95,14 @@ class AddressBasedCoinSelector extends DefaultCoinSelector {
         // TODO It might be risky to accept 0 confirmation tx from the network with only > 1 numBroadcastPeers
         // Need to be tested in testnet and mainnet
         // We need to handle cases when malleability happens or tx get lost and have not been successful propagated
-      /*  return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
+        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
                 type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
                         // we accept network tx without confirmations and numBroadcastPeers > 0
-                        //confidence.getSource().equals(TransactionConfidence.Source.SELF) &&
+                        /*confidence.getSource().equals(TransactionConfidence.Source.SELF) &&*/
                         // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
                         // TODO: The value 1 below dates from a time when transactions we broadcast *to* were 
                         // counted, set to 0
-                        (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());*/
-
-        log.debug("numBroadcastPeers = " + confidence.numBroadcastPeers());
-        // TODO at testnet we got confidence.numBroadcastPeers()=0 -> probably because we use chained unconfirmed tx
-        // investigate further
-        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
-                type.equals(TransactionConfidence.ConfidenceType.PENDING);
+                        (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
     }
 
     private static boolean isInBlockChain(Transaction tx) {
