@@ -1,24 +1,10 @@
-apply from: 'gradle/javafx.gradle'
+apply plugin: 'java'
+apply plugin: 'eclipse'
 
 version = '0.1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 
 sourceSets.main.resources.srcDirs += 'src/main/java'
-
-javafx {
-    appID 'Bitsquare'
-    appName 'Bitsquare'
-    mainClass 'io.bitsquare.BitSquare'
-
-    profiles {
-        windows {
-            javaRuntime = 'C:/Program Files/Java/jdk1.8.0_20/jre'
-            bundleArguments = [
-                'win.msi.productVersion' : '0.1.0'
-            ]
-        }
-    }
-}
 
 repositories {
     jcenter()
@@ -41,6 +27,7 @@ dependencies {
     compile 'com.google.code.findbugs:jsr305:2.0.3'
     compile 'net.jcip:jcip-annotations:1.0'
     compile 'org.jetbrains:annotations:13.0'
+    compile 'net.sourceforge.argparse4j:argparse4j:0.4.4'
     testCompile 'junit:junit:4.11'
     testCompile 'org.mockito:mockito-all:1.9.5'
 }

@@ -17,185 +17,93 @@
 
 package io.bitsquare;
 
-import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.di.BitSquareModule;
-import io.bitsquare.gui.AWTSystemTray;
-import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.gui.util.Profiler;
-import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.msg.SeedNodeAddress;
-import io.bitsquare.persistence.Persistence;
-import io.bitsquare.settings.Settings;
-import io.bitsquare.user.User;
-import io.bitsquare.util.ViewLoader;
+import io.bitsquare.msg.actor.DHTManager;
+import io.bitsquare.msg.actor.command.InitializePeer;
+import io.bitsquare.msg.actor.event.PeerInitialized;
+import io.bitsquare.util.BitsquareArgumentParser;
 
-import com.google.common.base.Throwables;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-
-import java.io.IOException;
-
-import java.util.Arrays;
-import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import javafx.application.Application;
-import javafx.scene.*;
-import javafx.scene.image.*;
-import javafx.scene.input.*;
-import javafx.stage.Stage;
+
+import net.tomp2p.peers.Number160;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import lighthouse.files.AppDirectory;
+import akka.actor.Inbox;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.Namespace;
+import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
 
-public class BitSquare extends Application {
-    private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
+public class BitSquare {
 
-    public static final boolean fillFormsWithDummyData = true;
-
-    private static String APP_NAME = "Bitsquare";
-    private static Stage primaryStage;
-    private WalletFacade walletFacade;
-    private MessageFacade messageFacade;
-
-    public static void main(String[] args) {
-        Profiler.init();
-        Profiler.printMsgWithTime("BitSquare.main called with args " + Arrays.asList(args).toString());
-
-        if (args.length > 0)
-            APP_NAME = APP_NAME + "-" + args[0];
-
-        /*Thread seedNodeThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                startSeedNode();
-            }
-        });
-        seedNodeThread.start();*/
-
-        launch(args);
-    }
-
-    private static void startSeedNode() {
-        List<SeedNodeAddress.StaticSeedNodeAddresses> staticSedNodeAddresses = SeedNodeAddress
-                .StaticSeedNodeAddresses.getAllSeedNodeAddresses();
-        SeedNode seedNode = new SeedNode(new SeedNodeAddress(staticSedNodeAddresses.get(0)));
-        seedNode.setDaemon(true);
-        seedNode.start();
-
-        try {
-            // keep main thread up
-            Thread.sleep(Long.MAX_VALUE);
-            log.debug("Localhost seed node started");
-        } catch (InterruptedException e) {
-            log.error(e.toString());
-        }
-
-    }
-
-
-    public static Stage getPrimaryStage() {
-        return primaryStage;
-    }
+    private static String appName = "Bitsquare";
 
     public static String getAppName() {
-        return APP_NAME;
+        return appName;
     }
 
-    @Override
-    public void start(Stage primaryStage) {
-        Profiler.printMsgWithTime("BitSquare.start called");
-        BitSquare.primaryStage = primaryStage;
+    public static void main(String[] args) {
 
-        Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions
-                (Throwables.getRootCause(throwable)));
-
+        BitsquareArgumentParser parser = new BitsquareArgumentParser();
+        Namespace namespace = null;
         try {
-            AppDirectory.initAppDir(APP_NAME);
-        } catch (IOException e) {
-            log.error(e.getMessage());
+            namespace = parser.parseArgs(args);
+        } catch (ArgumentParserException e) {
+            parser.handleError(e);
+            System.exit(1);
         }
+        if (namespace != null) {
 
-        final Injector injector = Guice.createInjector(new BitSquareModule());
+            if (namespace.getString(BitsquareArgumentParser.NAME_FLAG) != null) {
+                appName = appName + "-" + namespace.getString(BitsquareArgumentParser.NAME_FLAG);
+            }
 
-        // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
-        AWTSystemTray.createSystemTray(primaryStage, injector.getInstance(ActorSystem.class));
+            Integer port = BitsquareArgumentParser.PORT_DEFAULT;
+            if (namespace.getString(BitsquareArgumentParser.PORT_FLAG) != null) {
+                port = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
+            }
+            if (namespace.getBoolean(BitsquareArgumentParser.SEED_FLAG) == true) {
+                ActorSystem actorSystem = ActorSystem.create(getAppName());
 
-        walletFacade = injector.getInstance(WalletFacade.class);
-        messageFacade = injector.getInstance(MessageFacade.class);
-        Profiler.printMsgWithTime("BitSquare: messageFacade, walletFacade created");
+                ActorRef seedNode = actorSystem.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
+                Inbox inbox = Inbox.create(actorSystem);
+                inbox.send(seedNode, new InitializePeer(Number160.createHash("localhost"), port, null));
 
-        // apply stored data
-        final User user = injector.getInstance(User.class);
-        final Settings settings = injector.getInstance(Settings.class);
-        final Persistence persistence = injector.getInstance(Persistence.class);
-        persistence.init();
-
-        User persistedUser = (User) persistence.read(user);
-        user.applyPersistedUser(persistedUser);
-
-        settings.applyPersistedSettings((Settings) persistence.read(settings.getClass().getName()));
-
-        primaryStage.setTitle("BitSquare (" + APP_NAME + ")");
-
-        // sometimes there is a rendering bug, see https://github.com/bitsquare/bitsquare/issues/160
-        if (ImageUtil.isRetina())
-            primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/window_icon@2x.png")));
-        else
-            primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/window_icon.png")));
-
-        ViewLoader.setInjector(injector);
-
-        final ViewLoader loader =
-                new ViewLoader(getClass().getResource(Navigation.Item.MAIN.getFxmlUrl()), false);
-        try {
-            final Parent view = loader.load();
-
-            final Scene scene = new Scene(view, 1000, 900);
-            scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm(),
-                    getClass().getResource("/io/bitsquare/gui/images.css").toExternalForm());
-
-            setupCloseHandlers(primaryStage, scene);
-
-            primaryStage.setScene(scene);
-
-            // TODO resizing not fully supported yet
-
-           /* primaryStage.setMinWidth(75);
-            primaryStage.setMinHeight(50);*/
-
-            primaryStage.setMinWidth(1000);
-            primaryStage.setMinHeight(750);
-
-            Profiler.initScene(primaryStage.getScene());
-
-            primaryStage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
+                Thread seedNodeThread = new Thread(() -> {
+                    Boolean quit = false;
+                    while (!quit) {
+                        try {
+                            Object m = inbox.receive(FiniteDuration.create(5L, "seconds"));
+                            if (m instanceof PeerInitialized) {
+                                System.out.println("Seed Peer Initialized on port " + ((PeerInitialized) m).getPort
+                                        ());
+                            }
+                        } catch (Exception e) {
+                            if (!(e instanceof TimeoutException)) {
+                                quit = true;
+                            }
+                        }
+                    }
+                    actorSystem.shutdown();
+                    try {
+                        actorSystem.awaitTermination(Duration.create(5L, "seconds"));
+                    } catch (Exception ex) {
+                        if (ex instanceof TimeoutException)
+                            System.out.println("ActorSystem did not shutdown properly.");
+                        else
+                            System.out.println(ex.getMessage());
+                    }
+                });
+                seedNodeThread.start();
+            }
+            else {
+                Application.launch(BitSquareUI.class, args);
+            }
         }
-    }
-
-    private void setupCloseHandlers(Stage primaryStage, Scene scene) {
-        primaryStage.setOnCloseRequest(e -> AWTSystemTray.setStageHidden());
-
-        KeyCodeCombination keyCodeCombination = new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN);
-        scene.setOnKeyReleased(keyEvent -> {
-            if (keyCodeCombination.match(keyEvent)) AWTSystemTray.setStageHidden();
-        });
-    }
-
-    @Override
-    public void stop() throws Exception {
-        walletFacade.shutDown();
-        messageFacade.shutDown();
-
-        super.stop();
-        System.exit(0);
     }
 }

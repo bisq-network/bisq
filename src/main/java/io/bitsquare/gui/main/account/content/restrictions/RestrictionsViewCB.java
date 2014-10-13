@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.BitSquare;
+import io.bitsquare.BitSquareUI;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
@@ -196,7 +197,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
             Initializable childController = loader.getController();
             //childController.setParentController(this);
 
-            final Stage rootStage = BitSquare.getPrimaryStage();
+            final Stage rootStage = BitSquareUI.getPrimaryStage();
             final Stage stage = new Stage();
             stage.setTitle("Arbitrator selection");
             stage.setMinWidth(800);
