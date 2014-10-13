@@ -84,7 +84,7 @@ public class BSExampleNAT {
             System.out.println("found that my outside address is " + fd.peerAddress());
         }
         else {
-            System.out.println("### ### ### ### ### ### ### ### ### ### ### ###  failed " + fd.failedReason());
+            System.out.println("failed " + fd.failedReason());
         }
 
         peer.shutdown();
