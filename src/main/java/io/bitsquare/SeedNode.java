@@ -57,15 +57,21 @@ public class SeedNode extends Thread {
      *             from seedNodeAddresses
      */
     public static void main(String[] args) {
-        int index = 0;
+        SeedNodeAddress seedNodeAddress;
         if (args.length > 0) {
+            int index = 0;
             // use host index passes as param
             int param = Integer.valueOf(args[0]);
             if (param < staticSedNodeAddresses.size())
                 index = param;
+
+            seedNodeAddress = new SeedNodeAddress(staticSedNodeAddresses.get(index));
+        }
+        else {
+            seedNodeAddress = new SeedNodeAddress(SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST);
         }
 
-        SeedNode seedNode = new SeedNode(new SeedNodeAddress(staticSedNodeAddresses.get(index)));
+        SeedNode seedNode = new SeedNode(seedNodeAddress);
         seedNode.setDaemon(true);
         seedNode.start();
 

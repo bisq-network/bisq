@@ -37,7 +37,6 @@ import io.bitsquare.msg.DHTSeedService;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.P2PNode;
 import io.bitsquare.msg.SeedNodeAddress;
-import io.bitsquare.msg.actor.DHTManager;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeManager;
@@ -119,8 +118,8 @@ class StaticSeedNodeAddressesProvider implements Provider<SeedNodeAddress.Static
         String seedNodeFromConfig = BitSquareModule.properties.getProperty("defaultSeedNode");
 
         // Set default 
-        //SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST;
-         SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1;
+        SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST;
+        //SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1;
 
         // if defined in config we override the above
 //        if (seedNodeFromConfig != null)
