@@ -50,8 +50,8 @@ import net.tomp2p.peers.PeerAddress;
 
 public class BSExampleNAT {
     // "188.226.179.109", 5000
-    //private final static String IP_SERVER = "188.226.179.109";
-    private final static String IP_SERVER = "128.199.251.106"; // steves
+    private final static String IP_SERVER = "188.226.179.109";
+    //private final static String IP_SERVER = "128.199.251.106"; // steves
     private final static int PORT_SERVER = 5000;
     private final static int PORT_CLIENT = 5500;
     /*
