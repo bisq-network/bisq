@@ -48,7 +48,7 @@ import net.tomp2p.peers.PeerSocketAddress;
 
 public class UtilsDHT2 {
     /**
-     * Used to make the testcases predictable. Used as an input for {@link java.util.Random}.
+     * Used to make the testcases predictable. Used as an input for {@link Random}.
      */
     public static final long THE_ANSWER = 42L;
 
@@ -83,8 +83,9 @@ public class UtilsDHT2 {
         return createAddress(new Number160(id), "127.0.0.1", 8005, 8006, false, false);
     }
 
-    public static PeerAddress createAddress(Number160 idSender, String inetSender, int tcpPortSender, int udpPortSender,
-                                            boolean firewallUDP, boolean firewallTCP) throws UnknownHostException {
+    public static PeerAddress createAddress(Number160 idSender, String inetSender, int tcpPortSender,
+                                            int udpPortSender, boolean firewallUDP, 
+                                            boolean firewallTCP) throws UnknownHostException {
         InetAddress inetSend = InetAddress.getByName(inetSender);
         PeerSocketAddress peerSocketAddress = new PeerSocketAddress(inetSend, tcpPortSender, udpPortSender);
         PeerAddress n1 = new PeerAddress(idSender, peerSocketAddress, firewallTCP, firewallUDP, false,
@@ -93,9 +94,11 @@ public class UtilsDHT2 {
     }
 
     public static Message createDummyMessage(Number160 idSender, String inetSender, int tcpPortSendor,
-                                             int udpPortSender, Number160 idRecipien, String inetRecipient,
-                                             int tcpPortRecipient, int udpPortRecipient, byte command, Type type,
-                                             boolean firewallUDP, boolean firewallTCP) throws UnknownHostException {
+                                             int udpPortSender, Number160 idRecipien, String inetRecipient, 
+                                             int tcpPortRecipient,
+                                             int udpPortRecipient, byte command, Type type, boolean firewallUDP, 
+                                             boolean firewallTCP)
+            throws UnknownHostException {
         Message message = new Message();
         PeerAddress n1 = createAddress(idSender, inetSender, tcpPortSendor, udpPortSender, firewallUDP,
                 firewallTCP);
@@ -122,18 +125,22 @@ public class UtilsDHT2 {
      * Creates peers for testing. The first peer (peer[0]) will be used as the master. This means that shutting down
      * peer[0] will shut down all other peers
      *
-     * @param nrOfPeers The number of peers to create including the master
-     * @param rnd       The random object to create random peer IDs
-     * @param port      The port where the master peer will listen to
+     * @param nrOfPeers
+     *            The number of peers to create including the master
+     * @param rnd
+     *            The random object to create random peer IDs
+     * @param port
+     *            The port where the master peer will listen to
      * @return All the peers, with the master peer at position 0 -> peer[0]
-     * @throws Exception If the creation of nodes fail.
+     * @throws Exception
+     *             If the creation of nodes fail.
      */
     public static PeerDHT[] createNodes(int nrOfPeers, Random rnd, int port, AutomaticFuture automaticFuture,
                                         boolean maintenance) throws Exception {
         if (nrOfPeers < 1) {
             throw new IllegalArgumentException("Cannot create less than 1 peer");
         }
-        Bindings bindings = new Bindings();
+        Bindings bindings = new Bindings();//.addInterface("lo");
         PeerDHT[] peers = new PeerDHT[nrOfPeers];
         final Peer master;
         if (automaticFuture != null) {
@@ -159,8 +166,7 @@ public class UtilsDHT2 {
                 PeerMap peerMap = new PeerMap(new PeerMapConfiguration(peerId));
                 Peer peer = new PeerBuilder(peerId)
                         .masterPeer(master)
-                        .enableMaintenance(maintenance).enableMaintenance(maintenance).peerMap(peerMap)
-                        .externalBindings(bindings).start().addAutomaticFuture(automaticFuture);
+                        .enableMaintenance(maintenance).enableMaintenance(maintenance).peerMap(peerMap).externalBindings(bindings).start().addAutomaticFuture(automaticFuture);
                 peers[i] = new PeerBuilderDHT(peer).start();
             }
             else {
@@ -208,12 +214,13 @@ public class UtilsDHT2 {
      * Perfect routing, where each neighbor has contacted each other. This means that for small number of peers, every
      * peer knows every other peer.
      *
-     * @param peers The peers taking part in the p2p network.
+     * @param peers
+     *            The peers taking part in the p2p network.
      */
     public static void perfectRouting(PeerDHT... peers) {
         for (int i = 0; i < peers.length; i++) {
             for (int j = 0; j < peers.length; j++)
-                peers[i].peer().peerBean().peerMap().peerFound(peers[j].peer().peerAddress(), null);
+                peers[i].peer().peerBean().peerMap().peerFound(peers[j].peer().peerAddress(), null, null);
         }
         System.err.println("perfect routing done.");
     }
@@ -221,7 +228,7 @@ public class UtilsDHT2 {
     public static void perfectRoutingIndirect(PeerDHT... peers) {
         for (int i = 0; i < peers.length; i++) {
             for (int j = 0; j < peers.length; j++)
-                peers[i].peerBean().peerMap().peerFound(peers[j].peerAddress(), peers[j].peerAddress());
+                peers[i].peerBean().peerMap().peerFound(peers[j].peerAddress(), peers[j].peerAddress(), null);
         }
         System.err.println("perfect routing done.");
     }
