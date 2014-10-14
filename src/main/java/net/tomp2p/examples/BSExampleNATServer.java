@@ -34,6 +34,8 @@ package net.tomp2p.examples;
 
 import java.util.Random;
 
+import net.tomp2p.connection.Bindings;
+import net.tomp2p.connection.StandardProtocolFamily;
 import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
 import net.tomp2p.peers.Number160;
@@ -44,7 +46,10 @@ public class BSExampleNATServer {
 
     public static void startServer() throws Exception {
         Random r = new Random(42L);
-        Peer peer = new PeerBuilder(new Number160(r)).ports(PORT_SERVER).start();
+        Bindings bindings = new Bindings();
+        bindings.addProtocol(StandardProtocolFamily.INET);
+        PeerBuilder peerBuilder = new PeerBuilder(new Number160(r)).ports(PORT_SERVER).bindings(bindings);
+        Peer peer = peerBuilder.start();
         System.out.println("peer started.");
         for (; ; ) {
             for (PeerAddress pa : peer.peerBean().peerMap().all()) {

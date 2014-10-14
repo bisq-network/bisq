@@ -36,6 +36,8 @@ import java.net.InetAddress;
 
 import java.util.Random;
 
+import net.tomp2p.connection.Bindings;
+import net.tomp2p.connection.StandardProtocolFamily;
 import net.tomp2p.futures.FutureDiscover;
 import net.tomp2p.nat.FutureNAT;
 import net.tomp2p.nat.FutureRelayNAT;
@@ -48,8 +50,8 @@ import net.tomp2p.peers.PeerAddress;
 
 public class BSExampleNAT {
     // "188.226.179.109", 5000
-    private final static String IP_SERVER = "188.226.179.109";
-    //private final static String IP_SERVER = "128.199.251.106"; // steves
+    //private final static String IP_SERVER = "188.226.179.109";
+    private final static String IP_SERVER = "128.199.251.106"; // steves
     private final static int PORT_SERVER = 5000;
     private final static int PORT_CLIENT = 5500;
     /*
@@ -71,7 +73,11 @@ public class BSExampleNAT {
 
     public static void startClientNAT() throws Exception {
         Random r = new Random(43L);
-        Peer peer = new PeerBuilder(new Number160(r)).ports(PORT_CLIENT).behindFirewall().start();
+        Bindings bindings = new Bindings();
+        bindings.addProtocol(StandardProtocolFamily.INET);
+        PeerBuilder peerBuilder = new PeerBuilder(new Number160(r)).ports(PORT_CLIENT).behindFirewall().bindings(bindings);
+        Peer peer = peerBuilder.start();
+        //Peer peer = new PeerBuilder(new Number160(r)).ports(PORT_CLIENT).behindFirewall().start();
         PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
         PeerAddress pa = new PeerAddress(Number160.ZERO, InetAddress.getByName(IP_SERVER), PORT_SERVER, PORT_SERVER);
 
