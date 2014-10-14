@@ -35,6 +35,7 @@ import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMapChangeListener;
 import net.tomp2p.peers.PeerStatatistic;
 import net.tomp2p.relay.FutureRelay;
+import net.tomp2p.relay.RconRPC;
 import net.tomp2p.relay.RelayRPC;
 
 import org.slf4j.Logger;
@@ -114,7 +115,8 @@ public class SeedNode extends Thread {
             // Need to add all features the clients will use (otherwise msg type is UNKNOWN_ID)
             new PeerBuilderDHT(peer).start();
             PeerNAT nodeBehindNat = new PeerBuilderNAT(peer).start();
-            new RelayRPC(peer);
+            RconRPC rconRPC = new RconRPC(peer);
+            new RelayRPC(peer, rconRPC);
             //new PeerBuilderTracker(peer);
             nodeBehindNat.startSetupRelay(new FutureRelay());
 

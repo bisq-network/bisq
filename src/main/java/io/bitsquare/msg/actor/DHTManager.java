@@ -29,8 +29,8 @@ import net.tomp2p.nat.PeerBuilderNAT;
 import net.tomp2p.nat.PeerNAT;
 import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
-import net.tomp2p.peers.Number160;
 import net.tomp2p.relay.FutureRelay;
+import net.tomp2p.relay.RconRPC;
 import net.tomp2p.relay.RelayRPC;
 
 import akka.actor.AbstractActor;
@@ -73,7 +73,8 @@ public class DHTManager extends AbstractActor {
                                 // Need to add all features the clients will use (otherwise msg type is UNKNOWN_ID)
                                 peerDHT = new PeerBuilderDHT(peer).start();
                                 PeerNAT nodeBehindNat = new PeerBuilderNAT(peer).start();
-                                new RelayRPC(peer);
+                                RconRPC rconRPC = new RconRPC(peer);
+                                new RelayRPC(peer, rconRPC);
                                 //new PeerBuilderTracker(peer);
                                 nodeBehindNat.startSetupRelay(new FutureRelay());
                                 
