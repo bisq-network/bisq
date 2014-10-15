@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.help;
 
-import io.bitsquare.BitSquare;
 import io.bitsquare.BitSquareUI;
 
 import java.net.MalformedURLException;
@@ -44,8 +43,8 @@ public class Help {
 
     public static void openWindow(HelpId id) {
         try {
-            URL url = new URL("http://bitsquare.io/help.html?" + id);
-            // URL url = new URL("https://github.com/bitsquare/bitsquare/wiki/?" + id);
+            URL url = new URL("https://docs.bitsquare.io/0.1.0-SNAPSHOT/userguide/index.html");
+            // URL url = new URL("https://docs.bitsquare.io/0.1.0-SNAPSHOT/userguide/index.html#" + id);
             WebView webView;
             if (helpWindow == null) {
                 helpWindow = new Stage();
