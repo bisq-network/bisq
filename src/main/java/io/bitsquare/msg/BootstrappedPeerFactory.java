@@ -116,8 +116,8 @@ public class BootstrappedPeerFactory {
            /* ChannelServerConficuration csc = PeerBuilder.createDefaultChannelServerConfiguration();
             csc.idleTCPSeconds(20).idleUDPSeconds(20).connectionTimeoutTCPMillis(20000);
             Peer peer = new PeerBuilder(keyPair).ports(port).channelServerConfiguration(csc).start();*/
-            Peer peer = new PeerBuilder(keyPair).ports(port).start();
-           /*   Peer peer = new PeerBuilder(keyPair).ports(port).portsExternal(port)
+            Peer peer = new PeerBuilder(keyPair).ports(port).portsExternal(port).start();
+             /* Peer peer = new PeerBuilder(keyPair).ports(port).portsExternal(port)
                     .channelServerConfiguration(csc).start();
           */
             PeerDHT peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer
@@ -158,7 +158,7 @@ public class BootstrappedPeerFactory {
                 lastSuccessfulBootstrap = "default";
 
             // TODO
-            //lastSuccessfulBootstrap = "default";
+            lastSuccessfulBootstrap = "default";
 
             log.debug("lastSuccessfulBootstrap = " + lastSuccessfulBootstrap);
             switch (lastSuccessfulBootstrap) {
