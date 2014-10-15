@@ -115,8 +115,16 @@ public class BootstrappedPeerFactory {
     public ListenableFuture<PeerDHT> start() {
         try {
             int randomPort = new Ports().tcpPort();
+            //randomPort = 6500;
+           /* ChannelServerConficuration csc = PeerBuilder.createDefaultChannelServerConfiguration();
+            csc.idleTCPSeconds(20).idleUDPSeconds(20).connectionTimeoutTCPMillis(20000);
+            Peer peer = new PeerBuilder(keyPair).ports(randomPort).channelServerConfiguration(csc).start();*/
             Peer peer = new PeerBuilder(keyPair).ports(randomPort).start();
-            PeerDHT peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer(storage)).start();
+           /*   Peer peer = new PeerBuilder(keyPair).ports(randomPort).portsExternal(randomPort)
+                    .channelServerConfiguration(csc).start();
+          */
+            PeerDHT peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer
+                    (storage)).start();
 
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
                 @Override

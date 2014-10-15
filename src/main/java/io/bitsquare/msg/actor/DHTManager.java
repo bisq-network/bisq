@@ -17,11 +17,8 @@
 
 package io.bitsquare.msg.actor;
 
-import io.bitsquare.msg.SeedNodeAddress;
 import io.bitsquare.msg.actor.command.InitializePeer;
 import io.bitsquare.msg.actor.event.PeerInitialized;
-
-import java.util.List;
 
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
@@ -63,10 +60,6 @@ public class DHTManager extends AbstractActor {
                             log.debug("Received message: {}", ip);
 
                             try {
-                                List<SeedNodeAddress.StaticSeedNodeAddresses> staticSedNodeAddresses = SeedNodeAddress
-                                        .StaticSeedNodeAddresses.getAllSeedNodeAddresses();
-                                SeedNodeAddress seedNodeAddress = new SeedNodeAddress(staticSedNodeAddresses.get(0));
-
                                 peer = new PeerBuilder(ip.getPeerId()).ports(ip.getPort())
                                         .start();
 
@@ -92,6 +85,7 @@ public class DHTManager extends AbstractActor {
                                             .bootstrapTo(ip.getBootstrapPeers()).start();
                                     futureBootstrap.awaitUninterruptibly(bootstrapTimeout);
                                 }*/
+
                                 sender().tell(new PeerInitialized(peer.peerID(), ip.getPort()), self());
                             } catch (Throwable t) {
                                 log.info("The second instance has been started. If that happens at the first instance" +

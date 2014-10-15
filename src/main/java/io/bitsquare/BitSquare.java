@@ -40,6 +40,7 @@ import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
 public class BitSquare {
+    private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
 
     private static String appName = "Bitsquare";
 
@@ -80,12 +81,13 @@ public class BitSquare {
                         try {
                             Object m = inbox.receive(FiniteDuration.create(5L, "seconds"));
                             if (m instanceof PeerInitialized) {
-                                System.out.println("Seed Peer Initialized on port " + ((PeerInitialized) m).getPort
+                                log.debug("Seed Peer Initialized on port " + ((PeerInitialized) m).getPort
                                         ());
                             }
                         } catch (Exception e) {
                             if (!(e instanceof TimeoutException)) {
                                 quit = true;
+                                log.error(e.getMessage());
                             }
                         }
                     }
@@ -94,9 +96,9 @@ public class BitSquare {
                         actorSystem.awaitTermination(Duration.create(5L, "seconds"));
                     } catch (Exception ex) {
                         if (ex instanceof TimeoutException)
-                            System.out.println("ActorSystem did not shutdown properly.");
+                            log.error("ActorSystem did not shutdown properly.");
                         else
-                            System.out.println(ex.getMessage());
+                            log.error(ex.getMessage());
                     }
                 });
                 seedNodeThread.start();
