@@ -103,11 +103,11 @@ public class MessageFacade implements MessageBroker {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void init(BootstrapListener bootstrapListener) {
+    public void init(int port, BootstrapListener bootstrapListener) {
         p2pNode.setMessageBroker(this);
         p2pNode.setKeyPair(user.getMessageKeyPair());
 
-        p2pNode.start(new FutureCallback<PeerDHT>() {
+        p2pNode.start(port, new FutureCallback<PeerDHT>() {
             @Override
             public void onSuccess(@Nullable PeerDHT result) {
                 log.debug("p2pNode.start success result = " + result);

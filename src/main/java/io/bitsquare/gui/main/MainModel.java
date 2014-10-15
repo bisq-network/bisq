@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main;
 
+import io.bitsquare.BitSquare;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.UIModel;
@@ -106,7 +107,7 @@ class MainModel extends UIModel {
         // For testing with the serverside seednode we need the BootstrappedPeerFactory which gets started form 
         // messageFacade.init
 
-        messageFacade.init(new BootstrapListener() {
+        messageFacade.init(BitSquare.getClientPort(), new BootstrapListener() {
             @Override
             public void onCompleted() {
                 messageFacadeInited = true;

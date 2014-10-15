@@ -26,6 +26,7 @@ import java.util.concurrent.TimeoutException;
 
 import javafx.application.Application;
 
+import net.tomp2p.connection.Ports;
 import net.tomp2p.peers.Number160;
 
 import org.slf4j.Logger;
@@ -43,9 +44,14 @@ public class BitSquare {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
 
     private static String appName = "Bitsquare";
+    private static int clientPort;
 
     public static String getAppName() {
         return appName;
+    }
+
+    public static int getClientPort() {
+        return clientPort;
     }
 
     public static void main(String[] args) {
@@ -64,11 +70,12 @@ public class BitSquare {
                 appName = appName + "-" + namespace.getString(BitsquareArgumentParser.NAME_FLAG);
             }
 
-            Integer port = BitsquareArgumentParser.PORT_DEFAULT;
-            if (namespace.getString(BitsquareArgumentParser.PORT_FLAG) != null) {
-                port = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
-            }
             if (namespace.getBoolean(BitsquareArgumentParser.SEED_FLAG) == true) {
+                Integer port = BitsquareArgumentParser.PORT_DEFAULT;
+                if (namespace.getString(BitsquareArgumentParser.PORT_FLAG) != null) {
+                    port = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
+                }
+                
                 ActorSystem actorSystem = ActorSystem.create(getAppName());
 
                 ActorRef seedNode = actorSystem.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
@@ -104,6 +111,10 @@ public class BitSquare {
                 seedNodeThread.start();
             }
             else {
+                clientPort = new Ports().tcpPort(); // default we use a random port for the client
+                if (namespace.getString(BitsquareArgumentParser.PORT_FLAG) != null)
+                    clientPort = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
+                
                 Application.launch(BitSquareUI.class, args);
             }
         }

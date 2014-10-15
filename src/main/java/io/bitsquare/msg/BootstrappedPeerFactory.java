@@ -39,7 +39,6 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import net.tomp2p.connection.Ports;
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.dht.StorageLayer;
@@ -112,15 +111,13 @@ public class BootstrappedPeerFactory {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ListenableFuture<PeerDHT> start() {
+    public ListenableFuture<PeerDHT> start(int port) {
         try {
-            int randomPort = new Ports().tcpPort();
-            //randomPort = 6500;
            /* ChannelServerConficuration csc = PeerBuilder.createDefaultChannelServerConfiguration();
             csc.idleTCPSeconds(20).idleUDPSeconds(20).connectionTimeoutTCPMillis(20000);
-            Peer peer = new PeerBuilder(keyPair).ports(randomPort).channelServerConfiguration(csc).start();*/
-            Peer peer = new PeerBuilder(keyPair).ports(randomPort).start();
-           /*   Peer peer = new PeerBuilder(keyPair).ports(randomPort).portsExternal(randomPort)
+            Peer peer = new PeerBuilder(keyPair).ports(port).channelServerConfiguration(csc).start();*/
+            Peer peer = new PeerBuilder(keyPair).ports(port).start();
+           /*   Peer peer = new PeerBuilder(keyPair).ports(port).portsExternal(port)
                     .channelServerConfiguration(csc).start();
           */
             PeerDHT peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer
@@ -139,6 +136,7 @@ public class BootstrappedPeerFactory {
 
                 @Override
                 public void peerUpdated(PeerAddress peerAddress, PeerStatatistic peerStatistics) {
+                    log.debug("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
                 }
             });
 
@@ -158,6 +156,9 @@ public class BootstrappedPeerFactory {
             String lastSuccessfulBootstrap = (String) persistence.read(this, "lastSuccessfulBootstrap");
             if (lastSuccessfulBootstrap == null)
                 lastSuccessfulBootstrap = "default";
+
+            // TODO
+            //lastSuccessfulBootstrap = "default";
 
             log.debug("lastSuccessfulBootstrap = " + lastSuccessfulBootstrap);
             switch (lastSuccessfulBootstrap) {
@@ -333,7 +334,7 @@ public class BootstrappedPeerFactory {
 
         DistributedRelay distributedRelay = nodeBehindNat.startSetupRelay(futureRelay);
         distributedRelay.addRelayListener((distributedRelay1, peerConnection) -> {
-            log.error("startSetupRelay Failed");
+            log.debug("startSetupRelay distributedRelay handler called " + distributedRelay1 + "/" + peerConnection);
             settableFuture.setException(new Exception("startSetupRelay Failed"));
         });
     }

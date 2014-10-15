@@ -114,13 +114,13 @@ public class P2PNode {
         bootstrappedPeerFactory.setKeyPair(keyPair);
     }
 
-    public void start(FutureCallback<PeerDHT> callback) {
+    public void start(int port, FutureCallback<PeerDHT> callback) {
         useDiscStorage(useDiskStorage);
 
         bootstrappedPeerFactory.setStorage(storage);
         setupTimerForIPCheck();
 
-        ListenableFuture<PeerDHT> bootstrapComplete = bootstrap();
+        ListenableFuture<PeerDHT> bootstrapComplete = bootstrap(port);
         Futures.addCallback(bootstrapComplete, callback);
     }
 
@@ -209,8 +209,8 @@ public class P2PNode {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private ListenableFuture<PeerDHT> bootstrap() {
-        ListenableFuture<PeerDHT> bootstrapComplete = bootstrappedPeerFactory.start();
+    private ListenableFuture<PeerDHT> bootstrap(int port) {
+        ListenableFuture<PeerDHT> bootstrapComplete = bootstrappedPeerFactory.start(port);
         Futures.addCallback(bootstrapComplete, new FutureCallback<PeerDHT>() {
             @Override
             public void onSuccess(@Nullable PeerDHT peerDHT) {
