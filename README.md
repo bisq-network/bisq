@@ -34,7 +34,6 @@ Contact the team and keep up to date using any of the following:
  - Our [mailing list](https://groups.google.com/forum/#!forum/bitsquare)
  - [@bitsquare_](https://twitter.com/bitsquare_) on Twitter
  - [team@bitsquare.io](mailto:team@bitsquare.io)
- - The [Bitsquare thread](https://bitcointalk.org/index.php?topic=647457) on the Bitcointalk forum
  - GitHub [Issues](https://github.com/bitsquare/bitsquare/issues)
 
 
