@@ -414,7 +414,8 @@ public class TradeManager {
     // Routes the incoming messages to the responsible protocol
     private void onIncomingTradeMessage(TradeMessage tradeMessage, PeerAddress sender) {
         // log.trace("processTradingMessage TradeId " + tradeMessage.getTradeId());
-        log.trace("processTradingMessage instance " + tradeMessage.getClass().getSimpleName());
+        log.trace("onIncomingTradeMessage instance " + tradeMessage.getClass().getSimpleName());
+        log.trace("onIncomingTradeMessage sender " + sender);
 
         String tradeId = tradeMessage.getTradeId();
 

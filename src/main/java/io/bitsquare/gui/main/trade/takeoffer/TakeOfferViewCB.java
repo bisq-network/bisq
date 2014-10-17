@@ -216,8 +216,10 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
                             "another trader. " +
                             "\nIt will be refunded to you after the trade has successfully completed.",
                     actions);
+
+            presentationModel.securityDepositInfoDisplayed();
         }
-        
+
         priceAmountPane.setInactive();
 
         showPaymentInfoScreenButton.setVisible(false);
