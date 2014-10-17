@@ -47,6 +47,7 @@ import net.tomp2p.futures.BaseFutureListener;
 import net.tomp2p.futures.FutureBootstrap;
 import net.tomp2p.futures.FutureDiscover;
 import net.tomp2p.nat.FutureNAT;
+import net.tomp2p.nat.FutureRelayNAT;
 import net.tomp2p.nat.PeerBuilderNAT;
 import net.tomp2p.nat.PeerNAT;
 import net.tomp2p.p2p.Peer;
@@ -112,6 +113,43 @@ public class BootstrappedPeerFactory {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public ListenableFuture<PeerDHT> start(int port) {
+        try {
+            Peer peer = new PeerBuilder(keyPair).ports(port).behindFirewall().start();
+            PeerDHT peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer(storage)).start();
+            PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
+
+            // PeerAddress relay = new PeerAddress(new Number160(new Random(43L)), InetAddress.getByName("relay-ip"), 
+            //        5000, 5000);
+            // peerNAT.addRelay(relay);
+
+            PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(seedNodeAddress.getId()),
+                    InetAddress.getByName(seedNodeAddress.getIp()),
+                    seedNodeAddress.getPort(),
+                    seedNodeAddress.getPort());
+            FutureDiscover fd = peer.discover().peerAddress(masterNodeAddress).start();
+            FutureNAT fn = peerNAT.startSetupPortforwarding(fd);
+            FutureRelayNAT frn = peerNAT.startRelay(fd, fn);
+
+            frn.awaitUninterruptibly();
+            if (frn.isSuccess()) {
+                log.info("Bootstrap in relay mode succesful");
+                settableFuture.set(peerDHT);
+                return settableFuture;
+            }
+            else {
+                log.error("Bootstrap in relay mode  failed " + frn.failedReason());
+                settableFuture.setException(new Exception("Bootstrap in relay mode  failed " + frn.failedReason()));
+                return settableFuture;
+            }
+        } catch (IOException e) {
+            log.error("Bootstrap in relay mode  failed " + e.getMessage());
+            e.printStackTrace();
+            settableFuture.setException(e);
+            return settableFuture;
+        }
+    }
+
+    public ListenableFuture<PeerDHT> startOld(int port) {
         try {
            /* ChannelServerConficuration csc = PeerBuilder.createDefaultChannelServerConfiguration();
             csc.idleTCPSeconds(20).idleUDPSeconds(20).connectionTimeoutTCPMillis(20000);
@@ -184,6 +222,11 @@ public class BootstrappedPeerFactory {
         return settableFuture;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    
     private PeerAddress getBootstrapAddress() {
         try {
             return new PeerAddress(Number160.createHash(seedNodeAddress.getId()),

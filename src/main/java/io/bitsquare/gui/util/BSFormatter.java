@@ -124,21 +124,31 @@ public class BSFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String formatCoin(Coin coin) {
-        try {
-            return coinFormat.noCode().format(coin).toString();
-        } catch (Throwable t) {
-            log.warn("Exception at formatBtc: " + t.toString());
+        if (coin != null) {
+            try {
+                return coinFormat.noCode().format(coin).toString();
+            } catch (Throwable t) {
+                log.warn("Exception at formatBtc: " + t.toString());
+                return "";
+            }
+        }
+        else {
             return "";
         }
     }
 
     public String formatCoinWithCode(Coin coin) {
-        try {
-            // we don't use the code feature from coinFormat as it does automatic switching between mBTC and BTC and
-            // pre and post fixing
-            return coinFormat.postfixCode().format(coin).toString();
-        } catch (Throwable t) {
-            log.warn("Exception at formatBtcWithCode: " + t.toString());
+        if (coin != null) {
+            try {
+                // we don't use the code feature from coinFormat as it does automatic switching between mBTC and BTC and
+                // pre and post fixing
+                return coinFormat.postfixCode().format(coin).toString();
+            } catch (Throwable t) {
+                log.warn("Exception at formatBtcWithCode: " + t.toString());
+                return "";
+            }
+        }
+        else {
             return "";
         }
     }
@@ -191,19 +201,29 @@ public class BSFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String formatFiat(Fiat fiat) {
-        try {
-            return fiatFormat.noCode().format(fiat).toString();
-        } catch (Throwable t) {
-            log.warn("Exception at formatFiat: " + t.toString());
+        if (fiat != null) {
+            try {
+                return fiatFormat.noCode().format(fiat).toString();
+            } catch (Throwable t) {
+                log.warn("Exception at formatFiat: " + t.toString());
+                return "";
+            }
+        }
+        else {
             return "";
         }
     }
 
     public String formatFiatWithCode(Fiat fiat) {
-        try {
-            return fiatFormat.postfixCode().format(fiat).toString();
-        } catch (Throwable t) {
-            log.warn("Exception at formatFiatWithCode: " + t.toString());
+        if (fiat != null) {
+            try {
+                return fiatFormat.postfixCode().format(fiat).toString();
+            } catch (Throwable t) {
+                log.warn("Exception at formatFiatWithCode: " + t.toString());
+                return "";
+            }
+        }
+        else {
             return "";
         }
     }

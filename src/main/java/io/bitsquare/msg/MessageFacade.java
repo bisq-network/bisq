@@ -235,6 +235,9 @@ public class MessageFacade implements MessageBroker {
                                 try {
                                     Object offerDataObject = offerData.object();
                                     if (offerDataObject instanceof Offer) {
+                                        log.trace("Remove offer from DHT was successful. Removed data: [key: " + 
+                                                locationKey + ", " +
+                                                "offer: " + (Offer) offerDataObject + "]");
                                         orderBookListener.onOfferRemoved((Offer) offerDataObject);
                                     }
                                 } catch (ClassNotFoundException | IOException e) {
@@ -244,13 +247,10 @@ public class MessageFacade implements MessageBroker {
                             });
                             writeInvalidationTimestampToDHT(locationKey);
                         });
-
-                        log.trace("Remove offer from DHT was successful. Removed data: [key: " + locationKey + ", " +
-                                "value: " + offerData + "]");
                     }
                     else {
-                        log.error("Remove offer from DHT  was not successful. locationKey: " + locationKey + ", " +
-                                "Reason: " + future.failedReason());
+                        log.error("Remove offer from DHT failed. Cause: future.isSuccess() = false, locationKey: " +
+                                locationKey + ", Reason: " + future.failedReason());
                     }
                 }
 

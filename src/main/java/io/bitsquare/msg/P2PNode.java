@@ -37,6 +37,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import net.tomp2p.connection.DSASignatureFactory;
+import net.tomp2p.connection.PeerConnection;
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
 import net.tomp2p.dht.FutureRemove;
@@ -138,53 +139,43 @@ public class P2PNode {
     // Generic DHT methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // The data and the domain are protected by that key pair.
+    // TODO remove all security features for the moment. There are some problems with a "wrong signature!" msg in 
+    // the logs 
     public FuturePut putDomainProtectedData(Number160 locationKey, Data data) {
-        data.protectEntry(keyPair);
-        final Number160 ownerKeyHash = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
-        return peerDHT.put(locationKey).data(data).keyPair(keyPair).domainKey(ownerKeyHash).protectDomain().start();
+        return peerDHT.put(locationKey).data(data).start();
     }
 
-    // No protection, everybody can write.
     public FuturePut putData(Number160 locationKey, Data data) {
         return peerDHT.put(locationKey).data(data).start();
     }
 
-    // Not public readable. Only users with the public key of the peer who stored the data can read that data
     public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey) {
-        final Number160 ownerKeyHash = Utils.makeSHAHash(publicKey.getEncoded());
-        return peerDHT.get(locationKey).domainKey(ownerKeyHash).start();
+        return peerDHT.get(locationKey).start();
     }
 
-    // No protection, everybody can read.
     public FutureGet getData(Number160 locationKey) {
         return peerDHT.get(locationKey).start();
     }
 
-    // No domain protection, but entry protection
     public FuturePut addProtectedData(Number160 locationKey, Data data) {
-        data.protectEntry(keyPair);
-        log.trace("addProtectedData with contentKey " + data.hash().toString());
-        return peerDHT.add(locationKey).data(data).keyPair(keyPair).start();
+        return peerDHT.add(locationKey).data(data).start();
     }
 
-    // No domain protection, but entry protection
     public FutureRemove removeFromDataMap(Number160 locationKey, Data data) {
         Number160 contentKey = data.hash();
         log.trace("removeFromDataMap with contentKey " + contentKey.toString());
-        return peerDHT.remove(locationKey).contentKey(contentKey).keyPair(keyPair).start();
+        return peerDHT.remove(locationKey).contentKey(contentKey).start();
     }
 
-    // Public readable
     public FutureGet getDataMap(Number160 locationKey) {
         return peerDHT.get(locationKey).all().start();
     }
 
-    // Send signed payLoad to peer
     public FutureDirect sendData(PeerAddress peerAddress, Object payLoad) {
-        // use 30 seconds as max idle time before connection get closed
-        FuturePeerConnection futurePeerConnection = peerDHT.peer().createPeerConnection(peerAddress, 30000);
-        FutureDirect futureDirect = peerDHT.peer().sendDirect(futurePeerConnection).object(payLoad).sign().start();
+        log.trace("sendData");
+        FuturePeerConnection futurePeerConnection = peerDHT.peer().createPeerConnection(peerAddress,
+                PeerConnection.HEART_BEAT_MILLIS);
+        FutureDirect futureDirect = peerDHT.peer().sendDirect(futurePeerConnection).object(payLoad).start();
         futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
@@ -204,6 +195,82 @@ public class P2PNode {
 
         return futureDirect;
     }
+
+//
+//    public FuturePut putDomainProtectedData(Number160 locationKey, Data data) {
+//        log.trace("putDomainProtectedData");
+//        data.protectEntry(keyPair);
+//        final Number160 ownerKeyHash = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
+//        return peerDHT.put(locationKey).data(data).keyPair(keyPair).domainKey(ownerKeyHash).protectDomain().start();
+//    }
+//
+//    // No protection, everybody can write.
+//    public FuturePut putData(Number160 locationKey, Data data) {
+//        log.trace("putData");
+//        return peerDHT.put(locationKey).data(data).start();
+//    }
+//
+//    // Not public readable. Only users with the public key of the peer who stored the data can read that data
+//    public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey) {
+//        log.trace("getDomainProtectedData");
+//        final Number160 ownerKeyHash = Utils.makeSHAHash(publicKey.getEncoded());
+//        return peerDHT.get(locationKey).domainKey(ownerKeyHash).start();
+//    }
+//
+//    // No protection, everybody can read.
+//    public FutureGet getData(Number160 locationKey) {
+//        log.trace("getData");
+//        return peerDHT.get(locationKey).start();
+//    }
+//
+//    // No domain protection, but entry protection
+//    public FuturePut addProtectedData(Number160 locationKey, Data data) {
+//        log.trace("addProtectedData");
+//        data.protectEntry(keyPair);
+//        log.trace("addProtectedData with contentKey " + data.hash().toString());
+//        return peerDHT.add(locationKey).data(data).keyPair(keyPair).start();
+//    }
+//
+//    // No domain protection, but entry protection
+//    public FutureRemove removeFromDataMap(Number160 locationKey, Data data) {
+//        log.trace("removeFromDataMap");
+//        Number160 contentKey = data.hash();
+//        log.trace("removeFromDataMap with contentKey " + contentKey.toString());
+//        return peerDHT.remove(locationKey).contentKey(contentKey).keyPair(keyPair).start();
+//    }
+//
+//    // Public readable
+//    public FutureGet getDataMap(Number160 locationKey) {
+//        log.trace("getDataMap");
+//        return peerDHT.get(locationKey).all().start();
+//    }
+
+    // Send signed payLoad to peer
+//    public FutureDirect sendData(PeerAddress peerAddress, Object payLoad) {
+//        // use 30 seconds as max idle time before connection get closed
+//        FuturePeerConnection futurePeerConnection = peerDHT.peer().createPeerConnection(peerAddress, 30000);
+//        FutureDirect futureDirect = peerDHT.peer().sendDirect(futurePeerConnection).object(payLoad).sign().start();
+//        futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
+//            @Override
+//            public void operationComplete(BaseFuture future) throws Exception {
+//                if (futureDirect.isSuccess()) {
+//                    log.debug("sendMessage completed");
+//                }
+//                else {
+//                    log.error("sendData failed with Reason " + futureDirect.failedReason());
+//                }
+//            }
+//
+//            @Override
+//            public void exceptionCaught(Throwable t) throws Exception {
+//                log.error("Exception at sendData " + t.toString());
+//            }
+//        });
+//
+//        return futureDirect;
+//    }
+// 
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -285,6 +352,7 @@ public class P2PNode {
     private FuturePut storePeerAddress() throws IOException {
         Number160 locationKey = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
         Data data = new Data(peerDHT.peerAddress());
+        log.debug("storePeerAddress " + peerDHT.peerAddress().toString());
         return putDomainProtectedData(locationKey, data);
     }
 
