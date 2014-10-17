@@ -116,7 +116,7 @@ public class BitSquareUI extends Application {
         try {
             final Parent view = loader.load();
 
-            final Scene scene = new Scene(view, 1000, 900);
+            final Scene scene = new Scene(view, 1000, 600);
             scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm(),
                     getClass().getResource("/io/bitsquare/gui/images.css").toExternalForm());
 
