@@ -44,7 +44,6 @@ import net.tomp2p.storage.Data;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.slf4j.Logger;
@@ -52,6 +51,10 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
+/**
+ * Tests bootstrapping, put/get and sendDirect in WAN environment (auto port forwarding, Relay)
+ * startBootstrappingSeedNode is used as the server side code
+ */
 public class BasicUsecasesInWANTest {
     private static final Logger log = LoggerFactory.getLogger(BasicUsecasesInWANTest.class);
 
@@ -64,8 +67,8 @@ public class BasicUsecasesInWANTest {
 
     private final static String CLIENT_1_ID = "alice";
     private final static String CLIENT_2_ID = "bob";
-    private final static int CLIENT_1_PORT = 6502;
-    private final static int CLIENT_2_PORT = 6503;
+    private final static int CLIENT_1_PORT = 6500;
+    private final static int CLIENT_2_PORT = 6501;
 
     private Thread serverThread;
 
@@ -129,7 +132,7 @@ public class BasicUsecasesInWANTest {
         peer2DHT.shutdown().awaitUninterruptibly();
     }
 
-    // That test is failing because eof timeouts
+    // That test is failing because of timeouts
     /*
     
     server:
@@ -152,7 +155,7 @@ No future set beforehand, probably an early shutdown / timeout, or use setFailed
 
      */
     @Test
-    @Ignore
+    //@Ignore
     public void testSendDirect() throws Exception {
         PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT);
         PeerDHT peer2DHT = startClient(CLIENT_2_ID, CLIENT_2_PORT);
@@ -244,6 +247,25 @@ No future set beforehand, probably an early shutdown / timeout, or use setFailed
             e.printStackTrace();
             Assert.fail("Bootstrap in relay mode  failed " + e.getMessage());
             return null;
+        }
+    }
+
+    public void startBootstrappingSeedNode() {
+        Peer peer = null;
+        try {
+            peer = new PeerBuilder(Number160.createHash("digitalocean1.bitsquare.io")).ports(5000).start();
+            new PeerBuilderDHT(peer).start();
+            new PeerBuilderNAT(peer).start();
+
+            System.out.println("peer started.");
+            for (; ; ) {
+                for (PeerAddress pa : peer.peerBean().peerMap().all()) {
+                    System.out.println("peer online (TCP):" + pa);
+                }
+                Thread.sleep(2000);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
