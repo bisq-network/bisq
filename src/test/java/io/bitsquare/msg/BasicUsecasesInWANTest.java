@@ -167,9 +167,7 @@ No future set beforehand, probably an early shutdown / timeout, or use setFailed
         log.debug("peer1DHT " + peer1DHT.peerAddress());
         log.debug("peer2DHT " + peer2DHT.peerAddress());
 
-        FutureDirect futureDirect = peer1DHT.peer().sendDirect(peer2DHT.peer().peerAddress()).object("hallo")
-                .connectionTimeoutTCPMillis(10000).idleTCPSeconds(10).idleUDPSeconds(10).
-                        start();
+        FutureDirect futureDirect = peer1DHT.peer().sendDirect(peer2DHT.peer().peerAddress()).object("hallo").start();
 
         futureDirect.addListener(new BaseFutureAdapter<FutureDirect>() {
             @Override
