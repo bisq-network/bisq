@@ -142,22 +142,27 @@ public class P2PNode {
     // TODO remove all security features for the moment. There are some problems with a "wrong signature!" msg in 
     // the logs 
     public FuturePut putDomainProtectedData(Number160 locationKey, Data data) {
+        log.trace("putDomainProtectedData");
         return peerDHT.put(locationKey).data(data).start();
     }
 
     public FuturePut putData(Number160 locationKey, Data data) {
+        log.trace("putData");
         return peerDHT.put(locationKey).data(data).start();
     }
 
     public FutureGet getDomainProtectedData(Number160 locationKey, PublicKey publicKey) {
+        log.trace("getDomainProtectedData");
         return peerDHT.get(locationKey).start();
     }
 
     public FutureGet getData(Number160 locationKey) {
+        log.trace("getData");
         return peerDHT.get(locationKey).start();
     }
 
     public FuturePut addProtectedData(Number160 locationKey, Data data) {
+        log.trace("addProtectedData");
         return peerDHT.add(locationKey).data(data).start();
     }
 
@@ -168,6 +173,7 @@ public class P2PNode {
     }
 
     public FutureGet getDataMap(Number160 locationKey) {
+        log.trace("getDataMap");
         return peerDHT.get(locationKey).all().start();
     }
 
@@ -294,13 +300,13 @@ public class P2PNode {
                                     log.debug("storedPeerAddress = " + storedPeerAddress);
                                 }
                                 else {
-                                    log.error("");
+                                    log.error("storedPeerAddress not successful");
                                 }
                             }
 
                             @Override
                             public void exceptionCaught(Throwable t) throws Exception {
-                                log.error(t.toString());
+                                log.error("Error at storedPeerAddress " + t.toString());
                             }
                         });
                     }
@@ -309,13 +315,13 @@ public class P2PNode {
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    log.error(e.toString());
+                    log.error("Error at bootstrap " + e.toString());
                 }
             }
 
             @Override
             public void onFailure(@NotNull Throwable t) {
-                log.error(t.toString());
+                log.error("onFailure bootstrap " + t.toString());
             }
         });
         return bootstrapComplete;
@@ -323,8 +329,12 @@ public class P2PNode {
 
     private void setupReplyHandler() {
         peerDHT.peer().objectDataReply((sender, request) -> {
+            log.debug("handleMessage peerAddress " + sender);
+            log.debug("handleMessage message " + request);
+
             if (!sender.equals(peerDHT.peer().peerAddress()))
-                if (messageBroker != null) messageBroker.handleMessage(request, sender);
+                if (messageBroker != null)
+                    messageBroker.handleMessage(request, sender);
                 else
                     log.error("Received msg from myself. That should never happen.");
             return null;

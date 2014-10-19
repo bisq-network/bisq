@@ -1,12 +1,29 @@
 /*
- * Copyright 2012 Thomas Bocek
+ * This file is part of Bitsquare.
  *
+ * Bitsquare is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*
+ * Copyright 2012 Thomas Bocek
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -14,7 +31,7 @@
  * the License.
  */
 
-package io.bitsquare.msg;
+package net.tomp2p.dht;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -31,8 +48,6 @@ import java.util.Random;
 import java.util.TreeSet;
 
 import net.tomp2p.connection.Bindings;
-import net.tomp2p.dht.PeerBuilderDHT;
-import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.futures.FutureBootstrap;
 import net.tomp2p.futures.FutureDiscover;
 import net.tomp2p.message.Message;
@@ -48,7 +63,7 @@ import net.tomp2p.peers.PeerSocketAddress;
 
 public class UtilsDHT2 {
     /**
-     * Used to make the testcases predictable. Used as an input for {@link Random}.
+     * Used to make the testcases predictable. Used as an input for {@link java.util.Random}.
      */
     public static final long THE_ANSWER = 42L;
 
@@ -84,8 +99,7 @@ public class UtilsDHT2 {
     }
 
     public static PeerAddress createAddress(Number160 idSender, String inetSender, int tcpPortSender,
-                                            int udpPortSender, boolean firewallUDP, 
-                                            boolean firewallTCP) throws UnknownHostException {
+                                            int udpPortSender, boolean firewallUDP, boolean firewallTCP) throws UnknownHostException {
         InetAddress inetSend = InetAddress.getByName(inetSender);
         PeerSocketAddress peerSocketAddress = new PeerSocketAddress(inetSend, tcpPortSender, udpPortSender);
         PeerAddress n1 = new PeerAddress(idSender, peerSocketAddress, firewallTCP, firewallUDP, false,
@@ -96,8 +110,7 @@ public class UtilsDHT2 {
     public static Message createDummyMessage(Number160 idSender, String inetSender, int tcpPortSendor,
                                              int udpPortSender, Number160 idRecipien, String inetRecipient, 
                                              int tcpPortRecipient,
-                                             int udpPortRecipient, byte command, Type type, boolean firewallUDP, 
-                                             boolean firewallTCP)
+                                             int udpPortRecipient, byte command, Type type, boolean firewallUDP, boolean firewallTCP)
             throws UnknownHostException {
         Message message = new Message();
         PeerAddress n1 = createAddress(idSender, inetSender, tcpPortSendor, udpPortSender, firewallUDP,
@@ -124,7 +137,7 @@ public class UtilsDHT2 {
     /**
      * Creates peers for testing. The first peer (peer[0]) will be used as the master. This means that shutting down
      * peer[0] will shut down all other peers
-     *
+     * 
      * @param nrOfPeers
      *            The number of peers to create including the master
      * @param rnd
@@ -140,7 +153,7 @@ public class UtilsDHT2 {
         if (nrOfPeers < 1) {
             throw new IllegalArgumentException("Cannot create less than 1 peer");
         }
-        Bindings bindings = new Bindings();//.addInterface("lo");
+        Bindings bindings = new Bindings().addInterface("lo");
         PeerDHT[] peers = new PeerDHT[nrOfPeers];
         final Peer master;
         if (automaticFuture != null) {
@@ -157,7 +170,7 @@ public class UtilsDHT2 {
             PeerMap peerMap = new PeerMap(new PeerMapConfiguration(peerId));
             master = new PeerBuilder(peerId).enableMaintenance(maintenance).externalBindings(bindings)
                     .peerMap(peerMap).ports(port).start();
-            peers[0] = new PeerBuilderDHT(master).start();
+            peers[0] = new PeerBuilderDHT(master).start(); 
         }
 
         for (int i = 1; i < nrOfPeers; i++) {
@@ -166,7 +179,8 @@ public class UtilsDHT2 {
                 PeerMap peerMap = new PeerMap(new PeerMapConfiguration(peerId));
                 Peer peer = new PeerBuilder(peerId)
                         .masterPeer(master)
-                        .enableMaintenance(maintenance).enableMaintenance(maintenance).peerMap(peerMap).externalBindings(bindings).start().addAutomaticFuture(automaticFuture);
+                        .enableMaintenance(maintenance).enableMaintenance(maintenance).peerMap(peerMap)
+                        .externalBindings(bindings).start().addAutomaticFuture(automaticFuture);
                 peers[i] = new PeerBuilderDHT(peer).start();
             }
             else {
@@ -175,7 +189,7 @@ public class UtilsDHT2 {
                 Peer peer = new PeerBuilder(peerId).enableMaintenance(maintenance)
                         .externalBindings(bindings).peerMap(peerMap).masterPeer(master)
                         .start();
-                peers[i] = new PeerBuilderDHT(peer).start();
+                peers[i] = new PeerBuilderDHT(peer).start(); 
             }
         }
         System.err.println("peers created.");
@@ -213,7 +227,7 @@ public class UtilsDHT2 {
     /**
      * Perfect routing, where each neighbor has contacted each other. This means that for small number of peers, every
      * peer knows every other peer.
-     *
+     * 
      * @param peers
      *            The peers taking part in the p2p network.
      */

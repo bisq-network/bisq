@@ -26,6 +26,7 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
+import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.util.ViewLoader;
 
@@ -57,6 +58,7 @@ public class MainViewCB extends ViewCB<MainPM> {
 
     private final Navigation navigation;
     private final OverlayManager overlayManager;
+    private Settings settings;
 
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
 
@@ -75,12 +77,13 @@ public class MainViewCB extends ViewCB<MainPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MainViewCB(MainPM presentationModel, Navigation navigation,
-                       OverlayManager overlayManager, TradeManager tradeManager) {
+    private MainViewCB(MainPM presentationModel, Navigation navigation, OverlayManager overlayManager,
+                       TradeManager tradeManager, Settings settings) {
         super(presentationModel);
 
         this.navigation = navigation;
         this.overlayManager = overlayManager;
+        this.settings = settings;
 
         tradeManager.featureNotImplementedWarningProperty().addListener((ov, oldValue, newValue) -> {
             if (oldValue == null && newValue != null) {
@@ -115,12 +118,14 @@ public class MainViewCB extends ViewCB<MainPM> {
         overlayManager.addListener(new OverlayManager.OverlayListener() {
             @Override
             public void onBlurContentRequested() {
-                Transitions.blur(baseApplicationContainer);
+                if (settings.getUseAnimations())
+                    Transitions.blur(baseApplicationContainer);
             }
 
             @Override
             public void onRemoveBlurContentRequested() {
-                Transitions.removeBlur(baseApplicationContainer);
+                if (settings.getUseAnimations())
+                    Transitions.removeBlur(baseApplicationContainer);
             }
         });
 

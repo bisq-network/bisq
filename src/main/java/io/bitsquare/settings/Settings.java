@@ -41,9 +41,10 @@ public class Settings implements Serializable {
     private long collateral = 100;  // is 1/1000 so 100 results to 100/1000 = 0,1 (or 10%) 
     // which will be used for multiplying with the amount to get the collateral size in BTC.
 
-
+    private Boolean useAnimations = true;
     private String btcDenominationString = MonetaryFormat.CODE_BTC;
     final transient StringProperty btcDenomination = new SimpleStringProperty(MonetaryFormat.CODE_BTC);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -138,4 +139,14 @@ public class Settings implements Serializable {
     public String getBtcDenominationString() {
         return btcDenominationString;
     }
+
+    public Boolean getUseAnimations() {
+        return useAnimations;
+    }
+
+    public void setUseAnimations(boolean useAnimations) {
+        this.useAnimations = useAnimations;
+    }
+
+
 }

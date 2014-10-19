@@ -31,6 +31,7 @@ import net.tomp2p.dht.StorageMemory;
 import net.tomp2p.futures.BaseFutureAdapter;
 import net.tomp2p.futures.FutureDirect;
 import net.tomp2p.futures.FutureDiscover;
+import net.tomp2p.futures.FuturePeerConnection;
 import net.tomp2p.nat.FutureNAT;
 import net.tomp2p.nat.FutureRelayNAT;
 import net.tomp2p.nat.PeerBuilderNAT;
@@ -44,6 +45,7 @@ import net.tomp2p.storage.Data;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.slf4j.Logger;
@@ -67,8 +69,8 @@ public class BasicUsecasesInWANTest {
 
     private final static String CLIENT_1_ID = "alice";
     private final static String CLIENT_2_ID = "bob";
-    private final static int CLIENT_1_PORT = 6500;
-    private final static int CLIENT_2_PORT = 6501;
+    private final static int CLIENT_1_PORT = 6503;
+    private final static int CLIENT_2_PORT = 6504;
 
     private Thread serverThread;
 
@@ -101,6 +103,7 @@ public class BasicUsecasesInWANTest {
     }
 
     @Test
+    @Ignore
     public void testBootstrap() throws Exception {
         PeerDHT peerDHT = startClient(CLIENT_1_ID, CLIENT_1_PORT);
 
@@ -108,11 +111,18 @@ public class BasicUsecasesInWANTest {
         log.debug("############# tcpPort = " + peerDHT.peerAddress().tcpPort());
         log.debug("############# udpPort = " + peerDHT.peerAddress().udpPort());
 
-        assertEquals(CLIENT_IP, peerDHT.peerAddress().inetAddress().getHostAddress());
+        // in case of port forwarding use that:
+        //assertEquals(CLIENT_IP, peerDHT.peerAddress().inetAddress().getHostAddress());
+
+        // in case of relay use that:
+        assertEquals("192.168.1.33", peerDHT.peerAddress().inetAddress().getHostAddress());
+
+        
         peerDHT.shutdown().awaitUninterruptibly();
     }
 
     @Test
+    @Ignore
     public void testDHT() throws Exception {
         PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT);
         PeerDHT peer2DHT = startClient(CLIENT_2_ID, CLIENT_2_PORT);
@@ -120,7 +130,7 @@ public class BasicUsecasesInWANTest {
         FuturePut futurePut1 = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo1")).start();
         futurePut1.awaitUninterruptibly();
         // why fails that?
-        //assertTrue(futurePut1.isSuccess());
+        // assertTrue(futurePut1.isSuccess());
 
         FutureGet futureGet2 = peer1DHT.get(Number160.createHash("key")).start();
         futureGet2.awaitUninterruptibly();
@@ -155,7 +165,7 @@ No future set beforehand, probably an early shutdown / timeout, or use setFailed
 
      */
     @Test
-    //@Ignore
+    @Ignore
     public void testSendDirect() throws Exception {
         PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT);
         PeerDHT peer2DHT = startClient(CLIENT_2_ID, CLIENT_2_PORT);
@@ -170,7 +180,16 @@ No future set beforehand, probably an early shutdown / timeout, or use setFailed
         log.debug("peer1DHT " + peer1DHT.peerAddress());
         log.debug("peer2DHT " + peer2DHT.peerAddress());
 
-        FutureDirect futureDirect = peer1DHT.peer().sendDirect(peer2DHT.peer().peerAddress()).object("hallo").start();
+
+        // FuturePeerConnection futurePeerConnection = peer1DHT.peer().createPeerConnection(peer2DHT.peer()
+        // .peerAddress(),
+        //         PeerConnection.HEART_BEAT_MILLIS);
+        FuturePeerConnection futurePeerConnection = peer1DHT.peer().createPeerConnection(peer2DHT.peer().peerAddress(),
+                500);
+        FutureDirect futureDirect = peer1DHT.peer().sendDirect(futurePeerConnection).object("hallo").start();
+
+        //FutureDirect futureDirect2 = peer1DHT.peer().sendDirect(peer2DHT.peer().peerAddress()).object("hallo")
+        // .start();
 
         futureDirect.addListener(new BaseFutureAdapter<FutureDirect>() {
             @Override

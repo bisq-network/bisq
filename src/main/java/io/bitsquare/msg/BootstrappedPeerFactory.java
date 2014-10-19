@@ -56,7 +56,6 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMapChangeListener;
 import net.tomp2p.peers.PeerStatatistic;
-import net.tomp2p.relay.DistributedRelay;
 import net.tomp2p.relay.FutureRelay;
 import net.tomp2p.storage.Storage;
 
@@ -116,30 +115,68 @@ public class BootstrappedPeerFactory {
         try {
             Peer peer = new PeerBuilder(keyPair).ports(port).behindFirewall().start();
             PeerDHT peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer(storage)).start();
-            PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
-
-            // PeerAddress relay = new PeerAddress(new Number160(new Random(43L)), InetAddress.getByName("relay-ip"), 
-            //        5000, 5000);
-            // peerNAT.addRelay(relay);
 
             PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(seedNodeAddress.getId()),
                     InetAddress.getByName(seedNodeAddress.getIp()),
                     seedNodeAddress.getPort(),
                     seedNodeAddress.getPort());
-            FutureDiscover fd = peer.discover().peerAddress(masterNodeAddress).start();
-            FutureNAT fn = peerNAT.startSetupPortforwarding(fd);
-            FutureRelayNAT frn = peerNAT.startRelay(fd, fn);
-
-            frn.awaitUninterruptibly();
-            if (frn.isSuccess()) {
-                log.info("Bootstrap in relay mode succesful");
+            FutureDiscover futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
+            futureDiscover.awaitUninterruptibly();
+            if (futureDiscover.isSuccess()) {
+                log.info("Discover with direct connection successful. Address = " + futureDiscover.peerAddress());
                 settableFuture.set(peerDHT);
                 return settableFuture;
             }
             else {
-                log.error("Bootstrap in relay mode  failed " + frn.failedReason());
-                settableFuture.setException(new Exception("Bootstrap in relay mode  failed " + frn.failedReason()));
-                return settableFuture;
+                PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
+                FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
+                futureNAT.awaitUninterruptibly();
+                if (futureNAT.isSuccess()) {
+                    log.info("Automatic port forwarding is setup. Address = " +
+                            futureNAT.peerAddress());
+
+//                    settableFuture.set(peerDHT);
+//                    return settableFuture;
+
+                    futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
+                    futureDiscover.awaitUninterruptibly();
+                    if (futureDiscover.isSuccess()) {
+                        log.info("Discover with automatic port forwarding successful. Address = " + futureDiscover
+                                .peerAddress());
+                        settableFuture.set(peerDHT);
+                        return settableFuture;
+                    }
+                    else {
+                        log.error("Discover with automatic port forwarding failed " + futureDiscover.failedReason());
+                        settableFuture.setException(new Exception("Discover with automatic port forwarding failed " +
+                                futureDiscover.failedReason()));
+                        return settableFuture;
+                    }
+
+                }
+                else {
+                    // consider to use a dedicated relay node (Pawan Kumar use that approach)
+                    // PeerAddress relay = new PeerAddress(new Number160(new Random(43L)), 
+                    // InetAddress.getByName("relay-ip"), 
+                    //        5000, 5000);
+                    // peerNAT.addRelay(relay);
+
+                    FutureRelayNAT futureRelayNAT = peerNAT.startRelay(futureDiscover, futureNAT);
+                    futureRelayNAT.awaitUninterruptibly();
+                    if (futureRelayNAT.isSuccess()) {
+                        log.info("Bootstrap using relay successful. Address = " +
+                                futureDiscover.peerAddress());
+
+                        settableFuture.set(peerDHT);
+                        return settableFuture;
+                    }
+                    else {
+                        log.error("Bootstrap using relay failed " + futureRelayNAT.failedReason());
+                        settableFuture.setException(new Exception("Bootstrap in relay mode  failed " + futureRelayNAT
+                                .failedReason()));
+                        return settableFuture;
+                    }
+                }
             }
         } catch (IOException e) {
             log.error("Bootstrap in relay mode  failed " + e.getMessage());
@@ -174,7 +211,7 @@ public class BootstrappedPeerFactory {
 
                 @Override
                 public void peerUpdated(PeerAddress peerAddress, PeerStatatistic peerStatistics) {
-                    log.debug("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
+                    //log.debug("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
                 }
             });
 
@@ -226,7 +263,7 @@ public class BootstrappedPeerFactory {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    
+
     private PeerAddress getBootstrapAddress() {
         try {
             return new PeerAddress(Number160.createHash(seedNodeAddress.getId()),
@@ -358,7 +395,7 @@ public class BootstrappedPeerFactory {
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
                     log.debug("Start setup relay was successful.");
-                    futureRelay.relays().forEach(e -> log.debug("remotePeer = " + e.remotePeer()));
+                    //futureRelay.relays().forEach(e -> log.debug("remotePeer = " + e.remotePeer()));
 
                     findNeighbors2(peerDHT, bootstrapAddress);
                 }
@@ -375,11 +412,11 @@ public class BootstrappedPeerFactory {
             }
         });
 
-        DistributedRelay distributedRelay = nodeBehindNat.startSetupRelay(futureRelay);
+        /*DistributedRelay distributedRelay = nodeBehindNat.startSetupRelay(futureRelay);
         distributedRelay.addRelayListener((distributedRelay1, peerConnection) -> {
             log.debug("startSetupRelay distributedRelay handler called " + distributedRelay1 + "/" + peerConnection);
             settableFuture.setException(new Exception("startSetupRelay Failed"));
-        });
+        });*/
     }
 
     private void findNeighbors2(PeerDHT peerDHT, PeerAddress bootstrapAddress) {

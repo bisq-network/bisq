@@ -48,6 +48,25 @@ public class SeedNode extends Thread {
     private static final List<SeedNodeAddress.StaticSeedNodeAddresses> staticSedNodeAddresses = SeedNodeAddress
             .StaticSeedNodeAddresses.getAllSeedNodeAddresses();
 
+    public static void mainForTest(String[] args) {
+        Peer peer = null;
+        try {
+            peer = new PeerBuilder(Number160.createHash("digitalocean1.bitsquare.io")).ports(5000).start();
+            new PeerBuilderDHT(peer).start();
+            new PeerBuilderNAT(peer).start();
+
+            System.out.println("peer started.");
+            for (; ; ) {
+                for (PeerAddress pa : peer.peerBean().peerMap().all()) {
+                    System.out.println("peer online (TCP):" + pa);
+                }
+                Thread.sleep(2000);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * @param args If no args passed we use localhost, otherwise the param is used as index for selecting an address
      *             from seedNodeAddresses
@@ -101,7 +120,7 @@ public class SeedNode extends Thread {
         for (; ; ) {
             try {
                 // ping(peer);
-                Thread.sleep(300);
+                Thread.sleep(2000);
             } catch (InterruptedException e) {
                 log.error(e.toString());
             }
