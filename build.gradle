@@ -1,10 +1,19 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'application'
 
 version = '0.1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 
 sourceSets.main.resources.srcDirs += 'src/main/java'
+
+mainClassName = "io.bitsquare.BitSquare"
+
+run {
+    if ( project.hasProperty('args') ) {
+        args project.args.split('\\s+')
+    }
+}
 
 repositories {
     jcenter()
