@@ -53,6 +53,7 @@ public class DHTManager extends AbstractActor {
 
     private Peer peer;
     private PeerDHT peerDHT;
+    private PeerNAT peerNAT;
 
     public DHTManager() {
         receive(ReceiveBuilder
@@ -60,31 +61,10 @@ public class DHTManager extends AbstractActor {
                             log.debug("Received message: {}", ip);
 
                             try {
-                                peer = new PeerBuilder(ip.getPeerId()).ports(ip.getPort())
-                                        .start();
+                                peer = new PeerBuilder(ip.getPeerId()).ports(ip.getPort()).start();
 
-                                // Need to add all features the clients will use (otherwise msg type is UNKNOWN_ID)
                                 peerDHT = new PeerBuilderDHT(peer).start();
-                                PeerNAT nodeBehindNat = new PeerBuilderNAT(peer).start();
-                                RconRPC rconRPC = new RconRPC(peer);
-                                new RelayRPC(peer, rconRPC);
-                                //new PeerBuilderTracker(peer);
-                                nodeBehindNat.startSetupRelay(new FutureRelay());
-                                
-                                
-                               /* peer = new PeerBuilder(ip.getPeerId())
-                                        .ports(ip.getPort() != null ? ip.getPort() : new Ports().tcpPort()).start();
-                                peerDHT = new PeerBuilderDHT(peer).start();*/
-
-                                // TODO add code to discover non-local peers
-                                // FutureDiscover futureDiscover = peer.discover().peerAddress(bootstrapPeers.).start();
-                                // futureDiscover.awaitUninterruptibly();
-
-                               /* if (ip.getBootstrapPeers() != null) {
-                                    FutureBootstrap futureBootstrap = peer.bootstrap()
-                                            .bootstrapTo(ip.getBootstrapPeers()).start();
-                                    futureBootstrap.awaitUninterruptibly(bootstrapTimeout);
-                                }*/
+                                peerNAT = new PeerBuilderNAT(peer).start();
 
                                 sender().tell(new PeerInitialized(peer.peerID(), ip.getPort()), self());
                             } catch (Throwable t) {
@@ -102,6 +82,8 @@ public class DHTManager extends AbstractActor {
         log.debug("postStop");
         if (peerDHT != null)
             peerDHT.shutdown();
+        if (peerNAT != null)
+            peerNAT.natUtils().shutdown();
         super.postStop();
     }
 }
