@@ -54,6 +54,7 @@ public class DHTManager extends AbstractActor {
     private Peer peer;
     private PeerDHT peerDHT;
     private PeerNAT peerNAT;
+    private RelayRPC relayRPC;
 
     public DHTManager() {
         receive(ReceiveBuilder
@@ -65,6 +66,7 @@ public class DHTManager extends AbstractActor {
 
                                 peerDHT = new PeerBuilderDHT(peer).start();
                                 peerNAT = new PeerBuilderNAT(peer).start();
+                                relayRPC = new RelayRPC(peer, new RconRPC(peer));
 
                                 sender().tell(new PeerInitialized(peer.peerID(), ip.getPort()), self());
                             } catch (Throwable t) {
@@ -84,6 +86,7 @@ public class DHTManager extends AbstractActor {
             peerDHT.shutdown();
         if (peerNAT != null)
             peerNAT.natUtils().shutdown();
+
         super.postStop();
     }
 }
