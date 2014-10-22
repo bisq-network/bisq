@@ -112,12 +112,12 @@ public class BasicUsecasesInWANTest {
         log.debug("############# udpPort = " + peerDHT.peerAddress().udpPort());
 
         // in case of port forwarding use that:
-        //assertEquals(CLIENT_IP, peerDHT.peerAddress().inetAddress().getHostAddress());
+        assertEquals(CLIENT_IP, peerDHT.peerAddress().inetAddress().getHostAddress());
 
         // in case of relay use that:
-        assertEquals("192.168.1.33", peerDHT.peerAddress().inetAddress().getHostAddress());
+        //assertEquals("192.168.1.33", peerDHT.peerAddress().inetAddress().getHostAddress());
 
-        
+
         peerDHT.shutdown().awaitUninterruptibly();
     }
 
@@ -129,8 +129,10 @@ public class BasicUsecasesInWANTest {
 
         FuturePut futurePut1 = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo1")).start();
         futurePut1.awaitUninterruptibly();
+        log.debug("futurePut1.isSuccess() = " + futurePut1.isSuccess());
         // why fails that?
         // assertTrue(futurePut1.isSuccess());
+
 
         FutureGet futureGet2 = peer1DHT.get(Number160.createHash("key")).start();
         futureGet2.awaitUninterruptibly();
@@ -208,7 +210,7 @@ No future set beforehand, probably an early shutdown / timeout, or use setFailed
 
         futureDirect.awaitUninterruptibly();
 
-        countDownLatch.await(5, TimeUnit.SECONDS);
+        countDownLatch.await(3, TimeUnit.SECONDS);
         if (countDownLatch.getCount() > 0)
             Assert.fail("The test method did not complete successfully!");
 
@@ -238,9 +240,21 @@ No future set beforehand, probably an early shutdown / timeout, or use setFailed
                 FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
                 futureNAT.awaitUninterruptibly();
                 if (futureNAT.isSuccess()) {
-                    log.info("Automatic port forwarding is setup. Address = " +
-                            futureNAT.peerAddress());
-                    return peerDHT;
+                    FutureDiscover futureDiscover2 = peer.discover().peerAddress(masterNodeAddress).start();
+                    futureDiscover2.awaitUninterruptibly();
+                    if (futureDiscover.isSuccess()) {
+                        log.info("Discover with direct connection successful. Address = " + futureDiscover
+                                .peerAddress());
+
+                        log.info("Automatic port forwarding is setup. Address = " +
+                                futureNAT.peerAddress());
+                        return peerDHT;
+                    }
+                    else {
+                        log.error("Bootstrap with NAT after futureDiscover2 failed " + futureDiscover2.failedReason());
+                        peer.shutdown().awaitUninterruptibly();
+                        return null;
+                    }
                 }
                 else {
                     FutureRelayNAT futureRelayNAT = peerNAT.startRelay(futureDiscover, futureNAT);

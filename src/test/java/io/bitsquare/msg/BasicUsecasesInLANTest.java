@@ -43,6 +43,7 @@ import net.tomp2p.storage.Data;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.slf4j.Logger;
@@ -93,6 +94,7 @@ public class BasicUsecasesInLANTest {
     }
 
     @Test
+    @Ignore
     public void testBootstrap() throws Exception {
         PeerDHT peerDHT = startClient(CLIENT_1_ID, CLIENT_1_PORT);
         assertEquals(CLIENT_1_PORT, peerDHT.peerAddress().tcpPort());
@@ -101,6 +103,7 @@ public class BasicUsecasesInLANTest {
     }
 
     @Test
+    @Ignore
     public void testDHT() throws Exception {
         PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT);
         PeerDHT peer2DHT = startClient(CLIENT_2_ID, CLIENT_2_PORT);
@@ -121,6 +124,7 @@ public class BasicUsecasesInLANTest {
     }
 
     @Test
+    @Ignore
     public void testSendDirect() throws Exception {
         PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT);
         PeerDHT peer2DHT = startClient(CLIENT_2_ID, CLIENT_2_PORT);
