@@ -20,15 +20,13 @@ package io.bitsquare.msg.actor;
 import io.bitsquare.msg.actor.command.InitializePeer;
 import io.bitsquare.msg.actor.event.PeerInitialized;
 
+import net.tomp2p.connection.Bindings;
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.nat.PeerBuilderNAT;
 import net.tomp2p.nat.PeerNAT;
 import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
-import net.tomp2p.relay.FutureRelay;
-import net.tomp2p.relay.RconRPC;
-import net.tomp2p.relay.RelayRPC;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
@@ -51,6 +49,7 @@ public class DHTManager extends AbstractActor {
         return Props.create(DHTManager.class);
     }
 
+    private Bindings bindings;
     private Peer peer;
     private PeerDHT peerDHT;
     private PeerNAT peerNAT;
@@ -61,7 +60,11 @@ public class DHTManager extends AbstractActor {
                             log.debug("Received message: {}", ip);
 
                             try {
-                                peer = new PeerBuilder(ip.getPeerId()).ports(ip.getPort()).start();
+                                bindings = new Bindings();
+                                if (ip.getInterfaceHint() != null) {
+                                    bindings.addInterface(ip.getInterfaceHint());
+                                }
+                                peer = new PeerBuilder(ip.getPeerId()).ports(ip.getPort()).bindings(bindings).start();
 
                                 peerDHT = new PeerBuilderDHT(peer).start();
                                 peerNAT = new PeerBuilderNAT(peer).start();
@@ -84,6 +87,7 @@ public class DHTManager extends AbstractActor {
             peerDHT.shutdown();
         if (peerNAT != null)
             peerNAT.natUtils().shutdown();
+
         super.postStop();
     }
 }

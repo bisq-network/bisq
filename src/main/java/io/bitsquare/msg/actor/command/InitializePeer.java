@@ -30,11 +30,15 @@ public class InitializePeer {
 
     private final Number160 peerId;
     private final Integer port;
+    private final String interfaceHint;
+
     private final Collection<PeerAddress> bootstrapPeers;
 
-    public InitializePeer(Number160 peerId, Integer port, Collection<PeerAddress> bootstrapPeers) {
+    public InitializePeer(Number160 peerId, Integer port, String interfaceHint,
+                          Collection<PeerAddress> bootstrapPeers) {
         this.peerId = peerId;
         this.port = port;
+        this.interfaceHint = interfaceHint;
         this.bootstrapPeers = bootstrapPeers;
     }
 
@@ -44,6 +48,10 @@ public class InitializePeer {
 
     public Integer getPort() {
         return port;
+    }
+
+    public String getInterfaceHint() {
+        return interfaceHint;
     }
 
     public Collection<PeerAddress> getBootstrapPeers() {

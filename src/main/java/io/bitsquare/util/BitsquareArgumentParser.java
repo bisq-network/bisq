@@ -28,6 +28,7 @@ public class BitsquareArgumentParser {
     public static String SEED_FLAG = "seed";
     public static String PORT_FLAG = "port";
     public static Integer PORT_DEFAULT = 5000;
+    public static String INFHINT_FLAG = "interface";
     public static String NAME_FLAG = "name";
 
     private final ArgumentParser parser;
@@ -42,6 +43,8 @@ public class BitsquareArgumentParser {
         parser.addArgument("-p", "--"+PORT_FLAG)
                 .setDefault(PORT_DEFAULT)
                 .help("IP port to listen on.");
+        parser.addArgument("-i", "--"+INFHINT_FLAG)
+                .help("interface to listen on.");
         parser.addArgument("-n", "--"+NAME_FLAG)
                 .help("Append name to application name.");
     }
