@@ -187,15 +187,9 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
     @FXML
     void createOffer() {
         if (presentationModel.isRegistered()) {
-            if (presentationModel.getDirection() == Direction.BUY) {
-                createOfferButton.setDisable(true);
-                ((TradeNavigator) parent).createOffer(presentationModel.getAmountAsCoin(),
-                        presentationModel.getPriceAsCoin());
-            }
-            else {
-                Popups.openWarningPopup("Under construction", "At the moment only the creation of buy offers is " +
-                        "implemented.");
-            }
+            createOfferButton.setDisable(true);
+            ((TradeNavigator) parent).createOffer(presentationModel.getAmountAsCoin(),
+                    presentationModel.getPriceAsCoin());
         }
         else {
             openSetupScreen();

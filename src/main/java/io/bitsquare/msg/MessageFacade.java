@@ -235,7 +235,7 @@ public class MessageFacade implements MessageBroker {
                                 try {
                                     Object offerDataObject = offerData.object();
                                     if (offerDataObject instanceof Offer) {
-                                        log.trace("Remove offer from DHT was successful. Removed data: [key: " + 
+                                        log.trace("Remove offer from DHT was successful. Removed data: [key: " +
                                                 locationKey + ", " +
                                                 "offer: " + (Offer) offerDataObject + "]");
                                         orderBookListener.onOfferRemoved((Offer) offerDataObject);
@@ -528,7 +528,7 @@ public class MessageFacade implements MessageBroker {
                         });
                     }
                     else {
-                        log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
+                        //log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
                     }
                 }
                 else if (getFuture.data() == null) {
