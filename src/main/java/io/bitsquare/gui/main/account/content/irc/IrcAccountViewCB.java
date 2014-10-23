@@ -20,12 +20,18 @@ package io.bitsquare.gui.main.account.content.irc;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.validation.InputValidator;
 
+import java.awt.*;
+
+import java.io.IOException;
+
+import java.net.URI;
 import java.net.URL;
 
 import java.util.Currency;
@@ -33,7 +39,9 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
@@ -103,6 +111,8 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPm> implements Cont
             }
         });
 
+        typesComboBox.getSelectionModel().select(0);
+
         super.initialize(url, rb);
     }
 
@@ -112,6 +122,18 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPm> implements Cont
 
         setupListeners();
         setupBindings();
+
+        Platform.runLater(() -> {
+            Popups.openInfo("Demo setup for simulating the banking transfer",
+                    "For demo purposes we use a special setup so that users can simulate the banking transfer when " +
+                            "meeting in an IRC chat room.\n" +
+                            "You need to define your IRC nickname and later in the trade process you can find your " +
+                            "trading partner with his IRC nickname in the chat room and simulate the bank transfer " +
+                            "activities, which are:\n\n" +
+                            "1. Bitcoin buyer indicates that he has started the bank transfer.\n\n" +
+                            "2. Bitcoin seller confirms that he has received the national currency from the " +
+                            "bank transfer.");
+        });
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -163,7 +185,14 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPm> implements Cont
         Help.openWindow(HelpId.SETUP_FIAT_ACCOUNT);
     }
 
-
+    @FXML
+    void onOpenIRC() {
+        try {
+            Desktop.getDesktop().browse(URI.create("https://webchat.freenode.net/?channels=bitsquare-trading"));
+        } catch (IOException e) {
+            log.error("Cannot open browser. " + e.getMessage());
+        }
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -189,5 +218,7 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPm> implements Cont
         ircNickNameTextField.textProperty().bindBidirectional(presentationModel.ircNickName);
         saveButton.disableProperty().bind(presentationModel.saveButtonDisable);
     }
+
+
 }
 

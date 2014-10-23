@@ -156,6 +156,9 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
                     break;
             }
 
+            // for IRC demo we deactivate the arbitratorSettingsTab
+            arbitratorSettingsTab.setDisable(true);
+
             tab.setContent(view);
             ((TabPane) root).getSelectionModel().select(tab);
             Initializable childController = loader.getController();

@@ -47,19 +47,23 @@
         </GridPane.margin>
     </ComboBox>
 
-    <Label text="IRC nick name:" GridPane.rowIndex="1"/>
-    <InputTextField fx:id="ircNickNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+    <Label text="Check if your nickname is available:" GridPane.rowIndex="1"/>
+    <Hyperlink text="Open IRC @Freenode #bitsquare-trading in browser"
+               onAction="#onOpenIRC" GridPane.columnIndex="1" GridPane.rowIndex="1" minHeight="26"/>
 
-    <Label text="Currency:" GridPane.rowIndex="2"/>
+    <Label text="Your IRC nick name:" GridPane.rowIndex="2"/>
+    <InputTextField fx:id="ircNickNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+    <Label text="Currency:" GridPane.rowIndex="3"/>
     <ComboBox fx:id="currencyComboBox" promptText="Select currency"
               onAction="#onSelectCurrency" GridPane.columnIndex="1"
-              GridPane.rowIndex="2"/>
+              GridPane.rowIndex="3"/>
 
-    <InfoDisplay gridPane="$root" onAction="#onOpenSetupHelp" rowIndex="3"
+    <InfoDisplay gridPane="$root" onAction="#onOpenSetupHelp" rowIndex="4"
                  text="The payments account data will be saved in a encrypted form to the Bitcoin block chain and will be used in the trade process for account verification."/>
 
-    <HBox fx:id="buttonsHBox" GridPane.columnIndex="1" GridPane.rowIndex="4" spacing="10">
-        <Button fx:id="saveButton" text="Save" onAction="#onSave" defaultButton="true" disable="true"/>
+    <HBox fx:id="buttonsHBox" GridPane.columnIndex="1" GridPane.rowIndex="5" spacing="10">
+    <Button fx:id="saveButton" text="Save" onAction="#onSave" defaultButton="true" disable="true"/>
         <GridPane.margin>
             <Insets top="15.0" bottom="5.0"/>
         </GridPane.margin>
@@ -67,11 +71,12 @@
 
 
     <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>
+        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="250.0"/>
         <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
     </columnConstraints>
 
     <rowConstraints>
+        <RowConstraints vgrow="NEVER"/>
         <RowConstraints vgrow="NEVER"/>
         <RowConstraints vgrow="NEVER"/>
         <RowConstraints vgrow="NEVER"/>
