@@ -53,7 +53,6 @@ import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
-import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.stage.Window;
 
@@ -351,7 +350,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
                 // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added 
                 // our own actions.
                 List<Action> actions = new ArrayList<>();
-                actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {
+              /*  actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         getProperties().put("type", "COPY");
@@ -360,7 +359,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
                         content.putString(presentationModel.transactionId.get());
                         clipboard.setContent(content);
                     }
-                });
+                });*/
                 actions.add(new AbstractAction(BSResources.get("shared.close")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {
@@ -376,7 +375,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
                 });
 
                 Popups.openInfo(BSResources.get("createOffer.success.headline"),
-                        BSResources.get("createOffer.success.info", presentationModel.transactionId.get()),
+                        BSResources.get("createOffer.success.info"),
                         actions);
             }
         });

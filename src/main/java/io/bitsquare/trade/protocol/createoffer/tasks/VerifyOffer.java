@@ -39,7 +39,7 @@ public class VerifyOffer {
             checkNotNull(offer.getAcceptedLanguageLocales(), "AcceptedLanguageLocales is null");
             checkNotNull(offer.getAmount(), "Amount is null");
             checkNotNull(offer.getArbitrators(), "Arbitrator is null");
-            checkNotNull(offer.getBankAccountCountry(), "BankAccountCountry is null");
+            //checkNotNull(offer.getBankAccountCountry(), "BankAccountCountry is null");
             checkNotNull(offer.getBankAccountId(), "BankAccountId is null");
             checkNotNull(offer.getSecurityDeposit(), "SecurityDeposit is null");
             checkNotNull(offer.getCreationDate(), "CreationDate is null");
@@ -50,8 +50,8 @@ public class VerifyOffer {
             checkNotNull(offer.getMinAmount(), "MinAmount is null");
             checkNotNull(offer.getPrice(), "Price is null");
 
-            checkArgument(!offer.getAcceptedCountries().isEmpty(), "AcceptedCountries is empty");
-            checkArgument(!offer.getAcceptedLanguageLocales().isEmpty(), "AcceptedLanguageLocales is empty");
+            //checkArgument(!offer.getAcceptedCountries().isEmpty(), "AcceptedCountries is empty");
+            //checkArgument(!offer.getAcceptedLanguageLocales().isEmpty(), "AcceptedLanguageLocales is empty");
             checkArgument(offer.getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0,
                     "MinAmount is less then " + Restrictions.MIN_TRADE_AMOUNT);
             checkArgument(offer.getAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0,

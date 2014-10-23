@@ -22,7 +22,7 @@ import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
-import io.bitsquare.gui.main.account.content.fiat.FiatAccountViewCB;
+import io.bitsquare.gui.main.account.content.irc.IrcAccountViewCB;
 import io.bitsquare.gui.main.account.content.password.PasswordViewCB;
 import io.bitsquare.gui.main.account.content.registration.RegistrationViewCB;
 import io.bitsquare.gui.main.account.content.restrictions.RestrictionsViewCB;
@@ -83,6 +83,7 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
             if (navigationItems != null &&
                     navigationItems.length == 4 &&
                     navigationItems[2] == Navigation.Item.ACCOUNT_SETUP) {
+
                 switch (navigationItems[3]) {
                     case SEED_WORDS:
                         childController = seedWords.show();
@@ -117,8 +118,8 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
                 Navigation.Item.SEED_WORDS);
         password = new WizardItem(this, "Setup password", "Protect your wallet with a password",
                 Navigation.Item.ADD_PASSWORD);
-        restrictions = new WizardItem(this, "Setup your preferences",
-                "Define your preferences with whom you want to trade",
+        restrictions = new WizardItem(this, "Select arbitrators",
+                "Select which arbitrators you want to use for trading",
                 Navigation.Item.RESTRICTIONS);
         fiatAccount = new WizardItem(this, " Setup Payments account(s)",
                 "You need to setup at least one payment account",
@@ -129,10 +130,15 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
 
         leftVBox.getChildren().addAll(seedWords, password, restrictions, fiatAccount, registration);
 
+        seedWords.setDisable(true);
+        password.setDisable(true);
+        restrictions.setDisable(true);
+        registration.setDisable(true);
+
         super.initialize(url, rb);
 
         navigation.addListener(listener);
-        childController = seedWords.show();
+        childController = fiatAccount.show();
     }
 
     @Override
@@ -160,7 +166,7 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
             restrictions.onCompleted();
             childController = fiatAccount.show();
         }
-        else if (childView instanceof FiatAccountViewCB) {
+        else if (childView instanceof IrcAccountViewCB) {
             fiatAccount.onCompleted();
             childController = registration.show();
         }

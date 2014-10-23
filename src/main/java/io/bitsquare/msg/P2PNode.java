@@ -157,7 +157,7 @@ public class P2PNode {
     }
 
     public FutureGet getData(Number160 locationKey) {
-        log.trace("getData");
+        //log.trace("getData");
         return peerDHT.get(locationKey).start();
     }
 

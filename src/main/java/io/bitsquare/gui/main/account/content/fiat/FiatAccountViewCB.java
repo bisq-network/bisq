@@ -187,7 +187,7 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
 
     @FXML
     void onCompleted() {
-        if (parent != null)
+        if (parent instanceof MultiStepNavigation)
             ((MultiStepNavigation) parent).nextStep(this);
     }
 

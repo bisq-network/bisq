@@ -200,7 +200,7 @@ public class Navigation {
         CHANGE_PASSWORD("/io/bitsquare/gui/main/account/content/password/PasswordView.fxml"),
         RESTRICTIONS("/io/bitsquare/gui/main/account/content/restrictions/RestrictionsView.fxml"),
         REGISTRATION("/io/bitsquare/gui/main/account/content/registration/RegistrationView.fxml"),
-        FIAT_ACCOUNT("/io/bitsquare/gui/main/account/content/fiat/FiatAccountView.fxml"),
+        FIAT_ACCOUNT("/io/bitsquare/gui/main/account/content/irc/IrcAccountView.fxml"),
 
 
         ///////////////////////////////////////////////////////////////////////////////////////////

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public enum BankAccountType {
+    IRC("", ""),
     SEPA("IBAN", "BIC"),
     WIRE("primary ID", "secondary ID"),
     INTERNATIONAL("primary ID", "secondary ID"),

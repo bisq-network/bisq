@@ -348,7 +348,7 @@ textfield */
 #wizard-title-deactivated {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: #CCCCCC;
+    -fx-text-fill: #999999;
 }
 #wizard-title-active {
     -fx-font-weight: bold;
@@ -362,7 +362,7 @@ textfield */
 }
 
 #wizard-sub-title-deactivated {
-    -fx-text-fill: #CCCCCC;
+    -fx-text-fill: #999999;
 }
 #wizard-sub-title-active {
     -fx-text-fill: #333333;
@@ -409,7 +409,7 @@ textfield */
 #wizard-title-disabled {
     -fx-font-weight: bold;
     -fx-font-size: 16;
-    -fx-text-fill: #CCCCCC;
+    -fx-text-fill: #999999;
 }
 #wizard-title-active {
     -fx-font-weight: bold;

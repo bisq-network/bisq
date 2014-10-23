@@ -39,7 +39,6 @@ import javax.inject.Inject;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.input.*;
 
 import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
@@ -106,7 +105,7 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
                 overlayManager.blurContent();
 
                 List<Action> actions = new ArrayList<>();
-                actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {
+               /* actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         getProperties().put("type", "COPY");
@@ -115,7 +114,7 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
                         content.putString(presentationModel.getTransactionId());
                         clipboard.setContent(content);
                     }
-                });
+                });*/
                 actions.add(new AbstractAction(BSResources.get("shared.close")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {

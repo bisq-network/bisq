@@ -90,13 +90,16 @@ public class AccountSettingsViewCB extends CachedViewCB {
                 Navigation.Item.SEED_WORDS, toggleGroup);
         password = new MenuItem(navigation, "Wallet password",
                 Navigation.Item.CHANGE_PASSWORD, toggleGroup);
-        restrictions = new MenuItem(navigation, "Trading restrictions",
+        restrictions = new MenuItem(navigation, "Arbitrator selection",
                 Navigation.Item.RESTRICTIONS, toggleGroup);
         fiatAccount = new MenuItem(navigation, "Payments account(s)",
                 Navigation.Item.FIAT_ACCOUNT, toggleGroup);
         registration = new MenuItem(navigation, "Renew your account",
                 Navigation.Item.REGISTRATION, toggleGroup);
 
+        seedWords.setDisable(true);
+        password.setDisable(true);
+        restrictions.setDisable(true);
         registration.setDisable(true);
 
         leftVBox.getChildren().addAll(seedWords, password,
@@ -114,7 +117,7 @@ public class AccountSettingsViewCB extends CachedViewCB {
         if (items.length == 3 &&
                 items[2] == Navigation.Item.ACCOUNT_SETTINGS) {
             navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
-                    Navigation.Item.ACCOUNT_SETTINGS, Navigation.Item.SEED_WORDS);
+                    Navigation.Item.ACCOUNT_SETTINGS, Navigation.Item.FIAT_ACCOUNT);
         }
         else {
             if (items.length == 4 &&
