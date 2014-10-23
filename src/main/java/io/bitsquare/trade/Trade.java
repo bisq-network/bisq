@@ -165,8 +165,8 @@ public class Trade implements Serializable {
         return fault;
     }
 
-    public Coin getCollateralAmount() {
-        return tradeAmount.multiply(offer.getCollateral()).divide(1000L);
+    public Coin getSecurityDeposit() {
+        return offer.getSecurityDeposit();
     }
 
     public String getId() {

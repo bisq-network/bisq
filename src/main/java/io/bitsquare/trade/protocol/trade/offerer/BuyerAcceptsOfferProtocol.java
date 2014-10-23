@@ -221,8 +221,7 @@ public class BuyerAcceptsOfferProtocol {
     public void onResultVerifyTakeOfferFeePayment() {
         log.debug("onResultVerifyTakeOfferFeePayment called " + step++);
 
-        Coin collateral = trade.getCollateralAmount();
-        Coin offererInputAmount = collateral.add(FeePolicy.TX_FEE);
+        Coin offererInputAmount = trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
         state = State.CreateDepositTx;
         CreateDepositTx.run(this::onResultCreateDepositTx, this::onFault, walletFacade, tradeId, offererInputAmount,
                 takerPubKey, arbitratorPubKey);
@@ -375,7 +374,7 @@ public class BuyerAcceptsOfferProtocol {
         // next task
         String depositTransactionId = trade.getDepositTx().getHashAsString();
         Coin tradeAmount = trade.getTradeAmount();
-        Coin collateral = trade.getCollateralAmount();
+        Coin securityDeposit = trade.getSecurityDeposit();
         state = State.SendSignedPayoutTx;
         SendSignedPayoutTx.run(this::onResultSendSignedPayoutTx,
                 this::onFault,
@@ -386,7 +385,7 @@ public class BuyerAcceptsOfferProtocol {
                 peersPayoutAddress,
                 payoutAddress,
                 depositTransactionId,
-                collateral,
+                securityDeposit,
                 tradeAmount);
     }
 

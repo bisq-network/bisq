@@ -48,10 +48,10 @@ public class SeedNode extends Thread {
     private static final List<SeedNodeAddress.StaticSeedNodeAddresses> staticSedNodeAddresses = SeedNodeAddress
             .StaticSeedNodeAddresses.getAllSeedNodeAddresses();
 
-    public static void mainForTest(String[] args) {
-        Peer peer = null;
+
+    public static void main1(String[] args) {
         try {
-            peer = new PeerBuilder(Number160.createHash("digitalocean1.bitsquare.io")).ports(5000).start();
+            Peer peer = new PeerBuilder(Number160.createHash("digitalocean1.bitsquare.io")).ports(5000).start();
             new PeerBuilderDHT(peer).start();
             new PeerBuilderNAT(peer).start();
 

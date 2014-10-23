@@ -20,6 +20,7 @@ package io.bitsquare.settings;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.locale.Country;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
 
 import java.io.Serializable;
@@ -27,6 +28,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.OptionalLong;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -37,9 +39,6 @@ public class Settings implements Serializable {
     private List<Locale> acceptedLanguageLocales = new ArrayList<>();
     private List<Country> acceptedCountryLocales = new ArrayList<>();
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
-
-    private long collateral = 100;  // is 1/1000 so 100 results to 100/1000 = 0,1 (or 10%) 
-    // which will be used for multiplying with the amount to get the collateral size in BTC.
 
     private Boolean useAnimations = true;
     private String btcDenominationString = MonetaryFormat.CODE_BTC;
@@ -63,7 +62,6 @@ public class Settings implements Serializable {
             acceptedLanguageLocales = persistedSettings.getAcceptedLanguageLocales();
             acceptedCountryLocales = persistedSettings.getAcceptedCountries();
             acceptedArbitrators = persistedSettings.getAcceptedArbitrators();
-            collateral = persistedSettings.getCollateral();
             setBtcDenomination(persistedSettings.getBtcDenominationString());
         }
     }
@@ -115,12 +113,9 @@ public class Settings implements Serializable {
         return acceptedCountryLocales;
     }
 
-    public void setCollateral(long collateral) {
-        this.collateral = collateral;
-    }
-
-    public long getCollateral() {
-        return collateral;
+    public Coin getSecurityDeposit() {
+        OptionalLong result = acceptedArbitrators.stream().mapToLong(e -> e.getFee().getValue()).max();
+        return result.isPresent() ? Coin.valueOf(result.getAsLong()) : Coin.ZERO;
     }
 
     public String getBtcDenomination() {

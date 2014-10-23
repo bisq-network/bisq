@@ -133,7 +133,7 @@ public class DHTTestController implements Initializable {
                 CountryUtil.getDefaultCountry(),
                 "bankAccountUID",
                 new ArrayList<>(),
-                10,
+                Coin.parseCoin("0.1"),
                 new ArrayList<>(),
                 new ArrayList<>());
 

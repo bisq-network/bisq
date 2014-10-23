@@ -41,7 +41,7 @@ public class VerifyOffer {
             checkNotNull(offer.getArbitrators(), "Arbitrator is null");
             checkNotNull(offer.getBankAccountCountry(), "BankAccountCountry is null");
             checkNotNull(offer.getBankAccountId(), "BankAccountId is null");
-            checkNotNull(offer.getCollateral(), "Collateral is null");
+            checkNotNull(offer.getSecurityDeposit(), "SecurityDeposit is null");
             checkNotNull(offer.getCreationDate(), "CreationDate is null");
             checkNotNull(offer.getCurrency(), "Currency is null");
             checkNotNull(offer.getDirection(), "Direction is null");
@@ -57,12 +57,12 @@ public class VerifyOffer {
             checkArgument(offer.getAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0,
                     "Amount is less then " + Restrictions.MIN_TRADE_AMOUNT);
             checkArgument(offer.getAmount().compareTo(offer.getMinAmount()) >= 0, "MinAmount is larger then Amount");
-            checkArgument(offer.getCollateral() > 0, "Collateral is 0");
+            checkArgument(offer.getSecurityDeposit().isPositive(), "SecurityDeposit is not positive");
             checkArgument(offer.getPrice().isPositive(), "Price is 0 or negative");
 
             // TODO check balance
-            // Coin collateralAsCoin = offer.getAmount().divide((long) (1d / offer.getCollateral()));
-            // Coin totalsToFund = collateralAsCoin.add(FeePolicy.CREATE_OFFER_FEE.add(FeePolicy.TX_FEE));
+            // securityDeposit
+            // Coin totalsToFund 
             // getAddressInfoByTradeID(offerId)
             // TODO when offer is flattened continue here...
 

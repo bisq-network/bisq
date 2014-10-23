@@ -128,7 +128,7 @@
                 </GridPane>
             </TitledPane>
 
-            <TitledPane fx:id="payCollateralTitledPane" text="Pay collateral">
+            <TitledPane fx:id="paySecurityDepositTitledPane" text="Pay security deposit">
                 <AnchorPane>
                     <VBox spacing="20" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
                           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -137,8 +137,8 @@
 
                         <GridPane hgap="5.0" vgap="5.0">
 
-                            <Label text="Collateral address:"/>
-                            <TextField fx:id="collateralAddressTextField" editable="false" focusTraversable="false"
+                            <Label text="Security deposit address:"/>
+                            <TextField fx:id="securityDepositAddressTextField" editable="false" focusTraversable="false"
                                        GridPane.columnIndex="1"/>
                             <Label fx:id="copyIcon" id="copy-icon" GridPane.columnIndex="2">
                                 <padding>

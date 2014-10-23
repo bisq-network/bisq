@@ -236,13 +236,13 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         return formatter.formatCoinWithCode(model.getTotalFees());
     }
 
-    String getCollateral() {
-        // collateral is handled different for offerer and taker.
-        // Offerer have paid in the max amount, but taker might have taken less so also paid in less collateral
+    String getSecurityDeposit() {
+        // securityDeposit is handled different for offerer and taker.
+        // Offerer have paid in the max amount, but taker might have taken less so also paid in less securityDeposit
         if (model.isOfferer())
-            return formatter.formatCoinWithCode(model.getTrade().getOffer().getCollateralAmount());
+            return formatter.formatCoinWithCode(model.getTrade().getOffer().getSecurityDeposit());
         else
-            return formatter.formatCoinWithCode(model.getTrade().getCollateralAmount());
+            return formatter.formatCoinWithCode(model.getTrade().getSecurityDeposit());
     }
 
     BtcAddressValidator getBtcAddressValidator() {

@@ -57,14 +57,6 @@ public class CreateOfferPMTest {
 
     @Test
     public void testBindings() {
-        model.collateralAsLong.set(100);
-        presenter.price.set("500");
-        presenter.amount.set("1");
-        assertEquals("500.00", presenter.volume.get());
-        assertEquals(Coin.COIN, model.amountAsCoin.get());
-        assertEquals(Fiat.valueOf("USD", 500 * 10000), model.priceAsFiat.get());
-        assertEquals(Fiat.valueOf("USD", 500 * 10000), model.volumeAsFiat.get());
-
         presenter.price.set("500");
         presenter.volume.set("500");
         assertEquals("1.00", presenter.amount.get());

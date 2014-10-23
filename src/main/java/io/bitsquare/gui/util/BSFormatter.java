@@ -153,12 +153,16 @@ public class BSFormatter {
         }
     }
 
-
     public Coin parseToCoin(String input) {
-        try {
-            return coinFormat.parse(cleanInput(input));
-        } catch (Throwable t) {
-            log.warn("Exception at parseToBtc: " + t.toString());
+        if (input != null) {
+            try {
+                return coinFormat.parse(cleanInput(input));
+            } catch (Throwable t) {
+                log.warn("Exception at parseToBtc: " + t.toString());
+                return Coin.ZERO;
+            }
+        }
+        else {
             return Coin.ZERO;
         }
     }
@@ -171,6 +175,7 @@ public class BSFormatter {
      * @param input
      * @return
      */
+
     public Coin parseToCoinWith4Decimals(String input) {
         try {
             return Coin.valueOf(new BigDecimal(parseToCoin(cleanInput(input)).value).setScale(-scale - 1,
@@ -229,9 +234,15 @@ public class BSFormatter {
     }
 
     public Fiat parseToFiat(String input) {
-        try {
-            return Fiat.parseFiat(currencyCode, cleanInput(input));
-        } catch (Exception e) {
+        if (input != null) {
+            try {
+                return Fiat.parseFiat(currencyCode, cleanInput(input));
+            } catch (Exception e) {
+                return Fiat.valueOf(currencyCode, 0);
+            }
+
+        }
+        else {
             return Fiat.valueOf(currencyCode, 0);
         }
     }
@@ -244,14 +255,18 @@ public class BSFormatter {
      * @param input
      * @return
      */
-    public Fiat parseToFiatWith2Decimals(String input) {
-        try {
-            return parseToFiat(new BigDecimal(cleanInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
-        } catch (Throwable t) {
-            log.warn("Exception at parseCoinTo4Decimals: " + t.toString());
-            return Fiat.valueOf(currencyCode, 0);
-        }
 
+    public Fiat parseToFiatWith2Decimals(String input) {
+        if (input != null) {
+            try {
+                return parseToFiat(new BigDecimal(cleanInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
+            } catch (Throwable t) {
+                log.warn("Exception at parseCoinTo4Decimals: " + t.toString());
+                return Fiat.valueOf(currencyCode, 0);
+            }
+
+        }
+        return Fiat.valueOf(currencyCode, 0);
     }
 
     public boolean hasFiatValidDecimals(String input) {
@@ -314,14 +329,6 @@ public class BSFormatter {
         DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
         DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
         return dateFormatter.format(date) + " " + timeFormatter.format(date);
-    }
-
-    public String formatCollateralPercent(long collateral) {
-        DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(locale);
-        decimalFormat.setMinimumFractionDigits(1);
-        decimalFormat.setMaximumFractionDigits(1);
-        decimalFormat.setGroupingUsed(false);
-        return decimalFormat.format(collateral / 10) + " %";
     }
 
     public String formatToPercent(double value) {

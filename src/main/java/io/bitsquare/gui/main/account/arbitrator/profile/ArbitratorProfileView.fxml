@@ -43,7 +43,7 @@
                GridPane.rowIndex="4"/>
 
     <Label text="Arbitration fee:" GridPane.rowIndex="5"/>
-    <TextField fx:id="arbitrationFeeTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"
+    <TextField fx:id="feeTextField" editable="false" focusTraversable="false" GridPane.columnIndex="1"
                GridPane.columnSpan="2" GridPane.rowIndex="5"/>
 
     <Label text="Methods of arbitration:" GridPane.rowIndex="6"/>

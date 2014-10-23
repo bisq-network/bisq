@@ -68,10 +68,10 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     @FXML TitledGroupBg titledGroupBg, paymentsGroupBg, summaryGroupBg, withdrawGroupBg;
     @FXML ProcessStepBar processBar;
     @FXML Label statusLabel, txIdLabel, paymentMethodLabel, fiatAmountLabel, holderNameLabel, primaryIdLabel,
-            secondaryIdLabel, btcTradeAmountLabel, fiatTradeAmountLabel, feesLabel, collateralLabel,
+            secondaryIdLabel, btcTradeAmountLabel, fiatTradeAmountLabel, feesLabel, securityDepositLabel,
             withdrawAmountLabel, withdrawAddressLabel;
     @FXML TextField statusTextField, paymentMethodTextField, btcTradeAmountTextField, fiatTradeAmountTextField,
-            feesTextField, collateralTextField, withdrawAmountTextField;
+            feesTextField, securityDepositTextField, withdrawAmountTextField;
     @FXML InputTextField withdrawAddressTextField;
     @FXML TxIdTextField txIdTextField;
     @FXML InfoDisplay infoDisplay, paymentsInfoDisplay, summaryInfoDisplay;
@@ -355,7 +355,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     btcTradeAmountTextField.setText(presentationModel.getTradeVolume());
                     fiatTradeAmountTextField.setText(presentationModel.getFiatVolume());
                     feesTextField.setText(presentationModel.getTotalFees());
-                    collateralTextField.setText(presentationModel.getCollateral());
+                    securityDepositTextField.setText(presentationModel.getSecurityDeposit());
                     summaryInfoDisplay.setText("Your security deposit has been refunded to you. " +
                             "You can review the details to that trade any time in the closed trades section.");
 
@@ -430,7 +430,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     btcTradeAmountTextField.setText(presentationModel.getTradeVolume());
                     fiatTradeAmountTextField.setText(presentationModel.getFiatVolume());
                     feesTextField.setText(presentationModel.getTotalFees());
-                    collateralTextField.setText(presentationModel.getCollateral());
+                    securityDepositTextField.setText(presentationModel.getSecurityDeposit());
                     summaryInfoDisplay.setText("Your security deposit has been refunded to you. " +
                             "You can review the details to that trade any time in the closed trades section.");
 
@@ -490,8 +490,8 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         fiatTradeAmountTextField.setVisible(visible);
         feesLabel.setVisible(visible);
         feesTextField.setVisible(visible);
-        collateralLabel.setVisible(visible);
-        collateralTextField.setVisible(visible);
+        securityDepositLabel.setVisible(visible);
+        securityDepositTextField.setVisible(visible);
         summaryInfoDisplay.setVisible(visible);
 
         withdrawGroupBg.setVisible(visible);
@@ -508,8 +508,8 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         fiatTradeAmountTextField.setManaged(visible);
         feesLabel.setManaged(visible);
         feesTextField.setManaged(visible);
-        collateralLabel.setManaged(visible);
-        collateralTextField.setManaged(visible);
+        securityDepositLabel.setManaged(visible);
+        securityDepositTextField.setManaged(visible);
         summaryInfoDisplay.setManaged(visible);
 
         withdrawGroupBg.setManaged(visible);

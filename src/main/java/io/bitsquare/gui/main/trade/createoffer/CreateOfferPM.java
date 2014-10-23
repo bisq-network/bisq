@@ -57,10 +57,9 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     final StringProperty minAmount = new SimpleStringProperty();
     final StringProperty price = new SimpleStringProperty();
     final StringProperty volume = new SimpleStringProperty();
-    final StringProperty collateral = new SimpleStringProperty();
+    final StringProperty securityDeposit = new SimpleStringProperty();
     final StringProperty totalToPay = new SimpleStringProperty();
     final StringProperty directionLabel = new SimpleStringProperty();
-    final StringProperty collateralLabel = new SimpleStringProperty();
     final StringProperty offerFee = new SimpleStringProperty();
     final StringProperty networkFee = new SimpleStringProperty();
     final StringProperty bankAccountType = new SimpleStringProperty();
@@ -319,7 +318,6 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
             if (isBtcInputValid(newValue).isValid) {
                 setAmountToModel();
                 calculateVolume();
-                model.calculateCollateral();
                 model.calculateTotalToPay();
             }
             updateButtonDisableState();
@@ -334,7 +332,6 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
             if (isFiatInputValid(newValue).isValid) {
                 setPriceToModel();
                 calculateVolume();
-                model.calculateCollateral();
                 model.calculateTotalToPay();
             }
             updateButtonDisableState();
@@ -345,7 +342,6 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
                 setVolumeToModel();
                 setPriceToModel();
                 model.calculateAmount();
-                model.calculateCollateral();
                 model.calculateTotalToPay();
             }
             updateButtonDisableState();
@@ -380,13 +376,9 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     private void setupBindings() {
         totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.totalToPayAsCoin.get()),
                 model.totalToPayAsCoin));
-        collateral.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.collateralAsCoin.get()),
-                model.collateralAsCoin));
+        securityDeposit.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.securityDepositAsCoin.get()),
+                model.securityDepositAsCoin));
 
-        collateralLabel.bind(Bindings.createStringBinding(() ->
-                        BSResources.get("createOffer.fundsBox.collateral",
-                                formatter.formatCollateralPercent(model.collateralAsLong.get())),
-                model.collateralAsLong));
         totalToPayAsCoin.bind(model.totalToPayAsCoin);
 
         offerFee.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.offerFeeAsCoin.get()),

@@ -314,11 +314,11 @@ class PendingTradesModel extends UIModel {
                 .TX_FEE).toString());
         // return walletFacade.getBalanceForAddress(addressEntry.getAddress()).subtract(FeePolicy.TX_FEE);
 
-        // TODO handle overpaid collateral
+        // TODO handle overpaid securityDeposit
         if (isOfferer())
-            return getTrade().getTradeAmount().add(getTrade().getOffer().getCollateralAmount());
+            return getTrade().getTradeAmount().add(getTrade().getOffer().getSecurityDeposit());
         else
-            return getTrade().getCollateralAmount();
+            return getTrade().getSecurityDeposit();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

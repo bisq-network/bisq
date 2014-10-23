@@ -42,10 +42,8 @@ import java.util.Locale;
 import java.util.UUID;
 
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -88,8 +86,6 @@ class CreateOfferModel extends UIModel {
     final StringProperty fiatCode = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
 
-    final LongProperty collateralAsLong = new SimpleLongProperty();
-
     final BooleanProperty requestPlaceOfferSuccess = new SimpleBooleanProperty();
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     final BooleanProperty useMBTC = new SimpleBooleanProperty();
@@ -99,9 +95,9 @@ class CreateOfferModel extends UIModel {
     final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> collateralAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> offerFeeAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> networkFeeAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> securityDepositAsCoin = new SimpleObjectProperty<>();
 
     final ObservableList<Country> acceptedCountries = FXCollections.observableArrayList();
     final ObservableList<Locale> acceptedLanguages = FXCollections.observableArrayList();
@@ -160,7 +156,7 @@ class CreateOfferModel extends UIModel {
 
         // we need to set it here already as initWithData is called before activate
         if (settings != null)
-            collateralAsLong.set(settings.getCollateral());
+            securityDepositAsCoin.set(settings.getSecurityDeposit());
 
         super.initialize();
     }
@@ -171,9 +167,9 @@ class CreateOfferModel extends UIModel {
 
         // might be changed after screen change
         if (settings != null) {
-            // set it here again to cover the case of an collateral change after a screen change
+            // set it here again to cover the case of an securityDeposit change after a screen change
             if (settings != null)
-                collateralAsLong.set(settings.getCollateral());
+                securityDepositAsCoin.set(settings.getSecurityDeposit());
 
             acceptedCountries.setAll(settings.getAcceptedCountries());
             acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
@@ -238,7 +234,6 @@ class CreateOfferModel extends UIModel {
                         (volumeAsFiat.get())));
 
                 calculateTotalToPay();
-                calculateCollateral();
             }
         } catch (Throwable t) {
             // Should be never reached
@@ -247,27 +242,10 @@ class CreateOfferModel extends UIModel {
     }
 
     void calculateTotalToPay() {
-        calculateCollateral();
-        try {
-            if (collateralAsCoin.get() != null) {
-                totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(collateralAsCoin.get()));
-            }
-        } catch (Throwable t) {
-            // Should be never reached
-            log.error(t.toString());
-        }
+        if (securityDepositAsCoin.get() != null)
+            totalToPayAsCoin.set(offerFeeAsCoin.get().add(networkFeeAsCoin.get()).add(securityDepositAsCoin.get()));
     }
 
-    void calculateCollateral() {
-        try {
-
-            if (amountAsCoin.get() != null)
-                collateralAsCoin.set(amountAsCoin.get().multiply(collateralAsLong.get()).divide(1000L));
-        } catch (Throwable t) {
-            // The multiply might lead to too large numbers, we don't handle it but it should not break the app
-            log.error(t.toString());
-        }
-    }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean isMinAmountLessOrEqualAmount() {

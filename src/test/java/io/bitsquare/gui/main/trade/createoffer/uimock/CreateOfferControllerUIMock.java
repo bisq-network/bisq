@@ -56,10 +56,10 @@ public class CreateOfferControllerUIMock implements Initializable {
     @FXML private TextField addressTextField;
     @FXML private TextField balanceTextField;
 
-    @FXML private Label buyLabel, confirmationLabel, txTitleLabel, collateralLabel;
+    @FXML private Label buyLabel, confirmationLabel, txTitleLabel, securityDepositLabel;
     @FXML private TextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
     @FXML private Button placeOfferButton, closeButton;
-    @FXML private TextField totalToPayTextField, collateralTextField, bankAccountTypeTextField,
+    @FXML private TextField totalToPayTextField, securityDepositTextField, bankAccountTypeTextField,
             bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField,
             acceptedLanguagesTextField,
             summaryBtcTextField, transactionIdTextField;
@@ -72,49 +72,6 @@ public class CreateOfferControllerUIMock implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-/*
-        paymentInfoPane.setVisible(false);
-        collateralLabel.setVisible(false);
-        collateralTextField.setVisible(false);
-        offerFeeLabel.setVisible(false);
-        offerFeeTextField.setVisible(false);
-        networkFeeLabel.setVisible(false);
-        networkFeeTextField.setVisible(false);
-        totalsSeparator.setVisible(false);
-        summaryBtcLabel.setVisible(false);
-        summaryBtcTextField.setVisible(false);
-        paymentInfoLabel.setVisible(false);
-        paymentInfoIcon.setVisible(false);
-        showPayFundsScreenButton.setVisible(false);
-
-        payFundsPane.setVisible(false);
-        totalToPayLabel.setVisible(false);
-        totalToPayTextField.setVisible(false);
-        addressLabel.setVisible(false);
-        addressTextField.setVisible(false);
-        balanceLabel.setVisible(false);
-        balanceTextField.setVisible(false);
-        payFundsInfoIcon.setVisible(false);
-        payFundsInfoLabel.setVisible(false);
-        placeOfferButton.setVisible(false);
-        showDetailsButton.setVisible(false);
-
-        showDetailsPane.setVisible(false);
-        showDetailsTitleLabel.setVisible(false);
-        acceptedCountriesLabel.setVisible(false);
-        acceptedCountriesTextField.setVisible(false);
-        acceptedLanguagesLabel.setVisible(false);
-        acceptedLanguagesTextField.setVisible(false);
-        acceptedArbitratorsLabel.setVisible(false);
-        acceptedArbitratorsTextField.setVisible(false);
-        bankAccountTypeLabel.setVisible(false);
-        bankAccountTypeTextField.setVisible(false);
-        bankAccountCurrencyLabel.setVisible(false);
-        bankAccountCurrencyTextField.setVisible(false);
-        bankAccountCountyLabel.setVisible(false);
-        bankAccountCountyTextField.setVisible(false);
-        showDetailsInfoIcon.setVisible(false);
-        showDetailsInfoLabel.setVisible(false);*/
     }
 
    /* @FXML
@@ -143,8 +100,8 @@ public class CreateOfferControllerUIMock implements Initializable {
         showPaymentInfoScreenButton.setVisible(false);
 
         paymentInfoPane.setVisible(true);
-        collateralLabel.setVisible(true);
-        collateralTextField.setVisible(true);
+        securityDepositLabel.setVisible(true);
+        securityDepositTextField.setVisible(true);
         offerFeeLabel.setVisible(true);
         offerFeeTextField.setVisible(true);
         networkFeeLabel.setVisible(true);

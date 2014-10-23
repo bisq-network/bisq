@@ -52,7 +52,6 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
     private String amountRange;
     private String price;
     private String directionLabel;
-    private String collateralLabel;
     private String bankAccountType;
     private String bankAccountCurrency;
     private String bankAccountCounty;
@@ -70,7 +69,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
 
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty volume = new SimpleStringProperty();
-    final StringProperty collateral = new SimpleStringProperty();
+    final StringProperty securityDeposit = new SimpleStringProperty();
     final StringProperty totalToPay = new SimpleStringProperty();
     final StringProperty transactionId = new SimpleStringProperty();
     final StringProperty requestTakeOfferErrorMessage = new SimpleStringProperty();
@@ -167,8 +166,6 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
             addressAsString = model.getAddressEntry().getAddress().toString();
             address.set(model.getAddressEntry().getAddress());
         }
-        collateralLabel = BSResources.get("takeOffer.fundsBox.collateral",
-                formatter.formatCollateralPercent(offer.getCollateral()));
 
         acceptedCountries = formatter.countryLocalesToString(offer.getAcceptedCountries());
         acceptedLanguages = formatter.languageLocalesToString(offer.getAcceptedLanguageLocales());
@@ -196,7 +193,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
         model.securityDepositInfoDisplayed();
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI events
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -271,10 +268,6 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
         return directionLabel;
     }
 
-    String getCollateralLabel() {
-        return collateralLabel;
-    }
-
     String getBankAccountType() {
         return bankAccountType;
     }
@@ -310,7 +303,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
     Boolean displaySecurityDepositInfo() {
         return model.displaySecurityDepositInfo();
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -323,7 +316,6 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
             if (isBtcInputValid(newValue).isValid) {
                 setAmountToModel();
                 calculateVolume();
-                model.calculateCollateral();
                 model.calculateTotalToPay();
             }
             updateButtonDisableState();
@@ -350,8 +342,8 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
                 model.volumeAsFiat));
         totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.totalToPayAsCoin.get()),
                 model.totalToPayAsCoin));
-        collateral.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.collateralAsCoin.get()),
-                model.collateralAsCoin));
+        securityDeposit.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.securityDepositAsCoin.get()),
+                model.securityDepositAsCoin));
 
         totalToPayAsCoin.bind(model.totalToPayAsCoin);
 

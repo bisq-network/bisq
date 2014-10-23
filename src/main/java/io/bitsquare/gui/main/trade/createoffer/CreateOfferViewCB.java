@@ -200,7 +200,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
                             "another trader. " +
                             "\nIt will be refunded to you after the trade has successfully completed.",
                     actions);
-        
+
             presentationModel.securityDepositInfoDisplayed();
         }
 
@@ -515,8 +515,8 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         infoGridPane.setPadding(new Insets(10, 10, 10, 10));
 
         addPayInfoEntry(infoGridPane, 0,
-                presentationModel.collateralLabel.get(),
-                presentationModel.collateral.get());
+                BSResources.get("createOffer.fundsBox.securityDeposit"),
+                presentationModel.securityDeposit.get());
         addPayInfoEntry(infoGridPane, 1, BSResources.get("createOffer.fundsBox.offerFee"),
                 presentationModel.offerFee.get());
         addPayInfoEntry(infoGridPane, 2, BSResources.get("createOffer.fundsBox.networkFee"),

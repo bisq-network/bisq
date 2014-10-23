@@ -17,6 +17,8 @@
 
 package io.bitsquare.arbitrator;
 
+import org.bitcoinj.core.Coin;
+
 import java.io.Serializable;
 
 import java.util.List;
@@ -33,11 +35,7 @@ public class Arbitrator implements Serializable {
     private ID_TYPE idType;
     private List<Locale> languages;
     private Reputation reputation;
-    private double maxTradeVolume;
-    private double passiveServiceFee;
-    private double minPassiveServiceFee;
-    private double arbitrationFee;
-    private double minArbitrationFee;
+    private Coin fee;
     private List<METHOD> arbitrationMethods;
     private List<ID_VERIFICATION> idVerifications;
 
@@ -54,11 +52,7 @@ public class Arbitrator implements Serializable {
                       ID_TYPE idType,
                       List<Locale> languages,
                       Reputation reputation,
-                      double maxTradeVolume,
-                      double passiveServiceFee,
-                      double minPassiveServiceFee,
-                      double arbitrationFee,
-                      double minArbitrationFee,
+                      Coin fee,
                       List<METHOD> arbitrationMethods,
                       List<ID_VERIFICATION> idVerifications,
                       String webUrl,
@@ -69,11 +63,7 @@ public class Arbitrator implements Serializable {
         this.idType = idType;
         this.languages = languages;
         this.reputation = reputation;
-        this.maxTradeVolume = maxTradeVolume;
-        this.passiveServiceFee = passiveServiceFee;
-        this.minPassiveServiceFee = minPassiveServiceFee;
-        this.arbitrationFee = arbitrationFee;
-        this.minArbitrationFee = minArbitrationFee;
+        this.fee = fee;
         this.arbitrationMethods = arbitrationMethods;
         this.idVerifications = idVerifications;
         this.webUrl = webUrl;
@@ -90,11 +80,7 @@ public class Arbitrator implements Serializable {
         this.idType = persistedArbitrator.getIdType();
         this.languages = persistedArbitrator.getLanguages();
         this.reputation = persistedArbitrator.getReputation();
-        this.maxTradeVolume = persistedArbitrator.getMaxTradeVolume();
-        this.passiveServiceFee = persistedArbitrator.getPassiveServiceFee();
-        this.minPassiveServiceFee = persistedArbitrator.getMinPassiveServiceFee();
-        this.arbitrationFee = persistedArbitrator.getArbitrationFee();
-        this.minArbitrationFee = persistedArbitrator.getMinArbitrationFee();
+        this.fee = persistedArbitrator.getFee();
         this.arbitrationMethods = persistedArbitrator.getArbitrationMethods();
         this.idVerifications = persistedArbitrator.getIdVerifications();
         this.webUrl = persistedArbitrator.getWebUrl();
@@ -127,16 +113,13 @@ public class Arbitrator implements Serializable {
         return id != null && id.equals(other.getId());
     }
 
-
     public String getId() {
         return id;
     }
 
-
     public String getPubKeyAsHex() {
         return pubKeyAsHex;
     }
-
 
     public String getMessagePubKeyAsHex() {
         return messagePubKeyAsHex;
@@ -152,56 +135,33 @@ public class Arbitrator implements Serializable {
         return name;
     }
 
-
     public ID_TYPE getIdType() {
         return idType;
     }
-
 
     public List<Locale> getLanguages() {
         return languages;
     }
 
-
     public Reputation getReputation() {
         return reputation;
     }
 
-    public double getMaxTradeVolume() {
-        return maxTradeVolume;
+    public Coin getFee() {
+        return fee;
     }
-
-    public double getPassiveServiceFee() {
-        return passiveServiceFee;
-    }
-
-    public double getMinPassiveServiceFee() {
-        return minPassiveServiceFee;
-    }
-
-    public double getArbitrationFee() {
-        return arbitrationFee;
-    }
-
-    public double getMinArbitrationFee() {
-        return minArbitrationFee;
-    }
-
 
     public List<METHOD> getArbitrationMethods() {
         return arbitrationMethods;
     }
 
-
     public List<ID_VERIFICATION> getIdVerifications() {
         return idVerifications;
     }
 
-
     public String getWebUrl() {
         return webUrl;
     }
-
 
     public String getDescription() {
         return description;

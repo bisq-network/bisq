@@ -33,7 +33,7 @@ public class PayDeposit {
     public static void run(ResultHandler resultHandler,
                            ExceptionHandler exceptionHandler,
                            WalletFacade walletFacade,
-                           Coin collateral,
+                           Coin securityDeposit,
                            Coin tradeAmount,
                            String tradeId,
                            String pubKeyForThatTrade,
@@ -42,8 +42,8 @@ public class PayDeposit {
                            String preparedOffererDepositTxAsHex) {
         log.trace("Run task");
         try {
-            Coin amountToPay = tradeAmount.add(collateral);
-            Coin msOutputAmount = amountToPay.add(collateral);
+            Coin amountToPay = tradeAmount.add(securityDeposit);
+            Coin msOutputAmount = amountToPay.add(securityDeposit);
 
             Transaction signedTakerDepositTx = walletFacade.takerAddPaymentAndSignTx(amountToPay,
                     msOutputAmount,

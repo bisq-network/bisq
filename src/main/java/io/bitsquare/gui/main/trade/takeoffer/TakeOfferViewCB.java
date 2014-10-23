@@ -439,8 +439,8 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
                 BSResources.get("takeOffer.fundsBox.amount"),
                 presentationModel.getAmount());
         addPayInfoEntry(infoGridPane, 1,
-                presentationModel.getCollateralLabel(),
-                presentationModel.collateral.get());
+                BSResources.get("takeOffer.fundsBox.securityDeposit"),
+                presentationModel.securityDeposit.get());
         addPayInfoEntry(infoGridPane, 2, BSResources.get("takeOffer.fundsBox.offerFee"),
                 presentationModel.getOfferFee());
         addPayInfoEntry(infoGridPane, 3, BSResources.get("takeOffer.fundsBox.networkFee"),

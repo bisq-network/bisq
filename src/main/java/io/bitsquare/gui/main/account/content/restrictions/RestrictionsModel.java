@@ -30,6 +30,7 @@ import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
 
@@ -203,11 +204,7 @@ class RestrictionsModel extends UIModel {
                     Arbitrator.ID_TYPE.REAL_LIFE_ID,
                     languages,
                     new Reputation(),
-                    1,
-                    0.01,
-                    0.001,
-                    10,
-                    0.1,
+                    Coin.parseCoin("0.1"),
                     arbitrationMethods,
                     idVerifications,
                     "http://bitsquare.io/",

@@ -102,7 +102,7 @@ public class SellerTakesOfferProtocol {
     private final String pubKeyForThatTrade;
     private final ECKey accountKey;
     private final PublicKey peersMessagePublicKey;
-    private final Coin collateral;
+    private final Coin securityDeposit;
     private final String arbitratorPubKey;
 
     // written/read by task
@@ -149,7 +149,7 @@ public class SellerTakesOfferProtocol {
         offer = trade.getOffer();
         tradeId = trade.getId();
         tradeAmount = trade.getTradeAmount();
-        collateral = trade.getCollateralAmount();
+        securityDeposit = trade.getSecurityDeposit();
         //TODO use 1. for now
         arbitratorPubKey = trade.getOffer().getArbitrators().get(0).getPubKeyAsHex();
 
@@ -279,7 +279,7 @@ public class SellerTakesOfferProtocol {
         trade.setContractTakerSignature(signature);
 
         state = State.PayDeposit;
-        PayDeposit.run(this::onResultPayDeposit, this::onFault, walletFacade, collateral, tradeAmount, tradeId,
+        PayDeposit.run(this::onResultPayDeposit, this::onFault, walletFacade, securityDeposit, tradeAmount, tradeId,
                 pubKeyForThatTrade, arbitratorPubKey, peersPubKey, preparedPeersDepositTxAsHex);
     }
 

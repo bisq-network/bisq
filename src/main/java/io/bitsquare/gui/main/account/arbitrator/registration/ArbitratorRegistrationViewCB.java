@@ -22,7 +22,6 @@ import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
-import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileViewCB;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.LanguageUtil;
@@ -61,8 +60,6 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.*;
-
 // TODO Arbitration is very basic yet
 public class ArbitratorRegistrationViewCB extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorRegistrationViewCB.class);
@@ -73,7 +70,6 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
     private final User user;
     private BSFormatter formatter;
     private Arbitrator arbitrator = new Arbitrator();
-    private ArbitratorProfileViewCB arbitratorProfileViewCB;
     private boolean isEditMode;
 
     private List<Locale> languageList = new ArrayList<>();
@@ -84,7 +80,7 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
     private Arbitrator.ID_TYPE idType;
 
     @FXML Accordion accordion;
-    @FXML TitledPane profileTitledPane, payCollateralTitledPane;
+    @FXML TitledPane profileTitledPane, paySecurityDepositTitledPane;
     @FXML Button saveProfileButton, paymentDoneButton;
     @FXML Label nameLabel, infoLabel, copyIcon, confirmationLabel;
     @FXML ComboBox<Locale> languageComboBox;
@@ -94,7 +90,7 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
     @FXML TextField nameTextField, idTypeTextField, languagesTextField, maxTradeVolumeTextField,
             passiveServiceFeeTextField, minPassiveServiceFeeTextField, arbitrationFeeTextField,
             minArbitrationFeeTextField, methodsTextField, idVerificationsTextField, webPageTextField,
-            collateralAddressTextField, balanceTextField;
+            securityDepositAddressTextField, balanceTextField;
     @FXML TextArea descriptionTextArea;
     @FXML ConfidenceProgressIndicator progressIndicator;
 
@@ -225,7 +221,7 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
         if (isEditMode) {
             saveProfileButton.setText("Save");
             profileTitledPane.setCollapsible(false);
-            payCollateralTitledPane.setVisible(false);
+            paySecurityDepositTitledPane.setVisible(false);
         }
     }
 
@@ -321,8 +317,8 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
                 close();
             }
             else {
-                setupPayCollateralScreen();
-                accordion.setExpandedPane(payCollateralTitledPane);
+                setupPaySecurityDepositScreen();
+                accordion.setExpandedPane(paySecurityDepositTitledPane);
             }
         }
 
@@ -339,24 +335,25 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupPayCollateralScreen() {
-        infoLabel.setText("You need to pay 10 x the max. trading volume as collateral.\n\nThat payment will be " +
+    private void setupPaySecurityDepositScreen() {
+        infoLabel.setText("You need to pay 2 x the max. trading volume as security deposit.\n\nThat payment will be " +
                 "locked into a MultiSig fund and be refunded when you leave the arbitration pool.\nIn case of fraud " +
-                "(collusion, not fulfilling the min. dispute quality requirements) you will lose your collateral.\n" +
-                "If you have a negative feedback from your clients you will lose a part of the collateral,\n" +
+                "(collusion, not fulfilling the min. dispute quality requirements) you will lose your security " +
+                "deposit.\n" +
+                "If you have a negative feedback from your clients you will lose a part of the security deposit,\n" +
                 "depending on the overall relation of negative to positive ratings you received after a dispute " +
-                "resolution.\n\nPlease pay in " + arbitrator.getMaxTradeVolume() * 10 + " BTC");
+                "resolution.\n\nPlease pay in 2 BTC");
 
 
-        String collateralAddress = walletFacade.getRegistrationAddressEntry() != null ?
+        String securityDepositAddress = walletFacade.getRegistrationAddressEntry() != null ?
                 walletFacade.getRegistrationAddressEntry().toString() : "";
-        collateralAddressTextField.setText(collateralAddress);
+        securityDepositAddressTextField.setText(securityDepositAddress);
 
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> {
             Clipboard clipboard = Clipboard.getSystemClipboard();
             ClipboardContent content = new ClipboardContent();
-            content.putString(collateralAddress);
+            content.putString(securityDepositAddress);
             clipboard.setContent(content);
         });
 
@@ -419,11 +416,7 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
             nameTextField.setText(arbitrator.getName());
             idTypeTextField.setText(BSResources.get(arbitrator.getIdType().toString()));
             languagesTextField.setText(formatter.languageLocalesToString(arbitrator.getLanguages()));
-            maxTradeVolumeTextField.setText(String.valueOf(arbitrator.getMaxTradeVolume()));
-            passiveServiceFeeTextField.setText(String.valueOf(arbitrator.getPassiveServiceFee()));
-            minPassiveServiceFeeTextField.setText(String.valueOf(arbitrator.getMinPassiveServiceFee()));
-            arbitrationFeeTextField.setText(String.valueOf(arbitrator.getArbitrationFee()));
-            minArbitrationFeeTextField.setText(String.valueOf(arbitrator.getMinArbitrationFee()));
+            arbitrationFeeTextField.setText(String.valueOf(arbitrator.getFee()));
             methodsTextField.setText(formatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
             idVerificationsTextField.setText(
                     formatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));
@@ -442,13 +435,7 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
         String pubKeyAsHex = walletFacade.getArbitratorDepositAddressEntry().getPubKeyAsHexString();
         String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
         String name = nameTextField.getText();
-
-        double maxTradeVolume = parseToDouble(maxTradeVolumeTextField.getText());
-        double passiveServiceFee = parseToDouble(passiveServiceFeeTextField.getText());
-        double minPassiveServiceFee = parseToDouble(minPassiveServiceFeeTextField.getText());
-        double arbitrationFee = parseToDouble(arbitrationFeeTextField.getText());
-        double minArbitrationFee = parseToDouble(minArbitrationFeeTextField.getText());
-
+        Coin fee = formatter.parseToCoin(arbitrationFeeTextField.getText());
         String webUrl = webPageTextField.getText();
         String description = descriptionTextArea.getText();
 
@@ -458,11 +445,7 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
                 idType,
                 languageList,
                 new Reputation(),
-                maxTradeVolume,
-                passiveServiceFee,
-                minPassiveServiceFee,
-                arbitrationFee,
-                minArbitrationFee,
+                fee,
                 methodList,
                 idVerificationList,
                 webUrl,
@@ -472,17 +455,6 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
     private void close() {
         Stage stage = (Stage) root.getScene().getWindow();
         stage.close();
-    }
-
-    private double parseToDouble(String input) {
-        try {
-            checkNotNull(input);
-            checkArgument(input.length() > 0);
-            input = input.replace(",", ".").trim();
-            return Double.parseDouble(input);
-        } catch (Exception e) {
-            return 0;
-        }
     }
 }
 

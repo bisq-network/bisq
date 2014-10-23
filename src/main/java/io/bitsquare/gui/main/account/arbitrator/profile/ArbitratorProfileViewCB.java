@@ -39,12 +39,11 @@ public class ArbitratorProfileViewCB extends CachedViewCB {
 
     private final Persistence persistence;
     private BSFormatter formatter;
-    private Arbitrator arbitrator;
 
 
     @FXML Label nameLabel;
-    @FXML TextField nameTextField, languagesTextField, reputationTextField, maxTradeVolumeTextField,
-            passiveServiceFeeTextField, arbitrationFeeTextField, methodsTextField,
+    @FXML TextField nameTextField, languagesTextField, reputationTextField,
+            feeTextField, methodsTextField,
             idVerificationsTextField, webPageTextField;
     @FXML TextArea descriptionTextArea;
 
@@ -116,11 +115,7 @@ public class ArbitratorProfileViewCB extends CachedViewCB {
             nameTextField.setText(arbitrator.getName());
             languagesTextField.setText(formatter.languageLocalesToString(arbitrator.getLanguages()));
             reputationTextField.setText(arbitrator.getReputation().toString());
-            maxTradeVolumeTextField.setText(String.valueOf(arbitrator.getMaxTradeVolume()) + " BTC");
-            passiveServiceFeeTextField.setText(String.valueOf(arbitrator.getPassiveServiceFee()) + " % (Min. " +
-                    String.valueOf(arbitrator.getMinPassiveServiceFee()) + " BTC)");
-            arbitrationFeeTextField.setText(String.valueOf(arbitrator.getArbitrationFee()) + " % (Min. " + String
-                    .valueOf(arbitrator.getMinArbitrationFee()) + " BTC)");
+            feeTextField.setText(String.valueOf(arbitrator.getFee() + " BTC"));
             methodsTextField.setText(formatter.arbitrationMethodsToString(arbitrator.getArbitrationMethods()));
             idVerificationsTextField.setText(
                     formatter.arbitrationIDVerificationsToString(arbitrator.getIdVerifications()));

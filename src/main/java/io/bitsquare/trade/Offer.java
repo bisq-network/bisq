@@ -56,7 +56,7 @@ public class Offer implements Serializable {
     private final BankAccountType bankAccountType;
     private final Country bankAccountCountry;
 
-    private final long collateral;
+    private final Coin securityDeposit;
     private final List<Country> acceptedCountries;
     private final List<Locale> acceptedLanguageLocales;
     private final String bankAccountUID;
@@ -79,7 +79,7 @@ public class Offer implements Serializable {
                  Country bankAccountCountry,
                  String bankAccountUID,
                  List<Arbitrator> arbitrators,
-                 long collateral,
+                 Coin securityDeposit,
                  List<Country> acceptedCountries,
                  List<Locale> acceptedLanguageLocales) {
         this.id = id;
@@ -93,7 +93,7 @@ public class Offer implements Serializable {
         this.bankAccountCountry = bankAccountCountry;
         this.bankAccountUID = bankAccountUID;
         this.arbitrators = arbitrators;
-        this.collateral = collateral;
+        this.securityDeposit = securityDeposit;
         this.acceptedCountries = acceptedCountries;
 
         this.acceptedLanguageLocales = acceptedLanguageLocales;
@@ -186,12 +186,8 @@ public class Offer implements Serializable {
         return arbitrators;
     }
 
-    public long getCollateral() {
-        return collateral;
-    }
-
-    public Coin getCollateralAmount() {
-        return amount.multiply(collateral).divide(1000L);
+    public Coin getSecurityDeposit() {
+        return securityDeposit;
     }
 
     public String getBankAccountId() {
@@ -211,7 +207,7 @@ public class Offer implements Serializable {
                 ", messagePubKey=" + messagePublicKey.hashCode() +
                 ", bankAccountTypeEnum=" + bankAccountType +
                 ", bankAccountCountryLocale=" + bankAccountCountry +
-                ", collateral=" + collateral +
+                ", securityDeposit=" + securityDeposit +
                 ", acceptedCountryLocales=" + acceptedCountries +
                 ", acceptedLanguageLocales=" + acceptedLanguageLocales +
                 ", offerFeePaymentTxID='" + offerFeePaymentTxID + '\'' +

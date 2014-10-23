@@ -73,7 +73,7 @@ class TakeOfferModel extends UIModel {
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> collateralAsCoin = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> securityDepositAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> offerFeeAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> networkFeeAsCoin = new SimpleObjectProperty<>();
 
@@ -141,8 +141,8 @@ class TakeOfferModel extends UIModel {
             amountAsCoin.set(offer.getAmount());
         }
 
+        securityDepositAsCoin.set(offer.getSecurityDeposit());
         calculateVolume();
-        calculateCollateral();
         calculateTotalToPay();
 
         addressEntry = walletFacade.getAddressInfoByTradeID(offer.getId());
@@ -192,11 +192,10 @@ class TakeOfferModel extends UIModel {
     }
 
     void calculateTotalToPay() {
-        calculateCollateral();
         try {
-            if (collateralAsCoin.get() != null) {
+            if (securityDepositAsCoin.get() != null) {
                 totalToPayAsCoin.set(offerFeeAsCoin.get().add(amountAsCoin.get()).add(networkFeeAsCoin.get()).add
-                        (collateralAsCoin.get()));
+                        (securityDepositAsCoin.get()));
             }
         } catch (Throwable t) {
             // Should be never reached
@@ -204,16 +203,6 @@ class TakeOfferModel extends UIModel {
         }
     }
 
-    void calculateCollateral() {
-        try {
-            if (amountAsCoin.get() != null && offer != null)
-                collateralAsCoin.set(amountAsCoin.get().multiply(offer.getCollateral()).
-                        divide(1000L));
-        } catch (Throwable t) {
-            // The multiply might lead to too large numbers, we don't handle it but it should not break the app
-            log.error(t.toString());
-        }
-    }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean isMinAmountLessOrEqualAmount() {

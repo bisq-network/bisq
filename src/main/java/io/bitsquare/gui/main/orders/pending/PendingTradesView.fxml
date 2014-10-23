@@ -181,9 +181,9 @@
             <TextField fx:id="feesTextField" GridPane.rowIndex="7" GridPane.columnIndex="1" editable="false"
                        focusTraversable="false" mouseTransparent="true" managed="false" visible="false"/>
 
-            <Label fx:id="collateralLabel" text="Refunded collateral:" GridPane.rowIndex="8" managed="false"
+            <Label fx:id="securityDepositLabel" text="Refunded security deposit:" GridPane.rowIndex="8" managed="false"
                    visible="false"/>
-            <TextField fx:id="collateralTextField" GridPane.rowIndex="8" GridPane.columnIndex="1" editable="false"
+            <TextField fx:id="securityDepositTextField" GridPane.rowIndex="8" GridPane.columnIndex="1" editable="false"
                        focusTraversable="false" mouseTransparent="true" managed="false" visible="false"/>
 
             <InfoDisplay fx:id="summaryInfoDisplay" onAction="#onOpenSummaryHelp" rowIndex="9" gridPane="$gridPane"
