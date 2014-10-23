@@ -39,7 +39,7 @@
                 <Insets bottom="-10.0" left="25.0" top="30.0" right="25"/>
             </padding>
 
-            <TitledSeparator text="Pending trades" GridPane.rowIndex="0" GridPane.columnIndex="0"
+            <TitledSeparator text="Open trades" GridPane.rowIndex="0" GridPane.columnIndex="0"
                              GridPane.columnSpan="2"/>
 
             <TableView fx:id="table" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"

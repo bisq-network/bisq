@@ -25,7 +25,7 @@
          xmlns:fx="http://javafx.com/fxml">
 
     <Tab fx:id="offersTab" text="Open offers" closable="false"/>
-    <Tab fx:id="pendingTradesTab" text="Pending trades" closable="false"/>
+    <Tab fx:id="pendingTradesTab" text="Open trades" closable="false"/>
     <Tab fx:id="closedTradesTab" text="History" closable="false"/>
 
 </TabPane>
