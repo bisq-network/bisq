@@ -251,7 +251,7 @@ class PendingTradesModel extends UIModel {
                         formatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
                         "Are you sure you withdraw that amount?");
 
-        if (response == Dialog.Actions.OK) {
+        if (Popups.isOK(response)) {
             try {
                 walletFacade.sendFunds(
                         withdrawFromTextField.getText(), withdrawToTextField.getText(),

@@ -247,6 +247,7 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
                 actions.add(new AbstractAction(BSResources.get("shared.no")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {
+                        getProperties().put("type", "NO");
                         Dialog.Actions.NO.handle(actionEvent);
                         overlayManager.removeBlurContent();
                     }
@@ -255,6 +256,7 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
                 actions.add(new AbstractAction(BSResources.get("shared.yes")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {
+                        getProperties().put("type", "YES");
                         Dialog.Actions.YES.handle(actionEvent);
                         overlayManager.removeBlurContent();
                     }
@@ -265,7 +267,7 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
                                 ".\n\nDo you want to add it automatically?",
                         actions);
 
-                if (response == Dialog.Actions.YES)
+                if (Popups.isYes(response))
                     presentationModel.addCountryToAcceptedCountriesList();
             }
         });

@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.BitSquare;
 import io.bitsquare.BitSquareUI;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.locale.BSResources;
@@ -61,6 +60,7 @@ public class Popups {
         actions.add(new AbstractAction(BSResources.get("shared.close")) {
             @Override
             public void handle(ActionEvent actionEvent) {
+                getProperties().put("type", "CLOSE");
                 Dialog.Actions.CLOSE.handle(actionEvent);
                 overlayManager.removeBlurContent();
             }
@@ -88,13 +88,16 @@ public class Popups {
         actions.add(new AbstractAction(BSResources.get("shared.ok")) {
             @Override
             public void handle(ActionEvent actionEvent) {
+                getProperties().put("type", "OK");
                 Dialog.Actions.OK.handle(actionEvent);
                 overlayManager.removeBlurContent();
             }
+
         });
         actions.add(new AbstractAction(BSResources.get("shared.cancel")) {
             @Override
             public void handle(ActionEvent actionEvent) {
+                getProperties().put("type", "CANCEL");
                 Dialog.Actions.CANCEL.handle(actionEvent);
                 overlayManager.removeBlurContent();
             }
@@ -127,6 +130,7 @@ public class Popups {
         actions.add(new AbstractAction(BSResources.get("shared.close")) {
             @Override
             public void handle(ActionEvent actionEvent) {
+                getProperties().put("type", "CLOSE");
                 Dialog.Actions.CLOSE.handle(actionEvent);
                 overlayManager.removeBlurContent();
             }
@@ -159,6 +163,7 @@ public class Popups {
         actions.add(new AbstractAction(BSResources.get("shared.close")) {
             @Override
             public void handle(ActionEvent actionEvent) {
+                getProperties().put("type", "CLOSE");
                 Dialog.Actions.CLOSE.handle(actionEvent);
                 overlayManager.removeBlurContent();
             }
@@ -191,6 +196,7 @@ public class Popups {
         actions.add(new AbstractAction(BSResources.get("shared.close")) {
             @Override
             public void handle(ActionEvent actionEvent) {
+                getProperties().put("type", "CLOSE");
                 Dialog.Actions.CLOSE.handle(actionEvent);
                 overlayManager.removeBlurContent();
             }
@@ -216,14 +222,14 @@ public class Popups {
                 Action response = Popups.openErrorPopup("Error", "Application already running",
                         "This application is already running and cannot be started twice.\n\n " +
                                 "Check your system tray to reopen the window of the running application.");
-                if (response == Dialog.Actions.OK)
+                if (Popups.isOK(response))
                     Platform.exit();
             }
             else {
                 Action response = Popups.openExceptionPopup(throwable, "Exception", "A critical error has occurred.",
                         "Please copy the exception details and open a bug report at:\n " +
                                 "https://github.com/bitsquare/bitsquare/issues.");
-                if (response == Dialog.Actions.OK)
+                if (Popups.isOK(response))
                     Platform.exit();
             }
         };
@@ -239,4 +245,13 @@ public class Popups {
         openWarningPopup("Warning", "There is not enough money available",
                 "Please pay in first to your wallet.");
     }
+
+    public static boolean isOK(Action response) {
+        return response.getProperties().get("type").equals("OK");
+    }
+
+    public static boolean isYes(Action response) {
+        return response.getProperties().get("type").equals("YES");
+    }
+
 }

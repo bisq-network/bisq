@@ -53,7 +53,6 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import org.controlsfx.control.action.Action;
-import org.controlsfx.dialog.Dialog;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -162,11 +161,14 @@ public class WithdrawalViewCB extends CachedViewCB {
                     if (transaction != null) {
                         log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
                     }
+                    else {
+                        log.error("onWithdraw transaction is null");
+                    }
                 }
 
                 @Override
                 public void onFailure(@NotNull Throwable t) {
-                    log.debug("onWithdraw onFailure");
+                    log.error("onWithdraw onFailure");
                 }
             };
 
@@ -179,7 +181,7 @@ public class WithdrawalViewCB extends CachedViewCB {
                             "You receive in total: " +
                             formatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
                             "Are you sure you withdraw that amount?");
-            if (response == Dialog.Actions.OK) {
+            if (Popups.isOK(response)) {
                 try {
                     walletFacade.sendFunds(
                             withdrawFromTextField.getText(), withdrawToTextField.getText(),

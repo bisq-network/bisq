@@ -109,6 +109,7 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
                 actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {
+                        getProperties().put("type", "COPY");
                         Clipboard clipboard = Clipboard.getSystemClipboard();
                         ClipboardContent content = new ClipboardContent();
                         content.putString(presentationModel.getTransactionId());
@@ -118,6 +119,7 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
                 actions.add(new AbstractAction(BSResources.get("shared.close")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {
+                        getProperties().put("type", "CLOSE");
                         try {
                             if (parent instanceof MultiStepNavigation)
                                 ((MultiStepNavigation) parent).nextStep(RegistrationViewCB.this);

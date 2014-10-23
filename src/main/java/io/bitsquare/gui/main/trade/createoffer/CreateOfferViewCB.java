@@ -191,6 +191,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
             actions.add(new AbstractAction(BSResources.get("shared.close")) {
                 @Override
                 public void handle(ActionEvent actionEvent) {
+                    getProperties().put("type", "CLOSE");
                     Dialog.Actions.CLOSE.handle(actionEvent);
                     overlayManager.removeBlurContent();
                 }
@@ -353,6 +354,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
                 actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {
+                        getProperties().put("type", "COPY");
                         Clipboard clipboard = Clipboard.getSystemClipboard();
                         ClipboardContent content = new ClipboardContent();
                         content.putString(presentationModel.transactionId.get());
@@ -362,6 +364,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
                 actions.add(new AbstractAction(BSResources.get("shared.close")) {
                     @Override
                     public void handle(ActionEvent actionEvent) {
+                        getProperties().put("type", "CLOSE");
                         try {
                             close();
                         } catch (Exception e) {
