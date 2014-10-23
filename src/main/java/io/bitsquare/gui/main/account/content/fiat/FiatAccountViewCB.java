@@ -164,12 +164,15 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
     void onSelectRegion() {
         countryComboBox.setVisible(true);
         Region region = regionComboBox.getSelectionModel().getSelectedItem();
-        countryComboBox.setItems(presentationModel.getAllCountriesFor(region));
+        if (region != null)
+            countryComboBox.setItems(presentationModel.getAllCountriesFor(region));
     }
 
     @FXML
     void onSelectCountry() {
-        presentationModel.setCountry(countryComboBox.getSelectionModel().getSelectedItem());
+        Country country = countryComboBox.getSelectionModel().getSelectedItem();
+        if (country != null)
+            presentationModel.setCountry(country);
     }
 
     @FXML
