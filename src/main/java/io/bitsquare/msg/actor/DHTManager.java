@@ -21,6 +21,7 @@ import io.bitsquare.msg.actor.command.InitializePeer;
 import io.bitsquare.msg.actor.event.PeerInitialized;
 
 import net.tomp2p.connection.Bindings;
+import net.tomp2p.connection.StandardProtocolFamily;
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.nat.PeerBuilderNAT;
@@ -61,6 +62,7 @@ public class DHTManager extends AbstractActor {
 
                             try {
                                 bindings = new Bindings();
+                                bindings.addProtocol(StandardProtocolFamily.INET);
                                 if (ip.getInterfaceHint() != null) {
                                     bindings.addInterface(ip.getInterfaceHint());
                                 }
