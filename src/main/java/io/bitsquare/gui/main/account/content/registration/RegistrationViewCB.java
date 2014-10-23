@@ -131,9 +131,8 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
                 });
 
                 Popups.openInfo(BSResources.get("You have been successfully registered."),
-                        BSResources.get("The transaction ID for the registration fee payment is:\n\n" +
-                                presentationModel.getTransactionId() +
-                                "\n\n You can now start trading."),
+                        BSResources.get("Congratulation you have been successfully registered.\n\n" +
+                                " You can now start trading."),
                         actions);
             }
         });

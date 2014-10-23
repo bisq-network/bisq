@@ -181,12 +181,15 @@ class OrderBookModel extends UIModel {
             return true;
 
         boolean countryResult = offer.getAcceptedCountries().contains(user.getCurrentBankAccount().getCountry());
+        // for IRC test version deactivate the check
+        countryResult = true;
         if (!countryResult)
             restrictionsInfo.set("This offer requires that the payments account resides in one of those countries:\n" +
                     formatter.countryLocalesToString(offer.getAcceptedCountries()) +
                     "\n\nThe country of your payments account (" + user.getCurrentBankAccount().getCountry().getName() +
                     ") is not included in that list." +
                     "\n\n Do you want to edit your preferences now?");
+
 
         // TODO Not so clear how the restrictions will be handled
         // we might get rid of languages (handles viy arbitrators)
