@@ -26,9 +26,6 @@ import net.tomp2p.nat.PeerBuilderNAT;
 import net.tomp2p.nat.PeerNAT;
 import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
-import net.tomp2p.relay.FutureRelay;
-import net.tomp2p.relay.RconRPC;
-import net.tomp2p.relay.RelayRPC;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
@@ -54,7 +51,6 @@ public class DHTManager extends AbstractActor {
     private Peer peer;
     private PeerDHT peerDHT;
     private PeerNAT peerNAT;
-    private RelayRPC relayRPC;
 
     public DHTManager() {
         receive(ReceiveBuilder
@@ -66,7 +62,6 @@ public class DHTManager extends AbstractActor {
 
                                 peerDHT = new PeerBuilderDHT(peer).start();
                                 peerNAT = new PeerBuilderNAT(peer).start();
-                                relayRPC = new RelayRPC(peer, new RconRPC(peer));
 
                                 sender().tell(new PeerInitialized(peer.peerID(), ip.getPort()), self());
                             } catch (Throwable t) {
