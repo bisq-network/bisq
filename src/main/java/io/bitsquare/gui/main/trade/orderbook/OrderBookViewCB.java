@@ -245,15 +245,22 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
                         Navigation.Item.ACCOUNT_SETUP);
             }
         });
-        Popups.openInfo("You don't have setup a trading account.",
+        Popups.openInfoPopup("You don't have setup a trading account.",
                 "You need to setup your trading account before you can trade.",
                 actions);
     }
 
     private void takeOffer(Offer offer) {
+
         if (presentationModel.isRegistered()) {
-            ((TradeNavigator) parent).takeOffer(presentationModel.getAmountAsCoin(),
-                    presentationModel.getPriceAsCoin(), offer);
+            if (offer.getDirection() == Direction.BUY) {
+                ((TradeNavigator) parent).takeOffer(presentationModel.getAmountAsCoin(),
+                        presentationModel.getPriceAsCoin(), offer);
+            }
+            else {
+                Popups.openInfoPopup("Not implemented yet",
+                        "At the moment you can only take offers in the Sell BTC screen.");
+            }
         }
         else {
             openSetupScreen();

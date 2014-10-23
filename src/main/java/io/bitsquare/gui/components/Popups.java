@@ -50,11 +50,11 @@ public class Popups {
     private static OverlayManager overlayManager;
 
     // Information
-    public static void openInfo(String message) {
-        openInfo(null, message);
+    public static void openInfoPopup(String message) {
+        openInfoPopup(null, message);
     }
 
-    public static void openInfo(String masthead, String message) {
+    public static void openInfoPopup(String masthead, String message) {
         overlayManager.blurContent();
         List<Action> actions = new ArrayList<>();
         actions.add(new AbstractAction(BSResources.get("shared.close")) {
@@ -65,10 +65,10 @@ public class Popups {
                 overlayManager.removeBlurContent();
             }
         });
-        openInfo(masthead, message, actions);
+        openInfoPopup(masthead, message, actions);
     }
 
-    public static void openInfo(String masthead, String message, List<Action> actions) {
+    public static void openInfoPopup(String masthead, String message, List<Action> actions) {
         Dialogs.create()
                 .owner(BitSquareUI.getPrimaryStage())
                 .message(message)

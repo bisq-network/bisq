@@ -195,7 +195,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
                     overlayManager.removeBlurContent();
                 }
             });
-            Popups.openInfo("To ensure that both traders behave fair they need to pay a security deposit.",
+            Popups.openInfoPopup("To ensure that both traders behave fair they need to pay a security deposit.",
                     "The deposit will stay in your local trading wallet until the offer gets accepted by " +
                             "another trader. " +
                             "\nIt will be refunded to you after the trade has successfully completed.",
@@ -374,7 +374,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
                     }
                 });
 
-                Popups.openInfo(BSResources.get("createOffer.success.headline"),
+                Popups.openInfoPopup(BSResources.get("createOffer.success.headline"),
                         BSResources.get("createOffer.success.info"),
                         actions);
             }

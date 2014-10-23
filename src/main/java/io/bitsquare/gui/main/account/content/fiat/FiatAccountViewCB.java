@@ -180,7 +180,7 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
         InputValidator.ValidationResult result = presentationModel.requestSaveBankAccount();
         if (result.isValid) {
             selectionComboBox.getSelectionModel().select(null);
-            Popups.openInfo("Your payments account has been saved.",
+            Popups.openInfoPopup("Your payments account has been saved.",
                     "You can add more accounts or continue to the next step.");
         }
     }

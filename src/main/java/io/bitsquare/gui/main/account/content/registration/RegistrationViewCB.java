@@ -130,7 +130,7 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
                     }
                 });
 
-                Popups.openInfo(BSResources.get("You have been successfully registered."),
+                Popups.openInfoPopup(BSResources.get("You have been successfully registered."),
                         BSResources.get("Congratulation you have been successfully registered.\n\n" +
                                 " You can now start trading."),
                         actions);
