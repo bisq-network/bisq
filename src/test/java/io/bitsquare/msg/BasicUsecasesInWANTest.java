@@ -42,9 +42,7 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.storage.Data;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -65,42 +63,16 @@ public class BasicUsecasesInWANTest {
 
     private final static String SERVER_ID = "digitalocean1.bitsquare.io";
     private final static String SERVER_IP = "188.226.179.109";
+    //private final static String SERVER_IP = "128.199.251.106"; // steves server
     private final static int SERVER_PORT = 5000;
 
     private final static String CLIENT_1_ID = "alice";
     private final static String CLIENT_2_ID = "bob";
-    private final static int CLIENT_1_PORT = 6503;
-    private final static int CLIENT_2_PORT = 6504;
+    private final static int CLIENT_1_PORT = 6505;
+    private final static int CLIENT_2_PORT = 6506;
 
     private Thread serverThread;
 
-    @Before
-    public void startServer() throws Exception {
-        serverThread = new Thread(() -> {
-            Peer peer = null;
-            try {
-                peer = new PeerBuilder(Number160.createHash(SERVER_ID)).ports(SERVER_PORT).start();
-                log.debug("peer started.");
-                while (true) {
-                    for (PeerAddress pa : peer.peerBean().peerMap().all()) {
-                        log.debug("peer online (TCP):" + pa);
-                    }
-                    Thread.sleep(2000);
-                }
-            } catch (InterruptedException e) {
-                if (peer != null)
-                    peer.shutdown().awaitUninterruptibly();
-            } catch (IOException e2) {
-                e2.printStackTrace();
-            }
-        });
-        serverThread.start();
-    }
-
-    @After
-    public void stopServer() throws Exception {
-        serverThread.interrupt();
-    }
 
     @Test
     @Ignore
@@ -223,8 +195,9 @@ No future set beforehand, probably an early shutdown / timeout, or use setFailed
 
 
     private PeerDHT startClient(String clientId, int clientPort) throws Exception {
+        Peer peer = null;
         try {
-            Peer peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).behindFirewall().start();
+            peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).behindFirewall().start();
             PeerDHT peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer(new StorageMemory())).start();
 
             PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(SERVER_ID), SERVER_IP, SERVER_PORT,
@@ -242,8 +215,8 @@ No future set beforehand, probably an early shutdown / timeout, or use setFailed
                 if (futureNAT.isSuccess()) {
                     FutureDiscover futureDiscover2 = peer.discover().peerAddress(masterNodeAddress).start();
                     futureDiscover2.awaitUninterruptibly();
-                    if (futureDiscover.isSuccess()) {
-                        log.info("Discover with direct connection successful. Address = " + futureDiscover
+                    if (futureDiscover2.isSuccess()) {
+                        log.info("Discover with direct connection successful. Address = " + futureDiscover2
                                 .peerAddress());
 
                         log.info("Automatic port forwarding is setup. Address = " +
@@ -279,6 +252,7 @@ No future set beforehand, probably an early shutdown / timeout, or use setFailed
             log.error("Bootstrap in relay mode  failed " + e.getMessage());
             e.printStackTrace();
             Assert.fail("Bootstrap in relay mode  failed " + e.getMessage());
+            peer.shutdown().awaitUninterruptibly();
             return null;
         }
     }

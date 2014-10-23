@@ -60,8 +60,8 @@ public class BasicUsecasesInLANTest {
 
     private final static String CLIENT_1_ID = "alice";
     private final static String CLIENT_2_ID = "bob";
-    private final static int CLIENT_1_PORT = 6500;
-    private final static int CLIENT_2_PORT = 6501;
+    private final static int CLIENT_1_PORT = 6510;
+    private final static int CLIENT_2_PORT = 6511;
 
     private Thread serverThread;
 
