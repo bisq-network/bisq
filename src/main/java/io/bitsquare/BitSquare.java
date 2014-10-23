@@ -45,6 +45,7 @@ public class BitSquare {
 
     private static String appName = "Bitsquare";
     private static int clientPort;
+    private static String interfaceHint;
 
     public static String getAppName() {
         return appName;
@@ -70,6 +71,10 @@ public class BitSquare {
                 appName = appName + "-" + namespace.getString(BitsquareArgumentParser.NAME_FLAG);
             }
 
+            if (namespace.getString(BitsquareArgumentParser.INFHINT_FLAG) != null) {
+                interfaceHint = namespace.getString(BitsquareArgumentParser.INFHINT_FLAG);
+            }
+
             if (namespace.getBoolean(BitsquareArgumentParser.SEED_FLAG) == true) {
                 Integer port = BitsquareArgumentParser.PORT_DEFAULT;
                 if (namespace.getString(BitsquareArgumentParser.PORT_FLAG) != null) {
@@ -80,7 +85,7 @@ public class BitSquare {
 
                 ActorRef seedNode = actorSystem.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
                 Inbox inbox = Inbox.create(actorSystem);
-                inbox.send(seedNode, new InitializePeer(Number160.createHash("localhost"), port, null));
+                inbox.send(seedNode, new InitializePeer(Number160.createHash("localhost"), port, interfaceHint, null));
 
                 Thread seedNodeThread = new Thread(() -> {
                     Boolean quit = false;
