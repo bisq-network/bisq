@@ -294,11 +294,11 @@ public class MainViewCB extends ViewCB<MainPM> {
 
         Label loadingLabel = new Label();
         loadingLabel.setAlignment(Pos.CENTER);
-        loadingLabel.setPadding(new Insets(80, 0, 0, 0));
+        loadingLabel.setPadding(new Insets(60, 0, 0, 0));
         loadingLabel.textProperty().bind(presentationModel.splashScreenInfoText);
 
         ProgressBar progressBar = new ProgressBar();
-        progressBar.setPrefWidth(200);
+        progressBar.setPrefWidth(240);
         progressBar.progressProperty().bind(presentationModel.networkSyncProgress);
 
         vBox.getChildren().addAll(logo, loadingLabel, progressBar);
@@ -337,7 +337,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         sellButton = addNavButton(leftNavPane, "Sell BTC", Navigation.Item.SELL);
 
         ordersButtonButtonPane = new Pane();
-        ordersButton = addNavButton(ordersButtonButtonPane, "Orders", Navigation.Item.ORDERS);
+        ordersButton = addNavButton(ordersButtonButtonPane, "Portfolio", Navigation.Item.ORDERS);
         leftNavPane.getChildren().add(ordersButtonButtonPane);
 
         fundsButton = addNavButton(leftNavPane, "Funds", Navigation.Item.FUNDS);

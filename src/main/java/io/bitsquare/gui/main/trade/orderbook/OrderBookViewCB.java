@@ -120,7 +120,7 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
 
         table.getSortOrder().add(priceColumn);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label("No offers available.\nTry to change your filter or account settings.");
+        Label placeholder = new Label("Currently there are no offers available");
         placeholder.setWrapText(true);
         table.setPlaceholder(placeholder);
 
@@ -132,6 +132,10 @@ public class OrderBookViewCB extends CachedViewCB<OrderBookPM> {
         collapse = ImageUtil.getImageViewById(ImageUtil.COLLAPSE);
         showAdvancedSettingsButton.setGraphic(expand);
 
+        // for irc demo
+        showAdvancedSettingsButton.setVisible(false);
+        showAdvancedSettingsButton.setManaged(false);
+        
         super.initialize(url, rb);
     }
 

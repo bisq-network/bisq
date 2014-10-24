@@ -30,10 +30,10 @@
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
 
-    <TitledGroupBg text="Fund the registration fee" GridPane.rowSpan="4"/>
+    <TitledGroupBg text="Complete the registration" GridPane.rowSpan="4"/>
 
-    <Label text="Registration fee:" GridPane.rowIndex="0">
-        <GridPane.margin>
+    <Label text="Registration costs:" GridPane.rowIndex="0">
+    <GridPane.margin>
             <Insets top="10.0"/>
         </GridPane.margin>
     </Label>
@@ -62,7 +62,7 @@
     </BalanceTextField>
 
     <InfoDisplay gridPane="$root" onAction="#onOpenHelp" rowIndex="3"
-                 text="You need to pay a tiny registration fee which is needed for storing your encrypted account data in the blockchain. That will be used in the trade process for account verification."/>
+                 text="You need to pay a 0.0002 BTC which is needed for storing your encrypted account data in the blockchain. That will be used in the trade process for account verification."/>
 
     <Button fx:id="payButton" text="Pay registration fee" onAction="#onPayFee" GridPane.columnIndex="1"
             GridPane.rowIndex="4"
