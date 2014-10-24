@@ -241,10 +241,12 @@ No future set beforehand, probably an early shutdown / timeout, or use setFailed
                 FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
                 futureNAT.awaitUninterruptibly();
                 if (futureNAT.isSuccess()) {
+                    log.info("Automatic port forwarding is setup. Address = " +
+                            futureNAT.peerAddress());
                     FutureDiscover futureDiscover2 = peer.discover().peerAddress(masterNodeAddress).start();
                     futureDiscover2.awaitUninterruptibly();
                     if (futureDiscover2.isSuccess()) {
-                        log.info("Discover with direct connection successful. Address = " + futureDiscover2
+                        log.info("Discover with automatic port forwarding successful. Address = " + futureDiscover2
                                 .peerAddress());
 
                         log.info("Automatic port forwarding is setup. Address = " +
@@ -261,10 +263,7 @@ No future set beforehand, probably an early shutdown / timeout, or use setFailed
                     FutureRelayNAT futureRelayNAT = peerNAT.startRelay(futureDiscover, futureNAT);
                     futureRelayNAT.awaitUninterruptibly();
                     if (futureRelayNAT.isSuccess()) {
-                        log.info("Bootstrap using relay successful. Address = " +
-                                peer.peerAddress());
-                        futureRelayNAT.shutdown();
-                        peer.shutdown().awaitUninterruptibly();
+                        log.info("Bootstrap using relay successful. Address = " + peer.peerAddress());
                         return peerDHT;
                     }
                     else {
