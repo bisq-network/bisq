@@ -107,7 +107,7 @@ class MainModel extends UIModel {
         // For testing with the serverside seednode we need the BootstrappedPeerFactory which gets started form 
         // messageFacade.init
 
-        messageFacade.init(BitSquare.getClientPort(), new BootstrapListener() {
+        messageFacade.init(BitSquare.getPort(), new BootstrapListener() {
             @Override
             public void onCompleted() {
                 messageFacadeInited = true;

@@ -77,7 +77,7 @@ public class DHTTestController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        messageFacade.init(BitSquare.getClientPort(), new BootstrapListener() {
+        messageFacade.init(BitSquare.getPort(), new BootstrapListener() {
             @Override
             public void onCompleted() {
                 onMessageFacadeInitialised();

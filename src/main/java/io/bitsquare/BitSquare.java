@@ -23,12 +23,16 @@ import io.bitsquare.msg.actor.command.InitializePeer;
 import io.bitsquare.msg.actor.event.PeerInitialized;
 import io.bitsquare.util.BitsquareArgumentParser;
 
+import java.net.UnknownHostException;
+
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 import javafx.application.Application;
 
-import net.tomp2p.connection.Ports;
 import net.tomp2p.peers.Number160;
+import net.tomp2p.peers.PeerAddress;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,15 +49,15 @@ public class BitSquare {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
 
     private static String appName = "Bitsquare";
-    private static int clientPort;
+    private static int port;
     private static String interfaceHint;
 
     public static String getAppName() {
         return appName;
     }
 
-    public static int getClientPort() {
-        return clientPort;
+    public static int getPort() {
+        return port;
     }
 
     public static void main(String[] args) {
@@ -72,26 +76,39 @@ public class BitSquare {
                 appName = appName + "-" + namespace.getString(BitsquareArgumentParser.NAME_FLAG);
             }
 
+            port = BitsquareArgumentParser.PORT_DEFAULT;
+            if (namespace.getString(BitsquareArgumentParser.PORT_FLAG) != null) {
+                port = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
+            }
+
             if (namespace.getString(BitsquareArgumentParser.INFHINT_FLAG) != null) {
                 interfaceHint = namespace.getString(BitsquareArgumentParser.INFHINT_FLAG);
             }
 
-            if (namespace.getBoolean(BitsquareArgumentParser.SEED_FLAG) == true) {
+            if (namespace.getBoolean(BitsquareArgumentParser.BOOTSTRAP_FLAG) == true) {
                 String seedID = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1.getId();
-                if (namespace.getString(BitsquareArgumentParser.SEED_ID_FLAG) != null) {
-                    seedID = namespace.getString(BitsquareArgumentParser.SEED_ID_FLAG);
-                }
-
-                Integer port = BitsquareArgumentParser.PORT_DEFAULT;
-                if (namespace.getString(BitsquareArgumentParser.PORT_FLAG) != null) {
-                    port = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
+                if (namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG) != null) {
+                    seedID = namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG);
                 }
                 
                 ActorSystem actorSystem = ActorSystem.create(getAppName());
 
+                final Set<PeerAddress> peerAddresses = new HashSet<PeerAddress>();
+                final String sid = seedID;
+                SeedNodeAddress.StaticSeedNodeAddresses.getAllSeedNodeAddresses().forEach(a -> {
+                            if (!a.getId().equals(sid)) {
+                                try {
+                                    peerAddresses.add(new PeerAddress(Number160.createHash(a.getId()),a.getIp(),
+                                            a.getPort(), a.getPort()));
+                                } catch (UnknownHostException uhe) {
+                                   log.error("Unknown Host ["+a.getIp()+"]: "+uhe.getMessage());
+                                }
+                            }
+                        });
+
                 ActorRef seedNode = actorSystem.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
                 Inbox inbox = Inbox.create(actorSystem);
-                inbox.send(seedNode, new InitializePeer(Number160.createHash(seedID), port, interfaceHint, null));
+                inbox.send(seedNode, new InitializePeer(Number160.createHash(sid), port, interfaceHint, peerAddresses));
 
                 Thread seedNodeThread = new Thread(() -> {
                     Boolean quit = false;
@@ -122,9 +139,6 @@ public class BitSquare {
                 seedNodeThread.start();
             }
             else {
-                clientPort = new Ports().tcpPort(); // default we use a random port for the client
-                if (namespace.getString(BitsquareArgumentParser.PORT_FLAG) != null)
-                    clientPort = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
                 
                 Application.launch(BitSquareUI.class, args);
             }

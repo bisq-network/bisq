@@ -67,7 +67,9 @@ public class DHTManager extends AbstractActor {
                                     bindings.addInterface(ip.getInterfaceHint());
                                 }
                                 peer = new PeerBuilder(ip.getPeerId()).ports(ip.getPort()).bindings(bindings).start();
-
+                                if (ip.getBootstrapPeers() != null && ip.getBootstrapPeers().size() > 0) {
+                                    peer.bootstrap().bootstrapTo(ip.getBootstrapPeers()).start();
+                                }
                                 peerDHT = new PeerBuilderDHT(peer).start();
                                 peerNAT = new PeerBuilderNAT(peer).start();
 
