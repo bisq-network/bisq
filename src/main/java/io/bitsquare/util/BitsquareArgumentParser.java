@@ -25,6 +25,15 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
+/*
+optional arguments:
+  -h, --help                                show this help message and exit
+  -s, --seed                                Start as DHT seed peer, no UI. (default: false)
+  -d PEERID, --peerid PEERID                Seed peer  ID.  (default: digitalocean1.bitsquare.io)
+  -p PORT, --port PORT                      IP port to listen on. (default: 5000)
+  -i INTERFACE, --interface INTERFACE       Network interface to listen on.
+  -n NAME, --name NAME                      Append name to application name.
+ */
 public class BitsquareArgumentParser {
 
     public static String SEED_FLAG = "seed";
@@ -39,19 +48,18 @@ public class BitsquareArgumentParser {
     public BitsquareArgumentParser() {
         parser = ArgumentParsers.newArgumentParser("BitSquare")
                 .defaultHelp(true)
-                .description("BitSquare decentralized bitcoin exchange.");
+                .description("BitSquare - The decentralized bitcoin exchange.");
         parser.addArgument("-s", "--" + SEED_FLAG)
                 .action(Arguments.storeTrue())
                 .help("Start as DHT seed peer, no UI.");
         parser.addArgument("-d", "--" + PEER_ID_FLAG)
                 .setDefault(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1.getId())
                 .help("Seed peer ID.");
-        parser.addArgument("-p", "--"+PORT_FLAG)
-                .setDefault(PORT_DEFAULT)
+        parser.addArgument("-p", "--" + PORT_FLAG)
                 .help("IP port to listen on.");
         parser.addArgument("-i", "--" + INFHINT_FLAG)
                 .help("Network interface to listen on.");
-        parser.addArgument("-n", "--"+NAME_FLAG)
+        parser.addArgument("-n", "--" + NAME_FLAG)
                 .help("Append name to application name.");
     }
 

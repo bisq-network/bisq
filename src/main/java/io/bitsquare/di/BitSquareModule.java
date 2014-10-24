@@ -118,8 +118,8 @@ class StaticSeedNodeAddressesProvider implements Provider<SeedNodeAddress.Static
         String seedNodeFromConfig = BitSquareModule.properties.getProperty("defaultSeedNode");
 
         // Set default 
-        SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST;
-        //SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1;
+        //SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST;
+        SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1;
 
         // if defined in config we override the above
 //        if (seedNodeFromConfig != null)
@@ -146,8 +146,8 @@ class NetworkParametersProvider implements Provider<NetworkParameters> {
 
         // Set default
         // String networkType= WalletFacade.MAIN_NET;
-        //String networkType = WalletFacade.TEST_NET;
-        String networkType = WalletFacade.REG_TEST_NET;
+        String networkType = WalletFacade.TEST_NET;
+        //String networkType = WalletFacade.REG_TEST_NET;
 
         if (networkTypeFromConfig != null)
             networkType = networkTypeFromConfig;

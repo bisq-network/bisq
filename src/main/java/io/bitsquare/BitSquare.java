@@ -31,6 +31,7 @@ import java.util.concurrent.TimeoutException;
 
 import javafx.application.Application;
 
+import net.tomp2p.connection.Ports;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 
@@ -49,15 +50,15 @@ public class BitSquare {
     private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
 
     private static String appName = "Bitsquare";
-    private static int port;
+    private static int clientPort;
     private static String interfaceHint;
 
     public static String getAppName() {
         return appName;
     }
 
-    public static int getPort() {
-        return port;
+    public static int getClientPort() {
+        return clientPort;
     }
 
     public static void main(String[] args) {
@@ -76,13 +77,13 @@ public class BitSquare {
                 appName = appName + "-" + namespace.getString(BitsquareArgumentParser.NAME_FLAG);
             }
 
-            port = BitsquareArgumentParser.PORT_DEFAULT;
-            if (namespace.getString(BitsquareArgumentParser.PORT_FLAG) != null) {
-                port = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
-            }
-
             if (namespace.getString(BitsquareArgumentParser.INFHINT_FLAG) != null) {
                 interfaceHint = namespace.getString(BitsquareArgumentParser.INFHINT_FLAG);
+            }
+
+            int port = -1;
+            if (namespace.getString(BitsquareArgumentParser.PORT_FLAG) != null) {
+                port = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
             }
 
             if (namespace.getBoolean(BitsquareArgumentParser.SEED_FLAG) == true) {
@@ -90,25 +91,28 @@ public class BitSquare {
                 if (namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG) != null) {
                     seedID = namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG);
                 }
-                
+
                 ActorSystem actorSystem = ActorSystem.create(getAppName());
 
                 final Set<PeerAddress> peerAddresses = new HashSet<PeerAddress>();
                 final String sid = seedID;
                 SeedNodeAddress.StaticSeedNodeAddresses.getAllSeedNodeAddresses().forEach(a -> {
-                            if (!a.getId().equals(sid)) {
-                                try {
-                                    peerAddresses.add(new PeerAddress(Number160.createHash(a.getId()),a.getIp(),
-                                            a.getPort(), a.getPort()));
-                                } catch (UnknownHostException uhe) {
-                                   log.error("Unknown Host ["+a.getIp()+"]: "+uhe.getMessage());
-                                }
-                            }
-                        });
+                    if (!a.getId().equals(sid)) {
+                        try {
+                            peerAddresses.add(new PeerAddress(Number160.createHash(a.getId()), a.getIp(),
+                                    a.getPort(), a.getPort()));
+                        } catch (UnknownHostException uhe) {
+                            log.error("Unknown Host [" + a.getIp() + "]: " + uhe.getMessage());
+                        }
+                    }
+                });
+
+                int serverPort = (port == -1) ? BitsquareArgumentParser.PORT_DEFAULT : port;
 
                 ActorRef seedNode = actorSystem.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
                 Inbox inbox = Inbox.create(actorSystem);
-                inbox.send(seedNode, new InitializePeer(Number160.createHash(sid), port, interfaceHint, peerAddresses));
+                inbox.send(seedNode, new InitializePeer(Number160.createHash(sid), serverPort, interfaceHint,
+                        peerAddresses));
 
                 Thread seedNodeThread = new Thread(() -> {
                     Boolean quit = false;
@@ -139,7 +143,8 @@ public class BitSquare {
                 seedNodeThread.start();
             }
             else {
-                
+                // We use a random port for the client if no port is passed to the application
+                clientPort = (port == -1) ? new Ports().tcpPort() : port;
                 Application.launch(BitSquareUI.class, args);
             }
         }

@@ -44,7 +44,6 @@ import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.dht.StorageLayer;
 import net.tomp2p.futures.BaseFuture;
 import net.tomp2p.futures.BaseFutureListener;
-import net.tomp2p.futures.FutureBootstrap;
 import net.tomp2p.futures.FutureDiscover;
 import net.tomp2p.nat.FutureNAT;
 import net.tomp2p.nat.FutureRelayNAT;
@@ -56,7 +55,6 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMapChangeListener;
 import net.tomp2p.peers.PeerStatatistic;
-import net.tomp2p.relay.FutureRelay;
 import net.tomp2p.storage.Storage;
 
 import org.jetbrains.annotations.NotNull;
@@ -67,7 +65,7 @@ import org.slf4j.LoggerFactory;
 import static io.bitsquare.msg.SeedNodeAddress.StaticSeedNodeAddresses;
 
 /**
- * Creates a DHT peer and bootstrap to a seed node
+ * Creates a DHT peer and bootstrap to the network via a seed node
  */
 @Immutable
 public class BootstrappedPeerFactory {
@@ -116,88 +114,6 @@ public class BootstrappedPeerFactory {
             Peer peer = new PeerBuilder(keyPair).ports(port).behindFirewall().start();
             PeerDHT peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer(storage)).start();
 
-            PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(seedNodeAddress.getId()),
-                    InetAddress.getByName(seedNodeAddress.getIp()),
-                    seedNodeAddress.getPort(),
-                    seedNodeAddress.getPort());
-            FutureDiscover futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
-            futureDiscover.awaitUninterruptibly();
-            if (futureDiscover.isSuccess()) {
-                log.info("Discover with direct connection successful. Address = " + futureDiscover.peerAddress());
-                settableFuture.set(peerDHT);
-                return settableFuture;
-            }
-            else {
-                PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
-                FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
-                futureNAT.awaitUninterruptibly();
-                if (futureNAT.isSuccess()) {
-                    log.info("Automatic port forwarding is setup. Address = " +
-                            futureNAT.peerAddress());
-
-//                    settableFuture.set(peerDHT);
-//                    return settableFuture;
-
-                    futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
-                    futureDiscover.awaitUninterruptibly();
-                    if (futureDiscover.isSuccess()) {
-                        log.info("Discover with automatic port forwarding successful. Address = " + futureDiscover
-                                .peerAddress());
-                        settableFuture.set(peerDHT);
-                        return settableFuture;
-                    }
-                    else {
-                        log.error("Discover with automatic port forwarding failed " + futureDiscover.failedReason());
-                        settableFuture.setException(new Exception("Discover with automatic port forwarding failed " +
-                                futureDiscover.failedReason()));
-                        return settableFuture;
-                    }
-
-                }
-                else {
-                    // consider to use a dedicated relay node (Pawan Kumar use that approach)
-                    // PeerAddress relay = new PeerAddress(new Number160(new Random(43L)), 
-                    // InetAddress.getByName("relay-ip"), 
-                    //        5000, 5000);
-                    // peerNAT.addRelay(relay);
-
-                    FutureRelayNAT futureRelayNAT = peerNAT.startRelay(futureDiscover, futureNAT);
-                    futureRelayNAT.awaitUninterruptibly();
-                    if (futureRelayNAT.isSuccess()) {
-                        log.info("Bootstrap using relay successful. Address = " +
-                                futureDiscover.peerAddress());
-
-                        settableFuture.set(peerDHT);
-                        return settableFuture;
-                    }
-                    else {
-                        log.error("Bootstrap using relay failed " + futureRelayNAT.failedReason());
-                        settableFuture.setException(new Exception("Bootstrap in relay mode  failed " + futureRelayNAT
-                                .failedReason()));
-                        return settableFuture;
-                    }
-                }
-            }
-        } catch (IOException e) {
-            log.error("Bootstrap in relay mode  failed " + e.getMessage());
-            e.printStackTrace();
-            settableFuture.setException(e);
-            return settableFuture;
-        }
-    }
-
-    public ListenableFuture<PeerDHT> startOld(int port) {
-        try {
-           /* ChannelServerConficuration csc = PeerBuilder.createDefaultChannelServerConfiguration();
-            csc.idleTCPSeconds(20).idleUDPSeconds(20).connectionTimeoutTCPMillis(20000);
-            Peer peer = new PeerBuilder(keyPair).ports(port).channelServerConfiguration(csc).start();*/
-            Peer peer = new PeerBuilder(keyPair).ports(port).portsExternal(port).start();
-             /* Peer peer = new PeerBuilder(keyPair).ports(port).portsExternal(port)
-                    .channelServerConfiguration(csc).start();
-          */
-            PeerDHT peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer
-                    (storage)).start();
-
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
                 @Override
                 public void peerInserted(PeerAddress peerAddress, boolean verified) {
@@ -211,21 +127,21 @@ public class BootstrappedPeerFactory {
 
                 @Override
                 public void peerUpdated(PeerAddress peerAddress, PeerStatatistic peerStatistics) {
-                    //log.debug("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
+                    // log.debug("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
                 }
             });
 
             // We save last successful bootstrap method.
             // Reset it to "default" after 5 start ups.
-            Object lastSuccessfulBootstrapCounterObject = persistence.read(this, "lastSuccessfulBootstrapCounter");
-            int lastSuccessfulBootstrapCounter = 0;
-            if (lastSuccessfulBootstrapCounterObject != null)
-                lastSuccessfulBootstrapCounter = (int) lastSuccessfulBootstrapCounterObject;
+            Object bootstrapCounterObject = persistence.read(this, "bootstrapCounter");
+            int bootstrapCounter = 0;
+            if (bootstrapCounterObject instanceof Integer)
+                bootstrapCounter = (int) bootstrapCounterObject + 1;
 
-            if (lastSuccessfulBootstrapCounter > 5)
+            if (bootstrapCounter > 5)
                 persistence.write(this, "lastSuccessfulBootstrap", "default");
 
-            persistence.write(this, "lastSuccessfulBootstrapCounter", lastSuccessfulBootstrapCounter + 1);
+            persistence.write(this, "bootstrapCounter", bootstrapCounter);
 
 
             String lastSuccessfulBootstrap = (String) persistence.read(this, "lastSuccessfulBootstrap");
@@ -233,36 +149,157 @@ public class BootstrappedPeerFactory {
                 lastSuccessfulBootstrap = "default";
 
             // TODO
-            lastSuccessfulBootstrap = "default";
+            // lastSuccessfulBootstrap = "default";
 
             log.debug("lastSuccessfulBootstrap = " + lastSuccessfulBootstrap);
+            FutureDiscover futureDiscover;
             switch (lastSuccessfulBootstrap) {
                 case "relay":
-                    PeerNAT nodeBehindNat = new PeerBuilderNAT(peerDHT.peer()).start();
-                    bootstrapWithRelay(peerDHT, nodeBehindNat);
+                    futureDiscover = peerDHT.peer().discover().peerAddress(getBootstrapAddress()).start();
+                    PeerNAT peerNAT = new PeerBuilderNAT(peerDHT.peer()).start();
+                    FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
+                    bootstrapWithRelay(peerDHT, peerNAT, futureDiscover, futureNAT);
                     break;
-                case "startPortForwarding":
-                    FutureDiscover futureDiscover =
-                            peerDHT.peer().discover().peerAddress(getBootstrapAddress()).start();
-                    bootstrapWithPortForwarding(peerDHT, futureDiscover);
+                case "portForwarding":
+                    futureDiscover = peerDHT.peer().discover().peerAddress(getBootstrapAddress()).start();
+                    tryPortForwarding(peerDHT, futureDiscover);
                     break;
                 case "default":
                 default:
-                    bootstrap(peerDHT);
+                    discover(peerDHT);
                     break;
             }
         } catch (IOException e) {
-            log.error("Exception: " + e);
+            setState("Cannot create peer with port: " + port + ". Exeption: " + e, false);
             settableFuture.setException(e);
         }
 
         return settableFuture;
     }
 
+    // 1. Attempt: Try to discover our outside visible address
+    private void discover(PeerDHT peerDHT) {
+        FutureDiscover futureDiscover = peerDHT.peer().discover().peerAddress(getBootstrapAddress()).start();
+        futureDiscover.addListener(new BaseFutureListener<BaseFuture>() {
+            @Override
+            public void operationComplete(BaseFuture future) throws Exception {
+                if (future.isSuccess()) {
+                    setState("We are visible to other peers: My address visible to " +
+                            "the outside is " + futureDiscover.peerAddress());
+                    settableFuture.set(peerDHT);
+                    persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
+                }
+                else {
+                    log.warn("Discover has failed. Reason: " + futureDiscover.failedReason());
+                    setState("We are probably behind a NAT and not reachable to other peers. " +
+                            "We try port forwarding as next step.");
+                    tryPortForwarding(peerDHT, futureDiscover);
+                }
+            }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private 
-    ///////////////////////////////////////////////////////////////////////////////////////////
+            @Override
+            public void exceptionCaught(Throwable t) throws Exception {
+                setState("Exception at discover: " + t.getMessage(), false);
+                settableFuture.setException(t);
+                peerDHT.shutdown().awaitUninterruptibly();
+            }
+        });
+    }
+
+    // 2. Attempt: Try to set up port forwarding with UPNP and NAT-PMP
+    private void tryPortForwarding(PeerDHT peerDHT, FutureDiscover futureDiscover) {
+        PeerNAT peerNAT = new PeerBuilderNAT(peerDHT.peer()).start();
+        FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
+        futureNAT.addListener(new BaseFutureListener<BaseFuture>() {
+            @Override
+            public void operationComplete(BaseFuture future) throws Exception {
+                if (future.isSuccess()) {
+                    setState("Automatic port forwarding is setup. Address = " + futureNAT.peerAddress());
+                    // we need a second discover process
+                    discoverAfterPortForwarding(peerDHT);
+                }
+                else {
+                    log.warn("Port forwarding has failed. Reason: " + futureNAT.failedReason());
+                    setState("Port forwarding has failed. We try to use a relay as next step.");
+                    bootstrapWithRelay(peerDHT, peerNAT, futureDiscover, futureNAT);
+                }
+            }
+
+            @Override
+            public void exceptionCaught(Throwable t) throws Exception {
+                setState("Exception at port forwarding: " + t.getMessage(), false);
+                settableFuture.setException(t);
+                peerDHT.shutdown().awaitUninterruptibly();
+            }
+        });
+    }
+
+    // Try to determine our outside visible address after port forwarding is setup
+    private void discoverAfterPortForwarding(PeerDHT peerDHT) {
+        FutureDiscover futureDiscover = peerDHT.peer().discover().peerAddress(getBootstrapAddress()).start();
+        futureDiscover.addListener(new BaseFutureListener<BaseFuture>() {
+            @Override
+            public void operationComplete(BaseFuture future) throws Exception {
+                if (future.isSuccess()) {
+                    setState("Discover with automatic port forwarding was successful. " +
+                            "My address visible to the outside is = " + futureDiscover.peerAddress());
+                    settableFuture.set(peerDHT);
+                    persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "portForwarding");
+                }
+                else {
+                    setState("Discover with automatic port forwarding has failed " + futureDiscover
+                            .failedReason(), false);
+                    settableFuture.setException(new Exception("Discover with automatic port forwarding failed " +
+                            futureDiscover.failedReason()));
+                    persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
+                    peerDHT.shutdown().awaitUninterruptibly();
+                }
+            }
+
+            @Override
+            public void exceptionCaught(Throwable t) throws Exception {
+                setState("Exception at discover: " + t, false);
+                persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
+                settableFuture.setException(t);
+                peerDHT.shutdown().awaitUninterruptibly();
+            }
+        });
+    }
+
+    // 3. Attempt: We try to use another peer as relay
+    private void bootstrapWithRelay(PeerDHT peerDHT, PeerNAT peerNAT, FutureDiscover futureDiscover,
+                                    FutureNAT futureNAT) {
+        FutureRelayNAT futureRelayNAT = peerNAT.startRelay(futureDiscover, futureNAT);
+        futureRelayNAT.addListener(new BaseFutureListener<BaseFuture>() {
+            @Override
+            public void operationComplete(BaseFuture future) throws Exception {
+                if (future.isSuccess()) {
+                    setState("Bootstrap using relay was successful. " +
+                            "My address visible to the outside is = " + futureDiscover.peerAddress());
+                    settableFuture.set(peerDHT);
+                    persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "relay");
+                }
+                else {
+                    setState("Bootstrap using relay has failed " + futureDiscover.failedReason(), false);
+                    settableFuture.setException(new Exception("Bootstrap using relay failed " +
+                            futureDiscover.failedReason()));
+                    persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
+                    futureRelayNAT.shutdown();
+                    peerDHT.shutdown().awaitUninterruptibly();
+                }
+            }
+
+            @Override
+            public void exceptionCaught(Throwable t) throws Exception {
+                setState("Exception at bootstrapWithRelay: " + t, false);
+                persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
+                settableFuture.setException(t);
+                futureRelayNAT.shutdown();
+                peerDHT.shutdown().awaitUninterruptibly();
+            }
+        });
+
+    }
 
     private PeerAddress getBootstrapAddress() {
         try {
@@ -276,187 +313,15 @@ public class BootstrappedPeerFactory {
         }
     }
 
-    private void bootstrap(PeerDHT peerDHT) {
-        // Check if peer is reachable from outside
-        FutureDiscover futureDiscover = peerDHT.peer().discover().peerAddress(getBootstrapAddress()).start();
-        BootstrappedPeerFactory ref = this;
-        futureDiscover.addListener(new BaseFutureListener<BaseFuture>() {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception {
-                if (future.isSuccess()) {
-                    // We are not behind a NAT and reachable to other peers
-                    log.debug("We are not behind a NAT and reachable to other peers: My address visible to the " +
-                            "outside is " + futureDiscover.peerAddress());
-                    requestBootstrapPeerMap();
-                    setConnectionState("We are not behind a NAT and reachable to other peers: My address visible to " +
-                            "the " +
-                            "outside is " + futureDiscover.peerAddress());
-                    settableFuture.set(peerDHT);
-
-                    persistence.write(ref, "lastSuccessfulBootstrap", "default");
-                }
-                else {
-                    log.warn("Discover has failed. Reason: " + futureDiscover.failedReason());
-                    log.warn("We are probably behind a NAT and not reachable to other peers. We try port forwarding " +
-                            "as next step.");
-
-                    setConnectionState("We are probably behind a NAT and not reachable to other peers. We try port " +
-                            "forwarding " +
-                            "as next step.");
-
-                    bootstrapWithPortForwarding(peerDHT, futureDiscover);
-                }
-            }
-
-            @Override
-            public void exceptionCaught(Throwable t) throws Exception {
-                log.error("Exception at discover: " + t);
-                settableFuture.setException(t);
-            }
-        });
+    private void setState(String state) {
+        setState(state, true);
     }
 
-    private void bootstrapWithPortForwarding(PeerDHT peerDHT, FutureDiscover futureDiscover) {
-        // Assume we are behind a NAT device
-        PeerNAT nodeBehindNat = new PeerBuilderNAT(peerDHT.peer()).start();
-
-        // Try to set up port forwarding with UPNP and NATPMP if peer is not reachable
-        FutureNAT futureNAT = nodeBehindNat.startSetupPortforwarding(futureDiscover);
-        BootstrappedPeerFactory ref = this;
-        futureNAT.addListener(new BaseFutureListener<BaseFuture>() {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception {
-                if (future.isSuccess()) {
-                    // Port forwarding has succeed
-                    log.debug("Port forwarding was successful. My address visible to the outside is " +
-                            futureNAT.peerAddress());
-                    requestBootstrapPeerMap();
-                    setConnectionState("Port forwarding was successful. My address visible to the outside is " +
-                            futureNAT.peerAddress());
-                    settableFuture.set(peerDHT);
-
-                    persistence.write(ref, "lastSuccessfulBootstrap", "portForwarding");
-                }
-                else {
-                    log.warn("Port forwarding has failed. Reason: " + futureNAT.failedReason());
-                    log.warn("We try to use a relay as next step.");
-
-                    setConnectionState("We try to use a relay as next step.");
-
-                    bootstrapWithRelay(peerDHT, nodeBehindNat);
-                }
-            }
-
-            @Override
-            public void exceptionCaught(Throwable t) throws Exception {
-                log.error("Exception at port forwarding: " + t);
-                settableFuture.setException(t);
-            }
-        });
-    }
-
-    private void bootstrapWithRelay(PeerDHT peerDHT, PeerNAT nodeBehindNat) {
-        // Last resort: we try to use other peers as relays
-
-        // The firewalled flags have to be set, so that other peers don’t add the unreachable peer to their peer maps.
-        Peer peer = peerDHT.peer();
-        PeerAddress serverPeerAddress = peer.peerBean().serverPeerAddress();
-        serverPeerAddress = serverPeerAddress.changeFirewalledTCP(true).changeFirewalledUDP(true);
-        peer.peerBean().serverPeerAddress(serverPeerAddress);
-
-        // Find neighbors
-        FutureBootstrap futureBootstrap = peer.bootstrap().peerAddress(getBootstrapAddress()).start();
-        futureBootstrap.addListener(new BaseFutureListener<BaseFuture>() {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception {
-                if (future.isSuccess()) {
-                    log.debug("Bootstrap was successful. bootstrapTo  = " + futureBootstrap.bootstrapTo());
-
-                    setupRelay(peerDHT, nodeBehindNat, getBootstrapAddress());
-                }
-                else {
-                    log.error("Bootstrap failed. Reason:" + futureBootstrap.failedReason());
-                    settableFuture.setException(new Exception(futureBootstrap.failedReason()));
-                }
-            }
-
-            @Override
-            public void exceptionCaught(Throwable t) throws Exception {
-                log.error("Exception at bootstrap: " + t);
-                settableFuture.setException(t);
-            }
-        });
-    }
-
-    private void setupRelay(PeerDHT peerDHT, PeerNAT nodeBehindNat, PeerAddress bootstrapAddress) {
-        FutureRelay futureRelay = new FutureRelay();
-        futureRelay.addListener(new BaseFutureListener<BaseFuture>() {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception {
-                if (future.isSuccess()) {
-                    log.debug("Start setup relay was successful.");
-                    //futureRelay.relays().forEach(e -> log.debug("remotePeer = " + e.remotePeer()));
-
-                    findNeighbors2(peerDHT, bootstrapAddress);
-                }
-                else {
-                    log.error("setupRelay failed. Reason: " + futureRelay.failedReason());
-                    log.error("Bootstrap failed. We give up...");
-                    settableFuture.setException(new Exception(futureRelay.failedReason()));
-                }
-            }
-
-            @Override
-            public void exceptionCaught(Throwable t) throws Exception {
-                log.error("Exception at setup relay: " + t);
-            }
-        });
-
-        /*DistributedRelay distributedRelay = nodeBehindNat.startSetupRelay(futureRelay);
-        distributedRelay.addRelayListener((distributedRelay1, peerConnection) -> {
-            log.debug("startSetupRelay distributedRelay handler called " + distributedRelay1 + "/" + peerConnection);
-            settableFuture.setException(new Exception("startSetupRelay Failed"));
-        });*/
-    }
-
-    private void findNeighbors2(PeerDHT peerDHT, PeerAddress bootstrapAddress) {
-        // find neighbors again
-        FutureBootstrap futureBootstrap2 = peerDHT.peer().bootstrap().peerAddress(bootstrapAddress).start();
-        BootstrappedPeerFactory ref = this;
-        futureBootstrap2.addListener(new BaseFutureListener<BaseFuture>() {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception {
-                if (future.isSuccess()) {
-                    log.debug("Final bootstrap was successful. bootstrapTo  = " + futureBootstrap2.bootstrapTo());
-                    requestBootstrapPeerMap();
-                    setConnectionState("Final bootstrap was successful. bootstrapTo  = " + futureBootstrap2
-                            .bootstrapTo());
-                    settableFuture.set(peerDHT);
-
-                    persistence.write(ref, "lastSuccessfulBootstrap", "relay");
-                }
-                else {
-                    log.error("Bootstrap 2 failed. Reason:" + futureBootstrap2.failedReason());
-                    log.error("We give up...");
-                    settableFuture.setException(new Exception(futureBootstrap2.failedReason()));
-                }
-            }
-
-            @Override
-            public void exceptionCaught(Throwable t) throws Exception {
-                log.error("Exception at bootstrap 2: " + t);
-                settableFuture.setException(t);
-            }
-        });
-    }
-
-    // TODO we want to get a list of connected nodes form the seed node and save them locally for future bootstrapping
-    // The seed node should only be used if no other known peers are available
-    private void requestBootstrapPeerMap() {
-        log.debug("getBootstrapPeerMap");
-    }
-
-    private void setConnectionState(String state) {
+    private void setState(String state, boolean isSuccess) {
+        if (isSuccess)
+            log.info(state);
+        else
+            log.error(state);
         Platform.runLater(() -> connectionState.set(state));
     }
 }

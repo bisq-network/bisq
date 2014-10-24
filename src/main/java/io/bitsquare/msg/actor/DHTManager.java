@@ -28,6 +28,9 @@ import net.tomp2p.nat.PeerBuilderNAT;
 import net.tomp2p.nat.PeerNAT;
 import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
+import net.tomp2p.peers.PeerAddress;
+import net.tomp2p.peers.PeerMapChangeListener;
+import net.tomp2p.peers.PeerStatatistic;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
@@ -73,12 +76,32 @@ public class DHTManager extends AbstractActor {
                                 peerDHT = new PeerBuilderDHT(peer).start();
                                 peerNAT = new PeerBuilderNAT(peer).start();
 
+                                peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
+                                    @Override
+                                    public void peerInserted(PeerAddress peerAddress, boolean verified) {
+                                        log.debug("Peer inserted: peerAddress=" + peerAddress + ", " +
+                                                "verified=" + verified);
+                                    }
+
+                                    @Override
+                                    public void peerRemoved(PeerAddress peerAddress, PeerStatatistic peerStatistics) {
+                                        log.debug("Peer removed: peerAddress=" + peerAddress + ", " +
+                                                "peerStatistics=" + peerStatistics);
+                                    }
+
+                                    @Override
+                                    public void peerUpdated(PeerAddress peerAddress, PeerStatatistic peerStatistics) {
+                                        // log.debug("Peer updated: peerAddress=" + peerAddress + ", 
+                                        // peerStatistics=" + peerStatistics);
+                                    }
+                                });
+
                                 sender().tell(new PeerInitialized(peer.peerID(), ip.getPort()), self());
                             } catch (Throwable t) {
                                 log.info("The second instance has been started. If that happens at the first instance" +
                                         " we are in trouble... " + t.getMessage());
                                 sender().tell(new PeerInitialized(null, null), self());
-                            } 
+                            }
                         })
                         .matchAny(o -> log.info("received unknown message")).build()
         );
