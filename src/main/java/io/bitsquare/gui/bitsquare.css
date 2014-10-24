@@ -39,12 +39,6 @@ lower gradient color on tab: dddddd
 
 
 /* Main UI */
-#logo-sub-title-label {
-    -fx-font-weight: bold;
-    -fx-font-size: 24;
-    -fx-text-fill: #333333;
-}
-
 #base-content-container {
     -fx-background-color: -bs-bg-grey;
 }

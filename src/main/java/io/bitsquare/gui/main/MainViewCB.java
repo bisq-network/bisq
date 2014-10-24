@@ -292,10 +292,6 @@ public class MainViewCB extends ViewCB<MainPM> {
         ImageView logo = new ImageView();
         logo.setId("image-splash-logo");
 
-        Label subTitle = new Label("The decentralized bitcoin exchange");
-        subTitle.setAlignment(Pos.CENTER);
-        subTitle.setId("logo-sub-title-label");
-
         Label loadingLabel = new Label();
         loadingLabel.setAlignment(Pos.CENTER);
         loadingLabel.setPadding(new Insets(80, 0, 0, 0));
@@ -305,7 +301,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         progressBar.setPrefWidth(200);
         progressBar.progressProperty().bind(presentationModel.networkSyncProgress);
 
-        vBox.getChildren().addAll(logo, subTitle, loadingLabel, progressBar);
+        vBox.getChildren().addAll(logo, loadingLabel, progressBar);
 
         return vBox;
     }
