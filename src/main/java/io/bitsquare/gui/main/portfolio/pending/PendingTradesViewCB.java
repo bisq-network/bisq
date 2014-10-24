@@ -208,7 +208,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         presentationModel.removePendingTrade();
         presentationModel.withdraw(withdrawAddressTextField.getText());
         Platform.runLater(() ->
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO, 
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO,
                         Navigation.Item.CLOSED_TRADES));
     }
 
@@ -358,7 +358,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     feesTextField.setText(presentationModel.getTotalFees());
                     securityDepositTextField.setText(presentationModel.getSecurityDeposit());
                     summaryInfoDisplay.setText("Your security deposit has been refunded to you. " +
-                            "You can review the details to that trade any time in the closed trades section.");
+                            "You can review the details to that trade any time in the closed trades screen.");
 
                     withdrawAmountTextField.setText(presentationModel.getAmountToWithdraw());
                     break;
@@ -433,7 +433,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     feesTextField.setText(presentationModel.getTotalFees());
                     securityDepositTextField.setText(presentationModel.getSecurityDeposit());
                     summaryInfoDisplay.setText("Your security deposit has been refunded to you. " +
-                            "You can review the details to that trade any time in the closed trades section.");
+                            "You can review the details to that trade any time in the closed trades screen.");
 
                     withdrawAmountTextField.setText(presentationModel.getAmountToWithdraw());
                     break;
@@ -452,29 +452,39 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         paymentMethodLabel.setVisible(visible);
         fiatAmountLabel.setVisible(visible);
         holderNameLabel.setVisible(visible);
-        primaryIdLabel.setVisible(visible);
-        secondaryIdLabel.setVisible(visible);
+
+        // irc demo
+        // primaryIdLabel.setVisible(visible);
+        // secondaryIdLabel.setVisible(visible);
+        // primaryIdTextField.setVisible(visible);
+        // secondaryIdTextField.setVisible(visible);
+
         paymentMethodTextField.setVisible(visible);
         paymentsInfoDisplay.setVisible(visible);
         paymentsButton.setVisible(visible);
         fiatAmountTextField.setVisible(visible);
         holderNameTextField.setVisible(visible);
-        primaryIdTextField.setVisible(visible);
-        secondaryIdTextField.setVisible(visible);
+
 
         paymentsGroupBg.setManaged(visible);
         paymentMethodLabel.setManaged(visible);
         fiatAmountLabel.setManaged(visible);
         holderNameLabel.setManaged(visible);
-        primaryIdLabel.setManaged(visible);
-        secondaryIdLabel.setManaged(visible);
+
+        // irc demo
+        // primaryIdLabel.setManaged(visible);
+        // secondaryIdLabel.setManaged(visible);
+        primaryIdLabel.setManaged(false);
+        secondaryIdLabel.setManaged(false);
+        primaryIdTextField.setManaged(false);
+        secondaryIdTextField.setManaged(false);
+
         paymentMethodTextField.setManaged(visible);
         paymentsInfoDisplay.setManaged(visible);
         paymentsButton.setManaged(visible);
         fiatAmountTextField.setManaged(visible);
         holderNameTextField.setManaged(visible);
-        primaryIdTextField.setManaged(visible);
-        secondaryIdTextField.setManaged(visible);
+
 
         if (visible)
             scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);

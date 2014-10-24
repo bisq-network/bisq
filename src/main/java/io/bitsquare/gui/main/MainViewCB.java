@@ -351,6 +351,12 @@ public class MainViewCB extends ViewCB<MainPM> {
         settingsButton = addNavButton(rightNavPane, "Preferences", Navigation.Item.SETTINGS);
         accountButton = addNavButton(rightNavPane, "Account", Navigation.Item.ACCOUNT);
 
+
+        // for irc demo
+        homeButton.setDisable(true);
+        msgButton.setDisable(true);
+        settingsButton.setDisable(true);
+
         onMainNavigationAdded();
     }
 

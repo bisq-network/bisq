@@ -218,7 +218,10 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         balanceLabel.setVisible(true);
         balanceTextField.setVisible(true);
         fundsBoxInfoDisplay.setVisible(true);
-        showAdvancedSettingsButton.setVisible(true);
+
+        // for irc demo
+        //showAdvancedSettingsButton.setVisible(true);
+        showAdvancedSettingsButton.setManaged(false);
 
         if (expand == null) {
             expand = ImageUtil.getImageViewById(ImageUtil.EXPAND);

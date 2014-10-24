@@ -315,7 +315,7 @@ public class TradeManager {
                 offererAsBuyerProtocolMap.put(trade.getId(), buyerAcceptsOfferProtocol);
             }
             else {
-                // We don't store the protocol in case we have already a pending offer. The protocol is only
+                // We don't store the protocol in case we have already an open offer. The protocol is only
                 // temporary used to reply with a reject message.
                 log.trace("offererAsBuyerProtocol not stored as offer is already pending.");
             }

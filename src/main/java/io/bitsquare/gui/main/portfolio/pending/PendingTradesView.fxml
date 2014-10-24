@@ -129,7 +129,8 @@
             <TextField fx:id="paymentMethodTextField" GridPane.rowIndex="6" GridPane.columnIndex="1" editable="false"
                        focusTraversable="false" mouseTransparent="true" managed="false" visible="false"/>
 
-            <Label fx:id="holderNameLabel" text="Receiver name:" GridPane.rowIndex="7" managed="false" visible="false"/>
+            <Label fx:id="holderNameLabel" text="Receivers IRC nickname:" GridPane.rowIndex="7" managed="false"
+                   visible="false"/>
             <TextFieldWithCopyIcon fx:id="holderNameTextField" GridPane.rowIndex="7" GridPane.columnIndex="1"
                                    managed="false" visible="false"/>
 
