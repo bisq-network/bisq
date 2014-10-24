@@ -61,9 +61,10 @@ public class BasicUsecasesInWANTest {
     // update to external ip (whats my ip)
     private final static String CLIENT_IP = "83.36.8.117";
 
-    private final static String SERVER_ID = "digitalocean1.bitsquare.io";
-    private final static String SERVER_IP = "188.226.179.109";
-    //private final static String SERVER_IP = "128.199.251.106"; // steves server
+    //private final static String SERVER_ID = "digitalocean1.bitsquare.io";
+    private final static String SERVER_ID = "digitalocean2.bitsquare.io";  // steve's server
+    //private final static String SERVER_IP = "188.226.179.109";
+    private final static String SERVER_IP = "128.199.251.106"; // steve's server
     private final static int SERVER_PORT = 5000;
 
     private final static String CLIENT_1_ID = "alice";

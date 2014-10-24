@@ -27,7 +27,7 @@ import net.sourceforge.argparse4j.inf.Namespace;
 
 public class BitsquareArgumentParser {
 
-    public static String BOOTSTRAP_FLAG = "bootstrap";
+    public static String SEED_FLAG = "seed";
     public static String PEER_ID_FLAG = "peerid";
     public static String PORT_FLAG = "port";
     public static Integer PORT_DEFAULT = 5000;
@@ -40,17 +40,17 @@ public class BitsquareArgumentParser {
         parser = ArgumentParsers.newArgumentParser("BitSquare")
                 .defaultHelp(true)
                 .description("BitSquare decentralized bitcoin exchange.");
-        parser.addArgument("-b", "--" + BOOTSTRAP_FLAG)
+        parser.addArgument("-s", "--" + SEED_FLAG)
                 .action(Arguments.storeTrue())
-                .help("Start as DHT bootstrap peer, no UI.");
+                .help("Start as DHT seed peer, no UI.");
         parser.addArgument("-d", "--" + PEER_ID_FLAG)
                 .setDefault(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1.getId())
-                .help("Bootstrap peer ID.");
+                .help("Seed peer ID.");
         parser.addArgument("-p", "--"+PORT_FLAG)
                 .setDefault(PORT_DEFAULT)
                 .help("IP port to listen on.");
         parser.addArgument("-i", "--" + INFHINT_FLAG)
-                .help("interface to listen on.");
+                .help("Network interface to listen on.");
         parser.addArgument("-n", "--"+NAME_FLAG)
                 .help("Append name to application name.");
     }

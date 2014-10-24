@@ -85,7 +85,7 @@ public class BitSquare {
                 interfaceHint = namespace.getString(BitsquareArgumentParser.INFHINT_FLAG);
             }
 
-            if (namespace.getBoolean(BitsquareArgumentParser.BOOTSTRAP_FLAG) == true) {
+            if (namespace.getBoolean(BitsquareArgumentParser.SEED_FLAG) == true) {
                 String seedID = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1.getId();
                 if (namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG) != null) {
                     seedID = namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG);
