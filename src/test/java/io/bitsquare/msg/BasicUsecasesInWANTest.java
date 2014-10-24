@@ -61,18 +61,21 @@ public class BasicUsecasesInWANTest {
     // update to external ip (whats my ip)
     private final static String CLIENT_IP = "83.36.8.117";
 
-    private final static String SERVER_ID = "digitalocean1.bitsquare.io";
-    //private final static String SERVER_ID = "digitalocean2.bitsquare.io";  // steve's server
-    private final static String SERVER_IP = "188.226.179.109";
-    //private final static String SERVER_IP = "128.199.251.106"; // steve's server
+    private final static String SERVER_ID_1 = "digitalocean1.bitsquare.io"; // Manfreds server
+    private final static String SERVER_IP_1 = "188.226.179.109"; // Manfreds server
+
+    private final static String SERVER_ID_2 = "digitalocean2.bitsquare.io";  // Steve's server
+    private final static String SERVER_IP_2 = "128.199.251.106"; // Steve's server
+
+    private final static String SERVER_ID = SERVER_ID_1;
+    private final static String SERVER_IP = SERVER_IP_1;
+
     private final static int SERVER_PORT = 5000;
 
     private final static String CLIENT_1_ID = "alice";
     private final static String CLIENT_2_ID = "bob";
     private final static int CLIENT_1_PORT = 6505;
     private final static int CLIENT_2_PORT = 6506;
-
-    private Thread serverThread;
 
 
     @Test
@@ -90,7 +93,6 @@ public class BasicUsecasesInWANTest {
         // in case of relay use that:
         //assertEquals("192.168.1.33", peerDHT.peerAddress().inetAddress().getHostAddress());
 
-
         peerDHT.shutdown().awaitUninterruptibly();
     }
 
@@ -104,8 +106,29 @@ public class BasicUsecasesInWANTest {
         futurePut1.awaitUninterruptibly();
         log.debug("futurePut1.isSuccess() = " + futurePut1.isSuccess());
         // why fails that?
-        // assertTrue(futurePut1.isSuccess());
+        //assertTrue(futurePut1.isSuccess());
 
+        FutureGet futureGet2 = peer1DHT.get(Number160.createHash("key")).start();
+        futureGet2.awaitUninterruptibly();
+        assertTrue(futureGet2.isSuccess());
+        assertNotNull(futureGet2.data());
+        assertEquals("hallo1", futureGet2.data().object());
+
+        peer1DHT.shutdown().awaitUninterruptibly();
+        peer2DHT.shutdown().awaitUninterruptibly();
+    }
+
+    @Test
+    @Ignore
+    public void testDHT2Servers() throws Exception {
+        PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT, SERVER_ID_1, SERVER_IP_1, SERVER_PORT);
+        PeerDHT peer2DHT = startClient(CLIENT_2_ID, CLIENT_2_PORT, SERVER_ID_2, SERVER_IP_2, SERVER_PORT);
+
+        FuturePut futurePut1 = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo1")).start();
+        futurePut1.awaitUninterruptibly();
+        log.debug("futurePut1.isSuccess() = " + futurePut1.isSuccess());
+        // why fails that?
+        //assertTrue(futurePut1.isSuccess());
 
         FutureGet futureGet2 = peer1DHT.get(Number160.createHash("key")).start();
         futureGet2.awaitUninterruptibly();
@@ -194,15 +217,19 @@ No future set beforehand, probably an early shutdown / timeout, or use setFailed
         assertEquals("hallo", result.toString());
     }
 
-
     private PeerDHT startClient(String clientId, int clientPort) throws Exception {
+        return startClient(clientId, clientPort, SERVER_ID, SERVER_IP, SERVER_PORT);
+    }
+
+    private PeerDHT startClient(String clientId, int clientPort, String serverId, String serverIP,
+                                int serverPort) throws Exception {
         Peer peer = null;
         try {
             peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).behindFirewall().start();
             PeerDHT peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer(new StorageMemory())).start();
 
-            PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(SERVER_ID), SERVER_IP, SERVER_PORT,
-                    SERVER_PORT);
+            PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(serverId), serverIP, serverPort,
+                    serverPort);
             FutureDiscover futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
             futureDiscover.awaitUninterruptibly();
             if (futureDiscover.isSuccess()) {
@@ -258,6 +285,7 @@ No future set beforehand, probably an early shutdown / timeout, or use setFailed
         }
     }
 
+    // just for documentation
     public void startBootstrappingSeedNode() {
         Peer peer = null;
         try {
