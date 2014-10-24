@@ -138,8 +138,10 @@ public class BootstrappedPeerFactory {
             if (bootstrapCounterObject instanceof Integer)
                 bootstrapCounter = (int) bootstrapCounterObject + 1;
 
-            if (bootstrapCounter > 5)
+            if (bootstrapCounter > 5) {
                 persistence.write(this, "lastSuccessfulBootstrap", "default");
+                bootstrapCounter = 0;
+            }
 
             persistence.write(this, "bootstrapCounter", bootstrapCounter);
 
@@ -147,9 +149,6 @@ public class BootstrappedPeerFactory {
             String lastSuccessfulBootstrap = (String) persistence.read(this, "lastSuccessfulBootstrap");
             if (lastSuccessfulBootstrap == null)
                 lastSuccessfulBootstrap = "default";
-
-            // TODO
-            // lastSuccessfulBootstrap = "default";
 
             log.debug("lastSuccessfulBootstrap = " + lastSuccessfulBootstrap);
             FutureDiscover futureDiscover;
@@ -186,8 +185,8 @@ public class BootstrappedPeerFactory {
                 if (future.isSuccess()) {
                     setState("We are visible to other peers: My address visible to " +
                             "the outside is " + futureDiscover.peerAddress());
-                    settableFuture.set(peerDHT);
                     persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
+                    settableFuture.set(peerDHT);
                 }
                 else {
                     log.warn("Discover has failed. Reason: " + futureDiscover.failedReason());
@@ -200,8 +199,8 @@ public class BootstrappedPeerFactory {
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
                 setState("Exception at discover: " + t.getMessage(), false);
-                settableFuture.setException(t);
                 peerDHT.shutdown().awaitUninterruptibly();
+                settableFuture.setException(t);
             }
         });
     }
@@ -228,8 +227,8 @@ public class BootstrappedPeerFactory {
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
                 setState("Exception at port forwarding: " + t.getMessage(), false);
-                settableFuture.setException(t);
                 peerDHT.shutdown().awaitUninterruptibly();
+                settableFuture.setException(t);
             }
         });
     }
@@ -243,16 +242,16 @@ public class BootstrappedPeerFactory {
                 if (future.isSuccess()) {
                     setState("Discover with automatic port forwarding was successful. " +
                             "My address visible to the outside is = " + futureDiscover.peerAddress());
-                    settableFuture.set(peerDHT);
                     persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "portForwarding");
+                    settableFuture.set(peerDHT);
                 }
                 else {
                     setState("Discover with automatic port forwarding has failed " + futureDiscover
                             .failedReason(), false);
-                    settableFuture.setException(new Exception("Discover with automatic port forwarding failed " +
-                            futureDiscover.failedReason()));
                     persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
                     peerDHT.shutdown().awaitUninterruptibly();
+                    settableFuture.setException(new Exception("Discover with automatic port forwarding failed " +
+                            futureDiscover.failedReason()));
                 }
             }
 
@@ -260,8 +259,8 @@ public class BootstrappedPeerFactory {
             public void exceptionCaught(Throwable t) throws Exception {
                 setState("Exception at discover: " + t, false);
                 persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
-                settableFuture.setException(t);
                 peerDHT.shutdown().awaitUninterruptibly();
+                settableFuture.setException(t);
             }
         });
     }
@@ -275,17 +274,17 @@ public class BootstrappedPeerFactory {
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
                     setState("Bootstrap using relay was successful. " +
-                            "My address visible to the outside is = " + futureDiscover.peerAddress());
-                    settableFuture.set(peerDHT);
+                            "My address visible to the outside is = " + peerDHT.peerAddress());
                     persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "relay");
+                    settableFuture.set(peerDHT);
                 }
                 else {
                     setState("Bootstrap using relay has failed " + futureDiscover.failedReason(), false);
-                    settableFuture.setException(new Exception("Bootstrap using relay failed " +
-                            futureDiscover.failedReason()));
                     persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
                     futureRelayNAT.shutdown();
                     peerDHT.shutdown().awaitUninterruptibly();
+                    settableFuture.setException(new Exception("Bootstrap using relay failed " +
+                            futureDiscover.failedReason()));
                 }
             }
 
@@ -293,9 +292,9 @@ public class BootstrappedPeerFactory {
             public void exceptionCaught(Throwable t) throws Exception {
                 setState("Exception at bootstrapWithRelay: " + t, false);
                 persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
-                settableFuture.setException(t);
                 futureRelayNAT.shutdown();
                 peerDHT.shutdown().awaitUninterruptibly();
+                settableFuture.setException(t);
             }
         });
 
