@@ -157,7 +157,7 @@ public class BasicUsecasesInWANTest {
     }
 
     @Test
-    //@Ignore
+    @Ignore
     public void testDHT2Servers() throws Exception {
         PeerDHT peer1DHT = startClient(CLIENT_1_ID, new Ports().tcpPort(), SERVER_ID_1, SERVER_IP_1, SERVER_PORT_1);
         PeerDHT peer2DHT = startClient(CLIENT_2_ID, new Ports().tcpPort(), SERVER_ID_2, SERVER_IP_2, SERVER_PORT_2);
