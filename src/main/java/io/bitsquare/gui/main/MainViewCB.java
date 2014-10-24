@@ -66,9 +66,9 @@ public class MainViewCB extends ViewCB<MainPM> {
     private VBox splashScreen;
     private AnchorPane contentContainer;
     private HBox leftNavPane, rightNavPane;
-    private ToggleButton buyButton, sellButton, homeButton, msgButton, ordersButton, fundsButton, settingsButton,
+    private ToggleButton buyButton, sellButton, homeButton, msgButton, portfolioButton, fundsButton, settingsButton,
             accountButton;
-    private Pane ordersButtonButtonPane;
+    private Pane portfolioButtonButtonPane;
     private Label numPendingTradesLabel;
 
 
@@ -193,7 +193,7 @@ public class MainViewCB extends ViewCB<MainPM> {
     private void applyPendingTradesInfoIcon(int numPendingTrades) {
         log.debug("numPendingTrades " + numPendingTrades);
         if (numPendingTrades > 0) {
-            if (ordersButtonButtonPane.getChildren().size() == 1) {
+            if (portfolioButtonButtonPane.getChildren().size() == 1) {
                 ImageView icon = new ImageView();
                 icon.setLayoutX(0.5);
                 icon.setId("image-alert-round");
@@ -207,7 +207,7 @@ public class MainViewCB extends ViewCB<MainPM> {
                 alert.setMouseTransparent(true);
                 alert.setEffect(new DropShadow(4, 1, 2, Color.GREY));
                 alert.getChildren().addAll(icon, numPendingTradesLabel);
-                ordersButtonButtonPane.getChildren().add(alert);
+                portfolioButtonButtonPane.getChildren().add(alert);
             }
             else {
                 numPendingTradesLabel.setText(String.valueOf(numPendingTrades));
@@ -217,8 +217,8 @@ public class MainViewCB extends ViewCB<MainPM> {
             SystemNotification.openInfoNotification(BitSquare.getAppName(), "You got a new trade message.");
         }
         else {
-            if (ordersButtonButtonPane.getChildren().size() > 1)
-                ordersButtonButtonPane.getChildren().remove(1);
+            if (portfolioButtonButtonPane.getChildren().size() > 1)
+                portfolioButtonButtonPane.getChildren().remove(1);
         }
     }
 
@@ -257,7 +257,7 @@ public class MainViewCB extends ViewCB<MainPM> {
                 msgButton.setSelected(true);
                 break;
             case PORTFOLIO:
-                ordersButton.setSelected(true);
+                portfolioButton.setSelected(true);
                 break;
             case SETTINGS:
                 settingsButton.setSelected(true);
@@ -336,9 +336,9 @@ public class MainViewCB extends ViewCB<MainPM> {
         buyButton = addNavButton(leftNavPane, "Buy BTC", Navigation.Item.BUY);
         sellButton = addNavButton(leftNavPane, "Sell BTC", Navigation.Item.SELL);
 
-        ordersButtonButtonPane = new Pane();
-        ordersButton = addNavButton(ordersButtonButtonPane, "Portfolio", Navigation.Item.PORTFOLIO);
-        leftNavPane.getChildren().add(ordersButtonButtonPane);
+        portfolioButtonButtonPane = new Pane();
+        portfolioButton = addNavButton(portfolioButtonButtonPane, "Portfolio", Navigation.Item.PORTFOLIO);
+        leftNavPane.getChildren().add(portfolioButtonButtonPane);
 
         fundsButton = addNavButton(leftNavPane, "Funds", Navigation.Item.FUNDS);
 

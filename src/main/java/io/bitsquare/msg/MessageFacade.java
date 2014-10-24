@@ -231,14 +231,14 @@ public class MessageFacade implements MessageBroker {
                 public void operationComplete(BaseFuture future) throws Exception {
                     if (future.isSuccess()) {
                         Platform.runLater(() -> {
-                            offerBookListeners.stream().forEach(orderBookListener -> {
+                            offerBookListeners.stream().forEach(offerBookListener -> {
                                 try {
                                     Object offerDataObject = offerData.object();
                                     if (offerDataObject instanceof Offer) {
                                         log.trace("Remove offer from DHT was successful. Removed data: [key: " +
                                                 locationKey + ", " +
                                                 "offer: " + (Offer) offerDataObject + "]");
-                                        orderBookListener.onOfferRemoved((Offer) offerDataObject);
+                                        offerBookListener.onOfferRemoved((Offer) offerDataObject);
                                     }
                                 } catch (ClassNotFoundException | IOException e) {
                                     e.printStackTrace();
@@ -447,11 +447,11 @@ public class MessageFacade implements MessageBroker {
     // Event Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addOrderBookListener(OfferBookListener listener) {
+    public void addOfferBookListener(OfferBookListener listener) {
         offerBookListeners.add(listener);
     }
 
-    public void removeOrderBookListener(OfferBookListener listener) {
+    public void removeOfferBookListener(OfferBookListener listener) {
         offerBookListeners.remove(listener);
     }
 

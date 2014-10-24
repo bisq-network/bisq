@@ -41,10 +41,10 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * Holds and manages the unsorted and unfiltered orderbook list of both buy and sell offers.
- * It is handled as singleton by Guice and is used by 2 instances of OrderBookModel (one for Buy one for Sell).
+ * Holds and manages the unsorted and unfiltered offerbook list of both buy and sell offers.
+ * It is handled as singleton by Guice and is used by 2 instances of OfferBookModel (one for Buy one for Sell).
  * As it is used only by the Buy and Sell UIs we treat it as local UI model.
- * It also use OrderBookListener as the lists items class and we don't want to get any dependency out of the package
+ * It also use OfferBookListener as the lists items class and we don't want to get any dependency out of the package
  * for that.
  */
 public class OfferBook {
@@ -79,14 +79,14 @@ public class OfferBook {
         offerBookListener = new OfferBookListener() {
             @Override
             public void onOfferAdded(Offer offer) {
-                addOfferToOrderBookListItems(offer);
+                addOfferToOfferBookListItems(offer);
             }
 
             @Override
             public void onOffersReceived(List<Offer> offers) {
                 //TODO use deltas instead replacing the whole list
                 offerBookListItems.clear();
-                offers.stream().forEach(e -> addOfferToOrderBookListItems(e));
+                offers.stream().forEach(e -> addOfferToOfferBookListItems(e));
             }
 
             @Override
@@ -143,18 +143,18 @@ public class OfferBook {
     private void addListeners() {
         log.debug("addListeners ");
         user.currentBankAccountProperty().addListener(bankAccountChangeListener);
-        messageFacade.addOrderBookListener(offerBookListener);
+        messageFacade.addOfferBookListener(offerBookListener);
         messageFacade.invalidationTimestampProperty().addListener(invalidationListener);
     }
 
     private void removeListeners() {
         log.debug("removeListeners ");
         user.currentBankAccountProperty().removeListener(bankAccountChangeListener);
-        messageFacade.removeOrderBookListener(offerBookListener);
+        messageFacade.removeOfferBookListener(offerBookListener);
         messageFacade.invalidationTimestampProperty().removeListener(invalidationListener);
     }
 
-    private void addOfferToOrderBookListItems(Offer offer) {
+    private void addOfferToOfferBookListItems(Offer offer) {
         if (offer != null) {
             offerBookListItems.add(new OfferBookListItem(offer, country));
         }

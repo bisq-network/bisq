@@ -152,7 +152,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     // Public API methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // setOrderBookFilter is a one time call
+    // setOfferBookFilter is a one time call
     void initWithData(Direction direction, Coin amount, Fiat price) {
         model.setDirection(direction);
         directionLabel.set(model.getDirection() == Direction.BUY ? BSResources.get("shared.buy") : BSResources.get

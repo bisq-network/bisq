@@ -89,7 +89,7 @@ public class DHTTestController implements Initializable {
             }
         });
 
-        messageFacade.addOrderBookListener(new OfferBookListener() {
+        messageFacade.addOfferBookListener(new OfferBookListener() {
             @Override
             public void onOfferAdded(Offer offer) {
                 log.debug("offer added " + offer.getId());

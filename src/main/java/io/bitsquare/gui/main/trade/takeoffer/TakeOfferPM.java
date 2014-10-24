@@ -140,7 +140,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
     // Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // setOrderBookFilter is a one time call
+    // setOfferBookFilter is a one time call
     void initWithData(Direction direction, Coin amount, Offer offer) {
         model.initWithData(amount, offer);
 

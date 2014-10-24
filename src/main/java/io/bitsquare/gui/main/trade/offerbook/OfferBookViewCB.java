@@ -143,7 +143,7 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
     public void activate() {
         super.activate();
 
-        // setOrderBookInfo has been called before
+        // setOfferBookInfo has been called before
         SortedList<OfferBookListItem> offerList = presentationModel.getOfferList();
         table.setItems(offerList);
         offerList.comparatorProperty().bind(table.comparatorProperty());

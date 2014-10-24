@@ -34,7 +34,7 @@
     <TitledSeparator text="Open trades" GridPane.rowIndex="0" GridPane.columnIndex="0"
                      GridPane.columnSpan="2"/>
 
-    <TableView fx:id="orderBookTable" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"
+    <TableView fx:id="offerBookTable" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"
                prefHeight="150">
         <GridPane.margin>
             <Insets top="10.0" left="-10" right="-10"/>

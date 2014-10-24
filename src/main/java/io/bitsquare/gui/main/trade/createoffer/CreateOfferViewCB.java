@@ -150,7 +150,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         super.terminate();
 
         // Inform parent that we got removed.
-        // Needed to reset disable state of createOfferButton in OrderBookController
+        // Needed to reset disable state of createOfferButton in OfferBookController
         if (closeListener != null)
             closeListener.onClosed();
     }

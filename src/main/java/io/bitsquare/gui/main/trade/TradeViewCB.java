@@ -49,8 +49,8 @@ import org.slf4j.LoggerFactory;
 public class TradeViewCB extends CachedViewCB implements TradeNavigator {
     private static final Logger log = LoggerFactory.getLogger(TradeViewCB.class);
 
-    // private final OrderBookInfo orderBookInfo = new OrderBookInfo();
-    private OfferBookViewCB orderBookViewCB;
+    // private final OfferBookInfo offerBookInfo = new OfferBookInfo();
+    private OfferBookViewCB offerBookViewCB;
     private CreateOfferViewCB createOfferViewCB;
     private TakeOfferViewCB takeOfferViewCB;
     private Node createOfferView;
@@ -166,23 +166,23 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
         TabPane tabPane = (TabPane) root;
-        if (navigationItem == Navigation.Item.OFFER_BOOK && orderBookViewCB == null) {
-            // Orderbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
-            ViewLoader orderBookLoader =
+        if (navigationItem == Navigation.Item.OFFER_BOOK && offerBookViewCB == null) {
+            // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
+            ViewLoader offerBookLoader =
                     new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
             try {
-                final Parent view = orderBookLoader.load();
+                final Parent view = offerBookLoader.load();
                 final Tab tab = new Tab(direction == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
                 tab.setClosable(false);
                 tab.setContent(view);
                 tabPane.getTabs().add(tab);
-                orderBookViewCB = orderBookLoader.getController();
-                orderBookViewCB.setParent(this);
+                offerBookViewCB = offerBookLoader.getController();
+                offerBookViewCB.setParent(this);
 
-                orderBookViewCB.setDirection(direction);
-                // orderBookViewCB.setNavigationListener(n -> loadView(n));
+                offerBookViewCB.setDirection(direction);
+                // offerBookViewCB.setNavigationListener(n -> loadView(n));
 
-                return orderBookViewCB;
+                return offerBookViewCB;
             } catch (IOException e) {
                 log.error(e.getMessage());
             }
@@ -241,7 +241,7 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
 
     private void onCreateOfferViewRemoved() {
         createOfferViewCB = null;
-        orderBookViewCB.enableCreateOfferButton();
+        offerBookViewCB.enableCreateOfferButton();
 
         // update the navigation state
         navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.OFFER_BOOK);

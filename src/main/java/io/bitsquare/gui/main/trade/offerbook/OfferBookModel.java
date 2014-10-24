@@ -55,14 +55,14 @@ class OfferBookModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(OfferBookModel.class);
 
     private final User user;
-    private final OfferBook orderBook;
+    private final OfferBook offerBook;
     private final Settings settings;
     private BSFormatter formatter;
     private final TradeManager tradeManager;
 
     private final FilteredList<OfferBookListItem> filteredItems;
     private final SortedList<OfferBookListItem> sortedItems;
-    // private OrderBookInfo orderBookInfo;
+    // private OfferBookInfo offerBookInfo;
     private ChangeListener<BankAccount> bankAccountChangeListener;
 
     private final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
@@ -84,16 +84,16 @@ class OfferBookModel extends UIModel {
     @Inject
     OfferBookModel(User user,
                    TradeManager tradeManager,
-                   OfferBook orderBook,
+                   OfferBook offerBook,
                    Settings settings,
                    BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.user = user;
-        this.orderBook = orderBook;
+        this.offerBook = offerBook;
         this.settings = settings;
         this.formatter = formatter;
 
-        filteredItems = new FilteredList<>(orderBook.getOfferBookListItems());
+        filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
         sortedItems = new SortedList<>(filteredItems);
     }
 
@@ -113,7 +113,7 @@ class OfferBookModel extends UIModel {
     public void activate() {
         super.activate();
 
-        orderBook.addClient();
+        offerBook.addClient();
         user.currentBankAccountProperty().addListener(bankAccountChangeListener);
         btcCode.bind(settings.btcDenominationProperty());
 
@@ -125,7 +125,7 @@ class OfferBookModel extends UIModel {
     public void deactivate() {
         super.deactivate();
 
-        orderBook.removeClient();
+        offerBook.removeClient();
         user.currentBankAccountProperty().removeListener(bankAccountChangeListener);
         btcCode.unbind();
     }
@@ -294,8 +294,8 @@ class OfferBookModel extends UIModel {
     }
 
     void applyFilter() {
-        filteredItems.setPredicate(orderBookListItem -> {
-            Offer offer = orderBookListItem.getOffer();
+        filteredItems.setPredicate(offerBookListItem -> {
+            Offer offer = offerBookListItem.getOffer();
 
             boolean directionResult = offer.getDirection() != direction;
 
