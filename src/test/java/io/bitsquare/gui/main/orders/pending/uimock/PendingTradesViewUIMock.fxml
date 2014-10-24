@@ -31,7 +31,7 @@
         <Insets bottom="20.0" left="25.0" top="30.0" right="25"/>
     </padding>
 
-    <TitledSeparator text="Pending trades" GridPane.rowIndex="0" GridPane.columnIndex="0"
+    <TitledSeparator text="Open trades" GridPane.rowIndex="0" GridPane.columnIndex="0"
                      GridPane.columnSpan="2"/>
 
     <TableView fx:id="orderBookTable" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"
@@ -57,7 +57,7 @@
         </GridPane.margin>
     </ProcessStepBar>
 
-    <TitledGroupBg fx:id="priceAmountPane" text="Pending trade"
+    <TitledGroupBg fx:id="priceAmountPane" text="Open trade"
                    GridPane.rowSpan="2" GridPane.columnSpan="2" GridPane.rowIndex="2">
         <GridPane.margin>
             <Insets top="40.0" bottom="-10" left="-10" right="-10"/>
