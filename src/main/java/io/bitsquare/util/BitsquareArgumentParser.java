@@ -17,6 +17,8 @@
 
 package io.bitsquare.util;
 
+import io.bitsquare.msg.SeedNodeAddress;
+
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
@@ -26,6 +28,7 @@ import net.sourceforge.argparse4j.inf.Namespace;
 public class BitsquareArgumentParser {
 
     public static String SEED_FLAG = "seed";
+    public static String SEED_ID_FLAG = "seedid";
     public static String PORT_FLAG = "port";
     public static Integer PORT_DEFAULT = 5000;
     public static String INFHINT_FLAG = "interface";
@@ -39,11 +42,14 @@ public class BitsquareArgumentParser {
                 .description("BitSquare decentralized bitcoin exchange.");
         parser.addArgument("-s", "--" + SEED_FLAG)
                 .action(Arguments.storeTrue())
-                .help("Start in DHT seed mode, no UI.");
+                .help("Start as DHT seed node, no UI.");
+        parser.addArgument("-d", "--" + SEED_ID_FLAG)
+                .setDefault(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1.getId())
+                .help("Seed node peer ID.");
         parser.addArgument("-p", "--"+PORT_FLAG)
                 .setDefault(PORT_DEFAULT)
                 .help("IP port to listen on.");
-        parser.addArgument("-i", "--"+INFHINT_FLAG)
+        parser.addArgument("-i", "--" + INFHINT_FLAG)
                 .help("interface to listen on.");
         parser.addArgument("-n", "--"+NAME_FLAG)
                 .help("Append name to application name.");

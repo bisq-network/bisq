@@ -17,6 +17,7 @@
 
 package io.bitsquare;
 
+import io.bitsquare.msg.SeedNodeAddress;
 import io.bitsquare.msg.actor.DHTManager;
 import io.bitsquare.msg.actor.command.InitializePeer;
 import io.bitsquare.msg.actor.event.PeerInitialized;
@@ -76,6 +77,11 @@ public class BitSquare {
             }
 
             if (namespace.getBoolean(BitsquareArgumentParser.SEED_FLAG) == true) {
+                String seedID = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1.getId();
+                if (namespace.getString(BitsquareArgumentParser.SEED_ID_FLAG) != null) {
+                    seedID = namespace.getString(BitsquareArgumentParser.SEED_ID_FLAG);
+                }
+
                 Integer port = BitsquareArgumentParser.PORT_DEFAULT;
                 if (namespace.getString(BitsquareArgumentParser.PORT_FLAG) != null) {
                     port = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
@@ -85,7 +91,7 @@ public class BitSquare {
 
                 ActorRef seedNode = actorSystem.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
                 Inbox inbox = Inbox.create(actorSystem);
-                inbox.send(seedNode, new InitializePeer(Number160.createHash("localhost"), port, interfaceHint, null));
+                inbox.send(seedNode, new InitializePeer(Number160.createHash(seedID), port, interfaceHint, null));
 
                 Thread seedNodeThread = new Thread(() -> {
                     Boolean quit = false;
