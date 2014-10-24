@@ -68,11 +68,11 @@
     -fx-image: url("../../../images/nav/sell_active.png");
 }
 
-#image-nav-orders {
-    -fx-image: url("../../../images/nav/orders.png");
+#image-nav-portfolio {
+    -fx-image: url("../../../images/nav/portfolio.png");
 }
-#image-nav-orders-active {
-    -fx-image: url("../../../images/nav/orders_active.png");
+#image-nav-portfolio-active {
+    -fx-image: url("../../../images/nav/portfolio_active.png");
 }
 
 #image-nav-funds {

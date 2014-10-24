@@ -256,7 +256,7 @@ public class MainViewCB extends ViewCB<MainPM> {
             case MSG:
                 msgButton.setSelected(true);
                 break;
-            case ORDERS:
+            case PORTFOLIO:
                 ordersButton.setSelected(true);
                 break;
             case SETTINGS:
@@ -337,7 +337,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         sellButton = addNavButton(leftNavPane, "Sell BTC", Navigation.Item.SELL);
 
         ordersButtonButtonPane = new Pane();
-        ordersButton = addNavButton(ordersButtonButtonPane, "Portfolio", Navigation.Item.ORDERS);
+        ordersButton = addNavButton(ordersButtonButtonPane, "Portfolio", Navigation.Item.PORTFOLIO);
         leftNavPane.getChildren().add(ordersButtonButtonPane);
 
         fundsButton = addNavButton(leftNavPane, "Funds", Navigation.Item.FUNDS);

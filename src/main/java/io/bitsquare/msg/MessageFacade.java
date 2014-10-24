@@ -23,7 +23,7 @@ import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.msg.listeners.GetPeerAddressListener;
 import io.bitsquare.msg.listeners.IncomingTradeMessageListener;
-import io.bitsquare.msg.listeners.OrderBookListener;
+import io.bitsquare.msg.listeners.OfferBookListener;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
@@ -82,7 +82,7 @@ public class MessageFacade implements MessageBroker {
     private final P2PNode p2pNode;
     private final User user;
 
-    private final List<OrderBookListener> orderBookListeners = new ArrayList<>();
+    private final List<OfferBookListener> offerBookListeners = new ArrayList<>();
     private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
     private final List<IncomingTradeMessageListener> incomingTradeMessageListeners = new ArrayList<>();
     private final LongProperty invalidationTimestamp = new SimpleLongProperty(0);
@@ -173,7 +173,7 @@ public class MessageFacade implements MessageBroker {
                     if (future.isSuccess()) {
                         Platform.runLater(() -> {
                             addOfferListener.onComplete();
-                            orderBookListeners.stream().forEach(listener -> {
+                            offerBookListeners.stream().forEach(listener -> {
                                 try {
                                     Object offerDataObject = offerData.object();
                                     if (offerDataObject instanceof Offer) {
@@ -231,7 +231,7 @@ public class MessageFacade implements MessageBroker {
                 public void operationComplete(BaseFuture future) throws Exception {
                     if (future.isSuccess()) {
                         Platform.runLater(() -> {
-                            orderBookListeners.stream().forEach(orderBookListener -> {
+                            offerBookListeners.stream().forEach(orderBookListener -> {
                                 try {
                                     Object offerDataObject = offerData.object();
                                     if (offerDataObject instanceof Offer) {
@@ -287,7 +287,7 @@ public class MessageFacade implements MessageBroker {
                             }
                         }
 
-                        Platform.runLater(() -> orderBookListeners.stream().forEach(listener ->
+                        Platform.runLater(() -> offerBookListeners.stream().forEach(listener ->
                                 listener.onOffersReceived(offers)));
                     }
 
@@ -298,7 +298,7 @@ public class MessageFacade implements MessageBroker {
                     final Map<Number640, Data> dataMap = futureGet.dataMap();
                     if (dataMap == null || dataMap.size() == 0) {
                         log.trace("Get offers from DHT delivered empty dataMap.");
-                        Platform.runLater(() -> orderBookListeners.stream().forEach(listener ->
+                        Platform.runLater(() -> offerBookListeners.stream().forEach(listener ->
                                 listener.onOffersReceived(new ArrayList<>())));
                     }
                     else {
@@ -447,12 +447,12 @@ public class MessageFacade implements MessageBroker {
     // Event Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addOrderBookListener(OrderBookListener listener) {
-        orderBookListeners.add(listener);
+    public void addOrderBookListener(OfferBookListener listener) {
+        offerBookListeners.add(listener);
     }
 
-    public void removeOrderBookListener(OrderBookListener listener) {
-        orderBookListeners.remove(listener);
+    public void removeOrderBookListener(OfferBookListener listener) {
+        offerBookListeners.remove(listener);
     }
 
     public void addArbitratorListener(ArbitratorListener listener) {

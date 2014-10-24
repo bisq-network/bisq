@@ -340,7 +340,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
                         getProperties().put("type", "CLOSE");
                         try {
                             close();
-                            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ORDERS,
+                            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO,
                                     Navigation.Item.PENDING_TRADES);
                         } catch (Exception e) {
                             e.printStackTrace();

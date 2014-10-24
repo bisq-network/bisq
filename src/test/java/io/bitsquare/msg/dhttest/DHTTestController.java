@@ -19,13 +19,13 @@ package io.bitsquare.msg.dhttest;
 
 import io.bitsquare.BitSquare;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.main.trade.orderbook.OrderBookListItem;
+import io.bitsquare.gui.main.trade.offerbook.OfferBookListItem;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.msg.BootstrappedPeerFactory;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.AddOfferListener;
 import io.bitsquare.msg.listeners.BootstrapListener;
-import io.bitsquare.msg.listeners.OrderBookListener;
+import io.bitsquare.msg.listeners.OfferBookListener;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.user.User;
@@ -58,12 +58,12 @@ public class DHTTestController implements Initializable {
     private final MessageFacade messageFacade;
     private BootstrappedPeerFactory bootstrappedPeerFactory;
     private User user;
-    private final ObservableList<OrderBookListItem> orderBookListItems = FXCollections.observableArrayList();
+    private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
 
     @FXML TableView table;
     @FXML TextArea stateLabel;
     @FXML TextField toSaveTextField;
-    @FXML TableColumn<OrderBookListItem, OrderBookListItem> idColumn;
+    @FXML TableColumn<OfferBookListItem, OfferBookListItem> idColumn;
 
     @Inject
     private DHTTestController(MessageFacade messageFacade, User user,
@@ -89,7 +89,7 @@ public class DHTTestController implements Initializable {
             }
         });
 
-        messageFacade.addOrderBookListener(new OrderBookListener() {
+        messageFacade.addOrderBookListener(new OfferBookListener() {
             @Override
             public void onOfferAdded(Offer offer) {
                 log.debug("offer added " + offer.getId());
@@ -98,22 +98,22 @@ public class DHTTestController implements Initializable {
             @Override
             public void onOffersReceived(List<Offer> offers) {
                 //TODO use deltas instead replacing the whole list
-                orderBookListItems.clear();
+                offerBookListItems.clear();
                 offers.stream().forEach(offer -> {
                     if (offer != null) {
-                        orderBookListItems.add(new OrderBookListItem(offer, CountryUtil.getDefaultCountry()));
+                        offerBookListItems.add(new OfferBookListItem(offer, CountryUtil.getDefaultCountry()));
                     }
                 });
             }
 
             @Override
             public void onOfferRemoved(Offer offer) {
-                orderBookListItems.removeIf(item -> item.getOffer().getId().equals(offer.getId()));
+                offerBookListItems.removeIf(item -> item.getOffer().getId().equals(offer.getId()));
             }
         });
 
         setIDColumnCellFactory();
-        table.setItems(orderBookListItems);
+        table.setItems(offerBookListItems);
 
         bootstrappedPeerFactory.connectionState.addListener((ov, oldValue, newValue) -> {
             stateLabel.setText(newValue);
@@ -162,14 +162,14 @@ public class DHTTestController implements Initializable {
     private void setIDColumnCellFactory() {
         idColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         idColumn.setCellFactory(
-                new Callback<TableColumn<OrderBookListItem, OrderBookListItem>, TableCell<OrderBookListItem,
-                        OrderBookListItem>>() {
+                new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
+                        OfferBookListItem>>() {
                     @Override
-                    public TableCell<OrderBookListItem, OrderBookListItem> call(
-                            TableColumn<OrderBookListItem, OrderBookListItem> column) {
-                        return new TableCell<OrderBookListItem, OrderBookListItem>() {
+                    public TableCell<OfferBookListItem, OfferBookListItem> call(
+                            TableColumn<OfferBookListItem, OfferBookListItem> column) {
+                        return new TableCell<OfferBookListItem, OfferBookListItem>() {
                             @Override
-                            public void updateItem(final OrderBookListItem item, boolean empty) {
+                            public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && item.getOffer() != null && item.getOffer().getAmount() != null)
                                     setText(item.getOffer().getId());

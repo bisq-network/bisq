@@ -159,7 +159,7 @@ public class Navigation {
         HOME("/io/bitsquare/gui/main/home/HomeView.fxml"),
         BUY("/io/bitsquare/gui/main/trade/BuyView.fxml"),
         SELL("/io/bitsquare/gui/main/trade/SellView.fxml"),
-        ORDERS("/io/bitsquare/gui/main/orders/OrdersView.fxml"),
+        PORTFOLIO("/io/bitsquare/gui/main/portfolio/PortfolioView.fxml"),
         FUNDS("/io/bitsquare/gui/main/funds/FundsView.fxml"),
         MSG("/io/bitsquare/gui/main/msg/MsgView.fxml"),
         SETTINGS("/io/bitsquare/gui/main/settings/SettingsView.fxml"),
@@ -171,14 +171,14 @@ public class Navigation {
         ///////////////////////////////////////////////////////////////////////////////////////////
 
         // buy/sell (trade)
-        ORDER_BOOK("/io/bitsquare/gui/main/trade/orderbook/OrderBookView.fxml"),
+        OFFER_BOOK("/io/bitsquare/gui/main/trade/offerbook/OfferBookView.fxml"),
         CREATE_OFFER("/io/bitsquare/gui/main/trade/createoffer/CreateOfferView.fxml"),
         TAKE_OFFER("/io/bitsquare/gui/main/trade/takeoffer/TakeOfferView.fxml"),
 
-        // orders
-        OFFERS("/io/bitsquare/gui/main/orders/offer/OffersView.fxml"),
-        PENDING_TRADES("/io/bitsquare/gui/main/orders/pending/PendingTradesView.fxml"),
-        CLOSED_TRADES("/io/bitsquare/gui/main/orders/closed/ClosedTradesView.fxml"),
+        // portfolio
+        OFFERS("/io/bitsquare/gui/main/portfolio/offer/OffersView.fxml"),
+        PENDING_TRADES("/io/bitsquare/gui/main/portfolio/pending/PendingTradesView.fxml"),
+        CLOSED_TRADES("/io/bitsquare/gui/main/portfolio/closed/ClosedTradesView.fxml"),
 
         // funds
         WITHDRAWAL("/io/bitsquare/gui/main/funds/withdrawal/WithdrawalView.fxml"),

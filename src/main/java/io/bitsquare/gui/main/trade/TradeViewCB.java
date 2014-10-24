@@ -21,7 +21,7 @@ import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferViewCB;
-import io.bitsquare.gui.main.trade.orderbook.OrderBookViewCB;
+import io.bitsquare.gui.main.trade.offerbook.OfferBookViewCB;
 import io.bitsquare.gui.main.trade.takeoffer.TakeOfferViewCB;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
@@ -50,7 +50,7 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
     private static final Logger log = LoggerFactory.getLogger(TradeViewCB.class);
 
     // private final OrderBookInfo orderBookInfo = new OrderBookInfo();
-    private OrderBookViewCB orderBookViewCB;
+    private OfferBookViewCB orderBookViewCB;
     private CreateOfferViewCB createOfferViewCB;
     private TakeOfferViewCB takeOfferViewCB;
     private Node createOfferView;
@@ -118,7 +118,7 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
         });
 
         navigation.addListener(listener);
-        navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.ORDER_BOOK);
+        navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.OFFER_BOOK);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -166,7 +166,7 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
         TabPane tabPane = (TabPane) root;
-        if (navigationItem == Navigation.Item.ORDER_BOOK && orderBookViewCB == null) {
+        if (navigationItem == Navigation.Item.OFFER_BOOK && orderBookViewCB == null) {
             // Orderbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
             ViewLoader orderBookLoader =
                     new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
@@ -244,14 +244,14 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
         orderBookViewCB.enableCreateOfferButton();
 
         // update the navigation state
-        navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.ORDER_BOOK);
+        navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.OFFER_BOOK);
     }
 
     private void onTakeOfferViewRemoved() {
         takeOfferViewCB = null;
 
         // update the navigation state
-        navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.ORDER_BOOK);
+        navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.OFFER_BOOK);
     }
 
 }
