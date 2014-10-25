@@ -57,9 +57,9 @@ public class SeedNodeAddress {
     public enum StaticSeedNodeAddresses {
         // Manfreds server: "188.226.179.109"
         // Steves server: "128.199.251.106"
-        DIGITAL_OCEAN1("digitalocean1.bitsquare.io", "188.226.179.109", 5000),
+        DIGITAL_OCEAN1("digitalocean1.bitsquare.io", "188.226.179.109", 5000)/*,
         DIGITAL_OCEAN2("digitalocean2.bitsquare.io", "128.199.251.106", 5000),
-        LOCALHOST("localhost", "127.0.0.1", 5000);
+        LOCALHOST("localhost", "127.0.0.1", 5000)*/;
 
         private final String id;
         private final String ip;
