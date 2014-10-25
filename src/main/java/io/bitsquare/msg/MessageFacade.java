@@ -170,7 +170,8 @@ public class MessageFacade implements MessageBroker {
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    if (future.isSuccess()) {
+                    // deactivate it for the moment until the port forwarding bug is fixed
+                    // if (future.isSuccess()) {
                         Platform.runLater(() -> {
                             addOfferListener.onComplete();
                             offerBookListeners.stream().forEach(listener -> {
@@ -191,14 +192,14 @@ public class MessageFacade implements MessageBroker {
                             log.trace("Add offer to DHT was successful. Added data: [locationKey: " + locationKey +
                                     ", value: " + offerData + "]");
                         });
-                    }
+                  /*  }
                     else {
                         Platform.runLater(() -> {
                             addOfferListener.onFailed("Add offer to DHT failed.",
                                     new Exception("Add offer to DHT failed. Reason: " + future.failedReason()));
                             log.error("Add offer to DHT failed. Reason: " + future.failedReason());
                         });
-                    }
+                    }*/
                 }
 
                 @Override
@@ -229,7 +230,8 @@ public class MessageFacade implements MessageBroker {
             futureRemove.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    if (future.isSuccess()) {
+                    // deactivate it for the moment until the port forwarding bug is fixed
+                    // if (future.isSuccess()) {
                         Platform.runLater(() -> {
                             offerBookListeners.stream().forEach(offerBookListener -> {
                                 try {
@@ -247,11 +249,11 @@ public class MessageFacade implements MessageBroker {
                             });
                             writeInvalidationTimestampToDHT(locationKey);
                         });
-                    }
+                   /* }
                     else {
                         log.error("Remove offer from DHT failed. Cause: future.isSuccess() = false, locationKey: " +
                                 locationKey + ", Reason: " + future.failedReason());
-                    }
+                    }*/
                 }
 
                 @Override

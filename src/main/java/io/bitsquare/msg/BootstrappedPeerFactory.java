@@ -142,9 +142,7 @@ public class BootstrappedPeerFactory {
                 persistence.write(this, "lastSuccessfulBootstrap", "default");
                 bootstrapCounter = 0;
             }
-
             persistence.write(this, "bootstrapCounter", bootstrapCounter);
-
 
             String lastSuccessfulBootstrap = (String) persistence.read(this, "lastSuccessfulBootstrap");
             if (lastSuccessfulBootstrap == null)
@@ -152,7 +150,22 @@ public class BootstrappedPeerFactory {
 
             log.debug("lastSuccessfulBootstrap = " + lastSuccessfulBootstrap);
             FutureDiscover futureDiscover;
+
+            // just temporary while port forwarding is not working
             switch (lastSuccessfulBootstrap) {
+                case "relay":
+                case "portForwarding":
+                    futureDiscover = peerDHT.peer().discover().peerAddress(getBootstrapAddress()).start();
+                    PeerNAT peerNAT = new PeerBuilderNAT(peerDHT.peer()).start();
+                    FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
+                    bootstrapWithRelay(peerDHT, peerNAT, futureDiscover, futureNAT);
+                    break;
+                case "default":
+                default:
+                    discover(peerDHT);
+                    break;
+            }
+           /* switch (lastSuccessfulBootstrap) {
                 case "relay":
                     futureDiscover = peerDHT.peer().discover().peerAddress(getBootstrapAddress()).start();
                     PeerNAT peerNAT = new PeerBuilderNAT(peerDHT.peer()).start();
@@ -167,7 +180,7 @@ public class BootstrappedPeerFactory {
                 default:
                     discover(peerDHT);
                     break;
-            }
+            }*/
         } catch (IOException e) {
             setState("Cannot create peer with port: " + port + ". Exeption: " + e, false);
             settableFuture.setException(e);
@@ -192,7 +205,13 @@ public class BootstrappedPeerFactory {
                     log.warn("Discover has failed. Reason: " + futureDiscover.failedReason());
                     setState("We are probably behind a NAT and not reachable to other peers. " +
                             "We try port forwarding as next step.");
-                    tryPortForwarding(peerDHT, futureDiscover);
+
+                    // just temporary while port forwarding is not working
+                    //tryPortForwarding(peerDHT, futureDiscover);
+                    setState("Port forwarding has failed. We try to use a relay as next step.");
+                    PeerNAT peerNAT = new PeerBuilderNAT(peerDHT.peer()).start();
+                    FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
+                    bootstrapWithRelay(peerDHT, peerNAT, futureDiscover, futureNAT);
                 }
             }
 
