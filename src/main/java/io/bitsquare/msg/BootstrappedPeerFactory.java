@@ -282,6 +282,10 @@ public class BootstrappedPeerFactory {
 
     private void bootstrapWithRelay(PeerDHT peerDHT) {
 
+        PeerAddress upa = peerDHT.peerBean().serverPeerAddress();
+        upa = upa.changeFirewalledTCP(true).changeFirewalledUDP(true);
+        peerDHT.peerBean().serverPeerAddress(upa);
+        
         PeerNAT peerNAT = new PeerBuilderNAT(peerDHT.peer()).start();
         FutureRelayNAT futureRelayNAT = peerNAT.startRelay(getBootstrapAddress());
 

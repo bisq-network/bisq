@@ -133,6 +133,10 @@ class AddressBasedCoinSelector extends DefaultCoinSelector {
         if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isSentToP2SH
                 ()) {
             Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
+            log.trace("matchesRequiredAddress?");
+            log.trace(addressOutput.toString());
+            log.trace(addressEntry.getAddress().toString());
+
             if (addressEntry != null && addressOutput.equals(addressEntry.getAddress())) {
                 return true;
             }

@@ -123,8 +123,9 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         selectedItemChangeListener = (obsValue, oldValue, newValue) -> {
             if (oldValue != null && newValue != null)
                 presentationModel.selectTrade(newValue);
-            else if (newValue == null)
-                table.getSelectionModel().clearSelection();
+            // TODO only clearSelection when there are more at least one remaining trades
+           /* else if (newValue == null)
+                table.getSelectionModel().clearSelection();*/
         };
 
         listChangeListener = change -> {
