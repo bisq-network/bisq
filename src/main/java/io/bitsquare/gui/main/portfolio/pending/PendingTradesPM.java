@@ -133,10 +133,6 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         model.fiatPaymentReceived();
     }
 
-    void removePendingTrade() {
-        model.removePendingTrade();
-    }
-
     void withdraw(String withdrawToAddress) {
         // TODO address validation
         if (withdrawToAddress != null && withdrawToAddress.length() > 0)

@@ -188,10 +188,6 @@ class PendingTradesModel extends UIModel {
 
             trade.faultProperty().addListener(faultChangeListener);
             fault.set(trade.faultProperty().get());
-
-            if (closedTrade != null) {
-                list.removeIf(e -> e.getTrade().getId().equals(closedTrade.getId()));
-            }
         }
         else {
             txId.set(null);
@@ -207,18 +203,16 @@ class PendingTradesModel extends UIModel {
         tradeManager.fiatPaymentReceived(getTrade().getId());
     }
 
-    void removePendingTrade() {
-        if (closedTrade != null) {
-            list.removeIf(e -> e.getTrade().getId().equals(closedTrade.getId()));
-        }
-    }
-
     void withdraw(String toAddress) {
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                 if (transaction != null) {
                     log.info("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
+
+                    if (closedTrade != null) {
+                        list.removeIf(e -> e.getTrade().getId().equals(closedTrade.getId()));
+                    }
                 }
             }
 

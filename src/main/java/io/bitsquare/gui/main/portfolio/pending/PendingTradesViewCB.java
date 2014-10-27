@@ -107,12 +107,12 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         setVolumeColumnCellFactory();
         setDateColumnCellFactory();
 
-        scrollPane.vvalueProperty().addListener((ov, oldValue, newValue) -> {
+       /* scrollPane.vvalueProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("#### vvalueProperty " + newValue);
         });
         scrollPane.viewportBoundsProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("#### viewportBoundsProperty " + newValue);
-        });
+        });*/
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No pending trades available"));
@@ -206,7 +206,6 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     @FXML
     public void onWithdraw() {
         setSummaryControlsVisible(false);
-        presentationModel.removePendingTrade();
         presentationModel.withdraw(withdrawAddressTextField.getText());
         Platform.runLater(() ->
                 navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO,
