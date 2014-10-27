@@ -128,7 +128,8 @@ public class BSFormatter {
             try {
                 return coinFormat.noCode().format(coin).toString();
             } catch (Throwable t) {
-                log.warn("Exception at formatBtc: " + t.toString());
+                if (coin != null)
+                    log.warn("Exception at formatBtc: " + t.toString());
                 return "";
             }
         }
@@ -144,7 +145,8 @@ public class BSFormatter {
                 // pre and post fixing
                 return coinFormat.postfixCode().format(coin).toString();
             } catch (Throwable t) {
-                log.warn("Exception at formatBtcWithCode: " + t.toString());
+                if (coin != null)
+                    log.warn("Exception at formatBtcWithCode: " + t.toString());
                 return "";
             }
         }
@@ -158,7 +160,8 @@ public class BSFormatter {
             try {
                 return coinFormat.parse(cleanInput(input));
             } catch (Throwable t) {
-                log.warn("Exception at parseToBtc: " + t.toString());
+                if (input != null && input.length() > 0)
+                    log.warn("Exception at parseToBtc: " + t.toString());
                 return Coin.ZERO;
             }
         }
@@ -181,7 +184,8 @@ public class BSFormatter {
             return Coin.valueOf(new BigDecimal(parseToCoin(cleanInput(input)).value).setScale(-scale - 1,
                     BigDecimal.ROUND_HALF_UP).setScale(scale + 1).toBigInteger().longValue());
         } catch (Throwable t) {
-            log.warn("Exception at parseToCoinWith4Decimals: " + t.toString());
+            if (input != null && input.length() > 0)
+                log.warn("Exception at parseToCoinWith4Decimals: " + t.toString());
             return Coin.ZERO;
         }
     }
@@ -210,7 +214,8 @@ public class BSFormatter {
             try {
                 return fiatFormat.noCode().format(fiat).toString();
             } catch (Throwable t) {
-                log.warn("Exception at formatFiat: " + t.toString());
+                if (fiat != null)
+                    log.warn("Exception at formatFiat: " + t.toString());
                 return "";
             }
         }
@@ -224,7 +229,8 @@ public class BSFormatter {
             try {
                 return fiatFormat.postfixCode().format(fiat).toString();
             } catch (Throwable t) {
-                log.warn("Exception at formatFiatWithCode: " + t.toString());
+                if (fiat != null)
+                    log.warn("Exception at formatFiatWithCode: " + t.toString());
                 return "";
             }
         }
@@ -238,6 +244,8 @@ public class BSFormatter {
             try {
                 return Fiat.parseFiat(currencyCode, cleanInput(input));
             } catch (Exception e) {
+                if (input != null && input.length() > 0)
+                    log.warn("Exception at parseToFiat: " + e.toString());
                 return Fiat.valueOf(currencyCode, 0);
             }
 
@@ -261,7 +269,8 @@ public class BSFormatter {
             try {
                 return parseToFiat(new BigDecimal(cleanInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
             } catch (Throwable t) {
-                log.warn("Exception at parseCoinTo4Decimals: " + t.toString());
+                if (input != null && input.length() > 0)
+                    log.warn("Exception at parseCoinTo4Decimals: " + t.toString());
                 return Fiat.valueOf(currencyCode, 0);
             }
 
