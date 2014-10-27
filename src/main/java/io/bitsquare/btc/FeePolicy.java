@@ -60,8 +60,8 @@ public class FeePolicy {
         this.params = params;
 
         if (params.equals(TestNet3Params.get())) {
-            createOfferFeeAddress = "n3LLZ9ngKdxms3gCbHhNPibHTh7DmHigtE";
-            takeOfferFeeAddress = "n3LLZ9ngKdxms3gCbHhNPibHTh7DmHigtE";
+            createOfferFeeAddress = "mmm8BdTcHoc5wi75RmiQYsJ2Tr1NoZmM84";
+            takeOfferFeeAddress = "mmm8BdTcHoc5wi75RmiQYsJ2Tr1NoZmM84";
         }
         else if (params.equals(MainNetParams.get())) {
             // bitsquare donation address used for the moment...
