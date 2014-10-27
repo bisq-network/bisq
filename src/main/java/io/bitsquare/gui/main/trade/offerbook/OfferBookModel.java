@@ -113,6 +113,10 @@ class OfferBookModel extends UIModel {
     public void activate() {
         super.activate();
 
+        amountAsCoin.set(null);
+        priceAsFiat.set(null);
+        volumeAsFiat.set(null);
+
         offerBook.addClient();
         user.currentBankAccountProperty().addListener(bankAccountChangeListener);
         btcCode.bind(settings.btcDenominationProperty());
