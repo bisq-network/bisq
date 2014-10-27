@@ -124,7 +124,7 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
         placeholder.setWrapText(true);
         table.setPlaceholder(placeholder);
 
-        setupBindings();
+
         setupValidators();
         setupComparators();
 
@@ -143,6 +143,12 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
     public void activate() {
         super.activate();
 
+        amountTextField.setText("");
+        priceTextField.setText("");
+        volumeTextField.setText("");
+
+        setupBindings();
+
         // setOfferBookInfo has been called before
         SortedList<OfferBookListItem> offerList = presentationModel.getOfferList();
         table.setItems(offerList);
@@ -156,6 +162,8 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
     @Override
     public void deactivate() {
         super.deactivate();
+
+        removeBindings();
 
     }
 
@@ -361,6 +369,20 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
         volumeTextField.promptTextProperty().bind(createStringBinding(() ->
                         BSResources.get("Amount in {0}", presentationModel.fiatCode.get()),
                 presentationModel.fiatCode));
+    }
+
+    private void removeBindings() {
+        amountTextField.textProperty().unbind();
+        priceTextField.textProperty().unbind();
+        volumeTextField.textProperty().unbind();
+        amountBtcLabel.textProperty().unbind();
+        priceFiatLabel.textProperty().unbind();
+        volumeFiatLabel.textProperty().unbind();
+        priceDescriptionLabel.textProperty().unbind();
+        volumeDescriptionLabel.textProperty().unbind();
+        priceDescriptionLabel.textProperty().unbind();
+        volumeDescriptionLabel.textProperty().unbind();
+        volumeTextField.promptTextProperty().unbind();
     }
 
     private void setupValidators() {
