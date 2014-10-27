@@ -19,6 +19,7 @@ package io.bitsquare.gui;
 
 
 import io.bitsquare.BitSquare;
+import io.bitsquare.BitSquareUI;
 import io.bitsquare.gui.util.ImageUtil;
 
 import java.awt.*;
@@ -46,11 +47,13 @@ public class AWTSystemTray {
     private static MenuItem showGuiItem;
     private static Stage stage;
     private static ActorSystem actorSystem;
+    private static BitSquareUI application;
     private static TrayIcon trayIcon;
 
-    public static void createSystemTray(Stage stage, ActorSystem actorSystem) {
+    public static void createSystemTray(Stage stage, ActorSystem actorSystem, BitSquareUI application) {
         AWTSystemTray.stage = stage;
         AWTSystemTray.actorSystem = actorSystem;
+        AWTSystemTray.application = application;
 
         if (SystemTray.isSupported()) {
             // prevent exiting the app when the last window get closed
@@ -99,7 +102,11 @@ public class AWTSystemTray {
                     else
                         log.error(ex.getMessage());
                 }
-                System.exit(0);
+                try {
+                    application.stop();
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
             });
 
 

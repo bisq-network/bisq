@@ -84,7 +84,7 @@ public class BitSquareUI extends Application {
         final Injector injector = Guice.createInjector(new BitSquareModule());
 
         // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
-        AWTSystemTray.createSystemTray(primaryStage, injector.getInstance(ActorSystem.class));
+        AWTSystemTray.createSystemTray(primaryStage, injector.getInstance(ActorSystem.class), this);
 
         walletFacade = injector.getInstance(WalletFacade.class);
         messageFacade = injector.getInstance(MessageFacade.class);
@@ -146,7 +146,8 @@ public class BitSquareUI extends Application {
 
         KeyCodeCombination keyCodeCombination = new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN);
         scene.setOnKeyReleased(keyEvent -> {
-            if (keyCodeCombination.match(keyEvent)) AWTSystemTray.setStageHidden();
+            if (keyCodeCombination.match(keyEvent))
+                AWTSystemTray.setStageHidden();
         });
     }
 
