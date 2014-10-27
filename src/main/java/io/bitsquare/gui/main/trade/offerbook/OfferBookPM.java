@@ -165,18 +165,6 @@ class OfferBookPM extends PresentationModel<OfferBookModel> {
         return model.getOfferList();
     }
 
-    StringProperty getAmount() {
-        return amount;
-    }
-
-    StringProperty getPrice() {
-        return price;
-    }
-
-    StringProperty getVolume() {
-        return volume;
-    }
-
     boolean isRegistered() {
         return model.isRegistered();
     }
