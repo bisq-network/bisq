@@ -15,7 +15,9 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg;
+package io.bitsquare;
+
+import io.bitsquare.msg.SeedNodeAddress;
 
 import java.io.IOException;
 
@@ -26,7 +28,7 @@ import net.tomp2p.p2p.PeerBuilder;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMapChangeListener;
-import net.tomp2p.peers.PeerStatatistic;
+import net.tomp2p.peers.PeerStatistic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,12 +53,12 @@ public class SeedNode extends Thread {
                 }
 
                 @Override
-                public void peerRemoved(PeerAddress peerAddress, PeerStatatistic peerStatistics) {
+                public void peerRemoved(PeerAddress peerAddress, PeerStatistic peerStatistics) {
                     log.debug("Peer removed: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
                 }
 
                 @Override
-                public void peerUpdated(PeerAddress peerAddress, PeerStatatistic peerStatistics) {
+                public void peerUpdated(PeerAddress peerAddress, PeerStatistic peerStatistics) {
                     // log.debug("Peer updated: peerAddress=" + peerAddress + ", 
                     // peerStatistics=" + peerStatistics);
                 }
@@ -67,9 +69,9 @@ public class SeedNode extends Thread {
                 while (true) {
                     try {
                         for (PeerAddress pa : _peer.peerBean().peerMap().all()) {
-                            System.out.println("peer online (TCP):" + pa);
+                            System.out.println("Peer online:" + pa);
                         }
-                        Thread.sleep(2000L);
+                        Thread.sleep(5000L);
                     } catch (InterruptedException e) {
                     }
                 }

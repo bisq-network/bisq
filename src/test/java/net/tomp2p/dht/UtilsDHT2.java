@@ -1,21 +1,4 @@
 /*
- * This file is part of Bitsquare.
- *
- * Bitsquare is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or (at
- * your option) any later version.
- *
- * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
- * License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
- */
-
-/*
  * Copyright 2012 Thomas Bocek
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -63,7 +46,7 @@ import net.tomp2p.peers.PeerSocketAddress;
 
 public class UtilsDHT2 {
     /**
-     * Used to make the testcases predictable. Used as an input for {@link java.util.Random}.
+     * Used to make the testcases predictable. Used as an input for {@link Random}.
      */
     public static final long THE_ANSWER = 42L;
 
@@ -137,7 +120,7 @@ public class UtilsDHT2 {
     /**
      * Creates peers for testing. The first peer (peer[0]) will be used as the master. This means that shutting down
      * peer[0] will shut down all other peers
-     * 
+     *
      * @param nrOfPeers
      *            The number of peers to create including the master
      * @param rnd
@@ -161,16 +144,16 @@ public class UtilsDHT2 {
             PeerMap peerMap = new PeerMap(new PeerMapConfiguration(peerId));
             master = new PeerBuilder(peerId)
                     .ports(port).enableMaintenance(maintenance)
-                    .externalBindings(bindings).peerMap(peerMap).start().addAutomaticFuture(automaticFuture);
+                    .bindings(bindings).peerMap(peerMap).start().addAutomaticFuture(automaticFuture);
             peers[0] = new PeerBuilderDHT(master).start();
 
         }
         else {
             Number160 peerId = new Number160(rnd);
             PeerMap peerMap = new PeerMap(new PeerMapConfiguration(peerId));
-            master = new PeerBuilder(peerId).enableMaintenance(maintenance).externalBindings(bindings)
+            master = new PeerBuilder(peerId).enableMaintenance(maintenance).bindings(bindings)
                     .peerMap(peerMap).ports(port).start();
-            peers[0] = new PeerBuilderDHT(master).start(); 
+            peers[0] = new PeerBuilderDHT(master).start();
         }
 
         for (int i = 1; i < nrOfPeers; i++) {
@@ -179,17 +162,16 @@ public class UtilsDHT2 {
                 PeerMap peerMap = new PeerMap(new PeerMapConfiguration(peerId));
                 Peer peer = new PeerBuilder(peerId)
                         .masterPeer(master)
-                        .enableMaintenance(maintenance).enableMaintenance(maintenance).peerMap(peerMap)
-                        .externalBindings(bindings).start().addAutomaticFuture(automaticFuture);
+                        .enableMaintenance(maintenance).enableMaintenance(maintenance).peerMap(peerMap).bindings(bindings).start().addAutomaticFuture(automaticFuture);
                 peers[i] = new PeerBuilderDHT(peer).start();
             }
             else {
                 Number160 peerId = new Number160(rnd);
                 PeerMap peerMap = new PeerMap(new PeerMapConfiguration(peerId).peerNoVerification());
                 Peer peer = new PeerBuilder(peerId).enableMaintenance(maintenance)
-                        .externalBindings(bindings).peerMap(peerMap).masterPeer(master)
+                        .bindings(bindings).peerMap(peerMap).masterPeer(master)
                         .start();
-                peers[i] = new PeerBuilderDHT(peer).start(); 
+                peers[i] = new PeerBuilderDHT(peer).start();
             }
         }
         System.err.println("peers created.");
@@ -227,7 +209,7 @@ public class UtilsDHT2 {
     /**
      * Perfect routing, where each neighbor has contacted each other. This means that for small number of peers, every
      * peer knows every other peer.
-     * 
+     *
      * @param peers
      *            The peers taking part in the p2p network.
      */

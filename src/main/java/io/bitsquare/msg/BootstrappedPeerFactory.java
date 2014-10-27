@@ -54,7 +54,7 @@ import net.tomp2p.p2p.PeerBuilder;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMapChangeListener;
-import net.tomp2p.peers.PeerStatatistic;
+import net.tomp2p.peers.PeerStatistic;
 import net.tomp2p.storage.Storage;
 
 import org.jetbrains.annotations.NotNull;
@@ -121,12 +121,12 @@ public class BootstrappedPeerFactory {
                 }
 
                 @Override
-                public void peerRemoved(PeerAddress peerAddress, PeerStatatistic peerStatistics) {
+                public void peerRemoved(PeerAddress peerAddress, PeerStatistic peerStatistics) {
                     log.debug("Peer removed: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
                 }
 
                 @Override
-                public void peerUpdated(PeerAddress peerAddress, PeerStatatistic peerStatistics) {
+                public void peerUpdated(PeerAddress peerAddress, PeerStatistic peerStatistics) {
                     // log.debug("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
                 }
             });
@@ -156,12 +156,10 @@ public class BootstrappedPeerFactory {
 
             switch (lastSuccessfulBootstrap) {
                 case "relay":
-                    // just temporary while port forwarding is not working
-                    //futureDiscover = peerDHT.peer().discover().peerAddress(getBootstrapAddress()).start();
-                    // PeerNAT peerNAT = new PeerBuilderNAT(peerDHT.peer()).start();
-                    //FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
-                    // bootstrapWithRelay(peerDHT, peerNAT, futureDiscover, futureNAT);
-                    bootstrapWithRelay(peerDHT);
+                    futureDiscover = peerDHT.peer().discover().peerAddress(getBootstrapAddress()).start();
+                    PeerNAT peerNAT = new PeerBuilderNAT(peerDHT.peer()).start();
+                    FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
+                    bootstrapWithRelay(peerDHT, peerNAT, futureDiscover, futureNAT);
                     break;
                 case "portForwarding":
                     futureDiscover = peerDHT.peer().discover().peerAddress(getBootstrapAddress()).start();
@@ -197,12 +195,8 @@ public class BootstrappedPeerFactory {
                     setState("We are probably behind a NAT and not reachable to other peers. " +
                             "We try port forwarding as next step.");
 
-                    // just temporary while port forwarding is not working
-                    //tryPortForwarding(peerDHT, futureDiscover);
+                    tryPortForwarding(peerDHT, futureDiscover);
                     setState("Port forwarding has failed. We try to use a relay as next step.");
-                    PeerNAT peerNAT = new PeerBuilderNAT(peerDHT.peer()).start();
-                    FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
-                    // bootstrapWithRelay(peerDHT, peerNAT, futureDiscover, futureNAT);
                 }
             }
 
@@ -230,7 +224,7 @@ public class BootstrappedPeerFactory {
                 else {
                     log.warn("Port forwarding has failed. Reason: " + futureNAT.failedReason());
                     setState("Port forwarding has failed. We try to use a relay as next step.");
-                    // bootstrapWithRelay(peerDHT, peerNAT, futureDiscover, futureNAT);
+                    bootstrapWithRelay(peerDHT, peerNAT, futureDiscover, futureNAT);
                 }
             }
 
@@ -275,21 +269,10 @@ public class BootstrappedPeerFactory {
         });
     }
 
-    // just temporary while port forwarding is not working
     // 3. Attempt: We try to use another peer as relay
-   /* private void bootstrapWithRelay(PeerDHT peerDHT, PeerNAT peerNAT, FutureDiscover futureDiscover,
-                                    FutureNAT futureNAT) {*/
-
-    private void bootstrapWithRelay(PeerDHT peerDHT) {
-
-        PeerAddress upa = peerDHT.peerBean().serverPeerAddress();
-        upa = upa.changeFirewalledTCP(true).changeFirewalledUDP(true);
-        peerDHT.peerBean().serverPeerAddress(upa);
-        
-        PeerNAT peerNAT = new PeerBuilderNAT(peerDHT.peer()).start();
-        FutureRelayNAT futureRelayNAT = peerNAT.startRelay(getBootstrapAddress());
-
-        //FutureRelayNAT futureRelayNAT = peerNAT.startRelay(futureDiscover, futureNAT);
+    private void bootstrapWithRelay(PeerDHT peerDHT, PeerNAT peerNAT, FutureDiscover futureDiscover,
+                                    FutureNAT futureNAT) {
+        FutureRelayNAT futureRelayNAT = peerNAT.startRelay(futureDiscover, futureNAT);
         futureRelayNAT.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {

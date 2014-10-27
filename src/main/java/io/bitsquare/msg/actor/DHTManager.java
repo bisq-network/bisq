@@ -30,7 +30,7 @@ import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMapChangeListener;
-import net.tomp2p.peers.PeerStatatistic;
+import net.tomp2p.peers.PeerStatistic;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
@@ -84,13 +84,13 @@ public class DHTManager extends AbstractActor {
                                     }
 
                                     @Override
-                                    public void peerRemoved(PeerAddress peerAddress, PeerStatatistic peerStatistics) {
+                                    public void peerRemoved(PeerAddress peerAddress, PeerStatistic peerStatistics) {
                                         log.debug("Peer removed: peerAddress=" + peerAddress + ", " +
                                                 "peerStatistics=" + peerStatistics);
                                     }
 
                                     @Override
-                                    public void peerUpdated(PeerAddress peerAddress, PeerStatatistic peerStatistics) {
+                                    public void peerUpdated(PeerAddress peerAddress, PeerStatistic peerStatistics) {
                                         // log.debug("Peer updated: peerAddress=" + peerAddress + ", 
                                         // peerStatistics=" + peerStatistics);
                                     }
