@@ -14,7 +14,7 @@ There are no central points of control or failure in the Bitsquare network. Ther
 
 Because the fiat money portion of any trade must be transferred via traditional means such as a wire transfer, Bitsquare incorporates first-class support for human arbitration to resolve any errors or disputes.
 
-You can read about all of this and more in the [overview](https://bitsquare.io/images/overview.png), [whitepaper](https://docs.google.com/document/d/1d3EiWZdaM89-P6MVhS53unXv2-pDpSFsN3W4kCGXKgY/edit#), [arbitration](https://docs.google.com/document/d/1LJCRFdtM2Jn2Oiv49qRXwBDG8HZD0Hiedy8tNjErHps/edit) and [risk analysis](https://docs.google.com/document/d/1sHwU7K7C8Nl-fS4Z6X88L-NVJ_WBiKnsSpYpYfyqUXA/edit) documents. Several [screencasts](https://www.youtube.com/playlist?list=PLXvC3iNe_di9bL1A5xyAKI2PzNg8jU092) are available as well.
+You can read about all of this and more in the [overview](https://bitsquare.io/overview.png), [whitepaper](https://bitsquare.io/whitepaper.pdf), [arbitration](http://bitsquare.io/arbitration_system.pdf) and [risk analysis](http://bitsquare.io/risk_analysis.pdf) documents. Several [screencasts](https://www.youtube.com/playlist?list=PLXvC3iNe_di9bL1A5xyAKI2PzNg8jU092) are available as well.
 
 
 Status
@@ -33,7 +33,7 @@ Contact the team and keep up to date using any of the following:
  - The [#bitsquare](https://webchat.freenode.net/?channels=bitsquare) IRC channel on Freenode ([logs](https://botbot.me/freenode/bitsquare)) 
  - Our [mailing list](https://groups.google.com/forum/#!forum/bitsquare)
  - [@bitsquare_](https://twitter.com/bitsquare_) on Twitter
- - [team@bitsquare.io](mailto:team@bitsquare.io)
+ - Get in [contact](https://bitsquare.io/contact/) with us
  - GitHub [Issues](https://github.com/bitsquare/bitsquare/issues)
 
 
