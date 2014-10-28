@@ -152,7 +152,7 @@ public class BootstrappedPeerFactory {
             FutureDiscover futureDiscover;
 
             // just temporary while port forwarding is not working
-            lastSuccessfulBootstrap = "relay";
+            //lastSuccessfulBootstrap = "relay";
 
             switch (lastSuccessfulBootstrap) {
                 case "relay":
@@ -203,7 +203,7 @@ public class BootstrappedPeerFactory {
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
                 setState("Exception at discover: " + t.getMessage(), false);
-                peerDHT.shutdown().awaitUninterruptibly();
+                peerDHT.shutdown();
                 settableFuture.setException(t);
             }
         });
@@ -231,7 +231,7 @@ public class BootstrappedPeerFactory {
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
                 setState("Exception at port forwarding: " + t.getMessage(), false);
-                peerDHT.shutdown().awaitUninterruptibly();
+                peerDHT.shutdown();
                 settableFuture.setException(t);
             }
         });
@@ -253,7 +253,7 @@ public class BootstrappedPeerFactory {
                     setState("Discover with automatic port forwarding has failed " + futureDiscover
                             .failedReason(), false);
                     persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
-                    peerDHT.shutdown().awaitUninterruptibly();
+                    peerDHT.shutdown();
                     settableFuture.setException(new Exception("Discover with automatic port forwarding failed " +
                             futureDiscover.failedReason()));
                 }
@@ -263,7 +263,7 @@ public class BootstrappedPeerFactory {
             public void exceptionCaught(Throwable t) throws Exception {
                 setState("Exception at discover: " + t, false);
                 persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
-                peerDHT.shutdown().awaitUninterruptibly();
+                peerDHT.shutdown();
                 settableFuture.setException(t);
             }
         });
@@ -286,7 +286,7 @@ public class BootstrappedPeerFactory {
                     setState("Bootstrap using relay has failed " + futureRelayNAT.failedReason(), false);
                     persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
                     futureRelayNAT.shutdown();
-                    peerDHT.shutdown().awaitUninterruptibly();
+                    peerDHT.shutdown();
                     settableFuture.setException(new Exception("Bootstrap using relay failed " +
                             futureRelayNAT.failedReason()));
                 }
@@ -297,7 +297,7 @@ public class BootstrappedPeerFactory {
                 setState("Exception at bootstrapWithRelay: " + t, false);
                 persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
                 futureRelayNAT.shutdown();
-                peerDHT.shutdown().awaitUninterruptibly();
+                peerDHT.shutdown();
                 settableFuture.setException(t);
             }
         });
