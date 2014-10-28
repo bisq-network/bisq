@@ -1,3 +1,9 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
+plugins {
+  id "com.github.johnrengelman.shadow" version "1.1.2"
+}
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'application'
@@ -39,6 +45,19 @@ dependencies {
     compile 'net.sourceforge.argparse4j:argparse4j:0.4.4'
     testCompile 'junit:junit:4.11'
     testCompile 'org.mockito:mockito-all:1.9.5'
+}
+
+task packageNative(type:Exec, dependsOn:shadowJar) {
+    if (Os.isFamily(Os.FAMILY_MAC))
+        executable "${project.rootDir}/package/mac.sh"
+    else if (Os.isFamily(Os.FAMILY_UNIX))
+        executable "${project.rootDir}/package/linux.sh"
+    else if (Os.isFamily(Os.FAMILY_WINDOWS))
+        executable "${project.rootDir}/package/windows.bat"
+    else
+        throw new GradleException("Unsupported OS: " + System.properties['os.name'])
+
+    args project.version, shadowJar.archivePath, mainClassName
 }
 
 wrapper.gradleVersion = '2.1'
