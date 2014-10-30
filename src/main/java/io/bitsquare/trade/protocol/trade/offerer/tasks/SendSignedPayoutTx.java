@@ -20,6 +20,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
+import io.bitsquare.network.Peer;
 import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
@@ -29,8 +30,6 @@ import org.bitcoinj.core.ECKey;
 
 import javafx.util.Pair;
 
-import net.tomp2p.peers.PeerAddress;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +38,7 @@ public class SendSignedPayoutTx {
 
     public static void run(ResultHandler resultHandler,
                            ExceptionHandler exceptionHandler,
-                           PeerAddress peerAddress,
+                           Peer peer,
                            MessageFacade messageFacade,
                            WalletFacade walletFacade,
                            String tradeId,
@@ -69,7 +68,7 @@ public class SendSignedPayoutTx {
                     takerPaybackAmount,
                     offererPayoutAddress);
 
-            messageFacade.sendTradeMessage(peerAddress, tradeMessage, new OutgoingTradeMessageListener() {
+            messageFacade.sendTradeMessage(peer, tradeMessage, new OutgoingTradeMessageListener() {
                 @Override
                 public void onResult() {
                     log.trace("BankTransferInitedMessage successfully arrived at peer");

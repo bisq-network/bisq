@@ -25,10 +25,13 @@ import io.bitsquare.msg.listeners.GetPeerAddressListener;
 import io.bitsquare.msg.listeners.IncomingTradeMessageListener;
 import io.bitsquare.msg.listeners.OfferBookListener;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
+import io.bitsquare.network.Peer;
+import io.bitsquare.network.tomp2p.TomP2PPeer;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.user.User;
 
+import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
 
 import java.io.IOException;
@@ -58,7 +61,6 @@ import net.tomp2p.futures.BaseFutureListener;
 import net.tomp2p.futures.FutureDirect;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.Number640;
-import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.storage.Data;
 import net.tomp2p.utils.Utils;
 
@@ -141,8 +143,8 @@ public class TomP2PMessageFacade implements MessageFacade {
             @Override
             public void operationComplete(BaseFuture baseFuture) throws Exception {
                 if (baseFuture.isSuccess() && futureGet.data() != null) {
-                    final PeerAddress peerAddress = (PeerAddress) futureGet.data().object();
-                    Platform.runLater(() -> listener.onResult(peerAddress));
+                    final Peer peer = (Peer) futureGet.data().object();
+                    Platform.runLater(() -> listener.onResult(peer));
                 }
                 else {
                     Platform.runLater(listener::onFailed);
@@ -316,9 +318,12 @@ public class TomP2PMessageFacade implements MessageFacade {
     // Trade process
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void sendTradeMessage(PeerAddress peerAddress, TradeMessage tradeMessage,
+    public void sendTradeMessage(Peer peer, TradeMessage tradeMessage,
                                  OutgoingTradeMessageListener listener) {
-        FutureDirect futureDirect = p2pNode.sendData(peerAddress, tradeMessage);
+        if (!(peer instanceof TomP2PPeer)) {
+            throw new IllegalArgumentException("peer must be of type TomP2PPeer") ;
+        }
+        FutureDirect futureDirect = p2pNode.sendData(((TomP2PPeer)peer).getPeerAddress(), tradeMessage);
         futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
@@ -560,10 +565,10 @@ public class TomP2PMessageFacade implements MessageFacade {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleMessage(Object message, PeerAddress peerAddress) {
+    public void handleMessage(Object message, Peer sender) {
         if (message instanceof TradeMessage) {
             Platform.runLater(() -> incomingTradeMessageListeners.stream().forEach(e ->
-                    e.onMessage((TradeMessage) message, peerAddress)));
+                    e.onMessage((TradeMessage) message, sender)));
         }
     }
 }

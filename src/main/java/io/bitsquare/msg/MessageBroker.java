@@ -17,11 +17,11 @@
 
 package io.bitsquare.msg;
 
-import net.tomp2p.peers.PeerAddress;
+import io.bitsquare.network.Peer;
 
 /**
  * Interface for the object handling incoming messages.
  */
 public interface MessageBroker {
-    void handleMessage(Object message, PeerAddress peerAddress);
+    void handleMessage(Object message, Peer sender);
 }

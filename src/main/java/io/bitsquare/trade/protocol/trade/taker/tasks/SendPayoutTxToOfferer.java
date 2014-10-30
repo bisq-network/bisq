@@ -19,11 +19,10 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
+import io.bitsquare.network.Peer;
 import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
 import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
-
-import net.tomp2p.peers.PeerAddress;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,11 +30,11 @@ import org.slf4j.LoggerFactory;
 public class SendPayoutTxToOfferer {
     private static final Logger log = LoggerFactory.getLogger(SendPayoutTxToOfferer.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, PeerAddress peerAddress,
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, Peer peer,
                            MessageFacade messageFacade, String tradeId, String payoutTxAsHex) {
         log.trace("Run task");
         PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(tradeId, payoutTxAsHex);
-        messageFacade.sendTradeMessage(peerAddress, tradeMessage, new OutgoingTradeMessageListener() {
+        messageFacade.sendTradeMessage(peer, tradeMessage, new OutgoingTradeMessageListener() {
             @Override
             public void onResult() {
                 log.trace("PayoutTxPublishedMessage successfully arrived at peer");

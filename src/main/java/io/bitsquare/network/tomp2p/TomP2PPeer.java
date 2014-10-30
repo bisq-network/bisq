@@ -15,11 +15,29 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg.listeners;
+package io.bitsquare.network.tomp2p;
 
 import io.bitsquare.network.Peer;
-import io.bitsquare.trade.protocol.trade.TradeMessage;
 
-public interface IncomingTradeMessageListener {
-    void onMessage(TradeMessage tradeMessage, Peer sender);
+import com.google.common.base.Objects;
+
+import net.tomp2p.peers.PeerAddress;
+
+public class TomP2PPeer implements Peer {
+
+    private final PeerAddress peerAddress;
+
+    public TomP2PPeer(PeerAddress peerAddress) {
+        this.peerAddress = peerAddress;
+    }
+
+    public PeerAddress getPeerAddress() {
+        return peerAddress;
+    }
+
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("peerAddress", peerAddress)
+                .toString();
+    }
 }

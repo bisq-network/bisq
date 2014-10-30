@@ -25,6 +25,7 @@ import io.bitsquare.msg.listeners.GetPeerAddressListener;
 import io.bitsquare.msg.listeners.IncomingTradeMessageListener;
 import io.bitsquare.msg.listeners.OfferBookListener;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
+import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.user.User;
@@ -44,7 +45,6 @@ import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleLongProperty;
 
 import net.tomp2p.dht.PeerDHT;
-import net.tomp2p.peers.PeerAddress;
 
 public class NoopMessageFacade implements MessageFacade {
 
@@ -61,8 +61,7 @@ public class NoopMessageFacade implements MessageFacade {
     }
 
     @Override
-    public void sendTradeMessage(PeerAddress peerAddress, TradeMessage tradeMessage, OutgoingTradeMessageListener
-            listener) {
+    public void sendTradeMessage(Peer peer, TradeMessage tradeMessage, OutgoingTradeMessageListener listener) {
         throw new UnsupportedOperationException();
     }
 
@@ -163,7 +162,7 @@ public class NoopMessageFacade implements MessageFacade {
     }
 
     @Override
-    public void handleMessage(Object message, PeerAddress peerAddress) {
+    public void handleMessage(Object message, Peer sender) {
         throw new UnsupportedOperationException();
     }
 }

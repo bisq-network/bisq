@@ -19,13 +19,12 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
+import io.bitsquare.network.Peer;
 import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
 
 import org.bitcoinj.core.Coin;
-
-import net.tomp2p.peers.PeerAddress;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +34,7 @@ public class SendTakeOfferFeePayedTxId {
 
     public static void run(ResultHandler resultHandler,
                            ExceptionHandler exceptionHandler,
-                           PeerAddress peerAddress,
+                           Peer peer,
                            MessageFacade messageFacade,
                            String tradeId,
                            String takeOfferFeeTxId,
@@ -45,7 +44,7 @@ public class SendTakeOfferFeePayedTxId {
         TakeOfferFeePayedMessage msg = new TakeOfferFeePayedMessage(tradeId, takeOfferFeeTxId, tradeAmount,
                 pubKeyForThatTradeAsHex);
 
-        messageFacade.sendTradeMessage(peerAddress, msg, new OutgoingTradeMessageListener() {
+        messageFacade.sendTradeMessage(peer, msg, new OutgoingTradeMessageListener() {
             @Override
             public void onResult() {
                 log.trace("TakeOfferFeePayedMessage successfully arrived at peer");

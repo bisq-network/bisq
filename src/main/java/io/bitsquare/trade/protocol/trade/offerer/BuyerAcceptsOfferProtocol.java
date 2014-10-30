@@ -23,6 +23,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
@@ -47,8 +48,6 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Utils;
 
 import java.security.PublicKey;
-
-import net.tomp2p.peers.PeerAddress;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -96,7 +95,7 @@ public class BuyerAcceptsOfferProtocol {
 
     // provided
     private final Trade trade;
-    private final PeerAddress peerAddress;
+    private final Peer peer;
     private final MessageFacade messageFacade;
     private final WalletFacade walletFacade;
     private final BlockChainFacade blockChainFacade;
@@ -139,7 +138,7 @@ public class BuyerAcceptsOfferProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BuyerAcceptsOfferProtocol(Trade trade,
-                                     PeerAddress peerAddress,
+                                     Peer peer,
                                      MessageFacade messageFacade,
                                      WalletFacade walletFacade,
                                      BlockChainFacade blockChainFacade,
@@ -147,7 +146,7 @@ public class BuyerAcceptsOfferProtocol {
                                      User user,
                                      BuyerAcceptsOfferProtocolListener listener) {
         this.trade = trade;
-        this.peerAddress = peerAddress;
+        this.peer = peer;
         this.listener = listener;
         this.messageFacade = messageFacade;
         this.walletFacade = walletFacade;
@@ -173,7 +172,7 @@ public class BuyerAcceptsOfferProtocol {
     public void start() {
         log.debug("start called " + step++);
         state = State.HandleTakeOfferRequest;
-        HandleTakeOfferRequest.run(this::onResultHandleTakeOfferRequest, this::onFault, peerAddress, messageFacade,
+        HandleTakeOfferRequest.run(this::onResultHandleTakeOfferRequest, this::onFault, peer, messageFacade,
                 trade.getState(), tradeId);
     }
 
@@ -236,7 +235,7 @@ public class BuyerAcceptsOfferProtocol {
         state = State.RequestTakerDepositPayment;
         RequestTakerDepositPayment.run(this::onResultRequestTakerDepositPayment,
                 this::onFault,
-                peerAddress,
+                peer,
                 messageFacade,
                 tradeId,
                 bankAccount,
@@ -336,7 +335,7 @@ public class BuyerAcceptsOfferProtocol {
         listener.onDepositTxPublished(depositTransaction);
 
         state = State.SendDepositTxIdToTaker;
-        SendDepositTxIdToTaker.run(this::onResultSendDepositTxIdToTaker, this::onFault, peerAddress, messageFacade,
+        SendDepositTxIdToTaker.run(this::onResultSendDepositTxIdToTaker, this::onFault, peer, messageFacade,
                 tradeId, depositTransaction);
     }
 
@@ -378,7 +377,7 @@ public class BuyerAcceptsOfferProtocol {
         state = State.SendSignedPayoutTx;
         SendSignedPayoutTx.run(this::onResultSendSignedPayoutTx,
                 this::onFault,
-                peerAddress,
+                peer,
                 messageFacade,
                 walletFacade,
                 tradeId,

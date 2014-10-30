@@ -17,10 +17,10 @@
 
 package io.bitsquare.msg.listeners;
 
-import net.tomp2p.peers.PeerAddress;
+import io.bitsquare.network.Peer;
 
 public interface GetPeerAddressListener {
-    void onResult(PeerAddress peerAddress);
+    void onResult(Peer peer);
 
     void onFailed();
 }

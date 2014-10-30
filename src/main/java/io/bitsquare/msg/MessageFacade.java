@@ -25,6 +25,7 @@ import io.bitsquare.msg.listeners.GetPeerAddressListener;
 import io.bitsquare.msg.listeners.IncomingTradeMessageListener;
 import io.bitsquare.msg.listeners.OfferBookListener;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
+import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 
@@ -34,11 +35,9 @@ import java.util.Locale;
 
 import javafx.beans.property.LongProperty;
 
-import net.tomp2p.peers.PeerAddress;
-
 public interface MessageFacade extends MessageBroker {
 
-    void sendTradeMessage(PeerAddress peerAddress, TradeMessage tradeMessage, OutgoingTradeMessageListener listener);
+    void sendTradeMessage(Peer peer, TradeMessage tradeMessage, OutgoingTradeMessageListener listener);
 
     void shutDown();
 

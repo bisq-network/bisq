@@ -21,6 +21,7 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
+import io.bitsquare.network.Peer;
 import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
@@ -30,8 +31,6 @@ import org.bitcoinj.core.Utils;
 
 import java.security.PublicKey;
 
-import net.tomp2p.peers.PeerAddress;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +39,7 @@ public class SendSignedTakerDepositTxAsHex {
 
     public static void run(ResultHandler resultHandler,
                            ExceptionHandler exceptionHandler,
-                           PeerAddress peerAddress,
+                           Peer peer,
                            MessageFacade messageFacade,
                            WalletFacade walletFacade,
                            BankAccount bankAccount,
@@ -69,7 +68,7 @@ public class SendSignedTakerDepositTxAsHex {
                 walletFacade.getAddressInfoByTradeID(tradeId).getAddressString(),
                 takerTxOutIndex,
                 offererTxOutIndex);
-        messageFacade.sendTradeMessage(peerAddress, tradeMessage, new OutgoingTradeMessageListener() {
+        messageFacade.sendTradeMessage(peer, tradeMessage, new OutgoingTradeMessageListener() {
             @Override
             public void onResult() {
                 log.trace("RequestOffererDepositPublicationMessage successfully arrived at peer");

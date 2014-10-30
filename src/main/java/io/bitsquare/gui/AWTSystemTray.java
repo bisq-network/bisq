@@ -18,8 +18,8 @@
 package io.bitsquare.gui;
 
 
-import io.bitsquare.BitsquareUI;
 import io.bitsquare.Bitsquare;
+import io.bitsquare.BitsquareUI;
 import io.bitsquare.gui.util.ImageUtil;
 
 import java.awt.*;

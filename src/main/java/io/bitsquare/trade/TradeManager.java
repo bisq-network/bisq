@@ -21,6 +21,7 @@ import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.network.Peer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.handlers.ErrorMessageHandler;
@@ -54,8 +55,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
-
-import net.tomp2p.peers.PeerAddress;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -243,7 +242,7 @@ public class TradeManager {
     // Trading protocols
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createOffererAsBuyerProtocol(String offerId, PeerAddress sender) {
+    private void createOffererAsBuyerProtocol(String offerId, Peer sender) {
         log.trace("createOffererAsBuyerProtocol offerId = " + offerId);
         if (offers.containsKey(offerId)) {
             Offer offer = offers.get(offerId);
@@ -387,7 +386,7 @@ public class TradeManager {
         return trade;
     }
 
-    //TODO we don't support interruptions yet. 
+    //TODO we don't support interruptions yet.
     // If the user has shut down the app we lose the offererAsBuyerProtocolMap
     // Also we don't support yet offline messaging (mail box)
     public void fiatPaymentStarted(String tradeId) {
@@ -412,7 +411,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Routes the incoming messages to the responsible protocol
-    private void onIncomingTradeMessage(TradeMessage tradeMessage, PeerAddress sender) {
+    private void onIncomingTradeMessage(TradeMessage tradeMessage, Peer sender) {
         // log.trace("processTradingMessage TradeId " + tradeMessage.getTradeId());
         log.trace("onIncomingTradeMessage instance " + tradeMessage.getClass().getSimpleName());
         log.trace("onIncomingTradeMessage sender " + sender);

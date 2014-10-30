@@ -17,6 +17,8 @@
 
 package io.bitsquare.msg;
 
+import io.bitsquare.network.tomp2p.TomP2PPeer;
+
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -139,8 +141,8 @@ public class P2PNode {
     // Generic DHT methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO remove all security features for the moment. There are some problems with a "wrong signature!" msg in 
-    // the logs 
+    // TODO remove all security features for the moment. There are some problems with a "wrong signature!" msg in
+    // the logs
     public FuturePut putDomainProtectedData(Number160 locationKey, Data data) {
         log.trace("putDomainProtectedData");
         return peerDHT.put(locationKey).data(data).start();
@@ -275,7 +277,7 @@ public class P2PNode {
 //
 //        return futureDirect;
 //    }
-// 
+//
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -334,7 +336,7 @@ public class P2PNode {
 
             if (!sender.equals(peerDHT.peer().peerAddress()))
                 if (messageBroker != null)
-                    messageBroker.handleMessage(request, sender);
+                    messageBroker.handleMessage(request, new TomP2PPeer(sender));
                 else
                     log.error("Received msg from myself. That should never happen.");
             return null;

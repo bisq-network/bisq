@@ -15,11 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg.listeners;
+package io.bitsquare.network;
 
-import io.bitsquare.network.Peer;
-import io.bitsquare.trade.protocol.trade.TradeMessage;
-
-public interface IncomingTradeMessageListener {
-    void onMessage(TradeMessage tradeMessage, Peer sender);
+public interface Peer {
 }

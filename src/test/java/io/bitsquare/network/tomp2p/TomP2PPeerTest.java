@@ -15,11 +15,18 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg.listeners;
+package io.bitsquare.network.tomp2p;
 
-import io.bitsquare.network.Peer;
-import io.bitsquare.trade.protocol.trade.TradeMessage;
+import org.junit.Test;
 
-public interface IncomingTradeMessageListener {
-    void onMessage(TradeMessage tradeMessage, Peer sender);
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.*;
+
+public class TomP2PPeerTest {
+
+    @Test
+    public void testToString() {
+        TomP2PPeer peer = new TomP2PPeer(null);
+        assertThat(peer.toString(), equalTo("TomP2PPeer{peerAddress=null}"));
+    }
 }
