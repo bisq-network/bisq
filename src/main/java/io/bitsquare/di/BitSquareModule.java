@@ -118,7 +118,7 @@ class StaticSeedNodeAddressesProvider implements Provider<SeedNodeAddress.Static
         log.info("seedNode from config file: " + BitSquareModule.properties.getProperty("defaultSeedNode"));
         String seedNodeFromConfig = BitSquareModule.properties.getProperty("defaultSeedNode");
 
-        // Set default 
+        // Set default
         //SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST;
         SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1;
 
