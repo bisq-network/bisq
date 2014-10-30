@@ -29,25 +29,25 @@ import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.event.WeakEventHandler;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
-import javafx.stage.Popup;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
+import org.controlsfx.control.PopOver;
+
 
 /**
- * Created by
- * User: hansolo
- * Date: 01.07.13
- * Time: 07:10
+ * A copy of the original {@link eu.hansolo.enzo.notification.Notification} class at revision eb1d321, containing
+ * several changes that were otherwise not possible through subclassing or other customization via the existing
+ * Notification API. See git history for this file for exact details as to what has been changed. All other
+ * {@code eu.hansolo.enzo.*} types are loaded from the enzo jar (see build.gradle for details).
  */
 public class Notification {
     public static final Image INFO_ICON = new Image(Notifier.class.getResourceAsStream("info.png"));
@@ -81,10 +81,10 @@ public class Notification {
 
         private static final double ICON_WIDTH = 24;
         private static final double ICON_HEIGHT = 24;
-        private static double width = 300;
-        private static double height = 80;
+        private static double width = 321;
+        private static double height = 49;
         private static double offsetX = 0;
-        private static double offsetY = 25;
+        private static double offsetY = 2;
         private static double spacingY = 5;
         private static Pos popupLocation = Pos.TOP_RIGHT;
         private static Stage stageRef = null;
@@ -92,7 +92,7 @@ public class Notification {
         private Duration popupAnimationTime;
         private Stage stage;
         private Scene scene;
-        private ObservableList<Popup> popups;
+        private ObservableList<PopOver> popups;
 
 
         // ******************** Constructor ***************************************
@@ -112,11 +112,12 @@ public class Notification {
         private void initGraphics() {
             scene = new Scene(new Region());
             scene.setFill(null);
-            scene.getStylesheets().add(getClass().getResource("notifier.css").toExternalForm());
+            scene.getStylesheets().setAll(
+                    getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm(),
+                    getClass().getResource("/io/bitsquare/gui/images.css").toExternalForm());
 
             stage = new Stage();
             stage.initStyle(StageStyle.TRANSPARENT);
-            stage.setAlwaysOnTop(true);
         }
 
 
@@ -312,7 +313,7 @@ public class Notification {
         private void preOrder() {
             if (popups.isEmpty()) return;
             IntStream.range(0, popups.size()).parallel().forEachOrdered(
-                    i -> {
+                    i -> Platform.runLater(() -> {
                         switch (popupLocation) {
                             case TOP_LEFT:
                             case TOP_CENTER:
@@ -330,7 +331,7 @@ public class Notification {
                                 popups.get(i).setY(popups.get(i).getY() - height - spacingY);
                                 break;
                         }
-                    }
+                    })
             );
         }
 
@@ -340,39 +341,36 @@ public class Notification {
          * @param NOTIFICATION
          */
         private void showPopup(final Notification NOTIFICATION) {
+            ImageView icon = new ImageView(
+                    new Image(Notifier.class.getResourceAsStream("/images/notification_logo.png")));
+            icon.relocate(10, 7);
+
             Label title = new Label(NOTIFICATION.TITLE);
-            title.getStyleClass().add("title");
+            title.setStyle(" -fx-text-fill:#333333; -fx-font-size:12; -fx-font-weight:bold;");
+            title.relocate(60, 6);
 
-            ImageView icon = new ImageView(NOTIFICATION.IMAGE);
-            icon.setFitWidth(ICON_WIDTH);
-            icon.setFitHeight(ICON_HEIGHT);
+            Label message = new Label(NOTIFICATION.MESSAGE);
+            message.relocate(60, 25);
+            message.setStyle(" -fx-text-fill:#333333; -fx-font-size:11; ");
 
-            Label message = new Label(NOTIFICATION.MESSAGE, icon);
-            message.getStyleClass().add("message");
+            Pane popupLayout = new Pane();
+            popupLayout.setPrefSize(width, height);
+            popupLayout.getChildren().addAll(icon, title, message);
 
-            VBox popupLayout = new VBox();
-            popupLayout.setSpacing(10);
-            popupLayout.setPadding(new Insets(10, 10, 10, 10));
-            popupLayout.getChildren().addAll(title, message);
-
-            StackPane popupContent = new StackPane();
-            popupContent.setPrefSize(width, height);
-            popupContent.getStyleClass().add("notification");
-            popupContent.getChildren().addAll(popupLayout);
-
-            final Popup POPUP = new Popup();
-            POPUP.setX(getX());
-            POPUP.setY(getY());
-            POPUP.getContent().add(popupContent);
-            POPUP.addEventHandler(MouseEvent.MOUSE_PRESSED, new WeakEventHandler<>(event ->
-                    fireNotificationEvent(new NotificationEvent(NOTIFICATION, Notifier.this, POPUP,
+            PopOver popOver = new PopOver(popupLayout);
+            popOver.setDetachable(false);
+            popOver.setArrowSize(0);
+            popOver.setX(getX());
+            popOver.setY(getY());
+            popOver.addEventHandler(MouseEvent.MOUSE_PRESSED, new WeakEventHandler<>(event ->
+                    fireNotificationEvent(new NotificationEvent(NOTIFICATION, Notifier.this, popOver,
                             NotificationEvent.NOTIFICATION_PRESSED))
             ));
-            popups.add(POPUP);
+            popups.add(popOver);
 
             // Add a timeline for popup fade out
-            KeyValue fadeOutBegin = new KeyValue(POPUP.opacityProperty(), 1.0);
-            KeyValue fadeOutEnd = new KeyValue(POPUP.opacityProperty(), 0.0);
+            KeyValue fadeOutBegin = new KeyValue(popOver.opacityProperty(), 1.0);
+            KeyValue fadeOutEnd = new KeyValue(popOver.opacityProperty(), 0.0);
 
             KeyFrame kfBegin = new KeyFrame(Duration.ZERO, fadeOutBegin);
             KeyFrame kfEnd = new KeyFrame(popupAnimationTime, fadeOutEnd);
@@ -380,9 +378,9 @@ public class Notification {
             Timeline timeline = new Timeline(kfBegin, kfEnd);
             timeline.setDelay(popupLifetime);
             timeline.setOnFinished(actionEvent -> Platform.runLater(() -> {
-                POPUP.hide();
-                popups.remove(POPUP);
-                fireNotificationEvent(new NotificationEvent(NOTIFICATION, Notifier.this, POPUP,
+                popOver.hide();
+                popups.remove(popOver);
+                fireNotificationEvent(new NotificationEvent(NOTIFICATION, Notifier.this, popOver,
                         NotificationEvent.HIDE_NOTIFICATION));
             }));
 
@@ -393,8 +391,8 @@ public class Notification {
                 stage.show();
             }
 
-            POPUP.show(stage);
-            fireNotificationEvent(new NotificationEvent(NOTIFICATION, Notifier.this, POPUP,
+            popOver.show(stage);
+            fireNotificationEvent(new NotificationEvent(NOTIFICATION, Notifier.this, popOver,
                     NotificationEvent.SHOW_NOTIFICATION));
             timeline.play();
         }
