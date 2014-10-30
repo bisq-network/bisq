@@ -37,6 +37,7 @@ import io.bitsquare.msg.DHTSeedService;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.P2PNode;
 import io.bitsquare.msg.SeedNodeAddress;
+import io.bitsquare.msg.TomP2PMessageFacade;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeManager;
@@ -75,7 +76,7 @@ public class BitSquareModule extends AbstractModule {
         bind(FeePolicy.class).asEagerSingleton();
 
         bind(BlockChainFacade.class).asEagerSingleton();
-        bind(MessageFacade.class).asEagerSingleton();
+        bind(MessageFacade.class).to(TomP2PMessageFacade.class).asEagerSingleton();
         bind(P2PNode.class).asEagerSingleton();
         bind(BootstrappedPeerFactory.class).asEagerSingleton();
 
