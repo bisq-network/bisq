@@ -92,9 +92,6 @@ import static org.bitcoinj.script.ScriptOpCodes.OP_RETURN;
 public class WalletFacade {
     private static final Logger log = LoggerFactory.getLogger(WalletFacade.class);
 
-    public static final String MAIN_NET = "mainnet";
-    public static final String TEST_NET = "testnet";
-    public static final String REG_TEST_NET = "regtest";
     public static final String WALLET_PREFIX = Bitsquare.getAppName();
 
     private final ReentrantLock lock = Threading.lock("lock");

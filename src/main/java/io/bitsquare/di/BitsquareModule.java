@@ -17,53 +17,31 @@
 
 package io.bitsquare.di;
 
-
 import io.bitsquare.Bitsquare;
-import io.bitsquare.btc.BlockChainFacade;
-import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.crypto.CryptoFacade;
-import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.OverlayManager;
-import io.bitsquare.gui.main.trade.offerbook.OfferBook;
-import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
-import io.bitsquare.gui.util.validation.BtcValidator;
-import io.bitsquare.gui.util.validation.FiatValidator;
-import io.bitsquare.gui.util.validation.InputValidator;
-import io.bitsquare.gui.util.validation.PasswordValidator;
-import io.bitsquare.msg.BootstrappedPeerFactory;
-import io.bitsquare.msg.DHTSeedService;
-import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.msg.P2PNode;
-import io.bitsquare.msg.SeedNodeAddress;
-import io.bitsquare.msg.TomP2PMessageFacade;
+import io.bitsquare.btc.BitcoinModule;
+import io.bitsquare.crypto.CryptoModule;
+import io.bitsquare.gui.GuiModule;
+import io.bitsquare.msg.DefaultMessageModule;
+import io.bitsquare.msg.MessageModule;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.TradeModule;
 import io.bitsquare.user.User;
 import io.bitsquare.util.ConfigLoader;
 
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.RegTestParams;
-import org.bitcoinj.params.TestNet3Params;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
-import com.google.inject.name.Names;
-
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorSystem;
 
-public class BitsquareModule extends AbstractModule {
-    private static final Logger log = LoggerFactory.getLogger(BitsquareModule.class);
+public class BitsquareModule extends AbstractBitsquareModule {
 
-    static Properties properties;
+    public BitsquareModule() {
+        this(ConfigLoader.loadConfig());
+    }
+
+    public BitsquareModule(Properties properties) {
+        super(properties);
+    }
 
     @Override
     protected void configure() {
@@ -71,112 +49,33 @@ public class BitsquareModule extends AbstractModule {
         bind(Persistence.class).asEagerSingleton();
         bind(Settings.class).asEagerSingleton();
 
-        bind(CryptoFacade.class).asEagerSingleton();
-        bind(WalletFacade.class).asEagerSingleton();
-        bind(FeePolicy.class).asEagerSingleton();
+        install(messageModule());
+        install(bitcoinModule());
+        install(cryptoModule());
+        install(tradeModule());
+        install(guiModule());
 
-        bind(BlockChainFacade.class).asEagerSingleton();
-        bind(MessageFacade.class).to(TomP2PMessageFacade.class).asEagerSingleton();
-        bind(P2PNode.class).asEagerSingleton();
-        bind(BootstrappedPeerFactory.class).asEagerSingleton();
+        bind(ActorSystem.class).toInstance(ActorSystem.create(Bitsquare.getAppName()));
+    }
 
-        bind(TradeManager.class).asEagerSingleton();
-        bind(OfferBook.class).asEagerSingleton();
-        bind(Navigation.class).asEagerSingleton();
-        bind(OverlayManager.class).asEagerSingleton();
-        bind(BSFormatter.class).asEagerSingleton();
+    protected MessageModule messageModule() {
+        return new DefaultMessageModule(properties);
+    }
 
-        bind(BankAccountNumberValidator.class).asEagerSingleton();
-        bind(BtcValidator.class).asEagerSingleton();
-        bind(FiatValidator.class).asEagerSingleton();
-        bind(InputValidator.class).asEagerSingleton();
-        bind(PasswordValidator.class).asEagerSingleton();
+    protected BitcoinModule bitcoinModule() {
+        return new BitcoinModule(properties);
+    }
 
-        bind(NetworkParameters.class).toProvider(NetworkParametersProvider.class).asEagerSingleton();
+    protected CryptoModule cryptoModule() {
+        return new CryptoModule(properties);
+    }
 
-        // we will probably later disc storage instead of memory storage for TomP2P
-        // bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(true);
-        bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(false);
+    protected TradeModule tradeModule() {
+        return new TradeModule(properties);
+    }
 
-        bind(SeedNodeAddress.StaticSeedNodeAddresses.class).annotatedWith(Names.named("defaultSeedNode"))
-                .toProvider(StaticSeedNodeAddressesProvider.class).asEagerSingleton();
-
-        // Actor Related Classes to Inject
-        bind(ActorSystem.class).toProvider(ActorSystemProvider.class).asEagerSingleton();
-
-        bind(DHTSeedService.class);
+    protected GuiModule guiModule() {
+        return new GuiModule(properties);
     }
 }
 
-class StaticSeedNodeAddressesProvider implements Provider<SeedNodeAddress.StaticSeedNodeAddresses> {
-    private static final Logger log = LoggerFactory.getLogger(StaticSeedNodeAddressesProvider.class);
-
-    public SeedNodeAddress.StaticSeedNodeAddresses get() {
-        if (BitsquareModule.properties == null)
-            BitsquareModule.properties = ConfigLoader.loadConfig();
-
-        log.info("seedNode from config file: " + BitsquareModule.properties.getProperty("defaultSeedNode"));
-        String seedNodeFromConfig = BitsquareModule.properties.getProperty("defaultSeedNode");
-
-        // Set default
-        //SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST;
-        SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1;
-
-        // if defined in config we override the above
-//        if (seedNodeFromConfig != null)
-//            seedNode = seedNodeFromConfig.equals("localhost") ?
-//                    SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST :
-//                    SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN;
-
-        return seedNode;
-    }
-}
-
-class NetworkParametersProvider implements Provider<NetworkParameters> {
-    private static final Logger log = LoggerFactory.getLogger(NetworkParametersProvider.class);
-
-    public NetworkParameters get() {
-        NetworkParameters result = null;
-
-        //If config is available we override the networkType defined in Guice with the one from the config file
-        if (BitsquareModule.properties == null)
-            BitsquareModule.properties = ConfigLoader.loadConfig();
-
-        log.info("networkType from config file: " + BitsquareModule.properties.getProperty("networkType"));
-        String networkTypeFromConfig = BitsquareModule.properties.getProperty("networkType");
-
-        // Set default
-        // String networkType= WalletFacade.MAIN_NET;
-        String networkType = WalletFacade.TEST_NET;
-        //String networkType = WalletFacade.REG_TEST_NET;
-
-        if (networkTypeFromConfig != null)
-            networkType = networkTypeFromConfig;
-
-        switch (networkType) {
-            case WalletFacade.MAIN_NET:
-                result = MainNetParams.get();
-                break;
-            case WalletFacade.TEST_NET:
-                result = TestNet3Params.get();
-                break;
-            case WalletFacade.REG_TEST_NET:
-                result = RegTestParams.get();
-                break;
-        }
-        return result;
-    }
-}
-
-class ActorSystemProvider implements Provider<ActorSystem> {
-
-    @Override
-    public ActorSystem get() {
-        ActorSystem system = ActorSystem.create(Bitsquare.getAppName());
-
-        // create top level actors
-        //system.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
-
-        return system;
-    }
-}

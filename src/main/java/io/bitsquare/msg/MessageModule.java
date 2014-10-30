@@ -15,12 +15,9 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network;
+package io.bitsquare.msg;
 
-/**
- * A peer on the Bitsquare network.
- *
- * @author Chris Beams
- */
-public interface Peer {
+import com.google.inject.Module;
+
+public interface MessageModule extends Module {
 }

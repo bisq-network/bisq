@@ -15,7 +15,9 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.util;
+package io.bitsquare.msg;
+
+import io.bitsquare.util.MessageHandler;
 
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;

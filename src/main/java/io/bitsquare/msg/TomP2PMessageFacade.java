@@ -31,7 +31,6 @@ import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.user.User;
 
-import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
 
 import java.io.IOException;
@@ -77,8 +76,8 @@ import org.slf4j.LoggerFactory;
  * <p>
  * TODO: improve callbacks that Platform.runLater is not necessary. We call usually that methods form teh UI thread.
  */
-public class TomP2PMessageFacade implements MessageFacade {
-    private static final Logger log = LoggerFactory.getLogger(MessageFacade.class);
+class TomP2PMessageFacade implements MessageFacade {
+    private static final Logger log = LoggerFactory.getLogger(TomP2PMessageFacade.class);
     private static final String ARBITRATORS_ROOT = "ArbitratorsRoot";
 
     private final P2PNode p2pNode;

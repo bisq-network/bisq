@@ -23,6 +23,11 @@ import com.google.common.base.Objects;
 
 import net.tomp2p.peers.PeerAddress;
 
+/**
+ * A {@link Peer} implementation that encapsulates a TomP2P {@link PeerAddress}.
+ *
+ * @author Chris Beams
+ */
 public class TomP2PPeer implements Peer {
 
     private final PeerAddress peerAddress;

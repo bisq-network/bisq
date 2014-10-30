@@ -15,12 +15,20 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network;
+package io.bitsquare.crypto;
 
-/**
- * A peer on the Bitsquare network.
- *
- * @author Chris Beams
- */
-public interface Peer {
+import io.bitsquare.di.AbstractBitsquareModule;
+
+import java.util.Properties;
+
+public class CryptoModule extends AbstractBitsquareModule {
+
+    public CryptoModule(Properties properties) {
+        super(properties);
+    }
+
+    @Override
+    protected void configure() {
+        bind(CryptoFacade.class).asEagerSingleton();
+    }
 }

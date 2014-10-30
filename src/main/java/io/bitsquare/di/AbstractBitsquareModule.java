@@ -15,12 +15,17 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network;
+package io.bitsquare.di;
 
-/**
- * A peer on the Bitsquare network.
- *
- * @author Chris Beams
- */
-public interface Peer {
+import com.google.inject.AbstractModule;
+
+import java.util.Properties;
+
+public abstract class AbstractBitsquareModule extends AbstractModule {
+
+    protected final Properties properties;
+
+    public AbstractBitsquareModule(Properties properties) {
+        this.properties = properties;
+    }
 }

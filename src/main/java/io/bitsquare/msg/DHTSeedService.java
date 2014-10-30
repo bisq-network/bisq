@@ -19,7 +19,6 @@ package io.bitsquare.msg;
 
 import io.bitsquare.msg.actor.DHTManager;
 import io.bitsquare.msg.actor.command.InitializePeer;
-import io.bitsquare.util.ActorService;
 
 import com.google.inject.Inject;
 

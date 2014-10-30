@@ -15,12 +15,8 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.network;
+package io.bitsquare.btc;
 
-/**
- * A peer on the Bitsquare network.
- *
- * @author Chris Beams
- */
-public interface Peer {
+public enum BitcoinNetwork {
+    MAINNET, TESTNET, REGTEST;
 }
