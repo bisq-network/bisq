@@ -44,10 +44,10 @@ import org.controlsfx.control.PopOver;
 
 
 /**
- * Created by
- * User: hansolo
- * Date: 01.07.13
- * Time: 07:10
+ * A copy of the original {@link eu.hansolo.enzo.notification.Notification} class at revision eb1d321, containing
+ * several changes that were otherwise not possible through subclassing or other customization via the existing
+ * Notification API. See git history for this file for exact details as to what has been changed. All other
+ * {@code eu.hansolo.enzo.*} types are loaded from the enzo jar (see build.gradle for details).
  */
 public class Notification {
     public static final Image INFO_ICON = new Image(Notifier.class.getResourceAsStream("info.png"));
@@ -112,13 +112,12 @@ public class Notification {
         private void initGraphics() {
             scene = new Scene(new Region());
             scene.setFill(null);
-            // scene.getStylesheets().add(getClass().getResource("notifier.css").toExternalForm());
-            scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm(),
+            scene.getStylesheets().setAll(
+                    getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm(),
                     getClass().getResource("/io/bitsquare/gui/images.css").toExternalForm());
 
             stage = new Stage();
             stage.initStyle(StageStyle.TRANSPARENT);
-            // stage.setAlwaysOnTop(true);                        
         }
 
 
@@ -314,43 +313,26 @@ public class Notification {
         private void preOrder() {
             if (popups.isEmpty()) return;
             IntStream.range(0, popups.size()).parallel().forEachOrdered(
-                    i -> {
-                        Platform.runLater(() -> preOrderTask(i));
-                   /* switch (popupLocation) {
-                        case TOP_LEFT: case TOP_CENTER: case TOP_RIGHT: 
-                            popups.get(i).setY(popups.get(i).getY() + height + spacingY); 
-                            break;
-                        
-                        case BOTTOM_LEFT: case BOTTOM_CENTER: case BOTTOM_RIGHT:                             
-                            popups.get(i).setY(popups.get(i).getY() - height - spacingY);                             
-                            break;
-                        
-                        default: 
-                            popups.get(i).setY(popups.get(i).getY() - height - spacingY);
-                            break;
-                    }  */
-                    }
+                    i -> Platform.runLater(() -> {
+                        switch (popupLocation) {
+                            case TOP_LEFT:
+                            case TOP_CENTER:
+                            case TOP_RIGHT:
+                                popups.get(i).setY(popups.get(i).getY() + height + spacingY);
+                                break;
+
+                            case BOTTOM_LEFT:
+                            case BOTTOM_CENTER:
+                            case BOTTOM_RIGHT:
+                                popups.get(i).setY(popups.get(i).getY() - height - spacingY);
+                                break;
+
+                            default:
+                                popups.get(i).setY(popups.get(i).getY() - height - spacingY);
+                                break;
+                        }
+                    })
             );
-        }
-
-        private void preOrderTask(int i) {
-            switch (popupLocation) {
-                case TOP_LEFT:
-                case TOP_CENTER:
-                case TOP_RIGHT:
-                    popups.get(i).setY(popups.get(i).getY() + height + spacingY);
-                    break;
-
-                case BOTTOM_LEFT:
-                case BOTTOM_CENTER:
-                case BOTTOM_RIGHT:
-                    popups.get(i).setY(popups.get(i).getY() - height - spacingY);
-                    break;
-
-                default:
-                    popups.get(i).setY(popups.get(i).getY() - height - spacingY);
-                    break;
-            }
         }
 
         /**
@@ -359,9 +341,8 @@ public class Notification {
          * @param NOTIFICATION
          */
         private void showPopup(final Notification NOTIFICATION) {
-            ImageView icon = new ImageView(new Image(Notifier.class.getResourceAsStream("/images/notification_logo" +
-                    ".png")));
-            //icon.setId("notification-logo");
+            ImageView icon = new ImageView(
+                    new Image(Notifier.class.getResourceAsStream("/images/notification_logo.png")));
             icon.relocate(10, 7);
 
             Label title = new Label(NOTIFICATION.TITLE);

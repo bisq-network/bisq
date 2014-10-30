@@ -43,6 +43,7 @@ dependencies {
     compile 'net.jcip:jcip-annotations:1.0'
     compile 'org.jetbrains:annotations:13.0'
     compile 'net.sourceforge.argparse4j:argparse4j:0.4.4'
+    compile 'eu.hansolo.enzo:Enzo:0.1.5'
     testCompile 'junit:junit:4.11'
     testCompile 'org.mockito:mockito-all:1.9.5'
 }
