@@ -45,7 +45,6 @@ dependencies {
     compile 'net.sourceforge.argparse4j:argparse4j:0.4.4'
     compile 'eu.hansolo.enzo:Enzo:0.1.5'
     testCompile 'junit:junit:4.11'
-    testCompile 'org.mockito:mockito-all:1.9.5'
 }
 
 task packageNative(type:Exec, dependsOn:shadowJar) {
