@@ -17,8 +17,7 @@
 
 package io.bitsquare.gui.main.account.arbitrator;
 
-import io.bitsquare.BitSquare;
-import io.bitsquare.BitSquareUI;
+import io.bitsquare.BitsquareUI;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.account.arbitrator.registration.ArbitratorRegistrationViewCB;
@@ -103,7 +102,7 @@ public class ArbitratorSettingsViewCB extends CachedViewCB {
             final Parent view = loader.load();
             arbitratorRegistrationViewCB = loader.getController();
 
-            final Stage rootStage = BitSquareUI.getPrimaryStage();
+            final Stage rootStage = BitsquareUI.getPrimaryStage();
             final Stage stage = new Stage();
             stage.setTitle("Arbitrator");
             stage.setMinWidth(800);

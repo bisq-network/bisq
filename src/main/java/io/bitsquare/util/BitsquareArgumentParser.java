@@ -46,9 +46,9 @@ public class BitsquareArgumentParser {
     private final ArgumentParser parser;
 
     public BitsquareArgumentParser() {
-        parser = ArgumentParsers.newArgumentParser("BitSquare")
+        parser = ArgumentParsers.newArgumentParser("Bitsquare")
                 .defaultHelp(true)
-                .description("BitSquare - The decentralized bitcoin exchange.");
+                .description("Bitsquare - The decentralized bitcoin exchange.");
         parser.addArgument("-s", "--" + SEED_FLAG)
                 .action(Arguments.storeTrue())
                 .help("Start as DHT seed peer, no UI.");

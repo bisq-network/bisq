@@ -17,7 +17,7 @@
 
 package io.bitsquare.msg.dhttest;
 
-import io.bitsquare.di.BitSquareModule;
+import io.bitsquare.di.BitsquareModule;
 import io.bitsquare.util.ViewLoader;
 
 import com.google.inject.Guice;
@@ -50,7 +50,7 @@ public class DHTTestRunner extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
-        Injector injector = Guice.createInjector(new BitSquareModule());
+        Injector injector = Guice.createInjector(new BitsquareModule());
         ViewLoader.setInjector(injector);
 
         pane = new StackPane();

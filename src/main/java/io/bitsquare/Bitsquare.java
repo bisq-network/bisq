@@ -46,8 +46,8 @@ import net.sourceforge.argparse4j.inf.Namespace;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
-public class BitSquare {
-    private static final Logger log = LoggerFactory.getLogger(BitSquare.class);
+public class Bitsquare {
+    private static final Logger log = LoggerFactory.getLogger(Bitsquare.class);
 
     private static String appName = "Bitsquare";
     private static int clientPort;
@@ -145,7 +145,7 @@ public class BitSquare {
             else {
                 // We use a random port for the client if no port is passed to the application
                 clientPort = (port == -1) ? new Ports().tcpPort() : port;
-                Application.launch(BitSquareUI.class, args);
+                Application.launch(BitsquareUI.class, args);
             }
         }
     }

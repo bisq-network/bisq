@@ -18,8 +18,8 @@
 package io.bitsquare.gui;
 
 
-import io.bitsquare.BitSquare;
-import io.bitsquare.BitSquareUI;
+import io.bitsquare.BitsquareUI;
+import io.bitsquare.Bitsquare;
 import io.bitsquare.gui.util.ImageUtil;
 
 import java.awt.*;
@@ -47,10 +47,10 @@ public class AWTSystemTray {
     private static MenuItem showGuiItem;
     private static Stage stage;
     private static ActorSystem actorSystem;
-    private static BitSquareUI application;
+    private static BitsquareUI application;
     private static TrayIcon trayIcon;
 
-    public static void createSystemTray(Stage stage, ActorSystem actorSystem, BitSquareUI application) {
+    public static void createSystemTray(Stage stage, ActorSystem actorSystem, BitsquareUI application) {
         AWTSystemTray.stage = stage;
         AWTSystemTray.actorSystem = actorSystem;
         AWTSystemTray.application = application;
@@ -65,10 +65,10 @@ public class AWTSystemTray {
             else
                 trayIcon = new TrayIcon(getImage(ImageUtil.SYS_TRAY));
 
-            trayIcon.setToolTip("BitSquare P2P Fiat-Bitcoin exchange");
+            trayIcon.setToolTip("Bitsquare P2P Fiat-Bitcoin exchange");
 
             PopupMenu popupMenu = new PopupMenu();
-            MenuItem aboutItem = new MenuItem("Info about " + BitSquare.getAppName());
+            MenuItem aboutItem = new MenuItem("Info about " + Bitsquare.getAppName());
             popupMenu.add(aboutItem);
             popupMenu.addSeparator();
             showGuiItem = new MenuItem("Close exchange window");

@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.help;
 
-import io.bitsquare.BitSquareUI;
+import io.bitsquare.BitsquareUI;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -30,7 +30,7 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// TODO Find good solution for a web based help content management system. 
+// TODO Find good solution for a web based help content management system.
 public class Help {
     private static final Logger log = LoggerFactory.getLogger(Help.class);
 
@@ -49,7 +49,7 @@ public class Help {
             if (helpWindow == null) {
                 helpWindow = new Stage();
                 helpWindow.initModality(Modality.NONE);
-                helpWindow.initOwner(BitSquareUI.getPrimaryStage());
+                helpWindow.initOwner(BitsquareUI.getPrimaryStage());
                 webView = new WebView();
                 helpWindow.setScene(new Scene(webView, 800, 600));
             }

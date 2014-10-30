@@ -17,7 +17,7 @@
 
 package io.bitsquare.btc;
 
-import io.bitsquare.BitSquare;
+import io.bitsquare.Bitsquare;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
@@ -95,7 +95,7 @@ public class WalletFacade {
     public static final String MAIN_NET = "mainnet";
     public static final String TEST_NET = "testnet";
     public static final String REG_TEST_NET = "regtest";
-    public static final String WALLET_PREFIX = BitSquare.getAppName();
+    public static final String WALLET_PREFIX = Bitsquare.getAppName();
 
     private final ReentrantLock lock = Threading.lock("lock");
     private final NetworkParameters params;
@@ -179,9 +179,9 @@ public class WalletFacade {
         }
         walletAppKit.setDownloadListener(downloadListener)
                 .setBlockingStartup(false)
-                .setUserAgent("BitSquare", "0.1");
-        
-        /* 
+                .setUserAgent("Bitsquare", "0.1");
+
+        /*
         // TODO restore from DeterministicSeed
         if (seed != null)
             walletAppKit.restoreWalletFromSeed(seed);
@@ -554,7 +554,7 @@ public class WalletFacade {
         tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 
         // We don't take a fee at the moment
-        // 0.0000454 BTC will get extra to miners as it is lower then durst 
+        // 0.0000454 BTC will get extra to miners as it is lower then durst
        /* Coin fee = FeePolicy.REGISTRATION_FEE
                 .subtract(Transaction.MIN_NONDUST_OUTPUT)
                 .subtract(FeePolicy.TX_FEE);

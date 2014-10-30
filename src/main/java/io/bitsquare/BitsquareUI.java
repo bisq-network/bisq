@@ -18,7 +18,7 @@
 package io.bitsquare;
 
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.di.BitSquareModule;
+import io.bitsquare.di.BitsquareModule;
 import io.bitsquare.gui.AWTSystemTray;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.Popups;
@@ -49,8 +49,8 @@ import org.slf4j.LoggerFactory;
 import akka.actor.ActorSystem;
 import lighthouse.files.AppDirectory;
 
-public class BitSquareUI extends Application {
-    private static final Logger log = LoggerFactory.getLogger(BitSquareUI.class);
+public class BitsquareUI extends Application {
+    private static final Logger log = LoggerFactory.getLogger(BitsquareUI.class);
 
     public static final boolean fillFormsWithDummyData = true;
 
@@ -59,7 +59,7 @@ public class BitSquareUI extends Application {
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
 
-    public void BitSquareUI() {
+    public void BitsquareUI() {
         Profiler.init();
     }
 
@@ -69,26 +69,26 @@ public class BitSquareUI extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        Profiler.printMsgWithTime("BitSquare.start called");
-        BitSquareUI.primaryStage = primaryStage;
+        Profiler.printMsgWithTime("Bitsquare.start called");
+        BitsquareUI.primaryStage = primaryStage;
 
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions
                 (Throwables.getRootCause(throwable)));
 
         try {
-            AppDirectory.initAppDir(BitSquare.getAppName());
+            AppDirectory.initAppDir(Bitsquare.getAppName());
         } catch (IOException e) {
             log.error(e.getMessage());
         }
 
-        final Injector injector = Guice.createInjector(new BitSquareModule());
+        final Injector injector = Guice.createInjector(new BitsquareModule());
 
         // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
         AWTSystemTray.createSystemTray(primaryStage, injector.getInstance(ActorSystem.class), this);
 
         walletFacade = injector.getInstance(WalletFacade.class);
         messageFacade = injector.getInstance(MessageFacade.class);
-        Profiler.printMsgWithTime("BitSquare: messageFacade, walletFacade created");
+        Profiler.printMsgWithTime("Bitsquare: messageFacade, walletFacade created");
 
         // apply stored data
         final User user = injector.getInstance(User.class);
@@ -101,7 +101,7 @@ public class BitSquareUI extends Application {
 
         settings.applyPersistedSettings((Settings) persistence.read(settings.getClass().getName()));
 
-        primaryStage.setTitle("BitSquare (" + BitSquare.getAppName() + ")");
+        primaryStage.setTitle("Bitsquare (" + Bitsquare.getAppName() + ")");
 
         // sometimes there is a rendering bug, see https://github.com/bitsquare/bitsquare/issues/160
         if (ImageUtil.isRetina())

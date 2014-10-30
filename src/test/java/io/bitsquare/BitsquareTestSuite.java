@@ -37,5 +37,5 @@ import org.junit.runners.Suite;
         BtcValidatorTest.class
 })
 
-public class BitSquareTestSuite {
+public class BitsquareTestSuite {
 }

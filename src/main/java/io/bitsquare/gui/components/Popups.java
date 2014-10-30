@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.BitSquareUI;
+import io.bitsquare.BitsquareUI;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.locale.BSResources;
 
@@ -70,7 +70,7 @@ public class Popups {
 
     public static void openInfoPopup(String masthead, String message, List<Action> actions) {
         Dialogs.create()
-                .owner(BitSquareUI.getPrimaryStage())
+                .owner(BitsquareUI.getPrimaryStage())
                 .message(message)
                 .masthead(masthead)
                 .actions(actions)
@@ -107,7 +107,7 @@ public class Popups {
 
     public static Action openConfirmPopup(String title, String masthead, String message, List<Action> actions) {
         return Dialogs.create()
-                .owner(BitSquareUI.getPrimaryStage())
+                .owner(BitsquareUI.getPrimaryStage())
                 .title(title)
                 .message(message)
                 .masthead(masthead)
@@ -140,7 +140,7 @@ public class Popups {
 
     private static void openWarningPopup(String title, String masthead, String message, List<Action> actions) {
         Dialogs.create()
-                .owner(BitSquareUI.getPrimaryStage())
+                .owner(BitsquareUI.getPrimaryStage())
                 .title(title)
                 .message(message)
                 .masthead(masthead)
@@ -173,7 +173,7 @@ public class Popups {
 
     private static Action openErrorPopup(String title, String masthead, String message, List<Action> actions) {
         return Dialogs.create()
-                .owner(BitSquareUI.getPrimaryStage())
+                .owner(BitsquareUI.getPrimaryStage())
                 .title(title)
                 .message(message)
                 .masthead(masthead)
@@ -202,7 +202,7 @@ public class Popups {
             }
         });
         return Dialogs.create()
-                .owner(BitSquareUI.getPrimaryStage())
+                .owner(BitsquareUI.getPrimaryStage())
                 .title(title)
                 .message(message)
                 .masthead(masthead)

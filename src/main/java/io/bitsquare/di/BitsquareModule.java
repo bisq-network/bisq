@@ -18,7 +18,7 @@
 package io.bitsquare.di;
 
 
-import io.bitsquare.BitSquare;
+import io.bitsquare.Bitsquare;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
@@ -60,8 +60,8 @@ import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorSystem;
 
-public class BitSquareModule extends AbstractModule {
-    private static final Logger log = LoggerFactory.getLogger(BitSquareModule.class);
+public class BitsquareModule extends AbstractModule {
+    private static final Logger log = LoggerFactory.getLogger(BitsquareModule.class);
 
     static Properties properties;
 
@@ -112,11 +112,11 @@ class StaticSeedNodeAddressesProvider implements Provider<SeedNodeAddress.Static
     private static final Logger log = LoggerFactory.getLogger(StaticSeedNodeAddressesProvider.class);
 
     public SeedNodeAddress.StaticSeedNodeAddresses get() {
-        if (BitSquareModule.properties == null)
-            BitSquareModule.properties = ConfigLoader.loadConfig();
+        if (BitsquareModule.properties == null)
+            BitsquareModule.properties = ConfigLoader.loadConfig();
 
-        log.info("seedNode from config file: " + BitSquareModule.properties.getProperty("defaultSeedNode"));
-        String seedNodeFromConfig = BitSquareModule.properties.getProperty("defaultSeedNode");
+        log.info("seedNode from config file: " + BitsquareModule.properties.getProperty("defaultSeedNode"));
+        String seedNodeFromConfig = BitsquareModule.properties.getProperty("defaultSeedNode");
 
         // Set default
         //SeedNodeAddress.StaticSeedNodeAddresses seedNode = SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST;
@@ -139,11 +139,11 @@ class NetworkParametersProvider implements Provider<NetworkParameters> {
         NetworkParameters result = null;
 
         //If config is available we override the networkType defined in Guice with the one from the config file
-        if (BitSquareModule.properties == null)
-            BitSquareModule.properties = ConfigLoader.loadConfig();
+        if (BitsquareModule.properties == null)
+            BitsquareModule.properties = ConfigLoader.loadConfig();
 
-        log.info("networkType from config file: " + BitSquareModule.properties.getProperty("networkType"));
-        String networkTypeFromConfig = BitSquareModule.properties.getProperty("networkType");
+        log.info("networkType from config file: " + BitsquareModule.properties.getProperty("networkType"));
+        String networkTypeFromConfig = BitsquareModule.properties.getProperty("networkType");
 
         // Set default
         // String networkType= WalletFacade.MAIN_NET;
@@ -172,7 +172,7 @@ class ActorSystemProvider implements Provider<ActorSystem> {
 
     @Override
     public ActorSystem get() {
-        ActorSystem system = ActorSystem.create(BitSquare.getAppName());
+        ActorSystem system = ActorSystem.create(Bitsquare.getAppName());
 
         // create top level actors
         //system.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);

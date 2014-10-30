@@ -17,7 +17,7 @@
 
 package io.bitsquare.msg.dhttest;
 
-import io.bitsquare.BitSquare;
+import io.bitsquare.Bitsquare;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.gui.main.trade.offerbook.OfferBookListItem;
 import io.bitsquare.locale.CountryUtil;
@@ -77,7 +77,7 @@ public class DHTTestController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        messageFacade.init(BitSquare.getClientPort(), new BootstrapListener() {
+        messageFacade.init(Bitsquare.getClientPort(), new BootstrapListener() {
             @Override
             public void onCompleted() {
                 onMessageFacadeInitialised();

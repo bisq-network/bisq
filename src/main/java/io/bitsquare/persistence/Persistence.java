@@ -17,7 +17,7 @@
 
 package io.bitsquare.persistence;
 
-import io.bitsquare.BitSquare;
+import io.bitsquare.Bitsquare;
 import io.bitsquare.util.FileUtil;
 
 import org.bitcoinj.utils.Threading;
@@ -52,7 +52,7 @@ public class Persistence {
     private static final Logger log = LoggerFactory.getLogger(Persistence.class);
     private static final ReentrantLock lock = Threading.lock("Storage");
 
-    private final String prefix = BitSquare.getAppName() + "_pref";
+    private final String prefix = Bitsquare.getAppName() + "_pref";
     private final File storageFile = FileUtil.getFile(prefix, "ser");
 
     @GuardedBy("lock")

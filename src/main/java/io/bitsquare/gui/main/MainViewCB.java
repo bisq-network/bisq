@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main;
 
-import io.bitsquare.BitSquare;
+import io.bitsquare.Bitsquare;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
@@ -165,7 +165,7 @@ public class MainViewCB extends ViewCB<MainPM> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private Methods: Startup 
+    // Private Methods: Startup
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void startup() {
@@ -213,8 +213,8 @@ public class MainViewCB extends ViewCB<MainPM> {
                 numPendingTradesLabel.setText(String.valueOf(numPendingTrades));
             }
 
-            log.trace("openInfoNotification " + BitSquare.getAppName());
-            SystemNotification.openInfoNotification(BitSquare.getAppName(), "You got a new trade message.");
+            log.trace("openInfoNotification " + Bitsquare.getAppName());
+            SystemNotification.openInfoNotification(Bitsquare.getAppName(), "You got a new trade message.");
         }
         else {
             if (portfolioButtonButtonPane.getChildren().size() > 1)

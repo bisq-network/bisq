@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.trade.createoffer.uimock;
 
-import io.bitsquare.di.BitSquareModule;
+import io.bitsquare.di.BitsquareModule;
 import io.bitsquare.util.ViewLoader;
 
 import com.google.inject.Guice;
@@ -53,7 +53,7 @@ public class CreateOfferUIMockRunner extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
-        Injector injector = Guice.createInjector(new BitSquareModule());
+        Injector injector = Guice.createInjector(new BitsquareModule());
         ViewLoader.setInjector(injector);
 
         pane = new StackPane();
