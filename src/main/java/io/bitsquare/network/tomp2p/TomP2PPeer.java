@@ -21,6 +21,8 @@ import io.bitsquare.network.Peer;
 
 import com.google.common.base.Objects;
 
+import java.io.Serializable;
+
 import net.tomp2p.peers.PeerAddress;
 
 /**
@@ -28,8 +30,10 @@ import net.tomp2p.peers.PeerAddress;
  *
  * @author Chris Beams
  */
-public class TomP2PPeer implements Peer {
+public class TomP2PPeer implements Peer, Serializable {
 
+    private static final long serialVersionUID = -2022551056208230853L;
+    
     private final PeerAddress peerAddress;
 
     public TomP2PPeer(PeerAddress peerAddress) {

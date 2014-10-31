@@ -363,7 +363,7 @@ public class P2PNode {
 
     private FuturePut storePeerAddress() throws IOException {
         Number160 locationKey = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
-        Data data = new Data(peerDHT.peerAddress());
+        Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
         log.debug("storePeerAddress " + peerDHT.peerAddress().toString());
         return putDomainProtectedData(locationKey, data);
     }
