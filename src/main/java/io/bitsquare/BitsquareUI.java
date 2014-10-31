@@ -52,9 +52,6 @@ import lighthouse.files.AppDirectory;
 public class BitsquareUI extends Application {
     private static final Logger log = LoggerFactory.getLogger(BitsquareUI.class);
 
-    public static final boolean fillFormsWithDummyData = true;
-
-    private static Injector injector;
     private static Stage primaryStage;
     private WalletFacade walletFacade;
     private MessageFacade messageFacade;
