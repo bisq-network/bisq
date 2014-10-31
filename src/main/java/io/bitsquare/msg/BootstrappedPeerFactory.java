@@ -152,7 +152,7 @@ public class BootstrappedPeerFactory {
             FutureDiscover futureDiscover;
 
             // just temporary while port forwarding is not working
-            //lastSuccessfulBootstrap = "relay";
+            lastSuccessfulBootstrap = "default";
 
             switch (lastSuccessfulBootstrap) {
                 case "relay":

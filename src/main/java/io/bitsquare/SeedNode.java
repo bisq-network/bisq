@@ -39,7 +39,7 @@ public class SeedNode extends Thread {
     public static void main(String[] args) {
         Peer peer = null;
         SeedNodeAddress.StaticSeedNodeAddresses seedNodeAddress = SeedNodeAddress.StaticSeedNodeAddresses
-                .DIGITAL_OCEAN1;
+                .LOCALHOST;
         try {
             peer = new PeerBuilder(Number160.createHash(seedNodeAddress.getId())).ports(seedNodeAddress.getPort())
                     .start();

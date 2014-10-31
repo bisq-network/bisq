@@ -32,7 +32,7 @@ public class BitcoinModule extends AbstractModule {
     private final BitcoinNetwork defaultNetwork;
 
     public BitcoinModule(Properties properties) {
-        this(properties, BitcoinNetwork.TESTNET);
+        this(properties, BitcoinNetwork.REGTEST);
     }
 
     public BitcoinModule(Properties properties, BitcoinNetwork defaultNetwork) {
