@@ -191,12 +191,10 @@ public class BootstrappedPeerFactory {
                     settableFuture.set(peerDHT);
                 }
                 else {
-                    log.warn("Discover has failed. Reason: " + futureDiscover.failedReason());
                     setState("We are probably behind a NAT and not reachable to other peers. " +
                             "We try port forwarding as next step.");
 
                     tryPortForwarding(peerDHT, futureDiscover);
-                    setState("Port forwarding has failed. We try to use a relay as next step.");
                 }
             }
 
@@ -222,7 +220,6 @@ public class BootstrappedPeerFactory {
                     discoverAfterPortForwarding(peerDHT);
                 }
                 else {
-                    log.warn("Port forwarding has failed. Reason: " + futureNAT.failedReason());
                     setState("Port forwarding has failed. We try to use a relay as next step.");
                     bootstrapWithRelay(peerDHT, peerNAT, futureDiscover, futureNAT);
                 }

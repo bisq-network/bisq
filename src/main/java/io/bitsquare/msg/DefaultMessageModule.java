@@ -41,6 +41,6 @@ public class DefaultMessageModule extends AbstractBitsquareModule implements Mes
 
         bind(SeedNodeAddress.StaticSeedNodeAddresses.class)
                 .annotatedWith(Names.named("defaultSeedNode"))
-                .toInstance(SeedNodeAddress.StaticSeedNodeAddresses.LOCALHOST);
+                .toInstance(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1);
     }
 }

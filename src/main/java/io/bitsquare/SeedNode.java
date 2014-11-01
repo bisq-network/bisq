@@ -39,13 +39,14 @@ public class SeedNode extends Thread {
     public static void main(String[] args) {
         Peer peer = null;
         SeedNodeAddress.StaticSeedNodeAddresses seedNodeAddress = SeedNodeAddress.StaticSeedNodeAddresses
-                .LOCALHOST;
+                .DIGITAL_OCEAN1;
         try {
             peer = new PeerBuilder(Number160.createHash(seedNodeAddress.getId())).ports(seedNodeAddress.getPort())
                     .start();
             new PeerBuilderDHT(peer).start();
             new PeerBuilderNAT(peer).start();
             log.debug("peer listening at port: {}", seedNodeAddress.getPort());
+
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
                 @Override
                 public void peerInserted(PeerAddress peerAddress, boolean verified) {

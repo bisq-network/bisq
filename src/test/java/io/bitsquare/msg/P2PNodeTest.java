@@ -51,13 +51,13 @@ import static org.junit.Assert.*;
 // TODO Reactivate tests when P2PNode is using original code again. we deactivated the security features atm.
 // cause IOException: Not listening to anything. Maybe your binding information is wrong.
 // investigate what has broken it, probably from update to latest head
+@Ignore
 public class P2PNodeTest {
     private static final Logger log = LoggerFactory.getLogger(P2PNodeTest.class);
 
     final private static Random rnd = new Random(42L);
 
     @Test
-    @Ignore
     public void testSendData() throws Exception {
         PeerDHT[] peers = UtilsDHT2.createNodes(3, rnd, new Ports().tcpPort());
         PeerDHT master = peers[0];
@@ -98,7 +98,6 @@ public class P2PNodeTest {
     }
 
     @Test
-    @Ignore
     public void testProtectedPutGet() throws Exception {
         PeerDHT[] peers = UtilsDHT2.createNodes(3, rnd, new Ports().tcpPort());
         PeerDHT master = peers[0];
@@ -185,7 +184,6 @@ public class P2PNodeTest {
     }
 
     @Test
-    @Ignore
     public void testChangeEntryProtectionKey() throws Exception {
         KeyPairGenerator gen = KeyPairGenerator.getInstance("DSA");
 
@@ -220,7 +218,6 @@ public class P2PNodeTest {
 
 
     @Test
-    @Ignore
     public void testAddToListGetList() throws Exception {
 
         PeerDHT[] peers = UtilsDHT2.createNodes(3, rnd, new Ports().tcpPort());
