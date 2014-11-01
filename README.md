@@ -31,6 +31,7 @@ Staying in Touch
 
 Contact the team and keep up to date using any of the following:
 
+ - The [Bitsquare Website](https://bitsquare.io)
  - The [#bitsquare](https://webchat.freenode.net/?channels=bitsquare) IRC channel on Freenode ([logs](https://botbot.me/freenode/bitsquare)) 
  - Our [mailing list](https://groups.google.com/forum/#!forum/bitsquare)
  - [@bitsquare_](https://twitter.com/bitsquare_) on Twitter
