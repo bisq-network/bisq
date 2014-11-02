@@ -22,6 +22,7 @@ import io.bitsquare.msg.SeedNodeAddress;
 import java.io.IOException;
 
 import net.tomp2p.dht.PeerBuilderDHT;
+import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.nat.PeerBuilderNAT;
 import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
@@ -43,8 +44,14 @@ public class SeedNode extends Thread {
         try {
             peer = new PeerBuilder(Number160.createHash(seedNodeAddress.getId())).ports(seedNodeAddress.getPort())
                     .start();
-            new PeerBuilderDHT(peer).start();
+            PeerDHT peerDHT = new PeerBuilderDHT(peer).start();
             new PeerBuilderNAT(peer).start();
+
+           /* peerDHT.peer().objectDataReply((sender, request) -> {
+                log.trace("received request: ", request.toString());
+                return "pong";
+            });*/
+
             log.debug("peer listening at port: {}", seedNodeAddress.getPort());
 
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
