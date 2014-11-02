@@ -63,7 +63,7 @@ public class Trade implements Serializable {
     private State state;
     private Throwable fault;
 
-    // When serialized those transient properties are not instantiated, so we instantiate them in the getters at first 
+    // When serialized those transient properties are not instantiated, so we instantiate them in the getters at first
     // access. Only use the accessor not the private field.
     // TODO use ObjectProperties instead of BooleanProperty
     transient private BooleanProperty _payoutTxChanged;

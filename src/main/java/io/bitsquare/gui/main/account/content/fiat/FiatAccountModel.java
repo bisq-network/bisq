@@ -138,7 +138,7 @@ class FiatAccountModel extends UIModel {
         reset();
     }
 
-    // We ask the user if he likes to add his own bank account country to the accepted country list if he has not 
+    // We ask the user if he likes to add his own bank account country to the accepted country list if he has not
     // already added it before
     void addCountryToAcceptedCountriesList() {
         settings.addAcceptedCountry(country.get());

@@ -122,7 +122,7 @@ public class TransactionsViewCB extends CachedViewCB {
         Popups.openWarningPopup("Under construction",
                 "This will open a details popup but that is not implemented yet.");
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Cell factories

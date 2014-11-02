@@ -49,7 +49,7 @@ public class FeePolicy {
     // Not used at the moment
     // private static final String registrationFeeAddress = "mvkDXt4QmN4Nq9dRUsRigBCaovde9nLkZR";
 
-    // 
+    //
     private static String createOfferFeeAddress;
     private static String takeOfferFeeAddress;
 

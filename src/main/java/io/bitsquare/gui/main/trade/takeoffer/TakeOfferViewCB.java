@@ -324,7 +324,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
             if (newValue) {
                 overlayManager.blurContent();
 
-                // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added 
+                // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added
                 // our own actions.
                 List<Action> actions = new ArrayList<>();
                /* actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {

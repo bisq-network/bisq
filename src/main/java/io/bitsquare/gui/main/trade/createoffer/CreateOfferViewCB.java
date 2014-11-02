@@ -70,7 +70,7 @@ import org.slf4j.LoggerFactory;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 // TODO Implement other positioning method in InoutTextField to display it over the field instead of right side
-// priceAmountHBox is too large after redesign as to be used as layoutReference. 
+// priceAmountHBox is too large after redesign as to be used as layoutReference.
 
 public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferViewCB.class);
@@ -350,7 +350,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
             if (newValue) {
                 overlayManager.blurContent();
 
-                // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added 
+                // Dialogs are a bit limited. There is no callback for the InformationDialog button click, so we added
                 // our own actions.
                 List<Action> actions = new ArrayList<>();
               /*  actions.add(new AbstractAction(BSResources.get("shared.copyTxId")) {

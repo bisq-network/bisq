@@ -86,7 +86,7 @@ public class InfoDisplay extends Parent {
         link = new Hyperlink(BSResources.get("shared.readMore"));
         link.setPadding(new Insets(0, 0, 0, -2));
 
-        // We need that to know if we have a wrapping or not. 
+        // We need that to know if we have a wrapping or not.
         // Did not find a way to get that from the API.
         Label testLabel = new Label();
         testLabel.textProperty().bind(text);
@@ -109,7 +109,7 @@ public class InfoDisplay extends Parent {
         };
 
 
-        // when clicking "Read more..." we expand and change the link to the Help 
+        // when clicking "Read more..." we expand and change the link to the Help
         link.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
@@ -136,7 +136,7 @@ public class InfoDisplay extends Parent {
         sceneProperty().addListener((ov, oldValue, newValue) -> {
             if (oldValue == null && newValue != null && newValue.getWindow() != null) {
                 newValue.getWindow().widthProperty().addListener(listener);
-                // localToScene does deliver 0 instead of the correct x position when scene propery gets set, 
+                // localToScene does deliver 0 instead of the correct x position when scene propery gets set,
                 // so we delay for 1 render cycle
                 Platform.runLater(() -> {
                     label.setVisible(true);
