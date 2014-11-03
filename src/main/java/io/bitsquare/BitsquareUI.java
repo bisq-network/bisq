@@ -109,8 +109,9 @@ public class BitsquareUI extends Application {
             final Parent view = loader.load();
 
             final Scene scene = new Scene(view, 1000, 600);
-            scene.getStylesheets().setAll(getClass().getResource("/io/bitsquare/gui/bitsquare.css").toExternalForm(),
-                    getClass().getResource("/io/bitsquare/gui/images.css").toExternalForm());
+            scene.getStylesheets().setAll(
+                   "/io/bitsquare/gui/bitsquare.css",
+                   "/io/bitsquare/gui/images.css");
 
             setupCloseHandlers(primaryStage, scene);
 
