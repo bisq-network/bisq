@@ -83,9 +83,9 @@ public class BitsquareUI extends Application {
         AWTSystemTray.createSystemTray(primaryStage, injector.getInstance(ActorSystem.class), this);
 
         // apply stored data
-        final User user = injector.getInstance(User.class);
-        final Settings settings = injector.getInstance(Settings.class);
-        final Persistence persistence = injector.getInstance(Persistence.class);
+        User user = injector.getInstance(User.class);
+        Settings settings = injector.getInstance(Settings.class);
+        Persistence persistence = injector.getInstance(Persistence.class);
         persistence.init();
 
         User persistedUser = (User) persistence.read(user);
@@ -103,12 +103,12 @@ public class BitsquareUI extends Application {
 
         ViewLoader.setInjector(injector);
 
-        final ViewLoader loader =
+        ViewLoader loader =
                 new ViewLoader(getClass().getResource(Navigation.Item.MAIN.getFxmlUrl()), false);
         try {
-            final Parent view = loader.load();
+            Parent view = loader.load();
 
-            final Scene scene = new Scene(view, 1000, 600);
+            Scene scene = new Scene(view, 1000, 600);
             scene.getStylesheets().setAll(
                    "/io/bitsquare/gui/bitsquare.css",
                    "/io/bitsquare/gui/images.css");
