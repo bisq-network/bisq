@@ -22,8 +22,6 @@ import io.bitsquare.gui.util.ImageUtil;
 
 import java.awt.*;
 
-import java.util.concurrent.TimeoutException;
-
 import javax.swing.*;
 
 import javafx.application.Platform;
@@ -31,9 +29,6 @@ import javafx.stage.Stage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import akka.actor.ActorSystem;
-import scala.concurrent.duration.Duration;
 
 /**
  * There is no JavaFX support yet, so we need to use AWT.
@@ -48,14 +43,12 @@ public class SystemTray {
     public static final String HIDE_WINDOW_LABEL = "Hide exchange window";
 
     private final Stage stage;
-    private final ActorSystem actorSystem;
     private final BitsquareUI application;
     private final TrayIcon trayIcon = createTrayIcon();
     private final MenuItem toggleShowHideItem = new MenuItem(HIDE_WINDOW_LABEL);
 
-    public SystemTray(Stage stage, ActorSystem actorSystem, BitsquareUI application) {
+    public SystemTray(Stage stage, BitsquareUI application) {
         this.stage = stage;
-        this.actorSystem = actorSystem;
         this.application = application;
         init();
     }
@@ -102,15 +95,6 @@ public class SystemTray {
 
         exitItem.addActionListener(e -> {
             self.remove(trayIcon);
-            actorSystem.shutdown();
-            try {
-                actorSystem.awaitTermination(Duration.create(5L, "seconds"));
-            } catch (Exception ex) {
-                if (ex instanceof TimeoutException)
-                    log.error("ActorSystem did not shutdown properly.");
-                else
-                    log.error(ex.getMessage());
-            }
             try {
                 application.stop();
             } catch (Exception ex) {

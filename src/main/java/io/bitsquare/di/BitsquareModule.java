@@ -29,11 +29,19 @@ import io.bitsquare.trade.TradeModule;
 import io.bitsquare.user.User;
 import io.bitsquare.util.ConfigLoader;
 
+import com.google.inject.Injector;
+
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import akka.actor.ActorSystem;
+import scala.concurrent.duration.Duration;
 
 public class BitsquareModule extends AbstractBitsquareModule {
+
+    private static final Logger log = LoggerFactory.getLogger(BitsquareModule.class);
 
     public BitsquareModule() {
         this(ConfigLoader.loadConfig());
@@ -76,6 +84,17 @@ public class BitsquareModule extends AbstractBitsquareModule {
 
     protected GuiModule guiModule() {
         return new GuiModule(properties);
+    }
+
+    @Override
+    protected void doClose(Injector injector) {
+        ActorSystem actorSystem = injector.getInstance(ActorSystem.class);
+        actorSystem.shutdown();
+        try {
+            actorSystem.awaitTermination(Duration.create(5L, "seconds"));
+        } catch (Exception ex) {
+            log.error("Actor system failed to shut down properly", ex);
+        }
     }
 }
 

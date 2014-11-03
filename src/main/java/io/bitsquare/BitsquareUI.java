@@ -43,7 +43,6 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import akka.actor.ActorSystem;
 import lighthouse.files.AppDirectory;
 
 public class BitsquareUI extends Application {
@@ -110,7 +109,7 @@ public class BitsquareUI extends Application {
 
         // configure the system tray
 
-        SystemTray systemTray = new SystemTray(primaryStage, injector.getInstance(ActorSystem.class), this);
+        SystemTray systemTray = new SystemTray(primaryStage, this);
         primaryStage.setOnCloseRequest(e -> systemTray.hideStage());
         scene.setOnKeyReleased(keyEvent -> {
             if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
