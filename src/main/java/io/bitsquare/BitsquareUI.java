@@ -104,28 +104,23 @@ public class BitsquareUI extends Application {
         ViewLoader.setInjector(injector);
 
         ViewLoader loader = new ViewLoader(Navigation.Item.MAIN, false);
-        try {
-            Parent view = loader.load();
+        Parent view = loader.load();
 
-            Scene scene = new Scene(view, 1000, 600);
-            scene.getStylesheets().setAll(
-                   "/io/bitsquare/gui/bitsquare.css",
-                   "/io/bitsquare/gui/images.css");
+        Scene scene = new Scene(view, 1000, 600);
+        scene.getStylesheets().setAll(
+               "/io/bitsquare/gui/bitsquare.css",
+               "/io/bitsquare/gui/images.css");
 
-            setupCloseHandlers(primaryStage, scene);
+        setupCloseHandlers(primaryStage, scene);
 
-            primaryStage.setScene(scene);
+        primaryStage.setScene(scene);
 
-            primaryStage.setMinWidth(75);
-            primaryStage.setMinHeight(50);
+        primaryStage.setMinWidth(75);
+        primaryStage.setMinHeight(50);
 
-            Profiler.initScene(primaryStage.getScene());
+        Profiler.initScene(primaryStage.getScene());
 
-            primaryStage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-        }
+        primaryStage.show();
     }
 
     private void setupCloseHandlers(Stage primaryStage, Scene scene) {

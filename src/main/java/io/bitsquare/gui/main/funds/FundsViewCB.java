@@ -22,8 +22,6 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.util.ViewLoader;
 
-import java.io.IOException;
-
 import java.net.URL;
 
 import java.util.ResourceBundle;
@@ -121,26 +119,21 @@ public class FundsViewCB extends CachedViewCB {
         super.loadView(navigationItem);
 
         final ViewLoader loader = new ViewLoader(navigationItem);
-        try {
-            Node view = loader.load();
-            Tab tab = null;
-            switch (navigationItem) {
-                case WITHDRAWAL:
-                    tab = withdrawalTab;
-                    break;
-                case TRANSACTIONS:
-                    tab = transactionsTab;
-                    break;
-            }
-            tab.setContent(view);
-            ((TabPane) root).getSelectionModel().select(tab);
-            Initializable childController = loader.getController();
-            ((ViewCB) childController).setParent(this);
-
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            e.printStackTrace();
+        Node view = loader.load();
+        Tab tab = null;
+        switch (navigationItem) {
+            case WITHDRAWAL:
+                tab = withdrawalTab;
+                break;
+            case TRANSACTIONS:
+                tab = transactionsTab;
+                break;
         }
+        tab.setContent(view);
+        ((TabPane) root).getSelectionModel().select(tab);
+        Initializable childController = loader.getController();
+        ((ViewCB) childController).setParent(this);
+
         return childController;
     }
 

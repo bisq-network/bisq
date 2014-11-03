@@ -22,6 +22,8 @@ import io.bitsquare.locale.BSResources;
 
 import com.google.inject.Injector;
 
+import java.io.IOException;
+
 import java.net.URL;
 
 import java.util.HashMap;
@@ -69,18 +71,21 @@ public class ViewLoader {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T load() throws java.io.IOException {
+    public <T> T load() {
         if (isCached) {
             item = cachedGUIItems.get(url);
             log.debug("loaded from cache " + url);
             return (T) cachedGUIItems.get(url).view;
         }
-        else {
-            log.debug("load from disc " + url);
+
+        log.debug("load from disc " + url);
+        try {
             T result = loader.load();
             item = new Item(result, loader.getController());
             cachedGUIItems.put(url, item);
             return result;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load view at " + url, e);
         }
     }
 

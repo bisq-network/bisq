@@ -29,8 +29,6 @@ import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.util.ViewLoader;
 
-import java.io.IOException;
-
 import java.net.URL;
 
 import java.util.ArrayList;
@@ -141,16 +139,11 @@ public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorL
         super.loadView(navigationItem);
 
         final ViewLoader loader = new ViewLoader(navigationItem);
-        try {
-            Node view = loader.load();
-            ((Pane) root).getChildren().set(0, view);
-            Initializable childController = arbitratorProfileViewCB = loader.getController();
-            ((ViewCB) childController).setParent(this);
+        Node view = loader.load();
+        ((Pane) root).getChildren().set(0, view);
+        Initializable childController = arbitratorProfileViewCB = loader.getController();
+        ((ViewCB) childController).setParent(this);
 
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            e.printStackTrace();
-        }
         return childController;
     }
 

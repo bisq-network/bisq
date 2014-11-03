@@ -30,8 +30,6 @@ import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.util.ViewLoader;
 
-import java.io.IOException;
-
 import java.net.URL;
 
 import java.util.ResourceBundle;
@@ -147,20 +145,14 @@ public class MainViewCB extends ViewCB<MainPM> {
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView((navigationItem));
         final ViewLoader loader = new ViewLoader(navigationItem);
-        try {
-            final Node view = loader.load();
-            contentContainer.getChildren().setAll(view);
-            childController = loader.getController();
+        final Node view = loader.load();
+        contentContainer.getChildren().setAll(view);
+        childController = loader.getController();
 
-            if (childController instanceof ViewCB)
-                ((ViewCB) childController).setParent(this);
+        if (childController instanceof ViewCB)
+            ((ViewCB) childController).setParent(this);
 
-            return childController;
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-        }
-        return null;
+        return childController;
     }
 
 

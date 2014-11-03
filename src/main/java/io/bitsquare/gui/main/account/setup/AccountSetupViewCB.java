@@ -29,8 +29,6 @@ import io.bitsquare.gui.main.account.content.restrictions.RestrictionsViewCB;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsViewCB;
 import io.bitsquare.util.ViewLoader;
 
-import java.io.IOException;
-
 import java.net.URL;
 
 import java.util.ResourceBundle;
@@ -189,18 +187,12 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
         final ViewLoader loader = new ViewLoader(navigationItem);
-        try {
-            final Pane view = loader.load();
-            content.getChildren().setAll(view);
-            childController = loader.getController();
-            ((ViewCB<? extends PresentationModel>) childController).setParent(this);
-            ((ContextAware) childController).useSettingsContext(false);
-            return childController;
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            e.printStackTrace();
-        }
-        return null;
+        final Pane view = loader.load();
+        content.getChildren().setAll(view);
+        childController = loader.getController();
+        ((ViewCB<? extends PresentationModel>) childController).setParent(this);
+        ((ContextAware) childController).useSettingsContext(false);
+        return childController;
     }
 }
 

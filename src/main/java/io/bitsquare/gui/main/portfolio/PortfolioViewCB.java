@@ -23,8 +23,6 @@ import io.bitsquare.gui.ViewCB;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.util.ViewLoader;
 
-import java.io.IOException;
-
 import java.net.URL;
 
 import java.util.ResourceBundle;
@@ -127,29 +125,24 @@ public class PortfolioViewCB extends CachedViewCB {
         super.loadView(navigationItem);
 
         final ViewLoader loader = new ViewLoader(navigationItem);
-        try {
-            Parent view = loader.load();
-            Tab tab = null;
-            switch (navigationItem) {
-                case OFFERS:
-                    tab = offersTab;
-                    break;
-                case PENDING_TRADES:
-                    tab = pendingTradesTab;
-                    break;
-                case CLOSED_TRADES:
-                    tab = closedTradesTab;
-                    break;
-            }
-            tab.setContent(view);
-            ((TabPane) root).getSelectionModel().select(tab);
-            Initializable childController = loader.getController();
-            ((ViewCB) childController).setParent(this);
-
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            e.printStackTrace();
+        Parent view = loader.load();
+        Tab tab = null;
+        switch (navigationItem) {
+            case OFFERS:
+                tab = offersTab;
+                break;
+            case PENDING_TRADES:
+                tab = pendingTradesTab;
+                break;
+            case CLOSED_TRADES:
+                tab = closedTradesTab;
+                break;
         }
+        tab.setContent(view);
+        ((TabPane) root).getSelectionModel().select(tab);
+        Initializable childController = loader.getController();
+        ((ViewCB) childController).setParent(this);
+
         return childController;
     }
 }

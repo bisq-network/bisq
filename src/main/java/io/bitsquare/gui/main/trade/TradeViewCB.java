@@ -30,8 +30,6 @@ import io.bitsquare.util.ViewLoader;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
-import java.io.IOException;
-
 import java.net.URL;
 
 import java.util.List;
@@ -169,61 +167,49 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
         if (navigationItem == Navigation.Item.OFFER_BOOK && offerBookViewCB == null) {
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
             ViewLoader offerBookLoader = new ViewLoader(navigationItem, false);
-            try {
-                final Parent view = offerBookLoader.load();
-                final Tab tab = new Tab(direction == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
-                tab.setClosable(false);
-                tab.setContent(view);
-                tabPane.getTabs().add(tab);
-                offerBookViewCB = offerBookLoader.getController();
-                offerBookViewCB.setParent(this);
+            final Parent view = offerBookLoader.load();
+            final Tab tab = new Tab(direction == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
+            tab.setClosable(false);
+            tab.setContent(view);
+            tabPane.getTabs().add(tab);
+            offerBookViewCB = offerBookLoader.getController();
+            offerBookViewCB.setParent(this);
 
-                offerBookViewCB.setDirection(direction);
-                // offerBookViewCB.setNavigationListener(n -> loadView(n));
+            offerBookViewCB.setDirection(direction);
+            // offerBookViewCB.setNavigationListener(n -> loadView(n));
 
-                return offerBookViewCB;
-            } catch (IOException e) {
-                log.error(e.getMessage());
-            }
+            return offerBookViewCB;
         }
         else if (navigationItem == Navigation.Item.CREATE_OFFER && createOfferViewCB == null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
             final ViewLoader loader = new ViewLoader(navigationItem, false);
-            try {
-                createOfferView = loader.load();
-                createOfferViewCB = loader.getController();
-                createOfferViewCB.setParent(this);
-                createOfferViewCB.initWithData(direction, amount, price);
-                createOfferViewCB.setCloseListener(this::onCreateOfferViewRemoved);
-                final Tab tab = new Tab("Create offer");
-                tab.setContent(createOfferView);
-                tabPane.getTabs().add(tab);
-                tabPane.getSelectionModel().select(tab);
-                return createOfferViewCB;
-            } catch (IOException e) {
-                log.error(e.getMessage());
-            }
+            createOfferView = loader.load();
+            createOfferViewCB = loader.getController();
+            createOfferViewCB.setParent(this);
+            createOfferViewCB.initWithData(direction, amount, price);
+            createOfferViewCB.setCloseListener(this::onCreateOfferViewRemoved);
+            final Tab tab = new Tab("Create offer");
+            tab.setContent(createOfferView);
+            tabPane.getTabs().add(tab);
+            tabPane.getSelectionModel().select(tab);
+            return createOfferViewCB;
         }
         else if (navigationItem == Navigation.Item.TAKE_OFFER && takeOfferViewCB == null &&
                 offer != null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
             ViewLoader loader = new ViewLoader(Navigation.Item.TAKE_OFFER, false);
-            try {
-                takeOfferView = loader.load();
-                takeOfferViewCB = loader.getController();
-                takeOfferViewCB.setParent(this);
-                takeOfferViewCB.initWithData(direction, amount, offer);
-                takeOfferViewCB.setCloseListener(this::onCreateOfferViewRemoved);
-                final Tab tab = new Tab("Take offer");
-                tab.setContent(takeOfferView);
-                tabPane.getTabs().add(tab);
-                tabPane.getSelectionModel().select(tab);
-                return takeOfferViewCB;
-            } catch (IOException e) {
-                log.error(e.getMessage());
-            }
+            takeOfferView = loader.load();
+            takeOfferViewCB = loader.getController();
+            takeOfferViewCB.setParent(this);
+            takeOfferViewCB.initWithData(direction, amount, offer);
+            takeOfferViewCB.setCloseListener(this::onCreateOfferViewRemoved);
+            final Tab tab = new Tab("Take offer");
+            tab.setContent(takeOfferView);
+            tabPane.getTabs().add(tab);
+            tabPane.getSelectionModel().select(tab);
+            return takeOfferViewCB;
         }
         return null;
     }

@@ -25,8 +25,6 @@ import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.util.Colors;
 import io.bitsquare.util.ViewLoader;
 
-import java.io.IOException;
-
 import java.net.URL;
 
 import java.util.ResourceBundle;
@@ -149,18 +147,12 @@ public class AccountSettingsViewCB extends CachedViewCB {
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
         final ViewLoader loader = new ViewLoader(navigationItem);
-        try {
-            final Pane view = loader.load();
-            content.getChildren().setAll(view);
-            childController = loader.getController();
-            ((ViewCB<? extends PresentationModel>) childController).setParent(this);
-            ((ContextAware) childController).useSettingsContext(true);
-            return childController;
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            e.printStackTrace();
-        }
-        return null;
+        final Pane view = loader.load();
+        content.getChildren().setAll(view);
+        childController = loader.getController();
+        ((ViewCB<? extends PresentationModel>) childController).setParent(this);
+        ((ContextAware) childController).useSettingsContext(true);
+        return childController;
     }
 
 
