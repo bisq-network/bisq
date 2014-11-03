@@ -30,11 +30,6 @@ import org.slf4j.LoggerFactory;
 public class ImageUtil {
     private static final Logger log = LoggerFactory.getLogger(ImageUtil.class);
 
-    // System tray use AWT and there is no CSS support for loading retina supported images
-    public static final String SYS_TRAY = "/images/system_tray_icon.png";
-    public static final String SYS_TRAY_HI_RES = "/images/system_tray_icon@2x.png";
-
-
     public static final String REMOVE_ICON = "image-remove";
     public static final String EXPAND = "image-expand";
     public static final String COLLAPSE = "image-collapse";

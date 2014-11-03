@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui;
 
-import io.bitsquare.Bitsquare;
 import io.bitsquare.BitsquareUI;
 import io.bitsquare.gui.util.ImageUtil;
 
@@ -42,92 +41,91 @@ import scala.concurrent.duration.Duration;
 public class SystemTray {
     private static final Logger log = LoggerFactory.getLogger(SystemTray.class);
 
+    private static final String ICON_HI_RES = "/images/system_tray_icon@2x.png";
+    private static final String ICON_LO_RES = "/images/system_tray_icon.png";
+
+    public static final String SHOW_WINDOW_LABEL = "Show exchange window";
+    public static final String HIDE_WINDOW_LABEL = "Hide exchange window";
+
     private final Stage stage;
     private final ActorSystem actorSystem;
     private final BitsquareUI application;
-
-    private boolean isStageVisible = true;
-    private MenuItem showGuiItem;
-    private TrayIcon trayIcon;
+    private final TrayIcon trayIcon = createTrayIcon();
+    private final MenuItem toggleShowHideItem = new MenuItem(HIDE_WINDOW_LABEL);
 
     public SystemTray(Stage stage, ActorSystem actorSystem, BitsquareUI application) {
         this.stage = stage;
         this.actorSystem = actorSystem;
         this.application = application;
+        init();
+    }
 
-        if (java.awt.SystemTray.isSupported()) {
-            // prevent exiting the app when the last window get closed
-            Platform.setImplicitExit(false);
+    private void init() {
+        if (!java.awt.SystemTray.isSupported()) {
+            log.error("System tray is not supported.");
+            return;
+        }
 
-            java.awt.SystemTray systemTray = java.awt.SystemTray.getSystemTray();
-            if (ImageUtil.isRetina())
-                trayIcon = new TrayIcon(getImage(ImageUtil.SYS_TRAY_HI_RES));
-            else
-                trayIcon = new TrayIcon(getImage(ImageUtil.SYS_TRAY));
+        // prevent exiting the app when the last window gets closed
+        Platform.setImplicitExit(false);
 
-            trayIcon.setToolTip("Bitsquare P2P Fiat-Bitcoin exchange");
+        MenuItem aboutItem = new MenuItem("Info about Bitsquare");
+        MenuItem exitItem = new MenuItem("Exit");
 
-            PopupMenu popupMenu = new PopupMenu();
-            MenuItem aboutItem = new MenuItem("Info about " + Bitsquare.getAppName());
-            popupMenu.add(aboutItem);
-            popupMenu.addSeparator();
-            showGuiItem = new MenuItem("Close exchange window");
-            popupMenu.add(showGuiItem);
-            popupMenu.addSeparator();
-            MenuItem exitItem = new MenuItem("Exit");
-            popupMenu.add(exitItem);
+        PopupMenu popupMenu = new PopupMenu();
+        popupMenu.add(aboutItem);
+        popupMenu.addSeparator();
+        popupMenu.add(toggleShowHideItem);
+        popupMenu.addSeparator();
+        popupMenu.add(exitItem);
 
-            trayIcon.setPopupMenu(popupMenu);
+        trayIcon.setPopupMenu(popupMenu);
+        trayIcon.setToolTip("Bitsquare: The decentralized bitcoin exchange");
 
-            showGuiItem.addActionListener(e -> {
-                if (isStageVisible) {
-                    showGuiItem.setLabel("Open exchange window");
-                    Platform.runLater(stage::hide);
-                    isStageVisible = false;
-                }
-                else {
-                    showGuiItem.setLabel("Close exchange window");
-                    Platform.runLater(stage::show);
-                    isStageVisible = true;
-                }
-            });
-            exitItem.addActionListener(e -> {
-                systemTray.remove(trayIcon);
-                actorSystem.shutdown();
-                try {
-                    actorSystem.awaitTermination(Duration.create(5L, "seconds"));
-                } catch (Exception ex) {
-                    if (ex instanceof TimeoutException)
-                        log.error("ActorSystem did not shutdown properly.");
-                    else
-                        log.error(ex.getMessage());
-                }
-                try {
-                    application.stop();
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                }
-            });
+        java.awt.SystemTray self = java.awt.SystemTray.getSystemTray();
+        try {
+            self.add(trayIcon);
+        } catch (AWTException ex) {
+            log.error("Icon could not be added to system tray.", ex);
+        }
 
-
-            try {
-                systemTray.add(trayIcon);
-            } catch (AWTException e) {
-                log.error("TrayIcon could not be added.");
+        toggleShowHideItem.addActionListener(e -> {
+            if (stage.isShowing()) {
+                toggleShowHideItem.setLabel(SHOW_WINDOW_LABEL);
+                Platform.runLater(stage::hide);
             }
-        }
-        else {
-            log.error("SystemTray is not supported");
-        }
+            else {
+                toggleShowHideItem.setLabel(HIDE_WINDOW_LABEL);
+                Platform.runLater(stage::show);
+            }
+        });
+
+        exitItem.addActionListener(e -> {
+            self.remove(trayIcon);
+            actorSystem.shutdown();
+            try {
+                actorSystem.awaitTermination(Duration.create(5L, "seconds"));
+            } catch (Exception ex) {
+                if (ex instanceof TimeoutException)
+                    log.error("ActorSystem did not shutdown properly.");
+                else
+                    log.error(ex.getMessage());
+            }
+            try {
+                application.stop();
+            } catch (Exception ex) {
+                log.error("Application failed to shut down properly.", ex);
+            }
+        });
     }
 
-    public void setStageHidden() {
+    public void hideStage() {
         stage.hide();
-        isStageVisible = false;
-        showGuiItem.setLabel("Open exchange window");
+        toggleShowHideItem.setLabel(SHOW_WINDOW_LABEL);
     }
 
-    private Image getImage(String path) {
-        return new ImageIcon(SystemTray.class.getResource(path), "system tray icon").getImage();
+    private TrayIcon createTrayIcon() {
+        String path = ImageUtil.isRetina() ? ICON_HI_RES : ICON_LO_RES;
+        return new TrayIcon(new ImageIcon(getClass().getResource(path)).getImage());
     }
 }
