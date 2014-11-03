@@ -17,6 +17,7 @@
 
 package io.bitsquare.util;
 
+import io.bitsquare.FatalException;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.locale.BSResources;
 
@@ -56,6 +57,9 @@ public class ViewLoader {
 
     public ViewLoader(Navigation.Item navItem, boolean useCaching) {
         this.url = ViewLoader.class.getResource(navItem.getFxmlUrl());
+        if (this.url == null) {
+            throw new FatalException("'%s' could not be loaded as a resource", navItem.getFxmlUrl());
+        }
 
         isCached = useCaching && cachedGUIItems.containsKey(url);
         if (!isCached) {
@@ -85,7 +89,7 @@ public class ViewLoader {
             cachedGUIItems.put(url, item);
             return result;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load view at " + url, e);
+            throw new FatalException(e, "Failed to load view at %s", url);
         }
     }
 
