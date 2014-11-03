@@ -117,13 +117,8 @@ public class BitsquareUI extends Application {
 
             primaryStage.setScene(scene);
 
-            // TODO resizing not fully supported yet
-
             primaryStage.setMinWidth(75);
             primaryStage.setMinHeight(50);
-
-          /*  primaryStage.setMinWidth(1000);
-            primaryStage.setMinHeight(750);*/
 
             Profiler.initScene(primaryStage.getScene());
 
