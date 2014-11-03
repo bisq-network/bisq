@@ -168,8 +168,7 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
         TabPane tabPane = (TabPane) root;
         if (navigationItem == Navigation.Item.OFFER_BOOK && offerBookViewCB == null) {
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
-            ViewLoader offerBookLoader =
-                    new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
+            ViewLoader offerBookLoader = new ViewLoader(navigationItem, false);
             try {
                 final Parent view = offerBookLoader.load();
                 final Tab tab = new Tab(direction == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
@@ -190,7 +189,7 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
         else if (navigationItem == Navigation.Item.CREATE_OFFER && createOfferViewCB == null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
-            ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
+            final ViewLoader loader = new ViewLoader(navigationItem, false);
             try {
                 createOfferView = loader.load();
                 createOfferViewCB = loader.getController();
@@ -210,7 +209,7 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
                 offer != null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
-            ViewLoader loader = new ViewLoader(getClass().getResource(Navigation.Item.TAKE_OFFER.getFxmlUrl()), false);
+            ViewLoader loader = new ViewLoader(Navigation.Item.TAKE_OFFER, false);
             try {
                 takeOfferView = loader.load();
                 takeOfferViewCB = loader.getController();

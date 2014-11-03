@@ -189,7 +189,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
         // TODO caching causes exception
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
+        final ViewLoader loader = new ViewLoader(navigationItem, false);
         try {
             final Node view = loader.load();
             //TODO Resolve type problem...

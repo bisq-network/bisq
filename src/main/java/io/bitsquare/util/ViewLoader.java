@@ -17,6 +17,7 @@
 
 package io.bitsquare.util;
 
+import io.bitsquare.gui.Navigation;
 import io.bitsquare.locale.BSResources;
 
 import com.google.inject.Injector;
@@ -51,14 +52,8 @@ public class ViewLoader {
     // TODO maybe add more sophisticated caching strategy with removal of rarely accessed items
     private static final Map<URL, Item> cachedGUIItems = new HashMap<>();
 
-    public ViewLoader(URL url) {
-        this(url, true);
-    }
-
-    // TODO check relationship with CachedViewCB -> derive caching strategy, but there are some special cases where
-    // we need an override, as caching is done manually in the client class
-    public ViewLoader(URL url, boolean useCaching) {
-        this.url = url;
+    public ViewLoader(Navigation.Item navItem, boolean useCaching) {
+        this.url = ViewLoader.class.getResource(navItem.getFxmlUrl());
 
         isCached = useCaching && cachedGUIItems.containsKey(url);
         if (!isCached) {
@@ -67,6 +62,10 @@ public class ViewLoader {
             if (ViewLoader.injector != null)
                 loader.setControllerFactory(new GuiceControllerFactory(ViewLoader.injector));
         }
+    }
+
+    public ViewLoader(Navigation.Item navItem) {
+        this(navItem, true);
     }
 
     @SuppressWarnings("unchecked")

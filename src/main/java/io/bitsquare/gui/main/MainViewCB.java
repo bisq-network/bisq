@@ -146,7 +146,7 @@ public class MainViewCB extends ViewCB<MainPM> {
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView((navigationItem));
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        final ViewLoader loader = new ViewLoader(navigationItem);
         try {
             final Node view = loader.load();
             contentContainer.getChildren().setAll(view);

@@ -103,8 +103,7 @@ public class BitsquareUI extends Application {
 
         ViewLoader.setInjector(injector);
 
-        ViewLoader loader =
-                new ViewLoader(getClass().getResource(Navigation.Item.MAIN.getFxmlUrl()), false);
+        ViewLoader loader = new ViewLoader(Navigation.Item.MAIN, false);
         try {
             Parent view = loader.load();
 

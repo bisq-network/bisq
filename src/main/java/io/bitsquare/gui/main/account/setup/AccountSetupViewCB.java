@@ -188,7 +188,7 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
 
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        final ViewLoader loader = new ViewLoader(navigationItem);
         try {
             final Pane view = loader.load();
             content.getChildren().setAll(view);

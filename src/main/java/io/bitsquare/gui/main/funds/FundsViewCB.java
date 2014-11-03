@@ -120,7 +120,7 @@ public class FundsViewCB extends CachedViewCB {
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
 
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        final ViewLoader loader = new ViewLoader(navigationItem);
         try {
             Node view = loader.load();
             Tab tab = null;

@@ -140,7 +140,7 @@ public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorL
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
 
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
+        final ViewLoader loader = new ViewLoader(navigationItem);
         try {
             Node view = loader.load();
             ((Pane) root).getChildren().set(0, view);

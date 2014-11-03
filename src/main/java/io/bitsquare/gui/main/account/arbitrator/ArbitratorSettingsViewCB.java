@@ -97,7 +97,7 @@ public class ArbitratorSettingsViewCB extends CachedViewCB {
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
         // don't use caching here, cause exc. -> need to investigate and is rarely called so no caching is better
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
+        final ViewLoader loader = new ViewLoader(navigationItem, false);
         try {
             final Parent view = loader.load();
             arbitratorRegistrationViewCB = loader.getController();
