@@ -22,7 +22,6 @@ import io.bitsquare.gui.AWTSystemTray;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.ImageUtil;
-import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
@@ -66,7 +65,6 @@ public class BitsquareUI extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        Profiler.printMsgWithTime("Bitsquare.start called");
         BitsquareUI.primaryStage = primaryStage;
 
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions
@@ -117,8 +115,6 @@ public class BitsquareUI extends Application {
 
         primaryStage.setMinWidth(75);
         primaryStage.setMinHeight(50);
-
-        Profiler.initScene(primaryStage.getScene());
 
         primaryStage.show();
     }
