@@ -138,12 +138,16 @@ public class Navigation {
         void onNavigationRequested(Item... items);
     }
 
+    public interface FxmlResource {
+        String getFxmlUrl();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static enum Item {
+    public static enum Item implements FxmlResource {
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Application
@@ -221,6 +225,7 @@ public class Navigation {
             this.fxmlUrl = fxmlUrl;
         }
 
+        @Override
         public String getFxmlUrl() {
             return fxmlUrl;
         }

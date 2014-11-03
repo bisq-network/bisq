@@ -55,7 +55,7 @@ public class ViewLoader {
     // TODO maybe add more sophisticated caching strategy with removal of rarely accessed items
     private static final Map<URL, Item> cachedGUIItems = new HashMap<>();
 
-    public ViewLoader(Navigation.Item navItem, boolean useCaching) {
+    public ViewLoader(Navigation.FxmlResource navItem, boolean useCaching) {
         this.url = ViewLoader.class.getResource(navItem.getFxmlUrl());
         if (this.url == null) {
             throw new FatalException("'%s' could not be loaded as a resource", navItem.getFxmlUrl());
@@ -70,7 +70,7 @@ public class ViewLoader {
         }
     }
 
-    public ViewLoader(Navigation.Item navItem) {
+    public ViewLoader(Navigation.FxmlResource navItem) {
         this(navItem, true);
     }
 
