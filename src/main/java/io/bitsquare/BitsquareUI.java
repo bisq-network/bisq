@@ -67,8 +67,14 @@ public class BitsquareUI extends Application {
     public void start(Stage primaryStage) {
         BitsquareUI.primaryStage = primaryStage;
 
-        Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> Popups.handleUncaughtExceptions
-                (Throwables.getRootCause(throwable)));
+
+        // route uncaught exceptions to a user-facing dialog
+
+        Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) ->
+                Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
+
+
+        // configure the Bitsquare application data directory
 
         try {
             AppDirectory.initAppDir(Bitsquare.getAppName());
@@ -77,10 +83,8 @@ public class BitsquareUI extends Application {
         }
 
 
-        // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
-        AWTSystemTray.createSystemTray(primaryStage, injector.getInstance(ActorSystem.class), this);
+        // load and apply any stored settings
 
-        // apply stored data
         User user = injector.getInstance(User.class);
         Settings settings = injector.getInstance(Settings.class);
         Persistence persistence = injector.getInstance(Persistence.class);
@@ -91,16 +95,10 @@ public class BitsquareUI extends Application {
 
         settings.applyPersistedSettings((Settings) persistence.read(settings.getClass().getName()));
 
-        primaryStage.setTitle("Bitsquare (" + Bitsquare.getAppName() + ")");
 
-        // sometimes there is a rendering bug, see https://github.com/bitsquare/bitsquare/issues/160
-        if (ImageUtil.isRetina())
-            primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/window_icon@2x.png")));
-        else
-            primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/window_icon.png")));
+        // load the main view and create the main scene
 
         ViewLoader.setInjector(injector);
-
         ViewLoader loader = new ViewLoader(Navigation.Item.MAIN, false);
         Parent view = loader.load();
 
@@ -109,24 +107,31 @@ public class BitsquareUI extends Application {
                "/io/bitsquare/gui/bitsquare.css",
                "/io/bitsquare/gui/images.css");
 
-        setupCloseHandlers(primaryStage, scene);
 
-        primaryStage.setScene(scene);
+        // configure the system tray
 
-        primaryStage.setMinWidth(75);
-        primaryStage.setMinHeight(50);
-
-        primaryStage.show();
-    }
-
-    private void setupCloseHandlers(Stage primaryStage, Scene scene) {
+        AWTSystemTray.createSystemTray(primaryStage, injector.getInstance(ActorSystem.class), this);
         primaryStage.setOnCloseRequest(e -> AWTSystemTray.setStageHidden());
-
         KeyCodeCombination keyCodeCombination = new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN);
         scene.setOnKeyReleased(keyEvent -> {
             if (keyCodeCombination.match(keyEvent))
                 AWTSystemTray.setStageHidden();
         });
+
+
+        // configure the primary stage
+
+        primaryStage.setTitle("Bitsquare (" + Bitsquare.getAppName() + ")");
+        primaryStage.setScene(scene);
+        primaryStage.setMinWidth(75);
+        primaryStage.setMinHeight(50);
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream(
+                ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png")));
+
+
+        // make the UI visible
+
+        primaryStage.show();
     }
 
     @Override
