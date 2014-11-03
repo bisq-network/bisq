@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui;
 
-
 import io.bitsquare.Bitsquare;
 import io.bitsquare.BitsquareUI;
 import io.bitsquare.gui.util.ImageUtil;
@@ -39,27 +38,28 @@ import scala.concurrent.duration.Duration;
 
 /**
  * There is no JavaFX support yet, so we need to use AWT.
- * TODO research more
  */
-public class AWTSystemTray {
-    private static final Logger log = LoggerFactory.getLogger(AWTSystemTray.class);
-    private static boolean isStageVisible = true;
-    private static MenuItem showGuiItem;
-    private static Stage stage;
-    private static ActorSystem actorSystem;
-    private static BitsquareUI application;
-    private static TrayIcon trayIcon;
+public class SystemTray {
+    private static final Logger log = LoggerFactory.getLogger(SystemTray.class);
 
-    public static void createSystemTray(Stage stage, ActorSystem actorSystem, BitsquareUI application) {
-        AWTSystemTray.stage = stage;
-        AWTSystemTray.actorSystem = actorSystem;
-        AWTSystemTray.application = application;
+    private final Stage stage;
+    private final ActorSystem actorSystem;
+    private final BitsquareUI application;
 
-        if (SystemTray.isSupported()) {
+    private boolean isStageVisible = true;
+    private MenuItem showGuiItem;
+    private TrayIcon trayIcon;
+
+    public SystemTray(Stage stage, ActorSystem actorSystem, BitsquareUI application) {
+        this.stage = stage;
+        this.actorSystem = actorSystem;
+        this.application = application;
+
+        if (java.awt.SystemTray.isSupported()) {
             // prevent exiting the app when the last window get closed
             Platform.setImplicitExit(false);
 
-            SystemTray systemTray = SystemTray.getSystemTray();
+            java.awt.SystemTray systemTray = java.awt.SystemTray.getSystemTray();
             if (ImageUtil.isRetina())
                 trayIcon = new TrayIcon(getImage(ImageUtil.SYS_TRAY_HI_RES));
             else
@@ -121,13 +121,13 @@ public class AWTSystemTray {
         }
     }
 
-    public static void setStageHidden() {
+    public void setStageHidden() {
         stage.hide();
         isStageVisible = false;
         showGuiItem.setLabel("Open exchange window");
     }
 
-    private static Image getImage(String path) {
-        return new ImageIcon(AWTSystemTray.class.getResource(path), "system tray icon").getImage();
+    private Image getImage(String path) {
+        return new ImageIcon(SystemTray.class.getResource(path), "system tray icon").getImage();
     }
 }

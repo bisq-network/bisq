@@ -18,7 +18,7 @@
 package io.bitsquare;
 
 import io.bitsquare.di.BitsquareModule;
-import io.bitsquare.gui.AWTSystemTray;
+import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.ImageUtil;
@@ -110,12 +110,12 @@ public class BitsquareUI extends Application {
 
         // configure the system tray
 
-        AWTSystemTray.createSystemTray(primaryStage, injector.getInstance(ActorSystem.class), this);
-        primaryStage.setOnCloseRequest(e -> AWTSystemTray.setStageHidden());
+        SystemTray systemTray = new SystemTray(primaryStage, injector.getInstance(ActorSystem.class), this);
+        primaryStage.setOnCloseRequest(e -> systemTray.setStageHidden());
         KeyCodeCombination keyCodeCombination = new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN);
         scene.setOnKeyReleased(keyEvent -> {
             if (keyCodeCombination.match(keyEvent))
-                AWTSystemTray.setStageHidden();
+                systemTray.setStageHidden();
         });
 
 
