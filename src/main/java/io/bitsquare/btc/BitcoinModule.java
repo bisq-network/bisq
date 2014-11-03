@@ -17,6 +17,8 @@
 
 package io.bitsquare.btc;
 
+import io.bitsquare.di.AbstractBitsquareModule;
+
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
@@ -26,9 +28,8 @@ import com.google.inject.AbstractModule;
 
 import java.util.Properties;
 
-public class BitcoinModule extends AbstractModule {
+public class BitcoinModule extends AbstractBitsquareModule {
 
-    private final Properties properties;
     private final BitcoinNetwork defaultNetwork;
 
     public BitcoinModule(Properties properties) {
@@ -36,7 +37,7 @@ public class BitcoinModule extends AbstractModule {
     }
 
     public BitcoinModule(Properties properties, BitcoinNetwork defaultNetwork) {
-        this.properties = properties;
+        super(properties);
         this.defaultNetwork = defaultNetwork;
     }
 
@@ -62,6 +63,5 @@ public class BitcoinModule extends AbstractModule {
                     throw new IllegalArgumentException("Unknown bitcoin network name: " + networkName);
             }
     }
-
 }
 
