@@ -17,15 +17,49 @@
 
 package io.bitsquare.di;
 
+import com.google.common.collect.Sets;
+
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 
 import java.util.Properties;
+import java.util.Set;
 
 public abstract class AbstractBitsquareModule extends AbstractModule {
 
     protected final Properties properties;
 
+    private final Set<AbstractBitsquareModule> modules = Sets.newHashSet();
+
     public AbstractBitsquareModule(Properties properties) {
         this.properties = properties;
+    }
+
+    protected void install(AbstractBitsquareModule module) {
+        super.install(module);
+        modules.add(module);
+    }
+
+    /**
+     * Close any instances this module is responsible for and recursively close any
+     * sub-modules installed via {@link #install(AbstractBitsquareModule)}. This method
+     * must be called manually, e.g. at the end of a main() method or in the stop() method
+     * of a JavaFX Application; alternatively it may be registered as a JVM shutdown hook.
+     *
+     * @param injector the Injector originally initialized with this module
+     * @see #doClose(com.google.inject.Injector)
+     */
+    public final void close(Injector injector) {
+        modules.forEach(module -> module.close(injector));
+        doClose(injector);
+    }
+
+    /**
+     * Actually perform closing of any instances this module is responsible for. Called by
+     * {@link #close(Injector)}.
+     *
+     * @param injector the Injector originally initialized with this module
+     */
+    protected void doClose(Injector injector) {
     }
 }

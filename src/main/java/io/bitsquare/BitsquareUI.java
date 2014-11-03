@@ -17,14 +17,12 @@
 
 package io.bitsquare;
 
-import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.di.BitsquareModule;
 import io.bitsquare.gui.AWTSystemTray;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Profiler;
-import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
@@ -53,11 +51,13 @@ public class BitsquareUI extends Application {
     private static final Logger log = LoggerFactory.getLogger(BitsquareUI.class);
 
     private static Stage primaryStage;
-    private WalletFacade walletFacade;
-    private MessageFacade messageFacade;
 
-    public void BitsquareUI() {
-        Profiler.init();
+    private final BitsquareModule bitsquareModule;
+    private final Injector injector;
+
+    public BitsquareUI() {
+        this.bitsquareModule = new BitsquareModule();
+        this.injector = Guice.createInjector(bitsquareModule);
     }
 
     public static Stage getPrimaryStage() {
@@ -78,14 +78,9 @@ public class BitsquareUI extends Application {
             log.error(e.getMessage());
         }
 
-        final Injector injector = Guice.createInjector(new BitsquareModule());
 
         // currently there is not SystemTray support for java fx (planned for version 3) so we use the old AWT
         AWTSystemTray.createSystemTray(primaryStage, injector.getInstance(ActorSystem.class), this);
-
-        walletFacade = injector.getInstance(WalletFacade.class);
-        messageFacade = injector.getInstance(MessageFacade.class);
-        Profiler.printMsgWithTime("Bitsquare: messageFacade, walletFacade created");
 
         // apply stored data
         final User user = injector.getInstance(User.class);
@@ -149,11 +144,8 @@ public class BitsquareUI extends Application {
     }
 
     @Override
-    public void stop() throws Exception {
-        walletFacade.shutDown();
-        messageFacade.shutDown();
-
-        super.stop();
+    public void stop() {
+        bitsquareModule.close(injector);
         System.exit(0);
     }
 }

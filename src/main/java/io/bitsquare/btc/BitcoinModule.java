@@ -24,7 +24,7 @@ import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
 
-import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 
 import java.util.Properties;
 
@@ -47,6 +47,11 @@ public class BitcoinModule extends AbstractBitsquareModule {
         bind(FeePolicy.class).asEagerSingleton();
         bind(BlockChainFacade.class).asEagerSingleton();
         bind(NetworkParameters.class).toInstance(network());
+    }
+
+    @Override
+    public void doClose(Injector injector) {
+        injector.getInstance(WalletFacade.class).shutDown();
     }
 
     private NetworkParameters network() {
