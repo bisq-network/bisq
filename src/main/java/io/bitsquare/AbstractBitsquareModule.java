@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.di;
+package io.bitsquare;
 
 import com.google.common.collect.Sets;
 

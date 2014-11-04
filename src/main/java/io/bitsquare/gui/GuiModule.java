@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui;
 
-import io.bitsquare.di.AbstractBitsquareModule;
+import io.bitsquare.AbstractBitsquareModule;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.trade.offerbook.OfferBook;

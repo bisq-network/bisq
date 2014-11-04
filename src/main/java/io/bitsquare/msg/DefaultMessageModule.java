@@ -17,7 +17,7 @@
 
 package io.bitsquare.msg;
 
-import io.bitsquare.di.AbstractBitsquareModule;
+import io.bitsquare.AbstractBitsquareModule;
 
 import com.google.inject.Injector;
 import com.google.inject.name.Names;

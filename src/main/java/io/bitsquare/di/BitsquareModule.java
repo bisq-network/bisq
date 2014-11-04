@@ -17,6 +17,7 @@
 
 package io.bitsquare.di;
 
+import io.bitsquare.AbstractBitsquareModule;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.crypto.CryptoModule;
 import io.bitsquare.gui.GuiModule;
