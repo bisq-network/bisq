@@ -202,7 +202,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
         isTakeOfferButtonVisible.set(true);
     }
 
-    // On focus out we do validation and apply the data to the model 
+    // On focus out we do validation and apply the data to the model
     void onFocusOutAmountTextField(Boolean oldValue, Boolean newValue, String userInput) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(amount.get());

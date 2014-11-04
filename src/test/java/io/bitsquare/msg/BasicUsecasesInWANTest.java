@@ -83,7 +83,7 @@ public class BasicUsecasesInWANTest {
 
     private String overrideBootStrapMode = "default"; // nat, relay
 
-    // In port forwarding mode the isSuccess returns false, but the DHT operations succeeded. 
+    // In port forwarding mode the isSuccess returns false, but the DHT operations succeeded.
     // Needs investigation why.
     private boolean ignoreSuccessTests = true;
 
@@ -288,7 +288,7 @@ public class BasicUsecasesInWANTest {
         }
     }
 
-    // That test should succeed in port forwarding as we use the server seed node as receiver 
+    // That test should succeed in port forwarding as we use the server seed node as receiver
     @Test
     @Ignore
     public void testSendDirectPortForwarding() throws Exception {

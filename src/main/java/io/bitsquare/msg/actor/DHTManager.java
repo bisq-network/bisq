@@ -91,7 +91,7 @@ public class DHTManager extends AbstractActor {
 
                                     @Override
                                     public void peerUpdated(PeerAddress peerAddress, PeerStatistic peerStatistics) {
-                                        // log.debug("Peer updated: peerAddress=" + peerAddress + ", 
+                                        // log.debug("Peer updated: peerAddress=" + peerAddress + ",
                                         // peerStatistics=" + peerStatistics);
                                     }
                                 });

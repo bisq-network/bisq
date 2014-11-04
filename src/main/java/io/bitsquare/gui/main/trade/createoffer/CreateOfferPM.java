@@ -158,7 +158,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         directionLabel.set(model.getDirection() == Direction.BUY ? BSResources.get("shared.buy") : BSResources.get
                 ("shared.sell"));
 
-        // apply only if valid 
+        // apply only if valid
         boolean amountValid = false;
         if (amount != null && isBtcInputValid(amount.toPlainString())
                 .isValid) {
@@ -201,7 +201,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         isPlaceOfferButtonVisible.set(true);
     }
 
-    // On focus out we do validation and apply the data to the model 
+    // On focus out we do validation and apply the data to the model
     void onFocusOutAmountTextField(Boolean oldValue, Boolean newValue, String userInput) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(amount.get());
@@ -277,7 +277,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
 
                 calculateAmount();
 
-                // must be placed after calculateAmount (btc value has been adjusted in case the calculation leads to 
+                // must be placed after calculateAmount (btc value has been adjusted in case the calculation leads to
                 // invalid decimal places for the amount value
                 showWarningAdjustedVolume.set(!formatter.formatFiat(formatter.parseToFiatWith2Decimals(userInput))
                         .equals(volume

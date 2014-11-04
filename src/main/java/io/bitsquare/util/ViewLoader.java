@@ -55,7 +55,7 @@ public class ViewLoader {
         this(url, true);
     }
 
-    // TODO check relationship with CachedViewCB -> derive caching strategy, but there are some special cases where 
+    // TODO check relationship with CachedViewCB -> derive caching strategy, but there are some special cases where
     // we need an override, as caching is done manually in the client class
     public ViewLoader(URL url, boolean useCaching) {
         this.url = url;

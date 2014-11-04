@@ -82,7 +82,7 @@ class OfferBookPM extends PresentationModel<OfferBookModel> {
         fiatCode.bind(model.fiatCode);
         restrictionsInfo.bind(model.restrictionsInfo);
 
-        // Bidirectional bindings are used for all input fields: amount, price and volume 
+        // Bidirectional bindings are used for all input fields: amount, price and volume
         // We do volume/amount calculation during input, so user has immediate feedback
         amount.addListener((ov, oldValue, newValue) -> {
             if (isBtcInputValid(newValue).isValid) {

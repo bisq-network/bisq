@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * There can be only 1 errorMessageDisplays at a time we use static field for it.
  * The position is derived from the position of the textField itself or if set from the layoutReference node.
  */
-//TODO There are some rare situation where it behaves buggy. Needs further investigation and improvements. Also 
+//TODO There are some rare situation where it behaves buggy. Needs further investigation and improvements. Also
 // consider replacement with controlsFX components.
 public class InputTextField extends TextField {
     private static final Logger log = LoggerFactory.getLogger(InputTextField.class);

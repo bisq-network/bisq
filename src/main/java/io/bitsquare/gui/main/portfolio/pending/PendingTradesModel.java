@@ -331,4 +331,4 @@ class PendingTradesModel extends UIModel {
     }
 
 }
-   
+

@@ -62,7 +62,7 @@ public class VerifyOffer {
 
             // TODO check balance
             // securityDeposit
-            // Coin totalsToFund 
+            // Coin totalsToFund
             // getAddressInfoByTradeID(offerId)
             // TODO when offer is flattened continue here...
 

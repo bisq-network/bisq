@@ -2,11 +2,15 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
   id "com.github.johnrengelman.shadow" version "1.1.2"
+  id "com.github.kt3k.coveralls" version "2.0.1x"
 }
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'application'
+apply plugin: 'jacoco'
+
+wrapper.gradleVersion = '2.1'
 
 version = '0.1.0-SNAPSHOT'
 sourceCompatibility = 1.8
@@ -60,4 +64,9 @@ task packageNative(type:Exec, dependsOn:shadowJar) {
     args project.version, shadowJar.archivePath, mainClassName
 }
 
-wrapper.gradleVersion = '2.1'
+jacocoTestReport {
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+}

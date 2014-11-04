@@ -50,7 +50,7 @@ public class User implements Serializable {
     private KeyPair messageKeyPair;
     private String accountID;
 
-    // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is 
+    // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is
     // only temporary
     private List<BankAccount> _bankAccounts = new ArrayList<>();
     private BankAccount _currentBankAccount;
@@ -59,7 +59,7 @@ public class User implements Serializable {
     private final transient ObjectProperty<BankAccount> currentBankAccount = new SimpleObjectProperty<>();
 
     public User() {
-        // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is 
+        // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is
         // only temporary
         bankAccounts.addListener((ListChangeListener<BankAccount>) change ->
                 _bankAccounts = new ArrayList<>(bankAccounts));
@@ -178,7 +178,7 @@ public class User implements Serializable {
         return currentBankAccount;
     }
 
-    // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is 
+    // Used for serialisation (ObservableList cannot be serialized) -> serialisation will change anyway so that is
     // only temporary
     List<BankAccount> getSerializedBankAccounts() {
         return _bankAccounts;

@@ -1,6 +1,7 @@
 <img src="https://bitsquare.io/images/logo.png" width="240"/>
 
 [![Build Status](https://travis-ci.org/bitsquare/bitsquare.svg?branch=master)](https://travis-ci.org/bitsquare/bitsquare)
+[![Coverage Status](https://img.shields.io/coveralls/bitsquare/bitsquare.svg)](https://coveralls.io/r/bitsquare/bitsquare)
 
 
 What is Bitsquare?

@@ -131,8 +131,8 @@ public class CountryUtil {
         return regionCode;
     }
 
-    // We use getAvailableLocales as we depend on display names (would be a bit painful with translations if handled 
-    // from a static list -or we find something ready made?). 
+    // We use getAvailableLocales as we depend on display names (would be a bit painful with translations if handled
+    // from a static list -or we find something ready made?).
     private static List<Locale> getAllCountryLocales() {
         List<Locale> allLocales = Arrays.asList(Locale.getAvailableLocales());
         Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !"".equals(locale.getCountry()))

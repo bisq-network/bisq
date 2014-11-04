@@ -81,7 +81,7 @@ public class PortfolioViewCB extends CachedViewCB {
             if (newValue == offersTab)
                 navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO, Navigation.Item.OFFERS);
             else if (newValue == pendingTradesTab)
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO, 
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO,
                         Navigation.Item.PENDING_TRADES);
             else if (newValue == closedTradesTab)
                 navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO, Navigation.Item.CLOSED_TRADES);

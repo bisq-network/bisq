@@ -33,7 +33,7 @@ import net.tomp2p.peers.PeerAddress;
 public class TomP2PPeer implements Peer, Serializable {
 
     private static final long serialVersionUID = -2022551056208230853L;
-    
+
     private final PeerAddress peerAddress;
 
     public TomP2PPeer(PeerAddress peerAddress) {
