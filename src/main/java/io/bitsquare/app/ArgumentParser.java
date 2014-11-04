@@ -15,25 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.util;
+package io.bitsquare.app;
 
 import io.bitsquare.network.BootstrapNode;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
-import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
 /*
 optional arguments:
   -h, --help                                show this help message and exit
-  -s, --seed                                Start as DHT seed peer, no UI. (default: false)
   -d PEERID, --peerid PEERID                Seed peer  ID.  (default: digitalocean1.bitsquare.io)
   -p PORT, --port PORT                      IP port to listen on. (default: 5000)
   -i INTERFACE, --interface INTERFACE       Network interface to listen on.
   -n NAME, --name NAME                      Append name to application name.
  */
-public class BitsquareArgumentParser {
+public class ArgumentParser {
 
     public static String PEER_ID_FLAG = "peerid";
     public static String PORT_FLAG = "port";
@@ -41,9 +39,9 @@ public class BitsquareArgumentParser {
     public static String INFHINT_FLAG = "interface";
     public static String NAME_FLAG = "name";
 
-    private final ArgumentParser parser;
+    private final net.sourceforge.argparse4j.inf.ArgumentParser parser;
 
-    public BitsquareArgumentParser() {
+    public ArgumentParser() {
         parser = ArgumentParsers.newArgumentParser("Bitsquare")
                 .defaultHelp(true)
                 .description("Bitsquare - The decentralized bitcoin exchange.");
@@ -66,9 +64,5 @@ public class BitsquareArgumentParser {
             System.exit(1);
             return null;
         }
-    }
-
-    public void handleError(ArgumentParserException e) {
-        parser.handleError(e);
     }
 }

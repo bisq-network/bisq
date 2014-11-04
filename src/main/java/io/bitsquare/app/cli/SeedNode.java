@@ -17,12 +17,12 @@
 
 package io.bitsquare.app.cli;
 
+import io.bitsquare.app.ArgumentParser;
 import io.bitsquare.msg.actor.DHTManager;
 import io.bitsquare.msg.actor.command.InitializePeer;
 import io.bitsquare.msg.actor.event.PeerInitialized;
 import io.bitsquare.network.BootstrapNode;
 import io.bitsquare.network.Node;
-import io.bitsquare.util.BitsquareArgumentParser;
 
 import java.net.UnknownHostException;
 
@@ -50,25 +50,25 @@ public class SeedNode {
     private static String interfaceHint;
 
     public static void main(String[] args) {
-        BitsquareArgumentParser parser = new BitsquareArgumentParser();
+        ArgumentParser parser = new ArgumentParser();
         Namespace namespace = parser.parseArgs(args);
 
-        if (namespace.getString(BitsquareArgumentParser.NAME_FLAG) != null) {
-            appName = appName + "-" + namespace.getString(BitsquareArgumentParser.NAME_FLAG);
+        if (namespace.getString(ArgumentParser.NAME_FLAG) != null) {
+            appName = appName + "-" + namespace.getString(ArgumentParser.NAME_FLAG);
         }
 
-        if (namespace.getString(BitsquareArgumentParser.INFHINT_FLAG) != null) {
-            interfaceHint = namespace.getString(BitsquareArgumentParser.INFHINT_FLAG);
+        if (namespace.getString(ArgumentParser.INFHINT_FLAG) != null) {
+            interfaceHint = namespace.getString(ArgumentParser.INFHINT_FLAG);
         }
 
         int port = -1;
-        if (namespace.getString(BitsquareArgumentParser.PORT_FLAG) != null) {
-            port = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
+        if (namespace.getString(ArgumentParser.PORT_FLAG) != null) {
+            port = Integer.valueOf(namespace.getString(ArgumentParser.PORT_FLAG));
         }
 
         String seedID = BootstrapNode.DIGITAL_OCEAN1.getId();
-        if (namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG) != null) {
-            seedID = namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG);
+        if (namespace.getString(ArgumentParser.PEER_ID_FLAG) != null) {
+            seedID = namespace.getString(ArgumentParser.PEER_ID_FLAG);
         }
 
         ActorSystem actorSystem = ActorSystem.create(appName);
@@ -86,7 +86,7 @@ public class SeedNode {
             }
         }
 
-        int serverPort = (port == -1) ? BitsquareArgumentParser.PORT_DEFAULT : port;
+        int serverPort = (port == -1) ? ArgumentParser.PORT_DEFAULT : port;
 
         ActorRef seedNode = actorSystem.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
         Inbox inbox = Inbox.create(actorSystem);

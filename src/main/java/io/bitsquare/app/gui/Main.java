@@ -17,6 +17,7 @@
 
 package io.bitsquare.app.gui;
 
+import io.bitsquare.app.ArgumentParser;
 import io.bitsquare.app.BitsquareModule;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.SystemTray;
@@ -26,7 +27,6 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
-import io.bitsquare.util.BitsquareArgumentParser;
 
 import com.google.common.base.Throwables;
 
@@ -55,11 +55,11 @@ public class Main extends Application {
     private Injector injector;
 
     public static void main(String[] args) {
-        BitsquareArgumentParser parser = new BitsquareArgumentParser();
+        ArgumentParser parser = new ArgumentParser();
         Namespace namespace = parser.parseArgs(args);
 
-        if (namespace.getString(BitsquareArgumentParser.NAME_FLAG) != null) {
-            appName = appName + "-" + namespace.getString(BitsquareArgumentParser.NAME_FLAG);
+        if (namespace.getString(ArgumentParser.NAME_FLAG) != null) {
+            appName = appName + "-" + namespace.getString(ArgumentParser.NAME_FLAG);
         }
 
         Application.launch(Main.class, args);
