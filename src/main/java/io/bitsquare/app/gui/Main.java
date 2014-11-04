@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare;
+package io.bitsquare.app.gui;
 
 import io.bitsquare.di.BitsquareModule;
 import io.bitsquare.gui.Navigation;
@@ -47,8 +47,8 @@ import org.slf4j.LoggerFactory;
 import lighthouse.files.AppDirectory;
 import net.sourceforge.argparse4j.inf.Namespace;
 
-public class BitsquareUI extends Application {
-    private static final Logger log = LoggerFactory.getLogger(BitsquareUI.class);
+public class Main extends Application {
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
     private static String appName = "Bitsquare";
 
     private BitsquareModule bitsquareModule;
@@ -62,7 +62,7 @@ public class BitsquareUI extends Application {
             appName = appName + "-" + namespace.getString(BitsquareArgumentParser.NAME_FLAG);
         }
 
-        Application.launch(BitsquareUI.class, args);
+        Application.launch(Main.class, args);
     }
 
     @Override
