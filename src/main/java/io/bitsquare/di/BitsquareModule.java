@@ -17,7 +17,6 @@
 
 package io.bitsquare.di;
 
-import io.bitsquare.Bitsquare;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.crypto.CryptoModule;
 import io.bitsquare.gui.GuiModule;
@@ -48,14 +47,16 @@ public class BitsquareModule extends AbstractBitsquareModule {
 
     private static final Logger log = LoggerFactory.getLogger(BitsquareModule.class);
     private final Stage primaryStage;
+    private final String appName;
 
-    public BitsquareModule(Stage primaryStage) {
-        this(primaryStage, ConfigLoader.loadConfig());
+    public BitsquareModule(Stage primaryStage, String appName) {
+        this(primaryStage, appName, ConfigLoader.loadConfig());
     }
 
-    public BitsquareModule(Stage primaryStage, Properties properties) {
+    public BitsquareModule(Stage primaryStage, String appName, Properties properties) {
         super(properties);
         this.primaryStage = primaryStage;
+        this.appName = appName;
     }
 
     @Override
@@ -70,7 +71,8 @@ public class BitsquareModule extends AbstractBitsquareModule {
         install(tradeModule());
         install(guiModule());
 
-        bind(ActorSystem.class).toInstance(ActorSystem.create(Bitsquare.getAppName()));
+        bindConstant().annotatedWith(Names.named("appName")).to(appName);
+        bind(ActorSystem.class).toInstance(ActorSystem.create(appName));
 
         int randomPort = new Ports().tcpPort();
         bindConstant().annotatedWith(Names.named("clientPort")).to(randomPort);

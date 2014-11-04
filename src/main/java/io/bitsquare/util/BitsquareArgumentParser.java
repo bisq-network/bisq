@@ -58,8 +58,14 @@ public class BitsquareArgumentParser {
                 .help("Append name to application name.");
     }
 
-    public Namespace parseArgs(String... args) throws ArgumentParserException {
-        return parser.parseArgs(args);
+    public Namespace parseArgs(String... args) {
+        try {
+            return parser.parseArgs(args);
+        } catch (ArgumentParserException e) {
+            parser.handleError(e);
+            System.exit(1);
+            return null;
+        }
     }
 
     public void handleError(ArgumentParserException e) {

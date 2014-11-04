@@ -17,7 +17,6 @@
 
 package io.bitsquare.persistence;
 
-import io.bitsquare.Bitsquare;
 import io.bitsquare.util.FileUtil;
 
 import org.bitcoinj.utils.Threading;
@@ -39,6 +38,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.concurrent.GuardedBy;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,19 +52,20 @@ public class Persistence {
     private static final Logger log = LoggerFactory.getLogger(Persistence.class);
     private static final ReentrantLock lock = Threading.lock("Storage");
 
-    private final String prefix = Bitsquare.getAppName() + "_pref";
-    private final File storageFile = FileUtil.getFile(prefix, "ser");
-
     @GuardedBy("lock")
     private Map<String, Serializable> rootMap = new HashMap<>();
 
+    private final String prefix;
+    private final File storageFile;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Persistence() {
+    public Persistence(@Named("appName") String appName) {
+         this.prefix = appName + "_pref";
+         this.storageFile = FileUtil.getFile(prefix, "ser");
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -58,7 +58,7 @@ public class ViewLoaderTest {
 
     @Before
     public void setUp() {
-        Injector injector = Guice.createInjector(new BitsquareModule(TestApp.primaryStage));
+        Injector injector = Guice.createInjector(new BitsquareModule(TestApp.primaryStage, "testApp"));
         ViewLoader.setInjector(injector);
     }
 

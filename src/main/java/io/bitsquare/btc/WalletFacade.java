@@ -17,7 +17,6 @@
 
 package io.bitsquare.btc;
 
-import io.bitsquare.Bitsquare;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
@@ -73,6 +72,7 @@ import java.util.stream.Collectors;
 import javax.annotation.concurrent.GuardedBy;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.application.Platform;
 import javafx.util.Pair;
@@ -92,14 +92,13 @@ import static org.bitcoinj.script.ScriptOpCodes.OP_RETURN;
 public class WalletFacade {
     private static final Logger log = LoggerFactory.getLogger(WalletFacade.class);
 
-    public static final String WALLET_PREFIX = Bitsquare.getAppName();
-
     private final ReentrantLock lock = Threading.lock("lock");
     private final NetworkParameters params;
     private WalletAppKit walletAppKit;
     private final FeePolicy feePolicy;
     private final CryptoFacade cryptoFacade;
     private final Persistence persistence;
+    private final String appName;
     //  private final List<DownloadListener> downloadListeners = new CopyOnWriteArrayList<>();
     private final List<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArrayList<>();
     private final List<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArrayList<>();
@@ -118,11 +117,12 @@ public class WalletFacade {
 
     @Inject
     public WalletFacade(NetworkParameters params, FeePolicy feePolicy, CryptoFacade cryptoFacade,
-                        Persistence persistence) {
+                        Persistence persistence, @Named("appName") String appName) {
         this.params = params;
         this.feePolicy = feePolicy;
         this.cryptoFacade = cryptoFacade;
         this.persistence = persistence;
+        this.appName = appName;
     }
 
 
@@ -138,7 +138,7 @@ public class WalletFacade {
         Threading.USER_THREAD = Platform::runLater;
 
         // If seed is non-null it means we are restoring from backup.
-        walletAppKit = new WalletAppKit(params, AppDirectory.dir().toFile(), WALLET_PREFIX) {
+        walletAppKit = new WalletAppKit(params, AppDirectory.dir().toFile(), appName) {
             @Override
             protected void onSetupCompleted() {
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it

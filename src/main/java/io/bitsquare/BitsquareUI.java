@@ -25,6 +25,7 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
+import io.bitsquare.util.BitsquareArgumentParser;
 import io.bitsquare.util.ViewLoader;
 
 import com.google.common.base.Throwables;
@@ -44,20 +45,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import lighthouse.files.AppDirectory;
+import net.sourceforge.argparse4j.inf.Namespace;
 
 public class BitsquareUI extends Application {
     private static final Logger log = LoggerFactory.getLogger(BitsquareUI.class);
+    private static String appName = "Bitsquare";
 
     private BitsquareModule bitsquareModule;
     private Injector injector;
 
     public static void main(String[] args) {
+        BitsquareArgumentParser parser = new BitsquareArgumentParser();
+        Namespace namespace = parser.parseArgs(args);
+
+        if (namespace.getString(BitsquareArgumentParser.NAME_FLAG) != null) {
+            appName = appName + "-" + namespace.getString(BitsquareArgumentParser.NAME_FLAG);
+        }
+
         Application.launch(BitsquareUI.class, args);
     }
 
     @Override
     public void start(Stage primaryStage) {
-        bitsquareModule = new BitsquareModule(primaryStage);
+        bitsquareModule = new BitsquareModule(primaryStage, appName);
         injector = Guice.createInjector(bitsquareModule);
 
 
@@ -70,7 +80,7 @@ public class BitsquareUI extends Application {
         // configure the Bitsquare application data directory
 
         try {
-            AppDirectory.initAppDir(Bitsquare.getAppName());
+            AppDirectory.initAppDir(appName);
         } catch (IOException e) {
             log.error(e.getMessage());
         }
@@ -113,7 +123,7 @@ public class BitsquareUI extends Application {
 
         // configure the primary stage
 
-        primaryStage.setTitle("Bitsquare (" + Bitsquare.getAppName() + ")");
+        primaryStage.setTitle("Bitsquare (" + appName + ")");
         primaryStage.setScene(scene);
         primaryStage.setMinWidth(75);
         primaryStage.setMinHeight(50);
