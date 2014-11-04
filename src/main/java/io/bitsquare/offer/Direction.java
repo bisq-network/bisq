@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade;
+package io.bitsquare.offer;
 
 public enum Direction {
     BUY, SELL

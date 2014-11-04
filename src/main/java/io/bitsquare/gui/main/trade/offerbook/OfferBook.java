@@ -22,7 +22,7 @@ import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OfferBookListener;
-import io.bitsquare.trade.Offer;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
 

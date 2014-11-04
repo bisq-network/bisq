@@ -23,6 +23,8 @@ import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.msg.Message;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.network.Peer;
+import io.bitsquare.offer.Direction;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.handlers.ErrorMessageHandler;

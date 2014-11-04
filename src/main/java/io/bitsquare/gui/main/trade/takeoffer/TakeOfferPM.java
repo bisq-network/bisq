@@ -23,8 +23,8 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.trade.Direction;
-import io.bitsquare.trade.Offer;
+import io.bitsquare.offer.Direction;
+import io.bitsquare.offer.Offer;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

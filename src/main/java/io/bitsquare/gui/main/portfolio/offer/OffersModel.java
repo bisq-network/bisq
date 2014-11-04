@@ -18,8 +18,8 @@
 package io.bitsquare.gui.main.portfolio.offer;
 
 import io.bitsquare.gui.UIModel;
-import io.bitsquare.trade.Direction;
-import io.bitsquare.trade.Offer;
+import io.bitsquare.offer.Direction;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 

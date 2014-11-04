@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.offer;
 
-import io.bitsquare.trade.Offer;
+import io.bitsquare.offer.Offer;
 
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.

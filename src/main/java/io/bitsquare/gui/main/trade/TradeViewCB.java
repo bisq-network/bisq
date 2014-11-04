@@ -24,8 +24,8 @@ import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferViewCB;
 import io.bitsquare.gui.main.trade.offerbook.OfferBookViewCB;
 import io.bitsquare.gui.main.trade.takeoffer.TakeOfferViewCB;
-import io.bitsquare.trade.Direction;
-import io.bitsquare.trade.Offer;
+import io.bitsquare.offer.Direction;
+import io.bitsquare.offer.Offer;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;

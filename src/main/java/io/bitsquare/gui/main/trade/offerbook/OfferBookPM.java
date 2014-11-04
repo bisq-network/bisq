@@ -23,8 +23,8 @@ import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
 import io.bitsquare.gui.util.validation.OptionalFiatValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.trade.Direction;
-import io.bitsquare.trade.Offer;
+import io.bitsquare.offer.Direction;
+import io.bitsquare.offer.Offer;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;

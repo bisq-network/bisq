@@ -20,8 +20,8 @@ package io.bitsquare.gui.util;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
-import io.bitsquare.trade.Direction;
-import io.bitsquare.trade.Offer;
+import io.bitsquare.offer.Direction;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.user.User;
 
 import org.bitcoinj.core.Coin;

@@ -27,7 +27,7 @@ import io.bitsquare.msg.listeners.OfferBookListener;
 import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.network.tomp2p.TomP2PPeer;
-import io.bitsquare.trade.Offer;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.user.User;
 
 import com.google.common.util.concurrent.FutureCallback;

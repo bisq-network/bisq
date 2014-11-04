@@ -17,6 +17,8 @@
 
 package io.bitsquare.trade;
 
+import io.bitsquare.offer.Offer;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.Fiat;

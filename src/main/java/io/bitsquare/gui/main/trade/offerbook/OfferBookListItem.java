@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.trade.offerbook;
 
 import io.bitsquare.locale.Country;
-import io.bitsquare.trade.Offer;
+import io.bitsquare.offer.Offer;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

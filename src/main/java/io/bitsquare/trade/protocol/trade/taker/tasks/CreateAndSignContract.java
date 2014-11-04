@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.crypto.CryptoFacade;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Contract;
-import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.util.Utilities;
 

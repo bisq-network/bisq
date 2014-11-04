@@ -18,6 +18,7 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.util.DSAKeyUtil;
 
 import org.bitcoinj.core.Coin;
