@@ -59,6 +59,7 @@ public class AddressTextField extends AnchorPane {
     private final StringProperty address = new SimpleStringProperty();
     private final StringProperty paymentLabel = new SimpleStringProperty();
     private final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
+
     private OverlayManager overlayManager;
 
 

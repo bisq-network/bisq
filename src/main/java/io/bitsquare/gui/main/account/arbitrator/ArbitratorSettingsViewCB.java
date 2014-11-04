@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.account.arbitrator;
 
-import io.bitsquare.BitsquareUI;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.account.arbitrator.registration.ArbitratorRegistrationViewCB;
@@ -43,7 +42,8 @@ public class ArbitratorSettingsViewCB extends CachedViewCB {
 
     private static final Logger log = LoggerFactory.getLogger(ArbitratorSettingsViewCB.class);
 
-    private Navigation navigation;
+    private final Navigation navigation;
+    private final Stage primaryStage;
 
     private ArbitratorRegistrationViewCB arbitratorRegistrationViewCB;
 
@@ -53,9 +53,10 @@ public class ArbitratorSettingsViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ArbitratorSettingsViewCB(Navigation navigation) {
+    private ArbitratorSettingsViewCB(Navigation navigation, Stage primaryStage) {
         super();
         this.navigation = navigation;
+        this.primaryStage = primaryStage;
     }
 
 
@@ -100,17 +101,16 @@ public class ArbitratorSettingsViewCB extends CachedViewCB {
         final Parent view = loader.load();
         arbitratorRegistrationViewCB = loader.getController();
 
-        final Stage rootStage = BitsquareUI.getPrimaryStage();
         final Stage stage = new Stage();
         stage.setTitle("Arbitrator");
         stage.setMinWidth(800);
         stage.setMinHeight(400);
         stage.setWidth(800);
         stage.setHeight(600);
-        stage.setX(rootStage.getX() + 50);
-        stage.setY(rootStage.getY() + 50);
+        stage.setX(primaryStage.getX() + 50);
+        stage.setY(primaryStage.getY() + 50);
         stage.initModality(Modality.WINDOW_MODAL);
-        stage.initOwner(rootStage);
+        stage.initOwner(primaryStage);
         Scene scene = new Scene(view, 800, 600);
         stage.setScene(scene);
         stage.show();

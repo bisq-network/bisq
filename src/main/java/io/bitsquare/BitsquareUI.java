@@ -48,15 +48,8 @@ import lighthouse.files.AppDirectory;
 public class BitsquareUI extends Application {
     private static final Logger log = LoggerFactory.getLogger(BitsquareUI.class);
 
-    private static Stage primaryStage;
-
-    private final BitsquareModule bitsquareModule;
-    private final Injector injector;
-
-    public BitsquareUI() {
-        this.bitsquareModule = new BitsquareModule();
-        this.injector = Guice.createInjector(bitsquareModule);
-    }
+    private BitsquareModule bitsquareModule;
+    private Injector injector;
 
     public static void main(String[] args) {
         Application.launch(BitsquareUI.class, args);
@@ -64,7 +57,8 @@ public class BitsquareUI extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        BitsquareUI.primaryStage = primaryStage;
+        bitsquareModule = new BitsquareModule(primaryStage);
+        injector = Guice.createInjector(bitsquareModule);
 
 
         // route uncaught exceptions to a user-facing dialog
@@ -136,9 +130,5 @@ public class BitsquareUI extends Application {
     public void stop() {
         bitsquareModule.close(injector);
         System.exit(0);
-    }
-
-    public static Stage getPrimaryStage() {
-        return primaryStage;
     }
 }

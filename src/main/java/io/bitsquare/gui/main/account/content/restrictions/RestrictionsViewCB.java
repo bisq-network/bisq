@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.account.content.restrictions;
 
-import io.bitsquare.BitsquareUI;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
@@ -54,6 +53,7 @@ import org.slf4j.LoggerFactory;
 public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(RestrictionsViewCB.class);
+    private final Stage primaryStage;
 
     @FXML ListView<Locale> languagesListView;
     @FXML ListView<Country> countriesListView;
@@ -69,8 +69,9 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private RestrictionsViewCB(RestrictionsPM presentationModel) {
+    private RestrictionsViewCB(RestrictionsPM presentationModel, Stage primaryStage) {
         super(presentationModel);
+        this.primaryStage = primaryStage;
     }
 
 
@@ -193,17 +194,16 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
         Initializable childController = loader.getController();
         //childController.setParentController(this);
 
-        final Stage rootStage = BitsquareUI.getPrimaryStage();
         final Stage stage = new Stage();
         stage.setTitle("Arbitrator selection");
         stage.setMinWidth(800);
         stage.setMinHeight(500);
         stage.setWidth(800);
         stage.setHeight(600);
-        stage.setX(rootStage.getX() + 50);
-        stage.setY(rootStage.getY() + 50);
+        stage.setX(primaryStage.getX() + 50);
+        stage.setY(primaryStage.getY() + 50);
         stage.initModality(Modality.WINDOW_MODAL);
-        stage.initOwner(rootStage);
+        stage.initOwner(primaryStage);
         Scene scene = new Scene((Parent) view, 800, 600);
         stage.setScene(scene);
         stage.setOnHidden(windowEvent -> {

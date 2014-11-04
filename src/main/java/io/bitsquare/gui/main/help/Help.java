@@ -17,8 +17,6 @@
 
 package io.bitsquare.gui.main.help;
 
-import io.bitsquare.BitsquareUI;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -35,6 +33,7 @@ public class Help {
     private static final Logger log = LoggerFactory.getLogger(Help.class);
 
     private static Stage helpWindow;
+    public static Stage primaryStage;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +48,7 @@ public class Help {
             if (helpWindow == null) {
                 helpWindow = new Stage();
                 helpWindow.initModality(Modality.NONE);
-                helpWindow.initOwner(BitsquareUI.getPrimaryStage());
+                helpWindow.initOwner(primaryStage);
                 webView = new WebView();
                 helpWindow.setScene(new Scene(webView, 800, 600));
             }

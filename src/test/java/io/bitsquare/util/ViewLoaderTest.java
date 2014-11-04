@@ -35,13 +35,15 @@ import org.junit.Test;
 public class ViewLoaderTest {
 
     public static class TestApp extends Application {
+        static Stage primaryStage;
         @Override
         public void start(Stage primaryStage) throws Exception {
+            TestApp.primaryStage = primaryStage;
         }
     }
 
     @BeforeClass
-    public static void initJavaFX() {
+    public static void initJavaFX() throws InterruptedException {
         Thread t = new Thread("JavaFX Init Thread") {
             public void run() {
                 Application.launch(TestApp.class);
@@ -49,12 +51,14 @@ public class ViewLoaderTest {
         };
         t.setDaemon(true);
         t.start();
+        while (TestApp.primaryStage == null)
+            Thread.sleep(10);
     }
 
 
     @Before
     public void setUp() {
-        Injector injector = Guice.createInjector(new BitsquareModule());
+        Injector injector = Guice.createInjector(new BitsquareModule(TestApp.primaryStage));
         ViewLoader.setInjector(injector);
     }
 

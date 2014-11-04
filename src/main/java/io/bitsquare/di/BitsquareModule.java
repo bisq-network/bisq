@@ -34,6 +34,8 @@ import com.google.inject.name.Names;
 
 import java.util.Properties;
 
+import javafx.stage.Stage;
+
 import net.tomp2p.connection.Ports;
 
 import org.slf4j.Logger;
@@ -45,13 +47,15 @@ import scala.concurrent.duration.Duration;
 public class BitsquareModule extends AbstractBitsquareModule {
 
     private static final Logger log = LoggerFactory.getLogger(BitsquareModule.class);
+    private final Stage primaryStage;
 
-    public BitsquareModule() {
-        this(ConfigLoader.loadConfig());
+    public BitsquareModule(Stage primaryStage) {
+        this(primaryStage, ConfigLoader.loadConfig());
     }
 
-    public BitsquareModule(Properties properties) {
+    public BitsquareModule(Stage primaryStage, Properties properties) {
         super(properties);
+        this.primaryStage = primaryStage;
     }
 
     @Override
@@ -89,7 +93,7 @@ public class BitsquareModule extends AbstractBitsquareModule {
     }
 
     protected GuiModule guiModule() {
-        return new GuiModule(properties);
+        return new GuiModule(properties, primaryStage);
     }
 
     @Override

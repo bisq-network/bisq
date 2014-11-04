@@ -18,6 +18,8 @@
 package io.bitsquare.gui;
 
 import io.bitsquare.di.AbstractBitsquareModule;
+import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.trade.offerbook.OfferBook;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
@@ -28,10 +30,15 @@ import io.bitsquare.gui.util.validation.PasswordValidator;
 
 import java.util.Properties;
 
+import javafx.stage.Stage;
+
 public class GuiModule extends AbstractBitsquareModule {
 
-    public GuiModule(Properties properties) {
+    private final Stage primaryStage;
+
+    public GuiModule(Properties properties, Stage primaryStage) {
         super(properties);
+        this.primaryStage = primaryStage;
     }
 
     @Override
@@ -46,5 +53,9 @@ public class GuiModule extends AbstractBitsquareModule {
         bind(FiatValidator.class).asEagerSingleton();
         bind(InputValidator.class).asEagerSingleton();
         bind(PasswordValidator.class).asEagerSingleton();
+
+        bind(Stage.class).toInstance(primaryStage);
+        Popups.primaryStage = primaryStage;
+        Help.primaryStage = primaryStage;
     }
 }
