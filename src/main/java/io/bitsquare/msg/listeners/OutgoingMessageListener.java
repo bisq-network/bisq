@@ -17,7 +17,7 @@
 
 package io.bitsquare.msg.listeners;
 
-public interface OutgoingTradeMessageListener {
+public interface OutgoingMessageListener {
     void onFailed();
 
     void onResult();

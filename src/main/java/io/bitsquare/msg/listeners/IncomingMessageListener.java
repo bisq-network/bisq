@@ -17,9 +17,9 @@
 
 package io.bitsquare.msg.listeners;
 
+import io.bitsquare.msg.Message;
 import io.bitsquare.network.Peer;
-import io.bitsquare.trade.protocol.trade.TradeMessage;
 
-public interface IncomingTradeMessageListener {
-    void onMessage(TradeMessage tradeMessage, Peer sender);
+public interface IncomingMessageListener {
+    void onMessage(Message message, Peer sender);
 }

@@ -20,6 +20,7 @@ package io.bitsquare.trade;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
+import io.bitsquare.msg.Message;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.network.Peer;
 import io.bitsquare.persistence.Persistence;
@@ -120,7 +121,7 @@ public class TradeManager {
             closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
 
-        messageFacade.addIncomingTradeMessageListener(this::onIncomingTradeMessage);
+        messageFacade.addIncomingMessageListener(this::onIncomingTradeMessage);
     }
 
 
@@ -129,7 +130,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void cleanup() {
-        messageFacade.removeIncomingTradeMessageListener(this::onIncomingTradeMessage);
+        messageFacade.removeIncomingMessageListener(this::onIncomingTradeMessage);
     }
 
 
@@ -411,8 +412,11 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Routes the incoming messages to the responsible protocol
-    private void onIncomingTradeMessage(TradeMessage tradeMessage, Peer sender) {
-        // log.trace("processTradingMessage TradeId " + tradeMessage.getTradeId());
+    private void onIncomingTradeMessage(Message message, Peer sender) {
+        if (!(message instanceof TradeMessage))
+            throw new IllegalArgumentException("message must be of type TradeMessage");
+        TradeMessage tradeMessage = (TradeMessage) message;
+
         log.trace("onIncomingTradeMessage instance " + tradeMessage.getClass().getSimpleName());
         log.trace("onIncomingTradeMessage sender " + sender);
 

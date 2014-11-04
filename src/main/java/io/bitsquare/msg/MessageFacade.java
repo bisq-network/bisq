@@ -22,12 +22,11 @@ import io.bitsquare.msg.listeners.AddOfferListener;
 import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.msg.listeners.GetPeerAddressListener;
-import io.bitsquare.msg.listeners.IncomingTradeMessageListener;
+import io.bitsquare.msg.listeners.IncomingMessageListener;
 import io.bitsquare.msg.listeners.OfferBookListener;
-import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
+import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Offer;
-import io.bitsquare.trade.protocol.trade.TradeMessage;
 
 import java.security.PublicKey;
 
@@ -37,15 +36,15 @@ import javafx.beans.property.LongProperty;
 
 public interface MessageFacade extends MessageBroker {
 
-    void sendTradeMessage(Peer peer, TradeMessage tradeMessage, OutgoingTradeMessageListener listener);
+    void sendMessage(Peer peer, Message message, OutgoingMessageListener listener);
 
     void shutDown();
 
     void addArbitrator(Arbitrator arbitrator);
 
-    void addIncomingTradeMessageListener(IncomingTradeMessageListener listener);
+    void addIncomingMessageListener(IncomingMessageListener listener);
 
-    void removeIncomingTradeMessageListener(IncomingTradeMessageListener listener);
+    void removeIncomingMessageListener(IncomingMessageListener listener);
 
     void addOffer(Offer offer, AddOfferListener addOfferListener);
 
