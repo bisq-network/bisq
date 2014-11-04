@@ -20,13 +20,13 @@ package io.bitsquare.app.gui;
 import io.bitsquare.di.BitsquareModule;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.SystemTray;
+import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
 import io.bitsquare.util.BitsquareArgumentParser;
-import io.bitsquare.util.ViewLoader;
 
 import com.google.common.base.Throwables;
 

@@ -20,8 +20,8 @@ package io.bitsquare.gui.main.portfolio;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewCB;
+import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.util.ViewLoader;
 
 import java.net.URL;
 

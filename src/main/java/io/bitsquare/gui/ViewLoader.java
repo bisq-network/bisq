@@ -15,10 +15,9 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.util;
+package io.bitsquare.gui;
 
 import io.bitsquare.FatalException;
-import io.bitsquare.gui.Navigation;
 import io.bitsquare.locale.BSResources;
 
 import com.google.inject.Injector;

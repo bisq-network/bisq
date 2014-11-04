@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.account;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewCB;
-import io.bitsquare.util.ViewLoader;
+import io.bitsquare.gui.ViewLoader;
 
 import java.net.URL;
 

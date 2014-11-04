@@ -21,13 +21,13 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.ViewCB;
+import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.util.ViewLoader;
 
 import java.net.URL;
 

@@ -19,13 +19,13 @@ package io.bitsquare.gui.main.trade;
 
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferViewCB;
 import io.bitsquare.gui.main.trade.offerbook.OfferBookViewCB;
 import io.bitsquare.gui.main.trade.takeoffer.TakeOfferViewCB;
 import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.Offer;
-import io.bitsquare.util.ViewLoader;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;

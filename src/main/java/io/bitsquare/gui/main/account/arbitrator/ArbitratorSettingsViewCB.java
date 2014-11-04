@@ -19,8 +19,8 @@ package io.bitsquare.gui.main.account.arbitrator;
 
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.main.account.arbitrator.registration.ArbitratorRegistrationViewCB;
-import io.bitsquare.util.ViewLoader;
 
 import java.net.URL;
 

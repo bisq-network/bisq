@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.account.setup;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.ViewCB;
+import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.account.content.irc.IrcAccountViewCB;
@@ -27,7 +28,6 @@ import io.bitsquare.gui.main.account.content.password.PasswordViewCB;
 import io.bitsquare.gui.main.account.content.registration.RegistrationViewCB;
 import io.bitsquare.gui.main.account.content.restrictions.RestrictionsViewCB;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsViewCB;
-import io.bitsquare.util.ViewLoader;
 
 import java.net.URL;
 
