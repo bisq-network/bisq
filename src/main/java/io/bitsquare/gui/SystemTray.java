@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui;
 
-import io.bitsquare.BitsquareUI;
 import io.bitsquare.gui.util.ImageUtil;
 
 import java.awt.*;
@@ -43,13 +42,13 @@ public class SystemTray {
     public static final String HIDE_WINDOW_LABEL = "Hide exchange window";
 
     private final Stage stage;
-    private final BitsquareUI application;
+    private final Runnable onExit;
     private final TrayIcon trayIcon = createTrayIcon();
     private final MenuItem toggleShowHideItem = new MenuItem(HIDE_WINDOW_LABEL);
 
-    public SystemTray(Stage stage, BitsquareUI application) {
+    public SystemTray(Stage stage, Runnable onExit) {
         this.stage = stage;
-        this.application = application;
+        this.onExit = onExit;
         init();
     }
 
@@ -95,11 +94,7 @@ public class SystemTray {
 
         exitItem.addActionListener(e -> {
             self.remove(trayIcon);
-            try {
-                application.stop();
-            } catch (Exception ex) {
-                log.error("Application failed to shut down properly.", ex);
-            }
+            onExit.run();
         });
     }
 

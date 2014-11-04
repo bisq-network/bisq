@@ -109,7 +109,7 @@ public class BitsquareUI extends Application {
 
         // configure the system tray
 
-        SystemTray systemTray = new SystemTray(primaryStage, this);
+        SystemTray systemTray = new SystemTray(primaryStage, this::stop);
         primaryStage.setOnCloseRequest(e -> systemTray.hideStage());
         scene.setOnKeyReleased(keyEvent -> {
             if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
