@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui;
 
-import io.bitsquare.FatalException;
 import io.bitsquare.app.BitsquareModule;
 
 import com.google.inject.Guice;

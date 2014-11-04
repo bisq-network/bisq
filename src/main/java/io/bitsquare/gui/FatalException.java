@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare;
+package io.bitsquare.gui;
 
 @SuppressWarnings("serializable")
 public class FatalException extends RuntimeException {

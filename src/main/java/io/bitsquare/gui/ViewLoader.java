@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui;
 
-import io.bitsquare.FatalException;
 import io.bitsquare.locale.BSResources;
 
 import com.google.inject.Injector;
