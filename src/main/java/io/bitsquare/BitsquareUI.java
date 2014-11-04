@@ -58,10 +58,6 @@ public class BitsquareUI extends Application {
         this.injector = Guice.createInjector(bitsquareModule);
     }
 
-    public static Stage getPrimaryStage() {
-        return primaryStage;
-    }
-
     @Override
     public void start(Stage primaryStage) {
         BitsquareUI.primaryStage = primaryStage;
@@ -136,5 +132,9 @@ public class BitsquareUI extends Application {
     public void stop() {
         bitsquareModule.close(injector);
         System.exit(0);
+    }
+
+    public static Stage getPrimaryStage() {
+        return primaryStage;
     }
 }
