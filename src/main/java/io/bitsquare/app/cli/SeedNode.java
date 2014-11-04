@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare;
+package io.bitsquare.app.cli;
 
 import io.bitsquare.msg.SeedNodeAddress;
 import io.bitsquare.msg.actor.DHTManager;
@@ -42,8 +42,8 @@ import net.sourceforge.argparse4j.inf.Namespace;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
-public class Bitsquare {
-    private static final Logger log = LoggerFactory.getLogger(Bitsquare.class);
+public class SeedNode {
+    private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
 
     private static String appName = "Bitsquare";
     private static String interfaceHint;
@@ -52,9 +52,6 @@ public class Bitsquare {
         BitsquareArgumentParser parser = new BitsquareArgumentParser();
         Namespace namespace = parser.parseArgs(args);
 
-        //
-        // global args
-        //
         if (namespace.getString(BitsquareArgumentParser.NAME_FLAG) != null) {
             appName = appName + "-" + namespace.getString(BitsquareArgumentParser.NAME_FLAG);
         }
@@ -68,9 +65,6 @@ public class Bitsquare {
             port = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
         }
 
-        //
-        // seed-node only
-        //
         String seedID = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1.getId();
         if (namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG) != null) {
             seedID = namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG);
