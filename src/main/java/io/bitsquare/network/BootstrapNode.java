@@ -15,27 +15,33 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg;
+package io.bitsquare.network;
 
-import io.bitsquare.msg.actor.DHTManager;
-import io.bitsquare.msg.actor.command.InitializePeer;
+public enum BootstrapNode implements Node {
+    DIGITAL_OCEAN1("digitalocean1.bitsquare.io", "188.226.179.109", 5000);
 
-import com.google.inject.Inject;
+    private final String id;
+    private final String ip;
+    private final int port;
 
-import net.tomp2p.peers.Number160;
-
-import akka.actor.ActorSystem;
-
-public class DHTSeedService extends ActorService {
-
-    @Inject
-    public DHTSeedService(ActorSystem system) {
-        super(system, "/user/" + DHTManager.SEED_NAME);
+    BootstrapNode(String id, String ip, int port) {
+        this.id = id;
+        this.ip = ip;
+        this.port = port;
     }
 
-    public void initializePeer(String id, Integer port) {
+    @Override
+    public String getId() {
+        return id;
+    }
 
-        // TODO hard coded seed peer config for now, should read from config properties file
-        send(new InitializePeer(Number160.createHash(id), port, null, null));
+    @Override
+    public String getIp() {
+        return ip;
+    }
+
+    @Override
+    public int getPort() {
+        return port;
     }
 }

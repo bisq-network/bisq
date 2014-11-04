@@ -17,7 +17,7 @@
 
 package io.bitsquare.util;
 
-import io.bitsquare.msg.SeedNodeAddress;
+import io.bitsquare.network.BootstrapNode;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
@@ -48,7 +48,7 @@ public class BitsquareArgumentParser {
                 .defaultHelp(true)
                 .description("Bitsquare - The decentralized bitcoin exchange.");
         parser.addArgument("-d", "--" + PEER_ID_FLAG)
-                .setDefault(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1.getId())
+                .setDefault(BootstrapNode.DIGITAL_OCEAN1.getId())
                 .help("Seed peer ID.");
         parser.addArgument("-p", "--" + PORT_FLAG)
                 .help("IP port to listen on.");

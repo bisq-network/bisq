@@ -17,10 +17,11 @@
 
 package io.bitsquare.app.cli;
 
-import io.bitsquare.msg.SeedNodeAddress;
 import io.bitsquare.msg.actor.DHTManager;
 import io.bitsquare.msg.actor.command.InitializePeer;
 import io.bitsquare.msg.actor.event.PeerInitialized;
+import io.bitsquare.network.BootstrapNode;
+import io.bitsquare.network.Node;
 import io.bitsquare.util.BitsquareArgumentParser;
 
 import java.net.UnknownHostException;
@@ -65,7 +66,7 @@ public class SeedNode {
             port = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
         }
 
-        String seedID = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1.getId();
+        String seedID = BootstrapNode.DIGITAL_OCEAN1.getId();
         if (namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG) != null) {
             seedID = namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG);
         }
@@ -74,16 +75,16 @@ public class SeedNode {
 
         final Set<PeerAddress> peerAddresses = new HashSet<PeerAddress>();
         final String sid = seedID;
-        SeedNodeAddress.StaticSeedNodeAddresses.getAllSeedNodeAddresses().forEach(a -> {
-            if (!a.getId().equals(sid)) {
+        for (Node node : BootstrapNode.values()) {
+            if (!node.getId().equals(sid)) {
                 try {
-                    peerAddresses.add(new PeerAddress(Number160.createHash(a.getId()), a.getIp(),
-                            a.getPort(), a.getPort()));
+                    peerAddresses.add(new PeerAddress(Number160.createHash(node.getId()), node.getIp(),
+                            node.getPort(), node.getPort()));
                 } catch (UnknownHostException uhe) {
-                    log.error("Unknown Host [" + a.getIp() + "]: " + uhe.getMessage());
+                    log.error("Unknown Host [" + node.getIp() + "]: " + uhe.getMessage());
                 }
             }
-        });
+        }
 
         int serverPort = (port == -1) ? BitsquareArgumentParser.PORT_DEFAULT : port;
 
