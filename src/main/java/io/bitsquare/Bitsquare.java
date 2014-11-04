@@ -29,9 +29,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
-import javafx.application.Application;
-
-import net.tomp2p.connection.Ports;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 
@@ -50,15 +47,10 @@ public class Bitsquare {
     private static final Logger log = LoggerFactory.getLogger(Bitsquare.class);
 
     private static String appName = "Bitsquare";
-    private static int clientPort;
     private static String interfaceHint;
 
     public static String getAppName() {
         return appName;
-    }
-
-    public static int getClientPort() {
-        return clientPort;
     }
 
     public static void main(String[] args) {
@@ -73,6 +65,9 @@ public class Bitsquare {
         }
         if (namespace != null) {
 
+            //
+            // global args
+            //
             if (namespace.getString(BitsquareArgumentParser.NAME_FLAG) != null) {
                 appName = appName + "-" + namespace.getString(BitsquareArgumentParser.NAME_FLAG);
             }
@@ -86,67 +81,63 @@ public class Bitsquare {
                 port = Integer.valueOf(namespace.getString(BitsquareArgumentParser.PORT_FLAG));
             }
 
-            if (namespace.getBoolean(BitsquareArgumentParser.SEED_FLAG) == true) {
-                String seedID = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1.getId();
-                if (namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG) != null) {
-                    seedID = namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG);
-                }
+            //
+            // seed-node only
+            //
+            String seedID = SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1.getId();
+            if (namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG) != null) {
+                seedID = namespace.getString(BitsquareArgumentParser.PEER_ID_FLAG);
+            }
 
-                ActorSystem actorSystem = ActorSystem.create(getAppName());
+            ActorSystem actorSystem = ActorSystem.create(getAppName());
 
-                final Set<PeerAddress> peerAddresses = new HashSet<PeerAddress>();
-                final String sid = seedID;
-                SeedNodeAddress.StaticSeedNodeAddresses.getAllSeedNodeAddresses().forEach(a -> {
-                    if (!a.getId().equals(sid)) {
-                        try {
-                            peerAddresses.add(new PeerAddress(Number160.createHash(a.getId()), a.getIp(),
-                                    a.getPort(), a.getPort()));
-                        } catch (UnknownHostException uhe) {
-                            log.error("Unknown Host [" + a.getIp() + "]: " + uhe.getMessage());
-                        }
-                    }
-                });
-
-                int serverPort = (port == -1) ? BitsquareArgumentParser.PORT_DEFAULT : port;
-
-                ActorRef seedNode = actorSystem.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
-                Inbox inbox = Inbox.create(actorSystem);
-                inbox.send(seedNode, new InitializePeer(Number160.createHash(sid), serverPort, interfaceHint,
-                        peerAddresses));
-
-                Thread seedNodeThread = new Thread(() -> {
-                    Boolean quit = false;
-                    while (!quit) {
-                        try {
-                            Object m = inbox.receive(FiniteDuration.create(5L, "seconds"));
-                            if (m instanceof PeerInitialized) {
-                                log.debug("Seed Peer Initialized on port " + ((PeerInitialized) m).getPort
-                                        ());
-                            }
-                        } catch (Exception e) {
-                            if (!(e instanceof TimeoutException)) {
-                                quit = true;
-                                log.error(e.getMessage());
-                            }
-                        }
-                    }
-                    actorSystem.shutdown();
+            final Set<PeerAddress> peerAddresses = new HashSet<PeerAddress>();
+            final String sid = seedID;
+            SeedNodeAddress.StaticSeedNodeAddresses.getAllSeedNodeAddresses().forEach(a -> {
+                if (!a.getId().equals(sid)) {
                     try {
-                        actorSystem.awaitTermination(Duration.create(5L, "seconds"));
-                    } catch (Exception ex) {
-                        if (ex instanceof TimeoutException)
-                            log.error("ActorSystem did not shutdown properly.");
-                        else
-                            log.error(ex.getMessage());
+                        peerAddresses.add(new PeerAddress(Number160.createHash(a.getId()), a.getIp(),
+                                a.getPort(), a.getPort()));
+                    } catch (UnknownHostException uhe) {
+                        log.error("Unknown Host [" + a.getIp() + "]: " + uhe.getMessage());
                     }
-                });
-                seedNodeThread.start();
-            }
-            else {
-                // We use a random port for the client if no port is passed to the application
-                clientPort = (port == -1) ? new Ports().tcpPort() : port;
-                Application.launch(BitsquareUI.class, args);
-            }
+                }
+            });
+
+            int serverPort = (port == -1) ? BitsquareArgumentParser.PORT_DEFAULT : port;
+
+            ActorRef seedNode = actorSystem.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
+            Inbox inbox = Inbox.create(actorSystem);
+            inbox.send(seedNode, new InitializePeer(Number160.createHash(sid), serverPort, interfaceHint,
+                    peerAddresses));
+
+            Thread seedNodeThread = new Thread(() -> {
+                Boolean quit = false;
+                while (!quit) {
+                    try {
+                        Object m = inbox.receive(FiniteDuration.create(5L, "seconds"));
+                        if (m instanceof PeerInitialized) {
+                            log.debug("Seed Peer Initialized on port " + ((PeerInitialized) m).getPort
+                                    ());
+                        }
+                    } catch (Exception e) {
+                        if (!(e instanceof TimeoutException)) {
+                            quit = true;
+                            log.error(e.getMessage());
+                        }
+                    }
+                }
+                actorSystem.shutdown();
+                try {
+                    actorSystem.awaitTermination(Duration.create(5L, "seconds"));
+                } catch (Exception ex) {
+                    if (ex instanceof TimeoutException)
+                        log.error("ActorSystem did not shutdown properly.");
+                    else
+                        log.error(ex.getMessage());
+                }
+            });
+            seedNodeThread.start();
         }
     }
 }

@@ -18,8 +18,8 @@
 package io.bitsquare;
 
 import io.bitsquare.di.BitsquareModule;
-import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
@@ -56,6 +56,10 @@ public class BitsquareUI extends Application {
     public BitsquareUI() {
         this.bitsquareModule = new BitsquareModule();
         this.injector = Guice.createInjector(bitsquareModule);
+    }
+
+    public static void main(String[] args) {
+        Application.launch(BitsquareUI.class, args);
     }
 
     @Override

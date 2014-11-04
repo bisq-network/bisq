@@ -20,7 +20,6 @@ package io.bitsquare.util;
 import io.bitsquare.msg.SeedNodeAddress;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
-import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -36,7 +35,6 @@ optional arguments:
  */
 public class BitsquareArgumentParser {
 
-    public static String SEED_FLAG = "seed";
     public static String PEER_ID_FLAG = "peerid";
     public static String PORT_FLAG = "port";
     public static Integer PORT_DEFAULT = 5000;
@@ -49,9 +47,6 @@ public class BitsquareArgumentParser {
         parser = ArgumentParsers.newArgumentParser("Bitsquare")
                 .defaultHelp(true)
                 .description("Bitsquare - The decentralized bitcoin exchange.");
-        parser.addArgument("-s", "--" + SEED_FLAG)
-                .action(Arguments.storeTrue())
-                .help("Start as DHT seed peer, no UI.");
         parser.addArgument("-d", "--" + PEER_ID_FLAG)
                 .setDefault(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1.getId())
                 .help("Seed peer ID.");

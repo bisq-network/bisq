@@ -30,8 +30,11 @@ import io.bitsquare.user.User;
 import io.bitsquare.util.ConfigLoader;
 
 import com.google.inject.Injector;
+import com.google.inject.name.Names;
 
 import java.util.Properties;
+
+import net.tomp2p.connection.Ports;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +67,9 @@ public class BitsquareModule extends AbstractBitsquareModule {
         install(guiModule());
 
         bind(ActorSystem.class).toInstance(ActorSystem.create(Bitsquare.getAppName()));
+
+        int randomPort = new Ports().tcpPort();
+        bindConstant().annotatedWith(Names.named("clientPort")).to(randomPort);
     }
 
     protected MessageModule messageModule() {
