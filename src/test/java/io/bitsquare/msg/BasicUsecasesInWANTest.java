@@ -30,8 +30,6 @@ import net.tomp2p.dht.FuturePut;
 import net.tomp2p.dht.FutureRemove;
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
-import net.tomp2p.dht.StorageLayer;
-import net.tomp2p.dht.StorageMemory;
 import net.tomp2p.futures.FutureDirect;
 import net.tomp2p.futures.FutureDiscover;
 import net.tomp2p.futures.FuturePeerConnection;
@@ -85,7 +83,7 @@ public class BasicUsecasesInWANTest {
 
     // In port forwarding mode the isSuccess returns false, but the DHT operations succeeded.
     // Needs investigation why.
-    private boolean ignoreSuccessTests = true;
+    private boolean ignoreSuccessTests = false;
 
     // Don't create and bootstrap the nodes at every test but reuse already created ones.
     private boolean cacheClients = true;
@@ -147,6 +145,8 @@ public class BasicUsecasesInWANTest {
         futureGet.awaitUninterruptibly();
         if (!ignoreSuccessTests)
             assertTrue(futureGet.isSuccess());
+        log.debug("######## futureGet.data().toString()" + futureGet.data().toString());
+        log.debug("######## futureGet.data().object().toString()" + futureGet.data().object().toString());
         assertEquals("hallo", futureGet.data().object());
         if (!ignoreSuccessTests)
             assertTrue(futurePut.isSuccess());
@@ -312,6 +312,58 @@ public class BasicUsecasesInWANTest {
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private Peer bootstrapDirectConnection(String clientId, int clientPort, String serverId,
+                                           String serverIP, int serverPort) throws Exception {
+        Peer peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).behindFirewall().start();
+
+        PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(serverId), serverIP, serverPort,
+                serverPort);
+        FutureDiscover futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
+        futureDiscover.awaitUninterruptibly();
+        if (futureDiscover.isSuccess()) {
+            log.info("Discover with direct connection successful. Address = " + futureDiscover.peerAddress());
+            return peer;
+        }
+        else {
+            peer.shutdown().awaitUninterruptibly();
+            Assert.fail("Discover with direct connection failed " + futureDiscover);
+            return null;
+        }
+    }
+
+    private Peer bootstrapWithPortForwarding(String clientId, int clientPort, String serverId,
+                                             String serverIP, int serverPort) throws Exception {
+        Peer peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).behindFirewall().start();
+        PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
+        PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(serverId), serverIP, serverPort,
+                serverPort);
+        FutureDiscover futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
+        FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
+        futureNAT.awaitUninterruptibly();
+        if (futureNAT.isSuccess()) {
+            log.info("Automatic port forwarding is setup. Address = " +
+                    futureNAT.peerAddress());
+            futureDiscover.awaitUninterruptibly();
+            if (futureDiscover.isSuccess()) {
+                log.info("Discover with automatic port forwarding successful. Address = " + futureDiscover
+                        .peerAddress());
+
+                return peer;
+            }
+            else {
+                peer.shutdown().awaitUninterruptibly();
+                Assert.fail("Bootstrap with NAT after futureDiscover2 failed " + futureDiscover
+                        .failedReason());
+                return null;
+            }
+        }
+        else {
+            log.error("Bootstrap with NAT after futureDiscover2 failed " + futureDiscover
+                    .failedReason());
+            peer.shutdown().awaitUninterruptibly();
+            return null;
+        }
+    }
 
     private PeerDHT startClient(String clientId, int clientPort) throws Exception {
         return startClient(clientId, clientPort, SERVER_ID, SERVER_IP, SERVER_PORT);
@@ -328,7 +380,7 @@ public class BasicUsecasesInWANTest {
             Peer peer = null;
             try {
                 peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).behindFirewall().start();
-                PeerDHT peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer(new StorageMemory())).start();
+                PeerDHT peerDHT = new PeerBuilderDHT(peer).start();
 
                 PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(serverId), serverIP, serverPort,
                         serverPort);
