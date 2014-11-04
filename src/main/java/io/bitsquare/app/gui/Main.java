@@ -17,7 +17,7 @@
 
 package io.bitsquare.app.gui;
 
-import io.bitsquare.di.BitsquareModule;
+import io.bitsquare.app.BitsquareModule;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.ViewLoader;

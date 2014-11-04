@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.di;
+package io.bitsquare.app;
 
 import io.bitsquare.AbstractBitsquareModule;
 import io.bitsquare.btc.BitcoinModule;
