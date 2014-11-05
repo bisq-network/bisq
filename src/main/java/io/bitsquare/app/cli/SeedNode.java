@@ -52,16 +52,11 @@ public class SeedNode {
         ArgumentParser parser = new ArgumentParser();
         Namespace namespace = parser.parseArgs(args);
 
-        if (namespace.getString(ArgumentParser.INFHINT_FLAG) != null) {
-            interfaceHint = namespace.getString(ArgumentParser.INFHINT_FLAG);
-        }
+        if (namespace.getString(ArgumentParser.INTERFACE_HINT_FLAG) != null)
+            interfaceHint = namespace.getString(ArgumentParser.INTERFACE_HINT_FLAG);
 
         int serverPort = Integer.valueOf(namespace.getString(ArgumentParser.PORT_FLAG));
-
-        String seedID = BootstrapNode.LOCAL_HOST.getId();
-        if (namespace.getString(ArgumentParser.PEER_ID_FLAG) != null) {
-            seedID = namespace.getString(ArgumentParser.PEER_ID_FLAG);
-        }
+        String seedID = namespace.getString(ArgumentParser.PEER_ID_FLAG);
 
         final Set<PeerAddress> peerAddresses = new HashSet<>();
         for (Node node : BootstrapNode.values()) {
@@ -81,14 +76,15 @@ public class SeedNode {
         inbox.send(seedNode, new InitializePeer(Number160.createHash(seedID), serverPort, interfaceHint,
                 peerAddresses));
 
+        final String _seedID = seedID;
         Thread seedNodeThread = new Thread(() -> {
             Boolean quit = false;
             while (!quit) {
                 try {
                     Object m = inbox.receive(FiniteDuration.create(5L, "seconds"));
                     if (m instanceof PeerInitialized) {
-                        log.debug("Seed Peer Initialized on port " + ((PeerInitialized) m).getPort
-                                ());
+                        log.debug("Seed Peer with ID " + _seedID +
+                                " initialized on port " + ((PeerInitialized) m).getPort());
                     }
                 } catch (Exception e) {
                     if (!(e instanceof TimeoutException)) {
