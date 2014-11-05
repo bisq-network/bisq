@@ -63,6 +63,7 @@ import static org.junit.Assert.*;
  * In the configure method and the connectionType you can define your test scenario further.
  */
 
+@Ignore
 public class TomP2PTests {
     private static final Logger log = LoggerFactory.getLogger(TomP2PTests.class);
 
@@ -85,10 +86,12 @@ public class TomP2PTests {
     private final static int CLIENT_2_PORT = new Ports().tcpPort();
 
     // If you want to test in one specific connection mode define it directly, otherwise use UNKNOWN
-    private final ConnectionType connectionType = ConnectionType.UNKNOWN;
+    private final ConnectionType connectionType = ConnectionType.DIRECT;
 
     @Before
     public void configure() {
+        // Typically you run the seed node in localhost to test direct connection.
+        // If you have a setup where you are not behind a router you can also use a WAN side seed node.
         if (connectionType == ConnectionType.DIRECT) {
             seedId = "localhost";
             seedIP = "127.0.0.1";
@@ -195,6 +198,15 @@ public class TomP2PTests {
             assertNotNull(bootstrapInRelayMode("node_1", CLIENT_1_PORT));
     }
 
+    @Test
+    // @Ignore
+    public void testPut() throws Exception {
+        PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        FuturePut futurePut = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo")).start();
+        futurePut.awaitUninterruptibly();
+        if (!ignoreSuccessTests)
+            assertTrue(futurePut.isSuccess());
+    }
 
     @Test
     // @Ignore
@@ -211,11 +223,7 @@ public class TomP2PTests {
         futureGet.awaitUninterruptibly();
         if (!ignoreSuccessTests)
             assertTrue(futureGet.isSuccess());
-        log.debug("######## futureGet.data().toString()" + futureGet.data().toString());
-        log.debug("######## futureGet.data().object().toString()" + futureGet.data().object().toString());
         assertEquals("hallo", futureGet.data().object());
-        if (!ignoreSuccessTests)
-            assertTrue(futurePut.isSuccess());
 
         if (!cacheClients) {
             peer1DHT.shutdown().awaitUninterruptibly();
