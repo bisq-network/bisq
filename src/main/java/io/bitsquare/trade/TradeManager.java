@@ -84,7 +84,6 @@ public class TradeManager {
     //TODO store TakerAsSellerProtocol in trade
     private final Map<String, SellerTakesOfferProtocol> takerAsSellerProtocolMap = new HashMap<>();
     private final Map<String, BuyerAcceptsOfferProtocol> offererAsBuyerProtocolMap = new HashMap<>();
-    private final Map<String, CreateOfferCoordinator> createOfferCoordinatorMap = new HashMap<>();
 
     private final ObservableMap<String, Offer> offers = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> pendingTrades = FXCollections.observableHashMap();
@@ -167,36 +166,23 @@ public class TradeManager {
                 settings.getAcceptedCountries(),
                 settings.getAcceptedLanguageLocales());
 
-        if (createOfferCoordinatorMap.containsKey(offer.getId())) {
-            errorMessageHandler.handleErrorMessage("A createOfferCoordinator for the offer with the id " + offer
-                    .getId() + " " +
-                    "already exists.");
-        }
-        else {
-            CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(persistence,
-                    offer,
-                    walletFacade,
-                    (transactionId) -> {
-                        try {
-                            offer.setOfferFeePaymentTxID(transactionId.getHashAsString());
-                            addOffer(offer);
-                            createOfferCoordinatorMap.remove(offer.getId());
+        CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(
+                offer,
+                walletFacade,
+                (transactionId) -> {
+                    try {
+                        offer.setOfferFeePaymentTxID(transactionId.getHashAsString());
+                        addOffer(offer);
+                        resultHandler.onResult(transactionId);
+                    } catch (Exception e) {
+                        errorMessageHandler.handleErrorMessage("Could not save offer. Reason: " +
+                                (e.getCause() != null ? e.getCause().getMessage() : e.toString()));
+                    }
+                },
+                (message, throwable) -> errorMessageHandler.handleErrorMessage(message),
+                offerRepository);
 
-                            resultHandler.onResult(transactionId);
-                        } catch (Exception e) {
-                            //TODO retry policy
-                            errorMessageHandler.handleErrorMessage("Could not save offer. Reason: " +
-                                    (e.getCause() != null ? e.getCause().getMessage() : e.toString()));
-                            createOfferCoordinatorMap.remove(offer.getId());
-                        }
-                    },
-                    (message, throwable) -> {
-                        errorMessageHandler.handleErrorMessage(message);
-                        createOfferCoordinatorMap.remove(offer.getId());
-                    }, offerRepository);
-            createOfferCoordinatorMap.put(offer.getId(), createOfferCoordinator);
-            createOfferCoordinator.start();
-        }
+        createOfferCoordinator.start();
     }
 
     private void addOffer(Offer offer) {
