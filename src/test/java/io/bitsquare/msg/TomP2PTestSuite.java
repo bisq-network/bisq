@@ -43,7 +43,6 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.storage.Data;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -55,37 +54,52 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.*;
 
 /**
- * Test bootstrapping, put/get/add/remove and sendDirect in WAN environment (auto port forwarding, Relay)
- * startBootstrappingSeedNode is used as the server side code
+ * Test bootstrapping, DHT operations like put/get/add/remove and sendDirect in both LAN and WAN environment
+ * Test scenarios in direct connection, auto port forwarding or relay mode.
+ * <p>
+ * The seed node code is in startSeedNode.
+ * <p>
+ * To configure your test environment edit the static fields for id, IP and port.
+ * In the configure method and the connectionType you can define your test scenario further.
  */
-public class BasicUsecasesInWANTest {
-    private static final Logger log = LoggerFactory.getLogger(BasicUsecasesInWANTest.class);
 
-    private final static String SEED_ID_LOCALHOST = "localhostPeer";
-    private final static String SEED_IP_LOCALHOST = "127.0.0.1";
-    private final static int SEED_PORT_LOCALHOST = 5000;
+public class TomP2PTestSuite {
+    private static final Logger log = LoggerFactory.getLogger(TomP2PTestSuite.class);
 
-    private final static String SEED_ID_WAN_1 = "digitalocean1.bitsquare.io"; // Manfreds server
-    private final static String SEED_IP_WAN_1 = "188.226.179.109"; // Manfreds server
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Configure
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Setup your seed node
+    private final static String SEED_ID_WAN_1 = "digitalocean1.bitsquare.io";
+    private final static String SEED_IP_WAN_1 = "188.226.179.109";
     private final static int SEED_PORT_WAN_1 = 5000;
 
-    private final static String SEED_ID_WAN_2 = "digitalocean2.bitsquare.io";  // Steve's server
-    //private final static String SEED_IP_WAN_2 = "128.199.251.106"; // Steve's server
-    private final static String SEED_IP_WAN_2 = "188.226.179.109"; // Manfreds server
+    // Setup a second seed node used in some tests
+    private final static String SEED_ID_WAN_2 = "digitalocean2.bitsquare.io";
+    private final static String SEED_IP_WAN_2 = "188.226.179.109";
     private final static int SEED_PORT_WAN_2 = 5001;
 
-
-    // set default
-    private final static String SEED_ID = SEED_ID_LOCALHOST;
-    private final static String SEED_IP = SEED_IP_LOCALHOST;
-    private final static int SEED_PORT = SEED_PORT_LOCALHOST;
-
-    private final static String CLIENT_1_ID = "alice";
-    private final static String CLIENT_2_ID = "bob";
+    // new Ports().tcpPort() returns a random port
     private final static int CLIENT_1_PORT = new Ports().tcpPort();
     private final static int CLIENT_2_PORT = new Ports().tcpPort();
 
-    private String overrideBootStrapMode = "default"; // nat, relay
+    // If you want to test in one specific connection mode define it directly, otherwise use UNKNOWN
+    private final ConnectionType connectionType = ConnectionType.UNKNOWN;
+
+    @Before
+    public void configure() {
+        if (connectionType == ConnectionType.DIRECT) {
+            seedId = "localhost";
+            seedIP = "127.0.0.1";
+            seedPort = 5000;
+        }
+        else {
+            seedId = SEED_ID_WAN_1;
+            seedIP = SEED_IP_WAN_1;
+            seedPort = SEED_PORT_WAN_1;
+        }
+    }
 
     // In port forwarding mode the isSuccess returns false, but the DHT operations succeeded.
     // Needs investigation why.
@@ -94,8 +108,22 @@ public class BasicUsecasesInWANTest {
     // Don't create and bootstrap the nodes at every test but reuse already created ones.
     private boolean cacheClients = true;
 
-    private final static Map<String, PeerDHT> clients = new HashMap<>();
-    private Thread seedThread;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private enum ConnectionType {
+        UNKNOWN,
+        DIRECT,
+        NAT,
+        RELAY
+    }
+
+    private final static Map<String, Peer> cachedPeers = new HashMap<>();
+    private String seedId;
+    private String seedIP;
+    private int seedPort;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -103,14 +131,16 @@ public class BasicUsecasesInWANTest {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static void main(String[] args) throws Exception {
-        new BasicUsecasesInWANTest().startBootstrappingSeedNode(SEED_ID, SEED_PORT);
+        // Define your seed node IP and port
+        // "127.0.0.1" for localhost or SEED_ID_WAN_1
+        new TomP2PTestSuite().startSeedNode("127.0.0.1", 5000);
     }
 
-    public Thread startBootstrappingSeedNode(String serverId, int serverPort) {
+    public Thread startSeedNode(String seedNodeId, int seedNodePort) {
         Thread thread = new Thread(() -> {
             Peer peer = null;
             try {
-                peer = new PeerBuilder(Number160.createHash(serverId)).ports(serverPort).start();
+                peer = new PeerBuilder(Number160.createHash(seedNodeId)).ports(seedNodePort).start();
                 PeerDHT peerDHT = new PeerBuilderDHT(peer).start();
                 peerDHT.peer().objectDataReply((sender, request) -> {
                     log.trace("received request: ", request.toString());
@@ -135,59 +165,41 @@ public class BasicUsecasesInWANTest {
         return thread;
     }
 
-    @Before
-    public void startServer() throws Exception {
-        seedThread = new Thread(() -> {
-            Peer peer = null;
-            try {
-                peer = new PeerBuilder(Number160.createHash(SEED_ID)).ports(SEED_PORT).start();
-                PeerDHT peerDHT = new PeerBuilderDHT(peer).start();
-                peerDHT.peer().objectDataReply((sender, request) -> {
-                    log.trace("received request: ", request.toString());
-                    return "pong";
-                });
-                log.debug("peer started.");
-                while (true) {
-                    for (PeerAddress pa : peer.peerBean().peerMap().all()) {
-                        log.debug("peer online (TCP):" + pa);
-                    }
-                    Thread.sleep(2000);
-                }
-            } catch (InterruptedException e) {
-                if (peer != null)
-                    peer.shutdown().awaitUninterruptibly();
-            } catch (IOException e2) {
-                e2.printStackTrace();
-            }
-        });
-        seedThread.start();
-    }
-
-    @After
-    public void stopServer() throws Exception {
-        seedThread.interrupt();
-    }
-    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Tests
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
-    @Ignore
+    public void bootstrapInUnknownMode() throws Exception {
+        if (connectionType == ConnectionType.UNKNOWN)
+            assertNotNull(bootstrapInUnknownMode("node_1", CLIENT_1_PORT));
+    }
+
+    @Test
     public void testBootstrapDirectConnection() throws Exception {
-        Thread seedNodeRunnable = new BasicUsecasesInWANTest().startBootstrappingSeedNode(SEED_ID, SEED_PORT);
-        Thread.sleep(100);
-        bootstrapDirectConnection(CLIENT_1_ID, CLIENT_1_PORT, SEED_ID, SEED_IP, SEED_PORT);
-        seedNodeRunnable.interrupt();
+        if (connectionType == ConnectionType.DIRECT)
+            assertNotNull(bootstrapDirectConnection("node_1", CLIENT_1_PORT));
+    }
+
+    @Test
+    public void testBootstrapWithPortForwarding() throws Exception {
+        if (connectionType == ConnectionType.NAT)
+            assertNotNull(bootstrapWithPortForwarding("node_1", CLIENT_1_PORT));
+    }
+
+    @Test
+    public void testBootstrapInRelayMode() throws Exception {
+        if (connectionType == ConnectionType.RELAY)
+            assertNotNull(bootstrapInRelayMode("node_1", CLIENT_1_PORT));
     }
 
 
     @Test
     @Ignore
     public void testPutGet() throws Exception {
-        PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT);
-        PeerDHT peer2DHT = startClient(CLIENT_2_ID, CLIENT_2_PORT);
+        PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        PeerDHT peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
 
         FuturePut futurePut = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo")).start();
         futurePut.awaitUninterruptibly();
@@ -213,8 +225,8 @@ public class BasicUsecasesInWANTest {
     @Test
     @Ignore
     public void testAddGet() throws Exception {
-        PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT);
-        PeerDHT peer2DHT = startClient(CLIENT_2_ID, CLIENT_2_PORT);
+        PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        PeerDHT peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
 
         FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
         futurePut1.awaitUninterruptibly();
@@ -244,8 +256,8 @@ public class BasicUsecasesInWANTest {
     @Test
     @Ignore
     public void testAddRemove() throws Exception {
-        PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT);
-        PeerDHT peer2DHT = startClient(CLIENT_2_ID, CLIENT_2_PORT);
+        PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        PeerDHT peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
 
         FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
         futurePut1.awaitUninterruptibly();
@@ -281,8 +293,8 @@ public class BasicUsecasesInWANTest {
     @Test
     @Ignore
     public void testDHT2Servers() throws Exception {
-        PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT, SEED_ID_WAN_1, SEED_IP_WAN_1, SEED_PORT_WAN_1);
-        PeerDHT peer2DHT = startClient(CLIENT_2_ID, CLIENT_2_PORT, SEED_ID_WAN_2, SEED_IP_WAN_2, SEED_PORT_WAN_2);
+        PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT, SEED_ID_WAN_1, SEED_IP_WAN_1, SEED_PORT_WAN_1);
+        PeerDHT peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT, SEED_ID_WAN_2, SEED_IP_WAN_2, SEED_PORT_WAN_2);
 
         FuturePut futurePut = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo")).start();
         futurePut.awaitUninterruptibly();
@@ -308,10 +320,8 @@ public class BasicUsecasesInWANTest {
     @Test
     @Ignore
     public void testSendDirectRelay() throws Exception {
-        overrideBootStrapMode = "relay";
-        PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT);
-        overrideBootStrapMode = "nat";
-        PeerDHT peer2DHT = startClient(CLIENT_2_ID, CLIENT_2_PORT);
+        PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        PeerDHT peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
 
         final CountDownLatch countDownLatch = new CountDownLatch(1);
 
@@ -345,9 +355,9 @@ public class BasicUsecasesInWANTest {
     @Test
     @Ignore
     public void testSendDirectPortForwarding() throws Exception {
-        PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT);
-        PeerAddress reachablePeerAddress = new PeerAddress(Number160.createHash(SEED_ID), SEED_IP, SEED_PORT,
-                SEED_PORT);
+        PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        PeerAddress reachablePeerAddress = new PeerAddress(Number160.createHash(seedId), seedIP, seedPort,
+                seedPort);
 
         FuturePeerConnection futurePeerConnection = peer1DHT.peer().createPeerConnection(reachablePeerAddress, 500);
         FutureDirect futureDirect = peer1DHT.peer().sendDirect(futurePeerConnection).object("hallo").start();
@@ -366,81 +376,197 @@ public class BasicUsecasesInWANTest {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Peer bootstrapDirectConnection(String clientId, int clientPort) {
-        return bootstrapDirectConnection(clientId, clientPort, SEED_ID, SEED_IP, SEED_PORT);
+        return bootstrapDirectConnection(clientId, clientPort, seedId, seedIP, seedPort);
     }
 
-    private Peer bootstrapDirectConnection(String clientId, int clientPort, String serverId,
-                                           String serverIP, int serverPort) {
+    private Peer bootstrapDirectConnection(String clientId, int clientPort, String seedNodeId,
+                                           String seedNodeIP, int seedNodePort) {
+        final String id = clientId + clientPort;
+        if (cacheClients && cachedPeers.containsKey(id)) {
+            return cachedPeers.get(id);
+        }
         Peer peer = null;
         try {
             peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).start();
-            PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(serverId), serverIP, serverPort,
-                    serverPort);
+            PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(seedNodeId), seedNodeIP, seedNodePort,
+                    seedNodePort);
             FutureDiscover futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
             futureDiscover.awaitUninterruptibly();
             if (futureDiscover.isSuccess()) {
                 log.info("Discover with direct connection successful. Address = " + futureDiscover.peerAddress());
+                cachedPeers.put(id, peer);
                 return peer;
             }
             else {
                 peer.shutdown().awaitUninterruptibly();
-                Assert.fail("Discover with direct connection failed " + futureDiscover);
                 return null;
             }
         } catch (IOException e) {
             if (peer != null)
                 peer.shutdown().awaitUninterruptibly();
 
-            Assert.fail(e.getMessage());
             e.printStackTrace();
             return null;
         }
     }
 
-    private Peer bootstrapWithPortForwarding(String clientId, int clientPort, String serverId,
-                                             String serverIP, int serverPort) throws Exception {
-        Peer peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).behindFirewall().start();
-        PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
-        PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(serverId), serverIP, serverPort,
-                serverPort);
-        FutureDiscover futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
-        FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
-        futureNAT.awaitUninterruptibly();
-        if (futureNAT.isSuccess()) {
-            log.info("Automatic port forwarding is setup. Address = " +
-                    futureNAT.peerAddress());
-            futureDiscover.awaitUninterruptibly();
-            if (futureDiscover.isSuccess()) {
-                log.info("Discover with automatic port forwarding successful. Address = " + futureDiscover
-                        .peerAddress());
+    private Peer bootstrapWithPortForwarding(String clientId, int clientPort) {
+        return bootstrapWithPortForwarding(clientId, clientPort, seedId, seedIP, seedPort);
+    }
 
-                return peer;
+    private Peer bootstrapWithPortForwarding(String clientId, int clientPort, String seedNodeId,
+                                             String seedNodeIP, int seedNodePort) {
+        final String id = clientId + clientPort;
+        if (cacheClients && cachedPeers.containsKey(id)) {
+            return cachedPeers.get(id);
+        }
+        Peer peer = null;
+        try {
+            peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).behindFirewall().start();
+            PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
+            PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(seedNodeId), seedNodeIP, seedNodePort,
+                    seedNodePort);
+            FutureDiscover futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
+            FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
+            futureNAT.awaitUninterruptibly();
+            if (futureNAT.isSuccess()) {
+                log.info("Automatic port forwarding is setup. Address = " +
+                        futureNAT.peerAddress());
+                futureDiscover.awaitUninterruptibly();
+                if (futureDiscover.isSuccess()) {
+                    log.info("Discover with automatic port forwarding successful. Address = " + futureDiscover
+                            .peerAddress());
+                    cachedPeers.put(id, peer);
+                    return peer;
+                }
+                else {
+                    peer.shutdown().awaitUninterruptibly();
+                    return null;
+                }
             }
             else {
-                peer.shutdown().awaitUninterruptibly();
-                Assert.fail("Bootstrap with NAT after futureDiscover2 failed " + futureDiscover
+                log.error("Bootstrap with NAT after futureDiscover2 failed " + futureDiscover
                         .failedReason());
+                peer.shutdown().awaitUninterruptibly();
                 return null;
             }
-        }
-        else {
-            log.error("Bootstrap with NAT after futureDiscover2 failed " + futureDiscover
-                    .failedReason());
-            peer.shutdown().awaitUninterruptibly();
+        } catch (IOException e) {
+            if (peer != null)
+                peer.shutdown().awaitUninterruptibly();
+
+            e.printStackTrace();
             return null;
         }
     }
 
-    private PeerDHT startClient(String clientId, int clientPort) throws Exception {
-        return startClient(clientId, clientPort, SEED_ID, SEED_IP, SEED_PORT);
+    private Peer bootstrapInRelayMode(String clientId, int clientPort) {
+        return bootstrapInRelayMode(clientId, clientPort, seedId, seedIP, seedPort);
     }
 
-    private PeerDHT startClient(String clientId, int clientPort, String serverId,
-                                String serverIP, int serverPort) throws Exception {
+    private Peer bootstrapInRelayMode(String clientId, int clientPort, String seedNodeId,
+                                      String seedNodeIP, int seedNodePort) {
         final String id = clientId + clientPort;
-        log.debug("id = " + id + "/" + clients.containsKey(id));
-        if (cacheClients && clients.containsKey(id)) {
-            return clients.get(id);
+        if (cacheClients && cachedPeers.containsKey(id)) {
+            return cachedPeers.get(id);
+        }
+
+        Peer peer = null;
+        try {
+            peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).behindFirewall().start();
+            PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
+            PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(seedNodeId), seedNodeIP, seedNodePort,
+                    seedNodePort);
+            FutureDiscover futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
+            FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
+            FutureRelayNAT futureRelayNAT = peerNAT.startRelay(futureDiscover, futureNAT);
+            futureRelayNAT.awaitUninterruptibly();
+            if (futureRelayNAT.isSuccess()) {
+                log.info("Bootstrap using relay successful. Address = " + peer.peerAddress());
+                cachedPeers.put(id, peer);
+                return peer;
+
+            }
+            else {
+                log.error("Bootstrap using relay failed " + futureRelayNAT.failedReason());
+                futureRelayNAT.shutdown();
+                peer.shutdown().awaitUninterruptibly();
+                return null;
+            }
+        } catch (IOException e) {
+            if (peer != null)
+                peer.shutdown().awaitUninterruptibly();
+
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private Peer bootstrapInUnknownMode(String clientId, int clientPort) {
+        return bootstrapInUnknownMode(clientId, clientPort, seedId, seedIP, seedPort);
+    }
+
+    private Peer bootstrapInUnknownMode(String clientId, int clientPort, String seedNodeId,
+                                        String seedNodeIP, int seedNodePort) {
+        Peer peer = bootstrapDirectConnection(clientId, clientPort, seedNodeId, seedNodeIP, seedNodePort);
+        if (peer != null)
+            return peer;
+
+        peer = bootstrapWithPortForwarding(clientId, clientPort, seedNodeId, seedNodeIP, seedNodePort);
+        if (peer != null)
+            return peer;
+
+        peer = bootstrapInRelayMode(clientId, clientPort, seedNodeId, seedNodeIP, seedNodePort);
+        if (peer != null)
+            return peer;
+        else
+            log.error("Bootstrapping in all modes failed. Check if the seed node is running. " +
+                    "seedNodeId= " + seedNodeId +
+                    "seedNodeIP= " + seedNodeIP +
+                    "seedNodePort= " + seedNodePort);
+
+        return peer;
+    }
+
+    private PeerDHT getDHTPeer(String clientId, int clientPort) {
+        return getDHTPeer(clientId, clientPort, seedId, seedIP, seedPort);
+    }
+
+    private PeerDHT getDHTPeer(String clientId, int clientPort, String seedNodeId,
+                               String seedNodeIP, int seedNodePort) {
+        Peer peer;
+        if (connectionType == ConnectionType.DIRECT) {
+            peer = bootstrapDirectConnection(clientId, clientPort, seedNodeId, seedNodeIP, seedNodePort);
+        }
+        else if (connectionType == ConnectionType.NAT) {
+            peer = bootstrapWithPortForwarding(clientId, clientPort, seedNodeId, seedNodeIP, seedNodePort);
+        }
+        else if (connectionType == ConnectionType.RELAY) {
+            peer = bootstrapInRelayMode(clientId, clientPort, seedNodeId, seedNodeIP, seedNodePort);
+        }
+        else {
+            peer = bootstrapDirectConnection(clientId, clientPort, seedNodeId, seedNodeIP, seedNodePort);
+            if (peer == null)
+                peer = bootstrapWithPortForwarding(clientId, clientPort, seedNodeId, seedNodeIP, seedNodePort);
+            if (peer == null)
+                peer = bootstrapInRelayMode(clientId, clientPort, seedNodeId, seedNodeIP, seedNodePort);
+            if (peer == null)
+                Assert.fail("Bootstrapping in all modes failed. Check if the seed node is running. " +
+                        "seedNodeId= " + seedNodeId +
+                        "seedNodeIP= " + seedNodeIP +
+                        "seedNodePort= " + seedNodePort);
+        }
+
+        return new PeerBuilderDHT(peer).start();
+    }
+
+    /*private PeerDHT startClient(String clientId, int clientPort, String seedNodeId,
+                                String seedNodeIP, int seedNodePort) throws Exception {
+
+
+        final String id = clientId + clientPort;
+        log.debug("id = " + id + "/" + cachedPeers.containsKey(id));
+        if (cacheClients && cachedPeers.containsKey(id)) {
+            return cachedPeers.get(id);
         }
         else {
             Peer peer = null;
@@ -448,13 +574,14 @@ public class BasicUsecasesInWANTest {
                 peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).behindFirewall().start();
                 PeerDHT peerDHT = new PeerBuilderDHT(peer).start();
 
-                PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(serverId), serverIP, serverPort,
-                        serverPort);
+                PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(seedNodeId), seedNodeIP, 
+                seedNodePort,
+                        seedNodePort);
                 FutureDiscover futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
                 futureDiscover.awaitUninterruptibly();
                 if (futureDiscover.isSuccess() && overrideBootStrapMode.equals("default")) {
                     log.info("Discover with direct connection successful. Address = " + futureDiscover.peerAddress());
-                    clients.put(id, peerDHT);
+                    cachedPeers.put(id, peerDHT);
                     return peerDHT;
                 }
                 else {
@@ -471,7 +598,7 @@ public class BasicUsecasesInWANTest {
                             log.info("Discover with automatic port forwarding successful. Address = " + futureDiscover3
                                     .peerAddress());
 
-                            clients.put(id, peerDHT);
+                            cachedPeers.put(id, peerDHT);
                             return peerDHT;
                         }
                         else {
@@ -488,7 +615,7 @@ public class BasicUsecasesInWANTest {
                         futureRelayNAT.awaitUninterruptibly();
                         if (futureRelayNAT.isSuccess()) {
                             log.info("Bootstrap using relay successful. Address = " + peer.peerAddress());
-                            clients.put(id, peerDHT);
+                            cachedPeers.put(id, peerDHT);
                             return peerDHT;
 
                         }
@@ -511,6 +638,6 @@ public class BasicUsecasesInWANTest {
             }
         }
     }
-
+*/
 
 }

@@ -54,7 +54,7 @@ import static org.junit.Assert.*;
 public class BasicUsecasesInLANTest {
     private static final Logger log = LoggerFactory.getLogger(BasicUsecasesInLANTest.class);
 
-    private final static String SERVER_ID = "localhostPeer";
+    private final static String SERVER_ID = "localhost";
     private final static String SERVER_IP = "127.0.0.1";
     private final static int SERVER_PORT = 5000;
 
