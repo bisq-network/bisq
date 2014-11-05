@@ -18,7 +18,8 @@
 package io.bitsquare.offer;
 
 import io.bitsquare.msg.P2PNode;
-import io.bitsquare.msg.listeners.AddOfferListener;
+import io.bitsquare.trade.handlers.FaultHandler;
+import io.bitsquare.trade.handlers.ResultHandler;
 
 import java.io.IOException;
 
@@ -60,7 +61,7 @@ class TomP2POfferRepository implements OfferRepository {
     }
 
     @Override
-    public void addOffer(Offer offer, AddOfferListener addOfferListener) {
+    public void addOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler) {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         try {
             final Data offerData = new Data(offer);
@@ -77,7 +78,7 @@ class TomP2POfferRepository implements OfferRepository {
                     // deactivate it for the moment until the port forwarding bug is fixed
                     // if (future.isSuccess()) {
                     Platform.runLater(() -> {
-                        addOfferListener.onComplete();
+                        resultHandler.onResult();
                         offerRepositoryListeners.stream().forEach(listener -> {
                             try {
                                 Object offerDataObject = offerData.object();
@@ -98,17 +99,15 @@ class TomP2POfferRepository implements OfferRepository {
                 }
 
                 @Override
-                public void exceptionCaught(Throwable t) throws Exception {
+                public void exceptionCaught(Throwable ex) throws Exception {
                     Platform.runLater(() -> {
-                        addOfferListener.onFailed("Add offer to DHT failed with an exception.", t);
-                        log.error("Add offer to DHT failed with an exception: " + t.getMessage());
+                        faultHandler.onFault("Failed to add offer to DHT", ex);
                     });
                 }
             });
-        } catch (IOException e) {
+        } catch (IOException ex) {
             Platform.runLater(() -> {
-                addOfferListener.onFailed("Add offer to DHT failed with an exception.", e);
-                log.error("Add offer to DHT failed with an exception: " + e.getMessage());
+                faultHandler.onFault("Failed to add offer to DHT", ex);
             });
         }
     }

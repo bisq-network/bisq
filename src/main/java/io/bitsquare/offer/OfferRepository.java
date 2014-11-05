@@ -17,7 +17,8 @@
 
 package io.bitsquare.offer;
 
-import io.bitsquare.msg.listeners.AddOfferListener;
+import io.bitsquare.trade.handlers.FaultHandler;
+import io.bitsquare.trade.handlers.ResultHandler;
 
 import java.util.List;
 
@@ -27,7 +28,7 @@ public interface OfferRepository {
 
     void getOffers(String fiatCode);
 
-    void addOffer(Offer offer, AddOfferListener addOfferListener);
+    void addOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler);
 
     void removeOffer(Offer offer);
 

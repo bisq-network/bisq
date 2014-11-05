@@ -26,7 +26,6 @@ import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.createoffer.tasks.BroadCastOfferFeeTx;
 import io.bitsquare.trade.protocol.createoffer.tasks.CreateOfferFeeTx;
-import io.bitsquare.trade.protocol.createoffer.tasks.PublishOfferToDHT;
 import io.bitsquare.trade.protocol.createoffer.tasks.VerifyOffer;
 
 import org.bitcoinj.core.Transaction;
@@ -133,7 +132,7 @@ public class CreateOfferCoordinator {
 
     private void onOfferFeeTxBroadCasted() {
         model.setState(State.OFFER_FEE_BROAD_CASTED);
-        PublishOfferToDHT.run(this::onOfferPublishedToDHT, this::onFailed, offerRepository, offer);
+        offerRepository.addOffer(offer, this::onOfferPublishedToDHT, faultHandler);
     }
 
     private void onOfferPublishedToDHT() {
@@ -163,7 +162,7 @@ public class CreateOfferCoordinator {
             case OFFER_FEE_BROAD_CASTED:
                 // actually the only replay case here, tx publish was successful but storage to dht failed.
                 // Republish the offer to DHT
-                PublishOfferToDHT.run(this::onOfferPublishedToDHT, this::onFailed, offerRepository, offer);
+                offerRepository.addOffer(offer, this::onOfferPublishedToDHT, faultHandler);
                 break;
             case OFFER_PUBLISHED_TO_DHT:
                 // should be impossible
