@@ -43,6 +43,7 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.storage.Data;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -63,7 +64,7 @@ import static org.junit.Assert.*;
  * In the configure method and the connectionType you can define your test scenario further.
  */
 
-@Ignore
+//@Ignore
 public class TomP2PTests {
     private static final Logger log = LoggerFactory.getLogger(TomP2PTests.class);
 
@@ -128,7 +129,8 @@ public class TomP2PTests {
     private String seedId;
     private String seedIP;
     private int seedPort;
-
+    private PeerDHT peer1DHT;
+    private PeerDHT peer2DHT;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Seed node
@@ -174,6 +176,16 @@ public class TomP2PTests {
     // Tests
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @After
+    public void shutdown() {
+        if (!cacheClients) {
+            if (peer1DHT != null)
+                peer1DHT.shutdown().awaitUninterruptibly();
+            if (peer2DHT != null)
+                peer2DHT.shutdown().awaitUninterruptibly();
+        }
+    }
+
     @Test
     public void bootstrapInUnknownMode() throws Exception {
         if (connectionType == ConnectionType.UNKNOWN)
@@ -201,7 +213,7 @@ public class TomP2PTests {
     @Test
     // @Ignore
     public void testPut() throws Exception {
-        PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
         FuturePut futurePut = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo")).start();
         futurePut.awaitUninterruptibly();
         if (!ignoreSuccessTests)
@@ -211,31 +223,25 @@ public class TomP2PTests {
     @Test
     // @Ignore
     public void testPutGet() throws Exception {
-        PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
-        PeerDHT peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
-
+        peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
         FuturePut futurePut = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo")).start();
         futurePut.awaitUninterruptibly();
         if (!ignoreSuccessTests)
             assertTrue(futurePut.isSuccess());
 
+        peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
         FutureGet futureGet = peer2DHT.get(Number160.createHash("key")).start();
         futureGet.awaitUninterruptibly();
         if (!ignoreSuccessTests)
             assertTrue(futureGet.isSuccess());
         assertEquals("hallo", futureGet.data().object());
-
-        if (!cacheClients) {
-            peer1DHT.shutdown().awaitUninterruptibly();
-            peer2DHT.shutdown().awaitUninterruptibly();
-        }
     }
 
     @Test
-    @Ignore
+    //@Ignore
     public void testAddGet() throws Exception {
-        PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
-        PeerDHT peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
+        peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
 
         FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
         futurePut1.awaitUninterruptibly();
@@ -255,18 +261,13 @@ public class TomP2PTests {
         assertTrue(futureGet.dataMap().values().contains(new Data("hallo1")));
         assertTrue(futureGet.dataMap().values().contains(new Data("hallo2")));
         assertTrue(futureGet.dataMap().values().size() == 2);
-
-        if (!cacheClients) {
-            peer1DHT.shutdown().awaitUninterruptibly();
-            peer2DHT.shutdown().awaitUninterruptibly();
-        }
     }
 
     @Test
     @Ignore
     public void testAddRemove() throws Exception {
-        PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
-        PeerDHT peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
+        peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
 
         FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
         futurePut1.awaitUninterruptibly();
@@ -292,18 +293,13 @@ public class TomP2PTests {
 
         assertTrue(futureGet.dataMap().values().contains(new Data("hallo2")));
         assertTrue(futureGet.dataMap().values().size() == 1);
-
-        if (!cacheClients) {
-            peer1DHT.shutdown().awaitUninterruptibly();
-            peer2DHT.shutdown().awaitUninterruptibly();
-        }
     }
 
     @Test
     @Ignore
     public void testDHT2Servers() throws Exception {
-        PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT, SEED_ID_WAN_1, SEED_IP_WAN_1, SEED_PORT_WAN_1);
-        PeerDHT peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT, SEED_ID_WAN_2, SEED_IP_WAN_2, SEED_PORT_WAN_2);
+        peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT, SEED_ID_WAN_1, SEED_IP_WAN_1, SEED_PORT_WAN_1);
+        peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT, SEED_ID_WAN_2, SEED_IP_WAN_2, SEED_PORT_WAN_2);
 
         FuturePut futurePut = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo")).start();
         futurePut.awaitUninterruptibly();
@@ -315,11 +311,6 @@ public class TomP2PTests {
         if (!ignoreSuccessTests)
             assertTrue(futureGet.isSuccess());
         assertEquals("hallo", futureGet.data().object());
-
-        if (!cacheClients) {
-            peer1DHT.shutdown().awaitUninterruptibly();
-            peer2DHT.shutdown().awaitUninterruptibly();
-        }
     }
 
     // That test fails in port forwarding mode because most routers does not support NAT reflections.
@@ -329,8 +320,8 @@ public class TomP2PTests {
     @Test
     @Ignore
     public void testSendDirectRelay() throws Exception {
-        PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
-        PeerDHT peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
+        peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
 
         final CountDownLatch countDownLatch = new CountDownLatch(1);
 
@@ -353,18 +344,13 @@ public class TomP2PTests {
         assertEquals("hallo", result.toString());
         assertTrue(futureDirect.isSuccess());
         //assertEquals("pong", futureDirect.object());
-
-        if (!cacheClients) {
-            peer1DHT.shutdown().awaitUninterruptibly();
-            peer2DHT.shutdown().awaitUninterruptibly();
-        }
     }
 
     // That test should succeed in port forwarding as we use the server seed node as receiver
     @Test
     @Ignore
     public void testSendDirectPortForwarding() throws Exception {
-        PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
         PeerAddress reachablePeerAddress = new PeerAddress(Number160.createHash(seedId), seedIP, seedPort,
                 seedPort);
 
@@ -373,10 +359,6 @@ public class TomP2PTests {
         futureDirect.awaitUninterruptibly();
         assertTrue(futureDirect.isSuccess());
         //assertEquals("pong", futureDirect.object());
-
-        if (!cacheClients) {
-            peer1DHT.shutdown().awaitUninterruptibly();
-        }
     }
 
 
