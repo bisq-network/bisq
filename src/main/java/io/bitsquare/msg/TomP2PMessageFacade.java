@@ -140,7 +140,7 @@ class TomP2PMessageFacade implements MessageFacade {
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture baseFuture) throws Exception {
-                if (baseFuture.isSuccess() && futureGet.data() != null) {
+                if (isSuccess(baseFuture) && futureGet.data() != null) {
                     final Peer peer = (Peer) futureGet.data().object();
                     Platform.runLater(() -> listener.onResult(peer));
                 }
@@ -150,7 +150,6 @@ class TomP2PMessageFacade implements MessageFacade {
             }
         });
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Offer
@@ -168,48 +167,54 @@ class TomP2PMessageFacade implements MessageFacade {
                     ", hash: " + offerData.hash().toString() + "]");
             FuturePut futurePut = p2pNode.addProtectedData(locationKey, offerData);
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
-                @Override
-                public void operationComplete(BaseFuture future) throws Exception {
-                    // deactivate it for the moment until the port forwarding bug is fixed
-                    // if (future.isSuccess()) {
-                        Platform.runLater(() -> {
-                            addOfferListener.onComplete();
-                            offerBookListeners.stream().forEach(listener -> {
-                                try {
-                                    Object offerDataObject = offerData.object();
-                                    if (offerDataObject instanceof Offer) {
-                                        log.error("Added offer to DHT with ID: " + ((Offer) offerDataObject).getId());
-                                        listener.onOfferAdded((Offer) offerDataObject);
-                                    }
-                                } catch (ClassNotFoundException | IOException e) {
-                                    e.printStackTrace();
-                                    log.error("Add offer to DHT failed: " + e.getMessage());
-                                }
-                            });
+                                      @Override
+                                      public void operationComplete(BaseFuture future) throws Exception {
+                                          if (isSuccess(future)) {
+                                              Platform.runLater(() -> {
+                                                  addOfferListener.onComplete();
+                                                  offerBookListeners.stream().forEach(listener -> {
+                                                      try {
+                                                          Object offerDataObject = offerData.object();
+                                                          if (offerDataObject instanceof Offer) {
+                                                              log.error("Added offer to DHT with ID: " + ((Offer)
+                                                                      offerDataObject).getId());
+                                                              listener.onOfferAdded((Offer) offerDataObject);
+                                                          }
+                                                      } catch (ClassNotFoundException | IOException e) {
+                                                          e.printStackTrace();
+                                                          log.error("Add offer to DHT failed: " + e.getMessage());
+                                                      }
+                                                  });
 
-                            // TODO will be removed when we don't use polling anymore
-                            writeInvalidationTimestampToDHT(locationKey);
-                            log.trace("Add offer to DHT was successful. Added data: [locationKey: " + locationKey +
-                                    ", value: " + offerData + "]");
-                        });
-                  /*  }
-                    else {
-                        Platform.runLater(() -> {
-                            addOfferListener.onFailed("Add offer to DHT failed.",
-                                    new Exception("Add offer to DHT failed. Reason: " + future.failedReason()));
-                            log.error("Add offer to DHT failed. Reason: " + future.failedReason());
-                        });
-                    }*/
-                }
+                                                  // TODO will be removed when we don't use polling anymore
+                                                  writeInvalidationTimestampToDHT(locationKey);
+                                                  log.trace("Add offer to DHT was successful. Added data: " +
+                                                          "[locationKey: " + locationKey +
+                                                          ", value: " + offerData + "]");
+                                              });
+                                          }
+                                          else {
+                                              Platform.runLater(() -> {
+                                                  addOfferListener.onFailed("Add offer to DHT failed.",
+                                                          new Exception("Add offer to DHT failed. Reason: " + future
+                                                                  .failedReason()));
+                                                  log.error("Add offer to DHT failed. Reason: " + future.failedReason
+                                                          ());
+                                              });
+                                          }
+                                      }
 
-                @Override
-                public void exceptionCaught(Throwable t) throws Exception {
-                    Platform.runLater(() -> {
-                        addOfferListener.onFailed("Add offer to DHT failed with an exception.", t);
-                        log.error("Add offer to DHT failed with an exception: " + t.getMessage());
-                    });
-                }
-            });
+                                      @Override
+                                      public void exceptionCaught(Throwable t) throws Exception {
+                                          Platform.runLater(() -> {
+                                              addOfferListener.onFailed("Add offer to DHT failed with an exception.",
+                                                      t);
+                                              log.error("Add offer to DHT failed with an exception: " + t.getMessage());
+                                          });
+                                      }
+                                  }
+
+            );
         } catch (IOException e) {
             Platform.runLater(() -> {
                 addOfferListener.onFailed("Add offer to DHT failed with an exception.", e);
@@ -220,6 +225,7 @@ class TomP2PMessageFacade implements MessageFacade {
 
     //TODO remove is failing, probably due Coin or Fiat class (was working before)
     // objects are identical but returned object form network might have some problem with serialisation?
+
     public void removeOffer(Offer offer) {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         try {
@@ -230,8 +236,7 @@ class TomP2PMessageFacade implements MessageFacade {
             futureRemove.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    // deactivate it for the moment until the port forwarding bug is fixed
-                    // if (future.isSuccess()) {
+                    if (isSuccess(future)) {
                         Platform.runLater(() -> {
                             offerBookListeners.stream().forEach(offerBookListener -> {
                                 try {
@@ -249,11 +254,11 @@ class TomP2PMessageFacade implements MessageFacade {
                             });
                             writeInvalidationTimestampToDHT(locationKey);
                         });
-                   /* }
+                    }
                     else {
                         log.error("Remove offer from DHT failed. Cause: future.isSuccess() = false, locationKey: " +
                                 locationKey + ", Reason: " + future.failedReason());
-                    }*/
+                    }
                 }
 
                 @Override
@@ -274,7 +279,7 @@ class TomP2PMessageFacade implements MessageFacade {
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture baseFuture) throws Exception {
-                if (baseFuture.isSuccess()) {
+                if (isSuccess(baseFuture)) {
                     final Map<Number640, Data> dataMap = futureGet.dataMap();
                     final List<Offer> offers = new ArrayList<>();
                     if (dataMap != null) {
@@ -319,13 +324,13 @@ class TomP2PMessageFacade implements MessageFacade {
     public void sendMessage(Peer peer, Message message,
                             OutgoingMessageListener listener) {
         if (!(peer instanceof TomP2PPeer)) {
-            throw new IllegalArgumentException("peer must be of type TomP2PPeer") ;
+            throw new IllegalArgumentException("peer must be of type TomP2PPeer");
         }
-        FutureDirect futureDirect = p2pNode.sendData(((TomP2PPeer)peer).getPeerAddress(), message);
+        FutureDirect futureDirect = p2pNode.sendData(((TomP2PPeer) peer).getPeerAddress(), message);
         futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
-                if (futureDirect.isSuccess()) {
+                if (isSuccess(futureDirect)) {
                     Platform.runLater(listener::onResult);
                 }
                 else {
@@ -367,7 +372,7 @@ class TomP2PMessageFacade implements MessageFacade {
                         }
                     }));
 
-                    if (addFuture.isSuccess()) {
+                    if (isSuccess(addFuture)) {
                         log.trace("Add arbitrator to DHT was successful. Stored data: [key: " + locationKey + ", " +
                                 "values: " + arbitratorData + "]");
                     }
@@ -402,7 +407,7 @@ class TomP2PMessageFacade implements MessageFacade {
                         }
                     }
                 }));
-                if (removeFuture.isSuccess()) {
+                if (isSuccess(removeFuture)) {
                     log.trace("Remove arbitrator from DHT was successful. Stored data: [key: " + locationKey + ", " +
                             "values: " + arbitratorData + "]");
                 }
@@ -436,7 +441,7 @@ class TomP2PMessageFacade implements MessageFacade {
 
                     listener.onArbitratorsReceived(arbitrators);
                 }));
-                if (baseFuture.isSuccess()) {
+                if (isSuccess(baseFuture)) {
                     log.trace("Get arbitrators from DHT was successful. Stored data: [key: " + locationKey + ", " +
                             "values: " + futureGet.dataMap() + "]");
                 }
@@ -495,7 +500,7 @@ class TomP2PMessageFacade implements MessageFacade {
             putFuture.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    if (putFuture.isSuccess())
+                    if (isSuccess(putFuture))
                         log.trace("Update invalidationTimestamp to DHT was successful. TimeStamp=" +
                                 invalidationTimestamp.get());
                     else
@@ -522,7 +527,7 @@ class TomP2PMessageFacade implements MessageFacade {
         getFuture.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
-                if (getFuture.isSuccess()) {
+                if (isSuccess(getFuture)) {
                     Data data = getFuture.data();
                     if (data != null && data.object() instanceof Long) {
                         final Object object = data.object();
@@ -533,12 +538,12 @@ class TomP2PMessageFacade implements MessageFacade {
                         });
                     }
                     else {
-                        //log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
+                        log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
                     }
                 }
                 else if (getFuture.data() == null) {
                     // OK as nothing is set at the moment
-                    // log.trace("Get invalidationTimestamp from DHT returns null. That is ok for the startup.");
+                    log.trace("Get invalidationTimestamp from DHT returns null. That is ok for the startup.");
                 }
                 else {
                     log.error("Get invalidationTimestamp from DHT failed with reason:" + getFuture.failedReason());
@@ -557,6 +562,11 @@ class TomP2PMessageFacade implements MessageFacade {
         return Number160.createHash(locationKey + "invalidated");
     }
 
+    // Isolate the success handling as there is bug in port forwarding mode
+    private boolean isSuccess(BaseFuture baseFuture) {
+        // return baseFuture.isSuccess();
+        return true;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handler
