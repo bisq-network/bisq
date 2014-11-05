@@ -63,8 +63,8 @@ import static org.junit.Assert.*;
  * In the configure method and the connectionType you can define your test scenario further.
  */
 
-public class TomP2PTestSuite {
-    private static final Logger log = LoggerFactory.getLogger(TomP2PTestSuite.class);
+public class TomP2PTests {
+    private static final Logger log = LoggerFactory.getLogger(TomP2PTests.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Configure
@@ -103,9 +103,10 @@ public class TomP2PTestSuite {
 
     // In port forwarding mode the isSuccess returns false, but the DHT operations succeeded.
     // Needs investigation why.
-    private boolean ignoreSuccessTests = false;
+    private boolean ignoreSuccessTests = true;
 
-    // Don't create and bootstrap the nodes at every test but reuse already created ones.
+    // If cache is used tests get faster as it doesn't create and bootstrap a new node at every test.
+    // Need to observe if it can have some side effects. 
     private boolean cacheClients = true;
 
 
@@ -133,7 +134,7 @@ public class TomP2PTestSuite {
     public static void main(String[] args) throws Exception {
         // Define your seed node IP and port
         // "127.0.0.1" for localhost or SEED_ID_WAN_1
-        new TomP2PTestSuite().startSeedNode("127.0.0.1", 5000);
+        new TomP2PTests().startSeedNode("127.0.0.1", 5000);
     }
 
     public Thread startSeedNode(String seedNodeId, int seedNodePort) {
@@ -196,7 +197,7 @@ public class TomP2PTestSuite {
 
 
     @Test
-    @Ignore
+    // @Ignore
     public void testPutGet() throws Exception {
         PeerDHT peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
         PeerDHT peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
@@ -372,7 +373,7 @@ public class TomP2PTestSuite {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
+    // Bootstrapping
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Peer bootstrapDirectConnection(String clientId, int clientPort) {
@@ -398,10 +399,12 @@ public class TomP2PTestSuite {
                 return peer;
             }
             else {
+                log.warn("Discover with direct connection failed. Reason = " + futureDiscover.failedReason());
                 peer.shutdown().awaitUninterruptibly();
                 return null;
             }
         } catch (IOException e) {
+            log.warn("Discover with direct connection failed. Exception = " + e.getMessage());
             if (peer != null)
                 peer.shutdown().awaitUninterruptibly();
 
@@ -430,27 +433,31 @@ public class TomP2PTestSuite {
             FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
             futureNAT.awaitUninterruptibly();
             if (futureNAT.isSuccess()) {
-                log.info("Automatic port forwarding is setup. Address = " +
+                log.info("Automatic port forwarding is setup. Now we do a futureDiscover again. Address = " +
                         futureNAT.peerAddress());
+                futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
                 futureDiscover.awaitUninterruptibly();
                 if (futureDiscover.isSuccess()) {
-                    log.info("Discover with automatic port forwarding successful. Address = " + futureDiscover
+                    log.info("Discover with automatic port forwarding was successful. Address = " + futureDiscover
                             .peerAddress());
                     cachedPeers.put(id, peer);
                     return peer;
                 }
                 else {
+                    log.warn("Discover with automatic port forwarding failed. Reason = " + futureDiscover
+                            .failedReason());
                     peer.shutdown().awaitUninterruptibly();
                     return null;
                 }
             }
             else {
-                log.error("Bootstrap with NAT after futureDiscover2 failed " + futureDiscover
+                log.warn("StartSetupPortforwarding failed. Reason = " + futureNAT
                         .failedReason());
                 peer.shutdown().awaitUninterruptibly();
                 return null;
             }
         } catch (IOException e) {
+            log.warn("Discover with automatic port forwarding failed. Exception = " + e.getMessage());
             if (peer != null)
                 peer.shutdown().awaitUninterruptibly();
 
@@ -481,7 +488,7 @@ public class TomP2PTestSuite {
             FutureRelayNAT futureRelayNAT = peerNAT.startRelay(futureDiscover, futureNAT);
             futureRelayNAT.awaitUninterruptibly();
             if (futureRelayNAT.isSuccess()) {
-                log.info("Bootstrap using relay successful. Address = " + peer.peerAddress());
+                log.info("Bootstrap using relay was successful. Address = " + peer.peerAddress());
                 cachedPeers.put(id, peer);
                 return peer;
 
@@ -493,6 +500,7 @@ public class TomP2PTestSuite {
                 return null;
             }
         } catch (IOException e) {
+            log.error("Bootstrap using relay failed. Exception " + e.getMessage());
             if (peer != null)
                 peer.shutdown().awaitUninterruptibly();
 
