@@ -20,9 +20,9 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
-import io.bitsquare.trade.handlers.ExceptionHandler;
-import io.bitsquare.trade.handlers.ResultHandler;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
+import io.bitsquare.util.task.ExceptionHandler;
+import io.bitsquare.util.task.ResultHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.trade.handlers.ExceptionHandler;
+import io.bitsquare.util.task.ExceptionHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;

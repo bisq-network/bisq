@@ -18,8 +18,8 @@
 package io.bitsquare.offer;
 
 import io.bitsquare.msg.P2PNode;
-import io.bitsquare.trade.handlers.FaultHandler;
-import io.bitsquare.trade.handlers.ResultHandler;
+import io.bitsquare.util.task.FaultHandler;
+import io.bitsquare.util.task.ResultHandler;
 
 import java.io.IOException;
 

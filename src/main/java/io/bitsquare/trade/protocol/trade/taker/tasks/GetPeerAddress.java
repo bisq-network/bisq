@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.GetPeerAddressListener;
 import io.bitsquare.network.Peer;
-import io.bitsquare.trade.handlers.ExceptionHandler;
+import io.bitsquare.util.task.ExceptionHandler;
 
 import java.security.PublicKey;
 

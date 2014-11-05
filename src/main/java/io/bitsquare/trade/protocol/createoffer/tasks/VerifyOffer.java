@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.createoffer.tasks;
 
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.handlers.FaultHandler;
-import io.bitsquare.trade.handlers.ResultHandler;
+import io.bitsquare.util.task.FaultHandler;
+import io.bitsquare.util.task.ResultHandler;
 
 import javax.annotation.concurrent.Immutable;
 

@@ -22,7 +22,7 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferRepository;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.trade.handlers.FaultHandler;
+import io.bitsquare.util.task.FaultHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.createoffer.tasks.BroadCastOfferFeeTx;
 import io.bitsquare.trade.protocol.createoffer.tasks.CreateOfferFeeTx;

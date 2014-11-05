@@ -17,8 +17,8 @@
 
 package io.bitsquare.offer;
 
-import io.bitsquare.trade.handlers.FaultHandler;
-import io.bitsquare.trade.handlers.ResultHandler;
+import io.bitsquare.util.task.FaultHandler;
+import io.bitsquare.util.task.ResultHandler;
 
 import java.util.List;
 

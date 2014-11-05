@@ -21,8 +21,8 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
+import io.bitsquare.util.task.ExceptionHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

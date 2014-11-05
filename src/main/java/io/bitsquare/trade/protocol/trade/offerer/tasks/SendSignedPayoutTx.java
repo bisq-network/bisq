@@ -21,9 +21,9 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
-import io.bitsquare.trade.handlers.ExceptionHandler;
-import io.bitsquare.trade.handlers.ResultHandler;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
+import io.bitsquare.util.task.ExceptionHandler;
+import io.bitsquare.util.task.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;

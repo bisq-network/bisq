@@ -15,11 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.handlers;
+package io.bitsquare.util.task;
 
 /**
- * For reporting throwables only
+ * For reporting error message only (UI)
  */
-public interface ExceptionHandler {
-    void onError(Throwable throwable);
+public interface ErrorMessageHandler {
+    void onFault(String errorMessage);
 }

@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade.shared.tasks;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BlockChainFacade;
-import io.bitsquare.trade.handlers.ExceptionHandler;
-import io.bitsquare.trade.handlers.ResultHandler;
+import io.bitsquare.util.task.ExceptionHandler;
+import io.bitsquare.util.task.ResultHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

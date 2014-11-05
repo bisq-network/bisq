@@ -28,7 +28,6 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferRepository;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.trade.handlers.ErrorMessageHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.createoffer.CreateOfferCoordinator;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
@@ -45,6 +44,7 @@ import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDep
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
 import io.bitsquare.user.User;
+import io.bitsquare.util.task.ErrorMessageHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
