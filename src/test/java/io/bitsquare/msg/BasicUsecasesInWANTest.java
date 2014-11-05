@@ -43,7 +43,9 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.storage.Data;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -59,20 +61,24 @@ import static org.junit.Assert.*;
 public class BasicUsecasesInWANTest {
     private static final Logger log = LoggerFactory.getLogger(BasicUsecasesInWANTest.class);
 
-    private final static String SERVER_ID_1 = "digitalocean1.bitsquare.io"; // Manfreds server
-    private final static String SERVER_IP_1 = "188.226.179.109"; // Manfreds server
-    private final static int SERVER_PORT_1 = 5000;
+    private final static String SEED_ID_LOCALHOST = "localhostPeer";
+    private final static String SEED_IP_LOCALHOST = "127.0.0.1";
+    private final static int SEED_PORT_LOCALHOST = 5000;
 
-    private final static String SERVER_ID_2 = "digitalocean2.bitsquare.io";  // Steve's server
-    //private final static String SERVER_IP_2 = "128.199.251.106"; // Steve's server
-    private final static String SERVER_IP_2 = "188.226.179.109"; // Manfreds server
-    private final static int SERVER_PORT_2 = 5001;
+    private final static String SEED_ID_WAN_1 = "digitalocean1.bitsquare.io"; // Manfreds server
+    private final static String SEED_IP_WAN_1 = "188.226.179.109"; // Manfreds server
+    private final static int SEED_PORT_WAN_1 = 5000;
+
+    private final static String SEED_ID_WAN_2 = "digitalocean2.bitsquare.io";  // Steve's server
+    //private final static String SEED_IP_WAN_2 = "128.199.251.106"; // Steve's server
+    private final static String SEED_IP_WAN_2 = "188.226.179.109"; // Manfreds server
+    private final static int SEED_PORT_WAN_2 = 5001;
 
 
-    private final static String SERVER_ID = SERVER_ID_1;
-    private final static String SERVER_IP = SERVER_IP_1;
-    private final static int SERVER_PORT = SERVER_PORT_1;
-
+    // set default
+    private final static String SEED_ID = SEED_ID_LOCALHOST;
+    private final static String SEED_IP = SEED_IP_LOCALHOST;
+    private final static int SEED_PORT = SEED_PORT_LOCALHOST;
 
     private final static String CLIENT_1_ID = "alice";
     private final static String CLIENT_2_ID = "bob";
@@ -89,6 +95,7 @@ public class BasicUsecasesInWANTest {
     private boolean cacheClients = true;
 
     private final static Map<String, PeerDHT> clients = new HashMap<>();
+    private Thread seedThread;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -96,39 +103,85 @@ public class BasicUsecasesInWANTest {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static void main(String[] args) throws Exception {
-        new BasicUsecasesInWANTest().startBootstrappingSeedNode();
+        new BasicUsecasesInWANTest().startBootstrappingSeedNode(SEED_ID, SEED_PORT);
     }
 
-    public void startBootstrappingSeedNode() {
-        Peer peer = null;
-        try {
-            peer = new PeerBuilder(Number160.createHash(SERVER_ID_1)).ports(SERVER_PORT_1).start();
-            PeerDHT peerDHT = new PeerBuilderDHT(peer).start();
-            peerDHT.peer().objectDataReply((sender, request) -> {
-                log.trace("received request: ", request.toString());
-                return "pong";
-            });
+    public Thread startBootstrappingSeedNode(String serverId, int serverPort) {
+        Thread thread = new Thread(() -> {
+            Peer peer = null;
+            try {
+                peer = new PeerBuilder(Number160.createHash(serverId)).ports(serverPort).start();
+                PeerDHT peerDHT = new PeerBuilderDHT(peer).start();
+                peerDHT.peer().objectDataReply((sender, request) -> {
+                    log.trace("received request: ", request.toString());
+                    return "pong";
+                });
 
-            new PeerBuilderNAT(peer).start();
+                new PeerBuilderNAT(peer).start();
 
-            log.debug("peer started.");
-            for (; ; ) {
-                for (PeerAddress pa : peer.peerBean().peerMap().all()) {
-                    log.debug("peer online (TCP):" + pa);
+                log.debug("peer started.");
+                for (; ; ) {
+                    for (PeerAddress pa : peer.peerBean().peerMap().all()) {
+                        log.debug("peer online (TCP):" + pa);
+                    }
+                    Thread.sleep(2000);
                 }
-                Thread.sleep(2000);
+            } catch (Exception e) {
+                if (peer != null)
+                    peer.shutdown().awaitUninterruptibly();
             }
-        } catch (Exception e) {
-            if (peer != null)
-                peer.shutdown().awaitUninterruptibly();
-            e.printStackTrace();
-        }
+        });
+        thread.start();
+        return thread;
     }
 
+    @Before
+    public void startServer() throws Exception {
+        seedThread = new Thread(() -> {
+            Peer peer = null;
+            try {
+                peer = new PeerBuilder(Number160.createHash(SEED_ID)).ports(SEED_PORT).start();
+                PeerDHT peerDHT = new PeerBuilderDHT(peer).start();
+                peerDHT.peer().objectDataReply((sender, request) -> {
+                    log.trace("received request: ", request.toString());
+                    return "pong";
+                });
+                log.debug("peer started.");
+                while (true) {
+                    for (PeerAddress pa : peer.peerBean().peerMap().all()) {
+                        log.debug("peer online (TCP):" + pa);
+                    }
+                    Thread.sleep(2000);
+                }
+            } catch (InterruptedException e) {
+                if (peer != null)
+                    peer.shutdown().awaitUninterruptibly();
+            } catch (IOException e2) {
+                e2.printStackTrace();
+            }
+        });
+        seedThread.start();
+    }
+
+    @After
+    public void stopServer() throws Exception {
+        seedThread.interrupt();
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Tests
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Test
+    @Ignore
+    public void testBootstrapDirectConnection() throws Exception {
+        Thread seedNodeRunnable = new BasicUsecasesInWANTest().startBootstrappingSeedNode(SEED_ID, SEED_PORT);
+        Thread.sleep(100);
+        bootstrapDirectConnection(CLIENT_1_ID, CLIENT_1_PORT, SEED_ID, SEED_IP, SEED_PORT);
+        seedNodeRunnable.interrupt();
+    }
+
 
     @Test
     @Ignore
@@ -228,8 +281,8 @@ public class BasicUsecasesInWANTest {
     @Test
     @Ignore
     public void testDHT2Servers() throws Exception {
-        PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT, SERVER_ID_1, SERVER_IP_1, SERVER_PORT_1);
-        PeerDHT peer2DHT = startClient(CLIENT_2_ID, CLIENT_2_PORT, SERVER_ID_2, SERVER_IP_2, SERVER_PORT_2);
+        PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT, SEED_ID_WAN_1, SEED_IP_WAN_1, SEED_PORT_WAN_1);
+        PeerDHT peer2DHT = startClient(CLIENT_2_ID, CLIENT_2_PORT, SEED_ID_WAN_2, SEED_IP_WAN_2, SEED_PORT_WAN_2);
 
         FuturePut futurePut = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo")).start();
         futurePut.awaitUninterruptibly();
@@ -293,8 +346,8 @@ public class BasicUsecasesInWANTest {
     @Ignore
     public void testSendDirectPortForwarding() throws Exception {
         PeerDHT peer1DHT = startClient(CLIENT_1_ID, CLIENT_1_PORT);
-        PeerAddress reachablePeerAddress = new PeerAddress(Number160.createHash(SERVER_ID), SERVER_IP, SERVER_PORT,
-                SERVER_PORT);
+        PeerAddress reachablePeerAddress = new PeerAddress(Number160.createHash(SEED_ID), SEED_IP, SEED_PORT,
+                SEED_PORT);
 
         FuturePeerConnection futurePeerConnection = peer1DHT.peer().createPeerConnection(reachablePeerAddress, 500);
         FutureDirect futureDirect = peer1DHT.peer().sendDirect(futurePeerConnection).object("hallo").start();
@@ -312,21 +365,34 @@ public class BasicUsecasesInWANTest {
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Peer bootstrapDirectConnection(String clientId, int clientPort, String serverId,
-                                           String serverIP, int serverPort) throws Exception {
-        Peer peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).behindFirewall().start();
+    private Peer bootstrapDirectConnection(String clientId, int clientPort) {
+        return bootstrapDirectConnection(clientId, clientPort, SEED_ID, SEED_IP, SEED_PORT);
+    }
 
-        PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(serverId), serverIP, serverPort,
-                serverPort);
-        FutureDiscover futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
-        futureDiscover.awaitUninterruptibly();
-        if (futureDiscover.isSuccess()) {
-            log.info("Discover with direct connection successful. Address = " + futureDiscover.peerAddress());
-            return peer;
-        }
-        else {
-            peer.shutdown().awaitUninterruptibly();
-            Assert.fail("Discover with direct connection failed " + futureDiscover);
+    private Peer bootstrapDirectConnection(String clientId, int clientPort, String serverId,
+                                           String serverIP, int serverPort) {
+        Peer peer = null;
+        try {
+            peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).start();
+            PeerAddress masterNodeAddress = new PeerAddress(Number160.createHash(serverId), serverIP, serverPort,
+                    serverPort);
+            FutureDiscover futureDiscover = peer.discover().peerAddress(masterNodeAddress).start();
+            futureDiscover.awaitUninterruptibly();
+            if (futureDiscover.isSuccess()) {
+                log.info("Discover with direct connection successful. Address = " + futureDiscover.peerAddress());
+                return peer;
+            }
+            else {
+                peer.shutdown().awaitUninterruptibly();
+                Assert.fail("Discover with direct connection failed " + futureDiscover);
+                return null;
+            }
+        } catch (IOException e) {
+            if (peer != null)
+                peer.shutdown().awaitUninterruptibly();
+
+            Assert.fail(e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }
@@ -366,7 +432,7 @@ public class BasicUsecasesInWANTest {
     }
 
     private PeerDHT startClient(String clientId, int clientPort) throws Exception {
-        return startClient(clientId, clientPort, SERVER_ID, SERVER_IP, SERVER_PORT);
+        return startClient(clientId, clientPort, SEED_ID, SEED_IP, SEED_PORT);
     }
 
     private PeerDHT startClient(String clientId, int clientPort, String serverId,
