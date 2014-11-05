@@ -24,9 +24,9 @@ import io.bitsquare.offer.OfferRepository;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.createoffer.tasks.BroadCastOfferFeeTx;
-import io.bitsquare.trade.protocol.createoffer.tasks.CreateOfferFeeTx;
 import io.bitsquare.util.task.FaultHandler;
 
+import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import java.io.Serializable;
@@ -123,14 +123,20 @@ public class CreateOfferCoordinator {
             return;
         }
 
-        CreateOfferFeeTx.run(this::onOfferFeeTxCreated, faultHandler, walletFacade, offer.getId());
-    }
+        try {
+            model.transaction = walletFacade.createOfferFeeTx(offer.getId());
+            model.setState(State.OFFER_FEE_TX_CREATED);
+            offer.setOfferFeePaymentTxID(model.transaction.getHashAsString());
+        } catch (InsufficientMoneyException ex) {
+            faultHandler.handleFault(
+                    "Offer fee payment failed because there is insufficient money in the trade wallet", ex);
+            return;
+        } catch (Throwable ex) {
+            faultHandler.handleFault("Offer fee payment failed because of an exception occurred", ex);
+            return;
+        }
 
-    private void onOfferFeeTxCreated(Transaction transaction) {
-        model.transaction = transaction;
-        model.setState(State.OFFER_FEE_TX_CREATED);
-        offer.setOfferFeePaymentTxID(transaction.getHashAsString());
-        BroadCastOfferFeeTx.run(this::onOfferFeeTxBroadCasted, faultHandler, walletFacade, transaction);
+        BroadCastOfferFeeTx.run(this::onOfferFeeTxBroadCasted, faultHandler, walletFacade, model.transaction);
     }
 
     private void onOfferFeeTxBroadCasted() {
