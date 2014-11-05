@@ -538,7 +538,7 @@ class TomP2PMessageFacade implements MessageFacade {
                         });
                     }
                     else {
-                        log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
+                        //log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
                     }
                 }
                 else if (getFuture.data() == null) {
