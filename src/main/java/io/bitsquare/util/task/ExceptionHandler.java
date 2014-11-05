@@ -21,5 +21,5 @@ package io.bitsquare.util.task;
  * For reporting throwables only
  */
 public interface ExceptionHandler {
-    void onError(Throwable throwable);
+    void handleException(Throwable throwable);
 }

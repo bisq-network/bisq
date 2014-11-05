@@ -33,7 +33,7 @@ public class VerifyTakeOfferFeePayment {
         //TODO mocked yet, need a confidence listeners
         int numOfPeersSeenTx = walletFacade.getNumOfPeersSeenTx(takeOfferFeeTxId);
         if (numOfPeersSeenTx > 2) {
-            resultHandler.onResult();
+            resultHandler.handleResult();
         }
     }
 

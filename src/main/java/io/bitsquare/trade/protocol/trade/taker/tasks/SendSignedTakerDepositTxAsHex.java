@@ -72,13 +72,13 @@ public class SendSignedTakerDepositTxAsHex {
             @Override
             public void onResult() {
                 log.trace("RequestOffererDepositPublicationMessage successfully arrived at peer");
-                resultHandler.onResult();
+                resultHandler.handleResult();
             }
 
             @Override
             public void onFailed() {
                 log.error("RequestOffererDepositPublicationMessage  did not arrive at peer");
-                exceptionHandler.onError(
+                exceptionHandler.handleException(
                         new Exception("RequestOffererDepositPublicationMessage did not arrive at peer"));
             }
         });

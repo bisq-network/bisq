@@ -49,7 +49,7 @@ public class HandleTakeOfferRequest {
             @Override
             public void onFailed() {
                 log.error("AcceptTakeOfferRequestMessage  did not arrive at peer");
-                exceptionHandler.onError(new Exception("AcceptTakeOfferRequestMessage did not arrive at peer"));
+                exceptionHandler.handleException(new Exception("AcceptTakeOfferRequestMessage did not arrive at peer"));
             }
         });
     }

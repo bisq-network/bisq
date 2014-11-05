@@ -59,12 +59,12 @@ public class SignAndPublishDepositTx {
                         @Override
                         public void onFailure(@NotNull Throwable t) {
                             log.error("offererSignAndPublishTx faultHandler.onFault:" + t);
-                            exceptionHandler.onError(t);
+                            exceptionHandler.handleException(t);
                         }
                     });
         } catch (Exception e) {
             log.error("offererSignAndPublishTx faultHandler.onFault:" + e);
-            exceptionHandler.onError(e);
+            exceptionHandler.handleException(e);
         }
     }
 

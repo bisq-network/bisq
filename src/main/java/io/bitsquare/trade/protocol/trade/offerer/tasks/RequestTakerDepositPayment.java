@@ -48,13 +48,14 @@ public class RequestTakerDepositPayment {
             @Override
             public void onResult() {
                 log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");
-                resultHandler.onResult();
+                resultHandler.handleResult();
             }
 
             @Override
             public void onFailed() {
                 log.error("RequestTakerDepositPaymentMessage  did not arrive at peer");
-                exceptionHandler.onError(new Exception("RequestTakerDepositPaymentMessage did not arrive at peer"));
+                exceptionHandler.handleException(new Exception("RequestTakerDepositPaymentMessage did not arrive at " +
+                        "peer"));
             }
         });
     }

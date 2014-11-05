@@ -21,5 +21,5 @@ package io.bitsquare.util.task;
  * For reporting a description message and throwable
  */
 public interface FaultHandler {
-    void onFault(String message, Throwable throwable);
+    void handleFault(String message, Throwable throwable);
 }

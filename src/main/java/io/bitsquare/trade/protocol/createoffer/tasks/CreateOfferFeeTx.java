@@ -34,10 +34,11 @@ public class CreateOfferFeeTx {
         try {
             resultHandler.onResult(walletFacade.createOfferFeeTx(offerId));
         } catch (InsufficientMoneyException e) {
-            faultHandler.onFault("Offer fee payment failed because there is insufficient money in the trade wallet. " +
+            faultHandler.handleFault("Offer fee payment failed because there is insufficient money in the trade " +
+                    "wallet. " +
                     "", e);
         } catch (Throwable t) {
-            faultHandler.onFault("Offer fee payment failed because of an exception occurred. ", t);
+            faultHandler.handleFault("Offer fee payment failed because of an exception occurred. ", t);
         }
     }
 }

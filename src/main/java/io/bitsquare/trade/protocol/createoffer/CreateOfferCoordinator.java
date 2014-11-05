@@ -142,7 +142,7 @@ public class CreateOfferCoordinator {
 
     private void onFailed(String message, Throwable throwable) {
         //TODO recover policy, timer
-        faultHandler.onFault(message, throwable);
+        faultHandler.handleFault(message, throwable);
     }
 
 

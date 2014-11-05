@@ -66,9 +66,9 @@ public class VerifyOffer {
             // getAddressInfoByTradeID(offerId)
             // TODO when offer is flattened continue here...
 
-            resultHandler.onResult();
+            resultHandler.handleResult();
         } catch (Throwable t) {
-            faultHandler.onFault("Offer validation failed.", t);
+            faultHandler.handleFault("Offer validation failed.", t);
         }
     }
 }

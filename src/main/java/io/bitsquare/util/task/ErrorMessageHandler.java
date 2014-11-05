@@ -21,5 +21,5 @@ package io.bitsquare.util.task;
  * For reporting error message only (UI)
  */
 public interface ErrorMessageHandler {
-    void onFault(String errorMessage);
+    void handleErrorMessage(String errorMessage);
 }

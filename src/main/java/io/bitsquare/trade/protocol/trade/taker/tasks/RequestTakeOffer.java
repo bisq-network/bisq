@@ -38,13 +38,14 @@ public class RequestTakeOffer {
                     @Override
                     public void onResult() {
                         log.trace("RequestTakeOfferMessage successfully arrived at peer");
-                        resultHandler.onResult();
+                        resultHandler.handleResult();
                     }
 
                     @Override
                     public void onFailed() {
                         log.error("RequestTakeOfferMessage  did not arrive at peer");
-                        exceptionHandler.onError(new Exception("RequestTakeOfferMessage did not arrive at peer"));
+                        exceptionHandler.handleException(new Exception("RequestTakeOfferMessage did not arrive at " +
+                                "peer"));
                     }
                 });
     }

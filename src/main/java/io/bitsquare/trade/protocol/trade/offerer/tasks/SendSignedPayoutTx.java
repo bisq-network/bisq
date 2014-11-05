@@ -72,19 +72,19 @@ public class SendSignedPayoutTx {
                 @Override
                 public void onResult() {
                     log.trace("BankTransferInitedMessage successfully arrived at peer");
-                    resultHandler.onResult();
+                    resultHandler.handleResult();
                 }
 
                 @Override
                 public void onFailed() {
                     log.error("BankTransferInitedMessage did not arrive at peer");
-                    exceptionHandler.onError(new Exception("BankTransferInitedMessage did not arrive at peer"));
+                    exceptionHandler.handleException(new Exception("BankTransferInitedMessage did not arrive at peer"));
 
                 }
             });
         } catch (Exception e) {
             log.error("Exception at OffererCreatesAndSignsPayoutTx " + e);
-            exceptionHandler.onError(e);
+            exceptionHandler.handleException(e);
         }
     }
 }

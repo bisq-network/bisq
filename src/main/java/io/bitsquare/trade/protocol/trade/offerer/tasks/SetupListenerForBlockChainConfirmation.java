@@ -44,7 +44,7 @@ public class SetupListenerForBlockChainConfirmation {
                     listener.onDepositTxConfirmedInBlockchain();
                     depositTransaction.getConfidence().removeEventListener(this);
                     log.trace("Tx is in blockchain");
-                    resultHandler.onResult();
+                    resultHandler.handleResult();
                 }
             }
         });

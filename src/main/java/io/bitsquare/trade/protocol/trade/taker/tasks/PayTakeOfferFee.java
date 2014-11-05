@@ -47,13 +47,13 @@ public class PayTakeOfferFee {
                 @Override
                 public void onFailure(@NotNull Throwable t) {
                     log.error("Take offer fee paid faultHandler.onFault with exception: " + t);
-                    exceptionHandler.onError(
+                    exceptionHandler.handleException(
                             new Exception("Take offer fee paid faultHandler.onFault with exception: " + t));
                 }
             });
         } catch (InsufficientMoneyException e) {
             log.error("Take offer fee paid faultHandler.onFault due InsufficientMoneyException " + e);
-            exceptionHandler.onError(
+            exceptionHandler.handleException(
                     new Exception("Take offer fee paid faultHandler.onFault due to InsufficientMoneyException " + e));
         }
     }

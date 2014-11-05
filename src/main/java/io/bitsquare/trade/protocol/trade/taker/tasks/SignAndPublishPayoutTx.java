@@ -65,12 +65,12 @@ public class SignAndPublishPayoutTx {
                         @Override
                         public void onFailure(@NotNull Throwable t) {
                             log.error("Exception at takerSignsAndSendsTx " + t);
-                            exceptionHandler.onError(t);
+                            exceptionHandler.handleException(t);
                         }
                     });
         } catch (Exception e) {
             log.error("Exception at takerSignsAndSendsTx " + e);
-            exceptionHandler.onError(e);
+            exceptionHandler.handleException(e);
         }
     }
 

@@ -43,7 +43,7 @@ public class GetPeerAddress {
             @Override
             public void onFailed() {
                 log.error("Lookup for peer address faultHandler.onFault.");
-                exceptionHandler.onError(new Exception("Lookup for peer address faultHandler.onFault."));
+                exceptionHandler.handleException(new Exception("Lookup for peer address faultHandler.onFault."));
             }
         });
     }

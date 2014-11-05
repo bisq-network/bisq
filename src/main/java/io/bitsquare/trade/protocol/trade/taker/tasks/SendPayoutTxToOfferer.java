@@ -38,13 +38,13 @@ public class SendPayoutTxToOfferer {
             @Override
             public void onResult() {
                 log.trace("PayoutTxPublishedMessage successfully arrived at peer");
-                resultHandler.onResult();
+                resultHandler.handleResult();
             }
 
             @Override
             public void onFailed() {
                 log.error("PayoutTxPublishedMessage  did not arrive at peer");
-                exceptionHandler.onError(new Exception("PayoutTxPublishedMessage did not arrive at peer"));
+                exceptionHandler.handleException(new Exception("PayoutTxPublishedMessage did not arrive at peer"));
             }
         });
 

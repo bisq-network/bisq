@@ -18,5 +18,5 @@
 package io.bitsquare.util.task;
 
 public interface ResultHandler {
-    void onResult();
+    void handleResult();
 }

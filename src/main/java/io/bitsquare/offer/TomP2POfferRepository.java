@@ -78,7 +78,7 @@ class TomP2POfferRepository implements OfferRepository {
                     // deactivate it for the moment until the port forwarding bug is fixed
                     // if (future.isSuccess()) {
                     Platform.runLater(() -> {
-                        resultHandler.onResult();
+                        resultHandler.handleResult();
                         offerRepositoryListeners.stream().forEach(listener -> {
                             try {
                                 Object offerDataObject = offerData.object();
@@ -101,13 +101,13 @@ class TomP2POfferRepository implements OfferRepository {
                 @Override
                 public void exceptionCaught(Throwable ex) throws Exception {
                     Platform.runLater(() -> {
-                        faultHandler.onFault("Failed to add offer to DHT", ex);
+                        faultHandler.handleFault("Failed to add offer to DHT", ex);
                     });
                 }
             });
         } catch (IOException ex) {
             Platform.runLater(() -> {
-                faultHandler.onFault("Failed to add offer to DHT", ex);
+                faultHandler.handleFault("Failed to add offer to DHT", ex);
             });
         }
     }

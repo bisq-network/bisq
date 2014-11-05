@@ -58,7 +58,7 @@ public class CreateAndSignContract {
             resultHandler.onResult(contract, contractAsJson, signature);
         } catch (Throwable t) {
             log.error("Exception at sign contract " + t);
-            exceptionHandler.onError(t);
+            exceptionHandler.handleException(t);
         }
     }
 

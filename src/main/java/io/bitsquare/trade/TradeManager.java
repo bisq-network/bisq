@@ -168,7 +168,8 @@ public class TradeManager {
                 settings.getAcceptedLanguageLocales());
 
         if (createOfferCoordinatorMap.containsKey(offer.getId())) {
-            errorMessageHandler.onFault("A createOfferCoordinator for the offer with the id " + offer.getId() + " " +
+            errorMessageHandler.handleErrorMessage("A createOfferCoordinator for the offer with the id " + offer
+                    .getId() + " " +
                     "already exists.");
         }
         else {
@@ -185,13 +186,13 @@ public class TradeManager {
                             resultHandler.onResult(transactionId);
                         } catch (Exception e) {
                             //TODO retry policy
-                            errorMessageHandler.onFault("Could not save offer. Reason: " +
+                            errorMessageHandler.handleErrorMessage("Could not save offer. Reason: " +
                                     (e.getCause() != null ? e.getCause().getMessage() : e.toString()));
                             createOfferCoordinatorMap.remove(offer.getId());
                         }
                     },
                     (message, throwable) -> {
-                        errorMessageHandler.onFault(message);
+                        errorMessageHandler.handleErrorMessage(message);
                         createOfferCoordinatorMap.remove(offer.getId());
                     }, offerRepository);
             createOfferCoordinatorMap.put(offer.getId(), createOfferCoordinator);

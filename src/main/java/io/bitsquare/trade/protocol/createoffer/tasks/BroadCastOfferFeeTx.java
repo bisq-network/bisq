@@ -42,24 +42,24 @@ public class BroadCastOfferFeeTx {
                     log.info("sendResult onSuccess:" + transaction);
                     if (transaction != null) {
                         try {
-                            resultHandler.onResult();
+                            resultHandler.handleResult();
                         } catch (Exception e) {
-                            faultHandler.onFault("Offer fee payment failed.", e);
+                            faultHandler.handleFault("Offer fee payment failed.", e);
                         }
                     }
                     else {
-                        faultHandler.onFault("Offer fee payment failed.",
+                        faultHandler.handleFault("Offer fee payment failed.",
                                 new Exception("Offer fee payment failed. Transaction = null."));
                     }
                 }
 
                 @Override
                 public void onFailure(@NotNull Throwable t) {
-                    faultHandler.onFault("Offer fee payment failed with an exception.", t);
+                    faultHandler.handleFault("Offer fee payment failed with an exception.", t);
                 }
             });
         } catch (Throwable t) {
-            faultHandler.onFault("Offer fee payment failed because an exception occurred.", t);
+            faultHandler.handleFault("Offer fee payment failed because an exception occurred.", t);
         }
     }
 }

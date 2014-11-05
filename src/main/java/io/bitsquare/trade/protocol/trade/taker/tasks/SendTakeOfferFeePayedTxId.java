@@ -48,13 +48,13 @@ public class SendTakeOfferFeePayedTxId {
             @Override
             public void onResult() {
                 log.trace("TakeOfferFeePayedMessage successfully arrived at peer");
-                resultHandler.onResult();
+                resultHandler.handleResult();
             }
 
             @Override
             public void onFailed() {
                 log.error("TakeOfferFeePayedMessage  did not arrive at peer");
-                exceptionHandler.onError(new Exception("TakeOfferFeePayedMessage did not arrive at peer"));
+                exceptionHandler.handleException(new Exception("TakeOfferFeePayedMessage did not arrive at peer"));
             }
         });
     }

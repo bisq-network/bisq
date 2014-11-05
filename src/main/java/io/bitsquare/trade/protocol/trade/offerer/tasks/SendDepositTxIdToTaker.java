@@ -43,13 +43,13 @@ public class SendDepositTxIdToTaker {
             @Override
             public void onResult() {
                 log.trace("DepositTxPublishedMessage successfully arrived at peer");
-                resultHandler.onResult();
+                resultHandler.handleResult();
             }
 
             @Override
             public void onFailed() {
                 log.error("DepositTxPublishedMessage  did not arrive at peer");
-                exceptionHandler.onError(new Exception("DepositTxPublishedMessage did not arrive at peer"));
+                exceptionHandler.handleException(new Exception("DepositTxPublishedMessage did not arrive at peer"));
             }
         });
     }

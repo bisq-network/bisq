@@ -34,15 +34,16 @@ public class VerifyPeerAccount {
         if (blockChainFacade.verifyAccountRegistration()) {
             if (blockChainFacade.isAccountBlackListed(peersAccountId, peersBankAccount)) {
                 log.error("Taker is blacklisted");
-                exceptionHandler.onError(new Exception("Taker is blacklisted"));
+                exceptionHandler.handleException(new Exception("Taker is blacklisted"));
             }
             else {
-                resultHandler.onResult();
+                resultHandler.handleResult();
             }
         }
         else {
             log.error("Account registration validation for peer faultHandler.onFault.");
-            exceptionHandler.onError(new Exception("Account registration validation for peer faultHandler.onFault."));
+            exceptionHandler.handleException(new Exception("Account registration validation for peer faultHandler" +
+                    ".onFault."));
         }
     }
 
