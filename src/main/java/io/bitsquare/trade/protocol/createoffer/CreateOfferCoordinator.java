@@ -115,19 +115,19 @@ public class CreateOfferCoordinator {
 
     public void start() {
         model.setState(State.STARTED);
-        VerifyOffer.run(this::onOfferValidated, this::onFailed, offer);
+        VerifyOffer.run(this::onOfferValidated, faultHandler, offer);
     }
 
     private void onOfferValidated() {
         model.setState(State.VALIDATED);
-        CreateOfferFeeTx.run(this::onOfferFeeTxCreated, this::onFailed, walletFacade, offer.getId());
+        CreateOfferFeeTx.run(this::onOfferFeeTxCreated, faultHandler, walletFacade, offer.getId());
     }
 
     private void onOfferFeeTxCreated(Transaction transaction) {
         model.transaction = transaction;
         model.setState(State.OFFER_FEE_TX_CREATED);
         offer.setOfferFeePaymentTxID(transaction.getHashAsString());
-        BroadCastOfferFeeTx.run(this::onOfferFeeTxBroadCasted, this::onFailed, walletFacade, transaction);
+        BroadCastOfferFeeTx.run(this::onOfferFeeTxBroadCasted, faultHandler, walletFacade, transaction);
     }
 
     private void onOfferFeeTxBroadCasted() {
@@ -138,11 +138,6 @@ public class CreateOfferCoordinator {
     private void addOfferResultHandler() {
         model.setState(State.OFFER_PUBLISHED_TO_DHT);
         resultHandler.onResult(model.transaction);
-    }
-
-    private void onFailed(String message, Throwable throwable) {
-        //TODO recover policy, timer
-        faultHandler.handleFault(message, throwable);
     }
 
 
