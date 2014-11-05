@@ -132,10 +132,10 @@ public class CreateOfferCoordinator {
 
     private void onOfferFeeTxBroadCasted() {
         model.setState(State.OFFER_FEE_BROAD_CASTED);
-        offerRepository.addOffer(offer, this::onOfferPublishedToDHT, faultHandler);
+        offerRepository.addOffer(offer, this::addOfferResultHandler, faultHandler);
     }
 
-    private void onOfferPublishedToDHT() {
+    private void addOfferResultHandler() {
         model.setState(State.OFFER_PUBLISHED_TO_DHT);
         resultHandler.onResult(model.transaction);
     }
@@ -162,7 +162,7 @@ public class CreateOfferCoordinator {
             case OFFER_FEE_BROAD_CASTED:
                 // actually the only replay case here, tx publish was successful but storage to dht failed.
                 // Republish the offer to DHT
-                offerRepository.addOffer(offer, this::onOfferPublishedToDHT, faultHandler);
+                offerRepository.addOffer(offer, this::addOfferResultHandler, faultHandler);
                 break;
             case OFFER_PUBLISHED_TO_DHT:
                 // should be impossible
