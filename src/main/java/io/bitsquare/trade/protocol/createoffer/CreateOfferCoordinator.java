@@ -23,11 +23,12 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferRepository;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.trade.protocol.createoffer.tasks.BroadCastOfferFeeTx;
 import io.bitsquare.util.task.FaultHandler;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
+
+import com.google.common.util.concurrent.FutureCallback;
 
 import java.io.Serializable;
 
@@ -136,12 +137,34 @@ public class CreateOfferCoordinator {
             return;
         }
 
-        BroadCastOfferFeeTx.run(this::onOfferFeeTxBroadCasted, faultHandler, walletFacade, model.transaction);
-    }
+        try {
+            walletFacade.broadcastCreateOfferFeeTx(model.transaction, new FutureCallback<Transaction>() {
+                @Override
+                public void onSuccess(Transaction transaction) {
+                    log.info("sendResult onSuccess:" + transaction);
+                    if (transaction == null) {
+                        faultHandler.handleFault("Offer fee payment failed.",
+                                new Exception("Offer fee payment failed. Transaction = null."));
+                        return;
+                    }
 
-    private void onOfferFeeTxBroadCasted() {
-        model.setState(State.OFFER_FEE_BROAD_CASTED);
-        offerRepository.addOffer(offer, this::addOfferResultHandler, faultHandler);
+                    try {
+                        model.setState(State.OFFER_FEE_BROAD_CASTED);
+                        offerRepository.addOffer(offer, CreateOfferCoordinator.this::addOfferResultHandler, faultHandler);
+                    } catch (Exception e) {
+                        faultHandler.handleFault("Offer fee payment failed.", e);
+                    }
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    faultHandler.handleFault("Offer fee payment failed with an exception.", t);
+                }
+            });
+        } catch (Throwable t) {
+            faultHandler.handleFault("Offer fee payment failed because an exception occurred.", t);
+            return;
+        }
     }
 
     private void addOfferResultHandler() {
