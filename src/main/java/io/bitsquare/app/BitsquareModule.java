@@ -23,6 +23,7 @@ import io.bitsquare.crypto.CryptoModule;
 import io.bitsquare.gui.GuiModule;
 import io.bitsquare.msg.DefaultMessageModule;
 import io.bitsquare.msg.MessageModule;
+import io.bitsquare.offer.OfferModule;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeModule;
@@ -70,6 +71,7 @@ public class BitsquareModule extends AbstractBitsquareModule {
         install(bitcoinModule());
         install(cryptoModule());
         install(tradeModule());
+        install(offerModule());
         install(guiModule());
 
         bindConstant().annotatedWith(Names.named("appName")).to(appName);
@@ -93,6 +95,10 @@ public class BitsquareModule extends AbstractBitsquareModule {
 
     protected TradeModule tradeModule() {
         return new TradeModule(properties);
+    }
+
+    protected OfferModule offerModule() {
+        return new OfferModule(properties);
     }
 
     protected GuiModule guiModule() {

@@ -15,16 +15,35 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg.listeners;
+package io.bitsquare.offer;
 
-import io.bitsquare.offer.Offer;
+import io.bitsquare.msg.listeners.AddOfferListener;
 
 import java.util.List;
 
-public interface OfferBookListener {
-    void onOfferAdded(Offer offer);
+import javafx.beans.property.LongProperty;
 
-    void onOffersReceived(List<Offer> offers);
+public interface OfferRepository {
 
-    void onOfferRemoved(Offer offer);
+    void getOffers(String fiatCode);
+
+    void addOffer(Offer offer, AddOfferListener addOfferListener);
+
+    void removeOffer(Offer offer);
+
+    void addListener(Listener listener);
+
+    void removeListener(Listener listener);
+
+    LongProperty invalidationTimestampProperty();
+
+    void requestInvalidationTimeStampFromDHT(String fiatCode);
+
+    interface Listener {
+        void onOfferAdded(Offer offer);
+
+        void onOffersReceived(List<Offer> offers);
+
+        void onOfferRemoved(Offer offer);
+    }
 }

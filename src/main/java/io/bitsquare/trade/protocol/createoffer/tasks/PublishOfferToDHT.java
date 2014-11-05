@@ -17,9 +17,9 @@
 
 package io.bitsquare.trade.protocol.createoffer.tasks;
 
-import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.AddOfferListener;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.offer.OfferRepository;
 import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
 
@@ -29,9 +29,9 @@ import org.slf4j.LoggerFactory;
 public class PublishOfferToDHT {
     private static final Logger log = LoggerFactory.getLogger(PublishOfferToDHT.class);
 
-    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, MessageFacade messageFacade,
+    public static void run(ResultHandler resultHandler, FaultHandler faultHandler, OfferRepository offerRepository,
                            Offer offer) {
-        messageFacade.addOffer(offer, new AddOfferListener() {
+        offerRepository.addOffer(offer, new AddOfferListener() {
             @Override
             public void onComplete() {
                 resultHandler.onResult();

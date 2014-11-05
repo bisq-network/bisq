@@ -25,6 +25,7 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.offer.OfferRepository;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.handlers.ErrorMessageHandler;
@@ -78,6 +79,7 @@ public class TradeManager {
     private final BlockChainFacade blockChainFacade;
     private final WalletFacade walletFacade;
     private final CryptoFacade cryptoFacade;
+    private final OfferRepository offerRepository;
 
     //TODO store TakerAsSellerProtocol in trade
     private final Map<String, SellerTakesOfferProtocol> takerAsSellerProtocolMap = new HashMap<>();
@@ -99,7 +101,8 @@ public class TradeManager {
 
     @Inject
     public TradeManager(User user, Settings settings, Persistence persistence, MessageFacade messageFacade,
-                        BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade) {
+                        BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade,
+                        OfferRepository offerRepository) {
         this.user = user;
         this.settings = settings;
         this.persistence = persistence;
@@ -107,6 +110,7 @@ public class TradeManager {
         this.blockChainFacade = blockChainFacade;
         this.walletFacade = walletFacade;
         this.cryptoFacade = cryptoFacade;
+        this.offerRepository = offerRepository;
 
         Object offersObject = persistence.read(this, "offers");
         if (offersObject instanceof Map) {
@@ -189,7 +193,7 @@ public class TradeManager {
                     (message, throwable) -> {
                         errorMessageHandler.onFault(message);
                         createOfferCoordinatorMap.remove(offer.getId());
-                    });
+                    }, offerRepository);
             createOfferCoordinatorMap.put(offer.getId(), createOfferCoordinator);
             createOfferCoordinator.start();
         }
@@ -210,7 +214,7 @@ public class TradeManager {
         offers.remove(offer.getId());
         persistOffers();
 
-        messageFacade.removeOffer(offer);
+        offerRepository.removeOffer(offer);
     }
 
 
