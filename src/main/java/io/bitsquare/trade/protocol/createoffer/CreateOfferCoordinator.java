@@ -18,7 +18,6 @@
 package io.bitsquare.trade.protocol.createoffer;
 
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferRepository;
 import io.bitsquare.persistence.Persistence;
@@ -86,25 +85,22 @@ public class CreateOfferCoordinator {
 
     private final Offer offer;
     private final WalletFacade walletFacade;
-    private final MessageFacade messageFacade;
     private final TransactionResultHandler resultHandler;
     private final FaultHandler faultHandler;
     private final Model model;
     private final OfferRepository offerRepository;
 
     public CreateOfferCoordinator(Persistence persistence, Offer offer, WalletFacade walletFacade,
-                                  MessageFacade messageFacade, TransactionResultHandler resultHandler,
-                                  FaultHandler faultHandler, OfferRepository offerRepository) {
-        this(offer, walletFacade, messageFacade, resultHandler, faultHandler, new Model(persistence), offerRepository);
+                                  TransactionResultHandler resultHandler, FaultHandler faultHandler,
+                                  OfferRepository offerRepository) {
+        this(offer, walletFacade, resultHandler, faultHandler, new Model(persistence), offerRepository);
     }
 
     // for recovery from model
-    public CreateOfferCoordinator(Offer offer, WalletFacade walletFacade, MessageFacade messageFacade,
-                                  TransactionResultHandler resultHandler, FaultHandler faultHandler, Model model,
-                                  OfferRepository offerRepository) {
+    public CreateOfferCoordinator(Offer offer, WalletFacade walletFacade, TransactionResultHandler resultHandler,
+                                  FaultHandler faultHandler, Model model, OfferRepository offerRepository) {
         this.offer = offer;
         this.walletFacade = walletFacade;
-        this.messageFacade = messageFacade;
         this.resultHandler = resultHandler;
         this.faultHandler = faultHandler;
         this.model = model;

@@ -176,7 +176,6 @@ public class TradeManager {
             CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(persistence,
                     offer,
                     walletFacade,
-                    messageFacade,
                     (transactionId) -> {
                         try {
                             offer.setOfferFeePaymentTxID(transactionId.getHashAsString());
