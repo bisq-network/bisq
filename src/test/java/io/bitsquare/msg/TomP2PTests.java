@@ -82,10 +82,6 @@ public class TomP2PTests {
     private final static String SEED_IP_WAN_2 = "188.226.179.109";
     private final static int SEED_PORT_WAN_2 = 5001;
 
-    // new Ports().tcpPort() returns a random port
-    private final static int CLIENT_1_PORT = new Ports().tcpPort();
-    private final static int CLIENT_2_PORT = new Ports().tcpPort();
-
     // If you want to test in one specific connection mode define it directly, otherwise use UNKNOWN
     private final ConnectionType forcedConnectionType = ConnectionType.NAT;
     private ConnectionType resolvedConnectionType;
@@ -108,6 +104,10 @@ public class TomP2PTests {
         // Only in NAT mode we have to deal with that bug.
         if (forcedConnectionType == ConnectionType.NAT || resolvedConnectionType == ConnectionType.NAT)
             ignoreSuccessTests = true;
+
+        // new Ports().tcpPort() returns a random port
+        client1Port = new Ports().tcpPort();
+        client2Port = new Ports().tcpPort();
     }
 
     // In port forwarding mode the isSuccess returns false, but the DHT operations succeeded.
@@ -136,6 +136,8 @@ public class TomP2PTests {
     private int seedPort;
     private PeerDHT peer1DHT;
     private PeerDHT peer2DHT;
+    private int client1Port;
+    private int client2Port;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Seed node
@@ -194,30 +196,30 @@ public class TomP2PTests {
     @Test
     public void bootstrapInUnknownMode() throws Exception {
         if (forcedConnectionType == ConnectionType.UNKNOWN)
-            assertNotNull(bootstrapInUnknownMode("node_1", CLIENT_1_PORT));
+            assertNotNull(bootstrapInUnknownMode("node_1", client1Port));
     }
 
     @Test
     public void testBootstrapDirectConnection() throws Exception {
         if (forcedConnectionType == ConnectionType.DIRECT)
-            assertNotNull(bootstrapDirectConnection("node_1", CLIENT_1_PORT));
+            assertNotNull(bootstrapDirectConnection("node_1", client1Port));
     }
 
     @Test
     public void testBootstrapWithPortForwarding() throws Exception {
         if (forcedConnectionType == ConnectionType.NAT)
-            assertNotNull(bootstrapWithPortForwarding("node_1", CLIENT_1_PORT));
+            assertNotNull(bootstrapWithPortForwarding("node_1", client1Port));
     }
 
     @Test
     public void testBootstrapInRelayMode() throws Exception {
         if (forcedConnectionType == ConnectionType.RELAY)
-            assertNotNull(bootstrapInRelayMode("node_1", CLIENT_1_PORT));
+            assertNotNull(bootstrapInRelayMode("node_1", client1Port));
     }
 
     @Test
     public void testPut() throws Exception {
-        peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        peer1DHT = getDHTPeer("node_1", client1Port);
         FuturePut futurePut = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo")).start();
         futurePut.awaitUninterruptibly();
         if (!ignoreSuccessTests)
@@ -226,14 +228,14 @@ public class TomP2PTests {
 
     @Test
     public void testPutGet() throws Exception {
-        peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        peer1DHT = getDHTPeer("node_1", client1Port);
         FuturePut futurePut = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo")).start();
         futurePut.awaitUninterruptibly();
         if (!ignoreSuccessTests)
             assertTrue(futurePut.isSuccess());
 
 
-        peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
+        peer2DHT = getDHTPeer("node_2", client2Port);
         FutureGet futureGet = peer2DHT.get(Number160.createHash("key")).start();
         futureGet.awaitUninterruptibly();
         if (!ignoreSuccessTests)
@@ -243,7 +245,7 @@ public class TomP2PTests {
 
     @Test
     public void testAdd() throws Exception {
-        peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        peer1DHT = getDHTPeer("node_1", client1Port);
         FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
         futurePut1.awaitUninterruptibly();
         if (!ignoreSuccessTests)
@@ -257,7 +259,7 @@ public class TomP2PTests {
 
     @Test
     public void testAddGet() throws Exception {
-        peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        peer1DHT = getDHTPeer("node_1", client1Port);
         FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
         futurePut1.awaitUninterruptibly();
         if (!ignoreSuccessTests)
@@ -269,7 +271,7 @@ public class TomP2PTests {
             assertTrue(futurePut2.isSuccess());
 
 
-        peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
+        peer2DHT = getDHTPeer("node_2", client2Port);
         FutureGet futureGet = peer2DHT.get(Number160.createHash("locationKey")).all().start();
         futureGet.awaitUninterruptibly();
         if (!ignoreSuccessTests)
@@ -282,7 +284,7 @@ public class TomP2PTests {
 
     @Test
     public void testAddRemove() throws Exception {
-        peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+        peer1DHT = getDHTPeer("node_1", client1Port);
         FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
         futurePut1.awaitUninterruptibly();
         if (!ignoreSuccessTests)
@@ -294,7 +296,7 @@ public class TomP2PTests {
             assertTrue(futurePut2.isSuccess());
 
 
-        peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
+        peer2DHT = getDHTPeer("node_2", client2Port);
         Number160 contentKey = new Data("hallo1").hash();
         FutureRemove futureRemove = peer2DHT.remove(Number160.createHash("locationKey")).contentKey(contentKey).start();
         futureRemove.awaitUninterruptibly();
@@ -320,8 +322,8 @@ public class TomP2PTests {
     @Test
     public void testSendDirectRelay() throws Exception {
         if (forcedConnectionType == ConnectionType.RELAY || resolvedConnectionType == ConnectionType.RELAY) {
-            peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
-            peer2DHT = getDHTPeer("node_2", CLIENT_2_PORT);
+            peer1DHT = getDHTPeer("node_1", client1Port);
+            peer2DHT = getDHTPeer("node_2", client2Port);
 
             final CountDownLatch countDownLatch = new CountDownLatch(1);
 
@@ -353,7 +355,7 @@ public class TomP2PTests {
     @Test
     public void testSendDirectPortForwarding() throws Exception {
         if (forcedConnectionType == ConnectionType.NAT || resolvedConnectionType == ConnectionType.NAT) {
-            peer1DHT = getDHTPeer("node_1", CLIENT_1_PORT);
+            peer1DHT = getDHTPeer("node_1", client1Port);
             PeerAddress reachablePeerAddress = new PeerAddress(Number160.createHash(seedId), seedIP, seedPort,
                     seedPort);
 
