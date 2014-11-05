@@ -44,7 +44,7 @@ public class DefaultMessageModule extends AbstractBitsquareModule implements Mes
 
         bind(Node.class)
                 .annotatedWith(Names.named("bootstrapNode"))
-                .toInstance(BootstrapNode.DIGITAL_OCEAN1);
+                .toInstance(BootstrapNode.LOCAL_HOST);
     }
 
     @Override

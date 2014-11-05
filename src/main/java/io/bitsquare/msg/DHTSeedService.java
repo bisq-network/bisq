@@ -30,7 +30,7 @@ public class DHTSeedService extends ActorService {
 
     @Inject
     public DHTSeedService(ActorSystem system) {
-        super(system, "/user/" + DHTManager.SEED_NAME);
+        super(system, "/user/" + DHTManager.SEED_NODE);
     }
 
     public void initializePeer(String id, Integer port) {

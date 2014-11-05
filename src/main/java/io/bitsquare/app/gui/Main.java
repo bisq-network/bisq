@@ -123,7 +123,7 @@ public class Main extends Application {
 
         // configure the primary stage
 
-        primaryStage.setTitle("Bitsquare (" + appName + ")");
+        primaryStage.setTitle(appName);
         primaryStage.setScene(scene);
         primaryStage.setMinWidth(75);
         primaryStage.setMinHeight(50);

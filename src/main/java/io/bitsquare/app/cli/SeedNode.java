@@ -46,37 +46,26 @@ import scala.concurrent.duration.FiniteDuration;
 public class SeedNode {
     private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
 
-    private static String appName = "Bitsquare";
     private static String interfaceHint;
 
     public static void main(String[] args) {
         ArgumentParser parser = new ArgumentParser();
         Namespace namespace = parser.parseArgs(args);
 
-        if (namespace.getString(ArgumentParser.NAME_FLAG) != null) {
-            appName = appName + "-" + namespace.getString(ArgumentParser.NAME_FLAG);
-        }
-
         if (namespace.getString(ArgumentParser.INFHINT_FLAG) != null) {
             interfaceHint = namespace.getString(ArgumentParser.INFHINT_FLAG);
         }
 
-        int port = -1;
-        if (namespace.getString(ArgumentParser.PORT_FLAG) != null) {
-            port = Integer.valueOf(namespace.getString(ArgumentParser.PORT_FLAG));
-        }
+        int serverPort = Integer.valueOf(namespace.getString(ArgumentParser.PORT_FLAG));
 
-        String seedID = BootstrapNode.DIGITAL_OCEAN1.getId();
+        String seedID = BootstrapNode.LOCAL_HOST.getId();
         if (namespace.getString(ArgumentParser.PEER_ID_FLAG) != null) {
             seedID = namespace.getString(ArgumentParser.PEER_ID_FLAG);
         }
 
-        ActorSystem actorSystem = ActorSystem.create(appName);
-
-        final Set<PeerAddress> peerAddresses = new HashSet<PeerAddress>();
-        final String sid = seedID;
+        final Set<PeerAddress> peerAddresses = new HashSet<>();
         for (Node node : BootstrapNode.values()) {
-            if (!node.getId().equals(sid)) {
+            if (!node.getId().equals(seedID)) {
                 try {
                     peerAddresses.add(new PeerAddress(Number160.createHash(node.getId()), node.getIp(),
                             node.getPort(), node.getPort()));
@@ -86,11 +75,10 @@ public class SeedNode {
             }
         }
 
-        int serverPort = (port == -1) ? ArgumentParser.PORT_DEFAULT : port;
-
-        ActorRef seedNode = actorSystem.actorOf(DHTManager.getProps(), DHTManager.SEED_NAME);
+        ActorSystem actorSystem = ActorSystem.create("BitsquareSeedNode");
         Inbox inbox = Inbox.create(actorSystem);
-        inbox.send(seedNode, new InitializePeer(Number160.createHash(sid), serverPort, interfaceHint,
+        ActorRef seedNode = actorSystem.actorOf(DHTManager.getProps(), DHTManager.SEED_NODE);
+        inbox.send(seedNode, new InitializePeer(Number160.createHash(seedID), serverPort, interfaceHint,
                 peerAddresses));
 
         Thread seedNodeThread = new Thread(() -> {
