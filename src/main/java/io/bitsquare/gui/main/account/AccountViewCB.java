@@ -20,9 +20,7 @@ package io.bitsquare.gui.main.account;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewCB;
-import io.bitsquare.util.ViewLoader;
-
-import java.io.IOException;
+import io.bitsquare.gui.ViewLoader;
 
 import java.net.URL;
 
@@ -136,38 +134,33 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
 
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
-        try {
-            Node view = loader.load();
-            Tab tab = null;
-            switch (navigationItem) {
-                case ACCOUNT_SETTINGS:
-                    tab = accountSettingsTab;
-                    tab.setText("Account settings");
-                    arbitratorSettingsTab.setDisable(false);
-                    break;
-                case ACCOUNT_SETUP:
-                    tab = accountSettingsTab;
-                    tab.setText("Account setup");
-                    arbitratorSettingsTab.setDisable(true);
-                    break;
-                case ARBITRATOR_SETTINGS:
-                    tab = arbitratorSettingsTab;
-                    break;
-            }
-
-            // for IRC demo we deactivate the arbitratorSettingsTab
-            arbitratorSettingsTab.setDisable(true);
-
-            tab.setContent(view);
-            ((TabPane) root).getSelectionModel().select(tab);
-            Initializable childController = loader.getController();
-            ((ViewCB) childController).setParent(this);
-
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + Navigation.Item.ACCOUNT_SETUP.getFxmlUrl());
-            e.printStackTrace();
+        final ViewLoader loader = new ViewLoader(navigationItem);
+        Node view = loader.load();
+        Tab tab = null;
+        switch (navigationItem) {
+            case ACCOUNT_SETTINGS:
+                tab = accountSettingsTab;
+                tab.setText("Account settings");
+                arbitratorSettingsTab.setDisable(false);
+                break;
+            case ACCOUNT_SETUP:
+                tab = accountSettingsTab;
+                tab.setText("Account setup");
+                arbitratorSettingsTab.setDisable(true);
+                break;
+            case ARBITRATOR_SETTINGS:
+                tab = arbitratorSettingsTab;
+                break;
         }
+
+        // for IRC demo we deactivate the arbitratorSettingsTab
+        arbitratorSettingsTab.setDisable(true);
+
+        tab.setContent(view);
+        ((TabPane) root).getSelectionModel().select(tab);
+        Initializable childController = loader.getController();
+        ((ViewCB) childController).setParent(this);
+
         return childController;
     }
 

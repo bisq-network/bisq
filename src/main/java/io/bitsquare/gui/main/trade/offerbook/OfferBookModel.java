@@ -22,9 +22,9 @@ import io.bitsquare.gui.UIModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.offer.Direction;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.trade.Direction;
-import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 

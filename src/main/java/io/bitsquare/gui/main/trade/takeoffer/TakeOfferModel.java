@@ -22,9 +22,9 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.UIModel;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.trade.Offer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 

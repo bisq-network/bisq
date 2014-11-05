@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
+import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
@@ -44,7 +44,7 @@ public class SendTakeOfferFeePayedTxId {
         TakeOfferFeePayedMessage msg = new TakeOfferFeePayedMessage(tradeId, takeOfferFeeTxId, tradeAmount,
                 pubKeyForThatTradeAsHex);
 
-        messageFacade.sendTradeMessage(peer, msg, new OutgoingTradeMessageListener() {
+        messageFacade.sendMessage(peer, msg, new OutgoingMessageListener() {
             @Override
             public void onResult() {
                 log.trace("TakeOfferFeePayedMessage successfully arrived at peer");

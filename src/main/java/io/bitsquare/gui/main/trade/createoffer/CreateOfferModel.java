@@ -26,9 +26,9 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
+import io.bitsquare.offer.Direction;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.trade.Direction;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 

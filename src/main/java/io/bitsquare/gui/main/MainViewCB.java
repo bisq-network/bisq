@@ -17,26 +17,24 @@
 
 package io.bitsquare.gui.main;
 
-import io.bitsquare.Bitsquare;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.ViewCB;
+import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.util.ViewLoader;
-
-import java.io.IOException;
 
 import java.net.URL;
 
 import java.util.ResourceBundle;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.animation.Interpolator;
 import javafx.application.Platform;
@@ -58,9 +56,9 @@ public class MainViewCB extends ViewCB<MainPM> {
 
     private final Navigation navigation;
     private final OverlayManager overlayManager;
-    private Settings settings;
-
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
+    private final Settings settings;
+    private final String appName;
 
     private BorderPane baseApplicationContainer;
     private VBox splashScreen;
@@ -78,12 +76,13 @@ public class MainViewCB extends ViewCB<MainPM> {
 
     @Inject
     private MainViewCB(MainPM presentationModel, Navigation navigation, OverlayManager overlayManager,
-                       TradeManager tradeManager, Settings settings) {
+                       TradeManager tradeManager, Settings settings, @Named("appName") String appName) {
         super(presentationModel);
 
         this.navigation = navigation;
         this.overlayManager = overlayManager;
         this.settings = settings;
+        this.appName = appName;
 
         tradeManager.featureNotImplementedWarningProperty().addListener((ov, oldValue, newValue) -> {
             if (oldValue == null && newValue != null) {
@@ -146,21 +145,15 @@ public class MainViewCB extends ViewCB<MainPM> {
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView((navigationItem));
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
-        try {
-            final Node view = loader.load();
-            contentContainer.getChildren().setAll(view);
-            childController = loader.getController();
+        final ViewLoader loader = new ViewLoader(navigationItem);
+        final Node view = loader.load();
+        contentContainer.getChildren().setAll(view);
+        childController = loader.getController();
 
-            if (childController instanceof ViewCB)
-                ((ViewCB) childController).setParent(this);
+        if (childController instanceof ViewCB)
+            ((ViewCB) childController).setParent(this);
 
-            return childController;
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-        }
-        return null;
+        return childController;
     }
 
 
@@ -213,8 +206,8 @@ public class MainViewCB extends ViewCB<MainPM> {
                 numPendingTradesLabel.setText(String.valueOf(numPendingTrades));
             }
 
-            log.trace("openInfoNotification " + Bitsquare.getAppName());
-            SystemNotification.openInfoNotification(Bitsquare.getAppName(), "You got a new trade message.");
+            log.trace("openInfoNotification " + appName);
+            SystemNotification.openInfoNotification(appName, "You got a new trade message.");
         }
         else {
             if (portfolioButtonButtonPane.getChildren().size() > 1)

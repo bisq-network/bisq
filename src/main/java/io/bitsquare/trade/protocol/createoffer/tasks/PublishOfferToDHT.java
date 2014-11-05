@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.createoffer.tasks;
 
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.AddOfferListener;
-import io.bitsquare.trade.Offer;
+import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.handlers.FaultHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
 

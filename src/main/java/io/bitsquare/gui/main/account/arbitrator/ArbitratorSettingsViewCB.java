@@ -17,13 +17,10 @@
 
 package io.bitsquare.gui.main.account.arbitrator;
 
-import io.bitsquare.BitsquareUI;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.main.account.arbitrator.registration.ArbitratorRegistrationViewCB;
-import io.bitsquare.util.ViewLoader;
-
-import java.io.IOException;
 
 import java.net.URL;
 
@@ -45,7 +42,8 @@ public class ArbitratorSettingsViewCB extends CachedViewCB {
 
     private static final Logger log = LoggerFactory.getLogger(ArbitratorSettingsViewCB.class);
 
-    private Navigation navigation;
+    private final Navigation navigation;
+    private final Stage primaryStage;
 
     private ArbitratorRegistrationViewCB arbitratorRegistrationViewCB;
 
@@ -55,9 +53,10 @@ public class ArbitratorSettingsViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ArbitratorSettingsViewCB(Navigation navigation) {
+    private ArbitratorSettingsViewCB(Navigation navigation, Stage primaryStage) {
         super();
         this.navigation = navigation;
+        this.primaryStage = primaryStage;
     }
 
 
@@ -97,31 +96,26 @@ public class ArbitratorSettingsViewCB extends CachedViewCB {
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
         // don't use caching here, cause exc. -> need to investigate and is rarely called so no caching is better
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
-        try {
-            final Parent view = loader.load();
-            arbitratorRegistrationViewCB = loader.getController();
+        final ViewLoader loader = new ViewLoader(navigationItem, false);
 
-            final Stage rootStage = BitsquareUI.getPrimaryStage();
-            final Stage stage = new Stage();
-            stage.setTitle("Arbitrator");
-            stage.setMinWidth(800);
-            stage.setMinHeight(400);
-            stage.setWidth(800);
-            stage.setHeight(600);
-            stage.setX(rootStage.getX() + 50);
-            stage.setY(rootStage.getY() + 50);
-            stage.initModality(Modality.WINDOW_MODAL);
-            stage.initOwner(rootStage);
-            Scene scene = new Scene(view, 800, 600);
-            stage.setScene(scene);
-            stage.show();
+        final Parent view = loader.load();
+        arbitratorRegistrationViewCB = loader.getController();
 
-            return arbitratorRegistrationViewCB;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+        final Stage stage = new Stage();
+        stage.setTitle("Arbitrator");
+        stage.setMinWidth(800);
+        stage.setMinHeight(400);
+        stage.setWidth(800);
+        stage.setHeight(600);
+        stage.setX(primaryStage.getX() + 50);
+        stage.setY(primaryStage.getY() + 50);
+        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initOwner(primaryStage);
+        Scene scene = new Scene(view, 800, 600);
+        stage.setScene(scene);
+        stage.show();
+
+        return arbitratorRegistrationViewCB;
     }
 
 

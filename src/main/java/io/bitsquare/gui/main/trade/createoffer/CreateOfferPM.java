@@ -24,7 +24,7 @@ import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.trade.Direction;
+import io.bitsquare.offer.Direction;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

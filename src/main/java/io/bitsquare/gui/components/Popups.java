@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.BitsquareUI;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.locale.BSResources;
 
@@ -30,6 +29,7 @@ import java.util.List;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.stage.Stage;
 
 import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
@@ -41,6 +41,8 @@ import org.slf4j.LoggerFactory;
 
 public class Popups {
     private static final Logger log = LoggerFactory.getLogger(Popups.class);
+
+    public static Stage primaryStage;
 
     // TODO just temporary, class will be removed completely
     public static void setOverlayManager(OverlayManager overlayManager) {
@@ -70,7 +72,7 @@ public class Popups {
 
     public static void openInfoPopup(String masthead, String message, List<Action> actions) {
         Dialogs.create()
-                .owner(BitsquareUI.getPrimaryStage())
+                .owner(primaryStage)
                 .message(message)
                 .masthead(masthead)
                 .actions(actions)
@@ -107,7 +109,7 @@ public class Popups {
 
     public static Action openConfirmPopup(String title, String masthead, String message, List<Action> actions) {
         return Dialogs.create()
-                .owner(BitsquareUI.getPrimaryStage())
+                .owner(primaryStage)
                 .title(title)
                 .message(message)
                 .masthead(masthead)
@@ -140,7 +142,7 @@ public class Popups {
 
     private static void openWarningPopup(String title, String masthead, String message, List<Action> actions) {
         Dialogs.create()
-                .owner(BitsquareUI.getPrimaryStage())
+                .owner(primaryStage)
                 .title(title)
                 .message(message)
                 .masthead(masthead)
@@ -173,7 +175,7 @@ public class Popups {
 
     private static Action openErrorPopup(String title, String masthead, String message, List<Action> actions) {
         return Dialogs.create()
-                .owner(BitsquareUI.getPrimaryStage())
+                .owner(primaryStage)
                 .title(title)
                 .message(message)
                 .masthead(masthead)
@@ -202,7 +204,7 @@ public class Popups {
             }
         });
         return Dialogs.create()
-                .owner(BitsquareUI.getPrimaryStage())
+                .owner(primaryStage)
                 .title(title)
                 .message(message)
                 .masthead(masthead)

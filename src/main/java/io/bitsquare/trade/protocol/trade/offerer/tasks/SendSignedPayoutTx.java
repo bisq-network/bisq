@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.msg.listeners.OutgoingTradeMessageListener;
+import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.trade.handlers.ResultHandler;
@@ -68,7 +68,7 @@ public class SendSignedPayoutTx {
                     takerPaybackAmount,
                     offererPayoutAddress);
 
-            messageFacade.sendTradeMessage(peer, tradeMessage, new OutgoingTradeMessageListener() {
+            messageFacade.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
                 @Override
                 public void onResult() {
                     log.trace("BankTransferInitedMessage successfully arrived at peer");

@@ -17,8 +17,11 @@
 
 package io.bitsquare.msg;
 
-import io.bitsquare.di.AbstractBitsquareModule;
+import io.bitsquare.AbstractBitsquareModule;
+import io.bitsquare.network.BootstrapNode;
+import io.bitsquare.network.Node;
 
+import com.google.inject.Injector;
 import com.google.inject.name.Names;
 
 import java.util.Properties;
@@ -39,8 +42,13 @@ public class DefaultMessageModule extends AbstractBitsquareModule implements Mes
         // we will probably later use disk storage instead of memory storage for TomP2P
         bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(false);
 
-        bind(SeedNodeAddress.StaticSeedNodeAddresses.class)
-                .annotatedWith(Names.named("defaultSeedNode"))
-                .toInstance(SeedNodeAddress.StaticSeedNodeAddresses.DIGITAL_OCEAN1);
+        bind(Node.class)
+                .annotatedWith(Names.named("bootstrapNode"))
+                .toInstance(BootstrapNode.DIGITAL_OCEAN1);
+    }
+
+    @Override
+    public void doClose(Injector injector) {
+        injector.getInstance(MessageFacade.class).shutDown();
     }
 }

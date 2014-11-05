@@ -17,7 +17,7 @@
 
 package io.bitsquare.msg.listeners;
 
-import io.bitsquare.trade.Offer;
+import io.bitsquare.offer.Offer;
 
 import java.util.List;
 

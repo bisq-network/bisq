@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.account.setup;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.ViewCB;
+import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.account.content.irc.IrcAccountViewCB;
@@ -27,9 +28,6 @@ import io.bitsquare.gui.main.account.content.password.PasswordViewCB;
 import io.bitsquare.gui.main.account.content.registration.RegistrationViewCB;
 import io.bitsquare.gui.main.account.content.restrictions.RestrictionsViewCB;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsViewCB;
-import io.bitsquare.util.ViewLoader;
-
-import java.io.IOException;
 
 import java.net.URL;
 
@@ -188,19 +186,13 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
 
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
-        try {
-            final Pane view = loader.load();
-            content.getChildren().setAll(view);
-            childController = loader.getController();
-            ((ViewCB<? extends PresentationModel>) childController).setParent(this);
-            ((ContextAware) childController).useSettingsContext(false);
-            return childController;
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            e.printStackTrace();
-        }
-        return null;
+        final ViewLoader loader = new ViewLoader(navigationItem);
+        final Pane view = loader.load();
+        content.getChildren().setAll(view);
+        childController = loader.getController();
+        ((ViewCB<? extends PresentationModel>) childController).setParent(this);
+        ((ContextAware) childController).useSettingsContext(false);
+        return childController;
     }
 }
 

@@ -20,10 +20,8 @@ package io.bitsquare.gui.main.portfolio;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewCB;
+import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.util.ViewLoader;
-
-import java.io.IOException;
 
 import java.net.URL;
 
@@ -126,30 +124,25 @@ public class PortfolioViewCB extends CachedViewCB {
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
 
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
-        try {
-            Parent view = loader.load();
-            Tab tab = null;
-            switch (navigationItem) {
-                case OFFERS:
-                    tab = offersTab;
-                    break;
-                case PENDING_TRADES:
-                    tab = pendingTradesTab;
-                    break;
-                case CLOSED_TRADES:
-                    tab = closedTradesTab;
-                    break;
-            }
-            tab.setContent(view);
-            ((TabPane) root).getSelectionModel().select(tab);
-            Initializable childController = loader.getController();
-            ((ViewCB) childController).setParent(this);
-
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            e.printStackTrace();
+        final ViewLoader loader = new ViewLoader(navigationItem);
+        Parent view = loader.load();
+        Tab tab = null;
+        switch (navigationItem) {
+            case OFFERS:
+                tab = offersTab;
+                break;
+            case PENDING_TRADES:
+                tab = pendingTradesTab;
+                break;
+            case CLOSED_TRADES:
+                tab = closedTradesTab;
+                break;
         }
+        tab.setContent(view);
+        ((TabPane) root).getSelectionModel().select(tab);
+        Initializable childController = loader.getController();
+        ((ViewCB) childController).setParent(this);
+
         return childController;
     }
 }

@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main;
 
-import io.bitsquare.Bitsquare;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.UIModel;
@@ -34,6 +33,8 @@ import org.bitcoinj.core.DownloadListener;
 import com.google.inject.Inject;
 
 import java.util.Date;
+
+import javax.inject.Named;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -57,6 +58,7 @@ class MainModel extends UIModel {
     private final MessageFacade messageFacade;
     private final TradeManager tradeManager;
     private final Persistence persistence;
+    private final int clientPort;
 
     private boolean messageFacadeInited;
     private boolean walletFacadeInited;
@@ -72,12 +74,14 @@ class MainModel extends UIModel {
 
     @Inject
     private MainModel(User user, WalletFacade walletFacade, MessageFacade messageFacade,
-                      TradeManager tradeManager, Persistence persistence) {
+                      TradeManager tradeManager, Persistence persistence,
+                      @Named("clientPort") int clientPort) {
         this.user = user;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
         this.tradeManager = tradeManager;
         this.persistence = persistence;
+        this.clientPort = clientPort;
     }
 
 
@@ -107,7 +111,7 @@ class MainModel extends UIModel {
         // For testing with the serverside seednode we need the BootstrappedPeerFactory which gets started form
         // messageFacade.init
 
-        messageFacade.init(Bitsquare.getClientPort(), new BootstrapListener() {
+        messageFacade.init(clientPort, new BootstrapListener() {
             @Override
             public void onCompleted() {
                 messageFacadeInited = true;

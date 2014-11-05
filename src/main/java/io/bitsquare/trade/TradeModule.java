@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade;
 
-import io.bitsquare.di.AbstractBitsquareModule;
+import io.bitsquare.AbstractBitsquareModule;
 
 import java.util.Properties;
 

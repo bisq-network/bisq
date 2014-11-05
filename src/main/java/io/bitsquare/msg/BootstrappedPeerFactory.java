@@ -17,6 +17,7 @@
 
 package io.bitsquare.msg;
 
+import io.bitsquare.network.Node;
 import io.bitsquare.persistence.Persistence;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -62,8 +63,6 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.msg.SeedNodeAddress.StaticSeedNodeAddresses;
-
 /**
  * Creates a DHT peer and bootstrap to the network via a seed node
  */
@@ -73,7 +72,7 @@ public class BootstrappedPeerFactory {
 
     private KeyPair keyPair;
     private Storage storage;
-    private final SeedNodeAddress seedNodeAddress;
+    private final Node bootstrapNode;
     private final Persistence persistence;
 
     private final SettableFuture<PeerDHT> settableFuture = SettableFuture.create();
@@ -85,10 +84,9 @@ public class BootstrappedPeerFactory {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BootstrappedPeerFactory(Persistence persistence,
-                                   @Named("defaultSeedNode") StaticSeedNodeAddresses defaultStaticSeedNodeAddresses) {
+    public BootstrappedPeerFactory(Persistence persistence, @Named("bootstrapNode") Node bootstrapNode) {
         this.persistence = persistence;
-        this.seedNodeAddress = new SeedNodeAddress(defaultStaticSeedNodeAddresses);
+        this.bootstrapNode = bootstrapNode;
     }
 
 
@@ -303,10 +301,10 @@ public class BootstrappedPeerFactory {
 
     private PeerAddress getBootstrapAddress() {
         try {
-            return new PeerAddress(Number160.createHash(seedNodeAddress.getId()),
-                    InetAddress.getByName(seedNodeAddress.getIp()),
-                    seedNodeAddress.getPort(),
-                    seedNodeAddress.getPort());
+            return new PeerAddress(Number160.createHash(bootstrapNode.getId()),
+                    InetAddress.getByName(bootstrapNode.getIp()),
+                    bootstrapNode.getPort(),
+                    bootstrapNode.getPort());
         } catch (UnknownHostException e) {
             log.error("getBootstrapAddress failed: " + e.getMessage());
             return null;

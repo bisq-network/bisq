@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.main.account.content.restrictions;
 
-import io.bitsquare.BitsquareUI;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;
@@ -28,9 +28,6 @@ import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
-import io.bitsquare.util.ViewLoader;
-
-import java.io.IOException;
 
 import java.net.URL;
 
@@ -56,6 +53,7 @@ import org.slf4j.LoggerFactory;
 public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(RestrictionsViewCB.class);
+    private final Stage primaryStage;
 
     @FXML ListView<Locale> languagesListView;
     @FXML ListView<Country> countriesListView;
@@ -71,8 +69,9 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private RestrictionsViewCB(RestrictionsPM presentationModel) {
+    private RestrictionsViewCB(RestrictionsPM presentationModel, Stage primaryStage) {
         super(presentationModel);
+        this.primaryStage = primaryStage;
     }
 
 
@@ -189,37 +188,31 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
         // TODO caching causes exception
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()), false);
-        try {
-            final Node view = loader.load();
-            //TODO Resolve type problem...
-            Initializable childController = loader.getController();
-            //childController.setParentController(this);
+        final ViewLoader loader = new ViewLoader(navigationItem, false);
+        final Node view = loader.load();
+        //TODO Resolve type problem...
+        Initializable childController = loader.getController();
+        //childController.setParentController(this);
 
-            final Stage rootStage = BitsquareUI.getPrimaryStage();
-            final Stage stage = new Stage();
-            stage.setTitle("Arbitrator selection");
-            stage.setMinWidth(800);
-            stage.setMinHeight(500);
-            stage.setWidth(800);
-            stage.setHeight(600);
-            stage.setX(rootStage.getX() + 50);
-            stage.setY(rootStage.getY() + 50);
-            stage.initModality(Modality.WINDOW_MODAL);
-            stage.initOwner(rootStage);
-            Scene scene = new Scene((Parent) view, 800, 600);
-            stage.setScene(scene);
-            stage.setOnHidden(windowEvent -> {
-                if (navigationItem == Navigation.Item.ARBITRATOR_BROWSER)
-                    updateArbitratorList();
-            });
-            stage.show();
+        final Stage stage = new Stage();
+        stage.setTitle("Arbitrator selection");
+        stage.setMinWidth(800);
+        stage.setMinHeight(500);
+        stage.setWidth(800);
+        stage.setHeight(600);
+        stage.setX(primaryStage.getX() + 50);
+        stage.setY(primaryStage.getY() + 50);
+        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initOwner(primaryStage);
+        Scene scene = new Scene((Parent) view, 800, 600);
+        stage.setScene(scene);
+        stage.setOnHidden(windowEvent -> {
+            if (navigationItem == Navigation.Item.ARBITRATOR_BROWSER)
+                updateArbitratorList();
+        });
+        stage.show();
 
-            return childController;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return childController;
     }
 
 

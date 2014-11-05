@@ -22,16 +22,11 @@ import io.bitsquare.msg.actor.command.InitializePeer;
 
 import com.google.inject.Inject;
 
-import java.util.List;
-
 import net.tomp2p.peers.Number160;
 
 import akka.actor.ActorSystem;
 
 public class DHTSeedService extends ActorService {
-
-    private static final List<SeedNodeAddress.StaticSeedNodeAddresses> staticSedNodeAddresses = SeedNodeAddress
-            .StaticSeedNodeAddresses.getAllSeedNodeAddresses();
 
     @Inject
     public DHTSeedService(ActorSystem system) {

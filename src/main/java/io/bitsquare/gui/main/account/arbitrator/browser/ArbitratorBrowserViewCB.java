@@ -21,15 +21,13 @@ import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewCB;
+import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileViewCB;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.util.ViewLoader;
-
-import java.io.IOException;
 
 import java.net.URL;
 
@@ -140,17 +138,12 @@ public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorL
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
 
-        final ViewLoader loader = new ViewLoader(getClass().getResource(navigationItem.getFxmlUrl()));
-        try {
-            Node view = loader.load();
-            ((Pane) root).getChildren().set(0, view);
-            Initializable childController = arbitratorProfileViewCB = loader.getController();
-            ((ViewCB) childController).setParent(this);
+        final ViewLoader loader = new ViewLoader(navigationItem);
+        Node view = loader.load();
+        ((Pane) root).getChildren().set(0, view);
+        Initializable childController = arbitratorProfileViewCB = loader.getController();
+        ((ViewCB) childController).setParent(this);
 
-        } catch (IOException e) {
-            log.error("Loading view failed. FxmlUrl = " + navigationItem.getFxmlUrl());
-            e.printStackTrace();
-        }
         return childController;
     }
 

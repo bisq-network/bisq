@@ -18,3 +18,4 @@ build
 .classpath
 .project
 .settings
+*.java.hsp

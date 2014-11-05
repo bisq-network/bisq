@@ -17,7 +17,7 @@ sourceCompatibility = 1.8
 
 sourceSets.main.resources.srcDirs += 'src/main/java'
 
-mainClassName = "io.bitsquare.Bitsquare"
+mainClassName = "io.bitsquare.app.gui.Main"
 
 run {
     if ( project.hasProperty('args') ) {

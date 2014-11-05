@@ -17,6 +17,8 @@
 
 package io.bitsquare.trade.protocol.trade;
 
-public interface TradeMessage {
+import io.bitsquare.msg.Message;
+
+public interface TradeMessage extends Message {
     public String getTradeId();
 }

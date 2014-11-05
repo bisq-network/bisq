@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.offerer;
 
-import io.bitsquare.trade.Offer;
+import io.bitsquare.offer.Offer;
 
 import org.bitcoinj.core.Transaction;
 
