@@ -48,7 +48,7 @@ public class DefaultMessageModule extends AbstractBitsquareModule implements Mes
     }
 
     @Override
-    public void doClose(Injector injector) {
+    protected void doClose(Injector injector) {
         injector.getInstance(MessageFacade.class).shutDown();
     }
 }

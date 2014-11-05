@@ -50,7 +50,7 @@ public class BitcoinModule extends AbstractBitsquareModule {
     }
 
     @Override
-    public void doClose(Injector injector) {
+    protected void doClose(Injector injector) {
         injector.getInstance(WalletFacade.class).shutDown();
     }
 
