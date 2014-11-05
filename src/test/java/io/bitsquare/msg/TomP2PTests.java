@@ -46,6 +46,7 @@ import net.tomp2p.storage.Data;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.slf4j.Logger;
@@ -63,7 +64,7 @@ import static org.junit.Assert.*;
  * In the configure method and the connectionType you can define your test scenario further.
  */
 
-//@Ignore
+@Ignore
 public class TomP2PTests {
     private static final Logger log = LoggerFactory.getLogger(TomP2PTests.class);
 
