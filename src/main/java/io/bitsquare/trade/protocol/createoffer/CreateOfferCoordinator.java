@@ -22,11 +22,10 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferRepository;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.util.task.FaultHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.createoffer.tasks.BroadCastOfferFeeTx;
 import io.bitsquare.trade.protocol.createoffer.tasks.CreateOfferFeeTx;
-import io.bitsquare.trade.protocol.createoffer.tasks.VerifyOffer;
+import io.bitsquare.util.task.FaultHandler;
 
 import org.bitcoinj.core.Transaction;
 
@@ -115,11 +114,15 @@ public class CreateOfferCoordinator {
 
     public void start() {
         model.setState(State.STARTED);
-        VerifyOffer.run(this::onOfferValidated, faultHandler, offer);
-    }
 
-    private void onOfferValidated() {
-        model.setState(State.VALIDATED);
+        try {
+            offer.validate();
+            model.setState(State.VALIDATED);
+        } catch (Exception ex) {
+            faultHandler.handleFault("Offer validation failed", ex);
+            return;
+        }
+
         CreateOfferFeeTx.run(this::onOfferFeeTxCreated, faultHandler, walletFacade, offer.getId());
     }
 
