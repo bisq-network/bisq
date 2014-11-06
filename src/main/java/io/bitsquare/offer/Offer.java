@@ -19,7 +19,6 @@ package io.bitsquare.offer;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.btc.Restrictions;
 import io.bitsquare.locale.Country;
 
 import org.bitcoinj.core.Coin;
