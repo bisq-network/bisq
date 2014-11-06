@@ -30,15 +30,17 @@ import java.util.Properties;
 
 public class BitcoinModule extends AbstractBitsquareModule {
 
-    private final BitcoinNetwork defaultNetwork;
+    private static final BitcoinNetwork DEFAULT_NETWORK = BitcoinNetwork.REGTEST;
+
+    private final BitcoinNetwork network;
 
     public BitcoinModule(Properties properties) {
-        this(properties, BitcoinNetwork.REGTEST);
+        this(properties, DEFAULT_NETWORK);
     }
 
-    public BitcoinModule(Properties properties, BitcoinNetwork defaultNetwork) {
+    public BitcoinModule(Properties properties, BitcoinNetwork network) {
         super(properties);
-        this.defaultNetwork = defaultNetwork;
+        this.network = network;
     }
 
     @Override
@@ -55,7 +57,7 @@ public class BitcoinModule extends AbstractBitsquareModule {
     }
 
     private NetworkParameters network() {
-            String networkName = properties.getProperty("networkType", defaultNetwork.name());
+            String networkName = properties.getProperty("networkType", network.name());
 
             switch (BitcoinNetwork.valueOf(networkName.toUpperCase())) {
                 case MAINNET:
