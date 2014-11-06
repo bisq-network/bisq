@@ -15,9 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg;
+package io.bitsquare.msg.tomp2p;
 
 import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.msg.Message;
+import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.msg.listeners.GetPeerAddressListener;
@@ -68,7 +70,7 @@ class TomP2PMessageFacade implements MessageFacade {
     private static final Logger log = LoggerFactory.getLogger(TomP2PMessageFacade.class);
     private static final String ARBITRATORS_ROOT = "ArbitratorsRoot";
 
-    private final P2PNode p2pNode;
+    private final TomP2PNode p2pNode;
     private final User user;
 
     private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
@@ -80,7 +82,7 @@ class TomP2PMessageFacade implements MessageFacade {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PMessageFacade(User user, P2PNode p2pNode) {
+    public TomP2PMessageFacade(User user, TomP2PNode p2pNode) {
         this.user = user;
         this.p2pNode = p2pNode;
     }

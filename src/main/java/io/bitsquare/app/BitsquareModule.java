@@ -21,8 +21,8 @@ import io.bitsquare.AbstractBitsquareModule;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.crypto.CryptoModule;
 import io.bitsquare.gui.GuiModule;
-import io.bitsquare.msg.DefaultMessageModule;
 import io.bitsquare.msg.MessageModule;
+import io.bitsquare.msg.tomp2p.TomP2PMessageModule;
 import io.bitsquare.offer.OfferModule;
 import io.bitsquare.offer.tomp2p.TomP2POfferModule;
 import io.bitsquare.persistence.Persistence;
@@ -83,7 +83,7 @@ public class BitsquareModule extends AbstractBitsquareModule {
     }
 
     protected MessageModule messageModule() {
-        return new DefaultMessageModule(properties);
+        return new TomP2PMessageModule(properties);
     }
 
     protected BitcoinModule bitcoinModule() {

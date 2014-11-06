@@ -15,8 +15,9 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg;
+package io.bitsquare.msg.tomp2p;
 
+import io.bitsquare.msg.MessageBroker;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.network.tomp2p.TomP2PPeer;
 
@@ -66,14 +67,16 @@ import org.slf4j.LoggerFactory;
 
 import lighthouse.files.AppDirectory;
 
+import static io.bitsquare.network.tomp2p.BaseFutureUtil.isSuccess;
+
 /**
  * The fully bootstrapped P2PNode which is responsible himself for his availability in the messaging system. It saves
  * for instance the IP address periodically.
  * This class is offering generic functionality of TomP2P needed for Bitsquare, like data and domain protection.
  * It does not handle any domain aspects of Bitsquare.
  */
-public class P2PNode {
-    private static final Logger log = LoggerFactory.getLogger(P2PNode.class);
+public class TomP2PNode {
+    private static final Logger log = LoggerFactory.getLogger(TomP2PNode.class);
 
     private KeyPair keyPair;
     private final Boolean useDiskStorage;
@@ -90,14 +93,14 @@ public class P2PNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public P2PNode(BootstrappedPeerFactory bootstrappedPeerFactory,
-                   @Named("useDiskStorage") Boolean useDiskStorage) {
+    public TomP2PNode(BootstrappedPeerFactory bootstrappedPeerFactory,
+                      @Named("useDiskStorage") Boolean useDiskStorage) {
         this.bootstrappedPeerFactory = bootstrappedPeerFactory;
         this.useDiskStorage = useDiskStorage;
     }
 
     // for unit testing
-    P2PNode(KeyPair keyPair, PeerDHT peerDHT) {
+    TomP2PNode(KeyPair keyPair, PeerDHT peerDHT) {
         this.keyPair = keyPair;
         this.peerDHT = peerDHT;
         peerDHT.peerBean().keyPair(keyPair);
@@ -309,7 +312,7 @@ public class P2PNode {
             public void onSuccess(@Nullable PeerDHT peerDHT) {
                 try {
                     if (peerDHT != null) {
-                        P2PNode.this.peerDHT = peerDHT;
+                        TomP2PNode.this.peerDHT = peerDHT;
                         setupReplyHandler();
                         FuturePut futurePut = storePeerAddress();
                         futurePut.addListener(new BaseFutureListener<BaseFuture>() {
@@ -399,11 +402,5 @@ public class P2PNode {
         else {
             storage = new StorageMemory();
         }
-    }
-
-    // Isolate the success handling as there is bug in port forwarding mode
-    private boolean isSuccess(BaseFuture baseFuture) {
-        // return baseFuture.isSuccess();
-        return true;
     }
 }

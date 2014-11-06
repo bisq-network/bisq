@@ -15,21 +15,27 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer.tomp2p;
+package io.bitsquare.msg.tomp2p;
 
-import io.bitsquare.offer.OfferModule;
-import io.bitsquare.offer.OfferRepository;
+import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.MessageModule;
 
 import java.util.Properties;
 
-public class TomP2POfferModule extends OfferModule {
+public class TomP2PMessageModule extends MessageModule {
 
-    public TomP2POfferModule(Properties properties) {
+    public TomP2PMessageModule(Properties properties) {
         super(properties);
     }
 
     @Override
-    public Class<? extends OfferRepository> offerRepository() {
-        return TomP2POfferRepository.class;
+    protected void doConfigure() {
+        bind(TomP2PNode.class).asEagerSingleton();
+        bind(BootstrappedPeerFactory.class).asEagerSingleton();
+    }
+
+    @Override
+    protected Class<? extends MessageFacade> messageFacade() {
+        return TomP2PMessageFacade.class;
     }
 }

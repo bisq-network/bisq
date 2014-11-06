@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg;
+package io.bitsquare.msg.tomp2p;
 
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.Node;
@@ -65,7 +65,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Creates a DHT peer and bootstrap to the network via a seed node
  */
-public class BootstrappedPeerFactory {
+class BootstrappedPeerFactory {
     private static final Logger log = LoggerFactory.getLogger(BootstrappedPeerFactory.class);
 
     private KeyPair keyPair;

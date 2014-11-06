@@ -17,7 +17,7 @@
 
 package io.bitsquare.offer.tomp2p;
 
-import io.bitsquare.msg.P2PNode;
+import io.bitsquare.msg.tomp2p.TomP2PNode;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferRepository;
 import io.bitsquare.util.task.FaultHandler;
@@ -57,10 +57,10 @@ class TomP2POfferRepository implements OfferRepository {
     private final List<Listener> offerRepositoryListeners = new ArrayList<>();
     private final LongProperty invalidationTimestamp = new SimpleLongProperty(0);
 
-    private final P2PNode p2pNode;
+    private final TomP2PNode p2pNode;
 
     @Inject
-    public TomP2POfferRepository(P2PNode p2pNode) {
+    public TomP2POfferRepository(TomP2PNode p2pNode) {
         this.p2pNode = p2pNode;
     }
 

@@ -17,7 +17,43 @@
 
 package io.bitsquare.msg;
 
-import com.google.inject.Module;
+import io.bitsquare.AbstractBitsquareModule;
+import io.bitsquare.network.BootstrapNodes;
+import io.bitsquare.network.Node;
 
-public interface MessageModule extends Module {
+import com.google.inject.Injector;
+import com.google.inject.name.Names;
+
+import java.util.Properties;
+
+public abstract class MessageModule extends AbstractBitsquareModule {
+
+    protected MessageModule(Properties properties) {
+        super(properties);
+    }
+
+    @Override
+    protected final void configure() {
+        bind(MessageFacade.class).to(messageFacade()).asEagerSingleton();
+        bind(DHTSeedService.class);
+
+        // we will probably later use disk storage instead of memory storage for TomP2P
+        bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(false);
+
+        bind(Node.class)
+                .annotatedWith(Names.named("bootstrapNode"))
+                .toInstance(BootstrapNodes.DIGITAL_OCEAN_1);
+
+        doConfigure();
+    }
+
+    protected void doConfigure() {
+    }
+
+    protected abstract Class<? extends MessageFacade> messageFacade();
+
+    @Override
+    protected void doClose(Injector injector) {
+        injector.getInstance(MessageFacade.class).shutDown();
+    }
 }

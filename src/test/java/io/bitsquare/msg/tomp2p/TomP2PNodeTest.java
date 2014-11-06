@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg;
+package io.bitsquare.msg.tomp2p;
 
 import java.io.IOException;
 
@@ -48,12 +48,12 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
-// TODO Reactivate tests when P2PNode is using original code again. we deactivated the security features atm.
+// TODO Reactivate tests when TomP2PNode is using original code again. we deactivated the security features atm.
 // cause IOException: Not listening to anything. Maybe your binding information is wrong.
 // investigate what has broken it, probably from update to latest head
 @Ignore
-public class P2PNodeTest {
-    private static final Logger log = LoggerFactory.getLogger(P2PNodeTest.class);
+public class TomP2PNodeTest {
+    private static final Logger log = LoggerFactory.getLogger(TomP2PNodeTest.class);
 
     final private static Random rnd = new Random(42L);
 
@@ -80,12 +80,12 @@ public class P2PNodeTest {
         KeyPair keyPairClient = keyGen.genKeyPair();
         KeyPair keyPairOtherPeer = keyGen.genKeyPair();
 
-        P2PNode node;
+        TomP2PNode node;
         Number160 locationKey;
         Object object;
         FutureDirect futureDirect;
 
-        node = new P2PNode(keyPairClient, client);
+        node = new TomP2PNode(keyPairClient, client);
         object = "clients data";
         futureDirect = node.sendData(otherPeer.peerAddress(), object);
         futureDirect.awaitUninterruptibly();
@@ -110,7 +110,7 @@ public class P2PNodeTest {
         KeyPair keyPairClient = keyGen.genKeyPair();
         KeyPair keyPairOtherPeer = keyGen.genKeyPair();
 
-        P2PNode node;
+        TomP2PNode node;
         Number160 locationKey;
         Data data;
         FuturePut futurePut;
@@ -119,7 +119,7 @@ public class P2PNodeTest {
         // otherPeer tries to squat clients location store
         // he can do it but as he has not the domain key of the client he cannot do any harm
         // he only can store und that path: locationKey.otherPeerDomainKey.data
-        node = new P2PNode(keyPairOtherPeer, otherPeer);
+        node = new TomP2PNode(keyPairOtherPeer, otherPeer);
         locationKey = Number160.createHash("clients location");
         data = new Data("otherPeer data");
         futurePut = node.putDomainProtectedData(locationKey, data);
@@ -133,7 +133,7 @@ public class P2PNodeTest {
 
         // client store his data und his domainkey, no problem with previous occupied
         // he only can store und that path: locationKey.clientDomainKey.data
-        node = new P2PNode(keyPairClient, client);
+        node = new TomP2PNode(keyPairClient, client);
         locationKey = Number160.createHash("clients location");
         data = new Data("client data");
         futurePut = node.putDomainProtectedData(locationKey, data);
@@ -146,7 +146,7 @@ public class P2PNodeTest {
         assertEquals("client data", futureGet.data().object());
 
         // also other peers can read that data if they know the public key of the client
-        node = new P2PNode(keyPairOtherPeer, otherPeer);
+        node = new TomP2PNode(keyPairOtherPeer, otherPeer);
         futureGet = node.getDomainProtectedData(locationKey, keyPairClient.getPublic());
         futureGet.awaitUninterruptibly();
         assertTrue(futureGet.isSuccess());
@@ -168,7 +168,7 @@ public class P2PNodeTest {
         assertFalse(futurePut.isSuccess());
 
         // he can read his prev. stored data
-        node = new P2PNode(keyPairOtherPeer, otherPeer);
+        node = new TomP2PNode(keyPairOtherPeer, otherPeer);
         futureGet = node.getDomainProtectedData(locationKey, keyPairOtherPeer.getPublic());
         futureGet.awaitUninterruptibly();
         assertTrue(futureGet.isSuccess());
@@ -226,7 +226,7 @@ public class P2PNodeTest {
         PeerDHT otherPeer = peers[2];
         UtilsDHT2.perfectRouting(peers);
 
-        P2PNode node;
+        TomP2PNode node;
         final KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA");
         keyGen.initialize(1024);
         KeyPair keyPairClient = keyGen.genKeyPair();
@@ -243,7 +243,7 @@ public class P2PNodeTest {
         KeyPair keyPair1 = gen.generateKeyPair();
         keyPairClient = keyPair1;
 
-        node = new P2PNode(keyPairClient, client);
+        node = new TomP2PNode(keyPairClient, client);
         locationKey = Number160.createHash("add to list clients location");
         data = new Data("add to list client data1");
         Data data_1 = data;
@@ -298,7 +298,7 @@ public class P2PNodeTest {
         futurePut.awaitUninterruptibly();
         assertTrue(futurePut.isSuccess());
 
-        node = new P2PNode(keyPairOtherPeer, otherPeer);
+        node = new TomP2PNode(keyPairOtherPeer, otherPeer);
         futureGet = node.getDataMap(locationKey);
         futureGet.awaitUninterruptibly();
         assertTrue(futureGet.isSuccess());
@@ -334,7 +334,7 @@ public class P2PNodeTest {
 
 
         // client removes his entry -> OK
-        node = new P2PNode(keyPairClient, client);
+        node = new TomP2PNode(keyPairClient, client);
         FutureRemove futureRemove = node.removeFromDataMap(locationKey, data_1);
         futureRemove.awaitUninterruptibly();
         assertTrue(futureRemove.isSuccess());
@@ -375,7 +375,7 @@ public class P2PNodeTest {
 
 
         // otherPeer tries to removes client entry -> FAIL
-        node = new P2PNode(keyPairOtherPeer, otherPeer);
+        node = new TomP2PNode(keyPairOtherPeer, otherPeer);
         futureRemove = node.removeFromDataMap(locationKey, data_2);
         futureRemove.awaitUninterruptibly();
         assertFalse(futureRemove.isSuccess());
