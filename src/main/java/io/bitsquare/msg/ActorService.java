@@ -36,7 +36,7 @@ public abstract class ActorService extends Service<String> {
 
     private final ActorSystem system;
     private final Inbox inbox;
-    private ActorSelection actor;
+    private final ActorSelection actor;
 
     private MessageHandler handler;
 
@@ -71,12 +71,7 @@ public abstract class ActorService extends Service<String> {
                             if (result != null) {
                                 System.out.println(result.toString());
                                 if (handler != null) {
-                                    Application.invokeLater(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            handler.handle(result);
-                                        }
-                                    });
+                                    Application.invokeLater(() -> handler.handle(result));
                                 }
                             }
                         } catch (Exception e) {

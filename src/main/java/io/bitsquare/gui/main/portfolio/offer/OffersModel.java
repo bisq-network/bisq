@@ -38,7 +38,7 @@ class OffersModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(OffersModel.class);
 
     private final TradeManager tradeManager;
-    private User user;
+    private final User user;
 
     private final ObservableList<OfferListItem> list = FXCollections.observableArrayList();
     private MapChangeListener<String, Offer> offerMapChangeListener;

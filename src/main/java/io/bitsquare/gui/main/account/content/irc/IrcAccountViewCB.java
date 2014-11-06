@@ -123,17 +123,15 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPm> implements Cont
         setupListeners();
         setupBindings();
 
-        Platform.runLater(() -> {
-            Popups.openInfoPopup("Demo setup for simulating the banking transfer",
-                    "For demo purposes we use a special setup so that users can simulate the banking transfer when " +
-                            "meeting in an IRC chat room.\n" +
-                            "You need to define your IRC nickname and later in the trade process you can find your " +
-                            "trading partner with his IRC nickname in the chat room and simulate the bank transfer " +
-                            "activities, which are:\n\n" +
-                            "1. Bitcoin buyer indicates that he has started the bank transfer.\n\n" +
-                            "2. Bitcoin seller confirms that he has received the national currency from the " +
-                            "bank transfer.");
-        });
+        Platform.runLater(() -> Popups.openInfoPopup("Demo setup for simulating the banking transfer",
+                "For demo purposes we use a special setup so that users can simulate the banking transfer when " +
+                        "meeting in an IRC chat room.\n" +
+                        "You need to define your IRC nickname and later in the trade process you can find your " +
+                        "trading partner with his IRC nickname in the chat room and simulate the bank transfer " +
+                        "activities, which are:\n\n" +
+                        "1. Bitcoin buyer indicates that he has started the bank transfer.\n\n" +
+                        "2. Bitcoin seller confirms that he has received the national currency from the " +
+                        "bank transfer."));
     }
 
     @SuppressWarnings("EmptyMethod")

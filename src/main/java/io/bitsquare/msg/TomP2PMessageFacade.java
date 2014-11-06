@@ -30,8 +30,6 @@ import io.bitsquare.network.tomp2p.TomP2PPeer;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.user.User;
 
-import com.google.common.util.concurrent.FutureCallback;
-
 import java.io.IOException;
 
 import java.security.PublicKey;
@@ -40,8 +38,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.annotation.Nullable;
 
 import javax.inject.Inject;
 
@@ -52,7 +48,6 @@ import javafx.beans.property.SimpleLongProperty;
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
 import net.tomp2p.dht.FutureRemove;
-import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.futures.BaseFuture;
 import net.tomp2p.futures.BaseFutureAdapter;
 import net.tomp2p.futures.BaseFutureListener;
@@ -62,10 +57,9 @@ import net.tomp2p.peers.Number640;
 import net.tomp2p.storage.Data;
 import net.tomp2p.utils.Utils;
 
-import org.jetbrains.annotations.NotNull;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * That facade delivers direct messaging and DHT functionality from the TomP2P library
@@ -107,19 +101,7 @@ class TomP2PMessageFacade implements MessageFacade {
         p2pNode.setMessageBroker(this);
         p2pNode.setKeyPair(user.getMessageKeyPair());
 
-        p2pNode.start(port, new FutureCallback<PeerDHT>() {
-            @Override
-            public void onSuccess(@Nullable PeerDHT result) {
-                log.debug("p2pNode.start success result = " + result);
-                Platform.runLater(bootstrapListener::onCompleted);
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable t) {
-                log.error(t.toString());
-                Platform.runLater(() -> bootstrapListener.onFailed(t));
-            }
-        });
+        p2pNode.start(port, bootstrapListener);
     }
 
     public void shutDown() {
@@ -244,7 +226,7 @@ class TomP2PMessageFacade implements MessageFacade {
                                     if (offerDataObject instanceof Offer) {
                                         log.trace("Remove offer from DHT was successful. Removed data: [key: " +
                                                 locationKey + ", " +
-                                                "offer: " + (Offer) offerDataObject + "]");
+                                                "offer: " + offerDataObject + "]");
                                         offerBookListener.onOfferRemoved((Offer) offerDataObject);
                                     }
                                 } catch (ClassNotFoundException | IOException e) {
@@ -537,8 +519,8 @@ class TomP2PMessageFacade implements MessageFacade {
                             invalidationTimestamp.set(timeStamp);
                         });
                     }
-                    else {
-                        //log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
+                    else if (data != null) {
+                        log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
                     }
                 }
                 else if (getFuture.data() == null) {

@@ -38,13 +38,13 @@ public class ArbitratorProfileViewCB extends CachedViewCB {
     private final Settings settings;
 
     private final Persistence persistence;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
 
 
     @FXML Label nameLabel;
     @FXML TextField nameTextField, languagesTextField, reputationTextField,
-            feeTextField, methodsTextField,
-            idVerificationsTextField, webPageTextField;
+            feeTextField, methodsTextField, passiveServiceFeeTextField,
+            idVerificationsTextField, webPageTextField, maxTradeVolumeTextField;
     @FXML TextArea descriptionTextArea;
 
 

@@ -77,6 +77,8 @@ import javax.inject.Named;
 import javafx.application.Platform;
 import javafx.util.Pair;
 
+import org.jetbrains.annotations.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -186,7 +188,7 @@ public class WalletFacade {
 
         walletAppKit.addListener(new Service.Listener() {
             @Override
-            public void failed(Service.State from, Throwable failure) {
+            public void failed(@NotNull Service.State from, @NotNull Throwable failure) {
                 walletAppKit = null;
                 // TODO show error popup
                 //crashAlert(failure);

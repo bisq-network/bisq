@@ -460,7 +460,7 @@ public class Notification {
             return onNotificationPressedProperty().get();
         }
 
-        private ObjectProperty<EventHandler<NotificationEvent>> onNotificationPressed = new
+        private final ObjectProperty<EventHandler<NotificationEvent>> onNotificationPressed = new
                 ObjectPropertyBase<EventHandler<NotificationEvent>>() {
                     @Override
                     public Object getBean() {
@@ -485,7 +485,7 @@ public class Notification {
             return onShowNotificationProperty().get();
         }
 
-        private ObjectProperty<EventHandler<NotificationEvent>> onShowNotification = new
+        private final ObjectProperty<EventHandler<NotificationEvent>> onShowNotification = new
                 ObjectPropertyBase<EventHandler<NotificationEvent>>() {
                     @Override
                     public Object getBean() {
@@ -510,7 +510,7 @@ public class Notification {
             return onHideNotificationProperty().get();
         }
 
-        private ObjectProperty<EventHandler<NotificationEvent>> onHideNotification = new
+        private final ObjectProperty<EventHandler<NotificationEvent>> onHideNotification = new
                 ObjectPropertyBase<EventHandler<NotificationEvent>>() {
                     @Override
                     public Object getBean() {

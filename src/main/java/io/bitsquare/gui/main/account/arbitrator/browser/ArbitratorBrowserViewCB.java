@@ -53,7 +53,7 @@ public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorL
 
     private final Settings settings;
     private final Persistence persistence;
-    private MessageFacade messageFacade;
+    private final MessageFacade messageFacade;
 
     private final List<Arbitrator> allArbitrators = new ArrayList<>();
     private Arbitrator currentArbitrator;

@@ -64,7 +64,7 @@ public class WithdrawalViewCB extends CachedViewCB {
 
 
     private final WalletFacade walletFacade;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
     private final ObservableList<WithdrawalListItem> addressList = FXCollections.observableArrayList();
 
     @FXML TableView<WithdrawalListItem> table;

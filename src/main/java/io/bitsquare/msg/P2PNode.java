@@ -17,6 +17,7 @@
 
 package io.bitsquare.msg;
 
+import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.network.tomp2p.TomP2PPeer;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -37,6 +38,8 @@ import java.util.TimerTask;
 import javax.annotation.Nullable;
 
 import javax.inject.Inject;
+
+import javafx.application.Platform;
 
 import net.tomp2p.connection.DSASignatureFactory;
 import net.tomp2p.connection.PeerConnection;
@@ -117,14 +120,29 @@ public class P2PNode {
         bootstrappedPeerFactory.setKeyPair(keyPair);
     }
 
-    public void start(int port, FutureCallback<PeerDHT> callback) {
+    public void start(int port, BootstrapListener bootstrapListener) {
         useDiscStorage(useDiskStorage);
 
         bootstrappedPeerFactory.setStorage(storage);
         setupTimerForIPCheck();
 
         ListenableFuture<PeerDHT> bootstrapComplete = bootstrap(port);
-        Futures.addCallback(bootstrapComplete, callback);
+        Futures.addCallback(bootstrapComplete, new FutureCallback<PeerDHT>() {
+            @Override
+            public void onSuccess(@Nullable PeerDHT result) {
+                log.debug("p2pNode.start success result = " + result);
+                Platform.runLater(bootstrapListener::onCompleted);
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable t) {
+                log.error(t.toString());
+                Platform.runLater(() -> bootstrapListener.onFailed(t));
+            }
+        });
+
+        bootstrappedPeerFactory.bootstrapState.addListener((ov, oldValue, newValue) ->
+                bootstrapListener.onBootstrapStateChanged(newValue));
     }
 
 

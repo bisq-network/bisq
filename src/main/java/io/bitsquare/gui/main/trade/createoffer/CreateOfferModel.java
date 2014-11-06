@@ -70,8 +70,8 @@ class CreateOfferModel extends UIModel {
     private final WalletFacade walletFacade;
     private final Settings settings;
     private final User user;
-    private Persistence persistence;
-    private BSFormatter formatter;
+    private final Persistence persistence;
+    private final BSFormatter formatter;
 
     private final String offerId;
 

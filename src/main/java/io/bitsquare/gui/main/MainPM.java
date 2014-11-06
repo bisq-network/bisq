@@ -42,14 +42,16 @@ import org.slf4j.LoggerFactory;
 class MainPM extends PresentationModel<MainModel> {
     private static final Logger log = LoggerFactory.getLogger(MainPM.class);
 
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
 
     final BooleanProperty backendReady = new SimpleBooleanProperty();
     final StringProperty bankAccountsComboBoxPrompt = new SimpleStringProperty();
     final BooleanProperty bankAccountsComboBoxDisable = new SimpleBooleanProperty();
-    final StringProperty splashScreenInfoText = new SimpleStringProperty();
+    final StringProperty bootstrapState = new SimpleStringProperty();
+    final StringProperty bitcoinSyncState = new SimpleStringProperty("Initializing");
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty();
     final DoubleProperty networkSyncProgress = new SimpleDoubleProperty();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -61,10 +63,10 @@ class MainPM extends PresentationModel<MainModel> {
         this.formatter = formatter;
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
+
 
     @SuppressWarnings("EmptyMethod")
     @Override
@@ -75,16 +77,13 @@ class MainPM extends PresentationModel<MainModel> {
         networkSyncProgress.bind(model.networkSyncProgress);
         numPendingTrades.bind(model.numPendingTrades);
 
-        model.networkSyncProgress.addListener((ov, oldValue, newValue) -> {
-            if ((double) newValue > 0.0)
-                splashScreenInfoText.set("Synchronise with network " + formatter.formatToPercent((double)
-                        newValue));
-            else if ((double) newValue == 1)
-                splashScreenInfoText.set("Synchronise with network completed.");
-            else
-                splashScreenInfoText.set("Synchronise with network...");
-        });
-        splashScreenInfoText.set("Synchronise with network...");
+        model.bootstrapState.addListener((ov, oldValue, newValue) ->
+                bootstrapState.set("Connection to P2P network: " + newValue));
+
+        bootstrapState.set(model.bootstrapState.get());
+
+        model.networkSyncProgress.addListener((ov, oldValue, newValue) -> updateBitcoinSyncState((double) newValue));
+        updateBitcoinSyncState(model.networkSyncProgress.get());
 
         model.getBankAccounts().addListener((ListChangeListener<BankAccount>) change -> {
             bankAccountsComboBoxDisable.set(change.getList().isEmpty());
@@ -143,6 +142,21 @@ class MainPM extends PresentationModel<MainModel> {
                 return null;
             }
         };
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void updateBitcoinSyncState(double value) {
+        if (value > 0.0)
+            bitcoinSyncState.set("Synchronizing with bitcoin network: " +
+                    formatter.formatToPercent(value));
+        else if (value == 1)
+            bitcoinSyncState.set("Synchronizing with bitcoin network completed.");
+        else
+            bitcoinSyncState.set("Synchronizing with bitcoin network...");
     }
 
 }

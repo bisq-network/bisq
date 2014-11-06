@@ -33,13 +33,13 @@ optional arguments:
  */
 public class ArgumentParser {
 
-    public static String PEER_ID_FLAG = "peerid";
-    public static String PORT_FLAG = "port";
-    public static String INTERFACE_HINT_FLAG = "interface";
-    public static String NAME_FLAG = "name";
+    public static final String PEER_ID_FLAG = "peerid";
+    public static final String PORT_FLAG = "port";
+    public static final String INTERFACE_HINT_FLAG = "interface";
+    public static final String NAME_FLAG = "name";
 
-    public static Integer PORT_DEFAULT = 5000;
-    public static String PEER_ID_DEFAULT = BootstrapNode.DIGITAL_OCEAN1.getId();
+    private static final Integer PORT_DEFAULT = 5000;
+    private static final String PEER_ID_DEFAULT = BootstrapNode.DIGITAL_OCEAN1.getId();
 
     private final net.sourceforge.argparse4j.inf.ArgumentParser parser;
 
