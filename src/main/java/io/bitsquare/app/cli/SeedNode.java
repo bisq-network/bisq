@@ -62,7 +62,7 @@ public class SeedNode {
         }
 
         final Set<PeerAddress> peerAddresses = new HashSet<>();
-        for (Node node : BootstrapNode.values()) {
+        for (Node node : BootstrapNode.all()) {
             if (!node.getId().equals(seedID)) {
                 try {
                     peerAddresses.add(new PeerAddress(Number160.createHash(node.getId()), node.getIp(),

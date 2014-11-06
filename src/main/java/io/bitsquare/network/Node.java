@@ -17,21 +17,66 @@
 
 package io.bitsquare.network;
 
-public interface Node {
+import com.google.common.base.Objects;
 
+public final class Node {
     public static final int DEFAULT_PORT = 5000;
 
-    String getId();
+    private final String id;
+    private final String ip;
+    private final int port;
 
-    String getIp();
+    private Node(String id, String ip, int port) {
+        this.id = id;
+        this.ip = ip;
+        this.port = port;
+    }
 
-    int getPort();
-
-    static Node at(String id, String ip) {
+    public static Node at(String id, String ip) {
         return Node.at(id, ip, DEFAULT_PORT);
     }
 
-    static Node at(String id, String ip, int port) {
-        return new NodeImpl(id, ip, port);
+    public static Node at(String id, String ip, int port) {
+        return new Node(id, ip, port);
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object)
+            return true;
+
+        if (object == null || getClass() != object.getClass())
+            return false;
+
+        Node that = (Node) object;
+        return Objects.equal(this.id, that.id) &&
+                Objects.equal(this.ip, that.ip) &&
+                Objects.equal(this.port, that.port);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id, ip, port);
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(Node.class.getSimpleName())
+                .add("id", id)
+                .add("ip", ip)
+                .add("port", port)
+                .toString();
     }
 }
