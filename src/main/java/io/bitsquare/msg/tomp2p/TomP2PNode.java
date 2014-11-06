@@ -67,7 +67,7 @@ import org.slf4j.LoggerFactory;
 
 import lighthouse.files.AppDirectory;
 
-import static io.bitsquare.network.tomp2p.BaseFutureUtil.isSuccess;
+import static io.bitsquare.util.tomp2p.BaseFutureUtil.isSuccess;
 
 /**
  * The fully bootstrapped P2PNode which is responsible himself for his availability in the messaging system. It saves

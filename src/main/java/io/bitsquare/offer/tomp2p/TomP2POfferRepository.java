@@ -48,7 +48,7 @@ import net.tomp2p.storage.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.network.tomp2p.BaseFutureUtil.isSuccess;
+import static io.bitsquare.util.tomp2p.BaseFutureUtil.isSuccess;
 
 class TomP2POfferRepository implements OfferRepository {
 
