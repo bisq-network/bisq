@@ -19,6 +19,7 @@ package io.bitsquare.msg;
 
 import io.bitsquare.network.BootstrapNode;
 import io.bitsquare.network.Node;
+import io.bitsquare.util.Repeat;
 
 import java.io.IOException;
 
@@ -100,8 +101,8 @@ public class TomP2PTests {
     // Need to observe if it can have some side effects.
     private static final boolean CACHE_CLIENTS = true;
 
-    // Use that to stress test with repeated run of the test method body
-    private static final int STRESS_TEST_LOOP_COUNT = 1;
+    // Use to stress tests by repeating them
+    private static final int STRESS_TEST_COUNT = 1;
 
     // need to be static to keep them during tests
     private final static Map<String, Peer> cachedPeers = new HashMap<>();
@@ -113,13 +114,13 @@ public class TomP2PTests {
     private ConnectionType resolvedConnectionType;
 
     @Before
-    public void configure() {
+    public void setUp() {
         client1Port = getNewRandomPort();
         client2Port = getNewRandomPort();
     }
 
     @After
-    public void shutdown() {
+    public void tearDown() {
         if (!CACHE_CLIENTS) {
             if (peer1DHT != null)
                 peer1DHT.shutdown().awaitUninterruptibly();
@@ -129,171 +130,134 @@ public class TomP2PTests {
     }
 
     @Test
+    @Repeat(STRESS_TEST_COUNT)
     public void bootstrapInUnknownMode() throws Exception {
-        for (int i = 0; i < STRESS_TEST_LOOP_COUNT; i++) {
-            configure();
-            if (FORCED_CONNECTION_TYPE == ConnectionType.UNKNOWN)
-                assertNotNull(bootstrapInUnknownMode("node_1", client1Port));
-
-            shutdown();
-        }
+        if (FORCED_CONNECTION_TYPE == ConnectionType.UNKNOWN)
+            assertNotNull(bootstrapInUnknownMode("node_1", client1Port));
     }
 
     @Test
+    @Repeat(STRESS_TEST_COUNT)
     public void testBootstrapDirectConnection() throws Exception {
-        for (int i = 0; i < STRESS_TEST_LOOP_COUNT; i++) {
-            configure();
-            if (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT)
-                assertNotNull(bootstrapDirectConnection("node_1", client1Port));
-
-            shutdown();
-        }
+        if (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT)
+            assertNotNull(bootstrapDirectConnection("node_1", client1Port));
     }
 
     @Test
+    @Repeat(STRESS_TEST_COUNT)
     public void testBootstrapWithPortForwarding() throws Exception {
-        for (int i = 0; i < STRESS_TEST_LOOP_COUNT; i++) {
-            configure();
-            if (FORCED_CONNECTION_TYPE == ConnectionType.NAT)
-                assertNotNull(bootstrapWithPortForwarding("node_1", client1Port));
-
-            shutdown();
-        }
+        if (FORCED_CONNECTION_TYPE == ConnectionType.NAT)
+            assertNotNull(bootstrapWithPortForwarding("node_1", client1Port));
     }
 
     @Test
+    @Repeat(STRESS_TEST_COUNT)
     public void testBootstrapInRelayMode() throws Exception {
-        for (int i = 0; i < STRESS_TEST_LOOP_COUNT; i++) {
-            configure();
             if (FORCED_CONNECTION_TYPE == ConnectionType.RELAY)
                 assertNotNull(bootstrapInRelayMode("node_1", client1Port));
-
-            shutdown();
-        }
     }
 
     @Test
+    @Repeat(STRESS_TEST_COUNT)
     public void testPut() throws Exception {
-        for (int i = 0; i < STRESS_TEST_LOOP_COUNT; i++) {
-            configure();
-
             peer1DHT = getDHTPeer("node_1", client1Port);
             FuturePut futurePut = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo")).start();
             futurePut.awaitUninterruptibly();
             if (shouldEvaluateSuccess())
                 assertTrue(futurePut.isSuccess());
-
-            shutdown();
-        }
     }
 
     @Test
+    @Repeat(STRESS_TEST_COUNT)
     public void testPutGet() throws Exception {
-        for (int i = 0; i < STRESS_TEST_LOOP_COUNT; i++) {
-            configure();
-            peer1DHT = getDHTPeer("node_1", client1Port);
-            FuturePut futurePut = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo")).start();
-            futurePut.awaitUninterruptibly();
-            if (shouldEvaluateSuccess())
-                assertTrue(futurePut.isSuccess());
+        peer1DHT = getDHTPeer("node_1", client1Port);
+        FuturePut futurePut = peer1DHT.put(Number160.createHash("key")).data(new Data("hallo")).start();
+        futurePut.awaitUninterruptibly();
+        if (shouldEvaluateSuccess())
+            assertTrue(futurePut.isSuccess());
 
 
-            peer2DHT = getDHTPeer("node_2", client2Port);
-            FutureGet futureGet = peer2DHT.get(Number160.createHash("key")).start();
-            futureGet.awaitUninterruptibly();
-            if (shouldEvaluateSuccess())
-                assertTrue(futureGet.isSuccess());
-            assertEquals("hallo", futureGet.data().object());
-
-            shutdown();
-        }
+        peer2DHT = getDHTPeer("node_2", client2Port);
+        FutureGet futureGet = peer2DHT.get(Number160.createHash("key")).start();
+        futureGet.awaitUninterruptibly();
+        if (shouldEvaluateSuccess())
+            assertTrue(futureGet.isSuccess());
+        assertEquals("hallo", futureGet.data().object());
     }
 
     @Test
+    @Repeat(STRESS_TEST_COUNT)
     public void testAdd() throws Exception {
-        for (int i = 0; i < STRESS_TEST_LOOP_COUNT; i++) {
-            configure();
-            peer1DHT = getDHTPeer("node_1", client1Port);
-            FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
-            futurePut1.awaitUninterruptibly();
-            if (shouldEvaluateSuccess())
-                assertTrue(futurePut1.isSuccess());
+        peer1DHT = getDHTPeer("node_1", client1Port);
+        FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
+        futurePut1.awaitUninterruptibly();
+        if (shouldEvaluateSuccess())
+            assertTrue(futurePut1.isSuccess());
 
-            FuturePut futurePut2 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo2")).start();
-            futurePut2.awaitUninterruptibly();
-            if (shouldEvaluateSuccess())
-                assertTrue(futurePut2.isSuccess());
-
-            shutdown();
-        }
+        FuturePut futurePut2 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo2")).start();
+        futurePut2.awaitUninterruptibly();
+        if (shouldEvaluateSuccess())
+            assertTrue(futurePut2.isSuccess());
     }
 
     @Test
+    @Repeat(STRESS_TEST_COUNT)
     public void testAddGet() throws Exception {
-        for (int i = 0; i < STRESS_TEST_LOOP_COUNT; i++) {
-            configure();
-            peer1DHT = getDHTPeer("node_1", client1Port);
-            FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
-            futurePut1.awaitUninterruptibly();
-            if (shouldEvaluateSuccess())
-                assertTrue(futurePut1.isSuccess());
+        peer1DHT = getDHTPeer("node_1", client1Port);
+        FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
+        futurePut1.awaitUninterruptibly();
+        if (shouldEvaluateSuccess())
+            assertTrue(futurePut1.isSuccess());
 
-            FuturePut futurePut2 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo2")).start();
-            futurePut2.awaitUninterruptibly();
-            if (shouldEvaluateSuccess())
-                assertTrue(futurePut2.isSuccess());
+        FuturePut futurePut2 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo2")).start();
+        futurePut2.awaitUninterruptibly();
+        if (shouldEvaluateSuccess())
+            assertTrue(futurePut2.isSuccess());
 
 
-            peer2DHT = getDHTPeer("node_2", client2Port);
-            FutureGet futureGet = peer2DHT.get(Number160.createHash("locationKey")).all().start();
-            futureGet.awaitUninterruptibly();
-            if (shouldEvaluateSuccess())
-                assertTrue(futureGet.isSuccess());
+        peer2DHT = getDHTPeer("node_2", client2Port);
+        FutureGet futureGet = peer2DHT.get(Number160.createHash("locationKey")).all().start();
+        futureGet.awaitUninterruptibly();
+        if (shouldEvaluateSuccess())
+            assertTrue(futureGet.isSuccess());
 
-            assertTrue(futureGet.dataMap().values().contains(new Data("hallo1")));
-            assertTrue(futureGet.dataMap().values().contains(new Data("hallo2")));
-            assertTrue(futureGet.dataMap().values().size() == 2);
-
-            shutdown();
-        }
+        assertTrue(futureGet.dataMap().values().contains(new Data("hallo1")));
+        assertTrue(futureGet.dataMap().values().contains(new Data("hallo2")));
+        assertTrue(futureGet.dataMap().values().size() == 2);
     }
 
     @Test
+    @Repeat(STRESS_TEST_COUNT)
     public void testAddRemove() throws Exception {
-        for (int i = 0; i < STRESS_TEST_LOOP_COUNT; i++) {
-            configure();
-            peer1DHT = getDHTPeer("node_1", client1Port);
-            FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
-            futurePut1.awaitUninterruptibly();
-            if (shouldEvaluateSuccess())
-                assertTrue(futurePut1.isSuccess());
+        peer1DHT = getDHTPeer("node_1", client1Port);
+        FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
+        futurePut1.awaitUninterruptibly();
+        if (shouldEvaluateSuccess())
+            assertTrue(futurePut1.isSuccess());
 
-            FuturePut futurePut2 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo2")).start();
-            futurePut2.awaitUninterruptibly();
-            if (shouldEvaluateSuccess())
-                assertTrue(futurePut2.isSuccess());
+        FuturePut futurePut2 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo2")).start();
+        futurePut2.awaitUninterruptibly();
+        if (shouldEvaluateSuccess())
+            assertTrue(futurePut2.isSuccess());
 
 
-            peer2DHT = getDHTPeer("node_2", client2Port);
-            Number160 contentKey = new Data("hallo1").hash();
-            FutureRemove futureRemove = peer2DHT.remove(Number160.createHash("locationKey")).contentKey(contentKey)
-                    .start();
-            futureRemove.awaitUninterruptibly();
+        peer2DHT = getDHTPeer("node_2", client2Port);
+        Number160 contentKey = new Data("hallo1").hash();
+        FutureRemove futureRemove = peer2DHT.remove(Number160.createHash("locationKey")).contentKey(contentKey)
+                .start();
+        futureRemove.awaitUninterruptibly();
 
-            // That fails sometimes in direct mode and NAT
-            if (shouldEvaluateSuccess())
-                assertTrue(futureRemove.isSuccess());
+        // That fails sometimes in direct mode and NAT
+        if (shouldEvaluateSuccess())
+            assertTrue(futureRemove.isSuccess());
 
-            FutureGet futureGet = peer2DHT.get(Number160.createHash("locationKey")).all().start();
-            futureGet.awaitUninterruptibly();
-            if (shouldEvaluateSuccess())
-                assertTrue(futureGet.isSuccess());
+        FutureGet futureGet = peer2DHT.get(Number160.createHash("locationKey")).all().start();
+        futureGet.awaitUninterruptibly();
+        if (shouldEvaluateSuccess())
+            assertTrue(futureGet.isSuccess());
 
-            assertTrue(futureGet.dataMap().values().contains(new Data("hallo2")));
-            assertTrue(futureGet.dataMap().values().size() == 1);
-
-            shutdown();
-        }
+        assertTrue(futureGet.dataMap().values().contains(new Data("hallo2")));
+        assertTrue(futureGet.dataMap().values().size() == 1);
     }
 
 
@@ -301,58 +265,50 @@ public class TomP2PTests {
     // So if both clients are behind NAT they cannot send direct message to each other.
     // That will probably be fixed in a future version of TomP2P
     @Test
+    @Repeat(STRESS_TEST_COUNT)
     public void testSendDirectBetweenLocalPeers() throws Exception {
-        for (int i = 0; i < STRESS_TEST_LOOP_COUNT; i++) {
-            configure();
-            if (FORCED_CONNECTION_TYPE != ConnectionType.NAT && resolvedConnectionType != ConnectionType.NAT) {
-                peer1DHT = getDHTPeer("node_1", client1Port);
-                peer2DHT = getDHTPeer("node_2", client2Port);
+        if (FORCED_CONNECTION_TYPE != ConnectionType.NAT && resolvedConnectionType != ConnectionType.NAT) {
+            peer1DHT = getDHTPeer("node_1", client1Port);
+            peer2DHT = getDHTPeer("node_2", client2Port);
 
-                final CountDownLatch countDownLatch = new CountDownLatch(1);
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
 
-                final StringBuilder result = new StringBuilder();
-                peer2DHT.peer().objectDataReply((sender, request) -> {
-                    countDownLatch.countDown();
-                    result.append(String.valueOf(request));
-                    return "pong";
-                });
-                FuturePeerConnection futurePeerConnection = peer1DHT.peer().createPeerConnection(peer2DHT.peer()
-                        .peerAddress(), 500);
-                FutureDirect futureDirect = peer1DHT.peer().sendDirect(futurePeerConnection).object("hallo").start();
-                futureDirect.awaitUninterruptibly();
+            final StringBuilder result = new StringBuilder();
+            peer2DHT.peer().objectDataReply((sender, request) -> {
+                countDownLatch.countDown();
+                result.append(String.valueOf(request));
+                return "pong";
+            });
+            FuturePeerConnection futurePeerConnection = peer1DHT.peer().createPeerConnection(peer2DHT.peer()
+                    .peerAddress(), 500);
+            FutureDirect futureDirect = peer1DHT.peer().sendDirect(futurePeerConnection).object("hallo").start();
+            futureDirect.awaitUninterruptibly();
 
 
-                countDownLatch.await(3, TimeUnit.SECONDS);
-                if (countDownLatch.getCount() > 0)
-                    Assert.fail("The test method did not complete successfully!");
+            countDownLatch.await(3, TimeUnit.SECONDS);
+            if (countDownLatch.getCount() > 0)
+                Assert.fail("The test method did not complete successfully!");
 
-                assertEquals("hallo", result.toString());
-                assertTrue(futureDirect.isSuccess());
-                log.debug(futureDirect.object().toString());
-                assertEquals("pong", futureDirect.object());
-            }
-
-            shutdown();
+            assertEquals("hallo", result.toString());
+            assertTrue(futureDirect.isSuccess());
+            log.debug(futureDirect.object().toString());
+            assertEquals("pong", futureDirect.object());
         }
     }
 
     // That test should always succeed as we use the server seed node as receiver.
     // A node can send a message to another peer which is not in the same LAN.
     @Test
+    @Repeat(STRESS_TEST_COUNT)
     public void testSendDirectToSeedNode() throws Exception {
-        for (int i = 0; i < STRESS_TEST_LOOP_COUNT; i++) {
-            configure();
-            peer1DHT = getDHTPeer("node_1", client1Port);
+        peer1DHT = getDHTPeer("node_1", client1Port);
 
-            FuturePeerConnection futurePeerConnection =
-                    peer1DHT.peer().createPeerConnection(BOOTSTRAP_NODE_ADDRESS, 500);
-            FutureDirect futureDirect = peer1DHT.peer().sendDirect(futurePeerConnection).object("hallo").start();
-            futureDirect.awaitUninterruptibly();
-            assertTrue(futureDirect.isSuccess());
-            assertEquals("pong", futureDirect.object());
-
-            shutdown();
-        }
+        FuturePeerConnection futurePeerConnection =
+                peer1DHT.peer().createPeerConnection(BOOTSTRAP_NODE_ADDRESS, 500);
+        FutureDirect futureDirect = peer1DHT.peer().sendDirect(futurePeerConnection).object("hallo").start();
+        futureDirect.awaitUninterruptibly();
+        assertTrue(futureDirect.isSuccess());
+        assertEquals("pong", futureDirect.object());
     }
 
 
