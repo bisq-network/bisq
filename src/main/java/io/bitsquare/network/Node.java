@@ -27,5 +27,11 @@ public interface Node {
 
     int getPort();
 
-}
+    static Node at(String id, String ip) {
+        return Node.at(id, ip, DEFAULT_PORT);
+    }
 
+    static Node at(String id, String ip, int port) {
+        return new NodeImpl(id, ip, port);
+    }
+}
