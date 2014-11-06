@@ -17,11 +17,11 @@
 
 package io.bitsquare.offer;
 
-import io.bitsquare.AbstractBitsquareModule;
+import io.bitsquare.BitsquareModule;
 
 import java.util.Properties;
 
-public abstract class OfferModule extends AbstractBitsquareModule {
+public abstract class OfferModule extends BitsquareModule {
 
     protected OfferModule(Properties properties) {
         super(properties);

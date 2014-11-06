@@ -17,11 +17,11 @@
 
 package io.bitsquare.crypto;
 
-import io.bitsquare.AbstractBitsquareModule;
+import io.bitsquare.BitsquareModule;
 
 import java.util.Properties;
 
-public class CryptoModule extends AbstractBitsquareModule {
+public class CryptoModule extends BitsquareModule {
 
     public CryptoModule(Properties properties) {
         super(properties);

@@ -17,11 +17,11 @@
 
 package io.bitsquare.trade;
 
-import io.bitsquare.AbstractBitsquareModule;
+import io.bitsquare.BitsquareModule;
 
 import java.util.Properties;
 
-public class TradeModule extends AbstractBitsquareModule {
+public class TradeModule extends BitsquareModule {
 
     public TradeModule(Properties properties) {
         super(properties);

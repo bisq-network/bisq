@@ -17,7 +17,7 @@
 
 package io.bitsquare.app;
 
-import io.bitsquare.AbstractBitsquareModule;
+import io.bitsquare.BitsquareModule;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.crypto.CryptoModule;
 import io.bitsquare.msg.MessageModule;
@@ -45,7 +45,7 @@ import scala.concurrent.duration.Duration;
 /**
  * Configures all non-UI modules necessary to run a Bitsquare application.
  */
-public class AppModule extends AbstractBitsquareModule {
+public class AppModule extends BitsquareModule {
     private static final Logger log = LoggerFactory.getLogger(AppModule.class);
 
     private final String appName;

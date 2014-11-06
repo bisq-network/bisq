@@ -17,14 +17,14 @@
 
 package io.bitsquare.app.gui;
 
-import io.bitsquare.AbstractBitsquareModule;
+import io.bitsquare.BitsquareModule;
 import io.bitsquare.app.AppModule;
 import io.bitsquare.gui.GuiModule;
 import io.bitsquare.util.ConfigLoader;
 
 import javafx.stage.Stage;
 
-class MainModule extends AbstractBitsquareModule {
+class MainModule extends BitsquareModule {
 
     private final String appName;
     private final Stage primaryStage;

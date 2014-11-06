@@ -17,7 +17,7 @@
 
 package io.bitsquare.msg;
 
-import io.bitsquare.AbstractBitsquareModule;
+import io.bitsquare.BitsquareModule;
 import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
 
@@ -26,7 +26,7 @@ import com.google.inject.name.Names;
 
 import java.util.Properties;
 
-public abstract class MessageModule extends AbstractBitsquareModule {
+public abstract class MessageModule extends BitsquareModule {
 
     protected MessageModule(Properties properties) {
         super(properties);
