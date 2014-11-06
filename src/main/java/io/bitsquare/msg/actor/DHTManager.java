@@ -52,14 +52,12 @@ public class DHTManager extends AbstractActor {
         return Props.create(DHTManager.class);
     }
 
-    private Bindings bindings;
-    private Peer peer;
     private PeerDHT peerDHT;
     private PeerNAT peerNAT;
 
     public DHTManager() {
         receive(ReceiveBuilder
-                        .match(InitializePeer.class, initializePeer -> doInitializePeer(initializePeer))
+                        .match(InitializePeer.class, this::doInitializePeer)
                         .matchAny(o -> log.info("received unknown message")).build()
         );
     }
@@ -68,7 +66,7 @@ public class DHTManager extends AbstractActor {
         log.debug("Received message: {}", initializePeer);
 
         try {
-            bindings = new Bindings();
+            Bindings bindings = new Bindings();
 
             // TODO: @Steve: Is that needed that we restrict to IP4?
             // bindings.addProtocol(StandardProtocolFamily.INET); 
@@ -77,8 +75,12 @@ public class DHTManager extends AbstractActor {
                 bindings.addInterface(initializePeer.getInterfaceHint());
             }
 
-            peer = new PeerBuilder(initializePeer.getPeerId()).ports(initializePeer.getPort()).bindings(bindings)
+            Peer peer = new PeerBuilder(initializePeer.getPeerId()).ports(initializePeer.getPort()).bindings(bindings)
                     .start();
+            peer.objectDataReply((sender, request) -> {
+                log.debug("received request: ", request.toString());
+                return "pong";
+            });
 
             // For the moment we want not to bootstrap to other seed nodes to keep test scenarios
             // simple
@@ -110,9 +112,7 @@ public class DHTManager extends AbstractActor {
 
             sender().tell(new PeerInitialized(peer.peerID(), initializePeer.getPort()), self());
         } catch (Throwable t) {
-            log.info("The second instance has been started. If that happens at the first instance" +
-                    " we are in trouble... " + t.getMessage());
-            sender().tell(new PeerInitialized(null, null), self());
+            log.error(t.getMessage());
         }
     }
 

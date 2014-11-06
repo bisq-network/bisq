@@ -57,7 +57,7 @@ class TakeOfferModel extends UIModel {
     private final TradeManager tradeManager;
     private final WalletFacade walletFacade;
     private final Settings settings;
-    private Persistence persistence;
+    private final Persistence persistence;
 
     private Offer offer;
     private AddressEntry addressEntry;

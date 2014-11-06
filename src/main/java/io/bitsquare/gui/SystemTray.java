@@ -38,8 +38,8 @@ public class SystemTray {
     private static final String ICON_HI_RES = "/images/system_tray_icon@2x.png";
     private static final String ICON_LO_RES = "/images/system_tray_icon.png";
 
-    public static final String SHOW_WINDOW_LABEL = "Show exchange window";
-    public static final String HIDE_WINDOW_LABEL = "Hide exchange window";
+    private static final String SHOW_WINDOW_LABEL = "Show exchange window";
+    private static final String HIDE_WINDOW_LABEL = "Hide exchange window";
 
     private final Stage stage;
     private final Runnable onExit;

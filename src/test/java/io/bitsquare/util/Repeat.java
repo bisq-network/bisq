@@ -15,8 +15,24 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.btc;
+package io.bitsquare.util;
 
-public enum BitcoinNetwork {
-    MAINNET, TESTNET, REGTEST
+import java.lang.annotation.ElementType;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * Method-level annotation to be used in connection with {@link RepeatRule} to cause a
+ * given {@link org.junit.Test} method to be repeated a specified number of times.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Repeat {
+
+    /**
+     * Specifies the number of times to repeat the annotated {@link org.junit.Test}.
+     */
+    int value();
 }

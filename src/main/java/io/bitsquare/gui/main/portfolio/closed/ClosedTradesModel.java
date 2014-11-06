@@ -37,7 +37,7 @@ class ClosedTradesModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradesModel.class);
 
     private final TradeManager tradeManager;
-    private User user;
+    private final User user;
 
     private final ObservableList<ClosedTradesListItem> list = FXCollections.observableArrayList();
     private MapChangeListener<String, Trade> mapChangeListener;

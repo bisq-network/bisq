@@ -57,7 +57,7 @@ class OfferBookModel extends UIModel {
     private final User user;
     private final OfferBook offerBook;
     private final Settings settings;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
     private final TradeManager tradeManager;
 
     private final FilteredList<OfferBookListItem> filteredItems;

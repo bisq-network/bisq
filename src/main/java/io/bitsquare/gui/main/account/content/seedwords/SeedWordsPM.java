@@ -32,7 +32,7 @@ class SeedWordsPM extends PresentationModel<SeedWordsModel> {
     private static final Logger log = LoggerFactory.getLogger(SeedWordsPM.class);
 
     final StringProperty seedWords = new SimpleStringProperty();
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

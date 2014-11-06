@@ -47,7 +47,7 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
 
     // That is needed for the addressTextField
     final ObjectProperty<Address> address = new SimpleObjectProperty<>();
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

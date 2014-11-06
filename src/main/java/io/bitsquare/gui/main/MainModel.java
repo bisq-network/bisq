@@ -23,6 +23,7 @@ import io.bitsquare.gui.UIModel;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.BootstrapListener;
+import io.bitsquare.network.BootstrapState;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -44,6 +45,8 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 
@@ -62,11 +65,13 @@ class MainModel extends UIModel {
 
     private boolean messageFacadeInited;
     private boolean walletFacadeInited;
+    private boolean facadesInitialised;
 
     final BooleanProperty backendReady = new SimpleBooleanProperty();
     final DoubleProperty networkSyncProgress = new SimpleDoubleProperty(-1);
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty(0);
-    private boolean facadesInitialised;
+    final StringProperty bootstrapState = new SimpleStringProperty();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -121,6 +126,11 @@ class MainModel extends UIModel {
             @Override
             public void onFailed(Throwable throwable) {
                 log.error(throwable.toString());
+            }
+
+            @Override
+            public void onBootstrapStateChanged(BootstrapState bootstrapState) {
+                MainModel.this.bootstrapState.set(bootstrapState.getMessage());
             }
         });
 

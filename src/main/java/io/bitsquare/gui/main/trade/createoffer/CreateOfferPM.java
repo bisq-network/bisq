@@ -50,7 +50,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferPM.class);
 
     private final BtcValidator btcValidator;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
     private final FiatValidator fiatValidator;
 
     final StringProperty amount = new SimpleStringProperty();

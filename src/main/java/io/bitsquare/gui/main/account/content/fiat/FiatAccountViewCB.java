@@ -68,7 +68,7 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
     @FXML ComboBox<BankAccount> selectionComboBox;
     @FXML ComboBox<BankAccountType> typesComboBox;
     @FXML ComboBox<Currency> currencyComboBox;
-    private OverlayManager overlayManager;
+    private final OverlayManager overlayManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

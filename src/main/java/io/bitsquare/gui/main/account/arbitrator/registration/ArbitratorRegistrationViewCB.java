@@ -68,7 +68,7 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
     private final WalletFacade walletFacade;
     private final MessageFacade messageFacade;
     private final User user;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
     private Arbitrator arbitrator = new Arbitrator();
     private boolean isEditMode;
 

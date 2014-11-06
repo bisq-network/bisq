@@ -172,7 +172,7 @@ public class OfferBook {
     private void startPolling() {
         addListeners();
         setBankAccount(user.getCurrentBankAccount());
-        pollingTimer = Utilities.setInterval(1000, (animationTimer) -> {
+        pollingTimer = Utilities.setInterval(3000, (animationTimer) -> {
             offerRepository.requestInvalidationTimeStampFromDHT(fiatCode);
             return null;
         });

@@ -52,8 +52,8 @@ public class AccountSettingsViewCB extends CachedViewCB {
     private final Navigation navigation;
     private Navigation.Listener listener;
 
-    @FXML VBox leftVBox;
-    @FXML AnchorPane content;
+    @FXML private VBox leftVBox;
+    @FXML private AnchorPane content;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

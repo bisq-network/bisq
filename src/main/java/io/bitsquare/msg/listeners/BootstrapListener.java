@@ -17,9 +17,13 @@
 
 package io.bitsquare.msg.listeners;
 
+import io.bitsquare.network.BootstrapState;
+
 public interface BootstrapListener {
     public void onCompleted();
 
     public void onFailed(Throwable throwable);
+
+    public void onBootstrapStateChanged(BootstrapState state);
 
 }

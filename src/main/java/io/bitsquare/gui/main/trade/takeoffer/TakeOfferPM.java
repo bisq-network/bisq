@@ -65,7 +65,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
     final ObjectProperty<Address> address = new SimpleObjectProperty<>();
 
     private final BtcValidator btcValidator;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
 
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty volume = new SimpleStringProperty();

@@ -46,7 +46,7 @@ public class TransactionsViewCB extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(TransactionsViewCB.class);
 
     private final WalletFacade walletFacade;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
     private ObservableList<TransactionsListItem> transactionsListItems;
 
     @FXML TableView<TransactionsListItem> table;

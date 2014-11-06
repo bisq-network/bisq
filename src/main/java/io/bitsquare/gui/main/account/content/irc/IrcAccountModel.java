@@ -59,7 +59,7 @@ class IrcAccountModel extends UIModel {
 
     private final User user;
     private final Settings settings;
-    private MessageFacade messageFacade;
+    private final MessageFacade messageFacade;
     private final Persistence persistence;
 
     final StringProperty nickName = new SimpleStringProperty();

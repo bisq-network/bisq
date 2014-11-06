@@ -31,7 +31,7 @@ public abstract class AbstractBitsquareModule extends AbstractModule {
 
     private final Set<AbstractBitsquareModule> modules = Sets.newHashSet();
 
-    public AbstractBitsquareModule(Properties properties) {
+    protected AbstractBitsquareModule(Properties properties) {
         this.properties = properties;
     }
 

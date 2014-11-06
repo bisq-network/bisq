@@ -42,7 +42,7 @@ class OfferBookPM extends PresentationModel<OfferBookModel> {
     private static final Logger log = LoggerFactory.getLogger(OfferBookPM.class);
 
     private final OptionalBtcValidator optionalBtcValidator;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
     private final OptionalFiatValidator optionalFiatValidator;
 
     final StringProperty amount = new SimpleStringProperty();

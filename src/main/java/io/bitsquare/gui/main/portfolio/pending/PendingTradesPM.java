@@ -55,7 +55,7 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
 
     private final BSFormatter formatter;
     private InvalidationListener stateChangeListener;
-    private BtcAddressValidator btcAddressValidator;
+    private final BtcAddressValidator btcAddressValidator;
 
     final StringProperty txId = new SimpleStringProperty();
     final ObjectProperty<State> state = new SimpleObjectProperty<>();

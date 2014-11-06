@@ -61,7 +61,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     private ChangeListener<PendingTradesPM.State> offererStateChangeListener;
     private ChangeListener<PendingTradesPM.State> takerStateChangeListener;
     private ChangeListener<Throwable> faultChangeListener;
-    private Navigation navigation;
+    private final Navigation navigation;
 
     @FXML ScrollPane scrollPane;
     @FXML GridPane gridPane;

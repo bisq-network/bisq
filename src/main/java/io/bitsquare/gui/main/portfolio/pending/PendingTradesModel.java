@@ -226,10 +226,7 @@ class PendingTradesModel extends UIModel {
         String fromAddress = addressEntry.getAddressString();
         try {
             walletFacade.sendFunds(fromAddress, toAddress, getAmountToWithdraw(), callback);
-        } catch (AddressFormatException e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-        } catch (InsufficientMoneyException e) {
+        } catch (AddressFormatException | InsufficientMoneyException e) {
             e.printStackTrace();
             log.error(e.getMessage());
         }

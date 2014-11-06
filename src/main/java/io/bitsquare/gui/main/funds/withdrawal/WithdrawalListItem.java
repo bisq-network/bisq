@@ -43,7 +43,7 @@ public class WithdrawalListItem {
     private final AddressEntry addressEntry;
 
     private final WalletFacade walletFacade;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
     private final AddressConfidenceListener confidenceListener;
 
     private final ConfidenceProgressIndicator progressIndicator;

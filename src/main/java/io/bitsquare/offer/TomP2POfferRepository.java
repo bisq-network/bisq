@@ -75,27 +75,27 @@ class TomP2POfferRepository implements OfferRepository {
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    // deactivate it for the moment until the port forwarding bug is fixed
-                    // if (future.isSuccess()) {
-                    Platform.runLater(() -> {
-                        resultHandler.handleResult();
-                        offerRepositoryListeners.stream().forEach(listener -> {
-                            try {
-                                Object offerDataObject = offerData.object();
-                                if (offerDataObject instanceof Offer) {
-                                    log.error("Added offer to DHT with ID: " + ((Offer) offerDataObject).getId());
-                                    listener.onOfferAdded((Offer) offerDataObject);
+                    if (isSuccess(future)) {
+                        Platform.runLater(() -> {
+                            resultHandler.handleResult();
+                            offerRepositoryListeners.stream().forEach(listener -> {
+                                try {
+                                    Object offerDataObject = offerData.object();
+                                    if (offerDataObject instanceof Offer) {
+                                        log.error("Added offer to DHT with ID: " + offerDataObject);
+                                        listener.onOfferAdded((Offer) offerDataObject);
+                                    }
+                                } catch (ClassNotFoundException | IOException e) {
+                                    e.printStackTrace();
+                                    log.error("Add offer to DHT failed: " + e.getMessage());
                                 }
-                            } catch (ClassNotFoundException | IOException e) {
-                                e.printStackTrace();
-                                log.error("Add offer to DHT failed: " + e.getMessage());
-                            }
-                        });
+                            });
 
-                        writeInvalidationTimestampToDHT(locationKey);
-                        log.trace("Add offer to DHT was successful. Added data: [locationKey: " + locationKey +
-                                ", value: " + offerData + "]");
-                    });
+                            writeInvalidationTimestampToDHT(locationKey);
+                            log.trace("Add offer to DHT was successful. Added data: [locationKey: " + locationKey +
+                                    ", value: " + offerData + "]");
+                        });
+                    }
                 }
 
                 @Override
@@ -124,25 +124,25 @@ class TomP2POfferRepository implements OfferRepository {
             futureRemove.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    // deactivate it for the moment until the port forwarding bug is fixed
-                    // if (future.isSuccess()) {
-                    Platform.runLater(() -> {
-                        offerRepositoryListeners.stream().forEach(listener -> {
-                            try {
-                                Object offerDataObject = offerData.object();
-                                if (offerDataObject instanceof Offer) {
-                                    log.trace("Remove offer from DHT was successful. Removed data: [key: " +
-                                            locationKey + ", " +
-                                            "offer: " + (Offer) offerDataObject + "]");
-                                    listener.onOfferRemoved((Offer) offerDataObject);
+                    if (isSuccess(future)) {
+                        Platform.runLater(() -> {
+                            offerRepositoryListeners.stream().forEach(listener -> {
+                                try {
+                                    Object offerDataObject = offerData.object();
+                                    if (offerDataObject instanceof Offer) {
+                                        log.trace("Remove offer from DHT was successful. Removed data: [key: " +
+                                                locationKey + ", " +
+                                                "offer: " + (Offer) offerDataObject + "]");
+                                        listener.onOfferRemoved((Offer) offerDataObject);
+                                    }
+                                } catch (ClassNotFoundException | IOException e) {
+                                    e.printStackTrace();
+                                    log.error("Remove offer from DHT failed. Error: " + e.getMessage());
                                 }
-                            } catch (ClassNotFoundException | IOException e) {
-                                e.printStackTrace();
-                                log.error("Remove offer from DHT failed. Error: " + e.getMessage());
-                            }
+                            });
+                            writeInvalidationTimestampToDHT(locationKey);
                         });
-                        writeInvalidationTimestampToDHT(locationKey);
-                    });
+                    }
                 }
 
                 @Override
@@ -163,7 +163,7 @@ class TomP2POfferRepository implements OfferRepository {
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture baseFuture) throws Exception {
-                if (baseFuture.isSuccess()) {
+                if (isSuccess(baseFuture)) {
                     final Map<Number640, Data> dataMap = futureGet.dataMap();
                     final List<Offer> offers = new ArrayList<>();
                     if (dataMap != null) {
@@ -228,7 +228,7 @@ class TomP2POfferRepository implements OfferRepository {
             putFuture.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    if (putFuture.isSuccess())
+                    if (isSuccess(putFuture))
                         log.trace("Update invalidationTimestamp to DHT was successful. TimeStamp=" +
                                 invalidationTimestamp.get());
                     else
@@ -255,7 +255,7 @@ class TomP2POfferRepository implements OfferRepository {
         getFuture.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
-                if (getFuture.isSuccess()) {
+                if (isSuccess(getFuture)) {
                     Data data = getFuture.data();
                     if (data != null && data.object() instanceof Long) {
                         final Object object = data.object();
@@ -265,8 +265,8 @@ class TomP2POfferRepository implements OfferRepository {
                             invalidationTimestamp.set(timeStamp);
                         });
                     }
-                    else {
-                        //log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
+                    else if (data != null) {
+                        log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
                     }
                 }
                 else if (getFuture.data() == null) {
@@ -290,4 +290,9 @@ class TomP2POfferRepository implements OfferRepository {
         return Number160.createHash(locationKey + "invalidated");
     }
 
+    // Isolate the success handling as there is bug in port forwarding mode
+    private boolean isSuccess(BaseFuture baseFuture) {
+        // return baseFuture.isSuccess();
+        return true;
+    }
 }

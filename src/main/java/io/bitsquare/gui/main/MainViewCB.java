@@ -47,6 +47,7 @@ import javafx.scene.effect.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.*;
+import javafx.scene.text.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -167,7 +168,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         ((StackPane) root).getChildren().addAll(baseApplicationContainer, splashScreen);
         baseApplicationContainer.setCenter(getApplicationContainer());
 
-        Platform.runLater(() -> onSplashScreenAdded());
+        Platform.runLater(this::onSplashScreenAdded);
     }
 
     private void onSplashScreenAdded() {
@@ -285,16 +286,35 @@ public class MainViewCB extends ViewCB<MainPM> {
         ImageView logo = new ImageView();
         logo.setId("image-splash-logo");
 
-        Label loadingLabel = new Label();
-        loadingLabel.setAlignment(Pos.CENTER);
-        loadingLabel.setPadding(new Insets(60, 0, 0, 0));
-        loadingLabel.textProperty().bind(presentationModel.splashScreenInfoText);
+        Label bitcoinSyncStateLabel = new Label();
+        bitcoinSyncStateLabel.textProperty().bind(presentationModel.bitcoinSyncState);
 
-        ProgressBar progressBar = new ProgressBar();
-        progressBar.setPrefWidth(240);
-        progressBar.progressProperty().bind(presentationModel.networkSyncProgress);
+        ProgressBar btcProgressIndicator = new ProgressBar(-1);
+        btcProgressIndicator.setPrefWidth(120);
+        btcProgressIndicator.progressProperty().bind(presentationModel.networkSyncProgress);
 
-        vBox.getChildren().addAll(logo, loadingLabel, progressBar);
+        HBox btcBox = new HBox();
+        btcBox.setSpacing(10);
+        btcBox.setAlignment(Pos.CENTER);
+        btcBox.setPadding(new Insets(60, 0, 0, 0));
+        btcBox.getChildren().addAll(bitcoinSyncStateLabel, btcProgressIndicator);
+
+        Label bootstrapStateLabel = new Label();
+        bootstrapStateLabel.setWrapText(true);
+        bootstrapStateLabel.setMaxWidth(500);
+        bootstrapStateLabel.setTextAlignment(TextAlignment.CENTER);
+        bootstrapStateLabel.textProperty().bind(presentationModel.bootstrapState);
+
+        ProgressIndicator p2pProgressIndicator = new ProgressIndicator(-1);
+        p2pProgressIndicator.setMaxSize(24, 24);
+
+        HBox p2pBox = new HBox();
+        p2pBox.setSpacing(10);
+        p2pBox.setAlignment(Pos.CENTER);
+        p2pBox.setPadding(new Insets(10, 0, 0, 0));
+        p2pBox.getChildren().addAll(bootstrapStateLabel, p2pProgressIndicator);
+
+        vBox.getChildren().addAll(logo, btcBox, p2pBox);
 
         return vBox;
     }

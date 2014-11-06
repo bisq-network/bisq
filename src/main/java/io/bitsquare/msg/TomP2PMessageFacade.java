@@ -27,8 +27,6 @@ import io.bitsquare.network.Peer;
 import io.bitsquare.network.tomp2p.TomP2PPeer;
 import io.bitsquare.user.User;
 
-import com.google.common.util.concurrent.FutureCallback;
-
 import java.io.IOException;
 
 import java.security.PublicKey;
@@ -37,8 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import javax.annotation.Nullable;
-
 import javax.inject.Inject;
 
 import javafx.application.Platform;
@@ -46,7 +42,6 @@ import javafx.application.Platform;
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
 import net.tomp2p.dht.FutureRemove;
-import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.futures.BaseFuture;
 import net.tomp2p.futures.BaseFutureAdapter;
 import net.tomp2p.futures.BaseFutureListener;
@@ -55,10 +50,9 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.storage.Data;
 import net.tomp2p.utils.Utils;
 
-import org.jetbrains.annotations.NotNull;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * That facade delivers direct messaging and DHT functionality from the TomP2P library
@@ -98,19 +92,7 @@ class TomP2PMessageFacade implements MessageFacade {
         p2pNode.setMessageBroker(this);
         p2pNode.setKeyPair(user.getMessageKeyPair());
 
-        p2pNode.start(port, new FutureCallback<PeerDHT>() {
-            @Override
-            public void onSuccess(@Nullable PeerDHT result) {
-                log.debug("p2pNode.start success result = " + result);
-                Platform.runLater(bootstrapListener::onCompleted);
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable t) {
-                log.error(t.toString());
-                Platform.runLater(() -> bootstrapListener.onFailed(t));
-            }
-        });
+        p2pNode.start(port, bootstrapListener);
     }
 
     public void shutDown() {
@@ -131,7 +113,7 @@ class TomP2PMessageFacade implements MessageFacade {
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture baseFuture) throws Exception {
-                if (baseFuture.isSuccess() && futureGet.data() != null) {
+                if (isSuccess(baseFuture) && futureGet.data() != null) {
                     final Peer peer = (Peer) futureGet.data().object();
                     Platform.runLater(() -> listener.onResult(peer));
                 }
@@ -142,7 +124,6 @@ class TomP2PMessageFacade implements MessageFacade {
         });
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Trade process
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -150,13 +131,13 @@ class TomP2PMessageFacade implements MessageFacade {
     public void sendMessage(Peer peer, Message message,
                             OutgoingMessageListener listener) {
         if (!(peer instanceof TomP2PPeer)) {
-            throw new IllegalArgumentException("peer must be of type TomP2PPeer") ;
+            throw new IllegalArgumentException("peer must be of type TomP2PPeer");
         }
-        FutureDirect futureDirect = p2pNode.sendData(((TomP2PPeer)peer).getPeerAddress(), message);
+        FutureDirect futureDirect = p2pNode.sendData(((TomP2PPeer) peer).getPeerAddress(), message);
         futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
-                if (futureDirect.isSuccess()) {
+                if (isSuccess(futureDirect)) {
                     Platform.runLater(listener::onResult);
                 }
                 else {
@@ -198,7 +179,7 @@ class TomP2PMessageFacade implements MessageFacade {
                         }
                     }));
 
-                    if (addFuture.isSuccess()) {
+                    if (isSuccess(addFuture)) {
                         log.trace("Add arbitrator to DHT was successful. Stored data: [key: " + locationKey + ", " +
                                 "values: " + arbitratorData + "]");
                     }
@@ -233,7 +214,7 @@ class TomP2PMessageFacade implements MessageFacade {
                         }
                     }
                 }));
-                if (removeFuture.isSuccess()) {
+                if (isSuccess(removeFuture)) {
                     log.trace("Remove arbitrator from DHT was successful. Stored data: [key: " + locationKey + ", " +
                             "values: " + arbitratorData + "]");
                 }
@@ -267,7 +248,7 @@ class TomP2PMessageFacade implements MessageFacade {
 
                     listener.onArbitratorsReceived(arbitrators);
                 }));
-                if (baseFuture.isSuccess()) {
+                if (isSuccess(baseFuture)) {
                     log.trace("Get arbitrators from DHT was successful. Stored data: [key: " + locationKey + ", " +
                             "values: " + futureGet.dataMap() + "]");
                 }
@@ -299,6 +280,11 @@ class TomP2PMessageFacade implements MessageFacade {
         incomingMessageListeners.remove(listener);
     }
 
+    // Isolate the success handling as there is bug in port forwarding mode
+    private boolean isSuccess(BaseFuture baseFuture) {
+        // return baseFuture.isSuccess();
+        return true;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handler

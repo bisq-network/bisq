@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class BtcAddressValidator extends InputValidator {
     private static final Logger log = LoggerFactory.getLogger(BtcAddressValidator.class);
-    private NetworkParameters networkParameters;
+    private final NetworkParameters networkParameters;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

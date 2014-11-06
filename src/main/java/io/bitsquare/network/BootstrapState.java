@@ -15,8 +15,37 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.btc;
+package io.bitsquare.network;
 
-public enum BitcoinNetwork {
-    MAINNET, TESTNET, REGTEST
+/**
+ * NOT_SUCCEEDED means we will try the next step, FAILED is used for fatal failures which will terminate the bootstrap
+ */
+public enum BootstrapState {
+    PEER_CREATION,
+    PEER_CREATION_FAILED,
+    DIRECT_INIT,
+    DIRECT_SUCCESS,
+    DIRECT_NOT_SUCCEEDED,
+    DIRECT_FAILED,
+    NAT_INIT,
+    NAT_SETUP_DONE,
+    NAT_SUCCESS,
+    NAT_NOT_SUCCEEDED,
+    NAT_FAILED,
+    RELAY_INIT,
+    RELAY_SUCCESS,
+    RELAY_FAILED;
+
+    private String message;
+
+    BootstrapState() {
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
 }
