@@ -57,6 +57,7 @@ public class Persistence {
 
     private final String prefix;
     private final File storageFile;
+    private String appName;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -64,8 +65,9 @@ public class Persistence {
 
     @Inject
     public Persistence(@Named("appName") String appName) {
-         this.prefix = appName + "_pref";
-         this.storageFile = FileUtil.getFile(prefix, "ser");
+        this.appName = appName;
+        this.prefix = appName + "_pref";
+        this.storageFile = FileUtil.getFile(appName, prefix, "ser");
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -218,7 +220,7 @@ public class Persistence {
         FileOutputStream fileOutputStream = null;
         ObjectOutputStream objectOutputStream = null;
         try {
-            tempFile = FileUtil.getTempFile(prefix);
+            tempFile = FileUtil.getTempFile(appName, prefix);
 
             // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile)
             // and we need to close it

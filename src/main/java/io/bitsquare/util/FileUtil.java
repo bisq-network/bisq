@@ -30,12 +30,12 @@ import lighthouse.files.AppDirectory;
 public class FileUtil {
     private static final Logger log = LoggerFactory.getLogger(FileUtil.class);
 
-    public static File getFile(String name, String suffix) {
-        return new File(AppDirectory.dir().toFile(), name + "." + suffix);
+    public static File getFile(String appName, String name, String suffix) {
+        return new File(AppDirectory.dir(appName).toFile(), name + "." + suffix);
     }
 
-    public static File getTempFile(String prefix) throws IOException {
-        return File.createTempFile("temp_" + prefix, null, AppDirectory.dir().toFile());
+    public static File getTempFile(String appName, String prefix) throws IOException {
+        return File.createTempFile("temp_" + prefix, null, AppDirectory.dir(appName).toFile());
     }
 
     public static void writeTempFileToFile(File tempFile, File file) throws IOException {

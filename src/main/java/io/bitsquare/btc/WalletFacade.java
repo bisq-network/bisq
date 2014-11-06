@@ -140,7 +140,7 @@ public class WalletFacade {
         Threading.USER_THREAD = Platform::runLater;
 
         // If seed is non-null it means we are restoring from backup.
-        walletAppKit = new WalletAppKit(params, AppDirectory.dir().toFile(), appName) {
+        walletAppKit = new WalletAppKit(params, AppDirectory.dir(appName).toFile(), appName) {
             @Override
             protected void onSetupCompleted() {
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it

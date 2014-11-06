@@ -30,7 +30,7 @@ class MainModule extends BitsquareModule {
     private final Stage primaryStage;
 
     public MainModule(String appName, Stage primaryStage) {
-        super(ConfigLoader.loadConfig());
+        super(ConfigLoader.loadConfig(appName));
         this.appName = appName;
         this.primaryStage = primaryStage;
     }

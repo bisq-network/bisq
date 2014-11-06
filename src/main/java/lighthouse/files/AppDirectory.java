@@ -50,9 +50,7 @@ public class AppDirectory {
     }
 
     public static Path initAppDir(String appName) throws IOException {
-        AppDirectory.appName = appName;
-
-        Path dir = dir();
+        Path dir = dir(appName);
         if (!Files.exists(dir))
             Files.createDirectory(dir);
         else if (!Files.isWritable(dir))
@@ -60,11 +58,9 @@ public class AppDirectory {
         return dir;
     }
 
-    private static String appName = "";
-
     private static Path dir;
 
-    public static Path dir() {
+    public static Path dir(String appName) {
         if (dir == null)
             return getUserDataDir(appName);
         else

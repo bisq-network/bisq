@@ -31,9 +31,10 @@ import lighthouse.files.AppDirectory;
 
 public class ConfigLoader {
     private static final Logger log = LoggerFactory.getLogger(ConfigLoader.class);
-    private static final String configFilePath = AppDirectory.dir() + "/bitsquare.conf";
+    private static String configFilePath;
 
-    public static Properties loadConfig() {
+    public static Properties loadConfig(String appName) {
+        configFilePath = AppDirectory.dir(appName) + "/bitsquare.conf";
         InputStream inputStream = null;
 
         // load default properties from class path

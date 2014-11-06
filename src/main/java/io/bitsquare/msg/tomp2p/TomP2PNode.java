@@ -79,6 +79,7 @@ public class TomP2PNode {
     private static final Logger log = LoggerFactory.getLogger(TomP2PNode.class);
 
     private KeyPair keyPair;
+    private String appName;
     private final Boolean useDiskStorage;
     private MessageBroker messageBroker;
 
@@ -94,8 +95,10 @@ public class TomP2PNode {
 
     @Inject
     public TomP2PNode(BootstrappedPeerFactory bootstrappedPeerFactory,
+                      @Named("appName") String appName,
                       @Named("useDiskStorage") Boolean useDiskStorage) {
         this.bootstrappedPeerFactory = bootstrappedPeerFactory;
+        this.appName = appName;
         this.useDiskStorage = useDiskStorage;
     }
 
@@ -391,7 +394,7 @@ public class TomP2PNode {
 
     private void useDiscStorage(boolean useDiscStorage) {
         if (useDiscStorage) {
-            File path = new File(AppDirectory.dir().toFile() + "/tomP2P");
+            File path = new File(AppDirectory.dir(appName).toFile() + "/tomP2P");
             if (!path.exists()) {
                 boolean created = path.mkdir();
                 if (!created)
