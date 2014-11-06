@@ -128,25 +128,27 @@ class TomP2POfferRepository implements OfferRepository {
             futureRemove.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    if (isSuccess(future)) {
-                        Platform.runLater(() -> {
-                            offerRepositoryListeners.stream().forEach(listener -> {
-                                try {
-                                    Object offerDataObject = offerData.object();
-                                    if (offerDataObject instanceof Offer) {
-                                        log.trace("Remove offer from DHT was successful. Removed data: [key: " +
-                                                locationKey + ", " +
-                                                "offer: " + (Offer) offerDataObject + "]");
-                                        listener.onOfferRemoved((Offer) offerDataObject);
-                                    }
-                                } catch (ClassNotFoundException | IOException e) {
-                                    e.printStackTrace();
-                                    log.error("Remove offer from DHT failed. Error: " + e.getMessage());
+                    // We don't test futureRemove.isSuccess() as this API does not fit well to that operation, 
+                    // it might change in future to something like foundAndRemoved and notFound
+                    // See discussion at: https://github.com/tomp2p/TomP2P/issues/57#issuecomment-62069840
+
+                    Platform.runLater(() -> {
+                        offerRepositoryListeners.stream().forEach(listener -> {
+                            try {
+                                Object offerDataObject = offerData.object();
+                                if (offerDataObject instanceof Offer) {
+                                    log.trace("Remove offer from DHT was successful. Removed data: [key: " +
+                                            locationKey + ", " +
+                                            "offer: " + (Offer) offerDataObject + "]");
+                                    listener.onOfferRemoved((Offer) offerDataObject);
                                 }
-                            });
-                            writeInvalidationTimestampToDHT(locationKey);
+                            } catch (ClassNotFoundException | IOException e) {
+                                e.printStackTrace();
+                                log.error("Remove offer from DHT failed. Error: " + e.getMessage());
+                            }
                         });
-                    }
+                        writeInvalidationTimestampToDHT(locationKey);
+                    });
                 }
 
                 @Override
