@@ -53,6 +53,8 @@ import net.tomp2p.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static io.bitsquare.network.tomp2p.BaseFutureUtil.isSuccess;
+
 
 /**
  * That facade delivers direct messaging and DHT functionality from the TomP2P library
@@ -278,12 +280,6 @@ class TomP2PMessageFacade implements MessageFacade {
 
     public void removeIncomingMessageListener(IncomingMessageListener listener) {
         incomingMessageListeners.remove(listener);
-    }
-
-    // Isolate the success handling as there is bug in port forwarding mode
-    private boolean isSuccess(BaseFuture baseFuture) {
-        // return baseFuture.isSuccess();
-        return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

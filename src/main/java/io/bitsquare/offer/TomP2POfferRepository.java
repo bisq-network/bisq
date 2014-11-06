@@ -46,6 +46,8 @@ import net.tomp2p.storage.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static io.bitsquare.network.tomp2p.BaseFutureUtil.isSuccess;
+
 class TomP2POfferRepository implements OfferRepository {
 
     private static final Logger log = LoggerFactory.getLogger(TomP2POfferRepository.class);
@@ -288,11 +290,5 @@ class TomP2POfferRepository implements OfferRepository {
 
     private Number160 getInvalidatedLocationKey(Number160 locationKey) {
         return Number160.createHash(locationKey + "invalidated");
-    }
-
-    // Isolate the success handling as there is bug in port forwarding mode
-    private boolean isSuccess(BaseFuture baseFuture) {
-        // return baseFuture.isSuccess();
-        return true;
     }
 }
