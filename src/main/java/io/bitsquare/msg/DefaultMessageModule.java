@@ -18,7 +18,7 @@
 package io.bitsquare.msg;
 
 import io.bitsquare.AbstractBitsquareModule;
-import io.bitsquare.network.BootstrapNode;
+import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
 
 import com.google.inject.Injector;
@@ -44,7 +44,7 @@ public class DefaultMessageModule extends AbstractBitsquareModule implements Mes
 
         bind(Node.class)
                 .annotatedWith(Names.named("bootstrapNode"))
-                .toInstance(BootstrapNode.LOCAL_HOST);
+                .toInstance(BootstrapNodes.LOCALHOST);
     }
 
     @Override

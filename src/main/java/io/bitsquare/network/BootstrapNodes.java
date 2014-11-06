@@ -17,32 +17,16 @@
 
 package io.bitsquare.network;
 
-public enum BootstrapNode implements Node {
-    LOCAL_HOST("localhost", "127.0.0.1", 5000),
-    DIGITAL_OCEAN1("digitalocean1.bitsquare.io", "188.226.179.109", 5000);
+import java.util.Arrays;
+import java.util.List;
 
-    private final String id;
-    private final String ip;
-    private final int port;
+public interface BootstrapNodes {
+    Node LOCALHOST = Node.at("localhost", "127.0.0.1");
+    Node DIGITAL_OCEAN_1 = Node.at("digitalocean1.bitsquare.io", "188.226.179.109");
 
-    BootstrapNode(String id, String ip, int port) {
-        this.id = id;
-        this.ip = ip;
-        this.port = port;
-    }
-
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public String getIp() {
-        return ip;
-    }
-
-    @Override
-    public int getPort() {
-        return port;
+    static List<Node> all() {
+        return Arrays.asList(
+                LOCALHOST, DIGITAL_OCEAN_1
+        );
     }
 }

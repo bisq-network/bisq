@@ -17,6 +17,8 @@
 
 package io.bitsquare.msg;
 
+import io.bitsquare.network.Node;
+
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.nat.PeerBuilderNAT;
@@ -37,7 +39,7 @@ public class SeedNodeForTesting {
     public static void main(String[] args) throws Exception {
         // Define your seed node IP and port
         // "127.0.0.1" for localhost or SEED_ID_WAN_1
-        new SeedNodeForTesting().startSeedNode("localhost", 5000);
+        new SeedNodeForTesting().startSeedNode("localhost", Node.DEFAULT_PORT);
     }
 
     public Thread startSeedNode(String seedNodeId, int seedNodePort) {

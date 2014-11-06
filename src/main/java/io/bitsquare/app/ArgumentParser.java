@@ -17,46 +17,37 @@
 
 package io.bitsquare.app;
 
-import io.bitsquare.network.BootstrapNode;
+import io.bitsquare.network.BootstrapNodes;
+import io.bitsquare.network.Node;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
-/*
-optional arguments:
-  -h, --help                                show this help message and exit
-  -d PEER_ID, --peerid PEER                 Seed peer ID (default: "digitalocean1.bitsquare.io")
-  -p PORT, --port PORT                      IP port to listen on. (default: 5000)
-  -i INTERFACE, --interface INTERFACE       Network interface to listen on.
-  -n NAME, --name NAME                      Append name to application name.
- */
 public class ArgumentParser {
 
     public static final String PEER_ID_FLAG = "peerid";
     public static final String PORT_FLAG = "port";
     public static final String INTERFACE_HINT_FLAG = "interface";
     public static final String NAME_FLAG = "name";
-
-    private static final Integer PORT_DEFAULT = 5000;
-    private static final String PEER_ID_DEFAULT = BootstrapNode.DIGITAL_OCEAN1.getId();
+    public static final String PEER_ID_DEFAULT = BootstrapNodes.DIGITAL_OCEAN_1.getId();
 
     private final net.sourceforge.argparse4j.inf.ArgumentParser parser;
 
     public ArgumentParser() {
         parser = ArgumentParsers.newArgumentParser("Bitsquare")
                 .defaultHelp(true)
-                .description("Bitsquare - The decentralized bitcoin exchange.");
+                .description("Bitsquare - The decentralized bitcoin exchange");
         parser.addArgument("-d", "--" + PEER_ID_FLAG)
                 .setDefault(PEER_ID_DEFAULT)
-                .help("Seed peer ID.");
+                .help("Seed peer ID");
         parser.addArgument("-p", "--" + PORT_FLAG)
-                .setDefault(PORT_DEFAULT)
-                .help("IP port to listen on.");
+                .setDefault(Node.DEFAULT_PORT)
+                .help("Port to listen on");
         parser.addArgument("-i", "--" + INTERFACE_HINT_FLAG)
-                .help("Network interface to listen on.");
+                .help("Network interface to listen on");
         parser.addArgument("-n", "--" + NAME_FLAG)
-                .help("Append name to application name.");
+                .help("Name to append name to default application name");
     }
 
     public Namespace parseArgs(String... args) {
