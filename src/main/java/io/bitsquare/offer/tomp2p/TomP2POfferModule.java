@@ -15,23 +15,21 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.util;
+package io.bitsquare.offer.tomp2p;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import io.bitsquare.offer.OfferModule;
+import io.bitsquare.offer.OfferRepository;
 
-/**
- * Method-level annotation to be used in connection with {@link RepeatRule} to cause a
- * given {@link org.junit.Test} method to be repeated a specified number of times.
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Repeat {
+import java.util.Properties;
 
-    /**
-     * Specifies the number of times to repeat the annotated {@link org.junit.Test}.
-     */
-    int value();
+public class TomP2POfferModule extends OfferModule {
+
+    public TomP2POfferModule(Properties properties) {
+        super(properties);
+    }
+
+    @Override
+    public Class<? extends OfferRepository> offerRepository() {
+        return TomP2POfferRepository.class;
+    }
 }

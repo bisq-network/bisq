@@ -20,9 +20,9 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
-import io.bitsquare.trade.handlers.ExceptionHandler;
-import io.bitsquare.trade.handlers.ResultHandler;
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
+import io.bitsquare.util.task.ExceptionHandler;
+import io.bitsquare.util.task.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 
@@ -48,13 +48,13 @@ public class SendTakeOfferFeePayedTxId {
             @Override
             public void onResult() {
                 log.trace("TakeOfferFeePayedMessage successfully arrived at peer");
-                resultHandler.onResult();
+                resultHandler.handleResult();
             }
 
             @Override
             public void onFailed() {
                 log.error("TakeOfferFeePayedMessage  did not arrive at peer");
-                exceptionHandler.onError(new Exception("TakeOfferFeePayedMessage did not arrive at peer"));
+                exceptionHandler.handleException(new Exception("TakeOfferFeePayedMessage did not arrive at peer"));
             }
         });
     }

@@ -18,8 +18,8 @@
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.trade.handlers.ExceptionHandler;
-import io.bitsquare.trade.handlers.ResultHandler;
+import io.bitsquare.util.task.ExceptionHandler;
+import io.bitsquare.util.task.ResultHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class VerifyTakeOfferFeePayment {
         //TODO mocked yet, need a confidence listeners
         int numOfPeersSeenTx = walletFacade.getNumOfPeersSeenTx(takeOfferFeeTxId);
         if (numOfPeersSeenTx > 2) {
-            resultHandler.onResult();
+            resultHandler.handleResult();
         }
     }
 

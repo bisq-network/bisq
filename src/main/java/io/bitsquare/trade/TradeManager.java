@@ -25,9 +25,9 @@ import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.offer.OfferRepository;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
-import io.bitsquare.trade.handlers.ErrorMessageHandler;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.createoffer.CreateOfferCoordinator;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
@@ -44,6 +44,7 @@ import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDep
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
 import io.bitsquare.user.User;
+import io.bitsquare.util.task.ErrorMessageHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -78,11 +79,11 @@ public class TradeManager {
     private final BlockChainFacade blockChainFacade;
     private final WalletFacade walletFacade;
     private final CryptoFacade cryptoFacade;
+    private final OfferRepository offerRepository;
 
     //TODO store TakerAsSellerProtocol in trade
     private final Map<String, SellerTakesOfferProtocol> takerAsSellerProtocolMap = new HashMap<>();
     private final Map<String, BuyerAcceptsOfferProtocol> offererAsBuyerProtocolMap = new HashMap<>();
-    private final Map<String, CreateOfferCoordinator> createOfferCoordinatorMap = new HashMap<>();
 
     private final ObservableMap<String, Offer> offers = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> pendingTrades = FXCollections.observableHashMap();
@@ -99,7 +100,8 @@ public class TradeManager {
 
     @Inject
     public TradeManager(User user, Settings settings, Persistence persistence, MessageFacade messageFacade,
-                        BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade) {
+                        BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade,
+                        OfferRepository offerRepository) {
         this.user = user;
         this.settings = settings;
         this.persistence = persistence;
@@ -107,6 +109,7 @@ public class TradeManager {
         this.blockChainFacade = blockChainFacade;
         this.walletFacade = walletFacade;
         this.cryptoFacade = cryptoFacade;
+        this.offerRepository = offerRepository;
 
         Object offersObject = persistence.read(this, "offers");
         if (offersObject instanceof Map) {
@@ -163,36 +166,23 @@ public class TradeManager {
                 settings.getAcceptedCountries(),
                 settings.getAcceptedLanguageLocales());
 
-        if (createOfferCoordinatorMap.containsKey(offer.getId())) {
-            errorMessageHandler.onFault("A createOfferCoordinator for the offer with the id " + offer.getId() + " " +
-                    "already exists.");
-        }
-        else {
-            CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(persistence,
-                    offer,
-                    walletFacade,
-                    messageFacade,
-                    (transactionId) -> {
-                        try {
-                            offer.setOfferFeePaymentTxID(transactionId.getHashAsString());
-                            addOffer(offer);
-                            createOfferCoordinatorMap.remove(offer.getId());
+        CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(
+                offer,
+                walletFacade,
+                (transactionId) -> {
+                    try {
+                        offer.setOfferFeePaymentTxID(transactionId.getHashAsString());
+                        addOffer(offer);
+                        resultHandler.onResult(transactionId);
+                    } catch (Exception e) {
+                        errorMessageHandler.handleErrorMessage("Could not save offer. Reason: " +
+                                (e.getCause() != null ? e.getCause().getMessage() : e.toString()));
+                    }
+                },
+                (message, throwable) -> errorMessageHandler.handleErrorMessage(message),
+                offerRepository);
 
-                            resultHandler.onResult(transactionId);
-                        } catch (Exception e) {
-                            //TODO retry policy
-                            errorMessageHandler.onFault("Could not save offer. Reason: " +
-                                    (e.getCause() != null ? e.getCause().getMessage() : e.toString()));
-                            createOfferCoordinatorMap.remove(offer.getId());
-                        }
-                    },
-                    (message, throwable) -> {
-                        errorMessageHandler.onFault(message);
-                        createOfferCoordinatorMap.remove(offer.getId());
-                    });
-            createOfferCoordinatorMap.put(offer.getId(), createOfferCoordinator);
-            createOfferCoordinator.start();
-        }
+        createOfferCoordinator.start();
     }
 
     private void addOffer(Offer offer) {
@@ -210,7 +200,7 @@ public class TradeManager {
         offers.remove(offer.getId());
         persistOffers();
 
-        messageFacade.removeOffer(offer);
+        offerRepository.removeOffer(offer);
     }
 
 

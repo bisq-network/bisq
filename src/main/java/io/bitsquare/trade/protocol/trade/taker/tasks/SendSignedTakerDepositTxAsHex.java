@@ -22,9 +22,9 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
-import io.bitsquare.trade.handlers.ExceptionHandler;
-import io.bitsquare.trade.handlers.ResultHandler;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
+import io.bitsquare.util.task.ExceptionHandler;
+import io.bitsquare.util.task.ResultHandler;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Utils;
@@ -72,13 +72,13 @@ public class SendSignedTakerDepositTxAsHex {
             @Override
             public void onResult() {
                 log.trace("RequestOffererDepositPublicationMessage successfully arrived at peer");
-                resultHandler.onResult();
+                resultHandler.handleResult();
             }
 
             @Override
             public void onFailed() {
                 log.error("RequestOffererDepositPublicationMessage  did not arrive at peer");
-                exceptionHandler.onError(
+                exceptionHandler.handleException(
                         new Exception("RequestOffererDepositPublicationMessage did not arrive at peer"));
             }
         });

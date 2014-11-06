@@ -21,9 +21,9 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
-import io.bitsquare.trade.handlers.ExceptionHandler;
-import io.bitsquare.trade.handlers.ResultHandler;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RequestTakerDepositPaymentMessage;
+import io.bitsquare.util.task.ExceptionHandler;
+import io.bitsquare.util.task.ResultHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,13 +48,14 @@ public class RequestTakerDepositPayment {
             @Override
             public void onResult() {
                 log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");
-                resultHandler.onResult();
+                resultHandler.handleResult();
             }
 
             @Override
             public void onFailed() {
                 log.error("RequestTakerDepositPaymentMessage  did not arrive at peer");
-                exceptionHandler.onError(new Exception("RequestTakerDepositPaymentMessage did not arrive at peer"));
+                exceptionHandler.handleException(new Exception("RequestTakerDepositPaymentMessage did not arrive at " +
+                        "peer"));
             }
         });
     }

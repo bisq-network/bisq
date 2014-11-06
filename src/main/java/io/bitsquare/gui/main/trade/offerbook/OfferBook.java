@@ -20,9 +20,8 @@ package io.bitsquare.gui.main.trade.offerbook;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.msg.MessageFacade;
-import io.bitsquare.msg.listeners.OfferBookListener;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.offer.OfferRepository;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
 
@@ -44,18 +43,18 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Holds and manages the unsorted and unfiltered offerbook list of both buy and sell offers.
  * It is handled as singleton by Guice and is used by 2 instances of OfferBookModel (one for Buy one for Sell).
  * As it is used only by the Buy and Sell UIs we treat it as local UI model.
- * It also use OfferBookListener as the lists items class and we don't want to get any dependency out of the package
- * for that.
+ * It also use OfferRepository.Listener as the lists items class and we don't want to get any dependency out of the
+ * package for that.
  */
 public class OfferBook {
 
     private static final Logger log = LoggerFactory.getLogger(OfferBook.class);
 
-    private final MessageFacade messageFacade;
+    private final OfferRepository offerRepository;
     private final User user;
 
     private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-    private final OfferBookListener offerBookListener;
+    private final OfferRepository.Listener offerRepositoryListener;
     private final ChangeListener<BankAccount> bankAccountChangeListener;
     private final ChangeListener<Number> invalidationListener;
     private String fiatCode;
@@ -69,14 +68,14 @@ public class OfferBook {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBook(MessageFacade messageFacade, User user) {
-        this.messageFacade = messageFacade;
+    OfferBook(OfferRepository offerRepository, User user) {
+        this.offerRepository = offerRepository;
         this.user = user;
 
         bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
         invalidationListener = (ov, oldValue, newValue) -> requestOffers();
 
-        offerBookListener = new OfferBookListener() {
+        offerRepositoryListener = new OfferRepository.Listener() {
             @Override
             public void onOfferAdded(Offer offer) {
                 addOfferToOfferBookListItems(offer);
@@ -143,15 +142,15 @@ public class OfferBook {
     private void addListeners() {
         log.debug("addListeners ");
         user.currentBankAccountProperty().addListener(bankAccountChangeListener);
-        messageFacade.addOfferBookListener(offerBookListener);
-        messageFacade.invalidationTimestampProperty().addListener(invalidationListener);
+        offerRepository.addListener(offerRepositoryListener);
+        offerRepository.invalidationTimestampProperty().addListener(invalidationListener);
     }
 
     private void removeListeners() {
         log.debug("removeListeners ");
         user.currentBankAccountProperty().removeListener(bankAccountChangeListener);
-        messageFacade.removeOfferBookListener(offerBookListener);
-        messageFacade.invalidationTimestampProperty().removeListener(invalidationListener);
+        offerRepository.removeListener(offerRepositoryListener);
+        offerRepository.invalidationTimestampProperty().removeListener(invalidationListener);
     }
 
     private void addOfferToOfferBookListItems(Offer offer) {
@@ -161,7 +160,7 @@ public class OfferBook {
     }
 
     private void requestOffers() {
-        messageFacade.getOffers(fiatCode);
+        offerRepository.getOffers(fiatCode);
     }
 
 
@@ -174,11 +173,11 @@ public class OfferBook {
         addListeners();
         setBankAccount(user.getCurrentBankAccount());
         pollingTimer = Utilities.setInterval(3000, (animationTimer) -> {
-            messageFacade.requestInvalidationTimeStampFromDHT(fiatCode);
+            offerRepository.requestInvalidationTimeStampFromDHT(fiatCode);
             return null;
         });
 
-        messageFacade.getOffers(fiatCode);
+        offerRepository.getOffers(fiatCode);
     }
 
     private void stopPolling() {

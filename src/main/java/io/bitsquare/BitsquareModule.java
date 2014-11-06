@@ -25,24 +25,24 @@ import com.google.inject.Injector;
 import java.util.Properties;
 import java.util.Set;
 
-public abstract class AbstractBitsquareModule extends AbstractModule {
+public abstract class BitsquareModule extends AbstractModule {
 
     protected final Properties properties;
 
-    private final Set<AbstractBitsquareModule> modules = Sets.newHashSet();
+    private final Set<BitsquareModule> modules = Sets.newHashSet();
 
-    protected AbstractBitsquareModule(Properties properties) {
+    protected BitsquareModule(Properties properties) {
         this.properties = properties;
     }
 
-    protected void install(AbstractBitsquareModule module) {
+    protected void install(BitsquareModule module) {
         super.install(module);
         modules.add(module);
     }
 
     /**
      * Close any instances this module is responsible for and recursively close any
-     * sub-modules installed via {@link #install(AbstractBitsquareModule)}. This method
+     * sub-modules installed via {@link #install(BitsquareModule)}. This method
      * must be called manually, e.g. at the end of a main() method or in the stop() method
      * of a JavaFX Application; alternatively it may be registered as a JVM shutdown hook.
      *

@@ -18,21 +18,16 @@
 package io.bitsquare.msg;
 
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.msg.listeners.AddOfferListener;
 import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.msg.listeners.GetPeerAddressListener;
 import io.bitsquare.msg.listeners.IncomingMessageListener;
-import io.bitsquare.msg.listeners.OfferBookListener;
 import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
-import io.bitsquare.offer.Offer;
 
 import java.security.PublicKey;
 
 import java.util.Locale;
-
-import javafx.beans.property.LongProperty;
 
 public interface MessageFacade extends MessageBroker {
 
@@ -46,25 +41,11 @@ public interface MessageFacade extends MessageBroker {
 
     void removeIncomingMessageListener(IncomingMessageListener listener);
 
-    void addOffer(Offer offer, AddOfferListener addOfferListener);
-
     void addArbitratorListener(ArbitratorListener listener);
 
     void getArbitrators(Locale defaultLanguageLocale);
 
-    LongProperty invalidationTimestampProperty();
-
-    void addOfferBookListener(OfferBookListener offerBookListener);
-
-    void requestInvalidationTimeStampFromDHT(String fiatCode);
-
-    void getOffers(String fiatCode);
-
-    void removeOffer(Offer offer);
-
     void init(int clientPort, BootstrapListener bootstrapListener);
 
     void getPeerAddress(PublicKey messagePublicKey, GetPeerAddressListener getPeerAddressListener);
-
-    void removeOfferBookListener(OfferBookListener offerBookListener);
 }

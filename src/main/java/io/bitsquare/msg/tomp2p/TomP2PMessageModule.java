@@ -15,11 +15,27 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.handlers;
+package io.bitsquare.msg.tomp2p;
 
-/**
- * For reporting error message only (UI)
- */
-public interface ErrorMessageHandler {
-    void onFault(String errorMessage);
+import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.MessageModule;
+
+import java.util.Properties;
+
+public class TomP2PMessageModule extends MessageModule {
+
+    public TomP2PMessageModule(Properties properties) {
+        super(properties);
+    }
+
+    @Override
+    protected void doConfigure() {
+        bind(TomP2PNode.class).asEagerSingleton();
+        bind(BootstrappedPeerFactory.class).asEagerSingleton();
+    }
+
+    @Override
+    protected Class<? extends MessageFacade> messageFacade() {
+        return TomP2PMessageFacade.class;
+    }
 }

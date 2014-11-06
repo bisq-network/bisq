@@ -17,24 +17,22 @@
 
 package io.bitsquare.app;
 
-import io.bitsquare.AbstractBitsquareModule;
+import io.bitsquare.BitsquareModule;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.crypto.CryptoModule;
-import io.bitsquare.gui.GuiModule;
-import io.bitsquare.msg.DefaultMessageModule;
 import io.bitsquare.msg.MessageModule;
+import io.bitsquare.msg.tomp2p.TomP2PMessageModule;
+import io.bitsquare.offer.OfferModule;
+import io.bitsquare.offer.tomp2p.TomP2POfferModule;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeModule;
 import io.bitsquare.user.User;
-import io.bitsquare.util.ConfigLoader;
 
 import com.google.inject.Injector;
 import com.google.inject.name.Names;
 
 import java.util.Properties;
-
-import javafx.stage.Stage;
 
 import net.tomp2p.connection.Ports;
 
@@ -44,19 +42,16 @@ import org.slf4j.LoggerFactory;
 import akka.actor.ActorSystem;
 import scala.concurrent.duration.Duration;
 
-public class BitsquareModule extends AbstractBitsquareModule {
+/**
+ * Configures all non-UI modules necessary to run a Bitsquare application.
+ */
+public class AppModule extends BitsquareModule {
+    private static final Logger log = LoggerFactory.getLogger(AppModule.class);
 
-    private static final Logger log = LoggerFactory.getLogger(BitsquareModule.class);
-    private final Stage primaryStage;
     private final String appName;
 
-    public BitsquareModule(Stage primaryStage, String appName) {
-        this(primaryStage, appName, ConfigLoader.loadConfig());
-    }
-
-    public BitsquareModule(Stage primaryStage, String appName, Properties properties) {
+    public AppModule(Properties properties, String appName) {
         super(properties);
-        this.primaryStage = primaryStage;
         this.appName = appName;
     }
 
@@ -70,7 +65,7 @@ public class BitsquareModule extends AbstractBitsquareModule {
         install(bitcoinModule());
         install(cryptoModule());
         install(tradeModule());
-        install(guiModule());
+        install(offerModule());
 
         bindConstant().annotatedWith(Names.named("appName")).to(appName);
         bind(ActorSystem.class).toInstance(ActorSystem.create(appName));
@@ -80,7 +75,7 @@ public class BitsquareModule extends AbstractBitsquareModule {
     }
 
     protected MessageModule messageModule() {
-        return new DefaultMessageModule(properties);
+        return new TomP2PMessageModule(properties);
     }
 
     protected BitcoinModule bitcoinModule() {
@@ -95,9 +90,7 @@ public class BitsquareModule extends AbstractBitsquareModule {
         return new TradeModule(properties);
     }
 
-    protected GuiModule guiModule() {
-        return new GuiModule(properties, primaryStage);
-    }
+    protected OfferModule offerModule() { return new TomP2POfferModule(properties); }
 
     @Override
     protected void doClose(Injector injector) {

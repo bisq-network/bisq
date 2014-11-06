@@ -18,7 +18,6 @@
 package io.bitsquare.app.gui;
 
 import io.bitsquare.app.ArgumentParser;
-import io.bitsquare.app.BitsquareModule;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.ViewLoader;
@@ -51,7 +50,7 @@ public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
     private static String appName = "Bitsquare";
 
-    private BitsquareModule bitsquareModule;
+    private MainModule mainModule;
     private Injector injector;
 
     public static void main(String[] args) {
@@ -67,8 +66,8 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        bitsquareModule = new BitsquareModule(primaryStage, appName);
-        injector = Guice.createInjector(bitsquareModule);
+        mainModule = new MainModule(appName, primaryStage);
+        injector = Guice.createInjector(mainModule);
 
 
         // route uncaught exceptions to a user-facing dialog
@@ -138,7 +137,7 @@ public class Main extends Application {
 
     @Override
     public void stop() {
-        bitsquareModule.close(injector);
+        mainModule.close(injector);
         System.exit(0);
     }
 }

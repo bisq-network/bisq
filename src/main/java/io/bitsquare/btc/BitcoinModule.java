@@ -17,7 +17,7 @@
 
 package io.bitsquare.btc;
 
-import io.bitsquare.AbstractBitsquareModule;
+import io.bitsquare.BitsquareModule;
 
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
@@ -28,7 +28,7 @@ import com.google.inject.Injector;
 
 import java.util.Properties;
 
-public class BitcoinModule extends AbstractBitsquareModule {
+public class BitcoinModule extends BitsquareModule {
 
     private static final BitcoinNetwork DEFAULT_NETWORK = BitcoinNetwork.REGTEST;
 

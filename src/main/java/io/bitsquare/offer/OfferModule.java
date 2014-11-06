@@ -15,11 +15,22 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.handlers;
+package io.bitsquare.offer;
 
-/**
- * For reporting throwables only
- */
-public interface ExceptionHandler {
-    void onError(Throwable throwable);
+import io.bitsquare.BitsquareModule;
+
+import java.util.Properties;
+
+public abstract class OfferModule extends BitsquareModule {
+
+    protected OfferModule(Properties properties) {
+        super(properties);
+    }
+
+    @Override
+    protected void configure() {
+        bind(OfferRepository.class).to(offerRepository()).asEagerSingleton();
+    }
+
+    protected abstract Class<? extends OfferRepository> offerRepository();
 }

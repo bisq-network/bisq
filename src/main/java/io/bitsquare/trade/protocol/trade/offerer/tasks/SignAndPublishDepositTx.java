@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.trade.handlers.ExceptionHandler;
+import io.bitsquare.util.task.ExceptionHandler;
 
 import org.bitcoinj.core.Transaction;
 
@@ -59,12 +59,12 @@ public class SignAndPublishDepositTx {
                         @Override
                         public void onFailure(@NotNull Throwable t) {
                             log.error("offererSignAndPublishTx faultHandler.onFault:" + t);
-                            exceptionHandler.onError(t);
+                            exceptionHandler.handleException(t);
                         }
                     });
         } catch (Exception e) {
             log.error("offererSignAndPublishTx faultHandler.onFault:" + e);
-            exceptionHandler.onError(e);
+            exceptionHandler.handleException(e);
         }
     }
 

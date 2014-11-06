@@ -15,10 +15,8 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg.listeners;
+package io.bitsquare.util.task;
 
-public interface AddOfferListener {
-    void onComplete();
-
-    void onFailed(String reason, Throwable throwable);
+public interface ResultHandler {
+    void handleResult();
 }

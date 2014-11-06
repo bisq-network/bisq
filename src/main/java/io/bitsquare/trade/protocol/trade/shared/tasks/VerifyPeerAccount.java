@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade.shared.tasks;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BlockChainFacade;
-import io.bitsquare.trade.handlers.ExceptionHandler;
-import io.bitsquare.trade.handlers.ResultHandler;
+import io.bitsquare.util.task.ExceptionHandler;
+import io.bitsquare.util.task.ResultHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,15 +34,16 @@ public class VerifyPeerAccount {
         if (blockChainFacade.verifyAccountRegistration()) {
             if (blockChainFacade.isAccountBlackListed(peersAccountId, peersBankAccount)) {
                 log.error("Taker is blacklisted");
-                exceptionHandler.onError(new Exception("Taker is blacklisted"));
+                exceptionHandler.handleException(new Exception("Taker is blacklisted"));
             }
             else {
-                resultHandler.onResult();
+                resultHandler.handleResult();
             }
         }
         else {
             log.error("Account registration validation for peer faultHandler.onFault.");
-            exceptionHandler.onError(new Exception("Account registration validation for peer faultHandler.onFault."));
+            exceptionHandler.handleException(new Exception("Account registration validation for peer faultHandler" +
+                    ".onFault."));
         }
     }
 

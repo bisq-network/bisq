@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui;
 
-import io.bitsquare.AbstractBitsquareModule;
+import io.bitsquare.BitsquareModule;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.trade.offerbook.OfferBook;
@@ -32,7 +32,7 @@ import java.util.Properties;
 
 import javafx.stage.Stage;
 
-public class GuiModule extends AbstractBitsquareModule {
+public class GuiModule extends BitsquareModule {
 
     private final Stage primaryStage;
 

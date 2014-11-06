@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.trade.handlers.ExceptionHandler;
+import io.bitsquare.util.task.ExceptionHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -57,7 +57,7 @@ public class PayDeposit {
             resultHandler.onResult(signedTakerDepositTx);
         } catch (InsufficientMoneyException e) {
             log.error("Pay deposit faultHandler.onFault due InsufficientMoneyException " + e);
-            exceptionHandler.onError(
+            exceptionHandler.handleException(
                     new Exception("Pay deposit faultHandler.onFault due InsufficientMoneyException " + e));
         }
     }

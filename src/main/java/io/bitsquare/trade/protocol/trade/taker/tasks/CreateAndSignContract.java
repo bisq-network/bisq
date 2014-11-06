@@ -21,8 +21,8 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.crypto.CryptoFacade;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Contract;
-import io.bitsquare.trade.handlers.ExceptionHandler;
 import io.bitsquare.util.Utilities;
+import io.bitsquare.util.task.ExceptionHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -58,7 +58,7 @@ public class CreateAndSignContract {
             resultHandler.onResult(contract, contractAsJson, signature);
         } catch (Throwable t) {
             log.error("Exception at sign contract " + t);
-            exceptionHandler.onError(t);
+            exceptionHandler.handleException(t);
         }
     }
 

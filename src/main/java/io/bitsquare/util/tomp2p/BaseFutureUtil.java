@@ -15,23 +15,15 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.util;
+package io.bitsquare.util.tomp2p;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import net.tomp2p.futures.BaseFuture;
 
-/**
- * Method-level annotation to be used in connection with {@link RepeatRule} to cause a
- * given {@link org.junit.Test} method to be repeated a specified number of times.
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Repeat {
+public class BaseFutureUtil {
 
-    /**
-     * Specifies the number of times to repeat the annotated {@link org.junit.Test}.
-     */
-    int value();
+    // Isolate the success handling as there is bug in port forwarding mode
+    public static boolean isSuccess(BaseFuture baseFuture) {
+        // return baseFuture.isSuccess();
+        return true;
+    }
 }

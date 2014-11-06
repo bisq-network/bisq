@@ -34,6 +34,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import static com.google.common.base.Preconditions.*;
+import static io.bitsquare.btc.Restrictions.MIN_TRADE_AMOUNT;
+
 //TODO flatten down?
 
 public class Offer implements Serializable {
@@ -194,6 +197,37 @@ public class Offer implements Serializable {
         return bankAccountUID;
     }
 
+    public Date getCreationDate() {
+        return creationDate;
+    }
+
+    public void validate() throws Exception {
+        checkNotNull(getAcceptedCountries(), "AcceptedCountries is null");
+        checkNotNull(getAcceptedLanguageLocales(), "AcceptedLanguageLocales is null");
+        checkNotNull(getAmount(), "Amount is null");
+        checkNotNull(getArbitrators(), "Arbitrator is null");
+        checkNotNull(getBankAccountId(), "BankAccountId is null");
+        checkNotNull(getSecurityDeposit(), "SecurityDeposit is null");
+        checkNotNull(getCreationDate(), "CreationDate is null");
+        checkNotNull(getCurrency(), "Currency is null");
+        checkNotNull(getDirection(), "Direction is null");
+        checkNotNull(getId(), "Id is null");
+        checkNotNull(getMessagePublicKey(), "MessagePublicKey is null");
+        checkNotNull(getMinAmount(), "MinAmount is null");
+        checkNotNull(getPrice(), "Price is null");
+
+        checkArgument(getMinAmount().compareTo(MIN_TRADE_AMOUNT) >= 0, "MinAmount is less then " + MIN_TRADE_AMOUNT);
+        checkArgument(getAmount().compareTo(MIN_TRADE_AMOUNT) >= 0, "Amount is less then " + MIN_TRADE_AMOUNT);
+        checkArgument(getAmount().compareTo(getMinAmount()) >= 0, "MinAmount is larger then Amount");
+        checkArgument(getSecurityDeposit().isPositive(), "SecurityDeposit is not positive");
+        checkArgument(getPrice().isPositive(), "Price is 0 or negative");
+
+        // TODO check balance
+        // securityDeposit
+        // Coin totalsToFund
+        // getAddressInfoByTradeID(offerId)
+        // TODO when offer is flattened continue here...
+    }
 
     @Override
     public String toString() {
@@ -214,10 +248,5 @@ public class Offer implements Serializable {
                 ", bankAccountUID='" + bankAccountUID + '\'' +
                 ", arbitrator=" + arbitrators +
                 '}';
-    }
-
-
-    public Date getCreationDate() {
-        return creationDate;
     }
 }

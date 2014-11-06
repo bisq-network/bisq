@@ -15,8 +15,29 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.handlers;
+package io.bitsquare.app.gui;
 
-public interface ResultHandler {
-    void onResult();
+import io.bitsquare.BitsquareModule;
+import io.bitsquare.app.AppModule;
+import io.bitsquare.gui.GuiModule;
+import io.bitsquare.util.ConfigLoader;
+
+import javafx.stage.Stage;
+
+class MainModule extends BitsquareModule {
+
+    private final String appName;
+    private final Stage primaryStage;
+
+    public MainModule(String appName, Stage primaryStage) {
+        super(ConfigLoader.loadConfig());
+        this.appName = appName;
+        this.primaryStage = primaryStage;
+    }
+
+    @Override
+    protected void configure() {
+        install(new AppModule(properties, appName));
+        install(new GuiModule(properties, primaryStage));
+    }
 }

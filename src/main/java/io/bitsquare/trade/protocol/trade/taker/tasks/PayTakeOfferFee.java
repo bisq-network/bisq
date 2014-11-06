@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.trade.handlers.ExceptionHandler;
+import io.bitsquare.util.task.ExceptionHandler;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
@@ -47,13 +47,13 @@ public class PayTakeOfferFee {
                 @Override
                 public void onFailure(@NotNull Throwable t) {
                     log.error("Take offer fee paid faultHandler.onFault with exception: " + t);
-                    exceptionHandler.onError(
+                    exceptionHandler.handleException(
                             new Exception("Take offer fee paid faultHandler.onFault with exception: " + t));
                 }
             });
         } catch (InsufficientMoneyException e) {
             log.error("Take offer fee paid faultHandler.onFault due InsufficientMoneyException " + e);
-            exceptionHandler.onError(
+            exceptionHandler.handleException(
                     new Exception("Take offer fee paid faultHandler.onFault due to InsufficientMoneyException " + e));
         }
     }

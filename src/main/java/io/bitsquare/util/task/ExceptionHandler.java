@@ -15,23 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.util;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package io.bitsquare.util.task;
 
 /**
- * Method-level annotation to be used in connection with {@link RepeatRule} to cause a
- * given {@link org.junit.Test} method to be repeated a specified number of times.
+ * For reporting throwables only
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Repeat {
-
-    /**
-     * Specifies the number of times to repeat the annotated {@link org.junit.Test}.
-     */
-    int value();
+public interface ExceptionHandler {
+    void handleException(Throwable throwable);
 }
