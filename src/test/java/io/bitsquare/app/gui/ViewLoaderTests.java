@@ -15,9 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui;
+package io.bitsquare.app.gui;
 
-import io.bitsquare.app.BitsquareModule;
+import io.bitsquare.gui.FatalException;
+import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.ViewLoader;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -30,7 +32,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class ViewLoaderTest {
+public class ViewLoaderTests {
 
     public static class TestApp extends Application {
         static Stage primaryStage;
@@ -56,7 +58,7 @@ public class ViewLoaderTest {
 
     @Before
     public void setUp() {
-        Injector injector = Guice.createInjector(new BitsquareModule(TestApp.primaryStage, "testApp"));
+        Injector injector = Guice.createInjector(new MainModule("testApp", TestApp.primaryStage));
         ViewLoader.setInjector(injector);
     }
 
