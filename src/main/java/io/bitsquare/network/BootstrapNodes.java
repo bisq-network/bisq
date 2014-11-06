@@ -20,13 +20,13 @@ package io.bitsquare.network;
 import java.util.Arrays;
 import java.util.List;
 
-public interface BootstrapNode {
+public interface BootstrapNodes {
     Node LOCALHOST = Node.at("localhost", "127.0.0.1");
-    Node DIGITAL_OCEAN1 = Node.at("digitalocean1.bitsquare.io", "188.226.179.109");
+    Node DIGITAL_OCEAN_1 = Node.at("digitalocean1.bitsquare.io", "188.226.179.109");
 
     static List<Node> all() {
         return Arrays.asList(
-                LOCALHOST, DIGITAL_OCEAN1
+                LOCALHOST, DIGITAL_OCEAN_1
         );
     }
 }

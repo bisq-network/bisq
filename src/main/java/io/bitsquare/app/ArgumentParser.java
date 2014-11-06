@@ -17,7 +17,7 @@
 
 package io.bitsquare.app;
 
-import io.bitsquare.network.BootstrapNode;
+import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
@@ -30,7 +30,7 @@ public class ArgumentParser {
     public static final String PORT_FLAG = "port";
     public static final String INTERFACE_HINT_FLAG = "interface";
     public static final String NAME_FLAG = "name";
-    public static final String PEER_ID_DEFAULT = BootstrapNode.DIGITAL_OCEAN1.getId();
+    public static final String PEER_ID_DEFAULT = BootstrapNodes.DIGITAL_OCEAN_1.getId();
 
     private final net.sourceforge.argparse4j.inf.ArgumentParser parser;
 

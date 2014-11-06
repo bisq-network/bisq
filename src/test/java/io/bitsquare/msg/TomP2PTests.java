@@ -17,7 +17,7 @@
 
 package io.bitsquare.msg;
 
-import io.bitsquare.network.BootstrapNode;
+import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
 import io.bitsquare.util.Repeat;
 
@@ -83,7 +83,7 @@ public class TomP2PTests {
     // Typically you run the seed node in localhost to test direct connection.
     // If you have a setup where you are not behind a router you can also use a WAN side seed node.
     private static final Node BOOTSTRAP_NODE =
-            (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT) ? BootstrapNode.LOCALHOST : BootstrapNode.DIGITAL_OCEAN1;
+            (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT) ? BootstrapNodes.LOCALHOST : BootstrapNodes.DIGITAL_OCEAN_1;
 
     private static final PeerAddress BOOTSTRAP_NODE_ADDRESS;
 

@@ -21,7 +21,7 @@ import io.bitsquare.app.ArgumentParser;
 import io.bitsquare.msg.actor.DHTManager;
 import io.bitsquare.msg.actor.command.InitializePeer;
 import io.bitsquare.msg.actor.event.PeerInitialized;
-import io.bitsquare.network.BootstrapNode;
+import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
 
 import java.net.UnknownHostException;
@@ -56,13 +56,13 @@ public class SeedNode {
             interfaceHint = namespace.getString(ArgumentParser.INTERFACE_HINT_FLAG);
 
         int serverPort = Integer.valueOf(namespace.getString(ArgumentParser.PORT_FLAG));
-        String seedID = BootstrapNode.LOCALHOST.getId();
+        String seedID = BootstrapNodes.LOCALHOST.getId();
         if (namespace.getString(ArgumentParser.PEER_ID_FLAG) != null) {
             seedID = namespace.getString(ArgumentParser.PEER_ID_FLAG);
         }
 
         final Set<PeerAddress> peerAddresses = new HashSet<>();
-        for (Node node : BootstrapNode.all()) {
+        for (Node node : BootstrapNodes.all()) {
             if (!node.getId().equals(seedID)) {
                 try {
                     peerAddresses.add(new PeerAddress(Number160.createHash(node.getId()), node.getIp(),
