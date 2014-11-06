@@ -19,6 +19,8 @@ package io.bitsquare.network;
 
 public interface Node {
 
+    public static final int DEFAULT_PORT = 5000;
+
     String getId();
 
     String getIp();

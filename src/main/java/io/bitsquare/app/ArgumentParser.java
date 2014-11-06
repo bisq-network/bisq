@@ -18,6 +18,7 @@
 package io.bitsquare.app;
 
 import io.bitsquare.network.BootstrapNode;
+import io.bitsquare.network.Node;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
@@ -37,9 +38,7 @@ public class ArgumentParser {
     public static final String PORT_FLAG = "port";
     public static final String INTERFACE_HINT_FLAG = "interface";
     public static final String NAME_FLAG = "name";
-
-    private static final Integer PORT_DEFAULT = 5000;
-    private static final String PEER_ID_DEFAULT = BootstrapNode.DIGITAL_OCEAN1.getId();
+    public static final String PEER_ID_DEFAULT = BootstrapNode.DIGITAL_OCEAN1.getId();
 
     private final net.sourceforge.argparse4j.inf.ArgumentParser parser;
 
@@ -51,7 +50,7 @@ public class ArgumentParser {
                 .setDefault(PEER_ID_DEFAULT)
                 .help("Seed peer ID.");
         parser.addArgument("-p", "--" + PORT_FLAG)
-                .setDefault(PORT_DEFAULT)
+                .setDefault(Node.DEFAULT_PORT)
                 .help("IP port to listen on.");
         parser.addArgument("-i", "--" + INTERFACE_HINT_FLAG)
                 .help("Network interface to listen on.");

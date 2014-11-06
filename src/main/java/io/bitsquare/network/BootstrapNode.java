@@ -18,12 +18,16 @@
 package io.bitsquare.network;
 
 public enum BootstrapNode implements Node {
-    LOCALHOST("localhost", "127.0.0.1", 5000),
-    DIGITAL_OCEAN1("digitalocean1.bitsquare.io", "188.226.179.109", 5000);
+    LOCALHOST("localhost", "127.0.0.1"),
+    DIGITAL_OCEAN1("digitalocean1.bitsquare.io", "188.226.179.109");
 
     private final String id;
     private final String ip;
     private final int port;
+
+    BootstrapNode(String id, String ip) {
+        this(id, ip, DEFAULT_PORT);
+    }
 
     BootstrapNode(String id, String ip, int port) {
         this.id = id;
