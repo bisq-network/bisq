@@ -24,6 +24,7 @@ import io.bitsquare.gui.GuiModule;
 import io.bitsquare.msg.DefaultMessageModule;
 import io.bitsquare.msg.MessageModule;
 import io.bitsquare.offer.OfferModule;
+import io.bitsquare.offer.tomp2p.TomP2POfferModule;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeModule;
@@ -97,9 +98,7 @@ public class BitsquareModule extends AbstractBitsquareModule {
         return new TradeModule(properties);
     }
 
-    protected OfferModule offerModule() {
-        return new OfferModule(properties);
-    }
+    protected OfferModule offerModule() { return new TomP2POfferModule(properties); }
 
     protected GuiModule guiModule() {
         return new GuiModule(properties, primaryStage);

@@ -15,9 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.offer.tomp2p;
 
 import io.bitsquare.msg.P2PNode;
+import io.bitsquare.offer.Offer;
+import io.bitsquare.offer.OfferRepository;
 import io.bitsquare.util.task.FaultHandler;
 import io.bitsquare.util.task.ResultHandler;
 

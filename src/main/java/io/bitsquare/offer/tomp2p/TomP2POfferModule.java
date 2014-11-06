@@ -15,22 +15,22 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.offer.tomp2p;
 
 import io.bitsquare.AbstractBitsquareModule;
+import io.bitsquare.offer.OfferModule;
+import io.bitsquare.offer.OfferRepository;
 
 import java.util.Properties;
 
-public abstract class OfferModule extends AbstractBitsquareModule {
+public class TomP2POfferModule extends OfferModule {
 
-    protected OfferModule(Properties properties) {
+    public TomP2POfferModule(Properties properties) {
         super(properties);
     }
 
     @Override
-    protected void configure() {
-        bind(OfferRepository.class).to(offerRepository()).asEagerSingleton();
+    public Class<? extends OfferRepository> offerRepository() {
+        return TomP2POfferRepository.class;
     }
-
-    protected abstract Class<? extends OfferRepository> offerRepository();
 }
