@@ -56,7 +56,10 @@ public class SeedNode {
             interfaceHint = namespace.getString(ArgumentParser.INTERFACE_HINT_FLAG);
 
         int serverPort = Integer.valueOf(namespace.getString(ArgumentParser.PORT_FLAG));
-        String seedID = namespace.getString(ArgumentParser.PEER_ID_FLAG);
+        String seedID = BootstrapNode.LOCALHOST.getId();
+        if (namespace.getString(ArgumentParser.PEER_ID_FLAG) != null) {
+            seedID = namespace.getString(ArgumentParser.PEER_ID_FLAG);
+        }
 
         final Set<PeerAddress> peerAddresses = new HashSet<>();
         for (Node node : BootstrapNode.values()) {
