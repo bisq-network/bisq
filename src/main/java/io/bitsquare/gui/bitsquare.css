@@ -23,7 +23,8 @@ lower gradient color on tab: dddddd
 .root {
     -bs-grey: #666666;
     -bs-bg-grey: #dddddd;
-   
+    -bs-error-red: #dd0000;
+          
     -fx-accent: #0f87c3;
     -fx-default-button: derive(-fx-accent,95%);
     -fx-focus-color: -fx-accent;
@@ -36,7 +37,9 @@ lower gradient color on tab: dddddd
 #splash {
     -fx-background-color: #ffffff;
 }
-
+#splash-error-state-msg {
+    -fx-text-fill: -bs-error-red;
+}
 
 /* Main UI */
 #base-content-container {
@@ -50,18 +53,6 @@ lower gradient color on tab: dddddd
 #headline-label {
     -fx-font-weight: bold;
     -fx-font-size: 18;
-}
-
-#info-label {
-    -fx-font-size: 14;
-}
-
-#online-label {
-    -fx-fill: green;
-}
-
-#offline-label {
-    -fx-fill: red;
 }
 
 

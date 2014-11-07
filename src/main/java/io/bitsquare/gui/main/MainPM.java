@@ -20,6 +20,7 @@ package io.bitsquare.gui.main;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.network.BootstrapState;
 
 import com.google.inject.Inject;
 
@@ -47,10 +48,16 @@ class MainPM extends PresentationModel<MainModel> {
     final BooleanProperty backendReady = new SimpleBooleanProperty();
     final StringProperty bankAccountsComboBoxPrompt = new SimpleStringProperty();
     final BooleanProperty bankAccountsComboBoxDisable = new SimpleBooleanProperty();
-    final StringProperty bootstrapState = new SimpleStringProperty();
-    final StringProperty bitcoinSyncState = new SimpleStringProperty("Initializing");
+    final StringProperty blockchainSyncState = new SimpleStringProperty("Initializing");
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty();
-    final DoubleProperty networkSyncProgress = new SimpleDoubleProperty();
+    final DoubleProperty blockchainSyncProgress = new SimpleDoubleProperty();
+    final BooleanProperty blockchainSyncIndicatorVisible = new SimpleBooleanProperty(true);
+    final DoubleProperty bootstrapProgress = new SimpleDoubleProperty(-1);
+    final BooleanProperty bootstrapFailed = new SimpleBooleanProperty();
+    final BooleanProperty bootstrapIndicatorVisible = new SimpleBooleanProperty(true);
+    final StringProperty bootstrapState = new SimpleStringProperty();
+    final StringProperty bootstrapErrorMsg = new SimpleStringProperty();
+    final StringProperty walletFacadeErrorMsg = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -74,16 +81,42 @@ class MainPM extends PresentationModel<MainModel> {
         super.initialize();
 
         backendReady.bind(model.backendReady);
-        networkSyncProgress.bind(model.networkSyncProgress);
         numPendingTrades.bind(model.numPendingTrades);
 
-        model.bootstrapState.addListener((ov, oldValue, newValue) ->
-                bootstrapState.set("Connection to P2P network: " + newValue));
+        model.bootstrapState.addListener((ov, oldValue, newValue) -> {
+                    if (newValue == BootstrapState.DIRECT_SUCCESS ||
+                            newValue == BootstrapState.NAT_SUCCESS ||
+                            newValue == BootstrapState.RELAY_SUCCESS) {
+                        bootstrapState.set("Successfully connected to P2P network: " + newValue.getMessage());
+                        bootstrapIndicatorVisible.set(false);
+                        bootstrapProgress.set(1);
+                    }
+                    else if (newValue == BootstrapState.PEER_CREATION_FAILED ||
+                            newValue == BootstrapState.DIRECT_FAILED ||
+                            newValue == BootstrapState.NAT_FAILED ||
+                            newValue == BootstrapState.RELAY_FAILED) {
 
-        bootstrapState.set(model.bootstrapState.get());
+                        bootstrapErrorMsg.set(newValue.getMessage());
+                        bootstrapState.set("Connection to P2P network failed.");
+                        bootstrapIndicatorVisible.set(false);
+                        bootstrapProgress.set(0);
+                        bootstrapFailed.set(true);
+                    }
+                    else {
+                        bootstrapState.set("Connecting to P2P network: " + newValue.getMessage());
+                    }
+                }
+        );
 
-        model.networkSyncProgress.addListener((ov, oldValue, newValue) -> updateBitcoinSyncState((double) newValue));
-        updateBitcoinSyncState(model.networkSyncProgress.get());
+        model.walletFacadeException.addListener((ov, oldValue, newValue) -> {
+            blockchainSyncProgress.set(0);
+            blockchainSyncIndicatorVisible.set(false);
+            blockchainSyncState.set("Startup failed.");
+            walletFacadeErrorMsg.set(((Throwable) newValue).getMessage());
+        });
+
+        model.networkSyncProgress.addListener((ov, oldValue, newValue) -> setNetworkSyncProgress((double) newValue));
+        setNetworkSyncProgress(model.networkSyncProgress.get());
 
         model.getBankAccounts().addListener((ListChangeListener<BankAccount>) change -> {
             bankAccountsComboBoxDisable.set(change.getList().isEmpty());
@@ -149,14 +182,16 @@ class MainPM extends PresentationModel<MainModel> {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void updateBitcoinSyncState(double value) {
-        if (value > 0.0)
-            bitcoinSyncState.set("Synchronizing with bitcoin network: " +
-                    formatter.formatToPercent(value));
-        else if (value == 1)
-            bitcoinSyncState.set("Synchronizing with bitcoin network completed.");
+    private void setNetworkSyncProgress(double value) {
+        blockchainSyncProgress.set(value);
+        if (value >= 1)
+            blockchainSyncState.set("Synchronization completed.");
+        else if (value > 0.0)
+            blockchainSyncState.set("Synchronizing blockchain: " + formatter.formatToPercent(value));
         else
-            bitcoinSyncState.set("Synchronizing with bitcoin network...");
+            blockchainSyncState.set("Connecting to bitcoin network...");
+
+        blockchainSyncIndicatorVisible.set(value < 1);
     }
 
 }

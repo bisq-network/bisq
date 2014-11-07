@@ -29,11 +29,7 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
-import org.bitcoinj.core.DownloadListener;
-
 import com.google.inject.Inject;
-
-import java.util.Date;
 
 import javax.inject.Named;
 
@@ -45,8 +41,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 
@@ -70,7 +65,8 @@ class MainModel extends UIModel {
     final BooleanProperty backendReady = new SimpleBooleanProperty();
     final DoubleProperty networkSyncProgress = new SimpleDoubleProperty(-1);
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty(0);
-    final StringProperty bootstrapState = new SimpleStringProperty();
+    final ObjectProperty<BootstrapState> bootstrapState = new SimpleObjectProperty<>();
+    final ObjectProperty walletFacadeException = new SimpleObjectProperty<Throwable>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -130,41 +126,46 @@ class MainModel extends UIModel {
 
             @Override
             public void onBootstrapStateChanged(BootstrapState bootstrapState) {
-                MainModel.this.bootstrapState.set(bootstrapState.getMessage());
+                MainModel.this.bootstrapState.set(bootstrapState);
             }
         });
 
         Profiler.printMsgWithTime("MainModel.initFacades");
 
-        DownloadListener downloadListener = new DownloadListener() {
+        WalletFacade.BlockchainDownloadListener blockchainDownloadListener = new WalletFacade
+                .BlockchainDownloadListener() {
             @Override
-            protected void progress(double percent, int blocksLeft, Date date) {
-                super.progress(percent, blocksLeft, date);
-                Platform.runLater(() -> {
-                    networkSyncProgress.set(percent / 100.0);
+            public void progress(double percentage) {
+                networkSyncProgress.set(percentage / 100.0);
 
-                    if (facadesInitialised && percent >= 100.0)
-                        backendReady.set(true);
-                });
+                if (facadesInitialised && percentage >= 100.0)
+                    backendReady.set(true);
             }
 
             @Override
-            protected void doneDownload() {
-                super.doneDownload();
-                Platform.runLater(() -> {
-                    networkSyncProgress.set(1.0);
+            public void doneDownload() {
+                networkSyncProgress.set(1.0);
 
-                    if (facadesInitialised)
-                        backendReady.set(true);
-                });
+                if (facadesInitialised)
+                    backendReady.set(true);
             }
         };
 
-        walletFacade.initialize(downloadListener, () -> {
-            walletFacadeInited = true;
-            if (messageFacadeInited)
-                onFacadesInitialised();
-        });
+        WalletFacade.StartupListener startupListener = new WalletFacade.StartupListener() {
+            @Override
+            public void completed() {
+                walletFacadeInited = true;
+                if (messageFacadeInited)
+                    onFacadesInitialised();
+            }
+
+            @Override
+            public void failed(final Throwable failure) {
+                walletFacadeException.set(failure);
+            }
+        };
+
+        walletFacade.initialize(Platform::runLater, blockchainDownloadListener, startupListener);
     }
 
 
