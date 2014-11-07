@@ -42,7 +42,7 @@ public abstract class MessageModule extends BitsquareModule {
 
         bind(Node.class)
                 .annotatedWith(Names.named("bootstrapNode"))
-                .toInstance(BootstrapNodes.DIGITAL_OCEAN_1);
+                .toInstance(BootstrapNodes.LOCALHOST);
 
         doConfigure();
     }
