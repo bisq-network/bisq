@@ -25,14 +25,14 @@
 
     <logger name="io.bitsquare" level="TRACE"/>
 
-    <logger name="org.bitcoinj" level="WARN"/>
-    <logger name="net.tomp2p" level="TRACE"/>
+    <logger name="org.bitcoinj" level="INFO"/>
+    <logger name="net.tomp2p" level="INFO"/>
 
 
     <logger name="net.tomp2p.message.Encoder" level="WARN"/>
     <logger name="net.tomp2p.message.Decoder" level="WARN"/>
     <logger name="net.tomp2p.message.MessageHeaderCodec" level="WARN"/>
-    
+
 
     <logger name="io.netty.util" level="WARN"/>
     <logger name="io.netty.channel" level="WARN"/>

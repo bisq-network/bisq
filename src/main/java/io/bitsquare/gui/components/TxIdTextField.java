@@ -89,7 +89,8 @@ public class TxIdTextField extends AnchorPane {
         textField.setText(txID);
         textField.setOnMouseClicked(mouseEvent -> {
             try {
-                Desktop.getDesktop().browse(URI.create("https://blockchain.info/address/" + txID));
+                // TODO get the url form the app preferences
+                Desktop.getDesktop().browse(URI.create("https://blockchain.info/tx/" + txID));
             } catch (IOException e) {
                 log.warn(e.getMessage());
                 Popups.openWarningPopup("Warning", "Opening blockchain.info failed. Please check your internet " +

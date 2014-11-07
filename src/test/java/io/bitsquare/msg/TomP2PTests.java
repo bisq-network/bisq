@@ -20,6 +20,7 @@ package io.bitsquare.msg;
 import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
 import io.bitsquare.util.Repeat;
+import io.bitsquare.util.RepeatRule;
 
 import java.io.IOException;
 
@@ -30,7 +31,9 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import net.tomp2p.connection.Bindings;
 import net.tomp2p.connection.Ports;
+import net.tomp2p.connection.StandardProtocolFamily;
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
 import net.tomp2p.dht.FutureRemove;
@@ -53,6 +56,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.slf4j.Logger;
@@ -78,7 +82,7 @@ public class TomP2PTests {
     }
 
     // If you want to test in one specific connection mode define it directly, otherwise use UNKNOWN
-    private static final ConnectionType FORCED_CONNECTION_TYPE = ConnectionType.DIRECT;
+    private static final ConnectionType FORCED_CONNECTION_TYPE = ConnectionType.NAT;
 
     // Typically you run the seed node in localhost to test direct connection.
     // If you have a setup where you are not behind a router you can also use a WAN side seed node.
@@ -100,7 +104,8 @@ public class TomP2PTests {
 
     // If cache is used tests get faster as it doesn't create and bootstrap a new node at every test.
     // Need to observe if it can have some side effects.
-    private static final boolean CACHE_CLIENTS = true;
+    // In cached mode I observed more failures, need investigation why but might be a test setup problem.
+    private static final boolean CACHE_CLIENTS = false;
 
     // Use to stress tests by repeating them
     private static final int STRESS_TEST_COUNT = 1;
@@ -113,6 +118,7 @@ public class TomP2PTests {
     private int client1Port;
     private int client2Port;
     private ConnectionType resolvedConnectionType;
+    public @Rule RepeatRule repeatRule = new RepeatRule();
 
     @Before
     public void setUp() {
@@ -175,7 +181,6 @@ public class TomP2PTests {
         futurePut.awaitUninterruptibly();
         assertTrue(futurePut.isSuccess());
 
-
         peer2DHT = getDHTPeer("node_2", client2Port);
         FutureGet futureGet = peer2DHT.get(Number160.createHash("key")).start();
         futureGet.awaitUninterruptibly();
@@ -190,21 +195,19 @@ public class TomP2PTests {
         FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
         futurePut1.awaitUninterruptibly();
         assertTrue(futurePut1.isSuccess());
-
-        FuturePut futurePut2 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo2")).start();
-        futurePut2.awaitUninterruptibly();
-        assertTrue(futurePut2.isSuccess());
     }
 
     @Test
     @Repeat(STRESS_TEST_COUNT)
     public void testAddGet() throws Exception {
         peer1DHT = getDHTPeer("node_1", client1Port);
-        FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
+        FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1"))
+                .start();
         futurePut1.awaitUninterruptibly();
         assertTrue(futurePut1.isSuccess());
 
-        FuturePut futurePut2 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo2")).start();
+        FuturePut futurePut2 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo2"))
+                .start();
         futurePut2.awaitUninterruptibly();
         assertTrue(futurePut2.isSuccess());
 
@@ -223,11 +226,13 @@ public class TomP2PTests {
     @Repeat(STRESS_TEST_COUNT)
     public void testAddRemove() throws Exception {
         peer1DHT = getDHTPeer("node_1", client1Port);
-        FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
+        FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1"))
+                .start();
         futurePut1.awaitUninterruptibly();
         assertTrue(futurePut1.isSuccess());
 
-        FuturePut futurePut2 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo2")).start();
+        FuturePut futurePut2 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo2"))
+                .start();
         futurePut2.awaitUninterruptibly();
         assertTrue(futurePut2.isSuccess());
 
@@ -257,7 +262,6 @@ public class TomP2PTests {
     @Test
     @Repeat(STRESS_TEST_COUNT)
     public void testSendDirectBetweenLocalPeers() throws Exception {
-        // if (FORCED_CONNECTION_TYPE != ConnectionType.NAT && resolvedConnectionType != ConnectionType.NAT) {
         peer1DHT = getDHTPeer("node_1", client1Port);
         peer2DHT = getDHTPeer("node_2", client2Port);
 
@@ -283,7 +287,6 @@ public class TomP2PTests {
         assertTrue(futureDirect.isSuccess());
         log.debug(futureDirect.object().toString());
         assertEquals("pong", futureDirect.object());
-        // }
     }
 
     // That test should always succeed as we use the server seed node as receiver.
@@ -292,7 +295,6 @@ public class TomP2PTests {
     @Repeat(STRESS_TEST_COUNT)
     public void testSendDirectToSeedNode() throws Exception {
         peer1DHT = getDHTPeer("node_1", client1Port);
-
         FuturePeerConnection futurePeerConnection =
                 peer1DHT.peer().createPeerConnection(BOOTSTRAP_NODE_ADDRESS, 500);
         FutureDirect futureDirect = peer1DHT.peer().sendDirect(futurePeerConnection).object("hallo").start();
@@ -301,7 +303,6 @@ public class TomP2PTests {
         assertEquals("pong", futureDirect.object());
     }
 
-
     private Peer bootstrapDirectConnection(String clientId, int clientPort) {
         final String id = clientId + clientPort;
         if (CACHE_CLIENTS && cachedPeers.containsKey(id)) {
@@ -309,7 +310,8 @@ public class TomP2PTests {
         }
         Peer peer = null;
         try {
-            peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).start();
+            peer = new PeerBuilder(Number160.createHash(clientId)).bindings(getBindings())
+                    .ports(clientPort).start();
             FutureDiscover futureDiscover = peer.discover().peerAddress(BOOTSTRAP_NODE_ADDRESS).start();
             futureDiscover.awaitUninterruptibly();
             if (futureDiscover.isSuccess()) {
@@ -339,7 +341,9 @@ public class TomP2PTests {
         }
         Peer peer = null;
         try {
-            peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).behindFirewall().start();
+            peer = new PeerBuilder(Number160.createHash(clientId)).bindings(getBindings()).behindFirewall()
+                    .ports(clientPort).start();
+
             PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
             FutureDiscover futureDiscover = peer.discover().peerAddress(BOOTSTRAP_NODE_ADDRESS).start();
             FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
@@ -386,7 +390,9 @@ public class TomP2PTests {
 
         Peer peer = null;
         try {
-            peer = new PeerBuilder(Number160.createHash(clientId)).ports(clientPort).behindFirewall().start();
+            peer = new PeerBuilder(Number160.createHash(clientId)).bindings(getBindings()).behindFirewall()
+                    .ports(clientPort).start();
+
             PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
             FutureDiscover futureDiscover = peer.discover().peerAddress(BOOTSTRAP_NODE_ADDRESS).start();
             FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
@@ -467,5 +473,11 @@ public class TomP2PTests {
             newPort = new Ports().tcpPort();
 
         return newPort;
+    }
+
+    private Bindings getBindings() {
+        Bindings bindings = new Bindings();
+        bindings.addProtocol(StandardProtocolFamily.INET);
+        return bindings;
     }
 }

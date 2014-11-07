@@ -19,8 +19,11 @@ package io.bitsquare.msg;
 
 import io.bitsquare.network.Node;
 
+import net.tomp2p.connection.Bindings;
+import net.tomp2p.connection.ChannelServerConfiguration;
+import net.tomp2p.connection.Ports;
+import net.tomp2p.connection.StandardProtocolFamily;
 import net.tomp2p.dht.PeerBuilderDHT;
-import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.nat.PeerBuilderNAT;
 import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
@@ -37,38 +40,41 @@ public class SeedNodeForTesting {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeForTesting.class);
 
     public static void main(String[] args) throws Exception {
-        // Define your seed node IP and port
-        // "127.0.0.1" for localhost or SEED_ID_WAN_1
-        new SeedNodeForTesting().startSeedNode("localhost", Node.DEFAULT_PORT);
-    }
+        Peer peer = null;
+        try {
+            ChannelServerConfiguration csc = PeerBuilder.createDefaultChannelServerConfiguration();
+            csc.ports(new Ports(Node.DEFAULT_PORT, Node.DEFAULT_PORT));
+            csc.portsForwarding(new Ports(Node.DEFAULT_PORT, Node.DEFAULT_PORT));
+            csc.connectionTimeoutTCPMillis(10 * 1000);
+            csc.idleTCPSeconds(10);
+            csc.idleUDPSeconds(10);
 
-    public Thread startSeedNode(String seedNodeId, int seedNodePort) {
-        Thread thread = new Thread(() -> {
-            Peer peer = null;
-            try {
-                peer = new PeerBuilder(Number160.createHash(seedNodeId)).ports(seedNodePort).start();
-                PeerDHT peerDHT = new PeerBuilderDHT(peer).start();
-                peerDHT.peer().objectDataReply((sender, request) -> {
-                    log.trace("received request: ", request.toString());
-                    return "pong";
-                });
+            Bindings bindings = new Bindings();
+            bindings.addProtocol(StandardProtocolFamily.INET);
 
-                new PeerBuilderNAT(peer).start();
+            peer = new PeerBuilder(Number160.createHash("localhost")).bindings(bindings)
+                    .channelServerConfiguration(csc).ports(Node.DEFAULT_PORT).start();
 
-                log.debug("SeedNode started.");
-                for (; ; ) {
-                    for (PeerAddress pa : peer.peerBean().peerMap().all()) {
-                        log.debug("peer online:" + pa);
-                    }
-                    Thread.sleep(2000);
+            peer.objectDataReply((sender, request) -> {
+                log.trace("received request: ", request.toString());
+                return "pong";
+            });
+
+            // Needed for DHT support
+            new PeerBuilderDHT(peer).start();
+            // Needed for NAT support
+            new PeerBuilderNAT(peer).start();
+
+            log.debug("SeedNode started.");
+            for (; ; ) {
+                for (PeerAddress pa : peer.peerBean().peerMap().all()) {
+                    log.debug("peer online:" + pa);
                 }
-            } catch (Exception e) {
-                if (peer != null)
-                    peer.shutdown().awaitUninterruptibly();
+                Thread.sleep(2000);
             }
-        });
-        thread.start();
-        return thread;
+        } catch (Exception e) {
+            if (peer != null)
+                peer.shutdown().awaitUninterruptibly();
+        }
     }
-
 }

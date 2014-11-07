@@ -86,9 +86,13 @@ public class DHTManager extends AbstractActor {
             /* if (ip.getBootstrapPeers() != null && ip.getBootstrapPeers().size() > 0) {
                 peer.bootstrap().bootstrapTo(ip.getBootstrapPeers()).start();
             }*/
+
+            // Needed for DHT support
             peerDHT = new PeerBuilderDHT(peer).start();
+            // Needed for NAT support
             peerNAT = new PeerBuilderNAT(peer).start();
 
+            new PeerBuilderNAT(peer).start();
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
                 @Override
                 public void peerInserted(PeerAddress peerAddress, boolean verified) {
