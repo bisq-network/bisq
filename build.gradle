@@ -1,8 +1,8 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
-  id "com.github.johnrengelman.shadow" version "1.1.2"
-  id "com.github.kt3k.coveralls" version "2.0.1x"
+    id "com.github.johnrengelman.shadow" version "1.1.2"
+    id "com.github.kt3k.coveralls" version "2.0.1x"
 }
 
 apply plugin: 'java'
@@ -20,7 +20,7 @@ sourceSets.main.resources.srcDirs += 'src/main/java'
 mainClassName = "io.bitsquare.app.gui.Main"
 
 run {
-    if ( project.hasProperty('args') ) {
+    if (project.hasProperty('args')) {
         args project.args.split('\\s+')
     }
 }
@@ -31,7 +31,7 @@ repositories {
 }
 
 dependencies {
-    compile 'org.bitcoinj:bitcoinj-core:0.12'
+    compile 'org.bitcoinj:bitcoinj-core:0.12.1'
     compile 'net.tomp2p:tomp2p-all:5.0-Alpha.542a1a8-SNAPSHOT'
     compile 'com.typesafe.akka:akka-actor_2.10:2.3.4'
     compile 'org.slf4j:slf4j-api:1.7.7'
@@ -51,7 +51,7 @@ dependencies {
     testCompile 'junit:junit:4.11'
 }
 
-task packageNative(type:Exec, dependsOn:shadowJar) {
+task packageNative(type: Exec, dependsOn: shadowJar) {
     if (Os.isFamily(Os.FAMILY_MAC))
         executable "${project.rootDir}/package/mac.sh"
     else if (Os.isFamily(Os.FAMILY_UNIX))
