@@ -21,6 +21,7 @@ import io.bitsquare.msg.actor.command.InitializePeer;
 import io.bitsquare.msg.actor.event.PeerInitialized;
 
 import net.tomp2p.connection.Bindings;
+import net.tomp2p.connection.StandardProtocolFamily;
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.nat.PeerBuilderNAT;
@@ -67,9 +68,7 @@ public class DHTManager extends AbstractActor {
 
         try {
             Bindings bindings = new Bindings();
-
-            // TODO: @Steve: Is that needed that we restrict to IP4?
-            // bindings.addProtocol(StandardProtocolFamily.INET); 
+            bindings.addProtocol(StandardProtocolFamily.INET);
 
             if (initializePeer.getInterfaceHint() != null) {
                 bindings.addInterface(initializePeer.getInterfaceHint());
