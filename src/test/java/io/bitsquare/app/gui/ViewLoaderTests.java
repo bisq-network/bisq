@@ -24,6 +24,8 @@ import io.bitsquare.gui.ViewLoader;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+import java.util.HashMap;
+
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -31,6 +33,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import net.sourceforge.argparse4j.inf.Namespace;
 
 public class ViewLoaderTests {
 
@@ -59,7 +63,9 @@ public class ViewLoaderTests {
 
     @Before
     public void setUp() {
-        Injector injector = Guice.createInjector(new MainModule("testApp", null, TestApp.primaryStage));
+        Injector injector = Guice.createInjector(new MainModule("testApp",
+                new Namespace(new HashMap<>()),
+                TestApp.primaryStage));
         ViewLoader.setInjector(injector);
     }
 
