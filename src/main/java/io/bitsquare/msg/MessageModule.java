@@ -51,14 +51,14 @@ public abstract class MessageModule extends BitsquareModule {
         // Passed program args will override the properties of the default bootstrapNode
         // So you can use the same id and ip but different ports (e.g. running several nodes on one server with 
         // different ports)
-        if (argumentsNamespace.getString(ArgumentParser.PEER_ID_FLAG) != null)
-            bootstrapNode.setId(argumentsNamespace.getString(ArgumentParser.PEER_ID_FLAG));
+        if (argumentsNamespace.getString(ArgumentParser.SEED_ID_FLAG) != null)
+            bootstrapNode.setId(argumentsNamespace.getString(ArgumentParser.SEED_ID_FLAG));
 
-        if (argumentsNamespace.getString(ArgumentParser.IP_FLAG) != null)
-            bootstrapNode.setIp(argumentsNamespace.getString(ArgumentParser.IP_FLAG));
+        if (argumentsNamespace.getString(ArgumentParser.SEED_IP_FLAG) != null)
+            bootstrapNode.setIp(argumentsNamespace.getString(ArgumentParser.SEED_IP_FLAG));
 
-        if (argumentsNamespace.getString(ArgumentParser.PORT_FLAG) != null)
-            bootstrapNode.setPort(Integer.valueOf(argumentsNamespace.getString(ArgumentParser.PORT_FLAG)));
+        if (argumentsNamespace.getString(ArgumentParser.SEED_PORT_FLAG) != null)
+            bootstrapNode.setPort(Integer.valueOf(argumentsNamespace.getString(ArgumentParser.SEED_PORT_FLAG)));
 
         bind(Node.class)
                 .annotatedWith(Names.named("bootstrapNode"))

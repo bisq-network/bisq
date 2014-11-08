@@ -18,94 +18,81 @@
 package io.bitsquare.app.cli;
 
 import io.bitsquare.app.ArgumentParser;
-import io.bitsquare.msg.actor.DHTManager;
-import io.bitsquare.msg.actor.command.InitializePeer;
-import io.bitsquare.msg.actor.event.PeerInitialized;
 import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
 
-import java.net.UnknownHostException;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.TimeoutException;
-
+import net.tomp2p.connection.Bindings;
+import net.tomp2p.connection.StandardProtocolFamily;
+import net.tomp2p.dht.PeerBuilderDHT;
+import net.tomp2p.nat.PeerBuilderNAT;
+import net.tomp2p.p2p.Peer;
+import net.tomp2p.p2p.PeerBuilder;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Inbox;
 import net.sourceforge.argparse4j.inf.Namespace;
-import scala.concurrent.duration.Duration;
-import scala.concurrent.duration.FiniteDuration;
 
 public class SeedNode {
     private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
 
-    private static String interfaceHint;
-
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         ArgumentParser parser = new ArgumentParser();
         Namespace namespace = parser.parseArgs(args);
 
-        if (namespace.getString(ArgumentParser.INTERFACE_HINT_FLAG) != null)
-            interfaceHint = namespace.getString(ArgumentParser.INTERFACE_HINT_FLAG);
+        Node defaultNode = BootstrapNodes.DIGITAL_OCEAN_1;
+        String id = defaultNode.getId();
+        int port = defaultNode.getPort();
 
-        int serverPort = Integer.valueOf(namespace.getString(ArgumentParser.PORT_FLAG));
-        String seedID = BootstrapNodes.LOCALHOST.getId();
-        if (namespace.getString(ArgumentParser.PEER_ID_FLAG) != null) {
-            seedID = namespace.getString(ArgumentParser.PEER_ID_FLAG);
-        }
+        // Passed program args will override the properties of the default bootstrapNode
+        // So you can use the same id but different ports (e.g. running several nodes on one server with 
+        // different ports)
+        if (namespace.getString(ArgumentParser.SEED_ID_FLAG) != null)
+            id = namespace.getString(ArgumentParser.SEED_ID_FLAG);
 
-        final Set<PeerAddress> peerAddresses = new HashSet<>();
-        for (Node node : BootstrapNodes.all()) {
-            if (!node.getId().equals(seedID)) {
-                try {
-                    peerAddresses.add(new PeerAddress(Number160.createHash(node.getId()), node.getIp(),
-                            node.getPort(), node.getPort()));
-                } catch (UnknownHostException uhe) {
-                    log.error("Unknown Host [" + node.getIp() + "]: " + uhe.getMessage());
+        if (namespace.getString(ArgumentParser.SEED_PORT_FLAG) != null)
+            port = Integer.valueOf(namespace.getString(ArgumentParser.SEED_PORT_FLAG));
+
+        log.info("This node use ID: [" + id + "] and port: [" + port + "]");
+
+        Peer peer = null;
+        try {
+            // Lets test with different settings
+          /*  ChannelServerConfiguration csc = PeerBuilder.createDefaultChannelServerConfiguration();
+            csc.ports(new Ports(Node.DEFAULT_PORT, Node.DEFAULT_PORT));
+            csc.portsForwarding(new Ports(Node.DEFAULT_PORT, Node.DEFAULT_PORT));
+            csc.connectionTimeoutTCPMillis(10 * 1000);
+            csc.idleTCPSeconds(10);
+            csc.idleUDPSeconds(10);*/
+
+            Bindings bindings = new Bindings();
+            bindings.addProtocol(StandardProtocolFamily.INET);
+
+            peer = new PeerBuilder(Number160.createHash(id)).bindings(bindings)
+                    /*.channelServerConfiguration(csc)*/.ports(port).start();
+
+            peer.objectDataReply((sender, request) -> {
+                log.trace("received request: ", request.toString());
+                return "pong";
+            });
+
+            // Needed for DHT support
+            new PeerBuilderDHT(peer).start();
+            // Needed for NAT support
+            new PeerBuilderNAT(peer).start();
+
+            log.debug("SeedNode started.");
+            for (; ; ) {
+                for (PeerAddress pa : peer.peerBean().peerMap().all()) {
+                    log.debug("peer online:" + pa);
                 }
+                Thread.sleep(2000);
             }
+        } catch (Exception e) {
+            if (peer != null)
+                peer.shutdown().awaitUninterruptibly();
         }
-
-        ActorSystem actorSystem = ActorSystem.create("BitsquareSeedNode");
-        Inbox inbox = Inbox.create(actorSystem);
-        ActorRef seedNode = actorSystem.actorOf(DHTManager.getProps(), DHTManager.SEED_NODE);
-        inbox.send(seedNode, new InitializePeer(Number160.createHash(seedID), serverPort, interfaceHint,
-                peerAddresses));
-
-        final String _seedID = seedID;
-        Thread seedNodeThread = new Thread(() -> {
-            Boolean quit = false;
-            while (!quit) {
-                try {
-                    Object m = inbox.receive(FiniteDuration.create(5L, "seconds"));
-                    if (m instanceof PeerInitialized) {
-                        log.debug("Seed Peer with ID " + _seedID +
-                                " initialized on port " + ((PeerInitialized) m).getPort());
-                    }
-                } catch (Exception e) {
-                    if (!(e instanceof TimeoutException)) {
-                        quit = true;
-                        log.error(e.getMessage());
-                    }
-                }
-            }
-            actorSystem.shutdown();
-            try {
-                actorSystem.awaitTermination(Duration.create(5L, "seconds"));
-            } catch (Exception ex) {
-                if (ex instanceof TimeoutException)
-                    log.error("ActorSystem did not shutdown properly.");
-                else
-                    log.error(ex.getMessage());
-            }
-        });
-        seedNodeThread.start();
     }
 }

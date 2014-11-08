@@ -23,9 +23,9 @@ import net.sourceforge.argparse4j.inf.Namespace;
 
 public class ArgumentParser {
 
-    public static final String PEER_ID_FLAG = "peerid";
-    public static final String IP_FLAG = "ip";
-    public static final String PORT_FLAG = "port";
+    public static final String SEED_ID_FLAG = "id";
+    public static final String SEED_IP_FLAG = "ip";
+    public static final String SEED_PORT_FLAG = "port";
     public static final String INTERFACE_HINT_FLAG = "interface";
     public static final String NAME_FLAG = "name";
 
@@ -35,14 +35,18 @@ public class ArgumentParser {
         parser = ArgumentParsers.newArgumentParser("Bitsquare")
                 .defaultHelp(true)
                 .description("Bitsquare - The decentralized bitcoin exchange");
-        parser.addArgument("-d", "--" + PEER_ID_FLAG)
-                .help("Seed peer ID");
-        parser.addArgument("-d", "--" + IP_FLAG)
+
+        // Args for seed node config
+        parser.addArgument("-d", "--" + SEED_ID_FLAG)
+                .help("Seed node ID");
+        parser.addArgument("-d", "--" + SEED_IP_FLAG)
                 .help("Seed node IP");
-        parser.addArgument("-p", "--" + PORT_FLAG)
+        parser.addArgument("-p", "--" + SEED_PORT_FLAG)
                 .help("Seed node port");
         parser.addArgument("-i", "--" + INTERFACE_HINT_FLAG)
                 .help("Network interface to listen on");
+
+        // Args for app config
         parser.addArgument("-n", "--" + NAME_FLAG)
                 .help("Name to append to default application name");
     }
