@@ -17,9 +17,6 @@
 
 package io.bitsquare.app;
 
-import io.bitsquare.network.BootstrapNodes;
-import io.bitsquare.network.Node;
-
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -27,10 +24,10 @@ import net.sourceforge.argparse4j.inf.Namespace;
 public class ArgumentParser {
 
     public static final String PEER_ID_FLAG = "peerid";
+    public static final String IP_FLAG = "ip";
     public static final String PORT_FLAG = "port";
     public static final String INTERFACE_HINT_FLAG = "interface";
     public static final String NAME_FLAG = "name";
-    public static final String PEER_ID_DEFAULT = BootstrapNodes.DIGITAL_OCEAN_1.getId();
 
     private final net.sourceforge.argparse4j.inf.ArgumentParser parser;
 
@@ -39,15 +36,15 @@ public class ArgumentParser {
                 .defaultHelp(true)
                 .description("Bitsquare - The decentralized bitcoin exchange");
         parser.addArgument("-d", "--" + PEER_ID_FLAG)
-                .setDefault(PEER_ID_DEFAULT)
                 .help("Seed peer ID");
+        parser.addArgument("-d", "--" + IP_FLAG)
+                .help("Seed node IP");
         parser.addArgument("-p", "--" + PORT_FLAG)
-                .setDefault(Node.DEFAULT_PORT)
-                .help("Port to listen on");
+                .help("Seed node port");
         parser.addArgument("-i", "--" + INTERFACE_HINT_FLAG)
                 .help("Network interface to listen on");
         parser.addArgument("-n", "--" + NAME_FLAG)
-                .help("Name to append name to default application name");
+                .help("Name to append to default application name");
     }
 
     public Namespace parseArgs(String... args) {

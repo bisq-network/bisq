@@ -36,6 +36,7 @@ public class ViewLoaderTests {
 
     public static class TestApp extends Application {
         static Stage primaryStage;
+
         @Override
         public void start(Stage primaryStage) throws Exception {
             TestApp.primaryStage = primaryStage;
@@ -58,7 +59,7 @@ public class ViewLoaderTests {
 
     @Before
     public void setUp() {
-        Injector injector = Guice.createInjector(new MainModule("testApp", TestApp.primaryStage));
+        Injector injector = Guice.createInjector(new MainModule("testApp", null, TestApp.primaryStage));
         ViewLoader.setInjector(injector);
     }
 

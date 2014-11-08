@@ -18,6 +18,7 @@
 package io.bitsquare.msg;
 
 import io.bitsquare.BitsquareModule;
+import io.bitsquare.app.ArgumentParser;
 import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
 
@@ -26,10 +27,16 @@ import com.google.inject.name.Names;
 
 import java.util.Properties;
 
+import net.sourceforge.argparse4j.inf.Namespace;
+
 public abstract class MessageModule extends BitsquareModule {
 
-    protected MessageModule(Properties properties) {
+
+    private final Namespace argumentsNamespace;
+
+    protected MessageModule(Properties properties, Namespace argumentsNamespace) {
         super(properties);
+        this.argumentsNamespace = argumentsNamespace;
     }
 
     @Override
@@ -40,9 +47,22 @@ public abstract class MessageModule extends BitsquareModule {
         // we will probably later use disk storage instead of memory storage for TomP2P
         bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(false);
 
+        Node bootstrapNode = BootstrapNodes.DIGITAL_OCEAN_1;
+        // Passed program args will override the properties of the default bootstrapNode
+        // So you can use the same id and ip but different ports (e.g. running several nodes on one server with 
+        // different ports)
+        if (argumentsNamespace.getString(ArgumentParser.PEER_ID_FLAG) != null)
+            bootstrapNode.setId(argumentsNamespace.getString(ArgumentParser.PEER_ID_FLAG));
+
+        if (argumentsNamespace.getString(ArgumentParser.IP_FLAG) != null)
+            bootstrapNode.setIp(argumentsNamespace.getString(ArgumentParser.IP_FLAG));
+
+        if (argumentsNamespace.getString(ArgumentParser.PORT_FLAG) != null)
+            bootstrapNode.setPort(Integer.valueOf(argumentsNamespace.getString(ArgumentParser.PORT_FLAG)));
+
         bind(Node.class)
                 .annotatedWith(Names.named("bootstrapNode"))
-                .toInstance(BootstrapNodes.DIGITAL_OCEAN_1);
+                .toInstance(bootstrapNode);
 
         doConfigure();
     }

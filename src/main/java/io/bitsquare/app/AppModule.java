@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorSystem;
+import net.sourceforge.argparse4j.inf.Namespace;
 import scala.concurrent.duration.Duration;
 
 /**
@@ -48,10 +49,12 @@ import scala.concurrent.duration.Duration;
 public class AppModule extends BitsquareModule {
     private static final Logger log = LoggerFactory.getLogger(AppModule.class);
 
+    private Namespace argumentsNamespace;
     private final String appName;
 
-    public AppModule(Properties properties, String appName) {
+    public AppModule(Properties properties, Namespace argumentsNamespace, String appName) {
         super(properties);
+        this.argumentsNamespace = argumentsNamespace;
         this.appName = appName;
     }
 
@@ -75,7 +78,7 @@ public class AppModule extends BitsquareModule {
     }
 
     protected MessageModule messageModule() {
-        return new TomP2PMessageModule(properties);
+        return new TomP2PMessageModule(properties, argumentsNamespace);
     }
 
     protected BitcoinModule bitcoinModule() {

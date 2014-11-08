@@ -48,25 +48,23 @@ import net.sourceforge.argparse4j.inf.Namespace;
 
 public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
-    private static String appName = "Bitsquare";
+    private static Namespace argumentsNamespace;
 
     private MainModule mainModule;
     private Injector injector;
 
     public static void main(String[] args) {
-        ArgumentParser parser = new ArgumentParser();
-        Namespace namespace = parser.parseArgs(args);
-
-        if (namespace.getString(ArgumentParser.NAME_FLAG) != null) {
-            appName = appName + "-" + namespace.getString(ArgumentParser.NAME_FLAG);
-        }
-
+        argumentsNamespace = new ArgumentParser().parseArgs(args);
         Application.launch(Main.class, args);
     }
 
     @Override
     public void start(Stage primaryStage) {
-        mainModule = new MainModule(appName, primaryStage);
+        String appName = "Bitsquare";
+        if (argumentsNamespace.getString(ArgumentParser.NAME_FLAG) != null)
+            appName = "Bitsquare-" + argumentsNamespace.getString(ArgumentParser.NAME_FLAG);
+
+        mainModule = new MainModule(appName, argumentsNamespace, primaryStage);
         injector = Guice.createInjector(mainModule);
 
 
@@ -106,8 +104,8 @@ public class Main extends Application {
 
         Scene scene = new Scene(view, 1000, 600);
         scene.getStylesheets().setAll(
-               "/io/bitsquare/gui/bitsquare.css",
-               "/io/bitsquare/gui/images.css");
+                "/io/bitsquare/gui/bitsquare.css",
+                "/io/bitsquare/gui/images.css");
 
 
         // configure the system tray
