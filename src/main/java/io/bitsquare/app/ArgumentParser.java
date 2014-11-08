@@ -39,7 +39,7 @@ public class ArgumentParser {
         // Args for seed node config
         parser.addArgument("-d", "--" + SEED_ID_FLAG)
                 .help("Seed node ID");
-        parser.addArgument("-d", "--" + SEED_IP_FLAG)
+        parser.addArgument("-s", "--" + SEED_IP_FLAG)
                 .help("Seed node IP");
         parser.addArgument("-p", "--" + SEED_PORT_FLAG)
                 .help("Seed node port");
