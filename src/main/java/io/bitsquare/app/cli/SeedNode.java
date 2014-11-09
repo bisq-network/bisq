@@ -53,7 +53,7 @@ public class SeedNode {
         int port = defaultNode.getPort();
 
         // Passed program args will override the properties of the default bootstrapNode
-        // So you can use the same id but different ports (e.g. running several nodes on one server with 
+        // So you can use the same id but different ports (e.g. running several nodes on one server with
         // different ports)
         if (namespace.getString(BOOTSTRAP_NODE_ID_KEY) != null)
             id = namespace.getString(BOOTSTRAP_NODE_ID_KEY);
@@ -108,8 +108,8 @@ public class SeedNode {
         }
         peer = null;
     }
-    
-    
+
+
     /*public static void main(String[] args) throws Exception {
         ArgumentParser parser = new ArgumentParser();
         Namespace namespace = parser.parseArgs(args);
@@ -119,7 +119,7 @@ public class SeedNode {
         int port = defaultNode.getPort();
 
         // Passed program args will override the properties of the default bootstrapNode
-        // So you can use the same id but different ports (e.g. running several nodes on one server with 
+        // So you can use the same id but different ports (e.g. running several nodes on one server with
         // different ports)
         if (namespace.getString(ArgumentParser.SEED_ID_FLAG) != null)
             id = namespace.getString(ArgumentParser.SEED_ID_FLAG);
