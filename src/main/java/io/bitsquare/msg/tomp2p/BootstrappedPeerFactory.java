@@ -53,9 +53,12 @@ import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
+import net.tomp2p.peers.PeerMap;
 import net.tomp2p.peers.PeerMapChangeListener;
+import net.tomp2p.peers.PeerMapConfiguration;
 import net.tomp2p.peers.PeerStatistic;
 import net.tomp2p.storage.Storage;
+import net.tomp2p.utils.Utils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -110,7 +113,10 @@ class BootstrappedPeerFactory {
     public ListenableFuture<PeerDHT> start(int port) {
         try {
             setState(BootstrapState.PEER_CREATION, "We create a P2P node.");
-            peer = new PeerBuilder(keyPair).ports(port).start();
+
+            PeerMapConfiguration pmc = new PeerMapConfiguration(Utils.makeSHAHash(keyPair.getPublic().getEncoded()));
+            PeerMap pm = new PeerMap(pmc);
+            peer = new PeerBuilder(keyPair).ports(port).peerMap(pm).start();
             peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer(storage)).start();
 
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
