@@ -21,11 +21,10 @@ import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
+import static io.bitsquare.app.AppModule.APP_NAME_KEY;
 import static io.bitsquare.msg.MessageModule.*;
 
 public class ArgumentParser {
-
-    public static final String NAME_FLAG = "name";
 
     private final net.sourceforge.argparse4j.inf.ArgumentParser parser;
 
@@ -43,7 +42,7 @@ public class ArgumentParser {
                 .help("Seed node port");
 
         // Args for app config
-        parser.addArgument("-n", "--" + NAME_FLAG)
+        parser.addArgument("-n", "--" + APP_NAME_KEY)
                 .help("Name to append to default application name");
     }
 

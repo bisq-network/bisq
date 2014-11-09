@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 import lighthouse.files.AppDirectory;
 import net.sourceforge.argparse4j.inf.Namespace;
 
-import static io.bitsquare.app.ArgumentParser.NAME_FLAG;
+import static io.bitsquare.app.AppModule.APP_NAME_KEY;
 import static io.bitsquare.msg.MessageModule.*;
 
 public class Main extends Application {
@@ -63,12 +63,12 @@ public class Main extends Application {
     public static void main(String[] args) {
         Namespace argumentsNamespace = new ArgumentParser().parseArgs(args);
 
-        if (argumentsNamespace.getString(NAME_FLAG) != null)
-            appName = appName + "-" + argumentsNamespace.getString(NAME_FLAG);
+        if (argumentsNamespace.getString(APP_NAME_KEY) != null)
+            appName = appName + "-" + argumentsNamespace.getString(APP_NAME_KEY);
 
         properties = ConfigLoader.loadConfig(appName);
 
-        properties.setProperty(NAME_FLAG, appName);
+        properties.setProperty(APP_NAME_KEY, appName);
 
         if (argumentsNamespace.getString(BOOTSTRAP_NODE_ID_KEY) != null)
             properties.setProperty(BOOTSTRAP_NODE_ID_KEY, argumentsNamespace.getString(BOOTSTRAP_NODE_ID_KEY));

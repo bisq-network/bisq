@@ -42,6 +42,7 @@ import net.tomp2p.connection.Ports;
  * Configures all non-UI modules necessary to run a Bitsquare application.
  */
 public class AppModule extends BitsquareModule {
+    public static final String APP_NAME_KEY = "name";
 
     public AppModule(Properties properties) {
         super(properties);
@@ -59,7 +60,7 @@ public class AppModule extends BitsquareModule {
         install(tradeModule());
         install(offerModule());
 
-        String appName = properties.getProperty(ArgumentParser.NAME_FLAG);
+        String appName = properties.getProperty(APP_NAME_KEY);
         Preconditions.checkArgument(appName != null, "App name must be non-null");
 
         bindConstant().annotatedWith(Names.named("appName")).to(appName);
