@@ -29,6 +29,8 @@ import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeModule;
 import io.bitsquare.user.User;
 
+import com.google.common.base.Preconditions;
+
 import com.google.inject.Injector;
 import com.google.inject.name.Names;
 
@@ -48,11 +50,8 @@ import scala.concurrent.duration.Duration;
 public class AppModule extends BitsquareModule {
     private static final Logger log = LoggerFactory.getLogger(AppModule.class);
 
-    private final String appName;
-
-    public AppModule(Properties properties, String appName) {
+    public AppModule(Properties properties) {
         super(properties);
-        this.appName = appName;
     }
 
     @Override
@@ -66,6 +65,9 @@ public class AppModule extends BitsquareModule {
         install(cryptoModule());
         install(tradeModule());
         install(offerModule());
+
+        String appName = properties.getProperty(ArgumentParser.NAME_FLAG);
+        Preconditions.checkArgument(appName != null, "App name must be non-null");
 
         bindConstant().annotatedWith(Names.named("appName")).to(appName);
         bind(ActorSystem.class).toInstance(ActorSystem.create(appName));

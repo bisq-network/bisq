@@ -26,19 +26,16 @@ import java.util.Properties;
 import javafx.stage.Stage;
 
 class MainModule extends BitsquareModule {
-
-    private final String appName;
     private final Stage primaryStage;
 
-    public MainModule(Properties properties, String appName, Stage primaryStage) {
+    public MainModule(Properties properties, Stage primaryStage) {
         super(properties);
-        this.appName = appName;
         this.primaryStage = primaryStage;
     }
 
     @Override
     protected void configure() {
-        install(new AppModule(properties, appName));
+        install(new AppModule(properties));
         install(new GuiModule(properties, primaryStage));
     }
 }

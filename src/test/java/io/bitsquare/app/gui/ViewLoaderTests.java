@@ -17,6 +17,7 @@
 
 package io.bitsquare.app.gui;
 
+import io.bitsquare.app.ArgumentParser;
 import io.bitsquare.gui.FatalException;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewLoader;
@@ -64,7 +65,9 @@ public class ViewLoaderTests {
 
     @Before
     public void setUp() {
-        Injector injector = Guice.createInjector(new MainModule(new Properties(), "testApp", TestApp.primaryStage));
+        Properties properties = new Properties();
+        properties.setProperty(ArgumentParser.NAME_FLAG, "testApp");
+        Injector injector = Guice.createInjector(new MainModule(properties, TestApp.primaryStage));
         ViewLoader.setInjector(injector);
     }
 

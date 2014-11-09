@@ -60,12 +60,14 @@ public class Main extends Application {
     private Injector injector;
 
     public static void main(String[] args) {
-        properties = ConfigLoader.loadConfig(appName);
-
         Namespace argumentsNamespace = new ArgumentParser().parseArgs(args);
 
         if (argumentsNamespace.getString(NAME_FLAG) != null)
             appName = appName + "-" + argumentsNamespace.getString(NAME_FLAG);
+
+        properties = ConfigLoader.loadConfig(appName);
+
+        properties.setProperty(NAME_FLAG, appName);
 
         if (argumentsNamespace.getString(SEED_ID_FLAG) != null)
             properties.setProperty(SEED_ID_FLAG, argumentsNamespace.getString(SEED_ID_FLAG));
@@ -81,7 +83,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        mainModule = new MainModule(properties, appName, primaryStage);
+        mainModule = new MainModule(properties, primaryStage);
         injector = Guice.createInjector(mainModule);
 
 
