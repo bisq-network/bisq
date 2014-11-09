@@ -25,7 +25,6 @@ import io.bitsquare.gui.ViewLoader;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import java.util.HashMap;
 import java.util.Properties;
 
 import javafx.application.Application;
@@ -35,8 +34,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import net.sourceforge.argparse4j.inf.Namespace;
 
 public class ViewLoaderTests {
 
