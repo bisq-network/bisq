@@ -21,7 +21,7 @@ mainClassName = "io.bitsquare.app.gui.Main"
 
 run {
     if (project.hasProperty('args')) {
-        args project.args.split('\\s+')
+        args project.args.split(',')
     }
 }
 
