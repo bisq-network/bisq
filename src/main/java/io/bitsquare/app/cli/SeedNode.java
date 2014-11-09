@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory;
 
 import net.sourceforge.argparse4j.inf.Namespace;
 
+import static io.bitsquare.msg.MessageModule.*;
+
 public class SeedNode {
     private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
 
@@ -53,11 +55,11 @@ public class SeedNode {
         // Passed program args will override the properties of the default bootstrapNode
         // So you can use the same id but different ports (e.g. running several nodes on one server with 
         // different ports)
-        if (namespace.getString(ArgumentParser.SEED_ID_FLAG) != null)
-            id = namespace.getString(ArgumentParser.SEED_ID_FLAG);
+        if (namespace.getString(BOOTSTRAP_NODE_ID_KEY) != null)
+            id = namespace.getString(BOOTSTRAP_NODE_ID_KEY);
 
-        if (namespace.getString(ArgumentParser.SEED_PORT_FLAG) != null)
-            port = Integer.valueOf(namespace.getString(ArgumentParser.SEED_PORT_FLAG));
+        if (namespace.getString(BOOTSTRAP_NODE_PORT_KEY) != null)
+            port = Integer.valueOf(namespace.getString(BOOTSTRAP_NODE_PORT_KEY));
 
         try {
             Number160 peerId = Number160.createHash(id);

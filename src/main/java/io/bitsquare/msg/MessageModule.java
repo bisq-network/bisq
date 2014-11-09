@@ -25,10 +25,13 @@ import com.google.inject.name.Names;
 
 import java.util.Properties;
 
-import static io.bitsquare.app.ArgumentParser.*;
 import static io.bitsquare.network.BootstrapNodes.DEFAULT_BOOTSTRAP_NODE;
 
 public abstract class MessageModule extends BitsquareModule {
+
+    public static final String BOOTSTRAP_NODE_ID_KEY = "id";
+    public static final String BOOTSTRAP_NODE_IP_KEY = "ip";
+    public static final String BOOTSTRAP_NODE_PORT_KEY = "port";
 
     protected MessageModule(Properties properties) {
         super(properties);
@@ -42,9 +45,9 @@ public abstract class MessageModule extends BitsquareModule {
         bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(false);
 
         Node bootstrapNode = Node.at(
-                properties.getProperty(SEED_ID_FLAG, DEFAULT_BOOTSTRAP_NODE.getId()),
-                properties.getProperty(SEED_IP_FLAG, DEFAULT_BOOTSTRAP_NODE.getIp()),
-                properties.getProperty(SEED_PORT_FLAG, DEFAULT_BOOTSTRAP_NODE.getPortAsString())
+                properties.getProperty(BOOTSTRAP_NODE_ID_KEY, DEFAULT_BOOTSTRAP_NODE.getId()),
+                properties.getProperty(BOOTSTRAP_NODE_IP_KEY, DEFAULT_BOOTSTRAP_NODE.getIp()),
+                properties.getProperty(BOOTSTRAP_NODE_PORT_KEY, DEFAULT_BOOTSTRAP_NODE.getPortAsString())
         );
 
         bind(Node.class)
