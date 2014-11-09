@@ -27,15 +27,13 @@ import com.google.inject.name.Names;
 
 import java.util.Properties;
 
-import net.sourceforge.argparse4j.inf.Namespace;
+import static io.bitsquare.app.ArgumentParser.*;
+import static io.bitsquare.network.BootstrapNodes.DEFAULT_BOOTSTRAP_NODE;
 
 public abstract class MessageModule extends BitsquareModule {
 
-    private final Namespace argumentsNamespace;
-
-    protected MessageModule(Properties properties, Namespace argumentsNamespace) {
+    protected MessageModule(Properties properties) {
         super(properties);
-        this.argumentsNamespace = argumentsNamespace;
     }
 
     @Override
@@ -46,18 +44,13 @@ public abstract class MessageModule extends BitsquareModule {
         // we will probably later use disk storage instead of memory storage for TomP2P
         bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(false);
 
-        Node bootstrapNode = BootstrapNodes.DIGITAL_OCEAN_1;
-        // Passed program args will override the properties of the default bootstrapNode
-        // So you can use the same id and ip but different ports (e.g. running several nodes on one server with
-        // different ports)
-        if (argumentsNamespace.getString(ArgumentParser.SEED_ID_FLAG) != null)
-            bootstrapNode.setId(argumentsNamespace.getString(ArgumentParser.SEED_ID_FLAG));
+        Node bootstrapNode = Node.at(
+                properties.getProperty(SEED_ID_FLAG, DEFAULT_BOOTSTRAP_NODE.getId()),
+                properties.getProperty(SEED_IP_FLAG, DEFAULT_BOOTSTRAP_NODE.getIp()),
+                properties.getProperty(SEED_PORT_FLAG, DEFAULT_BOOTSTRAP_NODE.getPortAsString())
+        );
 
-        if (argumentsNamespace.getString(ArgumentParser.SEED_IP_FLAG) != null)
-            bootstrapNode.setIp(argumentsNamespace.getString(ArgumentParser.SEED_IP_FLAG));
-
-        if (argumentsNamespace.getString(ArgumentParser.SEED_PORT_FLAG) != null)
-            bootstrapNode.setPort(Integer.valueOf(argumentsNamespace.getString(ArgumentParser.SEED_PORT_FLAG)));
+        System.out.println("bootstrapNode = " + bootstrapNode);
 
         bind(Node.class)
                 .annotatedWith(Names.named("bootstrapNode"))

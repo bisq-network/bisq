@@ -20,28 +20,25 @@ package io.bitsquare.app.gui;
 import io.bitsquare.BitsquareModule;
 import io.bitsquare.app.AppModule;
 import io.bitsquare.gui.GuiModule;
-import io.bitsquare.util.ConfigLoader;
+
+import java.util.Properties;
 
 import javafx.stage.Stage;
-
-import net.sourceforge.argparse4j.inf.Namespace;
 
 class MainModule extends BitsquareModule {
 
     private final String appName;
     private final Stage primaryStage;
-    private final Namespace argumentsNamespace;
 
-    public MainModule(String appName, Namespace argumentsNamespace, Stage primaryStage) {
-        super(ConfigLoader.loadConfig(appName));
+    public MainModule(Properties properties, String appName, Stage primaryStage) {
+        super(properties);
         this.appName = appName;
-        this.argumentsNamespace = argumentsNamespace;
         this.primaryStage = primaryStage;
     }
 
     @Override
     protected void configure() {
-        install(new AppModule(properties, argumentsNamespace, appName));
+        install(new AppModule(properties, appName));
         install(new GuiModule(properties, primaryStage));
     }
 }

@@ -22,12 +22,10 @@ import io.bitsquare.msg.MessageModule;
 
 import java.util.Properties;
 
-import net.sourceforge.argparse4j.inf.Namespace;
-
 public class TomP2PMessageModule extends MessageModule {
 
-    public TomP2PMessageModule(Properties properties, Namespace argumentsNamespace) {
-        super(properties, argumentsNamespace);
+    public TomP2PMessageModule(Properties properties) {
+        super(properties);
     }
 
     @Override

@@ -26,6 +26,7 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
+import io.bitsquare.util.ConfigLoader;
 
 import com.google.common.base.Throwables;
 
@@ -33,6 +34,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import java.io.IOException;
+
+import java.util.Properties;
 
 import javafx.application.Application;
 import javafx.scene.*;
@@ -46,25 +49,39 @@ import org.slf4j.LoggerFactory;
 import lighthouse.files.AppDirectory;
 import net.sourceforge.argparse4j.inf.Namespace;
 
+import static io.bitsquare.app.ArgumentParser.*;
+
 public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
-    private static Namespace argumentsNamespace;
+    private static String appName = "Bitsquare";
+    private static Properties properties;
 
     private MainModule mainModule;
     private Injector injector;
 
     public static void main(String[] args) {
-        argumentsNamespace = new ArgumentParser().parseArgs(args);
+        properties = ConfigLoader.loadConfig(appName);
+
+        Namespace argumentsNamespace = new ArgumentParser().parseArgs(args);
+
+        if (argumentsNamespace.getString(NAME_FLAG) != null)
+            appName = appName + "-" + argumentsNamespace.getString(NAME_FLAG);
+
+        if (argumentsNamespace.getString(SEED_ID_FLAG) != null)
+            properties.setProperty(SEED_ID_FLAG, argumentsNamespace.getString(SEED_ID_FLAG));
+
+        if (argumentsNamespace.getString(SEED_IP_FLAG) != null)
+            properties.setProperty(SEED_IP_FLAG, argumentsNamespace.getString(SEED_IP_FLAG));
+
+        if (argumentsNamespace.getString(SEED_PORT_FLAG) != null)
+            properties.setProperty(SEED_PORT_FLAG, argumentsNamespace.getString(SEED_PORT_FLAG));
+
         Application.launch(Main.class, args);
     }
 
     @Override
     public void start(Stage primaryStage) {
-        String appName = "Bitsquare";
-        if (argumentsNamespace.getString(ArgumentParser.NAME_FLAG) != null)
-            appName = "Bitsquare-" + argumentsNamespace.getString(ArgumentParser.NAME_FLAG);
-
-        mainModule = new MainModule(appName, argumentsNamespace, primaryStage);
+        mainModule = new MainModule(properties, appName, primaryStage);
         injector = Guice.createInjector(mainModule);
 
 

@@ -22,9 +22,9 @@ import com.google.common.base.Objects;
 public final class Node {
     public static final int DEFAULT_PORT = 7366;
 
-    private String id;
-    private String ip;
-    private int port;
+    private final String id;
+    private final String ip;
+    private final int port;
 
     private Node(String id, String ip, int port) {
         this.id = id;
@@ -40,16 +40,8 @@ public final class Node {
         return new Node(id, ip, port);
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setIp(String ip) {
-        this.ip = ip;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
+    public static Node at(String id, String ip, String port) {
+        return new Node(id, ip, Integer.valueOf(port));
     }
 
     public String getId() {
@@ -62,6 +54,10 @@ public final class Node {
 
     public int getPort() {
         return port;
+    }
+
+    public String getPortAsString() {
+        return String.valueOf(port);
     }
 
     @Override

@@ -44,6 +44,14 @@ public class NodeTests {
         Node node2 = Node.at("bitsquare2.example.com", "203.0.113.2");
         assertThat(node1a.hashCode(), equalTo(node1b.hashCode()));
         assertThat(node1a.hashCode(), not(equalTo(node2.hashCode())));
+
+        assertThat(node1a.getPort(), equalTo(Node.DEFAULT_PORT));
+        assertThat(node1a.getPortAsString(), equalTo(String.valueOf(Node.DEFAULT_PORT)));
+
+        Node node3a = Node.at("bitsquare3.example.com", "203.0.113.3", 1234);
+        Node node3b = Node.at("bitsquare3.example.com", "203.0.113.3", "1234");
+
+        assertThat(node3a, equalTo(node3b));
     }
 
     @Test

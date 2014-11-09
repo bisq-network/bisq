@@ -25,6 +25,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import java.util.HashMap;
+import java.util.Properties;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -63,9 +64,7 @@ public class ViewLoaderTests {
 
     @Before
     public void setUp() {
-        Injector injector = Guice.createInjector(new MainModule("testApp",
-                new Namespace(new HashMap<>()),
-                TestApp.primaryStage));
+        Injector injector = Guice.createInjector(new MainModule(new Properties(), "testApp", TestApp.primaryStage));
         ViewLoader.setInjector(injector);
     }
 
