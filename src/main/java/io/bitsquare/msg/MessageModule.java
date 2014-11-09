@@ -18,8 +18,6 @@
 package io.bitsquare.msg;
 
 import io.bitsquare.BitsquareModule;
-import io.bitsquare.app.ArgumentParser;
-import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
 
 import com.google.inject.Injector;
@@ -39,7 +37,6 @@ public abstract class MessageModule extends BitsquareModule {
     @Override
     protected final void configure() {
         bind(MessageFacade.class).to(messageFacade()).asEagerSingleton();
-        bind(DHTSeedService.class);
 
         // we will probably later use disk storage instead of memory storage for TomP2P
         bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(false);

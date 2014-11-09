@@ -38,17 +38,10 @@ import java.util.Properties;
 
 import net.tomp2p.connection.Ports;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import akka.actor.ActorSystem;
-import scala.concurrent.duration.Duration;
-
 /**
  * Configures all non-UI modules necessary to run a Bitsquare application.
  */
 public class AppModule extends BitsquareModule {
-    private static final Logger log = LoggerFactory.getLogger(AppModule.class);
 
     public AppModule(Properties properties) {
         super(properties);
@@ -70,7 +63,6 @@ public class AppModule extends BitsquareModule {
         Preconditions.checkArgument(appName != null, "App name must be non-null");
 
         bindConstant().annotatedWith(Names.named("appName")).to(appName);
-        bind(ActorSystem.class).toInstance(ActorSystem.create(appName));
 
         int randomPort = new Ports().tcpPort();
         bindConstant().annotatedWith(Names.named("clientPort")).to(randomPort);
@@ -98,13 +90,6 @@ public class AppModule extends BitsquareModule {
 
     @Override
     protected void doClose(Injector injector) {
-        ActorSystem actorSystem = injector.getInstance(ActorSystem.class);
-        actorSystem.shutdown();
-        try {
-            actorSystem.awaitTermination(Duration.create(5L, "seconds"));
-        } catch (Exception ex) {
-            log.error("Actor system failed to shut down properly", ex);
-        }
     }
 }
 

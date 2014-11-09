@@ -26,7 +26,6 @@ public class ArgumentParser {
     public static final String SEED_ID_FLAG = "id";
     public static final String SEED_IP_FLAG = "ip";
     public static final String SEED_PORT_FLAG = "port";
-    public static final String INTERFACE_HINT_FLAG = "interface";
     public static final String NAME_FLAG = "name";
 
     private final net.sourceforge.argparse4j.inf.ArgumentParser parser;
@@ -43,8 +42,6 @@ public class ArgumentParser {
                 .help("Seed node IP");
         parser.addArgument("-p", "--" + SEED_PORT_FLAG)
                 .help("Seed node port");
-        parser.addArgument("-i", "--" + INTERFACE_HINT_FLAG)
-                .help("Network interface to listen on");
 
         // Args for app config
         parser.addArgument("-n", "--" + NAME_FLAG)
