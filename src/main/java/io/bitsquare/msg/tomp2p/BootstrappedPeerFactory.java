@@ -114,7 +114,8 @@ class BootstrappedPeerFactory {
         try {
             setState(BootstrapState.PEER_CREATION, "We create a P2P node.");
 
-            PeerMapConfiguration pmc = new PeerMapConfiguration(Utils.makeSHAHash(keyPair.getPublic().getEncoded()));
+            Number160 peerId = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
+            PeerMapConfiguration pmc = new PeerMapConfiguration(peerId).peerNoVerification();
             PeerMap pm = new PeerMap(pmc);
             peer = new PeerBuilder(keyPair).ports(port).peerMap(pm).start();
             peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer(storage)).start();
