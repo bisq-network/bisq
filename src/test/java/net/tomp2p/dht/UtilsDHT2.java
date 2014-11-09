@@ -1,12 +1,12 @@
 /*
  * Copyright 2012 Thomas Bocek
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -82,7 +82,7 @@ public class UtilsDHT2 {
     }
 
     public static PeerAddress createAddress(Number160 idSender, String inetSender, int tcpPortSender,
-                                            int udpPortSender, boolean firewallUDP, 
+                                            int udpPortSender, boolean firewallUDP,
                                             boolean firewallTCP) throws UnknownHostException {
         InetAddress inetSend = InetAddress.getByName(inetSender);
         PeerSocketAddress peerSocketAddress = new PeerSocketAddress(inetSend, tcpPortSender, udpPortSender);
@@ -92,9 +92,10 @@ public class UtilsDHT2 {
     }
 
     public static Message createDummyMessage(Number160 idSender, String inetSender, int tcpPortSendor,
-                                             int udpPortSender, Number160 idRecipien, String inetRecipient, 
+                                             int udpPortSender, Number160 idRecipien, String inetRecipient,
                                              int tcpPortRecipient,
-                                             int udpPortRecipient, byte command, Type type, boolean firewallUDP, boolean firewallTCP)
+                                             int udpPortRecipient, byte command, Type type, boolean firewallUDP,
+                                             boolean firewallTCP)
             throws UnknownHostException {
         Message message = new Message();
         PeerAddress n1 = createAddress(idSender, inetSender, tcpPortSendor, udpPortSender, firewallUDP,
@@ -122,15 +123,11 @@ public class UtilsDHT2 {
      * Creates peers for testing. The first peer (peer[0]) will be used as the master. This means that shutting down
      * peer[0] will shut down all other peers
      *
-     * @param nrOfPeers
-     *            The number of peers to create including the master
-     * @param rnd
-     *            The random object to create random peer IDs
-     * @param port
-     *            The port where the master peer will listen to
+     * @param nrOfPeers The number of peers to create including the master
+     * @param rnd       The random object to create random peer IDs
+     * @param port      The port where the master peer will listen to
      * @return All the peers, with the master peer at position 0 -> peer[0]
-     * @throws Exception
-     *             If the creation of nodes fail.
+     * @throws Exception If the creation of nodes fail.
      */
     public static PeerDHT[] createNodes(int nrOfPeers, Random rnd, int port, AutomaticFuture automaticFuture,
                                         boolean maintenance) throws Exception {
@@ -163,7 +160,8 @@ public class UtilsDHT2 {
                 PeerMap peerMap = new PeerMap(new PeerMapConfiguration(peerId));
                 Peer peer = new PeerBuilder(peerId)
                         .masterPeer(master)
-                        .enableMaintenance(maintenance).enableMaintenance(maintenance).peerMap(peerMap).bindings(bindings).start().addAutomaticFuture(automaticFuture);
+                        .enableMaintenance(maintenance).enableMaintenance(maintenance).peerMap(peerMap).bindings
+                                (bindings).start().addAutomaticFuture(automaticFuture);
                 peers[i] = new PeerBuilderDHT(peer).start();
             }
             else {
@@ -211,8 +209,7 @@ public class UtilsDHT2 {
      * Perfect routing, where each neighbor has contacted each other. This means that for small number of peers, every
      * peer knows every other peer.
      *
-     * @param peers
-     *            The peers taking part in the p2p network.
+     * @param peers The peers taking part in the p2p network.
      */
     public static void perfectRouting(PeerDHT... peers) {
         for (int i = 0; i < peers.length; i++) {

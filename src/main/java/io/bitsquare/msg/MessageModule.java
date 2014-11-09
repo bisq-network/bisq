@@ -31,7 +31,6 @@ import net.sourceforge.argparse4j.inf.Namespace;
 
 public abstract class MessageModule extends BitsquareModule {
 
-
     private final Namespace argumentsNamespace;
 
     protected MessageModule(Properties properties, Namespace argumentsNamespace) {
@@ -49,7 +48,7 @@ public abstract class MessageModule extends BitsquareModule {
 
         Node bootstrapNode = BootstrapNodes.DIGITAL_OCEAN_1;
         // Passed program args will override the properties of the default bootstrapNode
-        // So you can use the same id and ip but different ports (e.g. running several nodes on one server with 
+        // So you can use the same id and ip but different ports (e.g. running several nodes on one server with
         // different ports)
         if (argumentsNamespace.getString(ArgumentParser.SEED_ID_FLAG) != null)
             bootstrapNode.setId(argumentsNamespace.getString(ArgumentParser.SEED_ID_FLAG));

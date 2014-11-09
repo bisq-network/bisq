@@ -33,7 +33,7 @@
     <TitledGroupBg text="Complete the registration" GridPane.rowSpan="4"/>
 
     <Label text="Registration costs:" GridPane.rowIndex="0">
-    <GridPane.margin>
+        <GridPane.margin>
             <Insets top="10.0"/>
         </GridPane.margin>
     </Label>

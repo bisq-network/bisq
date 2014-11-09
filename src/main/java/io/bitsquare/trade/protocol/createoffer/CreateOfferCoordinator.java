@@ -87,7 +87,7 @@ public class CreateOfferCoordinator {
                     }
 
                     try {
-                        offerRepository.addOffer(offer, () -> resultHandler.onResult(transaction),  faultHandler);
+                        offerRepository.addOffer(offer, () -> resultHandler.onResult(transaction), faultHandler);
                     } catch (Exception e) {
                         faultHandler.handleFault("Offer fee payment failed.", e);
                     }

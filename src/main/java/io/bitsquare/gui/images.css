@@ -16,6 +16,7 @@
 #image-alert-round {
     -fx-image: url("../../../images/alert_round.png");
 }
+
 #image-remove {
     -fx-image: url("../../../images/remove.png");
 }
@@ -44,12 +45,11 @@
     -fx-image: url("../../../images/sell_large.png");
 }
 
-
-
 /* navigation buttons */
 #image-nav-home {
     -fx-image: url("../../../images/nav/home.png");
 }
+
 #image-nav-home-active {
     -fx-image: url("../../../images/nav/home_active.png");
 }
@@ -57,6 +57,7 @@
 #image-nav-buy {
     -fx-image: url("../../../images/nav/buy.png");
 }
+
 #image-nav-buy-active {
     -fx-image: url("../../../images/nav/buy_active.png");
 }
@@ -64,6 +65,7 @@
 #image-nav-sell {
     -fx-image: url("../../../images/nav/sell.png");
 }
+
 #image-nav-sell-active {
     -fx-image: url("../../../images/nav/sell_active.png");
 }
@@ -71,6 +73,7 @@
 #image-nav-portfolio {
     -fx-image: url("../../../images/nav/portfolio.png");
 }
+
 #image-nav-portfolio-active {
     -fx-image: url("../../../images/nav/portfolio_active.png");
 }
@@ -78,6 +81,7 @@
 #image-nav-funds {
     -fx-image: url("../../../images/nav/funds.png");
 }
+
 #image-nav-funds-active {
     -fx-image: url("../../../images/nav/funds_active.png");
 }
@@ -85,6 +89,7 @@
 #image-nav-msg {
     -fx-image: url("../../../images/nav/msg.png");
 }
+
 #image-nav-msg-active {
     -fx-image: url("../../../images/nav/msg_active.png");
 }
@@ -92,6 +97,7 @@
 #image-nav-settings {
     -fx-image: url("../../../images/nav/settings.png");
 }
+
 #image-nav-settings-active {
     -fx-image: url("../../../images/nav/settings_active.png");
 }
@@ -99,10 +105,10 @@
 #image-nav-account {
     -fx-image: url("../../../images/nav/account.png");
 }
+
 #image-nav-account-active {
     -fx-image: url("../../../images/nav/account_active.png");
 }
-
 
 /* account*/
 #image-tick {

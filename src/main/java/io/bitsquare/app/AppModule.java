@@ -93,7 +93,9 @@ public class AppModule extends BitsquareModule {
         return new TradeModule(properties);
     }
 
-    protected OfferModule offerModule() { return new TomP2POfferModule(properties); }
+    protected OfferModule offerModule() {
+        return new TomP2POfferModule(properties);
+    }
 
     @Override
     protected void doClose(Injector injector) {
