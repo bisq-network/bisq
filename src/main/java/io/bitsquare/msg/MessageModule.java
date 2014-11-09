@@ -50,8 +50,6 @@ public abstract class MessageModule extends BitsquareModule {
                 properties.getProperty(SEED_PORT_FLAG, DEFAULT_BOOTSTRAP_NODE.getPortAsString())
         );
 
-        System.out.println("bootstrapNode = " + bootstrapNode);
-
         bind(Node.class)
                 .annotatedWith(Names.named("bootstrapNode"))
                 .toInstance(bootstrapNode);
