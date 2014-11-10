@@ -32,7 +32,7 @@ repositories {
 
 dependencies {
     compile 'org.bitcoinj:bitcoinj-core:0.12'
-    compile 'net.tomp2p:tomp2p-all:5.0-Alpha.32cd9f9-SNAPSHOT'
+    compile 'net.tomp2p:tomp2p-all:5.0-Alpha.aa0c736-SNAPSHOT'
     compile 'org.slf4j:slf4j-api:1.7.7'
     compile 'ch.qos.logback:logback-core:1.1.2'
     compile 'ch.qos.logback:logback-classic:1.1.2'
