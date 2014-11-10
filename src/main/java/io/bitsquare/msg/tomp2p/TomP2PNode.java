@@ -28,7 +28,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import com.google.inject.name.Named;
 
-import java.io.File;
 import java.io.IOException;
 
 import java.security.KeyPair;
@@ -43,13 +42,11 @@ import javax.inject.Inject;
 
 import javafx.application.Platform;
 
-import net.tomp2p.connection.DSASignatureFactory;
 import net.tomp2p.connection.PeerConnection;
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
 import net.tomp2p.dht.FutureRemove;
 import net.tomp2p.dht.PeerDHT;
-import net.tomp2p.dht.StorageMemory;
 import net.tomp2p.futures.BaseFuture;
 import net.tomp2p.futures.BaseFutureListener;
 import net.tomp2p.futures.FutureDirect;
@@ -58,15 +55,12 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.storage.Data;
 import net.tomp2p.storage.Storage;
-import net.tomp2p.storage.StorageDisk;
 import net.tomp2p.utils.Utils;
 
 import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import lighthouse.files.AppDirectory;
 
 import static io.bitsquare.util.tomp2p.BaseFutureUtil.isSuccess;
 
@@ -79,12 +73,8 @@ import static io.bitsquare.util.tomp2p.BaseFutureUtil.isSuccess;
 public class TomP2PNode {
     private static final Logger log = LoggerFactory.getLogger(TomP2PNode.class);
 
-    static final String USE_DISK_STORAGE_KEY = "useDiskStorage";
-
     private KeyPair keyPair;
-    private String appName;
     private final int port;
-    private final Boolean useDiskStorage;
     private MessageBroker messageBroker;
 
     private PeerAddress storedPeerAddress;
@@ -98,14 +88,9 @@ public class TomP2PNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PNode(BootstrappedPeerFactory bootstrappedPeerFactory,
-                      @Named("appName") String appName,
-                      @Named(Node.PORT_KEY) int port,
-                      @Named(USE_DISK_STORAGE_KEY) Boolean useDiskStorage) {
+    public TomP2PNode(BootstrappedPeerFactory bootstrappedPeerFactory, @Named(Node.PORT_KEY) int port) {
         this.bootstrappedPeerFactory = bootstrappedPeerFactory;
-        this.appName = appName;
         this.port = port;
-        this.useDiskStorage = useDiskStorage;
     }
 
     // for unit testing
@@ -116,7 +101,6 @@ public class TomP2PNode {
         messageBroker = (message, peerAddress) -> {
         };
         port = Node.DEFAULT_PORT;
-        useDiskStorage = false;
     }
 
 
@@ -134,8 +118,6 @@ public class TomP2PNode {
     }
 
     public void start(BootstrapListener bootstrapListener) {
-        useDiskStorage(useDiskStorage);
-
         bootstrappedPeerFactory.setStorage(storage);
         setupTimerForIPCheck();
 
@@ -397,20 +379,5 @@ public class TomP2PNode {
         Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
         log.debug("storePeerAddress " + peerDHT.peerAddress().toString());
         return putDomainProtectedData(locationKey, data);
-    }
-
-    private void useDiskStorage(boolean useDiskStorage) {
-        if (useDiskStorage) {
-            File path = new File(AppDirectory.dir(appName).toFile() + "/tomP2P");
-            if (!path.exists()) {
-                boolean created = path.mkdir();
-                if (!created)
-                    throw new RuntimeException("Could not create the directory '" + path + "'");
-            }
-            storage = new StorageDisk(Number160.ZERO, path, new DSASignatureFactory());
-        }
-        else {
-            storage = new StorageMemory();
-        }
     }
 }

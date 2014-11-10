@@ -43,7 +43,6 @@ public class TomP2PMessageModule extends MessageModule {
     protected void doConfigure() {
         bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(
             Integer.valueOf(properties.getProperty(Node.PORT_KEY, String.valueOf(Node.DEFAULT_PORT))));
-        bind(boolean.class).annotatedWith(Names.named(TomP2PNode.USE_DISK_STORAGE_KEY)).toInstance(false);
         bind(TomP2PNode.class).asEagerSingleton();
 
         bind(Node.class).annotatedWith(Names.named(BOOTSTRAP_NODE_KEY)).toInstance(
