@@ -19,6 +19,7 @@ package io.bitsquare.msg.tomp2p;
 
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.MessageModule;
+import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
 
 import com.google.inject.name.Names;
@@ -26,7 +27,6 @@ import com.google.inject.name.Names;
 import java.util.Properties;
 
 import static io.bitsquare.msg.tomp2p.BootstrappedPeerFactory.*;
-import static io.bitsquare.network.BootstrapNodes.DEFAULT_BOOTSTRAP_NODE;
 
 public class TomP2PMessageModule extends MessageModule {
 
@@ -47,9 +47,9 @@ public class TomP2PMessageModule extends MessageModule {
 
         bind(Node.class).annotatedWith(Names.named(BOOTSTRAP_NODE_KEY)).toInstance(
                 Node.at(
-                        properties.getProperty(BOOTSTRAP_NODE_NAME_KEY, DEFAULT_BOOTSTRAP_NODE.getName()),
-                        properties.getProperty(BOOTSTRAP_NODE_IP_KEY, DEFAULT_BOOTSTRAP_NODE.getIp()),
-                        properties.getProperty(BOOTSTRAP_NODE_PORT_KEY, DEFAULT_BOOTSTRAP_NODE.getPortAsString())
+                        properties.getProperty(BOOTSTRAP_NODE_NAME_KEY, BootstrapNodes.DEFAULT.getName()),
+                        properties.getProperty(BOOTSTRAP_NODE_IP_KEY, BootstrapNodes.DEFAULT.getIp()),
+                        properties.getProperty(BOOTSTRAP_NODE_PORT_KEY, BootstrapNodes.DEFAULT.getPortAsString())
                 )
         );
         bindConstant().annotatedWith(Names.named(NETWORK_INTERFACE_KEY)).to(

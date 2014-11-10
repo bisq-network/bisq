@@ -25,15 +25,27 @@ import java.util.List;
 // Lets use ports in that range 7366-7390
 // 7366 will be used as default port
 public interface BootstrapNodes {
-    Node LOCALHOST = Node.at("localhost", "127.0.0.1");
+
     Node DIGITAL_OCEAN_1 = Node.at("digitalocean1.bitsquare.io", "188.226.179.109");
     Node DIGITAL_OCEAN_1_DEV = Node.at("digitalocean1.bitsquare.io", "188.226.179.109", 7367);
 
-    Node DEFAULT_BOOTSTRAP_NODE = DIGITAL_OCEAN_1;
+    /**
+     * Alias to the default bootstrap node.
+     */
+    Node DEFAULT = DIGITAL_OCEAN_1;
 
+    /**
+     * A locally-running {@link io.bitsquare.app.cli.BootstrapNode} instance.
+     * Typically used only for testing. Not included in results from {@link #all()}.
+     */
+    Node LOCALHOST = Node.at("localhost", "127.0.0.1");
+
+    /**
+     * All known public bootstrap nodes.
+     */
     static List<Node> all() {
         return Arrays.asList(
-                LOCALHOST, DIGITAL_OCEAN_1
+                DIGITAL_OCEAN_1
         );
     }
 }
