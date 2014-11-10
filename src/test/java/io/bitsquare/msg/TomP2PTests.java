@@ -70,7 +70,7 @@ import static org.junit.Assert.*;
  * Test bootstrapping, DHT operations like put/get/add/remove and sendDirect in both LAN and WAN environment
  * Test scenarios in direct connection, auto port forwarding or relay mode.
  * <p>
- * The start a seed node code use the {@link SeedNodeForTesting} class.
+ * To start a seed node code use the {@link io.bitsquare.app.cli.SeedNode} class.
  * <p>
  * To configure your test environment edit the static fields for id, IP and port.
  * In the configure method and the connectionType you can define your test scenario.
