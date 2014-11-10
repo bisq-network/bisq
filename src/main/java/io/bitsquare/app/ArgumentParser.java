@@ -34,15 +34,15 @@ public class ArgumentParser {
                 .description("Bitsquare - The decentralized bitcoin exchange");
 
         // Args for seed node config
-        parser.addArgument("-d", "--" + BOOTSTRAP_NODE_ID_KEY)
+        parser.addArgument("--" + BOOTSTRAP_NODE_ID_KEY)
                 .help("Seed node ID");
-        parser.addArgument("-s", "--" + BOOTSTRAP_NODE_IP_KEY)
+        parser.addArgument("--" + BOOTSTRAP_NODE_IP_KEY)
                 .help("Seed node IP");
-        parser.addArgument("-p", "--" + BOOTSTRAP_NODE_PORT_KEY)
+        parser.addArgument("--" + BOOTSTRAP_NODE_PORT_KEY)
                 .help("Seed node port");
 
         // A custom network interface (needed at the moment for windows, but might be useful also later)
-        parser.addArgument("-i", "--" + NETWORK_INTERFACE_KEY)
+        parser.addArgument("--" + NETWORK_INTERFACE_KEY)
                 .help("Network interface");
 
         // Args for app config

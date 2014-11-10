@@ -32,9 +32,9 @@ import static io.bitsquare.network.BootstrapNodes.DEFAULT_BOOTSTRAP_NODE;
 
 public class TomP2PMessageModule extends MessageModule {
 
-    public static final String BOOTSTRAP_NODE_ID_KEY = "id";
-    public static final String BOOTSTRAP_NODE_IP_KEY = "ip";
-    public static final String BOOTSTRAP_NODE_PORT_KEY = "port";
+    public static final String BOOTSTRAP_NODE_ID_KEY = "bootstrap.node.id";
+    public static final String BOOTSTRAP_NODE_IP_KEY = "bootstrap.node.ip";
+    public static final String BOOTSTRAP_NODE_PORT_KEY = "bootstrap.node.port";
     public static final String NETWORK_INTERFACE_KEY = BootstrappedPeerFactory.NETWORK_INTERFACE_KEY;
 
     public TomP2PMessageModule(Properties properties) {
