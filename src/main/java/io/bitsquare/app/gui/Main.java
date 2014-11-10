@@ -74,6 +74,9 @@ public class Main extends Application {
         if (argumentsNamespace.getString(NAME_KEY) != null)
             properties.setProperty(NAME_KEY, argumentsNamespace.getString(NAME_KEY));
 
+        if (argumentsNamespace.getString(PORT_KEY) != null)
+            properties.setProperty(PORT_KEY, argumentsNamespace.getString(PORT_KEY));
+
         if (argumentsNamespace.getString(BOOTSTRAP_NODE_NAME_KEY) != null)
             properties.setProperty(BOOTSTRAP_NODE_NAME_KEY, argumentsNamespace.getString(BOOTSTRAP_NODE_NAME_KEY));
 
