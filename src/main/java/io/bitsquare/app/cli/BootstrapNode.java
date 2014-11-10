@@ -35,8 +35,8 @@ import org.slf4j.LoggerFactory;
 
 import net.sourceforge.argparse4j.inf.Namespace;
 
-public class SeedNode {
-    private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
+public class BootstrapNode {
+    private static final Logger log = LoggerFactory.getLogger(BootstrapNode.class);
 
     private static Peer peer = null;
     private static boolean running = true;
@@ -68,7 +68,7 @@ public class SeedNode {
             new PeerBuilderDHT(peer).start();
             new PeerBuilderNAT(peer).start();
 
-            log.debug("SeedNode started.");
+            log.debug("started");
             new Thread(new Runnable() {
                 @Override
                 public void run() {

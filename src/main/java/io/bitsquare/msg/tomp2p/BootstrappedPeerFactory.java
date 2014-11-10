@@ -70,7 +70,7 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Creates a DHT peer and bootstrap to the network via a seed node
+ * Creates a DHT peer and bootstraps to the network via a bootstrap node
  */
 class BootstrappedPeerFactory {
     private static final Logger log = LoggerFactory.getLogger(BootstrappedPeerFactory.class);
@@ -201,7 +201,7 @@ class BootstrappedPeerFactory {
 
     // 1. Attempt: Try to discover our outside visible address
     private void discover() {
-        setState(BootstrapState.DIRECT_INIT, "We are starting to bootstrap to a seed node.");
+        setState(BootstrapState.DIRECT_INIT, "We are starting discovery against a bootstrap node.");
         FutureDiscover futureDiscover = peer.discover().peerAddress(getBootstrapAddress()).start();
         futureDiscover.addListener(new BaseFutureListener<BaseFuture>() {
             @Override

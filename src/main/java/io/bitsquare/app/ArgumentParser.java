@@ -37,17 +37,17 @@ public class ArgumentParser {
 
         // Args for local node config
         parser.addArgument("--" + Node.NAME_KEY)
-                .help("Local node ID");
+                .help("Local node name");
         parser.addArgument("--" + Node.PORT_KEY)
-                .help("Local port to listen on");
+                .help("Local node port");
 
-        // Args for seed node config
+        // Args for bootstrap node config
         parser.addArgument("--" + BOOTSTRAP_NODE_NAME_KEY)
-                .help("Seed node ID");
+                .help("Bootstrap node name");
         parser.addArgument("--" + BOOTSTRAP_NODE_IP_KEY)
-                .help("Seed node IP");
+                .help("Bootstrap node IP address");
         parser.addArgument("--" + BOOTSTRAP_NODE_PORT_KEY)
-                .help("Seed node port");
+                .help("Bootstrap node port");
 
         // A custom network interface (needed at the moment for windows, but might be useful also later)
         parser.addArgument("--" + NETWORK_INTERFACE_KEY)

@@ -104,7 +104,7 @@ class MainModel extends UIModel {
 
     void initBackend() {
 
-        // For testing with the serverside seednode we need the BootstrappedPeerFactory which gets started form
+        // For testing with the bootstrap node we need the BootstrappedPeerFactory which gets started from
         // messageFacade.init
 
         messageFacade.init(new BootstrapListener() {

@@ -70,7 +70,7 @@ import static org.junit.Assert.*;
  * Test bootstrapping, DHT operations like put/get/add/remove and sendDirect in both LAN and WAN environment
  * Test scenarios in direct connection, auto port forwarding or relay mode.
  * <p>
- * To start a seed node code use the {@link io.bitsquare.app.cli.SeedNode} class.
+ * To start a bootstrap node code use the {@link io.bitsquare.app.cli.BootstrapNode} class.
  * <p>
  * To configure your test environment edit the static fields for id, IP and port.
  * In the configure method and the connectionType you can define your test scenario.
@@ -86,11 +86,10 @@ public class TomP2PTests {
     // If you want to test in one specific connection mode define it directly, otherwise use UNKNOWN
     private static final ConnectionType FORCED_CONNECTION_TYPE = ConnectionType.NAT;
 
-    // Typically you run the seed node in localhost to test direct connection.
-    // If you have a setup where you are not behind a router you can also use a WAN side seed node.
-    private static final Node BOOTSTRAP_NODE =
-            (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT) ? BootstrapNodes.LOCALHOST : BootstrapNodes
-                    .DIGITAL_OCEAN_1_DEV;
+    // Typically you run the bootstrap node on localhost to test direct connection.
+    // If you have a setup where you are not behind a router you can also use a WAN bootstrap node.
+    private static final Node BOOTSTRAP_NODE = (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT) ?
+            BootstrapNodes.LOCALHOST : BootstrapNodes.DIGITAL_OCEAN_1_DEV;
 
     private static final PeerAddress BOOTSTRAP_NODE_ADDRESS;
 
@@ -290,11 +289,11 @@ public class TomP2PTests {
         }
     }
 
-    // That test should always succeed as we use the server seed node as receiver.
+    // This test should always succeed as we use the bootstrap node as receiver.
     // A node can send a message to another peer which is not in the same LAN.
     @Test
     @Repeat(STRESS_TEST_COUNT)
-    public void testSendDirectToSeedNode() throws Exception {
+    public void testSendDirectToBootstrapNode() throws Exception {
         peer1DHT = getDHTPeer("node_1", client1Port);
         FuturePeerConnection futurePeerConnection =
                 peer1DHT.peer().createPeerConnection(BOOTSTRAP_NODE_ADDRESS, 500);
