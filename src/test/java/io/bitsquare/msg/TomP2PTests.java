@@ -304,8 +304,7 @@ public class TomP2PTests {
         assertEquals("pong", futureDirect.object());
     }
 
-    private Peer bootstrapDirectConnection(String clientId, int clientPort) {
-        final String id = clientId + clientPort;
+    private Peer bootstrapDirectConnection(String clientId, int port) {
         Peer peer = null;
         try {
             Number160 peerId = Number160.createHash(clientId);
@@ -315,7 +314,7 @@ public class TomP2PTests {
             cc.maxPermitsTCP(100);
             cc.maxPermitsUDP(100);
             peer = new PeerBuilder(peerId).bindings(getBindings()).channelClientConfiguration(cc).peerMap(pm)
-                    .ports(clientPort).start();
+                    .ports(port).start();
             FutureDiscover futureDiscover = peer.discover().peerAddress(BOOTSTRAP_NODE_ADDRESS).start();
             futureDiscover.awaitUninterruptibly();
             if (futureDiscover.isSuccess()) {
@@ -347,12 +346,11 @@ public class TomP2PTests {
         }
     }
 
-    private Peer bootstrapWithPortForwarding(String clientId, int clientPort) {
-        final String id = clientId + clientPort;
+    private Peer bootstrapWithPortForwarding(String clientId, int port) {
         Peer peer = null;
         try {
             peer = new PeerBuilder(Number160.createHash(clientId)).bindings(getBindings()).behindFirewall()
-                    .ports(clientPort).start();
+                    .ports(port).start();
 
             PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
             FutureDiscover futureDiscover = peer.discover().peerAddress(BOOTSTRAP_NODE_ADDRESS).start();
@@ -401,13 +399,11 @@ public class TomP2PTests {
         }
     }
 
-    private Peer bootstrapInRelayMode(String clientId, int clientPort) {
-        final String id = clientId + clientPort;
-
+    private Peer bootstrapInRelayMode(String clientId, int port) {
         Peer peer = null;
         try {
             peer = new PeerBuilder(Number160.createHash(clientId)).bindings(getBindings()).behindFirewall()
-                    .ports(clientPort).start();
+                    .ports(port).start();
 
             PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
             FutureDiscover futureDiscover = peer.discover().peerAddress(BOOTSTRAP_NODE_ADDRESS).start();
@@ -444,19 +440,19 @@ public class TomP2PTests {
         }
     }
 
-    private Peer bootstrapInUnknownMode(String clientId, int clientPort) {
+    private Peer bootstrapInUnknownMode(String clientId, int port) {
         resolvedConnectionType = ConnectionType.DIRECT;
-        Peer peer = bootstrapDirectConnection(clientId, clientPort);
+        Peer peer = bootstrapDirectConnection(clientId, port);
         if (peer != null)
             return peer;
 
         resolvedConnectionType = ConnectionType.NAT;
-        peer = bootstrapWithPortForwarding(clientId, clientPort);
+        peer = bootstrapWithPortForwarding(clientId, port);
         if (peer != null)
             return peer;
 
         resolvedConnectionType = ConnectionType.RELAY;
-        peer = bootstrapInRelayMode(clientId, clientPort);
+        peer = bootstrapInRelayMode(clientId, port);
         if (peer != null)
             return peer;
         else
@@ -466,19 +462,19 @@ public class TomP2PTests {
         return peer;
     }
 
-    private PeerDHT getDHTPeer(String clientId, int clientPort) {
+    private PeerDHT getDHTPeer(String clientId, int port) {
         Peer peer;
         if (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT) {
-            peer = bootstrapDirectConnection(clientId, clientPort);
+            peer = bootstrapDirectConnection(clientId, port);
         }
         else if (FORCED_CONNECTION_TYPE == ConnectionType.NAT) {
-            peer = bootstrapWithPortForwarding(clientId, clientPort);
+            peer = bootstrapWithPortForwarding(clientId, port);
         }
         else if (FORCED_CONNECTION_TYPE == ConnectionType.RELAY) {
-            peer = bootstrapInRelayMode(clientId, clientPort);
+            peer = bootstrapInRelayMode(clientId, port);
         }
         else {
-            peer = bootstrapInUnknownMode(clientId, clientPort);
+            peer = bootstrapInUnknownMode(clientId, port);
         }
 
         if (peer == null)

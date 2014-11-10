@@ -18,7 +18,6 @@
 package io.bitsquare.app.cli;
 
 import io.bitsquare.app.ArgumentParser;
-import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
 
 import net.tomp2p.dht.PeerBuilderDHT;
@@ -36,8 +35,6 @@ import org.slf4j.LoggerFactory;
 
 import net.sourceforge.argparse4j.inf.Namespace;
 
-import static io.bitsquare.msg.tomp2p.TomP2PMessageModule.*;
-
 public class SeedNode {
     private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
 
@@ -48,18 +45,12 @@ public class SeedNode {
         ArgumentParser parser = new ArgumentParser();
         Namespace namespace = parser.parseArgs(args);
 
-        Node defaultNode = BootstrapNodes.DIGITAL_OCEAN_1;
-        String id = defaultNode.getId();
-        int port = defaultNode.getPort();
+        String id = namespace.getString(Node.ID_KEY);
+        if (id == null)
+            throw new IllegalArgumentException(String.format("--%s option is required", Node.ID_KEY));
 
-        // Passed program args will override the properties of the default bootstrapNode
-        // So you can use the same id but different ports (e.g. running several nodes on one server with
-        // different ports)
-        if (namespace.getString(BOOTSTRAP_NODE_ID_KEY) != null)
-            id = namespace.getString(BOOTSTRAP_NODE_ID_KEY);
-
-        if (namespace.getString(BOOTSTRAP_NODE_PORT_KEY) != null)
-            port = Integer.valueOf(namespace.getString(BOOTSTRAP_NODE_PORT_KEY));
+        String portValue = namespace.getString(Node.PORT_KEY);
+        int port = portValue != null ? Integer.valueOf(portValue) : Node.DEFAULT_PORT;
 
         try {
             Number160 peerId = Number160.createHash(id);

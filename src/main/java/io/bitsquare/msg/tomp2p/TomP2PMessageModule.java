@@ -25,8 +25,6 @@ import com.google.inject.name.Names;
 
 import java.util.Properties;
 
-import net.tomp2p.connection.Ports;
-
 import static io.bitsquare.msg.tomp2p.BootstrappedPeerFactory.*;
 import static io.bitsquare.network.BootstrapNodes.DEFAULT_BOOTSTRAP_NODE;
 
@@ -43,8 +41,8 @@ public class TomP2PMessageModule extends MessageModule {
 
     @Override
     protected void doConfigure() {
-        Integer randomPort = new Ports().tcpPort();
-        bindConstant().annotatedWith(Names.named(TomP2PNode.CLIENT_PORT_KEY)).to(randomPort);
+        bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(
+            Integer.valueOf(properties.getProperty(Node.PORT_KEY, String.valueOf(Node.DEFAULT_PORT))));
         bind(boolean.class).annotatedWith(Names.named(TomP2PNode.USE_DISK_STORAGE_KEY)).toInstance(false);
         bind(TomP2PNode.class).asEagerSingleton();
 

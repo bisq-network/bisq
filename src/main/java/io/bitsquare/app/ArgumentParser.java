@@ -17,6 +17,8 @@
 
 package io.bitsquare.app;
 
+import io.bitsquare.network.Node;
+
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -32,6 +34,12 @@ public class ArgumentParser {
         parser = ArgumentParsers.newArgumentParser("Bitsquare")
                 .defaultHelp(true)
                 .description("Bitsquare - The decentralized bitcoin exchange");
+
+        // Args for local node config
+        parser.addArgument("--" + Node.ID_KEY)
+                .help("Local node ID");
+        parser.addArgument("--" + Node.PORT_KEY)
+                .help("Local port to listen on");
 
         // Args for seed node config
         parser.addArgument("--" + BOOTSTRAP_NODE_ID_KEY)
