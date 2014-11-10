@@ -18,14 +18,11 @@
 package io.bitsquare.msg;
 
 import io.bitsquare.BitsquareModule;
-import io.bitsquare.network.Node;
 
 import com.google.inject.Injector;
 import com.google.inject.name.Names;
 
 import java.util.Properties;
-
-import static io.bitsquare.network.BootstrapNodes.DEFAULT_BOOTSTRAP_NODE;
 
 public abstract class MessageModule extends BitsquareModule {
 
@@ -34,8 +31,6 @@ public abstract class MessageModule extends BitsquareModule {
     public static final String BOOTSTRAP_NODE_PORT_KEY = "port";
     public static final String NETWORK_INTERFACE_KEY = "networkInterface";
 
-    public static final String BOOTSTRAP_NODE_KEY = "bootstrapNode";
-
     protected MessageModule(Properties properties) {
         super(properties);
     }
@@ -43,16 +38,6 @@ public abstract class MessageModule extends BitsquareModule {
     @Override
     protected final void configure() {
         bind(MessageFacade.class).to(messageFacade()).asEagerSingleton();
-
-        Node bootstrapNode = Node.at(
-                properties.getProperty(BOOTSTRAP_NODE_ID_KEY, DEFAULT_BOOTSTRAP_NODE.getId()),
-                properties.getProperty(BOOTSTRAP_NODE_IP_KEY, DEFAULT_BOOTSTRAP_NODE.getIp()),
-                properties.getProperty(BOOTSTRAP_NODE_PORT_KEY, DEFAULT_BOOTSTRAP_NODE.getPortAsString())
-        );
-
-        bind(Node.class)
-                .annotatedWith(Names.named(BOOTSTRAP_NODE_KEY))
-                .toInstance(bootstrapNode);
 
         bind(String.class)
                 .annotatedWith(Names.named("networkInterface"))

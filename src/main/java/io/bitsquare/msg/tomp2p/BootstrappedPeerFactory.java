@@ -68,13 +68,15 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.msg.MessageModule.BOOTSTRAP_NODE_KEY;
+
 
 /**
  * Creates a DHT peer and bootstrap to the network via a seed node
  */
 class BootstrappedPeerFactory {
     private static final Logger log = LoggerFactory.getLogger(BootstrappedPeerFactory.class);
+
+    static final String BOOTSTRAP_NODE_KEY = "bootstrapNode";
 
     private KeyPair keyPair;
     private Storage storage;
