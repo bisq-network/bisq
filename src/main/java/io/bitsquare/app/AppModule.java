@@ -42,7 +42,7 @@ import net.tomp2p.connection.Ports;
  * Configures all non-UI modules necessary to run a Bitsquare application.
  */
 public class AppModule extends BitsquareModule {
-    public static final String APP_NAME_KEY = "name";
+    public static final String APP_NAME_KEY = "appName";
 
     public AppModule(Properties properties) {
         super(properties);
