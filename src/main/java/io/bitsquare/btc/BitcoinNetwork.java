@@ -18,5 +18,5 @@
 package io.bitsquare.btc;
 
 public enum BitcoinNetwork {
-    MAINNET, TESTNET, REGTEST
+    MAINNET, TESTNET, REGTEST;
 }

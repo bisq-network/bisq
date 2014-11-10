@@ -50,6 +50,7 @@ import lighthouse.files.AppDirectory;
 import net.sourceforge.argparse4j.inf.Namespace;
 
 import static io.bitsquare.app.AppModule.APP_NAME_KEY;
+import static io.bitsquare.btc.BitcoinModule.BITCOIN_NETWORK_KEY;
 import static io.bitsquare.msg.tomp2p.TomP2PMessageModule.*;
 import static io.bitsquare.network.Node.*;
 
@@ -88,6 +89,9 @@ public class Main extends Application {
 
         if (argumentsNamespace.getString(NETWORK_INTERFACE_KEY) != null)
             properties.setProperty(NETWORK_INTERFACE_KEY, argumentsNamespace.getString(NETWORK_INTERFACE_KEY));
+
+        if (argumentsNamespace.getString(BITCOIN_NETWORK_KEY) != null)
+            properties.setProperty(BITCOIN_NETWORK_KEY, argumentsNamespace.getString(BITCOIN_NETWORK_KEY));
 
         Application.launch(Main.class, args);
     }

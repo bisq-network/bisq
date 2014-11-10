@@ -17,6 +17,7 @@
 
 package io.bitsquare.app;
 
+import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.network.Node;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
@@ -52,6 +53,10 @@ public class ArgumentParser {
         // A custom network interface (needed at the moment for windows, but might be useful also later)
         parser.addArgument("--" + NETWORK_INTERFACE_KEY)
                 .help("Network interface");
+
+        parser.addArgument("--" + BitcoinModule.BITCOIN_NETWORK_KEY)
+                .setDefault(BitcoinModule.DEFAULT_BITCOIN_NETWORK.toString())
+                .help("Bitcoin network to use");
 
         // Args for app config
         parser.addArgument("-n", "--" + APP_NAME_KEY)

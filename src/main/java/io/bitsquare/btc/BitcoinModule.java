@@ -30,17 +30,11 @@ import java.util.Properties;
 
 public class BitcoinModule extends BitsquareModule {
 
-    private static final BitcoinNetwork DEFAULT_NETWORK = BitcoinNetwork.TESTNET;
-
-    private final BitcoinNetwork network;
+    public static final String BITCOIN_NETWORK_KEY = "bitcoin.network";
+    public static final String DEFAULT_BITCOIN_NETWORK = BitcoinNetwork.TESTNET.toString();
 
     public BitcoinModule(Properties properties) {
-        this(properties, DEFAULT_NETWORK);
-    }
-
-    public BitcoinModule(Properties properties, BitcoinNetwork network) {
         super(properties);
-        this.network = network;
     }
 
     @Override
@@ -57,9 +51,10 @@ public class BitcoinModule extends BitsquareModule {
     }
 
     private NetworkParameters network() {
-        String networkName = properties.getProperty("networkType", network.name());
+        BitcoinNetwork network = BitcoinNetwork.valueOf(
+                properties.getProperty(BITCOIN_NETWORK_KEY, DEFAULT_BITCOIN_NETWORK).toUpperCase());
 
-        switch (BitcoinNetwork.valueOf(networkName.toUpperCase())) {
+        switch (network) {
             case MAINNET:
                 return MainNetParams.get();
             case TESTNET:
@@ -67,7 +62,7 @@ public class BitcoinModule extends BitsquareModule {
             case REGTEST:
                 return RegTestParams.get();
             default:
-                throw new IllegalArgumentException("Unknown bitcoin network name: " + networkName);
+                throw new IllegalArgumentException("Unknown bitcoin network: " + network);
         }
     }
 }
