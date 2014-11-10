@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import net.sourceforge.argparse4j.inf.Namespace;
 
-import static io.bitsquare.msg.MessageModule.*;
+import static io.bitsquare.msg.tomp2p.TomP2PMessageModule.*;
 
 public class SeedNode {
     private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
