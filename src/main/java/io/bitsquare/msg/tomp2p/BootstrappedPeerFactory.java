@@ -77,6 +77,7 @@ class BootstrappedPeerFactory {
 
     static final String BOOTSTRAP_NODE_KEY = "bootstrapNode";
     static final String NETWORK_INTERFACE_KEY = "networkInterface";
+    static final String NETWORK_INTERFACE_UNSPECIFIED = "<unspecified>";
 
     private KeyPair keyPair;
     private Storage storage;
@@ -132,7 +133,7 @@ class BootstrappedPeerFactory {
             cc.maxPermitsTCP(100);
             cc.maxPermitsUDP(100);
             Bindings bindings = new Bindings();
-            if (!networkInterface.equals(""))
+            if (!NETWORK_INTERFACE_UNSPECIFIED.equals(networkInterface))
                 bindings.addInterface(networkInterface);
 
             peer = new PeerBuilder(keyPair).ports(port).peerMap(pm).bindings(bindings)

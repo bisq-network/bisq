@@ -25,7 +25,7 @@ import com.google.inject.name.Names;
 
 import java.util.Properties;
 
-import static io.bitsquare.msg.tomp2p.BootstrappedPeerFactory.BOOTSTRAP_NODE_KEY;
+import static io.bitsquare.msg.tomp2p.BootstrappedPeerFactory.*;
 import static io.bitsquare.network.BootstrapNodes.DEFAULT_BOOTSTRAP_NODE;
 
 public class TomP2PMessageModule extends MessageModule {
@@ -52,7 +52,7 @@ public class TomP2PMessageModule extends MessageModule {
                 )
         );
         bindConstant().annotatedWith(Names.named(NETWORK_INTERFACE_KEY)).to(
-                properties.getProperty(NETWORK_INTERFACE_KEY, ""));
+                properties.getProperty(NETWORK_INTERFACE_KEY, NETWORK_INTERFACE_UNSPECIFIED));
         bind(BootstrappedPeerFactory.class).asEagerSingleton();
     }
 
