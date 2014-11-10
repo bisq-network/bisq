@@ -237,7 +237,7 @@ public class TomP2PTests {
         futureRemove.awaitUninterruptibly();
         futureRemove.awaitListenersUninterruptibly();
 
-        // We don't test futureRemove.isSuccess() as this API does not fit well to that operation, 
+        // We don't test futureRemove.isSuccess() as this API does not fit well to that operation,
         // it might change in future to something like foundAndRemoved and notFound
         // See discussion at: https://github.com/tomp2p/TomP2P/issues/57#issuecomment-62069840
 
