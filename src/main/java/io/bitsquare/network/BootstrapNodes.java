@@ -23,7 +23,6 @@ import java.util.List;
 public interface BootstrapNodes {
 
     Node DIGITAL_OCEAN_1 = Node.at("digitalocean1.bitsquare.io", "188.226.179.109");
-    Node DIGITAL_OCEAN_1_DEV = Node.at("digitalocean1.bitsquare.io", "188.226.179.109", 7367);
 
     /**
      * Alias to the default bootstrap node.

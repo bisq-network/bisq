@@ -68,6 +68,13 @@ public final class Node {
         return String.valueOf(port);
     }
 
+    /**
+     * Return a copy of this node with the port updated to the given value.
+     */
+    public Node withPort(int newPort) {
+        return Node.at(this.name, this.ip, newPort);
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object)

@@ -89,7 +89,7 @@ public class TomP2PTests {
     // Typically you run the bootstrap node on localhost to test direct connection.
     // If you have a setup where you are not behind a router you can also use a WAN bootstrap node.
     private static final Node BOOTSTRAP_NODE = (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT) ?
-            BootstrapNodes.LOCALHOST : BootstrapNodes.DIGITAL_OCEAN_1_DEV;
+            BootstrapNodes.LOCALHOST : BootstrapNodes.DIGITAL_OCEAN_1.withPort(7367);
 
     private static final PeerAddress BOOTSTRAP_NODE_ADDRESS;
 
