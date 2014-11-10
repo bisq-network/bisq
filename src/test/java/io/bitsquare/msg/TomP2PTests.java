@@ -314,7 +314,8 @@ public class TomP2PTests {
             ChannelClientConfiguration cc = PeerBuilder.createDefaultChannelClientConfiguration();
             cc.maxPermitsTCP(100);
             cc.maxPermitsUDP(100);
-            peer = new PeerBuilder(peerId).bindings(getBindings()).peerMap(pm).ports(clientPort).start();
+            peer = new PeerBuilder(peerId).bindings(getBindings()).channelClientConfiguration(cc).peerMap(pm)
+                    .ports(clientPort).start();
             FutureDiscover futureDiscover = peer.discover().peerAddress(BOOTSTRAP_NODE_ADDRESS).start();
             futureDiscover.awaitUninterruptibly();
             if (futureDiscover.isSuccess()) {

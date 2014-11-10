@@ -39,6 +39,7 @@ import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
+import net.tomp2p.connection.ChannelClientConfiguration;
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.dht.StorageLayer;
@@ -118,7 +119,10 @@ class BootstrappedPeerFactory {
             Number160 peerId = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
             PeerMapConfiguration pmc = new PeerMapConfiguration(peerId).peerNoVerification();
             PeerMap pm = new PeerMap(pmc);
-            peer = new PeerBuilder(keyPair).ports(port).peerMap(pm).start();
+            ChannelClientConfiguration cc = PeerBuilder.createDefaultChannelClientConfiguration();
+            cc.maxPermitsTCP(100);
+            cc.maxPermitsUDP(100);
+            peer = new PeerBuilder(keyPair).ports(port).peerMap(pm).channelClientConfiguration(cc).start();
             peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer(storage)).start();
 
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
