@@ -39,6 +39,7 @@ import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
+import net.tomp2p.connection.Bindings;
 import net.tomp2p.connection.ChannelClientConfiguration;
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
@@ -76,6 +77,7 @@ class BootstrappedPeerFactory {
     private KeyPair keyPair;
     private Storage storage;
     private final Node bootstrapNode;
+    private String networkInterface;
     private final Persistence persistence;
 
     private final SettableFuture<PeerDHT> settableFuture = SettableFuture.create();
@@ -89,9 +91,11 @@ class BootstrappedPeerFactory {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BootstrappedPeerFactory(Persistence persistence, @Named("bootstrapNode") Node bootstrapNode) {
+    public BootstrappedPeerFactory(Persistence persistence, @Named("bootstrapNode") Node bootstrapNode,
+                                   @Named("networkInterface") String networkInterface) {
         this.persistence = persistence;
         this.bootstrapNode = bootstrapNode;
+        this.networkInterface = networkInterface;
     }
 
 
@@ -122,7 +126,12 @@ class BootstrappedPeerFactory {
             ChannelClientConfiguration cc = PeerBuilder.createDefaultChannelClientConfiguration();
             cc.maxPermitsTCP(100);
             cc.maxPermitsUDP(100);
-            peer = new PeerBuilder(keyPair).ports(port).peerMap(pm).channelClientConfiguration(cc).start();
+            Bindings bindings = new Bindings();
+            if (!networkInterface.equals(""))
+                bindings.addInterface(networkInterface);
+
+            peer = new PeerBuilder(keyPair).ports(port).peerMap(pm).bindings(bindings)
+                    .channelClientConfiguration(cc).start();
             peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer(storage)).start();
 
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {

@@ -32,6 +32,7 @@ public abstract class MessageModule extends BitsquareModule {
     public static final String BOOTSTRAP_NODE_ID_KEY = "id";
     public static final String BOOTSTRAP_NODE_IP_KEY = "ip";
     public static final String BOOTSTRAP_NODE_PORT_KEY = "port";
+    public static final String NETWORK_INTERFACE_KEY = "networkInterface";
 
     protected MessageModule(Properties properties) {
         super(properties);
@@ -53,6 +54,10 @@ public abstract class MessageModule extends BitsquareModule {
         bind(Node.class)
                 .annotatedWith(Names.named("bootstrapNode"))
                 .toInstance(bootstrapNode);
+
+        bind(String.class)
+                .annotatedWith(Names.named("networkInterface"))
+                .toInstance(properties.getProperty(NETWORK_INTERFACE_KEY, ""));
 
         doConfigure();
     }

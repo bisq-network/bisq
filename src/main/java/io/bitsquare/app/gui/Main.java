@@ -79,6 +79,9 @@ public class Main extends Application {
         if (argumentsNamespace.getString(BOOTSTRAP_NODE_PORT_KEY) != null)
             properties.setProperty(BOOTSTRAP_NODE_PORT_KEY, argumentsNamespace.getString(BOOTSTRAP_NODE_PORT_KEY));
 
+        if (argumentsNamespace.getString(NETWORK_INTERFACE_KEY) != null)
+            properties.setProperty(NETWORK_INTERFACE_KEY, argumentsNamespace.getString(NETWORK_INTERFACE_KEY));
+
         Application.launch(Main.class, args);
     }
 
