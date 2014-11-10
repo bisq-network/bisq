@@ -297,39 +297,64 @@ public class MainViewCB extends ViewCB<MainPM> {
         ProgressBar blockchainSyncIndicator = new ProgressBar(-1);
         blockchainSyncIndicator.setPrefWidth(120);
         blockchainSyncIndicator.progressProperty().bind(presentationModel.blockchainSyncProgress);
-        blockchainSyncIndicator.visibleProperty().bind(presentationModel.blockchainSyncIndicatorVisible);
-        blockchainSyncIndicator.managedProperty().bind(presentationModel.blockchainSyncIndicatorVisible);
+
+        ImageView blockchainSyncIcon = new ImageView();
+        blockchainSyncIcon.setVisible(false);
+        blockchainSyncIcon.setManaged(false);
+
+        presentationModel.blockchainSyncIconId.addListener((ov, oldValue, newValue) -> {
+            blockchainSyncIcon.setId(newValue);
+            blockchainSyncIcon.setVisible(true);
+            blockchainSyncIcon.setManaged(true);
+
+            blockchainSyncIndicator.setVisible(false);
+            blockchainSyncIndicator.setManaged(false);
+        });
 
         HBox blockchainSyncBox = new HBox();
         blockchainSyncBox.setSpacing(10);
         blockchainSyncBox.setAlignment(Pos.CENTER);
         blockchainSyncBox.setPadding(new Insets(60, 0, 0, 0));
-        blockchainSyncBox.getChildren().addAll(blockchainSyncLabel, blockchainSyncIndicator);
+        blockchainSyncBox.getChildren().addAll(blockchainSyncLabel, blockchainSyncIndicator, blockchainSyncIcon);
 
         Label bootstrapStateLabel = new Label();
         bootstrapStateLabel.setWrapText(true);
         bootstrapStateLabel.setMaxWidth(500);
         bootstrapStateLabel.setTextAlignment(TextAlignment.CENTER);
         bootstrapStateLabel.textProperty().bind(presentationModel.bootstrapState);
+
+        ProgressIndicator bootstrapIndicator = new ProgressIndicator();
+        bootstrapIndicator.setMaxSize(24, 24);
+        bootstrapIndicator.progressProperty().bind(presentationModel.bootstrapProgress);
+        
         presentationModel.bootstrapFailed.addListener((ov, oldValue, newValue) -> {
             if (newValue) {
                 bootstrapStateLabel.setId("splash-error-state-msg");
+                bootstrapIndicator.setVisible(false);
+                
                 Popups.openErrorPopup("Error", "Cannot connect to P2P network. \n\nError message:\n" +
                         presentationModel.bootstrapErrorMsg.get());
             }
         });
 
-        ProgressIndicator bootstrapIndicator = new ProgressIndicator();
-        bootstrapIndicator.setMaxSize(24, 24);
-        bootstrapIndicator.progressProperty().bind(presentationModel.bootstrapProgress);
-        bootstrapIndicator.visibleProperty().bind(presentationModel.bootstrapIndicatorVisible);
-        bootstrapIndicator.managedProperty().bind(presentationModel.bootstrapIndicatorVisible);
+        ImageView bootstrapIcon = new ImageView();
+        bootstrapIcon.setVisible(false);
+        bootstrapIcon.setManaged(false);
+
+        presentationModel.bootstrapIconId.addListener((ov, oldValue, newValue) -> {
+            bootstrapIcon.setId(newValue);
+            bootstrapIcon.setVisible(true);
+            bootstrapIcon.setManaged(true);
+
+            bootstrapIndicator.setVisible(false);
+            bootstrapIndicator.setManaged(false);
+        });
 
         HBox bootstrapBox = new HBox();
         bootstrapBox.setSpacing(10);
         bootstrapBox.setAlignment(Pos.CENTER);
         bootstrapBox.setPadding(new Insets(10, 0, 0, 0));
-        bootstrapBox.getChildren().addAll(bootstrapStateLabel, bootstrapIndicator);
+        bootstrapBox.getChildren().addAll(bootstrapStateLabel, bootstrapIndicator, bootstrapIcon);
 
         vBox.getChildren().addAll(logo, blockchainSyncBox, bootstrapBox);
         return vBox;

@@ -48,16 +48,19 @@ class MainPM extends PresentationModel<MainModel> {
     final BooleanProperty backendReady = new SimpleBooleanProperty();
     final StringProperty bankAccountsComboBoxPrompt = new SimpleStringProperty();
     final BooleanProperty bankAccountsComboBoxDisable = new SimpleBooleanProperty();
-    final StringProperty blockchainSyncState = new SimpleStringProperty("Initializing");
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty();
+
+    final StringProperty blockchainSyncState = new SimpleStringProperty("Initializing");
     final DoubleProperty blockchainSyncProgress = new SimpleDoubleProperty();
     final BooleanProperty blockchainSyncIndicatorVisible = new SimpleBooleanProperty(true);
+    final StringProperty blockchainSyncIconId = new SimpleStringProperty();
+    final StringProperty walletFacadeErrorMsg = new SimpleStringProperty();
+
     final DoubleProperty bootstrapProgress = new SimpleDoubleProperty(-1);
     final BooleanProperty bootstrapFailed = new SimpleBooleanProperty();
-    final BooleanProperty bootstrapIndicatorVisible = new SimpleBooleanProperty(true);
     final StringProperty bootstrapState = new SimpleStringProperty();
     final StringProperty bootstrapErrorMsg = new SimpleStringProperty();
-    final StringProperty walletFacadeErrorMsg = new SimpleStringProperty();
+    final StringProperty bootstrapIconId = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -88,8 +91,14 @@ class MainPM extends PresentationModel<MainModel> {
                             newValue == BootstrapState.NAT_SUCCESS ||
                             newValue == BootstrapState.RELAY_SUCCESS) {
                         bootstrapState.set("Successfully connected to P2P network: " + newValue.getMessage());
-                        bootstrapIndicatorVisible.set(false);
                         bootstrapProgress.set(1);
+
+                        if (newValue == BootstrapState.DIRECT_SUCCESS)
+                            bootstrapIconId.set("image-connection-direct");
+                        else if (newValue == BootstrapState.NAT_SUCCESS)
+                            bootstrapIconId.set("image-connection-nat");
+                        else if (newValue == BootstrapState.RELAY_SUCCESS)
+                            bootstrapIconId.set("image-connection-relay");
                     }
                     else if (newValue == BootstrapState.PEER_CREATION_FAILED ||
                             newValue == BootstrapState.DIRECT_FAILED ||
@@ -98,7 +107,6 @@ class MainPM extends PresentationModel<MainModel> {
 
                         bootstrapErrorMsg.set(newValue.getMessage());
                         bootstrapState.set("Connection to P2P network failed.");
-                        bootstrapIndicatorVisible.set(false);
                         bootstrapProgress.set(0);
                         bootstrapFailed.set(true);
                     }
@@ -115,8 +123,14 @@ class MainPM extends PresentationModel<MainModel> {
             walletFacadeErrorMsg.set(((Throwable) newValue).getMessage());
         });
 
-        model.networkSyncProgress.addListener((ov, oldValue, newValue) -> setNetworkSyncProgress((double) newValue));
+        model.networkSyncProgress.addListener((ov, oldValue, newValue) -> {
+            setNetworkSyncProgress((double) newValue);
+
+            if ((double) newValue >= 1)
+                blockchainSyncIconId.set("image-connection-synced");
+        });
         setNetworkSyncProgress(model.networkSyncProgress.get());
+
 
         model.getBankAccounts().addListener((ListChangeListener<BankAccount>) change -> {
             bankAccountsComboBoxDisable.set(change.getList().isEmpty());

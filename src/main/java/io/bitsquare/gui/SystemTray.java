@@ -94,12 +94,7 @@ public class SystemTray {
             }
         });
 
-        exitItem.addActionListener(e -> exit());
-    }
-
-    public void exit() {
-        java.awt.SystemTray.getSystemTray().remove(trayIcon);
-        onExit.run();
+        exitItem.addActionListener(e -> onExit.run());
     }
 
     public void hideStage() {

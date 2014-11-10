@@ -122,3 +122,20 @@
 #image-arrow-grey {
     -fx-image: url("../../../images/arrow_grey.png");
 }
+
+/* connection state*/
+#image-connection-direct {
+    -fx-image: url("../../../images/connection/direct.png");
+}
+
+#image-connection-nat {
+    -fx-image: url("../../../images/connection/nat.png");
+}
+
+#image-connection-relay {
+    -fx-image: url("../../../images/connection/relay.png");
+}
+
+#image-connection-synced {
+    -fx-image: url("../../../images/connection/synced.png");
+}
