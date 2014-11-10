@@ -54,7 +54,6 @@ import net.tomp2p.futures.FuturePeerConnection;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.storage.Data;
-import net.tomp2p.storage.Storage;
 import net.tomp2p.utils.Utils;
 
 import org.jetbrains.annotations.NotNull;
@@ -79,7 +78,6 @@ public class TomP2PNode {
 
     private PeerAddress storedPeerAddress;
     private PeerDHT peerDHT;
-    private Storage storage;
     private BootstrappedPeerFactory bootstrappedPeerFactory;
 
 
@@ -118,7 +116,6 @@ public class TomP2PNode {
     }
 
     public void start(BootstrapListener bootstrapListener) {
-        bootstrappedPeerFactory.setStorage(storage);
         setupTimerForIPCheck();
 
         ListenableFuture<PeerDHT> bootstrapComplete = bootstrap(port);
@@ -144,9 +141,6 @@ public class TomP2PNode {
     public void shutDown() {
         if (peerDHT != null && peerDHT.peer() != null)
             peerDHT.peer().shutdown();
-
-        if (storage != null)
-            storage.close();
     }
 
 

@@ -43,7 +43,6 @@ import net.tomp2p.connection.Bindings;
 import net.tomp2p.connection.ChannelClientConfiguration;
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
-import net.tomp2p.dht.StorageLayer;
 import net.tomp2p.futures.BaseFuture;
 import net.tomp2p.futures.BaseFutureListener;
 import net.tomp2p.futures.FutureBootstrap;
@@ -60,7 +59,6 @@ import net.tomp2p.peers.PeerMap;
 import net.tomp2p.peers.PeerMapChangeListener;
 import net.tomp2p.peers.PeerMapConfiguration;
 import net.tomp2p.peers.PeerStatistic;
-import net.tomp2p.storage.Storage;
 import net.tomp2p.utils.Utils;
 
 import org.jetbrains.annotations.NotNull;
@@ -80,7 +78,6 @@ class BootstrappedPeerFactory {
     static final String NETWORK_INTERFACE_UNSPECIFIED = "<unspecified>";
 
     private KeyPair keyPair;
-    private Storage storage;
     private final Node bootstrapNode;
     private String networkInterface;
     private final Persistence persistence;
@@ -113,10 +110,6 @@ class BootstrappedPeerFactory {
         this.keyPair = keyPair;
     }
 
-    public void setStorage(@NotNull Storage storage) {
-        this.storage = storage;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
@@ -138,7 +131,7 @@ class BootstrappedPeerFactory {
 
             peer = new PeerBuilder(keyPair).ports(port).peerMap(pm).bindings(bindings)
                     .channelClientConfiguration(cc).start();
-            peerDHT = new PeerBuilderDHT(peer).storageLayer(new StorageLayer(storage)).start();
+            peerDHT = new PeerBuilderDHT(peer).start();
 
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
                 @Override
