@@ -17,12 +17,15 @@
 
 package io.bitsquare.app;
 
+import io.bitsquare.btc.BitcoinModule;
+import io.bitsquare.network.Node;
+
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
 import static io.bitsquare.app.AppModule.APP_NAME_KEY;
-import static io.bitsquare.msg.MessageModule.*;
+import static io.bitsquare.msg.tomp2p.TomP2PMessageModule.*;
 
 public class ArgumentParser {
 
@@ -33,17 +36,27 @@ public class ArgumentParser {
                 .defaultHelp(true)
                 .description("Bitsquare - The decentralized bitcoin exchange");
 
-        // Args for seed node config
-        parser.addArgument("-d", "--" + BOOTSTRAP_NODE_ID_KEY)
-                .help("Seed node ID");
-        parser.addArgument("-s", "--" + BOOTSTRAP_NODE_IP_KEY)
-                .help("Seed node IP");
-        parser.addArgument("-p", "--" + BOOTSTRAP_NODE_PORT_KEY)
-                .help("Seed node port");
+        // Args for local node config
+        parser.addArgument("--" + Node.NAME_KEY)
+                .help("Local node name");
+        parser.addArgument("--" + Node.PORT_KEY)
+                .help("Local node port");
+
+        // Args for bootstrap node config
+        parser.addArgument("--" + BOOTSTRAP_NODE_NAME_KEY)
+                .help("Bootstrap node name");
+        parser.addArgument("--" + BOOTSTRAP_NODE_IP_KEY)
+                .help("Bootstrap node IP address");
+        parser.addArgument("--" + BOOTSTRAP_NODE_PORT_KEY)
+                .help("Bootstrap node port");
 
         // A custom network interface (needed at the moment for windows, but might be useful also later)
-        parser.addArgument("-i", "--" + NETWORK_INTERFACE_KEY)
+        parser.addArgument("--" + NETWORK_INTERFACE_KEY)
                 .help("Network interface");
+
+        parser.addArgument("--" + BitcoinModule.BITCOIN_NETWORK_KEY)
+                .setDefault(BitcoinModule.DEFAULT_BITCOIN_NETWORK.toString())
+                .help("Bitcoin network to use");
 
         // Args for app config
         parser.addArgument("-n", "--" + APP_NAME_KEY)

@@ -19,10 +19,21 @@ package io.bitsquare.msg.tomp2p;
 
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.MessageModule;
+import io.bitsquare.network.BootstrapNodes;
+import io.bitsquare.network.Node;
+
+import com.google.inject.name.Names;
 
 import java.util.Properties;
 
+import static io.bitsquare.msg.tomp2p.BootstrappedPeerFactory.*;
+
 public class TomP2PMessageModule extends MessageModule {
+
+    public static final String BOOTSTRAP_NODE_NAME_KEY = "bootstrap.node.name";
+    public static final String BOOTSTRAP_NODE_IP_KEY = "bootstrap.node.ip";
+    public static final String BOOTSTRAP_NODE_PORT_KEY = "bootstrap.node.port";
+    public static final String NETWORK_INTERFACE_KEY = BootstrappedPeerFactory.NETWORK_INTERFACE_KEY;
 
     public TomP2PMessageModule(Properties properties) {
         super(properties);
@@ -30,7 +41,19 @@ public class TomP2PMessageModule extends MessageModule {
 
     @Override
     protected void doConfigure() {
+        bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(
+            Integer.valueOf(properties.getProperty(Node.PORT_KEY, String.valueOf(Node.DEFAULT_PORT))));
         bind(TomP2PNode.class).asEagerSingleton();
+
+        bind(Node.class).annotatedWith(Names.named(BOOTSTRAP_NODE_KEY)).toInstance(
+                Node.at(
+                        properties.getProperty(BOOTSTRAP_NODE_NAME_KEY, BootstrapNodes.DEFAULT.getName()),
+                        properties.getProperty(BOOTSTRAP_NODE_IP_KEY, BootstrapNodes.DEFAULT.getIp()),
+                        properties.getProperty(BOOTSTRAP_NODE_PORT_KEY, BootstrapNodes.DEFAULT.getPortAsString())
+                )
+        );
+        bindConstant().annotatedWith(Names.named(NETWORK_INTERFACE_KEY)).to(
+                properties.getProperty(NETWORK_INTERFACE_KEY, NETWORK_INTERFACE_UNSPECIFIED));
         bind(BootstrappedPeerFactory.class).asEagerSingleton();
     }
 

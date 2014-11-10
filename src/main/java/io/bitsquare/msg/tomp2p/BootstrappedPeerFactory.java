@@ -68,11 +68,16 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
- * Creates a DHT peer and bootstrap to the network via a seed node
+ * Creates a DHT peer and bootstraps to the network via a bootstrap node
  */
 class BootstrappedPeerFactory {
     private static final Logger log = LoggerFactory.getLogger(BootstrappedPeerFactory.class);
+
+    static final String BOOTSTRAP_NODE_KEY = "bootstrapNode";
+    static final String NETWORK_INTERFACE_KEY = "interface";
+    static final String NETWORK_INTERFACE_UNSPECIFIED = "<unspecified>";
 
     private KeyPair keyPair;
     private Storage storage;
@@ -91,8 +96,9 @@ class BootstrappedPeerFactory {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BootstrappedPeerFactory(Persistence persistence, @Named("bootstrapNode") Node bootstrapNode,
-                                   @Named("networkInterface") String networkInterface) {
+    public BootstrappedPeerFactory(Persistence persistence,
+                                   @Named(BOOTSTRAP_NODE_KEY) Node bootstrapNode,
+                                   @Named(NETWORK_INTERFACE_KEY) String networkInterface) {
         this.persistence = persistence;
         this.bootstrapNode = bootstrapNode;
         this.networkInterface = networkInterface;
@@ -127,7 +133,7 @@ class BootstrappedPeerFactory {
             cc.maxPermitsTCP(100);
             cc.maxPermitsUDP(100);
             Bindings bindings = new Bindings();
-            if (!networkInterface.equals(""))
+            if (!NETWORK_INTERFACE_UNSPECIFIED.equals(networkInterface))
                 bindings.addInterface(networkInterface);
 
             peer = new PeerBuilder(keyPair).ports(port).peerMap(pm).bindings(bindings)
@@ -197,7 +203,7 @@ class BootstrappedPeerFactory {
 
     // 1. Attempt: Try to discover our outside visible address
     private void discover() {
-        setState(BootstrapState.DIRECT_INIT, "We are starting to bootstrap to a seed node.");
+        setState(BootstrapState.DIRECT_INIT, "We are starting discovery against a bootstrap node.");
         FutureDiscover futureDiscover = peer.discover().peerAddress(getBootstrapAddress()).start();
         futureDiscover.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
@@ -324,7 +330,7 @@ class BootstrappedPeerFactory {
 
     private PeerAddress getBootstrapAddress() {
         try {
-            return new PeerAddress(Number160.createHash(bootstrapNode.getId()),
+            return new PeerAddress(Number160.createHash(bootstrapNode.getName()),
                     InetAddress.getByName(bootstrapNode.getIp()),
                     bootstrapNode.getPort(),
                     bootstrapNode.getPort());

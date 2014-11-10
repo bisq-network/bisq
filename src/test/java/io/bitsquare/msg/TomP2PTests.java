@@ -70,7 +70,7 @@ import static org.junit.Assert.*;
  * Test bootstrapping, DHT operations like put/get/add/remove and sendDirect in both LAN and WAN environment
  * Test scenarios in direct connection, auto port forwarding or relay mode.
  * <p>
- * The start a seed node code use the {@link SeedNodeForTesting} class.
+ * To start a bootstrap node code use the {@link io.bitsquare.app.cli.BootstrapNode} class.
  * <p>
  * To configure your test environment edit the static fields for id, IP and port.
  * In the configure method and the connectionType you can define your test scenario.
@@ -86,18 +86,17 @@ public class TomP2PTests {
     // If you want to test in one specific connection mode define it directly, otherwise use UNKNOWN
     private static final ConnectionType FORCED_CONNECTION_TYPE = ConnectionType.DIRECT;
 
-    // Typically you run the seed node in localhost to test direct connection.
-    // If you have a setup where you are not behind a router you can also use a WAN side seed node.
-    private static final Node BOOTSTRAP_NODE =
-            (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT) ? BootstrapNodes.LOCALHOST : BootstrapNodes
-                    .DIGITAL_OCEAN_1_DEV;
+    // Typically you run the bootstrap node in localhost to test direct connection.
+    // If you have a setup where you are not behind a router you can also use a WAN bootstrap node.
+    private static final Node BOOTSTRAP_NODE = (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT) ?
+            BootstrapNodes.LOCALHOST : BootstrapNodes.DIGITAL_OCEAN_1.withPort(7367);
 
     private static final PeerAddress BOOTSTRAP_NODE_ADDRESS;
 
     static {
         try {
             BOOTSTRAP_NODE_ADDRESS = new PeerAddress(
-                    Number160.createHash(BOOTSTRAP_NODE.getId()),
+                    Number160.createHash(BOOTSTRAP_NODE.getName()),
                     BOOTSTRAP_NODE.getIp(), BOOTSTRAP_NODE.getPort(), BOOTSTRAP_NODE.getPort());
         } catch (UnknownHostException ex) {
             throw new RuntimeException(BOOTSTRAP_NODE.toString(), ex);
@@ -252,7 +251,7 @@ public class TomP2PTests {
         futureRemove.awaitUninterruptibly();
         futureRemove.awaitListenersUninterruptibly();
 
-        // We don't test futureRemove.isSuccess() as this API does not fit well to that operation, 
+        // We don't test futureRemove.isSuccess() as this API does not fit well to that operation,
         // it might change in future to something like foundAndRemoved and notFound
         // See discussion at: https://github.com/tomp2p/TomP2P/issues/57#issuecomment-62069840
 
@@ -305,7 +304,7 @@ public class TomP2PTests {
         }
     }
 
-    // That test should always succeed as we use the server seed node as receiver.
+    // This test should always succeed as we use the bootstrap node as receiver.
     // A node can send a message to another peer which is not in the same LAN.
     @Test
     @Repeat(STRESS_TEST_COUNT)

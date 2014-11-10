@@ -31,8 +31,6 @@ import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
-import javax.inject.Named;
-
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -56,7 +54,6 @@ class MainModel extends UIModel {
     private final MessageFacade messageFacade;
     private final TradeManager tradeManager;
     private final Persistence persistence;
-    private final int clientPort;
 
     private boolean messageFacadeInited;
     private boolean walletFacadeInited;
@@ -75,14 +72,12 @@ class MainModel extends UIModel {
 
     @Inject
     private MainModel(User user, WalletFacade walletFacade, MessageFacade messageFacade,
-                      TradeManager tradeManager, Persistence persistence,
-                      @Named("clientPort") int clientPort) {
+                      TradeManager tradeManager, Persistence persistence) {
         this.user = user;
         this.walletFacade = walletFacade;
         this.messageFacade = messageFacade;
         this.tradeManager = tradeManager;
         this.persistence = persistence;
-        this.clientPort = clientPort;
     }
 
 
@@ -109,10 +104,10 @@ class MainModel extends UIModel {
 
     void initBackend() {
 
-        // For testing with the serverside seednode we need the BootstrappedPeerFactory which gets started form
+        // For testing with the bootstrap node we need the BootstrappedPeerFactory which gets started from
         // messageFacade.init
 
-        messageFacade.init(clientPort, new BootstrapListener() {
+        messageFacade.init(new BootstrapListener() {
             @Override
             public void onCompleted() {
                 messageFacadeInited = true;
