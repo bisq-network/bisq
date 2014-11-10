@@ -50,7 +50,6 @@ import lighthouse.files.AppDirectory;
 import net.sourceforge.argparse4j.inf.Namespace;
 
 import static io.bitsquare.app.AppModule.APP_NAME_KEY;
-import static io.bitsquare.msg.MessageModule.NETWORK_INTERFACE_KEY;
 import static io.bitsquare.msg.tomp2p.TomP2PMessageModule.*;
 
 public class Main extends Application {

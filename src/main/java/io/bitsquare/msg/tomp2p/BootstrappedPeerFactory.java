@@ -17,7 +17,6 @@
 
 package io.bitsquare.msg.tomp2p;
 
-import io.bitsquare.msg.MessageModule;
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.Node;
 import io.bitsquare.persistence.Persistence;
@@ -69,8 +68,6 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.msg.MessageModule.NETWORK_INTERFACE_KEY;
-
 
 /**
  * Creates a DHT peer and bootstrap to the network via a seed node
@@ -79,6 +76,7 @@ class BootstrappedPeerFactory {
     private static final Logger log = LoggerFactory.getLogger(BootstrappedPeerFactory.class);
 
     static final String BOOTSTRAP_NODE_KEY = "bootstrapNode";
+    static final String NETWORK_INTERFACE_KEY = "networkInterface";
 
     private KeyPair keyPair;
     private Storage storage;

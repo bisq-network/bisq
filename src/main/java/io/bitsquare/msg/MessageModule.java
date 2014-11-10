@@ -20,13 +20,10 @@ package io.bitsquare.msg;
 import io.bitsquare.BitsquareModule;
 
 import com.google.inject.Injector;
-import com.google.inject.name.Names;
 
 import java.util.Properties;
 
 public abstract class MessageModule extends BitsquareModule {
-
-    public static final String NETWORK_INTERFACE_KEY = "networkInterface";
 
     protected MessageModule(Properties properties) {
         super(properties);
@@ -35,10 +32,6 @@ public abstract class MessageModule extends BitsquareModule {
     @Override
     protected final void configure() {
         bind(MessageFacade.class).to(messageFacade()).asEagerSingleton();
-
-        bind(String.class)
-                .annotatedWith(Names.named(NETWORK_INTERFACE_KEY))
-                .toInstance(properties.getProperty(NETWORK_INTERFACE_KEY, ""));
 
         doConfigure();
     }

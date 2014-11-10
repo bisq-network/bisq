@@ -33,6 +33,7 @@ public class TomP2PMessageModule extends MessageModule {
     public static final String BOOTSTRAP_NODE_ID_KEY = "id";
     public static final String BOOTSTRAP_NODE_IP_KEY = "ip";
     public static final String BOOTSTRAP_NODE_PORT_KEY = "port";
+    public static final String NETWORK_INTERFACE_KEY = BootstrappedPeerFactory.NETWORK_INTERFACE_KEY;
 
     public TomP2PMessageModule(Properties properties) {
         super(properties);
@@ -50,6 +51,8 @@ public class TomP2PMessageModule extends MessageModule {
                         properties.getProperty(BOOTSTRAP_NODE_PORT_KEY, DEFAULT_BOOTSTRAP_NODE.getPortAsString())
                 )
         );
+        bindConstant().annotatedWith(Names.named(NETWORK_INTERFACE_KEY)).to(
+                properties.getProperty(NETWORK_INTERFACE_KEY, ""));
         bind(BootstrappedPeerFactory.class).asEagerSingleton();
     }
 
