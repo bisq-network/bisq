@@ -37,7 +37,7 @@ public abstract class MessageModule extends BitsquareModule {
         bind(MessageFacade.class).to(messageFacade()).asEagerSingleton();
 
         bind(String.class)
-                .annotatedWith(Names.named("networkInterface"))
+                .annotatedWith(Names.named(NETWORK_INTERFACE_KEY))
                 .toInstance(properties.getProperty(NETWORK_INTERFACE_KEY, ""));
 
         doConfigure();

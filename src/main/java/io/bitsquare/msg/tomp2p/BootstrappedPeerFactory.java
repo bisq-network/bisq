@@ -17,6 +17,7 @@
 
 package io.bitsquare.msg.tomp2p;
 
+import io.bitsquare.msg.MessageModule;
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.Node;
 import io.bitsquare.persistence.Persistence;
@@ -68,6 +69,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static io.bitsquare.msg.MessageModule.NETWORK_INTERFACE_KEY;
 
 
 /**
@@ -95,8 +97,9 @@ class BootstrappedPeerFactory {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BootstrappedPeerFactory(Persistence persistence, @Named(BOOTSTRAP_NODE_KEY) Node bootstrapNode,
-                                   @Named("networkInterface") String networkInterface) {
+    public BootstrappedPeerFactory(Persistence persistence,
+                                   @Named(BOOTSTRAP_NODE_KEY) Node bootstrapNode,
+                                   @Named(NETWORK_INTERFACE_KEY) String networkInterface) {
         this.persistence = persistence;
         this.bootstrapNode = bootstrapNode;
         this.networkInterface = networkInterface;
