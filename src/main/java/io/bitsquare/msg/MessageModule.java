@@ -18,8 +18,6 @@
 package io.bitsquare.msg;
 
 import io.bitsquare.BitsquareModule;
-import io.bitsquare.app.ArgumentParser;
-import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
 
 import com.google.inject.Injector;
@@ -27,10 +25,13 @@ import com.google.inject.name.Names;
 
 import java.util.Properties;
 
-import static io.bitsquare.app.ArgumentParser.*;
 import static io.bitsquare.network.BootstrapNodes.DEFAULT_BOOTSTRAP_NODE;
 
 public abstract class MessageModule extends BitsquareModule {
+
+    public static final String BOOTSTRAP_NODE_ID_KEY = "id";
+    public static final String BOOTSTRAP_NODE_IP_KEY = "ip";
+    public static final String BOOTSTRAP_NODE_PORT_KEY = "port";
 
     protected MessageModule(Properties properties) {
         super(properties);
@@ -39,15 +40,14 @@ public abstract class MessageModule extends BitsquareModule {
     @Override
     protected final void configure() {
         bind(MessageFacade.class).to(messageFacade()).asEagerSingleton();
-        bind(DHTSeedService.class);
 
         // we will probably later use disk storage instead of memory storage for TomP2P
         bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(false);
 
         Node bootstrapNode = Node.at(
-                properties.getProperty(SEED_ID_FLAG, DEFAULT_BOOTSTRAP_NODE.getId()),
-                properties.getProperty(SEED_IP_FLAG, DEFAULT_BOOTSTRAP_NODE.getIp()),
-                properties.getProperty(SEED_PORT_FLAG, DEFAULT_BOOTSTRAP_NODE.getPortAsString())
+                properties.getProperty(BOOTSTRAP_NODE_ID_KEY, DEFAULT_BOOTSTRAP_NODE.getId()),
+                properties.getProperty(BOOTSTRAP_NODE_IP_KEY, DEFAULT_BOOTSTRAP_NODE.getIp()),
+                properties.getProperty(BOOTSTRAP_NODE_PORT_KEY, DEFAULT_BOOTSTRAP_NODE.getPortAsString())
         );
 
         bind(Node.class)

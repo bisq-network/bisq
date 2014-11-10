@@ -319,7 +319,7 @@ public class SellerTakesOfferProtocol {
         log.debug("state " + state);
         checkState(state.ordinal() >= State.SendSignedTakerDepositTxAsHex.ordinal());
         checkArgument(tradeId.equals(message.getTradeId()));
-        //TODO takerCommitDepositTx should be in task as well, but will be probably changed anyway when akka is used...
+        //TODO takerCommitDepositTx should be in task as well
         Transaction tx = walletFacade.takerCommitDepositTx(message.getDepositTxAsHex());
         listener.onDepositTxPublished(tx);
     }

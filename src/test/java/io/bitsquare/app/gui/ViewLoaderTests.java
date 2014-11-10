@@ -17,7 +17,6 @@
 
 package io.bitsquare.app.gui;
 
-import io.bitsquare.app.ArgumentParser;
 import io.bitsquare.gui.FatalException;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewLoader;
@@ -25,7 +24,6 @@ import io.bitsquare.gui.ViewLoader;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import java.util.HashMap;
 import java.util.Properties;
 
 import javafx.application.Application;
@@ -36,7 +34,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import net.sourceforge.argparse4j.inf.Namespace;
+import static io.bitsquare.app.AppModule.APP_NAME_KEY;
 
 public class ViewLoaderTests {
 
@@ -66,7 +64,7 @@ public class ViewLoaderTests {
     @Before
     public void setUp() {
         Properties properties = new Properties();
-        properties.setProperty(ArgumentParser.NAME_FLAG, "testApp");
+        properties.setProperty(APP_NAME_KEY, "testApp");
         Injector injector = Guice.createInjector(new MainModule(properties, TestApp.primaryStage));
         ViewLoader.setInjector(injector);
     }

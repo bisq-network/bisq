@@ -21,13 +21,10 @@ import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
-public class ArgumentParser {
+import static io.bitsquare.app.AppModule.APP_NAME_KEY;
+import static io.bitsquare.msg.MessageModule.*;
 
-    public static final String SEED_ID_FLAG = "id";
-    public static final String SEED_IP_FLAG = "ip";
-    public static final String SEED_PORT_FLAG = "port";
-    public static final String INTERFACE_HINT_FLAG = "interface";
-    public static final String NAME_FLAG = "name";
+public class ArgumentParser {
 
     private final net.sourceforge.argparse4j.inf.ArgumentParser parser;
 
@@ -37,17 +34,15 @@ public class ArgumentParser {
                 .description("Bitsquare - The decentralized bitcoin exchange");
 
         // Args for seed node config
-        parser.addArgument("-d", "--" + SEED_ID_FLAG)
+        parser.addArgument("-d", "--" + BOOTSTRAP_NODE_ID_KEY)
                 .help("Seed node ID");
-        parser.addArgument("-s", "--" + SEED_IP_FLAG)
+        parser.addArgument("-s", "--" + BOOTSTRAP_NODE_IP_KEY)
                 .help("Seed node IP");
-        parser.addArgument("-p", "--" + SEED_PORT_FLAG)
+        parser.addArgument("-p", "--" + BOOTSTRAP_NODE_PORT_KEY)
                 .help("Seed node port");
-        parser.addArgument("-i", "--" + INTERFACE_HINT_FLAG)
-                .help("Network interface to listen on");
 
         // Args for app config
-        parser.addArgument("-n", "--" + NAME_FLAG)
+        parser.addArgument("-n", "--" + APP_NAME_KEY)
                 .help("Name to append to default application name");
     }
 

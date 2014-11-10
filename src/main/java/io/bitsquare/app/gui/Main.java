@@ -49,7 +49,8 @@ import org.slf4j.LoggerFactory;
 import lighthouse.files.AppDirectory;
 import net.sourceforge.argparse4j.inf.Namespace;
 
-import static io.bitsquare.app.ArgumentParser.*;
+import static io.bitsquare.app.AppModule.APP_NAME_KEY;
+import static io.bitsquare.msg.MessageModule.*;
 
 public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
@@ -62,21 +63,21 @@ public class Main extends Application {
     public static void main(String[] args) {
         Namespace argumentsNamespace = new ArgumentParser().parseArgs(args);
 
-        if (argumentsNamespace.getString(NAME_FLAG) != null)
-            appName = appName + "-" + argumentsNamespace.getString(NAME_FLAG);
+        if (argumentsNamespace.getString(APP_NAME_KEY) != null)
+            appName = appName + "-" + argumentsNamespace.getString(APP_NAME_KEY);
 
         properties = ConfigLoader.loadConfig(appName);
 
-        properties.setProperty(NAME_FLAG, appName);
+        properties.setProperty(APP_NAME_KEY, appName);
 
-        if (argumentsNamespace.getString(SEED_ID_FLAG) != null)
-            properties.setProperty(SEED_ID_FLAG, argumentsNamespace.getString(SEED_ID_FLAG));
+        if (argumentsNamespace.getString(BOOTSTRAP_NODE_ID_KEY) != null)
+            properties.setProperty(BOOTSTRAP_NODE_ID_KEY, argumentsNamespace.getString(BOOTSTRAP_NODE_ID_KEY));
 
-        if (argumentsNamespace.getString(SEED_IP_FLAG) != null)
-            properties.setProperty(SEED_IP_FLAG, argumentsNamespace.getString(SEED_IP_FLAG));
+        if (argumentsNamespace.getString(BOOTSTRAP_NODE_IP_KEY) != null)
+            properties.setProperty(BOOTSTRAP_NODE_IP_KEY, argumentsNamespace.getString(BOOTSTRAP_NODE_IP_KEY));
 
-        if (argumentsNamespace.getString(SEED_PORT_FLAG) != null)
-            properties.setProperty(SEED_PORT_FLAG, argumentsNamespace.getString(SEED_PORT_FLAG));
+        if (argumentsNamespace.getString(BOOTSTRAP_NODE_PORT_KEY) != null)
+            properties.setProperty(BOOTSTRAP_NODE_PORT_KEY, argumentsNamespace.getString(BOOTSTRAP_NODE_PORT_KEY));
 
         Application.launch(Main.class, args);
     }

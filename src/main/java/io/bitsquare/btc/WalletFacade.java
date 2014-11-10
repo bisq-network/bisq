@@ -91,7 +91,6 @@ import static org.bitcoinj.script.ScriptOpCodes.OP_RETURN;
 /**
  * TODO: use walletextension (with protobuffer) instead of saving addressEntryList via storage
  * TODO: break that class up. maybe a bitsquarewallet
- * Wait until steve's akka version to see how to continue here
  */
 public class WalletFacade {
     private static final Logger log = LoggerFactory.getLogger(WalletFacade.class);
