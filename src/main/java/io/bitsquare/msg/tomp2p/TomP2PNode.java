@@ -78,6 +78,8 @@ import static io.bitsquare.util.tomp2p.BaseFutureUtil.isSuccess;
 public class TomP2PNode {
     private static final Logger log = LoggerFactory.getLogger(TomP2PNode.class);
 
+    static final String USE_DISK_STORAGE_KEY = "useDiskStorage";
+
     private KeyPair keyPair;
     private String appName;
     private final Boolean useDiskStorage;
@@ -96,7 +98,7 @@ public class TomP2PNode {
     @Inject
     public TomP2PNode(BootstrappedPeerFactory bootstrappedPeerFactory,
                       @Named("appName") String appName,
-                      @Named("useDiskStorage") Boolean useDiskStorage) {
+                      @Named(USE_DISK_STORAGE_KEY) Boolean useDiskStorage) {
         this.bootstrappedPeerFactory = bootstrappedPeerFactory;
         this.appName = appName;
         this.useDiskStorage = useDiskStorage;
@@ -127,7 +129,7 @@ public class TomP2PNode {
     }
 
     public void start(int port, BootstrapListener bootstrapListener) {
-        useDiscStorage(useDiskStorage);
+        useDiskStorage(useDiskStorage);
 
         bootstrappedPeerFactory.setStorage(storage);
         setupTimerForIPCheck();
@@ -392,8 +394,8 @@ public class TomP2PNode {
         return putDomainProtectedData(locationKey, data);
     }
 
-    private void useDiscStorage(boolean useDiscStorage) {
-        if (useDiscStorage) {
+    private void useDiskStorage(boolean useDiskStorage) {
+        if (useDiskStorage) {
             File path = new File(AppDirectory.dir(appName).toFile() + "/tomP2P");
             if (!path.exists()) {
                 boolean created = path.mkdir();

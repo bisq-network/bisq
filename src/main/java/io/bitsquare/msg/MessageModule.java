@@ -44,9 +44,6 @@ public abstract class MessageModule extends BitsquareModule {
     protected final void configure() {
         bind(MessageFacade.class).to(messageFacade()).asEagerSingleton();
 
-        // we will probably later use disk storage instead of memory storage for TomP2P
-        bind(Boolean.class).annotatedWith(Names.named("useDiskStorage")).toInstance(false);
-
         Node bootstrapNode = Node.at(
                 properties.getProperty(BOOTSTRAP_NODE_ID_KEY, DEFAULT_BOOTSTRAP_NODE.getId()),
                 properties.getProperty(BOOTSTRAP_NODE_IP_KEY, DEFAULT_BOOTSTRAP_NODE.getIp()),

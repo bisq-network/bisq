@@ -20,6 +20,8 @@ package io.bitsquare.msg.tomp2p;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.MessageModule;
 
+import com.google.inject.name.Names;
+
 import java.util.Properties;
 
 public class TomP2PMessageModule extends MessageModule {
@@ -30,6 +32,9 @@ public class TomP2PMessageModule extends MessageModule {
 
     @Override
     protected void doConfigure() {
+        // we will probably later use disk storage instead of memory storage for TomP2P
+        bind(Boolean.class).annotatedWith(Names.named(TomP2PNode.USE_DISK_STORAGE_KEY)).toInstance(false);
+
         bind(TomP2PNode.class).asEagerSingleton();
         bind(BootstrappedPeerFactory.class).asEagerSingleton();
     }
