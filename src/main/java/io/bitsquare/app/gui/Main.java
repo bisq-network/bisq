@@ -136,8 +136,13 @@ public class Main extends Application {
         SystemTray systemTray = new SystemTray(primaryStage, this::stop);
         primaryStage.setOnCloseRequest(e -> systemTray.hideStage());
         scene.setOnKeyReleased(keyEvent -> {
+            // For now we exit when closing/quit the app.
+            // Later we will only hide the window (systemTray.hideStage()) and use the exit item in the system tray for
+            // shut down.
             if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
-                systemTray.hideStage();
+                systemTray.exit();
+            if (new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
+                systemTray.exit();
         });
 
 
