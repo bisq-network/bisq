@@ -97,7 +97,7 @@ public class TomP2PTests {
     static {
         try {
             BOOTSTRAP_NODE_ADDRESS = new PeerAddress(
-                    Number160.createHash(BOOTSTRAP_NODE.getId()),
+                    Number160.createHash(BOOTSTRAP_NODE.getName()),
                     BOOTSTRAP_NODE.getIp(), BOOTSTRAP_NODE.getPort(), BOOTSTRAP_NODE.getPort());
         } catch (UnknownHostException ex) {
             throw new RuntimeException(BOOTSTRAP_NODE.toString(), ex);

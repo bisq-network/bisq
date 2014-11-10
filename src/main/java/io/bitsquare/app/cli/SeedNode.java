@@ -45,15 +45,15 @@ public class SeedNode {
         ArgumentParser parser = new ArgumentParser();
         Namespace namespace = parser.parseArgs(args);
 
-        String id = namespace.getString(Node.ID_KEY);
-        if (id == null)
-            throw new IllegalArgumentException(String.format("--%s option is required", Node.ID_KEY));
+        String name = namespace.getString(Node.NAME_KEY);
+        if (name == null)
+            throw new IllegalArgumentException(String.format("--%s option is required", Node.NAME_KEY));
 
         String portValue = namespace.getString(Node.PORT_KEY);
         int port = portValue != null ? Integer.valueOf(portValue) : Node.DEFAULT_PORT;
 
         try {
-            Number160 peerId = Number160.createHash(id);
+            Number160 peerId = Number160.createHash(name);
             PeerMapConfiguration pmc = new PeerMapConfiguration(peerId).peerNoVerification();
             PeerMap pm = new PeerMap(pmc);
             peer = new PeerBuilder(peerId).ports(port).peerMap(pm).start();

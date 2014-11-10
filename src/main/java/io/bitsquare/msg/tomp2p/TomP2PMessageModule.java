@@ -30,7 +30,7 @@ import static io.bitsquare.network.BootstrapNodes.DEFAULT_BOOTSTRAP_NODE;
 
 public class TomP2PMessageModule extends MessageModule {
 
-    public static final String BOOTSTRAP_NODE_ID_KEY = "bootstrap.node.id";
+    public static final String BOOTSTRAP_NODE_NAME_KEY = "bootstrap.node.name";
     public static final String BOOTSTRAP_NODE_IP_KEY = "bootstrap.node.ip";
     public static final String BOOTSTRAP_NODE_PORT_KEY = "bootstrap.node.port";
     public static final String NETWORK_INTERFACE_KEY = BootstrappedPeerFactory.NETWORK_INTERFACE_KEY;
@@ -48,7 +48,7 @@ public class TomP2PMessageModule extends MessageModule {
 
         bind(Node.class).annotatedWith(Names.named(BOOTSTRAP_NODE_KEY)).toInstance(
                 Node.at(
-                        properties.getProperty(BOOTSTRAP_NODE_ID_KEY, DEFAULT_BOOTSTRAP_NODE.getId()),
+                        properties.getProperty(BOOTSTRAP_NODE_NAME_KEY, DEFAULT_BOOTSTRAP_NODE.getName()),
                         properties.getProperty(BOOTSTRAP_NODE_IP_KEY, DEFAULT_BOOTSTRAP_NODE.getIp()),
                         properties.getProperty(BOOTSTRAP_NODE_PORT_KEY, DEFAULT_BOOTSTRAP_NODE.getPortAsString())
                 )

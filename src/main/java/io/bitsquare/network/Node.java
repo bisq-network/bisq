@@ -20,34 +20,34 @@ package io.bitsquare.network;
 import com.google.common.base.Objects;
 
 public final class Node {
-    public static final String ID_KEY = "id";
+    public static final String NAME_KEY = "name";
     public static final String PORT_KEY = "port";
     public static final int DEFAULT_PORT = 7366;
 
-    private final String id;
+    private final String name;
     private final String ip;
     private final int port;
 
-    private Node(String id, String ip, int port) {
-        this.id = id;
+    private Node(String name, String ip, int port) {
+        this.name = name;
         this.ip = ip;
         this.port = port;
     }
 
-    public static Node at(String id, String ip) {
-        return Node.at(id, ip, DEFAULT_PORT);
+    public static Node at(String name, String ip) {
+        return Node.at(name, ip, DEFAULT_PORT);
     }
 
-    public static Node at(String id, String ip, int port) {
-        return new Node(id, ip, port);
+    public static Node at(String name, String ip, int port) {
+        return new Node(name, ip, port);
     }
 
-    public static Node at(String id, String ip, String port) {
-        return new Node(id, ip, Integer.valueOf(port));
+    public static Node at(String name, String ip, String port) {
+        return new Node(name, ip, Integer.valueOf(port));
     }
 
-    public String getId() {
-        return id;
+    public String getName() {
+        return name;
     }
 
     public String getIp() {
@@ -71,20 +71,20 @@ public final class Node {
             return false;
 
         Node that = (Node) object;
-        return Objects.equal(this.id, that.id) &&
+        return Objects.equal(this.name, that.name) &&
                 Objects.equal(this.ip, that.ip) &&
                 Objects.equal(this.port, that.port);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id, ip, port);
+        return Objects.hashCode(name, ip, port);
     }
 
     @Override
     public String toString() {
         return Objects.toStringHelper(Node.class.getSimpleName())
-                .add("id", id)
+                .add("name", name)
                 .add("ip", ip)
                 .add("port", port)
                 .toString();

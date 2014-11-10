@@ -36,13 +36,13 @@ public class ArgumentParser {
                 .description("Bitsquare - The decentralized bitcoin exchange");
 
         // Args for local node config
-        parser.addArgument("--" + Node.ID_KEY)
+        parser.addArgument("--" + Node.NAME_KEY)
                 .help("Local node ID");
         parser.addArgument("--" + Node.PORT_KEY)
                 .help("Local port to listen on");
 
         // Args for seed node config
-        parser.addArgument("--" + BOOTSTRAP_NODE_ID_KEY)
+        parser.addArgument("--" + BOOTSTRAP_NODE_NAME_KEY)
                 .help("Seed node ID");
         parser.addArgument("--" + BOOTSTRAP_NODE_IP_KEY)
                 .help("Seed node IP");

@@ -349,7 +349,7 @@ class BootstrappedPeerFactory {
 
     private PeerAddress getBootstrapAddress() {
         try {
-            return new PeerAddress(Number160.createHash(bootstrapNode.getId()),
+            return new PeerAddress(Number160.createHash(bootstrapNode.getName()),
                     InetAddress.getByName(bootstrapNode.getIp()),
                     bootstrapNode.getPort(),
                     bootstrapNode.getPort());

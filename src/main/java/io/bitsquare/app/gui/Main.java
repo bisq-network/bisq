@@ -51,6 +51,7 @@ import net.sourceforge.argparse4j.inf.Namespace;
 
 import static io.bitsquare.app.AppModule.APP_NAME_KEY;
 import static io.bitsquare.msg.tomp2p.TomP2PMessageModule.*;
+import static io.bitsquare.network.Node.*;
 
 public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
@@ -70,8 +71,11 @@ public class Main extends Application {
 
         properties.setProperty(APP_NAME_KEY, appName);
 
-        if (argumentsNamespace.getString(BOOTSTRAP_NODE_ID_KEY) != null)
-            properties.setProperty(BOOTSTRAP_NODE_ID_KEY, argumentsNamespace.getString(BOOTSTRAP_NODE_ID_KEY));
+        if (argumentsNamespace.getString(NAME_KEY) != null)
+            properties.setProperty(NAME_KEY, argumentsNamespace.getString(NAME_KEY));
+
+        if (argumentsNamespace.getString(BOOTSTRAP_NODE_NAME_KEY) != null)
+            properties.setProperty(BOOTSTRAP_NODE_NAME_KEY, argumentsNamespace.getString(BOOTSTRAP_NODE_NAME_KEY));
 
         if (argumentsNamespace.getString(BOOTSTRAP_NODE_IP_KEY) != null)
             properties.setProperty(BOOTSTRAP_NODE_IP_KEY, argumentsNamespace.getString(BOOTSTRAP_NODE_IP_KEY));
