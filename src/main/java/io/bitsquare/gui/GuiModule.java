@@ -28,16 +28,16 @@ import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PasswordValidator;
 
-import java.util.Properties;
-
 import javafx.stage.Stage;
+
+import org.springframework.core.env.Environment;
 
 public class GuiModule extends BitsquareModule {
 
     private final Stage primaryStage;
 
-    public GuiModule(Properties properties, Stage primaryStage) {
-        super(properties);
+    public GuiModule(Environment env, Stage primaryStage) {
+        super(env);
         this.primaryStage = primaryStage;
     }
 

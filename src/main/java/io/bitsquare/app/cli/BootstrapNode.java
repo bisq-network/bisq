@@ -17,7 +17,6 @@
 
 package io.bitsquare.app.cli;
 
-import io.bitsquare.app.ArgumentParser;
 import io.bitsquare.network.Node;
 
 import net.tomp2p.dht.PeerBuilderDHT;
@@ -33,7 +32,7 @@ import net.tomp2p.rpc.ObjectDataReply;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.sourceforge.argparse4j.inf.Namespace;
+import org.springframework.core.env.Environment;
 
 public class BootstrapNode {
     private static final Logger log = LoggerFactory.getLogger(BootstrapNode.class);
@@ -41,16 +40,15 @@ public class BootstrapNode {
     private static Peer peer = null;
     private static boolean running = true;
 
-    public static void main(String[] args) throws Exception {
-        ArgumentParser parser = new ArgumentParser();
-        Namespace namespace = parser.parseArgs(args);
+    private final Environment env;
 
-        String name = namespace.getString(Node.NAME_KEY);
-        if (name == null)
-            throw new IllegalArgumentException(String.format("--%s option is required", Node.NAME_KEY));
+    public BootstrapNode(Environment env) {
+        this.env = env;
+    }
 
-        String portValue = namespace.getString(Node.PORT_KEY);
-        int port = portValue != null ? Integer.valueOf(portValue) : Node.DEFAULT_PORT;
+    public void start() {
+        String name = env.getRequiredProperty(Node.NAME_KEY);
+        int port = env.getProperty(Node.PORT_KEY, Integer.class, Node.DEFAULT_PORT);
 
         try {
             Number160 peerId = Number160.createHash(name);
@@ -89,13 +87,5 @@ public class BootstrapNode {
             if (peer != null)
                 peer.shutdown().awaitUninterruptibly();
         }
-    }
-
-    public static void stop() {
-        running = false;
-        if (peer != null) {
-            peer.shutdown().awaitUninterruptibly();
-        }
-        peer = null;
     }
 }

@@ -19,12 +19,12 @@ package io.bitsquare.trade;
 
 import io.bitsquare.BitsquareModule;
 
-import java.util.Properties;
+import org.springframework.core.env.Environment;
 
 public class TradeModule extends BitsquareModule {
 
-    public TradeModule(Properties properties) {
-        super(properties);
+    public TradeModule(Environment env) {
+        super(env);
     }
 
     @Override

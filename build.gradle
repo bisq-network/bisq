@@ -17,7 +17,7 @@ sourceCompatibility = 1.8
 
 sourceSets.main.resources.srcDirs += 'src/main/java'
 
-mainClassName = "io.bitsquare.app.gui.Main"
+mainClassName = "io.bitsquare.app.gui.BitsquareAppMain"
 
 run {
     if (project.hasProperty('args')) {
@@ -33,6 +33,8 @@ repositories {
 dependencies {
     compile 'org.bitcoinj:bitcoinj-core:0.12'
     compile 'net.tomp2p:tomp2p-all:5.0-Alpha.32cd9f9-SNAPSHOT'
+    compile 'org.springframework:spring-core:4.1.1.RELEASE'
+    compile 'net.sf.jopt-simple:jopt-simple:4.8'
     compile 'org.slf4j:slf4j-api:1.7.7'
     compile 'ch.qos.logback:logback-core:1.1.2'
     compile 'ch.qos.logback:logback-classic:1.1.2'
@@ -45,7 +47,6 @@ dependencies {
     compile 'com.google.code.findbugs:jsr305:2.0.3'
     compile 'net.jcip:jcip-annotations:1.0'
     compile 'org.jetbrains:annotations:13.0'
-    compile 'net.sourceforge.argparse4j:argparse4j:0.4.4'
     compile 'eu.hansolo.enzo:Enzo:0.1.5'
     testCompile 'junit:junit:4.11'
 }

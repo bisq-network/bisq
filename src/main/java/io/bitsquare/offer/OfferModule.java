@@ -19,12 +19,12 @@ package io.bitsquare.offer;
 
 import io.bitsquare.BitsquareModule;
 
-import java.util.Properties;
+import org.springframework.core.env.Environment;
 
 public abstract class OfferModule extends BitsquareModule {
 
-    protected OfferModule(Properties properties) {
-        super(properties);
+    protected OfferModule(Environment env) {
+        super(env);
     }
 
     @Override

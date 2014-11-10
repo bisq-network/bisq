@@ -17,7 +17,8 @@
 
 package io.bitsquare.app.gui;
 
-import io.bitsquare.gui.FatalException;
+import io.bitsquare.BitsquareException;
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewLoader;
 
@@ -34,7 +35,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static io.bitsquare.app.AppModule.APP_NAME_KEY;
+import joptsimple.OptionParser;
+import org.springframework.core.env.PropertiesPropertySource;
 
 public class ViewLoaderTests {
 
@@ -64,8 +66,11 @@ public class ViewLoaderTests {
     @Before
     public void setUp() {
         Properties properties = new Properties();
-        properties.setProperty(APP_NAME_KEY, "testApp");
-        Injector injector = Guice.createInjector(new MainModule(properties, TestApp.primaryStage));
+        properties.setProperty(BitsquareEnvironment.APP_NAME_KEY, "testApp");
+        OptionParser parser = new OptionParser();
+        BitsquareEnvironment env = new BitsquareEnvironment(parser.parse(new String[] {}));
+        env.getPropertySources().addLast(new PropertiesPropertySource("testProperties", properties));
+        Injector injector = Guice.createInjector(new BitsquareAppModule(env, TestApp.primaryStage));
         ViewLoader.setInjector(injector);
     }
 
@@ -74,7 +79,7 @@ public class ViewLoaderTests {
         ViewLoader.setInjector(null);
     }
 
-    @Test(expected = FatalException.class)
+    @Test(expected = BitsquareException.class)
     public void loadingBogusFxmlResourceShouldThrow() {
         new ViewLoader(() -> "a bogus fxml resource", false).load();
     }
