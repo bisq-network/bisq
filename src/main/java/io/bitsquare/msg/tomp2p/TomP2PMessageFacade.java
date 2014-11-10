@@ -92,11 +92,10 @@ class TomP2PMessageFacade implements MessageFacade {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void init(int port, BootstrapListener bootstrapListener) {
+    public void init(BootstrapListener bootstrapListener) {
         p2pNode.setMessageBroker(this);
         p2pNode.setKeyPair(user.getMessageKeyPair());
-
-        p2pNode.start(port, bootstrapListener);
+        p2pNode.start(bootstrapListener);
     }
 
     public void shutDown() {
@@ -219,7 +218,7 @@ class TomP2PMessageFacade implements MessageFacade {
                     }
                 }));
 
-                // We don't test futureRemove.isSuccess() as this API does not fit well to that operation, 
+                // We don't test futureRemove.isSuccess() as this API does not fit well to that operation,
                 // it might change in future to something like foundAndRemoved and notFound
                 // See discussion at: https://github.com/tomp2p/TomP2P/issues/57#issuecomment-62069840
 

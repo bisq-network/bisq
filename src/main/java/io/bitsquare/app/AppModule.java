@@ -36,8 +36,6 @@ import com.google.inject.name.Names;
 
 import java.util.Properties;
 
-import net.tomp2p.connection.Ports;
-
 /**
  * Configures all non-UI modules necessary to run a Bitsquare application.
  */
@@ -64,9 +62,6 @@ public class AppModule extends BitsquareModule {
         Preconditions.checkArgument(appName != null, "App name must be non-null");
 
         bindConstant().annotatedWith(Names.named("appName")).to(appName);
-
-        int randomPort = new Ports().tcpPort();
-        bindConstant().annotatedWith(Names.named("clientPort")).to(randomPort);
     }
 
     protected MessageModule messageModule() {

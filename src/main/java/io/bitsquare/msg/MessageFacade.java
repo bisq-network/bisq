@@ -45,7 +45,7 @@ public interface MessageFacade extends MessageBroker {
 
     void getArbitrators(Locale defaultLanguageLocale);
 
-    void init(int clientPort, BootstrapListener bootstrapListener);
+    void init(BootstrapListener bootstrapListener);
 
     void getPeerAddress(PublicKey messagePublicKey, GetPeerAddressListener getPeerAddressListener);
 }

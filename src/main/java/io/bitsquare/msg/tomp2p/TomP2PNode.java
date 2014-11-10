@@ -79,9 +79,11 @@ public class TomP2PNode {
     private static final Logger log = LoggerFactory.getLogger(TomP2PNode.class);
 
     static final String USE_DISK_STORAGE_KEY = "useDiskStorage";
+    static final String CLIENT_PORT_KEY = "clientPort";
 
     private KeyPair keyPair;
     private String appName;
+    private final int clientPort;
     private final Boolean useDiskStorage;
     private MessageBroker messageBroker;
 
@@ -98,9 +100,11 @@ public class TomP2PNode {
     @Inject
     public TomP2PNode(BootstrappedPeerFactory bootstrappedPeerFactory,
                       @Named("appName") String appName,
+                      @Named(CLIENT_PORT_KEY) int clientPort,
                       @Named(USE_DISK_STORAGE_KEY) Boolean useDiskStorage) {
         this.bootstrappedPeerFactory = bootstrappedPeerFactory;
         this.appName = appName;
+        this.clientPort = clientPort;
         this.useDiskStorage = useDiskStorage;
     }
 
@@ -111,6 +115,7 @@ public class TomP2PNode {
         peerDHT.peerBean().keyPair(keyPair);
         messageBroker = (message, peerAddress) -> {
         };
+        clientPort = -1;
         useDiskStorage = false;
     }
 
@@ -128,13 +133,13 @@ public class TomP2PNode {
         bootstrappedPeerFactory.setKeyPair(keyPair);
     }
 
-    public void start(int port, BootstrapListener bootstrapListener) {
+    public void start(BootstrapListener bootstrapListener) {
         useDiskStorage(useDiskStorage);
 
         bootstrappedPeerFactory.setStorage(storage);
         setupTimerForIPCheck();
 
-        ListenableFuture<PeerDHT> bootstrapComplete = bootstrap(port);
+        ListenableFuture<PeerDHT> bootstrapComplete = bootstrap(clientPort);
         Futures.addCallback(bootstrapComplete, new FutureCallback<PeerDHT>() {
             @Override
             public void onSuccess(@Nullable PeerDHT result) {
