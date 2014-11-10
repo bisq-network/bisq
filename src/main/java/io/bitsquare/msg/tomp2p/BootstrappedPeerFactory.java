@@ -68,6 +68,8 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static io.bitsquare.msg.MessageModule.BOOTSTRAP_NODE_KEY;
+
 /**
  * Creates a DHT peer and bootstrap to the network via a seed node
  */
@@ -91,7 +93,7 @@ class BootstrappedPeerFactory {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BootstrappedPeerFactory(Persistence persistence, @Named("bootstrapNode") Node bootstrapNode,
+    public BootstrappedPeerFactory(Persistence persistence, @Named(BOOTSTRAP_NODE_KEY) Node bootstrapNode,
                                    @Named("networkInterface") String networkInterface) {
         this.persistence = persistence;
         this.bootstrapNode = bootstrapNode;
