@@ -77,7 +77,6 @@ public class SeedNode {
 
             log.debug("SeedNode started.");
             new Thread(new Runnable() {
-
                 @Override
                 public void run() {
                     while (running) {
@@ -87,7 +86,7 @@ public class SeedNode {
                         try {
                             Thread.sleep(2000);
                         } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            return;
                         }
                     }
                 }

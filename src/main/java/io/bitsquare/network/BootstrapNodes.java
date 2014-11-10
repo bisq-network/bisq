@@ -27,6 +27,7 @@ import java.util.List;
 public interface BootstrapNodes {
     Node LOCALHOST = Node.at("localhost", "127.0.0.1");
     Node DIGITAL_OCEAN_1 = Node.at("digitalocean1.bitsquare.io", "188.226.179.109");
+    Node DIGITAL_OCEAN_1_DEV = Node.at("digitalocean1.bitsquare.io", "188.226.179.109", 7367);
 
     Node DEFAULT_BOOTSTRAP_NODE = DIGITAL_OCEAN_1;
 
