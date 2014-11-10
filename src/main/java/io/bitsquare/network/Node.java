@@ -22,6 +22,12 @@ import com.google.common.base.Objects;
 public final class Node {
     public static final String NAME_KEY = "name";
     public static final String PORT_KEY = "port";
+
+    /**
+     * Default port is one <a
+     * href="https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?&page=103">
+     * currently unassigned by IANA</a> (7366-7390).
+     */
     public static final int DEFAULT_PORT = 7366;
 
     private final String name;
