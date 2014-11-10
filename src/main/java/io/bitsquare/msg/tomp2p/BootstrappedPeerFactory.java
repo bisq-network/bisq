@@ -44,6 +44,7 @@ import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.dht.StorageLayer;
 import net.tomp2p.futures.BaseFuture;
 import net.tomp2p.futures.BaseFutureListener;
+import net.tomp2p.futures.FutureBootstrap;
 import net.tomp2p.futures.FutureDiscover;
 import net.tomp2p.nat.FutureNAT;
 import net.tomp2p.nat.FutureRelayNAT;
@@ -188,13 +189,11 @@ class BootstrappedPeerFactory {
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
                     setState(BootstrapState.DIRECT_SUCCESS, "We are directly connected and visible to other peers.");
-                    persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
-                    settableFuture.set(peerDHT);
+                    bootstrap("default");
                 }
                 else {
                     setState(BootstrapState.DIRECT_NOT_SUCCEEDED, "We are probably behind a NAT and not reachable to " +
                             "other peers. We try to setup automatic port forwarding.");
-
                     tryPortForwarding();
                 }
             }
@@ -247,8 +246,7 @@ class BootstrappedPeerFactory {
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
                     setState(BootstrapState.NAT_SUCCESS, "Discover with automatic port forwarding was successful.");
-                    persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "portForwarding");
-                    settableFuture.set(peerDHT);
+                    bootstrap("portForwarding");
                 }
                 else {
                     setState(BootstrapState.NAT_FAILED, "Discover with automatic port forwarding has failed " +
@@ -282,8 +280,7 @@ class BootstrappedPeerFactory {
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
                     setState(BootstrapState.RELAY_SUCCESS, "Bootstrap using relay was successful.");
-                    persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "relay");
-                    settableFuture.set(peerDHT);
+                    bootstrap("relay");
                 }
                 else {
                     setState(BootstrapState.RELAY_FAILED, "Bootstrap using relay has failed " + futureRelayNAT
@@ -301,6 +298,30 @@ class BootstrappedPeerFactory {
                 setState(BootstrapState.RELAY_FAILED, "Exception at bootstrapWithRelay: " + t, false);
                 persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", "default");
                 futureRelayNAT.shutdown();
+                peerDHT.shutdown();
+                settableFuture.setException(t);
+            }
+        });
+    }
+
+    private void bootstrap(String state) {
+        FutureBootstrap futureBootstrap = peer.bootstrap().peerAddress(getBootstrapAddress()).start();
+        futureBootstrap.addListener(new BaseFutureListener<BaseFuture>() {
+            @Override
+            public void operationComplete(BaseFuture future) throws Exception {
+                if (futureBootstrap.isSuccess()) {
+                    setState(BootstrapState.DIRECT_SUCCESS, "Bootstrap successful.");
+                    persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", state);
+                    settableFuture.set(peerDHT);
+                }
+                else {
+                    setState(BootstrapState.DIRECT_NOT_SUCCEEDED, "Bootstrapping failed.");
+                }
+            }
+
+            @Override
+            public void exceptionCaught(Throwable t) throws Exception {
+                setState(BootstrapState.DIRECT_FAILED, "Exception at bootstrap: " + t.getMessage(), false);
                 peerDHT.shutdown();
                 settableFuture.setException(t);
             }
