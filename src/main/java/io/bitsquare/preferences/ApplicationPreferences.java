@@ -17,17 +17,31 @@
 
 package io.bitsquare.preferences;
 
+import io.bitsquare.persistence.Persistence;
+
 import org.bitcoinj.utils.MonetaryFormat;
 
 import java.io.Serializable;
+
+import java.util.Arrays;
+import java.util.List;
+
+import javax.inject.Inject;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ApplicationPreferences implements Serializable {
     private static final long serialVersionUID = 7995048077355006861L;
+    private static final Logger log = LoggerFactory.getLogger(ApplicationPreferences.class);
+
+    private List<String> btcDenominations = Arrays.asList(MonetaryFormat.CODE_BTC, MonetaryFormat.CODE_MBTC);
+
 
     // Needed for persistence as Property objects are transient (not serializable)
     // Will be probably removed when we have another persistence solution in place
@@ -38,13 +52,18 @@ public class ApplicationPreferences implements Serializable {
     final transient StringProperty btcDenomination = new SimpleStringProperty(btcDenominationString);
     final transient BooleanProperty useAnimations = new SimpleBooleanProperty(useAnimationsBoolean);
     final transient BooleanProperty useEffects = new SimpleBooleanProperty(useEffectsBoolean);
+    private Persistence persistence;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ApplicationPreferences() {
+    @Inject
+    public ApplicationPreferences(Persistence persistence) {
+        this.persistence = persistence;
+
+        applyPersistedSettings();
     }
 
 
@@ -52,17 +71,38 @@ public class ApplicationPreferences implements Serializable {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void applyPersistedSettings(ApplicationPreferences persistedSettings) {
-        if (persistedSettings != null) {
-            setBtcDenomination(persistedSettings.getBtcDenominationString());
-            setUseAnimations(persistedSettings.getUseAnimationsBooleanBoolean());
-            setUseEffects(persistedSettings.getUseEffectsBoolean());
+    public void applyPersistedSettings() {
+        Object data = persistence.read(this, "btcDenomination");
+        if (data instanceof String) {
+            btcDenominationString = (String) data;
+            this.btcDenomination.set(btcDenominationString);
+            log.debug(data.toString());
+        }
+
+        data = persistence.read(this, "useEffects");
+        if (data instanceof Boolean) {
+            useEffectsBoolean = (Boolean) data;
+            this.useEffects.set(useEffectsBoolean);
+
+            log.debug(data.toString());
+        }
+
+        data = persistence.read(this, "useAnimations");
+        if (data instanceof Boolean) {
+            useAnimationsBoolean = (Boolean) data;
+            this.useAnimations.set(useAnimationsBoolean);
+            log.debug(data.toString());
         }
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters/Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public List<String> getBtcDenominations() {
+        return btcDenominations;
+    }
 
     // btcDenomination
     public String getBtcDenomination() {
@@ -74,6 +114,7 @@ public class ApplicationPreferences implements Serializable {
     }
 
     public void setBtcDenomination(String btcDenomination) {
+        persistence.write(this, "btcDenomination", btcDenomination);
         btcDenominationString = btcDenomination;
         this.btcDenomination.set(btcDenomination);
     }
@@ -94,6 +135,7 @@ public class ApplicationPreferences implements Serializable {
     }
 
     public void setUseAnimations(boolean useAnimations) {
+        persistence.write(this, "useAnimations", useAnimations);
         useAnimationsBoolean = useAnimations;
         this.useAnimations.set(useAnimations);
     }
@@ -113,6 +155,7 @@ public class ApplicationPreferences implements Serializable {
     }
 
     public void setUseEffects(boolean useEffects) {
+        persistence.write(this, "useEffects", useEffects);
         useEffectsBoolean = useEffects;
         this.useEffects.set(useEffects);
     }

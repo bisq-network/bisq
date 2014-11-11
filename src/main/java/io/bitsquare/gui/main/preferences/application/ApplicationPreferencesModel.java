@@ -18,8 +18,17 @@
 package io.bitsquare.gui.main.preferences.application;
 
 import io.bitsquare.gui.UIModel;
+import io.bitsquare.preferences.ApplicationPreferences;
 
 import com.google.inject.Inject;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,13 +36,27 @@ import org.slf4j.LoggerFactory;
 class ApplicationPreferencesModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(ApplicationPreferencesModel.class);
 
+    private final ApplicationPreferences applicationPreferences;
+
+    final ObservableList<String> btcDenominations;
+    final BooleanProperty useAnimations = new SimpleBooleanProperty();
+    final BooleanProperty useEffects = new SimpleBooleanProperty();
+    final StringProperty btcDenomination = new SimpleStringProperty();
+
+    private ChangeListener<Boolean> useAnimationsListener;
+    private ChangeListener<Boolean> useEffectsListener;
+    private ChangeListener<String> btcDenominationListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    ApplicationPreferencesModel() {
+    ApplicationPreferencesModel(ApplicationPreferences applicationPreferences) {
+        this.applicationPreferences = applicationPreferences;
+
+        btcDenominations = FXCollections.observableArrayList(applicationPreferences.getBtcDenominations());
     }
 
 
@@ -45,11 +68,26 @@ class ApplicationPreferencesModel extends UIModel {
     public void initialize() {
 
         super.initialize();
+
+        useAnimationsListener = (ov, oldValue, newValue) -> applicationPreferences
+                .setUseAnimations(newValue);
+        useEffectsListener = (ov, oldValue, newValue) -> applicationPreferences
+                .setUseEffects(newValue);
+        btcDenominationListener = (ov, oldValue, newValue) -> applicationPreferences
+                .setBtcDenomination(newValue);
     }
 
     @Override
     public void activate() {
         super.activate();
+
+        useAnimations.set(applicationPreferences.getUseAnimations());
+        useEffects.set(applicationPreferences.getUseEffects());
+        btcDenomination.set(applicationPreferences.getBtcDenomination());
+
+        useAnimations.addListener(useAnimationsListener);
+        useEffects.addListener(useEffectsListener);
+        btcDenomination.addListener(btcDenominationListener);
 
     }
 
@@ -57,6 +95,9 @@ class ApplicationPreferencesModel extends UIModel {
     public void deactivate() {
         super.deactivate();
 
+        useAnimations.removeListener(useAnimationsListener);
+        useEffects.removeListener(useEffectsListener);
+        btcDenomination.removeListener(btcDenominationListener);
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -65,20 +106,6 @@ class ApplicationPreferencesModel extends UIModel {
         super.terminate();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
 }
 

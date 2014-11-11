@@ -90,11 +90,8 @@ public class BitsquareApp extends Application {
         User persistedUser = (User) persistence.read(user);
         user.applyPersistedUser(persistedUser);
 
-        applicationPreferences.applyPersistedSettings((ApplicationPreferences) persistence
-                .read(applicationPreferences.getClass().getName()));
         accountSettings.applyPersistedAccountSettings((AccountSettings) persistence
                 .read(accountSettings.getClass().getName()));
-
 
         // load the main view and create the main scene
 

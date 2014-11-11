@@ -18,11 +18,53 @@
   -->
 
 
+<?import io.bitsquare.gui.components.TitledGroupBg?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.preferences.application.ApplicationPreferencesViewCB"
-            xmlns:fx="http://javafx.com/fxml">
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.preferences.application.ApplicationPreferencesViewCB"
+          hgap="5.0" vgap="5.0"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
+          xmlns:fx="http://javafx.com/fxml">
 
-    <Label text="app"/>
-</AnchorPane>
+    <padding>
+        <Insets bottom="-10.0" left="25.0" top="30.0" right="25"/>
+    </padding>
+    
+    <TitledGroupBg text="General application preferences" GridPane.rowSpan="8"/>
 
+    <Label text="Bitcoin denomination" GridPane.rowIndex="0">
+        <GridPane.margin>
+            <Insets top="10"/>
+        </GridPane.margin>
+    </Label>
+    <ComboBox fx:id="btcDenominationComboBox" promptText="Select bitcoin denomination"
+              onAction="#onSelectBtcDenomination"
+              GridPane.rowIndex="0" GridPane.columnIndex="1">
+        <GridPane.margin>
+            <Insets top="10"/>
+        </GridPane.margin>
+    </ComboBox>
+
+    <Label text="Use animations:" GridPane.rowIndex="1"/>
+    <CheckBox fx:id="useAnimationsCheckBox"
+              GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+    <Label text="Use effects:" GridPane.rowIndex="2"/>
+    <CheckBox fx:id="useEffectsCheckBox"
+              GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
+    </columnConstraints>
+
+    <rowConstraints>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+        <RowConstraints vgrow="NEVER"/>
+    </rowConstraints>
+
+</GridPane>

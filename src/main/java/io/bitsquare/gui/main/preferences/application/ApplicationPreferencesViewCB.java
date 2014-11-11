@@ -25,6 +25,9 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +37,11 @@ import org.slf4j.LoggerFactory;
 public class ApplicationPreferencesViewCB extends CachedViewCB<ApplicationPreferencesPM> {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationPreferencesViewCB.class);
+
+
+    @FXML ComboBox<String> btcDenominationComboBox;
+    @FXML CheckBox useAnimationsCheckBox, useEffectsCheckBox;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -51,13 +59,17 @@ public class ApplicationPreferencesViewCB extends CachedViewCB<ApplicationPrefer
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-
         super.initialize(url, rb);
     }
 
     @Override
     public void activate() {
         super.activate();
+
+        btcDenominationComboBox.setItems(presentationModel.getBtcDenominationItems());
+        btcDenominationComboBox.getSelectionModel().select(presentationModel.btcDenomination().get());
+        useAnimationsCheckBox.selectedProperty().bindBidirectional(presentationModel.useAnimations());
+        useEffectsCheckBox.selectedProperty().bindBidirectional(presentationModel.useEffects());
 
     }
 
@@ -71,4 +83,15 @@ public class ApplicationPreferencesViewCB extends CachedViewCB<ApplicationPrefer
     public void terminate() {
         super.terminate();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI Handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @FXML
+    void onSelectBtcDenomination() {
+        presentationModel.btcDenomination().set(btcDenominationComboBox.getSelectionModel().getSelectedItem());
+    }
+
 }

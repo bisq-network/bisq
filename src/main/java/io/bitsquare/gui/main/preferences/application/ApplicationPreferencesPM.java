@@ -21,6 +21,10 @@ import io.bitsquare.gui.PresentationModel;
 
 import com.google.inject.Inject;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.StringProperty;
+import javafx.collections.ObservableList;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +67,22 @@ public class ApplicationPreferencesPM extends PresentationModel<ApplicationPrefe
     @Override
     public void terminate() {
         super.terminate();
+    }
+
+    public ObservableList<String> getBtcDenominationItems() {
+        return model.btcDenominations;
+    }
+
+    BooleanProperty useAnimations() {
+        return model.useAnimations;
+    }
+
+    BooleanProperty useEffects() {
+        return model.useEffects;
+    }
+
+    StringProperty btcDenomination() {
+        return model.btcDenomination;
     }
 
 
