@@ -26,7 +26,11 @@ import org.bitcoinj.params.TestNet3Params;
 
 import com.google.inject.Injector;
 
+import java.io.File;
+
 import org.springframework.core.env.Environment;
+
+import static com.google.inject.name.Names.named;
 
 public class BitcoinModule extends BitsquareModule {
 
@@ -39,10 +43,19 @@ public class BitcoinModule extends BitsquareModule {
 
     @Override
     protected void configure() {
-        bind(WalletFacade.class).asEagerSingleton();
-        bind(FeePolicy.class).asEagerSingleton();
-        bind(BlockChainFacade.class).asEagerSingleton();
         bind(NetworkParameters.class).toInstance(network());
+        bind(FeePolicy.class).asEagerSingleton();
+
+        bindConstant().annotatedWith(named(UserAgent.NAME_KEY)).to(env.getRequiredProperty(UserAgent.NAME_KEY));
+        bindConstant().annotatedWith(named(UserAgent.VERSION_KEY)).to(env.getRequiredProperty(UserAgent.VERSION_KEY));
+        bind(UserAgent.class).asEagerSingleton();
+
+        File walletDir = new File(env.getRequiredProperty(WalletFacade.DIR_KEY));
+        bind(File.class).annotatedWith(named(WalletFacade.DIR_KEY)).toInstance(walletDir);
+        bindConstant().annotatedWith(named(WalletFacade.PREFIX_KEY)).to(env.getRequiredProperty(WalletFacade.PREFIX_KEY));
+        bind(WalletFacade.class).asEagerSingleton();
+
+        bind(BlockChainFacade.class).asEagerSingleton();
     }
 
     @Override

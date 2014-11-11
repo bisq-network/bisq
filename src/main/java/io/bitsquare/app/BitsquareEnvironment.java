@@ -18,15 +18,20 @@
 package io.bitsquare.app;
 
 import io.bitsquare.BitsquareException;
+import io.bitsquare.btc.UserAgent;
+import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.gui.ViewCB;
+import io.bitsquare.persistence.Persistence;
 
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 
+import java.nio.file.Paths;
+
 import java.util.Properties;
 
 import joptsimple.OptionSet;
-import lighthouse.files.AppDirectory;
 import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertiesPropertySource;
@@ -39,10 +44,16 @@ import org.springframework.core.io.support.ResourcePropertySource;
 
 public class BitsquareEnvironment extends StandardEnvironment {
 
-    public static final String APP_NAME_KEY = "appName";
+    public static final String APP_NAME_KEY = "app.name";
     public static final String DEFAULT_APP_NAME = "Bitsquare";
 
-    private static final String BITSQUARE_APP_PROPERTY_SOURCE_NAME = "bitsquareAppProperties";
+    public static final String USER_DATA_DIR_KEY = "user.data.dir";
+    public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
+
+    public static final String APP_DATA_DIR_KEY = "app.data.dir";
+    public static final String DEFAULT_APP_DATA_DIR = appDataDir(DEFAULT_USER_DATA_DIR, DEFAULT_APP_NAME);
+
+    private static final String BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME = "bitsquareDefaultProperties";
     private static final String BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME = "bitsquareClasspathProperties";
     private static final String BITSQUARE_FILESYSTEM_PROPERTY_SOURCE_NAME = "bitsquareFilesystemProperties";
     private static final String BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME = "bitsquareCommandLineProperties";
@@ -56,19 +67,40 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, options);
 
         String appName = commandLineProperties.containsProperty(APP_NAME_KEY) ?
-                DEFAULT_APP_NAME + "-" + commandLineProperties.getProperty(APP_NAME_KEY) :
+                (String) commandLineProperties.getProperty(APP_NAME_KEY) :
                 DEFAULT_APP_NAME;
 
+        String userDataDir = commandLineProperties.containsProperty(USER_DATA_DIR_KEY) ?
+                (String) commandLineProperties.getProperty(USER_DATA_DIR_KEY) :
+                DEFAULT_USER_DATA_DIR;
+
+        String appDataDir = commandLineProperties.containsProperty(APP_DATA_DIR_KEY) ?
+                (String) commandLineProperties.getProperty(APP_DATA_DIR_KEY) :
+                appDataDir(userDataDir, appName);
+
         MutablePropertySources propertySources = this.getPropertySources();
-        propertySources.addBefore(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME, appProperties(appName));
+        propertySources.addBefore(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME, defaultProperties(appDataDir, appName));
         propertySources.addBefore(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME, classpathProperties());
-        propertySources.addBefore(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME, filesystemProperties(appName));
+        propertySources.addBefore(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME, filesystemProperties(appDataDir));
         propertySources.addAfter(SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, commandLineProperties);
     }
 
-    private PropertySource<?> appProperties(String appName) {
-        return new PropertiesPropertySource(BITSQUARE_APP_PROPERTY_SOURCE_NAME, new Properties() {{
+
+    private PropertySource<?> defaultProperties(String appDataDir, String appName) {
+        return new PropertiesPropertySource(BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {{
+            setProperty(APP_DATA_DIR_KEY, appDataDir);
             setProperty(APP_NAME_KEY, appName);
+
+            setProperty(UserAgent.NAME_KEY, appName);
+            setProperty(UserAgent.VERSION_KEY, "0.1");
+
+            setProperty(WalletFacade.DIR_KEY, appDataDir);
+            setProperty(WalletFacade.PREFIX_KEY, appName);
+
+            setProperty(Persistence.DIR_KEY, appDataDir);
+            setProperty(Persistence.PREFIX_KEY, appName + "_pref");
+
+            setProperty(ViewCB.TITLE_KEY, appName);
         }});
     }
 
@@ -81,8 +113,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
         }
     }
 
-    private PropertySource<?> filesystemProperties(String appName) {
-        String location = String.format("file:%s/bitsquare.conf", AppDirectory.dir(appName));
+    private PropertySource<?> filesystemProperties(String appDir) {
+        String location = String.format("file:%s/bitsquare.conf", appDir);
         Resource resource = resourceLoader.getResource(location);
 
         if (!resource.exists()) {
@@ -94,5 +126,23 @@ public class BitsquareEnvironment extends StandardEnvironment {
         } catch (IOException ex) {
             throw new BitsquareException(ex);
         }
+    }
+
+
+    private static String defaultUserDataDir() {
+        String os = System.getProperty("os.name").toLowerCase();
+
+        if (os.contains("win"))
+            return System.getenv("APPDATA");
+
+        if (os.contains("mac"))
+            return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toString();
+
+        // *nix
+        return Paths.get(System.getProperty("user.home"), ".local", "share").toString();
+    }
+
+    private static String appDataDir(String userDataDir, String appName) {
+        return Paths.get(userDataDir, appName).toString();
     }
 }

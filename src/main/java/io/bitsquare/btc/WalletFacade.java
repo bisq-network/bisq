@@ -57,6 +57,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Service;
 
+import java.io.File;
 import java.io.Serializable;
 
 import java.math.BigInteger;
@@ -84,8 +85,6 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import lighthouse.files.AppDirectory;
-
 import static org.bitcoinj.script.ScriptOpCodes.OP_RETURN;
 
 /**
@@ -94,24 +93,30 @@ import static org.bitcoinj.script.ScriptOpCodes.OP_RETURN;
  */
 public class WalletFacade {
     private static final Logger log = LoggerFactory.getLogger(WalletFacade.class);
+    private static final String LOCK_NAME = "lock";
 
-    private final ReentrantLock lock = Threading.lock("lock");
-    private final NetworkParameters params;
-    private WalletAppKit walletAppKit;
-    private final FeePolicy feePolicy;
-    private final CryptoFacade cryptoFacade;
-    private final Persistence persistence;
-    private final String appName;
+    public static final String DIR_KEY = "wallet.dir";
+    public static final String PREFIX_KEY = "wallet.prefix";
+
     private final List<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArrayList<>();
     private final List<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArrayList<>();
     private final List<BalanceListener> balanceListeners = new CopyOnWriteArrayList<>();
+    private final ReentrantLock lock = Threading.lock(LOCK_NAME);
+
+    private final NetworkParameters params;
+    private final FeePolicy feePolicy;
+    private final CryptoFacade cryptoFacade;
+    private final Persistence persistence;
+    private final File walletDir;
+    private final String walletPrefix;
+    private final UserAgent userAgent;
+
+    private WalletAppKit walletAppKit;
     private Wallet wallet;
     private WalletEventListener walletEventListener;
     private AddressEntry registrationAddressEntry;
     private AddressEntry arbitratorDepositAddressEntry;
-
-    @GuardedBy("lock")
-    private List<AddressEntry> addressEntryList = new ArrayList<>();
+    private @GuardedBy(LOCK_NAME) List<AddressEntry> addressEntryList = new ArrayList<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -119,12 +124,15 @@ public class WalletFacade {
 
     @Inject
     public WalletFacade(NetworkParameters params, FeePolicy feePolicy, CryptoFacade cryptoFacade,
-                        Persistence persistence, @Named("appName") String appName) {
+                        Persistence persistence, UserAgent userAgent,
+                        @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix) {
         this.params = params;
         this.feePolicy = feePolicy;
         this.cryptoFacade = cryptoFacade;
         this.persistence = persistence;
-        this.appName = appName;
+        this.walletDir = walletDir;
+        this.walletPrefix = walletPrefix;
+        this.userAgent = userAgent;
     }
 
 
@@ -141,7 +149,7 @@ public class WalletFacade {
         Threading.USER_THREAD = executor;
 
         // If seed is non-null it means we are restoring from backup.
-        walletAppKit = new WalletAppKit(params, AppDirectory.dir(appName).toFile(), appName) {
+        walletAppKit = new WalletAppKit(params, walletDir, walletPrefix) {
             @Override
             protected void onSetupCompleted() {
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it
@@ -195,7 +203,7 @@ public class WalletFacade {
 
         walletAppKit.setDownloadListener(downloadListener)
                 .setBlockingStartup(false)
-                .setUserAgent(appName, "0.1");
+                .setUserAgent(userAgent.getName(), userAgent.getVersion());
 
         /*
         // TODO restore from DeterministicSeed

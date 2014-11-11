@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory;
 public class ViewCB<T extends PresentationModel> implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(ViewCB.class);
 
+    public static final String TITLE_KEY = "view.title";
+
     protected T presentationModel;
     //TODO Initializable has to be changed to CodeBehind<? extends PresentationModel> when all UIs are updated
     protected Initializable childController;

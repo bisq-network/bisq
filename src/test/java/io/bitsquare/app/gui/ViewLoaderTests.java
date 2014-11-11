@@ -25,8 +25,6 @@ import io.bitsquare.gui.ViewLoader;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import java.util.Properties;
-
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -36,7 +34,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import joptsimple.OptionParser;
-import org.springframework.core.env.PropertiesPropertySource;
 
 public class ViewLoaderTests {
 
@@ -65,11 +62,8 @@ public class ViewLoaderTests {
 
     @Before
     public void setUp() {
-        Properties properties = new Properties();
-        properties.setProperty(BitsquareEnvironment.APP_NAME_KEY, "testApp");
         OptionParser parser = new OptionParser();
         BitsquareEnvironment env = new BitsquareEnvironment(parser.parse(new String[] {}));
-        env.getPropertySources().addLast(new PropertiesPropertySource("testProperties", properties));
         Injector injector = Guice.createInjector(new BitsquareAppModule(env, TestApp.primaryStage));
         ViewLoader.setInjector(injector);
     }
