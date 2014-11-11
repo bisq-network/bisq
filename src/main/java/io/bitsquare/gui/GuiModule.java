@@ -28,6 +28,8 @@ import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PasswordValidator;
 
+import com.google.inject.name.Names;
+
 import javafx.stage.Stage;
 
 import org.springframework.core.env.Environment;
@@ -57,5 +59,7 @@ public class GuiModule extends BitsquareModule {
         bind(Stage.class).toInstance(primaryStage);
         Popups.primaryStage = primaryStage;
         Help.primaryStage = primaryStage;
+
+        bindConstant().annotatedWith(Names.named(ViewCB.TITLE_KEY)).to(env.getRequiredProperty(ViewCB.TITLE_KEY));
     }
 }

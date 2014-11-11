@@ -20,6 +20,7 @@ package io.bitsquare.app;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.gui.ViewCB;
 import io.bitsquare.persistence.Persistence;
 
 import com.google.common.base.Preconditions;
@@ -81,6 +82,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
             setProperty(Persistence.DIR_KEY, AppDirectory.dir(appName).toString());
             setProperty(Persistence.PREFIX_KEY, appName + "_pref");
+
+            setProperty(ViewCB.TITLE_KEY, appName);
         }});
     }
 

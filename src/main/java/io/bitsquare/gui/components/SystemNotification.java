@@ -31,11 +31,11 @@ public class SystemNotification {
     private static final Logger log = LoggerFactory.getLogger(SystemNotification.class);
     private static final Notification.Notifier notifier = NotifierBuilder.create().build();
 
-    public static void openInfoNotification(String headline, String message) {
+    public static void openInfoNotification(String title, String message) {
         // On windows it causes problems with the hidden stage used in the hansolo Notification implementation
         // Lets deactivate it for the moment and fix that with a more native-like or real native solution later.
         String os = System.getProperty("os.name").toLowerCase();
         if (!os.contains("win"))
-            notifier.notify(NotificationBuilder.create().title(headline).message(message).build());
+            notifier.notify(NotificationBuilder.create().title(title).message(message).build());
     }
 }

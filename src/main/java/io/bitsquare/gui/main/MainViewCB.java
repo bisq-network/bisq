@@ -59,7 +59,7 @@ public class MainViewCB extends ViewCB<MainPM> {
     private final OverlayManager overlayManager;
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
     private final Settings settings;
-    private final String appName;
+    private final String title;
 
     private BorderPane baseApplicationContainer;
     private VBox splashScreen;
@@ -77,13 +77,13 @@ public class MainViewCB extends ViewCB<MainPM> {
 
     @Inject
     private MainViewCB(MainPM presentationModel, Navigation navigation, OverlayManager overlayManager,
-                       TradeManager tradeManager, Settings settings, @Named("appName") String appName) {
+                       TradeManager tradeManager, Settings settings, @Named(TITLE_KEY) String title) {
         super(presentationModel);
 
         this.navigation = navigation;
         this.overlayManager = overlayManager;
         this.settings = settings;
-        this.appName = appName;
+        this.title = title;
 
         tradeManager.featureNotImplementedWarningProperty().addListener((ov, oldValue, newValue) -> {
             if (oldValue == null && newValue != null) {
@@ -207,8 +207,8 @@ public class MainViewCB extends ViewCB<MainPM> {
                 numPendingTradesLabel.setText(String.valueOf(numPendingTrades));
             }
 
-            log.trace("openInfoNotification " + appName);
-            SystemNotification.openInfoNotification(appName, "You got a new trade message.");
+            log.trace("openInfoNotification " + title);
+            SystemNotification.openInfoNotification(title, "You got a new trade message.");
         }
         else {
             if (portfolioButtonButtonPane.getChildren().size() > 1)
