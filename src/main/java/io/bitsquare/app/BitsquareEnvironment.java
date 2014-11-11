@@ -92,6 +92,21 @@ public class BitsquareEnvironment extends StandardEnvironment {
     }
 
 
+    PropertySource<?> filesystemProperties() throws Exception {
+        String location = String.format("file:%s/bitsquare.properties", appDataDir);
+        Resource resource = resourceLoader.getResource(location);
+
+        if (!resource.exists())
+            return new PropertySource.StubPropertySource(BITSQUARE_FILESYSTEM_PROPERTY_SOURCE_NAME);
+
+        return new ResourcePropertySource(BITSQUARE_FILESYSTEM_PROPERTY_SOURCE_NAME, resource);
+    }
+
+    PropertySource<?> classpathProperties() throws Exception {
+        Resource resource = resourceLoader.getResource("classpath:bitsquare.properties");
+        return new ResourcePropertySource(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME, resource);
+    }
+
     PropertySource<?> defaultProperties() throws Exception {
         return new PropertiesPropertySource(BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {{
             setProperty(APP_DATA_DIR_KEY, appDataDir);
@@ -108,21 +123,6 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
             setProperty(ViewCB.TITLE_KEY, appName);
         }});
-    }
-
-    PropertySource<?> classpathProperties() throws Exception {
-        Resource resource = resourceLoader.getResource("classpath:bitsquare.properties");
-        return new ResourcePropertySource(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME, resource);
-    }
-
-    PropertySource<?> filesystemProperties() throws Exception {
-        String location = String.format("file:%s/bitsquare.properties", appDataDir);
-        Resource resource = resourceLoader.getResource(location);
-
-        if (!resource.exists())
-            return new PropertySource.StubPropertySource(BITSQUARE_FILESYSTEM_PROPERTY_SOURCE_NAME);
-
-        return new ResourcePropertySource(BITSQUARE_FILESYSTEM_PROPERTY_SOURCE_NAME, resource);
     }
 
 
