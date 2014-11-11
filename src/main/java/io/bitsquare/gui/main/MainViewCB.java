@@ -315,6 +315,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         blockchainSyncBox.setSpacing(10);
         blockchainSyncBox.setAlignment(Pos.CENTER);
         blockchainSyncBox.setPadding(new Insets(60, 0, 0, 0));
+        blockchainSyncBox.setPrefHeight(50);
         blockchainSyncBox.getChildren().addAll(blockchainSyncLabel, blockchainSyncIndicator, blockchainSyncIcon);
 
         Label bootstrapStateLabel = new Label();
@@ -326,12 +327,12 @@ public class MainViewCB extends ViewCB<MainPM> {
         ProgressIndicator bootstrapIndicator = new ProgressIndicator();
         bootstrapIndicator.setMaxSize(24, 24);
         bootstrapIndicator.progressProperty().bind(presentationModel.bootstrapProgress);
-        
+
         presentationModel.bootstrapFailed.addListener((ov, oldValue, newValue) -> {
             if (newValue) {
                 bootstrapStateLabel.setId("splash-error-state-msg");
                 bootstrapIndicator.setVisible(false);
-                
+
                 Popups.openErrorPopup("Error", "Cannot connect to P2P network. \n\nError message:\n" +
                         presentationModel.bootstrapErrorMsg.get());
             }
@@ -354,6 +355,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         bootstrapBox.setSpacing(10);
         bootstrapBox.setAlignment(Pos.CENTER);
         bootstrapBox.setPadding(new Insets(10, 0, 0, 0));
+        bootstrapBox.setPrefHeight(50);
         bootstrapBox.getChildren().addAll(bootstrapStateLabel, bootstrapIndicator, bootstrapIcon);
 
         vBox.getChildren().addAll(logo, blockchainSyncBox, bootstrapBox);
