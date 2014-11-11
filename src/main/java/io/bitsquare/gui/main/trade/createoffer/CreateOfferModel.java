@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.trade.createoffer;
 
+import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.AddressEntry;
@@ -28,7 +29,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.settings.Settings;
+import io.bitsquare.preferences.ApplicationPreferences;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
@@ -68,7 +69,8 @@ class CreateOfferModel extends UIModel {
 
     private final TradeManager tradeManager;
     private final WalletFacade walletFacade;
-    private final Settings settings;
+    private final AccountSettings accountSettings;
+    private ApplicationPreferences applicationPreferences;
     private final User user;
     private final Persistence persistence;
     private final BSFormatter formatter;
@@ -110,11 +112,13 @@ class CreateOfferModel extends UIModel {
 
     // non private for testing
     @Inject
-    public CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, Settings settings, User user,
-                            Persistence persistence, BSFormatter formatter) {
+    public CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, AccountSettings accountSettings,
+                            ApplicationPreferences applicationPreferences, User user, Persistence persistence,
+                            BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
-        this.settings = settings;
+        this.accountSettings = accountSettings;
+        this.applicationPreferences = applicationPreferences;
         this.user = user;
         this.persistence = persistence;
         this.formatter = formatter;
@@ -151,12 +155,12 @@ class CreateOfferModel extends UIModel {
             applyBankAccount(user.getCurrentBankAccount());
         }
 
-        if (settings != null)
-            btcCode.bind(settings.btcDenominationProperty());
+        if (accountSettings != null)
+            btcCode.bind(applicationPreferences.btcDenominationProperty());
 
         // we need to set it here already as initWithData is called before activate
-        if (settings != null)
-            securityDepositAsCoin.set(settings.getSecurityDeposit());
+        if (accountSettings != null)
+            securityDepositAsCoin.set(accountSettings.getSecurityDeposit());
 
         super.initialize();
     }
@@ -166,14 +170,14 @@ class CreateOfferModel extends UIModel {
         super.activate();
 
         // might be changed after screen change
-        if (settings != null) {
+        if (accountSettings != null) {
             // set it here again to cover the case of an securityDeposit change after a screen change
-            if (settings != null)
-                securityDepositAsCoin.set(settings.getSecurityDeposit());
+            if (accountSettings != null)
+                securityDepositAsCoin.set(accountSettings.getSecurityDeposit());
 
-            acceptedCountries.setAll(settings.getAcceptedCountries());
-            acceptedLanguages.setAll(settings.getAcceptedLanguageLocales());
-            acceptedArbitrators.setAll(settings.getAcceptedArbitrators());
+            acceptedCountries.setAll(accountSettings.getAcceptedCountries());
+            acceptedLanguages.setAll(accountSettings.getAcceptedLanguageLocales());
+            acceptedArbitrators.setAll(accountSettings.getAcceptedArbitrators());
         }
     }
 

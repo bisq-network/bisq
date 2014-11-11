@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.account.arbitrator.browser;
 
+import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
@@ -27,7 +28,6 @@ import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.settings.Settings;
 
 import java.net.URL;
 
@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorListener {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorBrowserViewCB.class);
 
-    private final Settings settings;
+    private final AccountSettings accountSettings;
     private final Persistence persistence;
     private final MessageFacade messageFacade;
 
@@ -68,8 +68,9 @@ public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorL
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorBrowserViewCB(Settings settings, Persistence persistence, MessageFacade messageFacade) {
-        this.settings = settings;
+    public ArbitratorBrowserViewCB(AccountSettings accountSettings, Persistence persistence, 
+                                   MessageFacade messageFacade) {
+        this.accountSettings = accountSettings;
         this.persistence = persistence;
         this.messageFacade = messageFacade;
     }
@@ -199,8 +200,8 @@ public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorL
 
     @FXML
     public void onSelect() {
-        settings.addAcceptedArbitrator(currentArbitrator);
-        persistence.write(settings);
+        accountSettings.addAcceptedArbitrator(currentArbitrator);
+        persistence.write(accountSettings);
     }
 
     @FXML

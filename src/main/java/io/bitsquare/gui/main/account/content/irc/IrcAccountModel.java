@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.irc;
 
+import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.bank.BankAccount;
@@ -29,7 +30,6 @@ import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.Region;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 
@@ -58,7 +58,7 @@ class IrcAccountModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(IrcAccountModel.class);
 
     private final User user;
-    private final Settings settings;
+    private final AccountSettings accountSettings;
     private final MessageFacade messageFacade;
     private final Persistence persistence;
 
@@ -78,10 +78,10 @@ class IrcAccountModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    IrcAccountModel(User user, Persistence persistence, Settings settings, MessageFacade messageFacade) {
+    IrcAccountModel(User user, Persistence persistence, AccountSettings accountSettings, MessageFacade messageFacade) {
         this.persistence = persistence;
         this.user = user;
-        this.settings = settings;
+        this.accountSettings = accountSettings;
         this.messageFacade = messageFacade;
     }
 
@@ -95,7 +95,7 @@ class IrcAccountModel extends UIModel {
     public void initialize() {
         super.initialize();
 
-        if (settings.getAcceptedArbitrators().isEmpty())
+        if (accountSettings.getAcceptedArbitrators().isEmpty())
             addMockArbitrator();
     }
 
@@ -175,11 +175,11 @@ class IrcAccountModel extends UIModel {
     }
 
     private void saveSettings() {
-        persistence.write(settings);
+        persistence.write(accountSettings);
     }
 
     private void addMockArbitrator() {
-        if (settings.getAcceptedArbitrators().isEmpty() && user.getMessageKeyPair() != null) {
+        if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getMessageKeyPair() != null) {
             String pubKeyAsHex = Utils.HEX.encode(new ECKey().getPubKey());
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
             List<Locale> languages = new ArrayList<>();
@@ -202,8 +202,8 @@ class IrcAccountModel extends UIModel {
                     "http://bitsquare.io/",
                     "Bla bla...");
 
-            settings.addAcceptedArbitrator(arbitrator);
-            persistence.write(settings);
+            accountSettings.addAcceptedArbitrator(arbitrator);
+            persistence.write(accountSettings);
 
             messageFacade.addArbitrator(arbitrator);
         }

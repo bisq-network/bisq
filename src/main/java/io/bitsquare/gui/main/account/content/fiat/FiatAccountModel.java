@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.fiat;
 
+import io.bitsquare.account.AccountSettings;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.gui.UIModel;
@@ -25,7 +26,6 @@ import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.Region;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
@@ -48,7 +48,7 @@ class FiatAccountModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(FiatAccountModel.class);
 
     private final User user;
-    private final Settings settings;
+    private final AccountSettings accountSettings;
     private final Persistence persistence;
 
     final StringProperty title = new SimpleStringProperty();
@@ -75,10 +75,10 @@ class FiatAccountModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    FiatAccountModel(User user, Persistence persistence, Settings settings) {
+    FiatAccountModel(User user, Persistence persistence, AccountSettings accountSettings) {
         this.persistence = persistence;
         this.user = user;
-        this.settings = settings;
+        this.accountSettings = accountSettings;
     }
 
 
@@ -127,7 +127,7 @@ class FiatAccountModel extends UIModel {
         user.setBankAccount(bankAccount);
         saveUser();
         allBankAccounts.setAll(user.getBankAccounts());
-        countryNotInAcceptedCountriesList.set(!settings.getAcceptedCountries().contains(country.get()));
+        countryNotInAcceptedCountriesList.set(!accountSettings.getAcceptedCountries().contains(country.get()));
         reset();
     }
 
@@ -141,7 +141,7 @@ class FiatAccountModel extends UIModel {
     // We ask the user if he likes to add his own bank account country to the accepted country list if he has not
     // already added it before
     void addCountryToAcceptedCountriesList() {
-        settings.addAcceptedCountry(country.get());
+        accountSettings.addAcceptedCountry(country.get());
         saveSettings();
         countryNotInAcceptedCountriesList.set(false);
     }
@@ -225,6 +225,6 @@ class FiatAccountModel extends UIModel {
     }
 
     private void saveSettings() {
-        persistence.write(settings);
+        persistence.write(accountSettings);
     }
 }

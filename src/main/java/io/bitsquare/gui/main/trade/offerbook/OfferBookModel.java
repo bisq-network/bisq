@@ -24,7 +24,7 @@ import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.settings.Settings;
+import io.bitsquare.preferences.ApplicationPreferences;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
@@ -56,7 +56,7 @@ class OfferBookModel extends UIModel {
 
     private final User user;
     private final OfferBook offerBook;
-    private final Settings settings;
+    private final ApplicationPreferences settings;
     private final BSFormatter formatter;
     private final TradeManager tradeManager;
 
@@ -85,7 +85,7 @@ class OfferBookModel extends UIModel {
     OfferBookModel(User user,
                    TradeManager tradeManager,
                    OfferBook offerBook,
-                   Settings settings,
+                   ApplicationPreferences settings,
                    BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.user = user;

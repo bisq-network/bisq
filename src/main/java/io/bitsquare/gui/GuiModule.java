@@ -22,6 +22,7 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.trade.offerbook.OfferBook;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
@@ -55,6 +56,7 @@ public class GuiModule extends BitsquareModule {
         bind(FiatValidator.class).asEagerSingleton();
         bind(InputValidator.class).asEagerSingleton();
         bind(PasswordValidator.class).asEagerSingleton();
+        bind(Transitions.class).asEagerSingleton();
 
         bind(Stage.class).toInstance(primaryStage);
         Popups.primaryStage = primaryStage;

@@ -21,7 +21,7 @@ import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.ViewLoader;
-import io.bitsquare.settings.Settings;
+import io.bitsquare.preferences.ApplicationPreferences;
 
 import java.net.URL;
 
@@ -42,7 +42,7 @@ public class PreferencesViewCB extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(PreferencesViewCB.class);
 
     private final Navigation navigation;
-    private Settings settings;
+    private ApplicationPreferences settings;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -55,7 +55,7 @@ public class PreferencesViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    PreferencesViewCB(Navigation navigation, Settings settings) {
+    PreferencesViewCB(Navigation navigation, ApplicationPreferences settings) {
         super();
 
         this.navigation = navigation;

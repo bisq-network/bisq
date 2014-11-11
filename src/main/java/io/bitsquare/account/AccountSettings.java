@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.settings;
+package io.bitsquare.account;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.locale.Country;
@@ -30,26 +30,24 @@ import java.util.List;
 import java.util.Locale;
 import java.util.OptionalLong;
 
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-
-public class Settings implements Serializable {
+public class AccountSettings implements Serializable {
     private static final long serialVersionUID = 7995048077355006861L;
 
     private List<Locale> acceptedLanguageLocales = new ArrayList<>();
     private List<Country> acceptedCountryLocales = new ArrayList<>();
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
 
-    private Boolean useAnimations = true;
+    // needed for persistence
     private String btcDenominationString = MonetaryFormat.CODE_BTC;
-    final transient StringProperty btcDenomination = new SimpleStringProperty(MonetaryFormat.CODE_BTC);
+    private Boolean useAnimationsBoolean = true;
+    private Boolean useEffectsBoolean = true;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Settings() {
+    public AccountSettings() {
     }
 
 
@@ -57,12 +55,11 @@ public class Settings implements Serializable {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void applyPersistedSettings(Settings persistedSettings) {
+    public void applyPersistedAccountSettings(AccountSettings persistedSettings) {
         if (persistedSettings != null) {
             acceptedLanguageLocales = persistedSettings.getAcceptedLanguageLocales();
             acceptedCountryLocales = persistedSettings.getAcceptedCountries();
             acceptedArbitrators = persistedSettings.getAcceptedArbitrators();
-            setBtcDenomination(persistedSettings.getBtcDenominationString());
         }
     }
 
@@ -117,31 +114,5 @@ public class Settings implements Serializable {
         OptionalLong result = acceptedArbitrators.stream().mapToLong(e -> e.getFee().getValue()).max();
         return result.isPresent() ? Coin.valueOf(result.getAsLong()) : Coin.ZERO;
     }
-
-    public String getBtcDenomination() {
-        return btcDenomination.get();
-    }
-
-    public StringProperty btcDenominationProperty() {
-        return btcDenomination;
-    }
-
-    public void setBtcDenomination(String btcDenomination) {
-        btcDenominationString = btcDenomination;
-        this.btcDenomination.set(btcDenomination);
-    }
-
-    public String getBtcDenominationString() {
-        return btcDenominationString;
-    }
-
-    public Boolean getUseAnimations() {
-        return useAnimations;
-    }
-
-    public void setUseAnimations(boolean useAnimations) {
-        this.useAnimations = useAnimations;
-    }
-
 
 }

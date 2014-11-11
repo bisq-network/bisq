@@ -48,7 +48,7 @@ public class CreateOfferPMTest {
         BSFormatter formatter = new BSFormatter(new User());
         formatter.setLocale(Locale.US);
         formatter.setFiatCurrencyCode("USD");
-        model = new CreateOfferModel(null, null, null, null, null, formatter);
+        model = new CreateOfferModel(null, null, null, null, null, null, formatter);
 
         presenter = new CreateOfferPM(model, new FiatValidator(null), new BtcValidator(), formatter);
         presenter.initialize();

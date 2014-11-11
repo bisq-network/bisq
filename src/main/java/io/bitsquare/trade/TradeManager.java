@@ -17,6 +17,7 @@
 
 package io.bitsquare.trade;
 
+import io.bitsquare.account.AccountSettings;
 import io.bitsquare.btc.BlockChainFacade;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.crypto.CryptoFacade;
@@ -27,7 +28,6 @@ import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferRepository;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.createoffer.CreateOfferCoordinator;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
@@ -73,7 +73,7 @@ public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
     private final User user;
-    private final Settings settings;
+    private final AccountSettings accountSettings;
     private final Persistence persistence;
     private final MessageFacade messageFacade;
     private final BlockChainFacade blockChainFacade;
@@ -99,11 +99,12 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeManager(User user, Settings settings, Persistence persistence, MessageFacade messageFacade,
+    public TradeManager(User user, AccountSettings accountSettings, Persistence persistence, 
+                        MessageFacade messageFacade,
                         BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade,
                         OfferRepository offerRepository) {
         this.user = user;
-        this.settings = settings;
+        this.accountSettings = accountSettings;
         this.persistence = persistence;
         this.messageFacade = messageFacade;
         this.blockChainFacade = blockChainFacade;
@@ -161,10 +162,10 @@ public class TradeManager {
                 user.getCurrentBankAccount().getCurrency(),
                 user.getCurrentBankAccount().getCountry(),
                 user.getCurrentBankAccount().getUid(),
-                settings.getAcceptedArbitrators(),
-                settings.getSecurityDeposit(),
-                settings.getAcceptedCountries(),
-                settings.getAcceptedLanguageLocales());
+                accountSettings.getAcceptedArbitrators(),
+                accountSettings.getSecurityDeposit(),
+                accountSettings.getAcceptedCountries(),
+                accountSettings.getAcceptedLanguageLocales());
 
         CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(
                 offer,

@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.restrictions;
 
+import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.gui.UIModel;
@@ -26,7 +27,6 @@ import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.Region;
 import io.bitsquare.msg.MessageFacade;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 
@@ -50,7 +50,7 @@ class RestrictionsModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(RestrictionsModel.class);
 
     private final User user;
-    private final Settings settings;
+    private final AccountSettings accountSettings;
     private final Persistence persistence;
     private final MessageFacade messageFacade;
 
@@ -67,9 +67,10 @@ class RestrictionsModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private RestrictionsModel(User user, Settings settings, Persistence persistence, MessageFacade messageFacade) {
+    private RestrictionsModel(User user, AccountSettings accountSettings, Persistence persistence,
+                              MessageFacade messageFacade) {
         this.user = user;
-        this.settings = settings;
+        this.accountSettings = accountSettings;
         this.persistence = persistence;
         this.messageFacade = messageFacade;
     }
@@ -83,9 +84,9 @@ class RestrictionsModel extends UIModel {
     public void initialize() {
         super.initialize();
 
-        Settings persistedSettings = (Settings) persistence.read(settings);
-        if (persistedSettings != null) {
-            settings.applyPersistedSettings(persistedSettings);
+        AccountSettings persistedAccountSettings = (AccountSettings) persistence.read(accountSettings);
+        if (persistedAccountSettings != null) {
+            accountSettings.applyPersistedAccountSettings(persistedAccountSettings);
         }
         else {
             if (Locale.getDefault() != null) {
@@ -103,9 +104,9 @@ class RestrictionsModel extends UIModel {
     @Override
     public void activate() {
         super.activate();
-        languageList.setAll(settings.getAcceptedLanguageLocales());
-        countryList.setAll(settings.getAcceptedCountries());
-        arbitratorList.setAll(settings.getAcceptedArbitrators());
+        languageList.setAll(accountSettings.getAcceptedLanguageLocales());
+        countryList.setAll(accountSettings.getAcceptedCountries());
+        arbitratorList.setAll(accountSettings.getAcceptedArbitrators());
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -131,26 +132,26 @@ class RestrictionsModel extends UIModel {
     }
 
     void updateArbitratorList() {
-        arbitratorList.setAll(settings.getAcceptedArbitrators());
+        arbitratorList.setAll(accountSettings.getAcceptedArbitrators());
     }
 
     void addLanguage(Locale locale) {
         if (locale != null && !languageList.contains(locale)) {
             languageList.add(locale);
-            settings.addAcceptedLanguageLocale(locale);
+            accountSettings.addAcceptedLanguageLocale(locale);
         }
     }
 
     void removeLanguage(Locale locale) {
         languageList.remove(locale);
-        settings.removeAcceptedLanguageLocale(locale);
+        accountSettings.removeAcceptedLanguageLocale(locale);
         saveSettings();
     }
 
     void addCountry(Country country) {
         if (!countryList.contains(country) && country != null) {
             countryList.add(country);
-            settings.addAcceptedCountry(country);
+            accountSettings.addAcceptedCountry(country);
             saveSettings();
         }
     }
@@ -158,21 +159,21 @@ class RestrictionsModel extends UIModel {
     ObservableList<Country> getListWithAllEuroCountries() {
         // TODO use Set instead of List
         // In addAcceptedCountry there is a check to no add duplicates, so it works correctly for now
-        CountryUtil.getAllEuroCountries().stream().forEach(settings::addAcceptedCountry);
-        countryList.setAll(settings.getAcceptedCountries());
+        CountryUtil.getAllEuroCountries().stream().forEach(accountSettings::addAcceptedCountry);
+        countryList.setAll(accountSettings.getAcceptedCountries());
         saveSettings();
         return countryList;
     }
 
     void removeCountry(Country country) {
         countryList.remove(country);
-        settings.removeAcceptedCountry(country);
+        accountSettings.removeAcceptedCountry(country);
         saveSettings();
     }
 
     void removeArbitrator(Arbitrator arbitrator) {
         arbitratorList.remove(arbitrator);
-        settings.removeAcceptedArbitrator(arbitrator);
+        accountSettings.removeAcceptedArbitrator(arbitrator);
         saveSettings();
     }
 
@@ -182,12 +183,12 @@ class RestrictionsModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void saveSettings() {
-        persistence.write(settings);
+        persistence.write(accountSettings);
     }
 
     // TODO Remove mock later
     private void addMockArbitrator() {
-        if (settings.getAcceptedArbitrators().isEmpty() && user.getMessageKeyPair() != null) {
+        if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getMessageKeyPair() != null) {
             String pubKeyAsHex = Utils.HEX.encode(new ECKey().getPubKey());
             String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
             List<Locale> languages = new ArrayList<>();
@@ -211,8 +212,8 @@ class RestrictionsModel extends UIModel {
                     "Bla bla...");
 
             arbitratorList.add(arbitrator);
-            settings.addAcceptedArbitrator(arbitrator);
-            persistence.write(settings);
+            accountSettings.addAcceptedArbitrator(arbitrator);
+            persistence.write(accountSettings);
 
             messageFacade.addArbitrator(arbitrator);
         }

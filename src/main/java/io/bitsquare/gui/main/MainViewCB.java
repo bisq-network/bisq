@@ -26,7 +26,6 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
-import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeManager;
 
 import java.net.URL;
@@ -36,7 +35,6 @@ import java.util.ResourceBundle;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import javafx.animation.Interpolator;
 import javafx.application.Platform;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -58,7 +56,7 @@ public class MainViewCB extends ViewCB<MainPM> {
     private final Navigation navigation;
     private final OverlayManager overlayManager;
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
-    private final Settings settings;
+    private Transitions transitions;
     private final String title;
 
     private BorderPane baseApplicationContainer;
@@ -77,12 +75,13 @@ public class MainViewCB extends ViewCB<MainPM> {
 
     @Inject
     private MainViewCB(MainPM presentationModel, Navigation navigation, OverlayManager overlayManager,
-                       TradeManager tradeManager, Settings settings, @Named(TITLE_KEY) String title) {
+                       TradeManager tradeManager, Transitions transitions,
+                       @Named(TITLE_KEY) String title) {
         super(presentationModel);
 
         this.navigation = navigation;
         this.overlayManager = overlayManager;
-        this.settings = settings;
+        this.transitions = transitions;
         this.title = title;
 
         tradeManager.featureNotImplementedWarningProperty().addListener((ov, oldValue, newValue) -> {
@@ -118,14 +117,12 @@ public class MainViewCB extends ViewCB<MainPM> {
         overlayManager.addListener(new OverlayManager.OverlayListener() {
             @Override
             public void onBlurContentRequested() {
-                if (settings.getUseAnimations())
-                    Transitions.blur(baseApplicationContainer);
+                transitions.blur(baseApplicationContainer);
             }
 
             @Override
             public void onRemoveBlurContentRequested() {
-                if (settings.getUseAnimations())
-                    Transitions.removeBlur(baseApplicationContainer);
+                transitions.removeBlur(baseApplicationContainer);
             }
         });
 
@@ -230,7 +227,7 @@ public class MainViewCB extends ViewCB<MainPM> {
 
     private void onContentAdded() {
         Profiler.printMsgWithTime("MainController.onContentAdded");
-        Transitions.fadeOutAndRemove(splashScreen, 1500).setInterpolator(Interpolator.EASE_IN);
+        transitions.fadeOutAndRemove(splashScreen, 1500);
     }
 
 
