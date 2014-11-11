@@ -38,6 +38,7 @@ import net.tomp2p.dht.FuturePut;
 import net.tomp2p.dht.FutureRemove;
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
+import net.tomp2p.futures.BaseFuture;
 import net.tomp2p.futures.FutureBootstrap;
 import net.tomp2p.futures.FutureDirect;
 import net.tomp2p.futures.FutureDiscover;
@@ -89,7 +90,7 @@ public class TomP2PTests {
     // Typically you run the bootstrap node in localhost to test direct connection.
     // If you have a setup where you are not behind a router you can also use a WAN bootstrap node.
     private static final Node BOOTSTRAP_NODE = (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT) ?
-            BootstrapNodes.LOCALHOST : BootstrapNodes.DIGITAL_OCEAN_1.withPort(7367);
+            BootstrapNodes.LOCALHOST : Node.at("digitalocean1.dev.bitsquare.io", "188.226.179.109", 7367);
 
     private static final PeerAddress BOOTSTRAP_NODE_ADDRESS;
 
@@ -123,16 +124,19 @@ public class TomP2PTests {
     @After
     public void tearDown() {
         if (peer1DHT != null) {
-            peer1DHT.shutdown().awaitUninterruptibly();
-            peer1DHT.shutdown().awaitListenersUninterruptibly();
+            BaseFuture future = peer1DHT.shutdown();
+            future.awaitUninterruptibly();
+            future.awaitListenersUninterruptibly();
         }
         if (peer2DHT != null) {
-            peer2DHT.shutdown().awaitUninterruptibly();
-            peer2DHT.shutdown().awaitListenersUninterruptibly();
+            BaseFuture future = peer2DHT.shutdown();
+            future.awaitUninterruptibly();
+            future.awaitListenersUninterruptibly();
         }
         if (peer != null) {
-            peer.shutdown().awaitUninterruptibly();
-            peer.shutdown().awaitListenersUninterruptibly();
+            BaseFuture future = peer.shutdown();
+            future.awaitUninterruptibly();
+            future.awaitListenersUninterruptibly();
         }
     }
 
@@ -225,6 +229,71 @@ public class TomP2PTests {
         futureGet.awaitUninterruptibly();
         assertTrue(futureGet.isSuccess());
 
+        assertTrue(futureGet.dataMap().values().contains(new Data("hallo1")));
+        assertTrue(futureGet.dataMap().values().contains(new Data("hallo2")));
+        assertTrue(futureGet.dataMap().values().size() == 2);
+    }
+
+    @Test
+    @Repeat(STRESS_TEST_COUNT)
+    public void testAddGetWithReconnect() throws Exception {
+        peer1DHT = getDHTPeer(client1Port);
+        FuturePut futurePut1 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo1")).start();
+        futurePut1.awaitUninterruptibly();
+        assertTrue(futurePut1.isSuccess());
+        FuturePut futurePut2 = peer1DHT.add(Number160.createHash("locationKey")).data(new Data("hallo2")).start();
+        futurePut2.awaitUninterruptibly();
+        assertTrue(futurePut2.isSuccess());
+
+        peer2DHT = getDHTPeer(client2Port);
+        FutureGet futureGet = peer2DHT.get(Number160.createHash("locationKey")).all().start();
+        futureGet.awaitUninterruptibly();
+        assertTrue(futureGet.isSuccess());
+        assertTrue(futureGet.dataMap().values().contains(new Data("hallo1")));
+        assertTrue(futureGet.dataMap().values().contains(new Data("hallo2")));
+        assertTrue(futureGet.dataMap().values().size() == 2);
+
+        // shut down peer2
+        BaseFuture future = peer2DHT.shutdown();
+        future.awaitUninterruptibly();
+        future.awaitListenersUninterruptibly();
+        // start up peer2
+        peer2DHT = getDHTPeer(client2Port);
+        futureGet = peer2DHT.get(Number160.createHash("locationKey")).all().start();
+        futureGet.awaitUninterruptibly();
+        assertTrue(futureGet.isSuccess());
+        assertTrue(futureGet.dataMap().values().contains(new Data("hallo1")));
+        assertTrue(futureGet.dataMap().values().contains(new Data("hallo2")));
+        assertTrue(futureGet.dataMap().values().size() == 2);
+
+        futureGet = peer1DHT.get(Number160.createHash("locationKey")).all().start();
+        futureGet.awaitUninterruptibly();
+        assertTrue(futureGet.isSuccess());
+        assertTrue(futureGet.dataMap().values().contains(new Data("hallo1")));
+        assertTrue(futureGet.dataMap().values().contains(new Data("hallo2")));
+        assertTrue(futureGet.dataMap().values().size() == 2);
+
+        // shut down both
+        future = peer2DHT.shutdown();
+        future.awaitUninterruptibly();
+        future.awaitListenersUninterruptibly();
+        future = peer1DHT.shutdown();
+        future.awaitUninterruptibly();
+        future.awaitListenersUninterruptibly();
+
+        // start up both
+        peer1DHT = getDHTPeer(client1Port);
+        futureGet = peer1DHT.get(Number160.createHash("locationKey")).all().start();
+        futureGet.awaitUninterruptibly();
+        assertTrue(futureGet.isSuccess());
+        assertTrue(futureGet.dataMap().values().contains(new Data("hallo1")));
+        assertTrue(futureGet.dataMap().values().contains(new Data("hallo2")));
+        assertTrue(futureGet.dataMap().values().size() == 2);
+
+        peer2DHT = getDHTPeer(client2Port);
+        futureGet = peer2DHT.get(Number160.createHash("locationKey")).all().start();
+        futureGet.awaitUninterruptibly();
+        assertTrue(futureGet.isSuccess());
         assertTrue(futureGet.dataMap().values().contains(new Data("hallo1")));
         assertTrue(futureGet.dataMap().values().contains(new Data("hallo2")));
         assertTrue(futureGet.dataMap().values().size() == 2);
