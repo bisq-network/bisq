@@ -39,10 +39,8 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
     public static final String TITLE_KEY = "view.title";
 
     protected T presentationModel;
-    //TODO Initializable has to be changed to CodeBehind<? extends PresentationModel> when all UIs are updated
-    protected Initializable childController;
-    //TODO Initializable has to be changed to CodeBehind<? extends PresentationModel> when all UIs are updated
-    protected Initializable parent;
+    protected ViewCB<? extends PresentationModel> childController;
+    protected ViewCB<? extends PresentationModel> parent;
 
     @FXML protected Parent root;
 
@@ -92,7 +90,7 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
      * @param parent Controller who has created this.getClass().getSimpleName() instance (via
      *               navigateToView/FXMLLoader).
      */
-    public void setParent(Initializable parent) {
+    public void setParent(ViewCB<? extends PresentationModel> parent) {
         log.trace("Lifecycle: setParentController " + this.getClass().getSimpleName() + " / parent = " +
                 parent);
         this.parent = parent;
