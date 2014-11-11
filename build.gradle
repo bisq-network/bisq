@@ -73,6 +73,23 @@ task packageNative(type: Exec, dependsOn: shadowJar) {
     args project.version, shadowJar.archivePath, mainClassName
 }
 
+shadowJar.classifier = 'app'
+
+task appJar(dependsOn: shadowJar) {
+    group = "shadow"
+    description = "Builds a Bitsquare client UI executable jar"
+}
+
+task bootstrapNodeJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+    group = "shadow"
+    description = "Builds a Bitsquare bootstrap node executable jar"
+    manifest.attributes 'Main-Class': 'io.bitsquare.app.cli.BootstrapNodeMain'
+    classifier = 'bootstrapNode'
+    from(project.convention.getPlugin(JavaPluginConvention).sourceSets.main.output)
+    configurations = [project.configurations.runtime]
+    exclude('META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA')
+}
+
 jacocoTestReport {
     reports {
         xml.enabled = true
