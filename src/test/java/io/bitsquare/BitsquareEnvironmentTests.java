@@ -15,16 +15,27 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui;
+package io.bitsquare;
 
-@SuppressWarnings("serializable")
-public class FatalException extends RuntimeException {
+import io.bitsquare.app.BitsquareEnvironment;
 
-    public FatalException(String format, Object... args) {
-        super(String.format(format, args));
-    }
+import org.junit.Test;
 
-    public FatalException(Throwable cause, String format, Object... args) {
-        super(String.format(format, args), cause);
+import joptsimple.OptionParser;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.*;
+
+public class BitsquareEnvironmentTests {
+
+    @Test
+    public void test() {
+        String[] args = new String[]{ "--arg1=val1", "--arg2=val2" };
+        OptionParser parser = new OptionParser();
+        parser.accepts("arg1").withRequiredArg();
+        parser.accepts("arg2").withRequiredArg();
+        BitsquareEnvironment env = new BitsquareEnvironment(parser.parse(args));
+        assertThat(env.getProperty("arg1"), equalTo("val1"));
+        assertThat(env.getProperty("arg2"), equalTo("val2"));
     }
 }

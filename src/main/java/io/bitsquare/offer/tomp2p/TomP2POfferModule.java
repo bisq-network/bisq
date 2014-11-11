@@ -20,12 +20,12 @@ package io.bitsquare.offer.tomp2p;
 import io.bitsquare.offer.OfferModule;
 import io.bitsquare.offer.OfferRepository;
 
-import java.util.Properties;
+import org.springframework.core.env.Environment;
 
 public class TomP2POfferModule extends OfferModule {
 
-    public TomP2POfferModule(Properties properties) {
-        super(properties);
+    public TomP2POfferModule(Environment env) {
+        super(env);
     }
 
     @Override

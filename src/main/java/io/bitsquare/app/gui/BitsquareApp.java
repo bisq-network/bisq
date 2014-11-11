@@ -17,7 +17,7 @@
 
 package io.bitsquare.app.gui;
 
-import io.bitsquare.app.ArgumentParser;
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.ViewLoader;
@@ -26,16 +26,14 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Settings;
 import io.bitsquare.user.User;
-import io.bitsquare.util.ConfigLoader;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import java.io.IOException;
-
-import java.util.Properties;
 
 import javafx.application.Application;
 import javafx.scene.*;
@@ -47,59 +45,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import lighthouse.files.AppDirectory;
-import net.sourceforge.argparse4j.inf.Namespace;
+import org.springframework.core.env.Environment;
 
-import static io.bitsquare.app.AppModule.APP_NAME_KEY;
-import static io.bitsquare.btc.BitcoinModule.BITCOIN_NETWORK_KEY;
-import static io.bitsquare.msg.tomp2p.TomP2PMessageModule.*;
-import static io.bitsquare.network.Node.*;
+public class BitsquareApp extends Application {
+    private static final Logger log = LoggerFactory.getLogger(BitsquareApp.class);
 
-public class Main extends Application {
-    private static final Logger log = LoggerFactory.getLogger(Main.class);
-    private static String appName = "Bitsquare";
-    private static Properties properties;
+    private static Environment env;
 
-    private MainModule mainModule;
+    private BitsquareAppModule bitsquareAppModule;
     private Injector injector;
 
-    public static void main(String[] args) {
-        Namespace argumentsNamespace = new ArgumentParser().parseArgs(args);
-
-        if (argumentsNamespace.getString(APP_NAME_KEY) != null)
-            appName = appName + "-" + argumentsNamespace.getString(APP_NAME_KEY);
-
-        properties = ConfigLoader.loadConfig(appName);
-
-        properties.setProperty(APP_NAME_KEY, appName);
-
-        if (argumentsNamespace.getString(NAME_KEY) != null)
-            properties.setProperty(NAME_KEY, argumentsNamespace.getString(NAME_KEY));
-
-        if (argumentsNamespace.getString(PORT_KEY) != null)
-            properties.setProperty(PORT_KEY, argumentsNamespace.getString(PORT_KEY));
-
-        if (argumentsNamespace.getString(BOOTSTRAP_NODE_NAME_KEY) != null)
-            properties.setProperty(BOOTSTRAP_NODE_NAME_KEY, argumentsNamespace.getString(BOOTSTRAP_NODE_NAME_KEY));
-
-        if (argumentsNamespace.getString(BOOTSTRAP_NODE_IP_KEY) != null)
-            properties.setProperty(BOOTSTRAP_NODE_IP_KEY, argumentsNamespace.getString(BOOTSTRAP_NODE_IP_KEY));
-
-        if (argumentsNamespace.getString(BOOTSTRAP_NODE_PORT_KEY) != null)
-            properties.setProperty(BOOTSTRAP_NODE_PORT_KEY, argumentsNamespace.getString(BOOTSTRAP_NODE_PORT_KEY));
-
-        if (argumentsNamespace.getString(NETWORK_INTERFACE_KEY) != null)
-            properties.setProperty(NETWORK_INTERFACE_KEY, argumentsNamespace.getString(NETWORK_INTERFACE_KEY));
-
-        if (argumentsNamespace.getString(BITCOIN_NETWORK_KEY) != null)
-            properties.setProperty(BITCOIN_NETWORK_KEY, argumentsNamespace.getString(BITCOIN_NETWORK_KEY));
-
-        Application.launch(Main.class, args);
+    public static void setEnvironment(Environment env) {
+        BitsquareApp.env = env;
     }
 
     @Override
-    public void start(Stage primaryStage) {
-        mainModule = new MainModule(properties, primaryStage);
-        injector = Guice.createInjector(mainModule);
+    public void start(Stage primaryStage) throws IOException {
+        Preconditions.checkArgument(env != null, "Environment must not be null");
+
+        String appName = env.getRequiredProperty(BitsquareEnvironment.APP_NAME_KEY);
+
+        bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
+        injector = Guice.createInjector(bitsquareAppModule);
 
 
         // route uncaught exceptions to a user-facing dialog
@@ -173,7 +140,7 @@ public class Main extends Application {
 
     @Override
     public void stop() {
-        mainModule.close(injector);
+        bitsquareAppModule.close(injector);
         System.exit(0);
     }
 }

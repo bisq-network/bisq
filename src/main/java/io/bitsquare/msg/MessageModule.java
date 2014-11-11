@@ -21,12 +21,12 @@ import io.bitsquare.BitsquareModule;
 
 import com.google.inject.Injector;
 
-import java.util.Properties;
+import org.springframework.core.env.Environment;
 
 public abstract class MessageModule extends BitsquareModule {
 
-    protected MessageModule(Properties properties) {
-        super(properties);
+    protected MessageModule(Environment env) {
+        super(env);
     }
 
     @Override

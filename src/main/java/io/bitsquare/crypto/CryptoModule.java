@@ -19,12 +19,12 @@ package io.bitsquare.crypto;
 
 import io.bitsquare.BitsquareModule;
 
-import java.util.Properties;
+import org.springframework.core.env.Environment;
 
 public class CryptoModule extends BitsquareModule {
 
-    public CryptoModule(Properties properties) {
-        super(properties);
+    public CryptoModule(Environment env) {
+        super(env);
     }
 
     @Override

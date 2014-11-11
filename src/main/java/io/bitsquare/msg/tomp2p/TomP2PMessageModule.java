@@ -24,7 +24,7 @@ import io.bitsquare.network.Node;
 
 import com.google.inject.name.Names;
 
-import java.util.Properties;
+import org.springframework.core.env.Environment;
 
 import static io.bitsquare.msg.tomp2p.BootstrappedPeerFactory.*;
 
@@ -35,25 +35,25 @@ public class TomP2PMessageModule extends MessageModule {
     public static final String BOOTSTRAP_NODE_PORT_KEY = "bootstrap.node.port";
     public static final String NETWORK_INTERFACE_KEY = BootstrappedPeerFactory.NETWORK_INTERFACE_KEY;
 
-    public TomP2PMessageModule(Properties properties) {
-        super(properties);
+    public TomP2PMessageModule(Environment env) {
+        super(env);
     }
 
     @Override
     protected void doConfigure() {
         bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(
-            Integer.valueOf(properties.getProperty(Node.PORT_KEY, String.valueOf(Node.DEFAULT_PORT))));
+            env.getProperty(Node.PORT_KEY, Integer.class, Node.DEFAULT_PORT));
         bind(TomP2PNode.class).asEagerSingleton();
 
         bind(Node.class).annotatedWith(Names.named(BOOTSTRAP_NODE_KEY)).toInstance(
                 Node.at(
-                        properties.getProperty(BOOTSTRAP_NODE_NAME_KEY, BootstrapNodes.DEFAULT.getName()),
-                        properties.getProperty(BOOTSTRAP_NODE_IP_KEY, BootstrapNodes.DEFAULT.getIp()),
-                        properties.getProperty(BOOTSTRAP_NODE_PORT_KEY, BootstrapNodes.DEFAULT.getPortAsString())
+                        env.getProperty(BOOTSTRAP_NODE_NAME_KEY, BootstrapNodes.DEFAULT.getName()),
+                        env.getProperty(BOOTSTRAP_NODE_IP_KEY, BootstrapNodes.DEFAULT.getIp()),
+                        env.getProperty(BOOTSTRAP_NODE_PORT_KEY, BootstrapNodes.DEFAULT.getPortAsString())
                 )
         );
         bindConstant().annotatedWith(Names.named(NETWORK_INTERFACE_KEY)).to(
-                properties.getProperty(NETWORK_INTERFACE_KEY, NETWORK_INTERFACE_UNSPECIFIED));
+                env.getProperty(NETWORK_INTERFACE_KEY, NETWORK_INTERFACE_UNSPECIFIED));
         bind(BootstrappedPeerFactory.class).asEagerSingleton();
     }
 

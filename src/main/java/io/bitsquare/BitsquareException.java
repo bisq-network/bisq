@@ -15,27 +15,20 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.app.gui;
+package io.bitsquare;
 
-import io.bitsquare.BitsquareModule;
-import io.bitsquare.app.AppModule;
-import io.bitsquare.gui.GuiModule;
+@SuppressWarnings("serializable")
+public class BitsquareException extends RuntimeException {
 
-import java.util.Properties;
-
-import javafx.stage.Stage;
-
-class MainModule extends BitsquareModule {
-    private final Stage primaryStage;
-
-    public MainModule(Properties properties, Stage primaryStage) {
-        super(properties);
-        this.primaryStage = primaryStage;
+    public BitsquareException(Throwable cause) {
+        super(cause);
     }
 
-    @Override
-    protected void configure() {
-        install(new AppModule(properties));
-        install(new GuiModule(properties, primaryStage));
+    public BitsquareException(String format, Object... args) {
+        super(String.format(format, args));
+    }
+
+    public BitsquareException(Throwable cause, String format, Object... args) {
+        super(String.format(format, args), cause);
     }
 }

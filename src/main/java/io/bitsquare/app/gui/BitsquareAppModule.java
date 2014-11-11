@@ -15,11 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.app;
+package io.bitsquare.app.gui;
 
 import io.bitsquare.BitsquareModule;
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.crypto.CryptoModule;
+import io.bitsquare.gui.GuiModule;
 import io.bitsquare.msg.MessageModule;
 import io.bitsquare.msg.tomp2p.TomP2PMessageModule;
 import io.bitsquare.offer.OfferModule;
@@ -29,21 +31,20 @@ import io.bitsquare.settings.Settings;
 import io.bitsquare.trade.TradeModule;
 import io.bitsquare.user.User;
 
-import com.google.common.base.Preconditions;
-
 import com.google.inject.Injector;
 import com.google.inject.name.Names;
 
-import java.util.Properties;
+import javafx.stage.Stage;
 
-/**
- * Configures all non-UI modules necessary to run a Bitsquare application.
- */
-public class AppModule extends BitsquareModule {
-    public static final String APP_NAME_KEY = "appName";
+import org.springframework.core.env.Environment;
 
-    public AppModule(Properties properties) {
-        super(properties);
+class BitsquareAppModule extends BitsquareModule {
+
+    private final Stage primaryStage;
+
+    public BitsquareAppModule(Environment env, Stage primaryStage) {
+        super(env);
+        this.primaryStage = primaryStage;
     }
 
     @Override
@@ -57,35 +58,38 @@ public class AppModule extends BitsquareModule {
         install(cryptoModule());
         install(tradeModule());
         install(offerModule());
+        install(guiModule());
 
-        String appName = properties.getProperty(APP_NAME_KEY);
-        Preconditions.checkArgument(appName != null, "App name must be non-null");
+        String appName = env.getRequiredProperty(BitsquareEnvironment.APP_NAME_KEY);
 
         bindConstant().annotatedWith(Names.named("appName")).to(appName);
     }
 
     protected MessageModule messageModule() {
-        return new TomP2PMessageModule(properties);
+        return new TomP2PMessageModule(env);
     }
 
     protected BitcoinModule bitcoinModule() {
-        return new BitcoinModule(properties);
+        return new BitcoinModule(env);
     }
 
     protected CryptoModule cryptoModule() {
-        return new CryptoModule(properties);
+        return new CryptoModule(env);
     }
 
     protected TradeModule tradeModule() {
-        return new TradeModule(properties);
+        return new TradeModule(env);
     }
 
     protected OfferModule offerModule() {
-        return new TomP2POfferModule(properties);
+        return new TomP2POfferModule(env);
+    }
+
+    protected GuiModule guiModule() {
+        return new GuiModule(env, primaryStage);
     }
 
     @Override
     protected void doClose(Injector injector) {
     }
 }
-

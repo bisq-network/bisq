@@ -22,17 +22,18 @@ import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 
-import java.util.Properties;
 import java.util.Set;
+
+import org.springframework.core.env.Environment;
 
 public abstract class BitsquareModule extends AbstractModule {
 
-    protected final Properties properties;
+    protected final Environment env;
 
     private final Set<BitsquareModule> modules = Sets.newHashSet();
 
-    protected BitsquareModule(Properties properties) {
-        this.properties = properties;
+    protected BitsquareModule(Environment env) {
+        this.env = env;
     }
 
     protected void install(BitsquareModule module) {

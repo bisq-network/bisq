@@ -26,15 +26,15 @@ import org.bitcoinj.params.TestNet3Params;
 
 import com.google.inject.Injector;
 
-import java.util.Properties;
+import org.springframework.core.env.Environment;
 
 public class BitcoinModule extends BitsquareModule {
 
     public static final String BITCOIN_NETWORK_KEY = "bitcoin.network";
     public static final String DEFAULT_BITCOIN_NETWORK = BitcoinNetwork.TESTNET.toString();
 
-    public BitcoinModule(Properties properties) {
-        super(properties);
+    public BitcoinModule(Environment env) {
+        super(env);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class BitcoinModule extends BitsquareModule {
 
     private NetworkParameters network() {
         BitcoinNetwork network = BitcoinNetwork.valueOf(
-                properties.getProperty(BITCOIN_NETWORK_KEY, DEFAULT_BITCOIN_NETWORK).toUpperCase());
+                env.getProperty(BITCOIN_NETWORK_KEY, DEFAULT_BITCOIN_NETWORK).toUpperCase());
 
         switch (network) {
             case MAINNET:
