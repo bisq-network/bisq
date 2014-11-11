@@ -18,13 +18,46 @@ Because the fiat money portion of any trade must be transferred via traditional 
 You can read about all of this and more in the [overview](https://bitsquare.io/overview.png), 
 [whitepaper](https://bitsquare.io/whitepaper.pdf), [arbitration](https://bitsquare.io/arbitration_system.pdf) and [risk analysis](https://bitsquare.io/risk_analysis.pdf) documents. Several [screencasts](https://www.youtube.com/playlist?list=PLXvC3iNe_di9bL1A5xyAKI2PzNg8jU092) are available as well.
 
-
 Status
 ------
+Pre-alpha and under heavy development.
 
-The [team](https://github.com/orgs/bitsquare/people) is currently working on a series of pre-releases on the way to version 1.0. See the [roadmap](https://github.com/bitsquare/bitsquare/wiki/Roadmap) for details.
+Building from source
+--------------------
 
-**Alpha testers welcome!** Please see the [instructions for alpha testing](https://github.com/bitsquare/bitsquare/wiki/Alpha-Testing), where you'll find detailed information about downloading and using our native installers, [building from source](doc/build.md) and more.
+1. Install the latest JDK (8u20 or better)
+2. Clone this repository
+3. **Build and launch the Bitsquare JavaFX client** by running:
+```
+./gradlew run
+```
+
+Pass command line arguments to the app via the Gradle `-Pargs` property as follows:
+
+    ./gradlew run -Pargs="--help"
+
+Or, **build an executable jar** with the `appJar` task:
+
+    ./gradlew appJar
+
+Run the app as follows:
+
+    java -jar build/libs/bitsquare-<version>-app.jar
+
+Pass the `--help` flag to see what options are available:
+
+    java -jar build/libs/bitsquare-<version>-app.jar --help
+
+To **build a headless bootstrap node jar**, run the `bootstrapNodeJar` task:
+
+    ./gradlew bootstrapNodeJar
+
+Run the bootstrap node:
+
+    java -jar build/libs/bitsquare-<version>-bootstrapNode.jar
+
+
+See [doc/build.md](doc/build.md) for additional information.
 
 
 Staying in Touch
