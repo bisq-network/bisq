@@ -25,7 +25,6 @@ import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.preferences.ApplicationPreferences;
 import io.bitsquare.user.User;
 
 import com.google.common.base.Preconditions;
@@ -82,7 +81,6 @@ public class BitsquareApp extends Application {
         // load and apply any stored settings
 
         User user = injector.getInstance(User.class);
-        ApplicationPreferences applicationPreferences = injector.getInstance(ApplicationPreferences.class);
         AccountSettings accountSettings = injector.getInstance(AccountSettings.class);
         Persistence persistence = injector.getInstance(Persistence.class);
         persistence.init();
