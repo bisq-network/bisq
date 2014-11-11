@@ -17,7 +17,7 @@
 
 package io.bitsquare.app.gui;
 
-import io.bitsquare.app.BitsquareEnvironment;
+import io.bitsquare.BitsquareException;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.ViewLoader;
@@ -35,21 +35,21 @@ import com.google.inject.Injector;
 
 import java.io.IOException;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.image.*;
 import javafx.scene.input.*;
 import javafx.stage.Stage;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import lighthouse.files.AppDirectory;
 import org.springframework.core.env.Environment;
 
-public class BitsquareApp extends Application {
-    private static final Logger log = LoggerFactory.getLogger(BitsquareApp.class);
+import static io.bitsquare.app.BitsquareEnvironment.*;
 
+public class BitsquareApp extends Application {
     private static Environment env;
 
     private BitsquareAppModule bitsquareAppModule;
@@ -63,8 +63,6 @@ public class BitsquareApp extends Application {
     public void start(Stage primaryStage) throws IOException {
         Preconditions.checkArgument(env != null, "Environment must not be null");
 
-        String appName = env.getRequiredProperty(BitsquareEnvironment.APP_NAME_KEY);
-
         bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
         injector = Guice.createInjector(bitsquareAppModule);
 
@@ -75,13 +73,9 @@ public class BitsquareApp extends Application {
                 Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
 
 
-        // configure the Bitsquare application data directory
+        // initialize the application data directory (if necessary)
 
-        try {
-            AppDirectory.initAppDir(appName);
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
+        initAppDir(env.getRequiredProperty(APP_DATA_DIR_KEY));
 
 
         // load and apply any stored settings
@@ -125,7 +119,7 @@ public class BitsquareApp extends Application {
 
         // configure the primary stage
 
-        primaryStage.setTitle(appName);
+        primaryStage.setTitle(env.getRequiredProperty(APP_NAME_KEY));
         primaryStage.setScene(scene);
         primaryStage.setMinWidth(75);
         primaryStage.setMinHeight(50);
@@ -142,5 +136,21 @@ public class BitsquareApp extends Application {
     public void stop() {
         bitsquareAppModule.close(injector);
         System.exit(0);
+    }
+
+
+    private void initAppDir(String appDir) {
+        Path dir = Paths.get(appDir);
+        if (Files.exists(dir)) {
+            if (!Files.isWritable(dir)) {
+                throw new BitsquareException("Application data directory '%s' is not writeable", dir);
+            }
+            return;
+        }
+        try {
+            Files.createDirectory(dir);
+        } catch (IOException ex) {
+            throw new BitsquareException(ex, "Application data directory '%s' could not be created", dir);
+        }
     }
 }

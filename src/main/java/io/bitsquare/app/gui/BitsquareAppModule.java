@@ -18,7 +18,6 @@
 package io.bitsquare.app.gui;
 
 import io.bitsquare.BitsquareModule;
-import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.crypto.CryptoModule;
 import io.bitsquare.gui.GuiModule;
@@ -66,10 +65,6 @@ class BitsquareAppModule extends BitsquareModule {
         install(tradeModule());
         install(offerModule());
         install(guiModule());
-
-        String appName = env.getRequiredProperty(BitsquareEnvironment.APP_NAME_KEY);
-
-        bindConstant().annotatedWith(named("appName")).to(appName);
     }
 
     protected MessageModule messageModule() {

@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 public class Navigation {
     private static final Logger log = LoggerFactory.getLogger(Navigation.class);
 
-
     // New listeners can be added during iteration so we use CopyOnWriteArrayList to prevent invalid array
     // modification
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
