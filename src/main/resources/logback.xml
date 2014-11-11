@@ -25,8 +25,8 @@
 
     <logger name="io.bitsquare" level="TRACE"/>
 
-    <logger name="org.bitcoinj" level="INFO"/>
-    <logger name="net.tomp2p" level="TRACE"/>
+    <logger name="org.bitcoinj" level="TRACE"/>
+    <logger name="net.tomp2p" level="WARN"/>
 
 
     <logger name="net.tomp2p.message.Encoder" level="WARN"/>
@@ -45,6 +45,7 @@
 
     <logger name="org.bitcoinj.core.BitcoinSerializer" level="WARN"/>
     <logger name="org.bitcoinj.core.AbstractBlockChain" level="WARN"/>
+    <logger name="org.bitcoinj.wallet.DeterministicKeyChain" level="WARN"/>
 
     <!--
     <logger name="org.bitcoinj.core.Wallet" level="OFF"/>

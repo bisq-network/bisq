@@ -94,12 +94,12 @@
     -fx-image: url("../../../images/nav/msg_active.png");
 }
 
-#image-nav-settings {
-    -fx-image: url("../../../images/nav/settings.png");
+#image-nav-preferences {
+    -fx-image: url("../../../images/nav/preferences.png");
 }
 
-#image-nav-settings-active {
-    -fx-image: url("../../../images/nav/settings_active.png");
+#image-nav-preferences-active {
+    -fx-image: url("../../../images/nav/preferences_active.png");
 }
 
 #image-nav-account {

@@ -17,21 +17,12 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.geometry.Insets?>
+
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.settings.SettingsViewCB"
-         AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
-         AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
-         xmlns:fx="http://javafx.com/fxml">
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.settings.network.NetworkPreferencesViewCB"
+            xmlns:fx="http://javafx.com/fxml">
 
-    <Tab text="Preferences" closable="false">
-        <VBox spacing="20">
-            <padding>
-                <Insets left="20" top="20" right="20"/>
-            </padding>
-            <Label text="Preferences not implemented yet."/>
-        </VBox>
-    </Tab>
+    <Label text="net"/>
+</AnchorPane>
 
-</TabPane>

@@ -65,7 +65,7 @@ public class MainViewCB extends ViewCB<MainPM> {
     private VBox splashScreen;
     private AnchorPane contentContainer;
     private HBox leftNavPane, rightNavPane;
-    private ToggleButton buyButton, sellButton, homeButton, msgButton, portfolioButton, fundsButton, settingsButton,
+    private ToggleButton buyButton, sellButton, homeButton, msgButton, portfolioButton, fundsButton, preferencesButton,
             accountButton;
     private Pane portfolioButtonButtonPane;
     private Label numPendingTradesLabel;
@@ -207,7 +207,6 @@ public class MainViewCB extends ViewCB<MainPM> {
                 numPendingTradesLabel.setText(String.valueOf(numPendingTrades));
             }
 
-            log.trace("openInfoNotification " + title);
             SystemNotification.openInfoNotification(title, "You got a new trade message.");
         }
         else {
@@ -253,8 +252,8 @@ public class MainViewCB extends ViewCB<MainPM> {
             case PORTFOLIO:
                 portfolioButton.setSelected(true);
                 break;
-            case SETTINGS:
-                settingsButton.setSelected(true);
+            case PREFERENCES:
+                preferencesButton.setSelected(true);
                 break;
             case SELL:
                 sellButton.setSelected(true);
@@ -404,14 +403,13 @@ public class MainViewCB extends ViewCB<MainPM> {
 
         addBankAccountComboBox(rightNavPane);
 
-        settingsButton = addNavButton(rightNavPane, "Preferences", Navigation.Item.SETTINGS);
+        preferencesButton = addNavButton(rightNavPane, "Preferences", Navigation.Item.PREFERENCES);
         accountButton = addNavButton(rightNavPane, "Account", Navigation.Item.ACCOUNT);
 
 
         // for irc demo
         homeButton.setDisable(true);
         msgButton.setDisable(true);
-        settingsButton.setDisable(true);
 
         onMainNavigationAdded();
     }

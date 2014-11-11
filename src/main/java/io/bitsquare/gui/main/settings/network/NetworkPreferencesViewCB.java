@@ -15,10 +15,9 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.settings;
+package io.bitsquare.gui.main.settings.network;
 
 import io.bitsquare.gui.CachedViewCB;
-import io.bitsquare.gui.Navigation;
 
 import java.net.URL;
 
@@ -26,13 +25,15 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
-import javafx.fxml.Initializable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SettingsViewCB extends CachedViewCB {
-    private static final Logger log = LoggerFactory.getLogger(SettingsViewCB.class);
+/**
+ * This UI is not cached as it is normally only needed once.
+ */
+public class NetworkPreferencesViewCB extends CachedViewCB<NetworkPreferencesPM> {
+
+    private static final Logger log = LoggerFactory.getLogger(NetworkPreferencesViewCB.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -40,20 +41,27 @@ public class SettingsViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SettingsViewCB() {
+    private NetworkPreferencesViewCB(NetworkPreferencesPM presentationModel) {
+        super(presentationModel);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+
         super.initialize(url, rb);
     }
 
-    @SuppressWarnings("EmptyMethod")
+    @Override
+    public void activate() {
+        super.activate();
+
+    }
+
     @Override
     public void deactivate() {
         super.deactivate();
@@ -61,41 +69,9 @@ public class SettingsViewCB extends CachedViewCB {
 
     @SuppressWarnings("EmptyMethod")
     @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
     public void terminate() {
         super.terminate();
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Navigation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected Initializable loadView(Navigation.Item navigationItem) {
-        return super.loadView(navigationItem);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI handlers
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
 
 }
 
