@@ -1,3 +1,4 @@
+import org.apache.tools.ant.filters.ReplaceTokens
 import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
@@ -22,6 +23,13 @@ mainClassName = "io.bitsquare.app.gui.BitsquareAppMain"
 run {
     if (project.hasProperty('args')) {
         args project.args.split(',')
+    }
+}
+
+processResources {
+    from(sourceSets.main.resources.srcDirs) {
+        include '**/*.properties'
+        filter(ReplaceTokens, tokens: [ 'app.version': project.version ])
     }
 }
 

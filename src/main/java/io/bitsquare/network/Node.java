@@ -20,8 +20,8 @@ package io.bitsquare.network;
 import com.google.common.base.Objects;
 
 public final class Node {
-    public static final String NAME_KEY = "name";
-    public static final String PORT_KEY = "port";
+    public static final String NAME_KEY = "node.name";
+    public static final String PORT_KEY = "node.port";
 
     /**
      * Default port is one <a

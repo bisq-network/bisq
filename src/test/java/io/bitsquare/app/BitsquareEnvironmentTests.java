@@ -17,15 +17,18 @@
 
 package io.bitsquare.app;
 
+import io.bitsquare.btc.UserAgent;
+
 import org.junit.Test;
 
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 import org.springframework.mock.env.MockPropertySource;
 
 import static io.bitsquare.app.BitsquareEnvironment.*;
-import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.core.env.PropertySource.named;
 import static org.springframework.core.env.StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME;
@@ -57,5 +60,16 @@ public class BitsquareEnvironmentTests {
 
         assertThat(env.getProperty("key.x"), equalTo("x.commandline")); // commandline value wins due to precedence
         assertThat(env.getProperty("key.y"), equalTo("y.env")); // env value wins because it's the only one available
+    }
+
+    @Test
+    public void bitsquareVersionShouldBeAvailable() {
+        // we cannot actually test for the value because (a) it requires Gradle's
+        // processResources task filtering (which does not happen within IDEA) and
+        // (b) because we do not know the specific version to test for. Instead just
+        // test that the property has been made available.
+        Environment env = new BitsquareEnvironment(new MockPropertySource());
+        assertThat(env.containsProperty(APP_VERSION_KEY), is(true));
+        assertThat(env.getProperty(UserAgent.VERSION_KEY), equalTo(env.getProperty(APP_VERSION_KEY)));
     }
 }

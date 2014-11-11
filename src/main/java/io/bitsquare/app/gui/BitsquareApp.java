@@ -25,10 +25,8 @@ import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.preferences.ApplicationPreferences;
 import io.bitsquare.user.User;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 import com.google.inject.Guice;
@@ -48,6 +46,7 @@ import javafx.stage.Stage;
 
 import org.springframework.core.env.Environment;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.app.BitsquareEnvironment.*;
 
 public class BitsquareApp extends Application {
@@ -62,8 +61,7 @@ public class BitsquareApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
-        Preconditions.checkArgument(env != null, "Environment must not be null");
-
+        checkNotNull(env, "Environment must not be null");
         bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
         injector = Guice.createInjector(bitsquareAppModule);
 
@@ -82,7 +80,6 @@ public class BitsquareApp extends Application {
         // load and apply any stored settings
 
         User user = injector.getInstance(User.class);
-        ApplicationPreferences applicationPreferences = injector.getInstance(ApplicationPreferences.class);
         AccountSettings accountSettings = injector.getInstance(AccountSettings.class);
         Persistence persistence = injector.getInstance(Persistence.class);
         persistence.init();
