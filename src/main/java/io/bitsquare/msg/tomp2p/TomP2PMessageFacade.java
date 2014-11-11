@@ -116,13 +116,15 @@ class TomP2PMessageFacade implements MessageFacade {
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture baseFuture) throws Exception {
-                if (isSuccess(baseFuture) && futureGet.data() != null) {
-                    final Peer peer = (Peer) futureGet.data().object();
-                    Platform.runLater(() -> listener.onResult(peer));
-                }
+                //TODO just deactivated temporary because in relay mode with 2 local peers isSuccess returns false
+                //if (isSuccess(baseFuture) && futureGet.data() != null) {
+                final Peer peer = (Peer) futureGet.data().object();
+                Platform.runLater(() -> listener.onResult(peer));
+               /* }
                 else {
+                    log.error("getPeerAddress failed. failedReason = " + baseFuture.failedReason());
                     Platform.runLater(listener::onFailed);
-                }
+                }*/
             }
         });
     }
@@ -144,6 +146,7 @@ class TomP2PMessageFacade implements MessageFacade {
                     Platform.runLater(listener::onResult);
                 }
                 else {
+                    log.error("sendMessage failed with reason " + futureDirect.failedReason());
                     Platform.runLater(listener::onFailed);
                 }
             }

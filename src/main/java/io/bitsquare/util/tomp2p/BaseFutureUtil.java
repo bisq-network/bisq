@@ -23,7 +23,6 @@ public class BaseFutureUtil {
 
     // Isolate the success handling as there is bug in port forwarding mode
     public static boolean isSuccess(BaseFuture baseFuture) {
-        // return baseFuture.isSuccess();
-        return true;
+        return baseFuture.isSuccess();
     }
 }
