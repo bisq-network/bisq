@@ -39,8 +39,8 @@ public class BitsquareAppMain extends BitsquareExecutable {
 
     @Override
     protected void customizeOptionParsing(OptionParser parser) {
-        parser.accepts(APP_NAME_KEY, "Application name").withRequiredArg().defaultsTo(DEFAULT_APP_NAME);
         parser.accepts(USER_DATA_DIR_KEY, "User data directory").withRequiredArg().defaultsTo(DEFAULT_USER_DATA_DIR);
+        parser.accepts(APP_NAME_KEY, "Application name").withRequiredArg().defaultsTo(DEFAULT_APP_NAME);
         parser.accepts(APP_DATA_DIR_KEY, "Application data directory").withRequiredArg().defaultsTo(DEFAULT_APP_DATA_DIR);
         parser.accepts(NAME_KEY, "Network name").withRequiredArg();
         parser.accepts(PORT_KEY, "Port to listen on").withRequiredArg().defaultsTo(String.valueOf(Node.DEFAULT_PORT));

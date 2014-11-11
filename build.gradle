@@ -49,6 +49,7 @@ dependencies {
     compile 'org.jetbrains:annotations:13.0'
     compile 'eu.hansolo.enzo:Enzo:0.1.5'
     testCompile 'junit:junit:4.11'
+    testCompile 'org.springframework:spring-test:4.1.1.RELEASE'
 }
 
 task packageNative(type: Exec, dependsOn: shadowJar) {

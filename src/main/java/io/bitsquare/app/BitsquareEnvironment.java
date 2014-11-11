@@ -23,10 +23,6 @@ import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.persistence.Persistence;
 
-import com.google.common.base.Preconditions;
-
-import java.io.IOException;
-
 import java.nio.file.Paths;
 
 import java.util.Properties;
@@ -42,51 +38,59 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePropertySource;
 
-public class BitsquareEnvironment extends StandardEnvironment {
+import static com.google.common.base.Preconditions.checkNotNull;
 
-    public static final String APP_NAME_KEY = "app.name";
-    public static final String DEFAULT_APP_NAME = "Bitsquare";
+public class BitsquareEnvironment extends StandardEnvironment {
 
     public static final String USER_DATA_DIR_KEY = "user.data.dir";
     public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
 
+    public static final String APP_NAME_KEY = "app.name";
+    public static final String DEFAULT_APP_NAME = "Bitsquare";
+
     public static final String APP_DATA_DIR_KEY = "app.data.dir";
     public static final String DEFAULT_APP_DATA_DIR = appDataDir(DEFAULT_USER_DATA_DIR, DEFAULT_APP_NAME);
 
-    private static final String BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME = "bitsquareDefaultProperties";
-    private static final String BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME = "bitsquareClasspathProperties";
-    private static final String BITSQUARE_FILESYSTEM_PROPERTY_SOURCE_NAME = "bitsquareFilesystemProperties";
-    private static final String BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME = "bitsquareCommandLineProperties";
+    static final String BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME = "bitsquareDefaultProperties";
+    static final String BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME = "bitsquareClasspathProperties";
+    static final String BITSQUARE_FILESYSTEM_PROPERTY_SOURCE_NAME = "bitsquareFilesystemProperties";
+    static final String BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME = "bitsquareCommandLineProperties";
 
     private final ResourceLoader resourceLoader = new DefaultResourceLoader();
 
+    private final String appName;
+    private final String appDataDir;
+
     public BitsquareEnvironment(OptionSet options) {
-        Preconditions.checkArgument(options != null, "Options must not be null");
+        this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
+    }
 
-        PropertySource commandLineProperties =
-                new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, options);
-
-        String appName = commandLineProperties.containsProperty(APP_NAME_KEY) ?
-                (String) commandLineProperties.getProperty(APP_NAME_KEY) :
-                DEFAULT_APP_NAME;
-
+    BitsquareEnvironment(PropertySource commandLineProperties) {
         String userDataDir = commandLineProperties.containsProperty(USER_DATA_DIR_KEY) ?
                 (String) commandLineProperties.getProperty(USER_DATA_DIR_KEY) :
                 DEFAULT_USER_DATA_DIR;
 
-        String appDataDir = commandLineProperties.containsProperty(APP_DATA_DIR_KEY) ?
+        this.appName = commandLineProperties.containsProperty(APP_NAME_KEY) ?
+                (String) commandLineProperties.getProperty(APP_NAME_KEY) :
+                DEFAULT_APP_NAME;
+
+        this.appDataDir = commandLineProperties.containsProperty(APP_DATA_DIR_KEY) ?
                 (String) commandLineProperties.getProperty(APP_DATA_DIR_KEY) :
                 appDataDir(userDataDir, appName);
 
         MutablePropertySources propertySources = this.getPropertySources();
-        propertySources.addBefore(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME, defaultProperties(appDataDir, appName));
-        propertySources.addBefore(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME, classpathProperties());
-        propertySources.addBefore(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME, filesystemProperties(appDataDir));
-        propertySources.addAfter(SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, commandLineProperties);
+        propertySources.addFirst(commandLineProperties);
+        try {
+            propertySources.addLast(filesystemProperties());
+            propertySources.addLast(classpathProperties());
+            propertySources.addLast(defaultProperties());
+        } catch (Exception ex) {
+            throw new BitsquareException(ex);
+        }
     }
 
 
-    private PropertySource<?> defaultProperties(String appDataDir, String appName) {
+    PropertySource<?> defaultProperties() throws Exception {
         return new PropertiesPropertySource(BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {{
             setProperty(APP_DATA_DIR_KEY, appDataDir);
             setProperty(APP_NAME_KEY, appName);
@@ -104,28 +108,19 @@ public class BitsquareEnvironment extends StandardEnvironment {
         }});
     }
 
-    private PropertySource<?> classpathProperties() {
-        try {
-            Resource resource = resourceLoader.getResource("classpath:bitsquare.properties");
-            return new ResourcePropertySource(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME, resource);
-        } catch (IOException ex) {
-            throw new BitsquareException(ex);
-        }
+    PropertySource<?> classpathProperties() throws Exception {
+        Resource resource = resourceLoader.getResource("classpath:bitsquare.properties");
+        return new ResourcePropertySource(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME, resource);
     }
 
-    private PropertySource<?> filesystemProperties(String appDir) {
-        String location = String.format("file:%s/bitsquare.conf", appDir);
+    PropertySource<?> filesystemProperties() throws Exception {
+        String location = String.format("file:%s/bitsquare.conf", appDataDir);
         Resource resource = resourceLoader.getResource(location);
 
-        if (!resource.exists()) {
+        if (!resource.exists())
             return new PropertySource.StubPropertySource(BITSQUARE_FILESYSTEM_PROPERTY_SOURCE_NAME);
-        }
 
-        try {
-            return new ResourcePropertySource(BITSQUARE_FILESYSTEM_PROPERTY_SOURCE_NAME, resource);
-        } catch (IOException ex) {
-            throw new BitsquareException(ex);
-        }
+        return new ResourcePropertySource(BITSQUARE_FILESYSTEM_PROPERTY_SOURCE_NAME, resource);
     }
 
 
