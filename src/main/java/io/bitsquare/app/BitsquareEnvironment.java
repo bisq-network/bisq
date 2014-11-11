@@ -42,6 +42,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BitsquareEnvironment extends StandardEnvironment {
 
+    public static final String APP_VERSION_KEY = "app.version";
+
     public static final String USER_DATA_DIR_KEY = "user.data.dir";
     public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
 
@@ -96,7 +98,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
             setProperty(APP_NAME_KEY, appName);
 
             setProperty(UserAgent.NAME_KEY, appName);
-            setProperty(UserAgent.VERSION_KEY, "0.1");
+            setProperty(UserAgent.VERSION_KEY, BitsquareEnvironment.this.getRequiredProperty(APP_VERSION_KEY));
 
             setProperty(WalletFacade.DIR_KEY, appDataDir);
             setProperty(WalletFacade.PREFIX_KEY, appName);
