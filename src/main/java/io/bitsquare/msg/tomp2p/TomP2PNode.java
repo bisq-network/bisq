@@ -324,7 +324,7 @@ public class TomP2PNode {
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    log.error("Error at bootstrap " + e.toString());
+                    log.error("Error at storePeerAddress " + e.toString());
                 }
             }
 
@@ -341,11 +341,13 @@ public class TomP2PNode {
             log.debug("handleMessage peerAddress " + sender);
             log.debug("handleMessage message " + request);
 
-            if (!sender.equals(peerDHT.peer().peerAddress()))
+            if (!sender.equals(peerDHT.peer().peerAddress())) {
                 if (messageBroker != null)
                     messageBroker.handleMessage(request, new TomP2PPeer(sender));
-                else
-                    log.error("Received msg from myself. That should never happen.");
+            }
+            else {
+                throw new RuntimeException("Received msg from myself. That must never happen.");
+            }
             return null;
         });
     }
