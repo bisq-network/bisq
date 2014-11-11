@@ -42,7 +42,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
     public static final String APP_NAME_KEY = "appName";
     public static final String DEFAULT_APP_NAME = "Bitsquare";
 
-    private static final String BITSQUARE_APP_PROPERTY_SOURCE_NAME = "bitsquareAppProperties";
+    private static final String BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME = "bitsquareDefaultProperties";
     private static final String BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME = "bitsquareClasspathProperties";
     private static final String BITSQUARE_FILESYSTEM_PROPERTY_SOURCE_NAME = "bitsquareFilesystemProperties";
     private static final String BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME = "bitsquareCommandLineProperties";
@@ -60,14 +60,14 @@ public class BitsquareEnvironment extends StandardEnvironment {
                 DEFAULT_APP_NAME;
 
         MutablePropertySources propertySources = this.getPropertySources();
-        propertySources.addBefore(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME, appProperties(appName));
+        propertySources.addBefore(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME, defaultProperties(appName));
         propertySources.addBefore(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME, classpathProperties());
         propertySources.addBefore(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME, filesystemProperties(appName));
         propertySources.addAfter(SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, commandLineProperties);
     }
 
-    private PropertySource<?> appProperties(String appName) {
-        return new PropertiesPropertySource(BITSQUARE_APP_PROPERTY_SOURCE_NAME, new Properties() {{
+    private PropertySource<?> defaultProperties(String appName) {
+        return new PropertiesPropertySource(BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {{
             setProperty(APP_NAME_KEY, appName);
         }});
     }
