@@ -114,7 +114,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
     }
 
     PropertySource<?> filesystemProperties() throws Exception {
-        String location = String.format("file:%s/bitsquare.conf", appDataDir);
+        String location = String.format("file:%s/bitsquare.properties", appDataDir);
         Resource resource = resourceLoader.getResource(location);
 
         if (!resource.exists())
