@@ -18,6 +18,7 @@
 package io.bitsquare.app;
 
 import io.bitsquare.BitsquareException;
+import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletFacade;
 import io.bitsquare.persistence.Persistence;
 
@@ -71,10 +72,12 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private PropertySource<?> defaultProperties(String appName) {
         return new PropertiesPropertySource(BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {{
             setProperty(APP_NAME_KEY, appName);
+
+            setProperty(UserAgent.NAME_KEY, appName);
+            setProperty(UserAgent.VERSION_KEY, "0.1");
+
             setProperty(WalletFacade.DIR_KEY, AppDirectory.dir(appName).toString());
             setProperty(WalletFacade.PREFIX_KEY, appName);
-            setProperty(WalletFacade.USERAGENT_NAME_KEY, appName);
-            setProperty(WalletFacade.USERAGENT_VERSION_KEY, "0.1");
 
             setProperty(Persistence.DIR_KEY, AppDirectory.dir(appName).toString());
             setProperty(Persistence.PREFIX_KEY, appName + "_pref");

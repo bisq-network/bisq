@@ -31,7 +31,6 @@ import java.io.File;
 import org.springframework.core.env.Environment;
 
 import static com.google.inject.name.Names.named;
-import static io.bitsquare.btc.WalletFacade.*;
 
 public class BitcoinModule extends BitsquareModule {
 
@@ -44,14 +43,18 @@ public class BitcoinModule extends BitsquareModule {
 
     @Override
     protected void configure() {
+        bind(NetworkParameters.class).toInstance(network());
+        bind(FeePolicy.class).asEagerSingleton();
+
+        bindConstant().annotatedWith(named(UserAgent.NAME_KEY)).to(env.getRequiredProperty(UserAgent.NAME_KEY));
+        bindConstant().annotatedWith(named(UserAgent.VERSION_KEY)).to(env.getRequiredProperty(UserAgent.VERSION_KEY));
+        bind(UserAgent.class).asEagerSingleton();
+
         File walletDir = new File(env.getRequiredProperty(WalletFacade.DIR_KEY));
         bind(File.class).annotatedWith(named(WalletFacade.DIR_KEY)).toInstance(walletDir);
         bindConstant().annotatedWith(named(WalletFacade.PREFIX_KEY)).to(env.getRequiredProperty(WalletFacade.PREFIX_KEY));
-        bindConstant().annotatedWith(named(USERAGENT_NAME_KEY)).to(env.getRequiredProperty(USERAGENT_NAME_KEY));
-        bindConstant().annotatedWith(named(USERAGENT_VERSION_KEY)).to(env.getRequiredProperty(USERAGENT_VERSION_KEY));
-        bind(NetworkParameters.class).toInstance(network());
-        bind(FeePolicy.class).asEagerSingleton();
         bind(WalletFacade.class).asEagerSingleton();
+
         bind(BlockChainFacade.class).asEagerSingleton();
     }
 

@@ -97,8 +97,6 @@ public class WalletFacade {
 
     public static final String DIR_KEY = "wallet.dir";
     public static final String PREFIX_KEY = "wallet.prefix";
-    public static final String USERAGENT_NAME_KEY = "bitcoin.useragent.name";
-    public static final String USERAGENT_VERSION_KEY = "bitcoin.useragent.version";
 
     private final List<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArrayList<>();
     private final List<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArrayList<>();
@@ -111,8 +109,7 @@ public class WalletFacade {
     private final Persistence persistence;
     private final File walletDir;
     private final String walletPrefix;
-    private final String userAgentName;
-    private final String userAgentVersion;
+    private final UserAgent userAgent;
 
     private WalletAppKit walletAppKit;
     private Wallet wallet;
@@ -126,20 +123,16 @@ public class WalletFacade {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletFacade(NetworkParameters params, FeePolicy feePolicy,
-                        CryptoFacade cryptoFacade, Persistence persistence,
-                        @Named(DIR_KEY) File walletDir,
-                        @Named(PREFIX_KEY) String walletPrefix,
-                        @Named(USERAGENT_NAME_KEY) String userAgentName,
-                        @Named(USERAGENT_VERSION_KEY) String userAgentVersion) {
+    public WalletFacade(NetworkParameters params, FeePolicy feePolicy, CryptoFacade cryptoFacade,
+                        Persistence persistence, UserAgent userAgent,
+                        @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix) {
         this.params = params;
         this.feePolicy = feePolicy;
         this.cryptoFacade = cryptoFacade;
         this.persistence = persistence;
         this.walletDir = walletDir;
         this.walletPrefix = walletPrefix;
-        this.userAgentName = userAgentName;
-        this.userAgentVersion = userAgentVersion;
+        this.userAgent = userAgent;
     }
 
 
@@ -210,7 +203,7 @@ public class WalletFacade {
 
         walletAppKit.setDownloadListener(downloadListener)
                 .setBlockingStartup(false)
-                .setUserAgent(userAgentName, userAgentVersion);
+                .setUserAgent(userAgent.getName(), userAgent.getVersion());
 
         /*
         // TODO restore from DeterministicSeed
