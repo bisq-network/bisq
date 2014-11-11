@@ -56,7 +56,7 @@ class TakeOfferModel extends UIModel {
 
     private final TradeManager tradeManager;
     private final WalletFacade walletFacade;
-    private final ApplicationPreferences settings;
+    private final ApplicationPreferences applicationPreferences;
     private final Persistence persistence;
 
     private Offer offer;
@@ -83,11 +83,11 @@ class TakeOfferModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    TakeOfferModel(TradeManager tradeManager, WalletFacade walletFacade, ApplicationPreferences settings, 
+    TakeOfferModel(TradeManager tradeManager, WalletFacade walletFacade, ApplicationPreferences applicationPreferences,
                    Persistence persistence) {
         this.tradeManager = tradeManager;
         this.walletFacade = walletFacade;
-        this.settings = settings;
+        this.applicationPreferences = applicationPreferences;
         this.persistence = persistence;
     }
 
@@ -108,7 +108,7 @@ class TakeOfferModel extends UIModel {
     public void activate() {
         super.activate();
 
-        btcCode.bind(settings.btcDenominationProperty());
+        btcCode.bind(applicationPreferences.btcDenominationProperty());
     }
 
     @SuppressWarnings("EmptyMethod")

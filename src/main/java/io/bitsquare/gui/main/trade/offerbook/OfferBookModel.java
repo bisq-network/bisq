@@ -56,7 +56,7 @@ class OfferBookModel extends UIModel {
 
     private final User user;
     private final OfferBook offerBook;
-    private final ApplicationPreferences settings;
+    private final ApplicationPreferences applicationPreferences;
     private final BSFormatter formatter;
     private final TradeManager tradeManager;
 
@@ -85,12 +85,12 @@ class OfferBookModel extends UIModel {
     OfferBookModel(User user,
                    TradeManager tradeManager,
                    OfferBook offerBook,
-                   ApplicationPreferences settings,
+                   ApplicationPreferences applicationPreferences,
                    BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.user = user;
         this.offerBook = offerBook;
-        this.settings = settings;
+        this.applicationPreferences = applicationPreferences;
         this.formatter = formatter;
 
         filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
@@ -119,7 +119,7 @@ class OfferBookModel extends UIModel {
 
         offerBook.addClient();
         user.currentBankAccountProperty().addListener(bankAccountChangeListener);
-        btcCode.bind(settings.btcDenominationProperty());
+        btcCode.bind(applicationPreferences.btcDenominationProperty());
 
         setBankAccount(user.getCurrentBankAccount());
         applyFilter();
@@ -199,7 +199,7 @@ class OfferBookModel extends UIModel {
         // we might get rid of languages (handles viy arbitrators)
         /*
         // disjoint returns true if the two specified collections have no elements in common.
-        boolean languageResult = !Collections.disjoint(settings.getAcceptedLanguageLocales(),
+        boolean languageResult = !Collections.disjoint(applicationPreferences.getAcceptedLanguageLocales(),
                 offer.getAcceptedLanguageLocales());
         if (!languageResult)
             restrictionsInfo.set("This offer requires that the payments account resides in one of those languages:\n" +
@@ -207,7 +207,7 @@ class OfferBookModel extends UIModel {
                     "\n\nThe country of your payments account (" + user.getCurrentBankAccount().getCountry().getName() +
                     ") is not included in that list.");
 
-        boolean arbitratorResult = !Collections.disjoint(settings.getAcceptedArbitrators(),
+        boolean arbitratorResult = !Collections.disjoint(applicationPreferences.getAcceptedArbitrators(),
                 offer.getArbitrators());*/
 
         return countryResult;

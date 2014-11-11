@@ -42,7 +42,7 @@ public class PreferencesViewCB extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(PreferencesViewCB.class);
 
     private final Navigation navigation;
-    private ApplicationPreferences settings;
+    private ApplicationPreferences applicationPreferences;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -55,11 +55,11 @@ public class PreferencesViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    PreferencesViewCB(Navigation navigation, ApplicationPreferences settings) {
+    PreferencesViewCB(Navigation navigation, ApplicationPreferences applicationPreferences) {
         super();
 
         this.navigation = navigation;
-        this.settings = settings;
+        this.applicationPreferences = applicationPreferences;
     }
 
 

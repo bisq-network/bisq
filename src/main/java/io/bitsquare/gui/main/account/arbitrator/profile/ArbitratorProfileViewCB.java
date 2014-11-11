@@ -35,7 +35,7 @@ import javafx.scene.control.*;
 // TODO Arbitration is very basic yet
 public class ArbitratorProfileViewCB extends CachedViewCB {
 
-    private final ApplicationPreferences settings;
+    private final ApplicationPreferences applicationPreferences;
 
     private final Persistence persistence;
     private final BSFormatter formatter;
@@ -53,12 +53,14 @@ public class ArbitratorProfileViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorProfileViewCB(ApplicationPreferences settings, Persistence persistence, BSFormatter formatter) {
-        this.settings = settings;
+    public ArbitratorProfileViewCB(ApplicationPreferences applicationPreferences, Persistence persistence, 
+                                   BSFormatter formatter) {
+        this.applicationPreferences = applicationPreferences;
         this.persistence = persistence;
 
-        //  Settings persistedSettings = (Settings) storage.read(settings.getClass().getName());
-        // settings.applyPersistedSettings(persistedSettings);
+        //  ApplicationPreferences persistedApplicationPreferences = (ApplicationPreferences) storage
+        // .read(settings.getClass().getName());
+        // settings.applyPersistedSettings(persistedApplicationPreferences);
         this.formatter = formatter;
     }
 

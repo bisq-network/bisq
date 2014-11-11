@@ -327,7 +327,6 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
 
     @FXML
     public void onPaymentDone() {
-        //To change body of created methods use File | Settings | File Templates.
     }
 
 

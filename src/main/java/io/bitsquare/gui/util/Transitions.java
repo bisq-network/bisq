@@ -40,16 +40,16 @@ public class Transitions {
 
     public final static int DEFAULT_DURATION = 400;
 
-    private ApplicationPreferences settings;
+    private ApplicationPreferences applicationPreferences;
     private Timeline removeBlurTimeLine;
 
     @Inject
-    public Transitions(ApplicationPreferences settings) {
-        this.settings = settings;
+    public Transitions(ApplicationPreferences applicationPreferences) {
+        this.applicationPreferences = applicationPreferences;
     }
 
     private int evaluateDuration(int duration) {
-        return settings.getUseAnimations() ? duration : 1;
+        return applicationPreferences.getUseAnimations() ? duration : 1;
     }
 
     // Fade
@@ -58,7 +58,7 @@ public class Transitions {
     }
 
     public void fadeIn(Node node, int duration) {
-        if (settings.getUseEffects()) {
+        if (applicationPreferences.getUseEffects()) {
             FadeTransition fade = new FadeTransition(Duration.millis(evaluateDuration(duration)), node);
             fade.setFromValue(node.getOpacity());
             fade.setToValue(1.0);
@@ -71,7 +71,7 @@ public class Transitions {
     }
 
     public FadeTransition fadeOut(Node node, int duration) {
-        if (!settings.getUseEffects())
+        if (!applicationPreferences.getUseEffects())
             duration = 1;
 
         FadeTransition fade = new FadeTransition(Duration.millis(evaluateDuration(duration)), node);
@@ -86,7 +86,7 @@ public class Transitions {
     }
 
     public void fadeOutAndRemove(Node node, int duration) {
-        if (!settings.getUseEffects())
+        if (!applicationPreferences.getUseEffects())
             duration = 1;
 
         FadeTransition fade = fadeOut(node, evaluateDuration(duration));
@@ -103,7 +103,7 @@ public class Transitions {
     }
 
     public void blur(Node node, int duration, boolean useDarken, boolean removeNode) {
-        if (settings.getUseEffects()) {
+        if (applicationPreferences.getUseEffects()) {
             if (removeBlurTimeLine != null)
                 removeBlurTimeLine.stop();
 
@@ -136,7 +136,7 @@ public class Transitions {
     }
 
     public void removeBlur(Node node, int duration, boolean useDarken) {
-        if (settings.getUseEffects()) {
+        if (applicationPreferences.getUseEffects()) {
             if (node != null) {
                 GaussianBlur blur = (GaussianBlur) node.getEffect();
                 if (blur != null) {
