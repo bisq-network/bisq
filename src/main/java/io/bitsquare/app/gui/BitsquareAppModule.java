@@ -32,11 +32,14 @@ import io.bitsquare.trade.TradeModule;
 import io.bitsquare.user.User;
 
 import com.google.inject.Injector;
-import com.google.inject.name.Names;
+
+import java.io.File;
 
 import javafx.stage.Stage;
 
 import org.springframework.core.env.Environment;
+
+import static com.google.inject.name.Names.named;
 
 class BitsquareAppModule extends BitsquareModule {
 
@@ -50,8 +53,12 @@ class BitsquareAppModule extends BitsquareModule {
     @Override
     protected void configure() {
         bind(User.class).asEagerSingleton();
-        bind(Persistence.class).asEagerSingleton();
         bind(Settings.class).asEagerSingleton();
+
+        File persistenceDir = new File(env.getRequiredProperty(Persistence.DIR_KEY));
+        bind(File.class).annotatedWith(named(Persistence.DIR_KEY)).toInstance(persistenceDir);
+        bindConstant().annotatedWith(named(Persistence.PREFIX_KEY)).to(env.getRequiredProperty(Persistence.PREFIX_KEY));
+        bind(Persistence.class).asEagerSingleton();
 
         install(messageModule());
         install(bitcoinModule());
@@ -62,7 +69,7 @@ class BitsquareAppModule extends BitsquareModule {
 
         String appName = env.getRequiredProperty(BitsquareEnvironment.APP_NAME_KEY);
 
-        bindConstant().annotatedWith(Names.named("appName")).to(appName);
+        bindConstant().annotatedWith(named("appName")).to(appName);
     }
 
     protected MessageModule messageModule() {

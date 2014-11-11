@@ -17,8 +17,7 @@
 
 package io.bitsquare.persistence;
 
-import io.bitsquare.util.FileUtil;
-
+import org.bitcoinj.core.Utils;
 import org.bitcoinj.utils.Threading;
 
 import java.io.File;
@@ -52,22 +51,27 @@ public class Persistence {
     private static final Logger log = LoggerFactory.getLogger(Persistence.class);
     private static final ReentrantLock lock = Threading.lock("Storage");
 
+    public static final String DIR_KEY = "persistence.dir";
+    public static final String PREFIX_KEY = "persistence.prefix";
+
     @GuardedBy("lock")
     private Map<String, Serializable> rootMap = new HashMap<>();
 
+    private final File dir;
     private final String prefix;
     private final File storageFile;
-    private String appName;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Persistence(@Named("appName") String appName) {
-        this.appName = appName;
-        this.prefix = appName + "_pref";
-        this.storageFile = FileUtil.getFile(appName, prefix, "ser");
+    public Persistence(
+            @Named(DIR_KEY) File dir,
+            @Named(PREFIX_KEY) String prefix) {
+        this.dir = dir;
+        this.prefix = prefix;
+        this.storageFile = new File(dir, prefix + ".ser");
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -220,7 +224,7 @@ public class Persistence {
         FileOutputStream fileOutputStream = null;
         ObjectOutputStream objectOutputStream = null;
         try {
-            tempFile = FileUtil.getTempFile(appName, prefix);
+            tempFile = File.createTempFile("temp_" + prefix, null, dir);
 
             // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile)
             // and we need to close it
@@ -240,7 +244,7 @@ public class Persistence {
             fileOutputStream.close();
             objectOutputStream.close();
 
-            FileUtil.writeTempFileToFile(tempFile, storageFile);
+            writeTempFileToFile(tempFile, storageFile);
         } catch (IOException e) {
             e.printStackTrace();
             log.error("save object to file failed." + e);
@@ -267,6 +271,22 @@ public class Persistence {
             return objectInputStream.readObject();
         } finally {
             lock.unlock();
+        }
+    }
+
+    public void writeTempFileToFile(File tempFile, File file) throws IOException {
+        if (Utils.isWindows()) {
+            // Work around an issue on Windows whereby you can't rename over existing files.
+            final File canonical = file.getCanonicalFile();
+            if (canonical.exists() && !canonical.delete()) {
+                throw new IOException("Failed to delete canonical file for replacement with save");
+            }
+            if (!tempFile.renameTo(canonical)) {
+                throw new IOException("Failed to rename " + tempFile + " to " + canonical);
+            }
+        }
+        else if (!tempFile.renameTo(file)) {
+            throw new IOException("Failed to rename " + tempFile + " to " + file);
         }
     }
 }
