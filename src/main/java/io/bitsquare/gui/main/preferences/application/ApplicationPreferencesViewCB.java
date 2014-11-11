@@ -15,26 +15,33 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.settings.network;
+package io.bitsquare.gui.main.preferences.application;
 
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.CachedViewCB;
 
-import com.google.inject.Inject;
+import java.net.URL;
+
+import java.util.ResourceBundle;
+
+import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NetworkPreferencesPM extends PresentationModel<NetworkPreferencesModel> {
-    private static final Logger log = LoggerFactory.getLogger(NetworkPreferencesPM.class);
+/**
+ * This UI is not cached as it is normally only needed once.
+ */
+public class ApplicationPreferencesViewCB extends CachedViewCB<ApplicationPreferencesPM> {
 
+    private static final Logger log = LoggerFactory.getLogger(ApplicationPreferencesViewCB.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    NetworkPreferencesPM(NetworkPreferencesModel model) {
-        super(model);
+    private ApplicationPreferencesViewCB(ApplicationPreferencesPM presentationModel) {
+        super(presentationModel);
     }
 
 
@@ -43,17 +50,17 @@ public class NetworkPreferencesPM extends PresentationModel<NetworkPreferencesMo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize() {
+    public void initialize(URL url, ResourceBundle rb) {
 
-        super.initialize();
+        super.initialize(url, rb);
     }
 
     @Override
     public void activate() {
         super.activate();
+
     }
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
@@ -64,21 +71,4 @@ public class NetworkPreferencesPM extends PresentationModel<NetworkPreferencesMo
     public void terminate() {
         super.terminate();
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
 }

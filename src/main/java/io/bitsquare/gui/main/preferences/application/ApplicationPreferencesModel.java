@@ -15,17 +15,17 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.settings.application;
+package io.bitsquare.gui.main.preferences.application;
 
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.UIModel;
 
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ApplicationPreferencesPM extends PresentationModel<ApplicationPreferencesModel> {
-    private static final Logger log = LoggerFactory.getLogger(ApplicationPreferencesPM.class);
+class ApplicationPreferencesModel extends UIModel {
+    private static final Logger log = LoggerFactory.getLogger(ApplicationPreferencesModel.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -33,8 +33,7 @@ public class ApplicationPreferencesPM extends PresentationModel<ApplicationPrefe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    ApplicationPreferencesPM(ApplicationPreferencesModel model) {
-        super(model);
+    ApplicationPreferencesModel() {
     }
 
 
@@ -51,12 +50,13 @@ public class ApplicationPreferencesPM extends PresentationModel<ApplicationPrefe
     @Override
     public void activate() {
         super.activate();
+
     }
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
+
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -80,5 +80,5 @@ public class ApplicationPreferencesPM extends PresentationModel<ApplicationPrefe
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
 }
+

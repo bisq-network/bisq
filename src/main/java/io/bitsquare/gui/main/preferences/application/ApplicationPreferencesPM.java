@@ -15,33 +15,26 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.settings.application;
+package io.bitsquare.gui.main.preferences.application;
 
-import io.bitsquare.gui.CachedViewCB;
+import io.bitsquare.gui.PresentationModel;
 
-import java.net.URL;
-
-import java.util.ResourceBundle;
-
-import javax.inject.Inject;
+import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * This UI is not cached as it is normally only needed once.
- */
-public class ApplicationPreferencesViewCB extends CachedViewCB<ApplicationPreferencesPM> {
+public class ApplicationPreferencesPM extends PresentationModel<ApplicationPreferencesModel> {
+    private static final Logger log = LoggerFactory.getLogger(ApplicationPreferencesPM.class);
 
-    private static final Logger log = LoggerFactory.getLogger(ApplicationPreferencesViewCB.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ApplicationPreferencesViewCB(ApplicationPreferencesPM presentationModel) {
-        super(presentationModel);
+    ApplicationPreferencesPM(ApplicationPreferencesModel model) {
+        super(model);
     }
 
 
@@ -50,17 +43,17 @@ public class ApplicationPreferencesViewCB extends CachedViewCB<ApplicationPrefer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public void initialize() {
 
-        super.initialize(url, rb);
+        super.initialize();
     }
 
     @Override
     public void activate() {
         super.activate();
-
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
@@ -71,4 +64,21 @@ public class ApplicationPreferencesViewCB extends CachedViewCB<ApplicationPrefer
     public void terminate() {
         super.terminate();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
 }

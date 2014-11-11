@@ -20,9 +20,9 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.settings.network.NetworkPreferencesViewCB"
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.preferences.application.ApplicationPreferencesViewCB"
             xmlns:fx="http://javafx.com/fxml">
 
-    <Label text="net"/>
+    <Label text="app"/>
 </AnchorPane>
 

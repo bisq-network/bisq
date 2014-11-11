@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.settings.network;
+package io.bitsquare.gui.main.preferences.network;
 
 import io.bitsquare.gui.CachedViewCB;
 

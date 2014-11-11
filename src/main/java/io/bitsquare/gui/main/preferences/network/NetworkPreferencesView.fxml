@@ -17,14 +17,12 @@
   ~ along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
   -->
 
+
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.settings.PreferencesViewCB"
-         AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
-         AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
-         xmlns:fx="http://javafx.com/fxml">
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.preferences.network.NetworkPreferencesViewCB"
+            xmlns:fx="http://javafx.com/fxml">
 
-    <Tab fx:id="applicationTab" text="Application preferences" closable="false"/>
-    <Tab fx:id="networkTab" text="Network preferences" closable="false"/>
+    <Label text="net"/>
+</AnchorPane>
 
-</TabPane>

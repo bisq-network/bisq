@@ -15,17 +15,17 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.settings.application;
+package io.bitsquare.gui.main.preferences.network;
 
-import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.PresentationModel;
 
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ApplicationPreferencesModel extends UIModel {
-    private static final Logger log = LoggerFactory.getLogger(ApplicationPreferencesModel.class);
+public class NetworkPreferencesPM extends PresentationModel<NetworkPreferencesModel> {
+    private static final Logger log = LoggerFactory.getLogger(NetworkPreferencesPM.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,8 @@ class ApplicationPreferencesModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    ApplicationPreferencesModel() {
+    NetworkPreferencesPM(NetworkPreferencesModel model) {
+        super(model);
     }
 
 
@@ -50,13 +51,12 @@ class ApplicationPreferencesModel extends UIModel {
     @Override
     public void activate() {
         super.activate();
-
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
-
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -80,5 +80,5 @@ class ApplicationPreferencesModel extends UIModel {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-}
 
+}

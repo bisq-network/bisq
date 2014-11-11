@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.settings;
+package io.bitsquare.gui.main.preferences;
 
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;

@@ -165,7 +165,7 @@ public class Navigation {
         PORTFOLIO("/io/bitsquare/gui/main/portfolio/PortfolioView.fxml"),
         FUNDS("/io/bitsquare/gui/main/funds/FundsView.fxml"),
         MSG("/io/bitsquare/gui/main/msg/MsgView.fxml"),
-        PREFERENCES("/io/bitsquare/gui/main/settings/PreferencesView.fxml"),
+        PREFERENCES("/io/bitsquare/gui/main/preferences/PreferencesView.fxml"),
         ACCOUNT("/io/bitsquare/gui/main/account/AccountView.fxml"),
 
 
@@ -188,8 +188,8 @@ public class Navigation {
         TRANSACTIONS("/io/bitsquare/gui/main/funds/transactions/TransactionsView.fxml"),
 
         // preferences
-        APPLICATION_PREFERENCES("/io/bitsquare/gui/main/settings/application/ApplicationPreferencesView.fxml"),
-        NETWORK_PREFERENCES("/io/bitsquare/gui/main/settings/network/NetworkPreferencesView.fxml"),
+        APPLICATION_PREFERENCES("/io/bitsquare/gui/main/preferences/application/ApplicationPreferencesView.fxml"),
+        NETWORK_PREFERENCES("/io/bitsquare/gui/main/preferences/network/NetworkPreferencesView.fxml"),
 
         // account
         ACCOUNT_SETUP("/io/bitsquare/gui/main/account/setup/AccountSetupView.fxml"),
