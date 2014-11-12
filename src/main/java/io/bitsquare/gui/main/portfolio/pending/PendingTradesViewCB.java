@@ -193,12 +193,6 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         presentationModel.state.removeListener(takerStateChangeListener);
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // GUI handlers

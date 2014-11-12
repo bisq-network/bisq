@@ -115,12 +115,6 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         model.tradeState.removeListener(stateChangeListener);
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Methods

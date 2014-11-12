@@ -103,6 +103,8 @@ class PendingTradesModel extends UIModel {
                 list.add(new PendingTradesListItem(change.getValueAdded()));
             else if (change.wasRemoved())
                 closedTrade = change.getValueRemoved();
+
+            sortList();
         };
 
         super.initialize();
@@ -119,7 +121,7 @@ class PendingTradesModel extends UIModel {
         tradeManager.getPendingTrades().addListener(mapChangeListener);
 
         // we sort by date, earliest first
-        list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
+        sortList();
 
         // select either currentPendingTrade or first in the list
         Optional<PendingTradesListItem> currentTradeItemOptional = list.stream()
@@ -138,12 +140,6 @@ class PendingTradesModel extends UIModel {
 
         tradeManager.getPendingTrades().removeListener(mapChangeListener);
         selectTrade(null);
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
     }
 
 
@@ -325,6 +321,10 @@ class PendingTradesModel extends UIModel {
             walletService.removeTxConfidenceListener(txConfidenceListener);
             txConfidenceListener = null;
         }
+    }
+
+    private void sortList() {
+        list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
     }
 
 }

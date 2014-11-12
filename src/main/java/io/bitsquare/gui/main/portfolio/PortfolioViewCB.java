@@ -47,7 +47,7 @@ public class PortfolioViewCB extends CachedViewCB {
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 
-    @FXML Tab offersTab, pendingTradesTab, closedTradesTab;
+    @FXML Tab offersTab, openTradesTab, closedTradesTab;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -78,7 +78,7 @@ public class PortfolioViewCB extends CachedViewCB {
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == offersTab)
                 navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO, Navigation.Item.OFFERS);
-            else if (newValue == pendingTradesTab)
+            else if (newValue == openTradesTab)
                 navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO,
                         Navigation.Item.PENDING_TRADES);
             else if (newValue == closedTradesTab)
@@ -132,7 +132,7 @@ public class PortfolioViewCB extends CachedViewCB {
                 tab = offersTab;
                 break;
             case PENDING_TRADES:
-                tab = pendingTradesTab;
+                tab = openTradesTab;
                 break;
             case CLOSED_TRADES:
                 tab = closedTradesTab;
