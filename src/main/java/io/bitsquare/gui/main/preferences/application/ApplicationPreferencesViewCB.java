@@ -38,7 +38,6 @@ public class ApplicationPreferencesViewCB extends CachedViewCB<ApplicationPrefer
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationPreferencesViewCB.class);
 
-
     @FXML ComboBox<String> btcDenominationComboBox;
     @FXML CheckBox useAnimationsCheckBox, useEffectsCheckBox;
 
@@ -68,6 +67,7 @@ public class ApplicationPreferencesViewCB extends CachedViewCB<ApplicationPrefer
 
         btcDenominationComboBox.setItems(presentationModel.getBtcDenominationItems());
         btcDenominationComboBox.getSelectionModel().select(presentationModel.btcDenomination().get());
+
         useAnimationsCheckBox.selectedProperty().bindBidirectional(presentationModel.useAnimations());
         useEffectsCheckBox.selectedProperty().bindBidirectional(presentationModel.useEffects());
 
@@ -76,6 +76,9 @@ public class ApplicationPreferencesViewCB extends CachedViewCB<ApplicationPrefer
     @Override
     public void deactivate() {
         super.deactivate();
+
+        useAnimationsCheckBox.selectedProperty().unbind();
+        useEffectsCheckBox.selectedProperty().unbind();
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -93,5 +96,4 @@ public class ApplicationPreferencesViewCB extends CachedViewCB<ApplicationPrefer
     void onSelectBtcDenomination() {
         presentationModel.btcDenomination().set(btcDenominationComboBox.getSelectionModel().getSelectedItem());
     }
-
 }

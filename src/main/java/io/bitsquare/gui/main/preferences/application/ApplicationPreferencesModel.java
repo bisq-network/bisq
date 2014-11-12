@@ -38,14 +38,15 @@ class ApplicationPreferencesModel extends UIModel {
 
     private final ApplicationPreferences applicationPreferences;
 
+    private final ChangeListener<Boolean> useAnimationsListener;
+    private final ChangeListener<Boolean> useEffectsListener;
+    private final ChangeListener<String> btcDenominationListener;
+
     final ObservableList<String> btcDenominations;
+
     final BooleanProperty useAnimations = new SimpleBooleanProperty();
     final BooleanProperty useEffects = new SimpleBooleanProperty();
     final StringProperty btcDenomination = new SimpleStringProperty();
-
-    private ChangeListener<Boolean> useAnimationsListener;
-    private ChangeListener<Boolean> useEffectsListener;
-    private ChangeListener<String> btcDenominationListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -57,6 +58,9 @@ class ApplicationPreferencesModel extends UIModel {
         this.applicationPreferences = applicationPreferences;
 
         btcDenominations = FXCollections.observableArrayList(applicationPreferences.getBtcDenominations());
+        btcDenominationListener = (ov, oldValue, newValue) -> applicationPreferences.setBtcDenomination(newValue);
+        useAnimationsListener = (ov, oldValue, newValue) -> applicationPreferences.setUseAnimations(newValue);
+        useEffectsListener = (ov, oldValue, newValue) -> applicationPreferences.setUseEffects(newValue);
     }
 
 
@@ -64,17 +68,10 @@ class ApplicationPreferencesModel extends UIModel {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize() {
-
         super.initialize();
-
-        useAnimationsListener = (ov, oldValue, newValue) -> applicationPreferences
-                .setUseAnimations(newValue);
-        useEffectsListener = (ov, oldValue, newValue) -> applicationPreferences
-                .setUseEffects(newValue);
-        btcDenominationListener = (ov, oldValue, newValue) -> applicationPreferences
-                .setBtcDenomination(newValue);
     }
 
     @Override
@@ -88,7 +85,6 @@ class ApplicationPreferencesModel extends UIModel {
         useAnimations.addListener(useAnimationsListener);
         useEffects.addListener(useEffectsListener);
         btcDenomination.addListener(btcDenominationListener);
-
     }
 
     @Override
@@ -105,7 +101,6 @@ class ApplicationPreferencesModel extends UIModel {
     public void terminate() {
         super.terminate();
     }
-
 
 }
 

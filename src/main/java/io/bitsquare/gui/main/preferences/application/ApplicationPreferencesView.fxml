@@ -31,7 +31,7 @@
     <padding>
         <Insets bottom="-10.0" left="25.0" top="30.0" right="25"/>
     </padding>
-    
+
     <TitledGroupBg text="General application preferences" GridPane.rowSpan="8"/>
 
     <Label text="Bitcoin denomination" GridPane.rowIndex="0">
@@ -54,7 +54,6 @@
     <Label text="Use effects:" GridPane.rowIndex="2"/>
     <CheckBox fx:id="useEffectsCheckBox"
               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-
 
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>

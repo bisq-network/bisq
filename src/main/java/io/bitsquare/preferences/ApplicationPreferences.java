@@ -76,22 +76,18 @@ public class ApplicationPreferences implements Serializable {
         if (data instanceof String) {
             btcDenominationString = (String) data;
             this.btcDenomination.set(btcDenominationString);
-            log.debug(data.toString());
         }
 
         data = persistence.read(this, "useEffects");
         if (data instanceof Boolean) {
             useEffectsBoolean = (Boolean) data;
             this.useEffects.set(useEffectsBoolean);
-
-            log.debug(data.toString());
         }
 
         data = persistence.read(this, "useAnimations");
         if (data instanceof Boolean) {
             useAnimationsBoolean = (Boolean) data;
             this.useAnimations.set(useAnimationsBoolean);
-            log.debug(data.toString());
         }
     }
 
