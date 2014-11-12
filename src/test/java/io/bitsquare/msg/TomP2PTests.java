@@ -26,7 +26,7 @@ import java.io.IOException;
 
 import java.net.UnknownHostException;
 
-import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -390,7 +390,7 @@ public class TomP2PTests {
     private Peer bootstrapDirectConnection(int clientPort) {
         Peer peer = null;
         try {
-            Number160 peerId = new Number160(new Random(43L));
+            Number160 peerId = Number160.createHash(UUID.randomUUID().toString());
             PeerMapConfiguration pmc = new PeerMapConfiguration(peerId).peerNoVerification();
             PeerMap pm = new PeerMap(pmc);
             ChannelClientConfiguration cc = PeerBuilder.createDefaultChannelClientConfiguration();
@@ -430,7 +430,7 @@ public class TomP2PTests {
     }
 
     private Peer bootstrapWithPortForwarding(int clientPort) {
-        Number160 peerId = new Number160(new Random(43L));
+        Number160 peerId = Number160.createHash(UUID.randomUUID().toString());
         Peer peer = null;
         try {
             peer = new PeerBuilder(peerId).bindings(getBindings()).behindFirewall()
@@ -484,7 +484,7 @@ public class TomP2PTests {
     }
 
     private Peer bootstrapInRelayMode(int clientPort) {
-        Number160 peerId = new Number160(new Random(43L));
+        Number160 peerId = Number160.createHash(UUID.randomUUID().toString());
         Peer peer = null;
         try {
             peer = new PeerBuilder(peerId).bindings(getBindings()).behindFirewall()
