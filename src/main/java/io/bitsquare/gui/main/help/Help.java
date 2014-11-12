@@ -17,13 +17,7 @@
 
 package io.bitsquare.gui.main.help;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
-import javafx.scene.*;
-import javafx.scene.web.*;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
+import io.bitsquare.util.Utilities;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +26,6 @@ import org.slf4j.LoggerFactory;
 public class Help {
     private static final Logger log = LoggerFactory.getLogger(Help.class);
 
-    private static Stage helpWindow;
-    public static Stage primaryStage;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
@@ -42,23 +33,9 @@ public class Help {
 
     public static void openWindow(HelpId id) {
         try {
-            URL url = new URL("https://docs.bitsquare.io/0.1.0-SNAPSHOT/userguide/index.html");
+            Utilities.openURL("https://docs.bitsquare.io/0.1.0-SNAPSHOT/userguide/index.html");
             // URL url = new URL("https://docs.bitsquare.io/0.1.0-SNAPSHOT/userguide/index.html#" + id);
-            WebView webView;
-            if (helpWindow == null) {
-                helpWindow = new Stage();
-                helpWindow.initModality(Modality.NONE);
-                helpWindow.initOwner(primaryStage);
-                webView = new WebView();
-                helpWindow.setScene(new Scene(webView, 800, 600));
-            }
-            else {
-                webView = (WebView) helpWindow.getScene().getRoot();
-            }
-            helpWindow.setTitle(url.toString());
-            webView.getEngine().load(url.toString());
-            helpWindow.show();
-        } catch (MalformedURLException e) {
+        } catch (Exception e) {
             log.error(e.getMessage());
         }
     }

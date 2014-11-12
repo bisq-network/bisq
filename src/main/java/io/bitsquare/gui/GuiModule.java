@@ -19,7 +19,6 @@ package io.bitsquare.gui;
 
 import io.bitsquare.BitsquareModule;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.trade.offerbook.OfferBook;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Transitions;
@@ -60,7 +59,6 @@ public class GuiModule extends BitsquareModule {
 
         bind(Stage.class).toInstance(primaryStage);
         Popups.primaryStage = primaryStage;
-        Help.primaryStage = primaryStage;
 
         bindConstant().annotatedWith(Names.named(ViewCB.TITLE_KEY)).to(env.getRequiredProperty(ViewCB.TITLE_KEY));
     }
