@@ -26,12 +26,8 @@ import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.validation.InputValidator;
+import io.bitsquare.util.Utilities;
 
-import java.awt.*;
-
-import java.io.IOException;
-
-import java.net.URI;
 import java.net.URL;
 
 import java.util.Currency;
@@ -41,7 +37,6 @@ import javax.inject.Inject;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
@@ -186,8 +181,8 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPm> implements Cont
     @FXML
     void onOpenIRC() {
         try {
-            Desktop.getDesktop().browse(URI.create("https://webchat.freenode.net/?channels=bitsquare-trading"));
-        } catch (IOException e) {
+            Utilities.openURL("https://webchat.freenode.net/?channels=bitsquare-trading");
+        } catch (Exception e) {
             log.error("Cannot open browser. " + e.getMessage());
         }
     }

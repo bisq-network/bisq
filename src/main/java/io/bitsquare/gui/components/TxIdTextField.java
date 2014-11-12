@@ -20,17 +20,10 @@ package io.bitsquare.gui.components;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
+import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.TransactionConfidence;
 
-import java.awt.*;
-
-import java.io.IOException;
-
-import java.net.URI;
-
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
@@ -90,8 +83,8 @@ public class TxIdTextField extends AnchorPane {
         textField.setOnMouseClicked(mouseEvent -> {
             try {
                 // TODO get the url form the app preferences
-                Desktop.getDesktop().browse(URI.create("https://blockchain.info/tx/" + txID));
-            } catch (IOException e) {
+                Utilities.openURL("https://blockchain.info/tx/" + txID);
+            } catch (Exception e) {
                 log.warn(e.getMessage());
                 Popups.openWarningPopup("Warning", "Opening blockchain.info failed. Please check your internet " +
                         "connection.");
