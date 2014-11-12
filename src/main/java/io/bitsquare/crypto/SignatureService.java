@@ -42,12 +42,12 @@ import org.spongycastle.util.encoders.Base64;
  * That service delivers crypto functionality from the bitcoinJ library
  * //TODO still very basic as not much used yet, missing implementations
  */
-public class CryptoService {
-    private static final Logger log = LoggerFactory.getLogger(CryptoService.class);
+public class SignatureService {
+    private static final Logger log = LoggerFactory.getLogger(SignatureService.class);
 
 
     @Inject
-    public CryptoService() {
+    public SignatureService() {
     }
 
     // DeterministicKey does not support signMessage yet.

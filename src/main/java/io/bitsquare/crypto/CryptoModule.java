@@ -29,6 +29,6 @@ public class CryptoModule extends BitsquareModule {
 
     @Override
     protected void configure() {
-        bind(CryptoService.class).asEagerSingleton();
+        bind(SignatureService.class).asEagerSingleton();
     }
 }

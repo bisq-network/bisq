@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.crypto.CryptoService;
+import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.util.Utilities;
@@ -37,7 +37,7 @@ public class VerifyAndSignContract {
 
     public static void run(ResultHandler resultHandler,
                            ExceptionHandler exceptionHandler,
-                           CryptoService cryptoService,
+                           SignatureService signatureService,
                            String accountId,
                            Coin tradeAmount,
                            String takeOfferFeeTxId,
@@ -56,7 +56,7 @@ public class VerifyAndSignContract {
         String contractAsJson = Utilities.objectToJson(contract);
 
         log.trace("The 2 contracts as json does match");
-        String signature = cryptoService.signContract(registrationKey, contractAsJson);
+        String signature = signatureService.signContract(registrationKey, contractAsJson);
         //log.trace("signature: " + signature);
         resultHandler.onResult(contract, contractAsJson, signature);
     }

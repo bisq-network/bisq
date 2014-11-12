@@ -20,7 +20,7 @@ package io.bitsquare.btc;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
-import io.bitsquare.crypto.CryptoService;
+import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.persistence.Persistence;
 
 import org.bitcoinj.core.Address;
@@ -105,7 +105,7 @@ public class WalletService {
 
     private final NetworkParameters params;
     private final FeePolicy feePolicy;
-    private final CryptoService cryptoService;
+    private final SignatureService signatureService;
     private final Persistence persistence;
     private final File walletDir;
     private final String walletPrefix;
@@ -123,12 +123,12 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletService(NetworkParameters params, FeePolicy feePolicy, CryptoService cryptoService,
+    public WalletService(NetworkParameters params, FeePolicy feePolicy, SignatureService signatureService,
                         Persistence persistence, UserAgent userAgent,
                         @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix) {
         this.params = params;
         this.feePolicy = feePolicy;
-        this.cryptoService = cryptoService;
+        this.signatureService = signatureService;
         this.persistence = persistence;
         this.walletDir = walletDir;
         this.walletPrefix = walletPrefix;
@@ -555,7 +555,7 @@ public class WalletService {
 
         Transaction tx = new Transaction(params);
 
-        byte[] data = cryptoService.getEmbeddedAccountRegistrationData(
+        byte[] data = signatureService.getEmbeddedAccountRegistrationData(
                 getRegistrationAddressEntry().getKey(), stringifiedBankAccounts);
         tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 

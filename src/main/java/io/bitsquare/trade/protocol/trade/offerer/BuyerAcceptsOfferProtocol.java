@@ -21,7 +21,7 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.crypto.CryptoService;
+import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
@@ -99,7 +99,7 @@ public class BuyerAcceptsOfferProtocol {
     private final MessageService messageService;
     private final WalletService walletService;
     private final BlockChainService blockChainService;
-    private final CryptoService cryptoService;
+    private final SignatureService signatureService;
     private final BuyerAcceptsOfferProtocolListener listener;
 
     // derived
@@ -142,7 +142,7 @@ public class BuyerAcceptsOfferProtocol {
                                      MessageService messageService,
                                      WalletService walletService,
                                      BlockChainService blockChainService,
-                                     CryptoService cryptoService,
+                                     SignatureService signatureService,
                                      User user,
                                      BuyerAcceptsOfferProtocolListener listener) {
         this.trade = trade;
@@ -151,7 +151,7 @@ public class BuyerAcceptsOfferProtocol {
         this.messageService = messageService;
         this.walletService = walletService;
         this.blockChainService = blockChainService;
-        this.cryptoService = cryptoService;
+        this.signatureService = signatureService;
 
         tradeId = trade.getId();
         offer = trade.getOffer();
@@ -297,7 +297,7 @@ public class BuyerAcceptsOfferProtocol {
         state = State.VerifyAndSignContract;
         VerifyAndSignContract.run(this::onResultVerifyAndSignContract,
                 this::onFault,
-                cryptoService,
+                signatureService,
                 accountId,
                 tradeAmount,
                 takeOfferFeeTxId,

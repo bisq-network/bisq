@@ -20,7 +20,7 @@ package io.bitsquare.trade;
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.crypto.CryptoService;
+import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.msg.Message;
 import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.Peer;
@@ -78,7 +78,7 @@ public class TradeManager {
     private final MessageService messageService;
     private final BlockChainService blockChainService;
     private final WalletService walletService;
-    private final CryptoService cryptoService;
+    private final SignatureService signatureService;
     private final OfferRepository offerRepository;
 
     //TODO store TakerAsSellerProtocol in trade
@@ -99,9 +99,9 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeManager(User user, AccountSettings accountSettings, Persistence persistence, 
-                        MessageService messageService,
-                        BlockChainService blockChainService, WalletService walletService, CryptoService cryptoService,
+    public TradeManager(User user, AccountSettings accountSettings, Persistence persistence,
+                        MessageService messageService, BlockChainService blockChainService,
+                        WalletService walletService, SignatureService signatureService,
                         OfferRepository offerRepository) {
         this.user = user;
         this.accountSettings = accountSettings;
@@ -109,7 +109,7 @@ public class TradeManager {
         this.messageService = messageService;
         this.blockChainService = blockChainService;
         this.walletService = walletService;
-        this.cryptoService = cryptoService;
+        this.signatureService = signatureService;
         this.offerRepository = offerRepository;
 
         Object offersObject = persistence.read(this, "offers");
@@ -249,7 +249,7 @@ public class TradeManager {
                     messageService,
                     walletService,
                     blockChainService,
-                    cryptoService,
+                    signatureService,
                     user,
                     new BuyerAcceptsOfferProtocolListener() {
                         @Override
@@ -372,7 +372,7 @@ public class TradeManager {
         };
 
         SellerTakesOfferProtocol sellerTakesOfferProtocol = new SellerTakesOfferProtocol(
-                trade, listener, messageService, walletService, blockChainService, cryptoService,
+                trade, listener, messageService, walletService, blockChainService, signatureService,
                 user);
         takerAsSellerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
         sellerTakesOfferProtocol.start();

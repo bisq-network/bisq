@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.taker;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.crypto.CryptoService;
+import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
@@ -89,7 +89,7 @@ public class SellerTakesOfferProtocol {
     private final MessageService messageService;
     private final WalletService walletService;
     private final BlockChainService blockChainService;
-    private final CryptoService cryptoService;
+    private final SignatureService signatureService;
 
     // derived
     private final Offer offer;
@@ -136,14 +136,14 @@ public class SellerTakesOfferProtocol {
                                     MessageService messageService,
                                     WalletService walletService,
                                     BlockChainService blockChainService,
-                                    CryptoService cryptoService,
+                                    SignatureService signatureService,
                                     User user) {
         this.trade = trade;
         this.listener = listener;
         this.messageService = messageService;
         this.walletService = walletService;
         this.blockChainService = blockChainService;
-        this.cryptoService = cryptoService;
+        this.signatureService = signatureService;
 
         offer = trade.getOffer();
         tradeId = trade.getId();
@@ -257,7 +257,7 @@ public class SellerTakesOfferProtocol {
         state = State.CreateAndSignContract;
         CreateAndSignContract.run(this::onResultCreateAndSignContract,
                 this::onFault,
-                cryptoService,
+                signatureService,
                 offer,
                 tradeAmount,
                 takeOfferFeeTxId,
