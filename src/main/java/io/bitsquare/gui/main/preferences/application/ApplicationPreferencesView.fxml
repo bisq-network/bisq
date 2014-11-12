@@ -29,13 +29,13 @@
           xmlns:fx="http://javafx.com/fxml">
 
     <padding>
-        <Insets bottom="-10.0" left="25.0" top="30.0" right="25"/>
+        <Insets bottom="10.0" left="25.0" top="30.0" right="25"/>
     </padding>
 
     <TitledGroupBg text="General application preferences" GridPane.rowSpan="8"/>
 
-    <Label text="Bitcoin denomination" GridPane.rowIndex="0">
-        <GridPane.margin>
+    <Label text="Bitcoin denomination:" GridPane.rowIndex="0">
+    <GridPane.margin>
             <Insets top="10"/>
         </GridPane.margin>
     </Label>
@@ -51,9 +51,17 @@
     <CheckBox fx:id="useAnimationsCheckBox"
               GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-    <Label text="Use effects:" GridPane.rowIndex="2"/>
+    <Label text="Use effects:" GridPane.rowIndex="2">
+        <GridPane.margin>
+            <Insets bottom="-15"/>
+        </GridPane.margin>
+    </Label>
     <CheckBox fx:id="useEffectsCheckBox"
-              GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+              GridPane.columnIndex="1" GridPane.rowIndex="2">
+        <GridPane.margin>
+            <Insets bottom="-15"/>
+        </GridPane.margin>
+    </CheckBox>
 
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>

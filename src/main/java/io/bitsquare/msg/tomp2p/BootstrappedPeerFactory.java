@@ -70,10 +70,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Creates a DHT peer and bootstraps to the network via a bootstrap node
  */
-class BootstrappedPeerFactory {
+public class BootstrappedPeerFactory {
     private static final Logger log = LoggerFactory.getLogger(BootstrappedPeerFactory.class);
 
-    static final String BOOTSTRAP_NODE_KEY = "bootstrapNode";
+    public static final String BOOTSTRAP_NODE_KEY = "bootstrapNode";
     static final String NETWORK_INTERFACE_KEY = "interface";
     static final String NETWORK_INTERFACE_UNSPECIFIED = "<unspecified>";
 

@@ -77,6 +77,7 @@ public class TomP2PNode {
     private MessageBroker messageBroker;
 
     private PeerAddress storedPeerAddress;
+
     private PeerDHT peerDHT;
     private BootstrappedPeerFactory bootstrappedPeerFactory;
 
@@ -143,6 +144,9 @@ public class TomP2PNode {
             peerDHT.peer().shutdown();
     }
 
+    public PeerDHT getPeerDHT() {
+        return peerDHT;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Generic DHT methods

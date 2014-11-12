@@ -42,12 +42,13 @@ public class NetworkPreferencesPM extends PresentationModel<NetworkPreferencesMo
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize() {
-
         super.initialize();
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void activate() {
         super.activate();
@@ -75,7 +76,22 @@ public class NetworkPreferencesPM extends PresentationModel<NetworkPreferencesMo
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    String bitcoinNetworkType() {
+        return model.bitcoinNetworkType;
+    }
 
+    String p2pNetworkConnection() {
+        return model.p2pNetworkConnection;
+    }
+
+    String p2pNetworkAddress() {
+        return model.p2pNetworkAddress;
+    }
+
+    String bootstrapAddress() {
+        return model.bootstrapAddress;
+    }
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////

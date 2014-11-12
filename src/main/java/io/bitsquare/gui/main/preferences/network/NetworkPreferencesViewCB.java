@@ -25,6 +25,9 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +37,8 @@ import org.slf4j.LoggerFactory;
 public class NetworkPreferencesViewCB extends CachedViewCB<NetworkPreferencesPM> {
 
     private static final Logger log = LoggerFactory.getLogger(NetworkPreferencesViewCB.class);
+
+    @FXML TextField bitcoinNetworkType, p2pNetworkConnection, p2pNetworkAddress, bootstrapAddress;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -50,9 +55,9 @@ public class NetworkPreferencesViewCB extends CachedViewCB<NetworkPreferencesPM>
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-
         super.initialize(url, rb);
     }
 
@@ -60,8 +65,13 @@ public class NetworkPreferencesViewCB extends CachedViewCB<NetworkPreferencesPM>
     public void activate() {
         super.activate();
 
+        bitcoinNetworkType.setText(presentationModel.bitcoinNetworkType());
+        p2pNetworkConnection.setText(presentationModel.p2pNetworkConnection());
+        p2pNetworkAddress.setText(presentationModel.p2pNetworkAddress());
+        bootstrapAddress.setText(presentationModel.bootstrapAddress());
     }
 
+    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();
