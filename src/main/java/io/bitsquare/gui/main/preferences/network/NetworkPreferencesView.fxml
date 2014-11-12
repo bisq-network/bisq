@@ -38,7 +38,7 @@
             <Insets top="10"/>
         </GridPane.margin>
     </Label>
-    <TextField fx:id="bitcoinNetworkType" GridPane.rowIndex="0" GridPane.columnIndex="1"
+    <TextField fx:id="bitcoinNetwork" GridPane.rowIndex="0" GridPane.columnIndex="1"
                mouseTransparent="true" editable="false" focusTraversable="false">
         <GridPane.margin>
             <Insets top="10"/>
@@ -46,11 +46,11 @@
     </TextField>
 
     <Label text="P2P network connection:" GridPane.rowIndex="1"/>
-    <TextField fx:id="p2pNetworkConnection" GridPane.rowIndex="1" GridPane.columnIndex="1"
+    <TextField fx:id="connectionType" GridPane.rowIndex="1" GridPane.columnIndex="1"
                mouseTransparent="true" editable="false" focusTraversable="false"/>
 
     <Label text="My external visible P2P network address:" GridPane.rowIndex="2"/>
-    <TextField fx:id="p2pNetworkAddress" GridPane.rowIndex="2" GridPane.columnIndex="1"
+    <TextField fx:id="nodeAddress" GridPane.rowIndex="2" GridPane.columnIndex="1"
                mouseTransparent="true" editable="false" focusTraversable="false"/>
 
     <Label text="P2P bootstrap node address:" GridPane.rowIndex="3">
@@ -58,7 +58,7 @@
             <Insets bottom="-15"/>
         </GridPane.margin>
     </Label>
-    <TextField fx:id="bootstrapAddress" GridPane.rowIndex="3" GridPane.columnIndex="1"
+    <TextField fx:id="bootstrapNodeAddress" GridPane.rowIndex="3" GridPane.columnIndex="1"
                mouseTransparent="true" editable="false" focusTraversable="false">
         <GridPane.margin>
             <Insets bottom="-15"/>

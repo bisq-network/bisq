@@ -17,7 +17,9 @@
 
 package io.bitsquare.gui.main.preferences.network;
 
-import io.bitsquare.gui.CachedViewCB;
+import io.bitsquare.network.ClientNode;
+
+import org.bitcoinj.core.NetworkParameters;
 
 import java.net.URL;
 
@@ -26,62 +28,28 @@ import java.util.ResourceBundle;
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public class NetworkPreferencesViewCB implements Initializable {
 
-/**
- * This UI is not cached as it is normally only needed once.
- */
-public class NetworkPreferencesViewCB extends CachedViewCB<NetworkPreferencesPM> {
+    private final NetworkParameters networkParameters;
+    private final ClientNode clientNode;
 
-    private static final Logger log = LoggerFactory.getLogger(NetworkPreferencesViewCB.class);
-
-    @FXML TextField bitcoinNetworkType, p2pNetworkConnection, p2pNetworkAddress, bootstrapAddress;
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    @FXML TextField bitcoinNetwork, connectionType, nodeAddress, bootstrapNodeAddress;
 
     @Inject
-    private NetworkPreferencesViewCB(NetworkPreferencesPM presentationModel) {
-        super(presentationModel);
+    public NetworkPreferencesViewCB(NetworkParameters networkParameters, ClientNode clientNode) {
+        this.networkParameters = networkParameters;
+        this.clientNode = clientNode;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
+        bitcoinNetwork.setText(networkParameters.getId());
+        nodeAddress.setText(clientNode.getAddress().toString());
+        bootstrapNodeAddress.setText(clientNode.getBootstrapNodeAddress().toString());
+        connectionType.setText(clientNode.getConnectionType().toString());
     }
-
-    @Override
-    public void activate() {
-        super.activate();
-
-        bitcoinNetworkType.setText(presentationModel.bitcoinNetworkType);
-        p2pNetworkConnection.setText(presentationModel.p2pNetworkConnection);
-        p2pNetworkAddress.setText(presentationModel.p2pNetworkAddress);
-        bootstrapAddress.setText(presentationModel.bootstrapAddress);
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
 }
 

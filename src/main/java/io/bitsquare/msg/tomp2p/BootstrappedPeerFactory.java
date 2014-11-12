@@ -70,10 +70,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Creates a DHT peer and bootstraps to the network via a bootstrap node
  */
-public class BootstrappedPeerFactory {
+class BootstrappedPeerFactory {
     private static final Logger log = LoggerFactory.getLogger(BootstrappedPeerFactory.class);
 
-    public static final String BOOTSTRAP_NODE_KEY = "bootstrapNode";
+    static final String BOOTSTRAP_NODE_KEY = "bootstrapNode";
     static final String NETWORK_INTERFACE_KEY = "interface";
     static final String NETWORK_INTERFACE_UNSPECIFIED = "<unspecified>";
 
@@ -83,7 +83,8 @@ public class BootstrappedPeerFactory {
     private final Persistence persistence;
 
     private final SettableFuture<PeerDHT> settableFuture = SettableFuture.create();
-    public final ObjectProperty<BootstrapState> bootstrapState = new SimpleObjectProperty<>();
+
+    private final ObjectProperty<BootstrapState> bootstrapState = new SimpleObjectProperty<>();
     private Peer peer;
     private PeerDHT peerDHT;
 
@@ -331,6 +332,14 @@ public class BootstrappedPeerFactory {
             log.error("getBootstrapAddress failed: " + e.getMessage());
             return null;
         }
+    }
+
+    public Node getBootstrapNode() {
+        return bootstrapNode;
+    }
+
+    public ObjectProperty<BootstrapState> getBootstrapState() {
+        return bootstrapState;
     }
 
     private void setState(BootstrapState bootstrapState, String message) {

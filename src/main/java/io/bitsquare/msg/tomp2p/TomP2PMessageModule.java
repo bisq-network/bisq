@@ -20,9 +20,12 @@ package io.bitsquare.msg.tomp2p;
 import io.bitsquare.msg.MessageModule;
 import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.BootstrapNodes;
+import io.bitsquare.network.ClientNode;
 import io.bitsquare.network.Node;
 
 import com.google.inject.name.Names;
+
+import javax.inject.Singleton;
 
 import org.springframework.core.env.Environment;
 
@@ -43,7 +46,8 @@ public class TomP2PMessageModule extends MessageModule {
     protected void doConfigure() {
         bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(
                 env.getProperty(Node.PORT_KEY, Integer.class, Node.DEFAULT_PORT));
-        bind(TomP2PNode.class).asEagerSingleton();
+        bind(TomP2PNode.class).in(Singleton.class);
+        bind(ClientNode.class).to(TomP2PNode.class);
 
         bind(Node.class).annotatedWith(Names.named(BOOTSTRAP_NODE_KEY)).toInstance(
                 Node.at(
