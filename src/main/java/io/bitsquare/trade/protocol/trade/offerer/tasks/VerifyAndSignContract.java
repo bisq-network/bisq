@@ -56,7 +56,7 @@ public class VerifyAndSignContract {
         String contractAsJson = Utilities.objectToJson(contract);
 
         log.trace("The 2 contracts as json does match");
-        String signature = signatureService.signContract(registrationKey, contractAsJson);
+        String signature = signatureService.signMessage(registrationKey, contractAsJson);
         //log.trace("signature: " + signature);
         resultHandler.onResult(contract, contractAsJson, signature);
     }

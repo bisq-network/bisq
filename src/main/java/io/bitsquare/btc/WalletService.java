@@ -555,7 +555,7 @@ public class WalletService {
 
         Transaction tx = new Transaction(params);
 
-        byte[] data = signatureService.getEmbeddedAccountRegistrationData(
+        byte[] data = signatureService.digestMessageWithSignature(
                 getRegistrationAddressEntry().getKey(), stringifiedBankAccounts);
         tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 

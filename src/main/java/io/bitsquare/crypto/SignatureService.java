@@ -20,41 +20,17 @@ package io.bitsquare.crypto;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Utils;
-import org.bitcoinj.crypto.KeyCrypterException;
 
 import com.google.common.base.Charsets;
 
-import java.nio.charset.Charset;
-
-import java.security.SignatureException;
-
-import javax.annotation.Nullable;
-
-import javax.inject.Inject;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.util.encoders.Base64;
 
-/**
- * That service delivers crypto functionality from the bitcoinJ library
- * //TODO still very basic as not much used yet, missing implementations
- */
 public class SignatureService {
-    private static final Logger log = LoggerFactory.getLogger(SignatureService.class);
 
-
-    @Inject
-    public SignatureService() {
-    }
-
-    // DeterministicKey does not support signMessage yet.
-    private String signMessage(ECKey key, String message, @Nullable KeyParameter aesKey) throws KeyCrypterException {
+    public String signMessage(ECKey key, String message) {
         byte[] data = Utils.formatMessageForSigning(message);
         Sha256Hash hash = Sha256Hash.createDouble(data);
-        ECKey.ECDSASignature sig = key.sign(hash, aesKey);
+        ECKey.ECDSASignature sig = key.sign(hash, null);
         // Now we have to work backwards to figure out the recId needed to recover the signature.
         int recId = -1;
         for (int i = 0; i < 4; i++) {
@@ -71,43 +47,11 @@ public class SignatureService {
         sigData[0] = (byte) headerByte;
         System.arraycopy(Utils.bigIntegerToBytes(sig.r, 32), 0, sigData, 1, 32);
         System.arraycopy(Utils.bigIntegerToBytes(sig.s, 32), 0, sigData, 33, 32);
-        return new String(Base64.encode(sigData), Charset.forName("UTF-8"));
+        return new String(Base64.encode(sigData), Charsets.UTF_8);
     }
 
-    public byte[] getEmbeddedAccountRegistrationData(ECKey registrationKey, String stringifiedBankAccounts) {
-        String signedBankAccountIDs = signMessage(registrationKey, stringifiedBankAccounts, null);
-        return Utils.sha256hash160(
-                concatenateChunks(stringifiedBankAccounts, signedBankAccountIDs).getBytes(Charsets.UTF_8));
+    public byte[] digestMessageWithSignature(ECKey key, String message) {
+        String signedMessage = signMessage(key, message);
+        return Utils.sha256hash160(message.concat(signedMessage).getBytes(Charsets.UTF_8));
     }
-
-    public String signContract(ECKey key, String contractAsJson) {
-        return signMessage(key, contractAsJson, null);
-    }
-
-    //   registration
-    public boolean verifySignature(byte[] pubKey, String msg, String sig) {
-        try {
-            ECKey key = ECKey.fromPublicOnly(pubKey);
-            key.verifyMessage(msg, sig);
-            return true;
-        } catch (SignatureException e) {
-            return false;
-        }
-    }
-
-    public boolean verifyHash(String hashAsHexStringToVerify, String msg, String sig) {
-        String hashAsHexString = Utils.HEX.encode(createHash(msg, sig));
-        return hashAsHexString.equals(hashAsHexStringToVerify);
-    }
-
-    private byte[] createHash(String msg, String sig) {
-        byte[] hashBytes = concatenateChunks(msg, sig).getBytes(Charsets.UTF_8);
-        return Utils.sha256hash160(hashBytes);
-    }
-
-
-    private String concatenateChunks(String stringifiedBankAccounts, String signedBankAccountIDs) {
-        return stringifiedBankAccounts + signedBankAccountIDs;
-    }
-
 }

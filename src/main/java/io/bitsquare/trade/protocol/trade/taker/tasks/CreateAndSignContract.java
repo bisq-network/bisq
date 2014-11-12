@@ -54,7 +54,7 @@ public class CreateAndSignContract {
                     peersBankAccount, bankAccount, peersMessagePublicKey, messagePublicKey);
 
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = signatureService.signContract(registrationKey, contractAsJson);
+            String signature = signatureService.signMessage(registrationKey, contractAsJson);
             resultHandler.onResult(contract, contractAsJson, signature);
         } catch (Throwable t) {
             log.error("Exception at sign contract " + t);
