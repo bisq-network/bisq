@@ -31,9 +31,13 @@ import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.locale.BSResources;
 
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
+
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -45,8 +49,10 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.*;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
+import javafx.util.StringConverter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,8 +84,13 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     @FXML Button confirmPaymentReceiptButton, paymentsButton, withdrawButton;
     @FXML TextFieldWithCopyIcon fiatAmountTextField, holderNameTextField, secondaryIdTextField, primaryIdTextField;
     @FXML TableView<PendingTradesListItem> table;
-    @FXML TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, amountColumn, volumeColumn,
-            directionColumn, dateColumn, tradeIdColumn;
+
+    @FXML TableColumn<PendingTradesListItem, Fiat> priceColumn;
+    @FXML TableColumn<PendingTradesListItem, Fiat> tradeVolumeColumn;
+    @FXML TableColumn<PendingTradesListItem, PendingTradesListItem> directionColumn;
+    @FXML TableColumn<PendingTradesListItem, String> idColumn;
+    @FXML TableColumn<PendingTradesListItem, Date> dateColumn;
+    @FXML TableColumn<PendingTradesListItem, Coin> tradeAmountColumn;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -547,119 +558,79 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setTradeIdColumnCellFactory() {
-        tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
-        tradeIdColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>,
-                        TableCell<PendingTradesListItem, PendingTradesListItem>>() {
+        idColumn.setCellFactory(TextFieldTableCell.<PendingTradesListItem, String>forTableColumn(
+                new StringConverter<String>() {
+                    @Override
+                    public String toString(String value) {
+                        return presentationModel.formatTradeId(value);
+                    }
 
                     @Override
-                    public TableCell<PendingTradesListItem, PendingTradesListItem> call
-                            (TableColumn<PendingTradesListItem,
-                                    PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
-                            private Hyperlink hyperlink;
-
-                            @Override
-                            public void updateItem(final PendingTradesListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-
-                                if (item != null && !empty) {
-                                    hyperlink = new Hyperlink(presentationModel.getTradeId(item));
-                                    hyperlink.setId("id-link");
-                                    Tooltip.install(hyperlink, new Tooltip(presentationModel.getTradeId(item)));
-                                    hyperlink.setOnAction(event -> openOfferDetails(item));
-                                    setGraphic(hyperlink);
-                                }
-                                else {
-                                    setGraphic(null);
-                                    setId(null);
-                                }
-                            }
-                        };
+                    public String fromString(String string) {
+                        return null;
                     }
-                });
+                }));
     }
 
     private void setDateColumnCellFactory() {
-        dateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        dateColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
-                        PendingTradesListItem>>() {
+        dateColumn.setCellFactory(TextFieldTableCell.<PendingTradesListItem, Date>forTableColumn(
+                new StringConverter<Date>() {
                     @Override
-                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(
-                            TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
-                            @Override
-                            public void updateItem(final PendingTradesListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null)
-                                    setText(presentationModel.getDate(item));
-                                else
-                                    setText("");
-                            }
-                        };
+                    public String toString(Date value) {
+                        return presentationModel.formatDate(value);
                     }
-                });
+
+                    @Override
+                    public Date fromString(String string) {
+                        return null;
+                    }
+                }));
     }
 
     private void setAmountColumnCellFactory() {
-        amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        amountColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
-                        PendingTradesListItem>>() {
+        tradeAmountColumn.setCellFactory(TextFieldTableCell.<PendingTradesListItem, Coin>forTableColumn(
+                new StringConverter<Coin>() {
                     @Override
-                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(
-                            TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
-                            @Override
-                            public void updateItem(final PendingTradesListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                setText(presentationModel.getAmount(item));
-                            }
-                        };
+                    public String toString(Coin value) {
+                        return presentationModel.formatTradeAmount(value);
                     }
-                });
+
+                    @Override
+                    public Coin fromString(String string) {
+                        return null;
+                    }
+                }));
     }
 
     private void setPriceColumnCellFactory() {
-        priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        priceColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
-                        PendingTradesListItem>>() {
+        priceColumn.setCellFactory(TextFieldTableCell.<PendingTradesListItem, Fiat>forTableColumn(
+                new StringConverter<Fiat>() {
                     @Override
-                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(
-                            TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
-                            @Override
-                            public void updateItem(final PendingTradesListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                setText(presentationModel.getPrice(item));
-                            }
-                        };
+                    public String toString(Fiat value) {
+                        return presentationModel.formatPrice(value);
                     }
-                });
+
+                    @Override
+                    public Fiat fromString(String string) {
+                        return null;
+                    }
+                }));
+
     }
 
     private void setVolumeColumnCellFactory() {
-        volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        volumeColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
-                        PendingTradesListItem>>() {
+        tradeVolumeColumn.setCellFactory(TextFieldTableCell.<PendingTradesListItem, Fiat>forTableColumn(
+                new StringConverter<Fiat>() {
                     @Override
-                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(
-                            TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
-                            @Override
-                            public void updateItem(final PendingTradesListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null)
-                                    setText(presentationModel.getVolume(item));
-                                else
-                                    setText("");
-                            }
-                        };
+                    public String toString(Fiat value) {
+                        return presentationModel.formatTradeVolume(value);
                     }
-                });
+
+                    @Override
+                    public Fiat fromString(String string) {
+                        return null;
+                    }
+                }));
     }
 
     private void setDirectionColumnCellFactory() {
@@ -674,12 +645,14 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                             @Override
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(presentationModel.getDirectionLabel(item));
+                                if (item != null && !empty)
+                                    setText(presentationModel.evaluateDirection(item));
+                                else
+                                    setText(null);
                             }
                         };
                     }
                 });
     }
-
 }
 

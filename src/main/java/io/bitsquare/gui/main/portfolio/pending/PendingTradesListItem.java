@@ -19,13 +19,20 @@ package io.bitsquare.gui.main.portfolio.pending;
 
 import io.bitsquare.trade.Trade;
 
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
+
+import java.util.Date;
+
+import javafx.beans.property.ObjectProperty;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.
  */
-class PendingTradesListItem {
+public class PendingTradesListItem {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesListItem.class);
 
     private final Trade trade;
@@ -35,16 +42,35 @@ class PendingTradesListItem {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    PendingTradesListItem(Trade trade) {
+    public PendingTradesListItem(Trade trade) {
         this.trade = trade;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    Trade getTrade() {
+    public Trade getTrade() {
         return trade;
+    }
+
+    public ObjectProperty<Coin> tradeAmountProperty() {
+        return trade.tradeAmountProperty();
+    }
+
+    public ObjectProperty<Fiat> tradeVolumeProperty() {
+        return trade.tradeVolumeProperty();
+    }
+
+    public Date getDate() {
+        return trade.getDate();
+    }
+
+    public String getId() {
+        return trade.getId();
+    }
+
+    public Fiat getPrice() {
+        return trade.getOffer().getPrice();
     }
 }

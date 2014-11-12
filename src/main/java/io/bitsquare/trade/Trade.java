@@ -27,12 +27,8 @@ import java.io.Serializable;
 
 import java.util.Date;
 
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-
-//TODO flatten down?
 
 public class Trade implements Serializable {
     private static final long serialVersionUID = -8275323072940974077L;
@@ -52,27 +48,27 @@ public class Trade implements Serializable {
         COMPLETED
     }
 
-
     private final Offer offer;
     private final Date date;
     private String takeOfferFeeTxID;
-    private Coin tradeAmount;
     private Contract contract;
     private String contractAsJson;
     private String takerSignature;
     private Transaction depositTx;
     private Transaction payoutTx;
+
+    private Coin tradeAmount;
     private State state;
     private Throwable fault;
 
+    // For changing values we use properties to get binding support in the UI (table)
     // When serialized those transient properties are not instantiated, so we instantiate them in the getters at first
     // access. Only use the accessor not the private field.
-    // TODO use ObjectProperties instead of BooleanProperty
-    transient private BooleanProperty _payoutTxChanged;
-    transient private BooleanProperty _contractChanged;
-    transient private ObjectProperty<Transaction> _depositTx;
+    transient private ObjectProperty<Coin> _tradeAmount;
+    transient private ObjectProperty<Fiat> _tradeVolume;
     transient private ObjectProperty<State> _state;
     transient private ObjectProperty<Throwable> _fault;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -81,6 +77,7 @@ public class Trade implements Serializable {
     public Trade(Offer offer) {
         this.offer = offer;
         date = new Date();
+
         state = State.OPEN;
     }
 
@@ -103,6 +100,8 @@ public class Trade implements Serializable {
 
     public void setTradeAmount(Coin tradeAmount) {
         this.tradeAmount = tradeAmount;
+        tradeAmountProperty().set(tradeAmount);
+        tradeVolumeProperty().set(getTradeVolume());
     }
 
     public Contract getContract() {
@@ -115,17 +114,14 @@ public class Trade implements Serializable {
 
     public void setContract(Contract contract) {
         this.contract = contract;
-        contractChangedProperty().set(!contractChangedProperty().get());
     }
 
     public void setDepositTx(Transaction tx) {
         this.depositTx = tx;
-        depositTxProperty().set(tx);
     }
 
     public void setPayoutTx(Transaction tx) {
         this.payoutTx = tx;
-        payoutTxChangedProperty().set(!payoutTxChangedProperty().get());
     }
 
     public void setState(State state) {
@@ -192,25 +188,18 @@ public class Trade implements Serializable {
     }
 
     // When serialized those transient properties are not instantiated, so we need to instantiate them at first access
-    public ObjectProperty<Transaction> depositTxProperty() {
-        if (_depositTx == null)
-            _depositTx = new SimpleObjectProperty<>(depositTx);
+    public ObjectProperty<Coin> tradeAmountProperty() {
+        if (_tradeAmount == null)
+            _tradeAmount = new SimpleObjectProperty<>();
 
-        return _depositTx;
+        return _tradeAmount;
     }
 
-    public BooleanProperty contractChangedProperty() {
-        if (_contractChanged == null)
-            _contractChanged = new SimpleBooleanProperty();
+    public ObjectProperty<Fiat> tradeVolumeProperty() {
+        if (_tradeVolume == null)
+            _tradeVolume = new SimpleObjectProperty<>();
 
-        return _contractChanged;
-    }
-
-    public BooleanProperty payoutTxChangedProperty() {
-        if (_payoutTxChanged == null)
-            _payoutTxChanged = new SimpleBooleanProperty();
-
-        return _payoutTxChanged;
+        return _tradeVolume;
     }
 
     public ObjectProperty<State> stateProperty() {
@@ -225,6 +214,4 @@ public class Trade implements Serializable {
             _fault = new SimpleObjectProperty<>(fault);
         return _fault;
     }
-
-
 }

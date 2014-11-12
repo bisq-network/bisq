@@ -26,6 +26,7 @@
 <?import io.bitsquare.gui.components.TxIdTextField?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.*?>
 <?import javafx.scene.layout.*?>
 <AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.portfolio.pending.PendingTradesViewCB"
             xmlns:fx="http://javafx.com/fxml">
@@ -48,11 +49,31 @@
                     <Insets top="10.0" left="-10" right="-10" bottom="-15"/>
                 </GridPane.margin>
                 <columns>
-                    <TableColumn text="Trade ID" fx:id="tradeIdColumn" minWidth="100" sortable="false"/>
-                    <TableColumn text="Date" fx:id="dateColumn" minWidth="130"/>
-                    <TableColumn text="Trade amount in BTC" fx:id="amountColumn" minWidth="130" sortable="false"/>
-                    <TableColumn text="Price" fx:id="priceColumn" minWidth="100" sortable="false"/>
-                    <TableColumn text="Trade amount in EUR" fx:id="volumeColumn" minWidth="130" sortable="false"/>
+                    <TableColumn text="Trade ID" fx:id="idColumn" minWidth="100" sortable="false">
+                        <cellValueFactory>
+                            <PropertyValueFactory property="id"/>
+                        </cellValueFactory>
+                    </TableColumn>
+                    <TableColumn text="Date" fx:id="dateColumn" minWidth="130">
+                        <cellValueFactory>
+                            <PropertyValueFactory property="date"/>
+                        </cellValueFactory>
+                    </TableColumn>
+                    <TableColumn text="Trade amount in BTC" fx:id="tradeAmountColumn" minWidth="130" sortable="false">
+                        <cellValueFactory>
+                            <PropertyValueFactory property="tradeAmount"/>
+                        </cellValueFactory>
+                    </TableColumn>
+                    <TableColumn text="Price" fx:id="priceColumn" minWidth="100" sortable="false">
+                        <cellValueFactory>
+                            <PropertyValueFactory property="price"/>
+                        </cellValueFactory>
+                    </TableColumn>
+                    <TableColumn text="Trade amount in EUR" fx:id="tradeVolumeColumn" minWidth="130" sortable="false">
+                        <cellValueFactory>
+                            <PropertyValueFactory property="tradeVolume"/>
+                        </cellValueFactory>
+                    </TableColumn>
                     <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80" sortable="false"/>
                 </columns>
             </TableView>

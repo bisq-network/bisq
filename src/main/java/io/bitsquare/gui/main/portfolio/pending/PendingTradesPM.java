@@ -24,7 +24,12 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
 
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
+
 import com.google.inject.Inject;
+
+import java.util.Date;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
@@ -174,28 +179,28 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     }
 
     // columns
-    String getTradeId(PendingTradesListItem item) {
-        return item.getTrade().getId();
+    String formatTradeId(String value) {
+        return value;
     }
 
-    String getAmount(PendingTradesListItem item) {
-        return (item != null) ? formatter.formatCoinWithCode(item.getTrade().getTradeAmount()) : "";
+    String formatTradeAmount(Coin value) {
+        return formatter.formatCoinWithCode(value);
     }
 
-    String getPrice(PendingTradesListItem item) {
-        return (item != null) ? formatter.formatFiat(item.getTrade().getOffer().getPrice()) : "";
+    String formatPrice(Fiat value) {
+        return formatter.formatFiat(value);
     }
 
-    String getVolume(PendingTradesListItem item) {
-        return (item != null) ? formatter.formatFiatWithCode(item.getTrade().getTradeVolume()) : "";
+    String formatTradeVolume(Fiat value) {
+        return formatter.formatFiatWithCode(value);
     }
 
-    String getDirectionLabel(PendingTradesListItem item) {
+    String evaluateDirection(PendingTradesListItem item) {
         return (item != null) ? formatter.formatDirection(model.getDirection(item.getTrade().getOffer())) : "";
     }
 
-    String getDate(PendingTradesListItem item) {
-        return formatter.formatDateTime(item.getTrade().getDate());
+    String formatDate(Date value) {
+        return formatter.formatDateTime(value);
     }
 
     // payment
