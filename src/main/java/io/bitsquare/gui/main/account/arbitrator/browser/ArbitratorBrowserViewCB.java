@@ -68,7 +68,7 @@ public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorL
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorBrowserViewCB(AccountSettings accountSettings, Persistence persistence, 
+    public ArbitratorBrowserViewCB(AccountSettings accountSettings, Persistence persistence,
                                    MessageService messageService) {
         this.accountSettings = accountSettings;
         this.persistence = persistence;

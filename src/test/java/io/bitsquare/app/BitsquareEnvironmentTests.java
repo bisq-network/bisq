@@ -46,12 +46,15 @@ public class BitsquareEnvironmentTests {
                 .withProperty("key.y", "y.env");
 
         ConfigurableEnvironment env = new BitsquareEnvironment(commandlineProps) {
-            @Override PropertySource<?> filesystemProperties() { return filesystemProps; }
+            @Override
+            PropertySource<?> filesystemProperties() {
+                return filesystemProps;
+            }
         };
         MutablePropertySources propertySources = env.getPropertySources();
 
         assertThat(propertySources.precedenceOf(named(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME)), equalTo(0));
-        assertThat(propertySources.precedenceOf(named(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME)),  equalTo(1));
+        assertThat(propertySources.precedenceOf(named(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME)), equalTo(1));
         assertThat(propertySources.precedenceOf(named(SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME)), equalTo(2));
         assertThat(propertySources.precedenceOf(named(BITSQUARE_FILESYSTEM_PROPERTY_SOURCE_NAME)), equalTo(3));
         assertThat(propertySources.precedenceOf(named(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME)), equalTo(4));

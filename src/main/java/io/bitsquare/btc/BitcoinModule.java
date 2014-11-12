@@ -52,7 +52,8 @@ public class BitcoinModule extends BitsquareModule {
 
         File walletDir = new File(env.getRequiredProperty(WalletService.DIR_KEY));
         bind(File.class).annotatedWith(named(WalletService.DIR_KEY)).toInstance(walletDir);
-        bindConstant().annotatedWith(named(WalletService.PREFIX_KEY)).to(env.getRequiredProperty(WalletService.PREFIX_KEY));
+        bindConstant().annotatedWith(named(WalletService.PREFIX_KEY)).to(
+                env.getRequiredProperty(WalletService.PREFIX_KEY));
         bind(WalletService.class).asEagerSingleton();
 
         bind(BlockChainService.class).asEagerSingleton();

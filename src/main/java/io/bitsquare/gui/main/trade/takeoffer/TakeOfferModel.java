@@ -83,8 +83,8 @@ class TakeOfferModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    TakeOfferModel(TradeManager tradeManager, WalletService walletService, ApplicationPreferences applicationPreferences,
-                   Persistence persistence) {
+    TakeOfferModel(TradeManager tradeManager, WalletService walletService,
+                   ApplicationPreferences applicationPreferences, Persistence persistence) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
         this.applicationPreferences = applicationPreferences;

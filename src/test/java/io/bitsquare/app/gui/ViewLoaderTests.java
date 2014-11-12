@@ -63,7 +63,7 @@ public class ViewLoaderTests {
     @Before
     public void setUp() {
         OptionParser parser = new OptionParser();
-        BitsquareEnvironment env = new BitsquareEnvironment(parser.parse(new String[] {}));
+        BitsquareEnvironment env = new BitsquareEnvironment(parser.parse(new String[]{}));
         Injector injector = Guice.createInjector(new BitsquareAppModule(env, TestApp.primaryStage));
         ViewLoader.setInjector(injector);
     }

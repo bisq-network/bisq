@@ -124,8 +124,8 @@ public class WalletService {
 
     @Inject
     public WalletService(NetworkParameters params, FeePolicy feePolicy, SignatureService signatureService,
-                        Persistence persistence, UserAgent userAgent,
-                        @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix) {
+                         Persistence persistence, UserAgent userAgent,
+                         @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix) {
         this.params = params;
         this.feePolicy = feePolicy;
         this.signatureService = signatureService;

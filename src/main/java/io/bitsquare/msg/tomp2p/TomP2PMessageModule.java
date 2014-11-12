@@ -17,8 +17,8 @@
 
 package io.bitsquare.msg.tomp2p;
 
-import io.bitsquare.msg.MessageService;
 import io.bitsquare.msg.MessageModule;
+import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
 
@@ -42,7 +42,7 @@ public class TomP2PMessageModule extends MessageModule {
     @Override
     protected void doConfigure() {
         bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(
-            env.getProperty(Node.PORT_KEY, Integer.class, Node.DEFAULT_PORT));
+                env.getProperty(Node.PORT_KEY, Integer.class, Node.DEFAULT_PORT));
         bind(TomP2PNode.class).asEagerSingleton();
 
         bind(Node.class).annotatedWith(Names.named(BOOTSTRAP_NODE_KEY)).toInstance(

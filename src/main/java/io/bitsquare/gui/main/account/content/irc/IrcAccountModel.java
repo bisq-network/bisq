@@ -78,7 +78,8 @@ class IrcAccountModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    IrcAccountModel(User user, Persistence persistence, AccountSettings accountSettings, MessageService messageService) {
+    IrcAccountModel(User user, Persistence persistence, AccountSettings accountSettings,
+                    MessageService messageService) {
         this.persistence = persistence;
         this.user = user;
         this.accountSettings = accountSettings;
