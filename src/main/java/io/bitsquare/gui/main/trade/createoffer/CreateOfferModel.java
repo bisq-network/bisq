@@ -22,7 +22,7 @@ import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.gui.util.BSFormatter;
@@ -68,7 +68,7 @@ class CreateOfferModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferModel.class);
 
     private final TradeManager tradeManager;
-    private final WalletFacade walletFacade;
+    private final WalletService walletService;
     private final AccountSettings accountSettings;
     private ApplicationPreferences applicationPreferences;
     private final User user;
@@ -112,11 +112,11 @@ class CreateOfferModel extends UIModel {
 
     // non private for testing
     @Inject
-    public CreateOfferModel(TradeManager tradeManager, WalletFacade walletFacade, AccountSettings accountSettings,
+    public CreateOfferModel(TradeManager tradeManager, WalletService walletService, AccountSettings accountSettings,
                             ApplicationPreferences applicationPreferences, User user, Persistence persistence,
                             BSFormatter formatter) {
         this.tradeManager = tradeManager;
-        this.walletFacade = walletFacade;
+        this.walletService = walletService;
         this.accountSettings = accountSettings;
         this.applicationPreferences = applicationPreferences;
         this.user = user;
@@ -137,16 +137,16 @@ class CreateOfferModel extends UIModel {
         offerFeeAsCoin.set(FeePolicy.CREATE_OFFER_FEE);
         networkFeeAsCoin.set(FeePolicy.TX_FEE);
 
-        if (walletFacade != null && walletFacade.getWallet() != null) {
-            addressEntry = walletFacade.getAddressInfoByTradeID(offerId);
+        if (walletService != null && walletService.getWallet() != null) {
+            addressEntry = walletService.getAddressInfoByTradeID(offerId);
 
-            walletFacade.addBalanceListener(new BalanceListener(getAddressEntry().getAddress()) {
+            walletService.addBalanceListener(new BalanceListener(getAddressEntry().getAddress()) {
                 @Override
                 public void onBalanceChanged(@NotNull Coin balance) {
                     updateBalance(balance);
                 }
             });
-            updateBalance(walletFacade.getBalanceForAddress(getAddressEntry().getAddress()));
+            updateBalance(walletService.getBalanceForAddress(getAddressEntry().getAddress()));
         }
 
         if (user != null) {
@@ -280,8 +280,8 @@ class CreateOfferModel extends UIModel {
         this.direction = direction;
     }
 
-    WalletFacade getWalletFacade() {
-        return walletFacade;
+    WalletService getWalletService() {
+        return walletService;
     }
 
     String getOfferId() {

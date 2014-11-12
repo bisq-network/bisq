@@ -130,7 +130,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
         setupListeners();
         setupBindings();
-        balanceTextField.setup(presentationModel.getWalletFacade(), presentationModel.address.get(),
+        balanceTextField.setup(presentationModel.getWalletService(), presentationModel.address.get(),
                 presentationModel.getFormatter());
         volumeTextField.setPromptText(BSResources.get("createOffer.volume.prompt", presentationModel.fiatCode.get()));
     }

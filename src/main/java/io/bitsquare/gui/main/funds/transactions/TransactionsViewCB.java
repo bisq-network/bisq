@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.funds.transactions;
 
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 public class TransactionsViewCB extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(TransactionsViewCB.class);
 
-    private final WalletFacade walletFacade;
+    private final WalletService walletService;
     private final BSFormatter formatter;
     private ObservableList<TransactionsListItem> transactionsListItems;
 
@@ -59,8 +59,8 @@ public class TransactionsViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TransactionsViewCB(WalletFacade walletFacade, BSFormatter formatter) {
-        this.walletFacade = walletFacade;
+    private TransactionsViewCB(WalletService walletService, BSFormatter formatter) {
+        this.walletService = walletService;
         this.formatter = formatter;
     }
 
@@ -92,10 +92,10 @@ public class TransactionsViewCB extends CachedViewCB {
     public void activate() {
         super.activate();
 
-        List<Transaction> transactions = walletFacade.getWallet().getRecentTransactions(10000, true);
+        List<Transaction> transactions = walletService.getWallet().getRecentTransactions(10000, true);
         transactionsListItems = FXCollections.observableArrayList();
         transactionsListItems.addAll(transactions.stream().map(transaction ->
-                new TransactionsListItem(transaction, walletFacade, formatter)).collect(Collectors.toList()));
+                new TransactionsListItem(transaction, walletService, formatter)).collect(Collectors.toList()));
 
         table.setItems(transactionsListItems);
     }

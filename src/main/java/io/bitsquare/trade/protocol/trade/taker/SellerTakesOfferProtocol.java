@@ -18,10 +18,10 @@
 package io.bitsquare.trade.protocol.trade.taker;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.btc.BlockChainFacade;
-import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.crypto.CryptoFacade;
-import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.btc.BlockChainService;
+import io.bitsquare.btc.WalletService;
+import io.bitsquare.crypto.CryptoService;
+import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Contract;
@@ -86,10 +86,10 @@ public class SellerTakesOfferProtocol {
     // provided data
     private final Trade trade;
     private final SellerTakesOfferProtocolListener listener;
-    private final MessageFacade messageFacade;
-    private final WalletFacade walletFacade;
-    private final BlockChainFacade blockChainFacade;
-    private final CryptoFacade cryptoFacade;
+    private final MessageService messageService;
+    private final WalletService walletService;
+    private final BlockChainService blockChainService;
+    private final CryptoService cryptoService;
 
     // derived
     private final Offer offer;
@@ -133,17 +133,17 @@ public class SellerTakesOfferProtocol {
 
     public SellerTakesOfferProtocol(Trade trade,
                                     SellerTakesOfferProtocolListener listener,
-                                    MessageFacade messageFacade,
-                                    WalletFacade walletFacade,
-                                    BlockChainFacade blockChainFacade,
-                                    CryptoFacade cryptoFacade,
+                                    MessageService messageService,
+                                    WalletService walletService,
+                                    BlockChainService blockChainService,
+                                    CryptoService cryptoService,
                                     User user) {
         this.trade = trade;
         this.listener = listener;
-        this.messageFacade = messageFacade;
-        this.walletFacade = walletFacade;
-        this.blockChainFacade = blockChainFacade;
-        this.cryptoFacade = cryptoFacade;
+        this.messageService = messageService;
+        this.walletService = walletService;
+        this.blockChainService = blockChainService;
+        this.cryptoService = cryptoService;
 
         offer = trade.getOffer();
         tradeId = trade.getId();
@@ -158,8 +158,8 @@ public class SellerTakesOfferProtocol {
         accountId = user.getAccountId();
         messagePublicKey = user.getMessagePublicKey();
 
-        pubKeyForThatTrade = walletFacade.getAddressInfoByTradeID(tradeId).getPubKeyAsHexString();
-        accountKey = walletFacade.getRegistrationAddressEntry().getKey();
+        pubKeyForThatTrade = walletService.getAddressInfoByTradeID(tradeId).getPubKeyAsHexString();
+        accountKey = walletService.getRegistrationAddressEntry().getKey();
 
         state = State.Init;
     }
@@ -167,7 +167,7 @@ public class SellerTakesOfferProtocol {
     public void start() {
         log.debug("start called " + step++);
         state = State.GetPeerAddress;
-        GetPeerAddress.run(this::onResultGetPeerAddress, this::onFault, messageFacade, peersMessagePublicKey);
+        GetPeerAddress.run(this::onResultGetPeerAddress, this::onFault, messageService, peersMessagePublicKey);
     }
 
     public void onResultGetPeerAddress(Peer peer) {
@@ -175,7 +175,7 @@ public class SellerTakesOfferProtocol {
         this.peer = peer;
 
         state = State.RequestTakeOffer;
-        RequestTakeOffer.run(this::onResultRequestTakeOffer, this::onFault, peer, messageFacade, tradeId);
+        RequestTakeOffer.run(this::onResultRequestTakeOffer, this::onFault, peer, messageService, tradeId);
     }
 
     public void onResultRequestTakeOffer() {
@@ -197,7 +197,7 @@ public class SellerTakesOfferProtocol {
         if (message.isTakeOfferRequestAccepted()) {
             state = State.PayTakeOfferFee;
             listener.onTakeOfferRequestAccepted(trade);
-            PayTakeOfferFee.run(this::onResultPayTakeOfferFee, this::onFault, walletFacade, tradeId);
+            PayTakeOfferFee.run(this::onResultPayTakeOfferFee, this::onFault, walletService, tradeId);
         }
         else {
             listener.onTakeOfferRequestRejected(trade);
@@ -211,7 +211,7 @@ public class SellerTakesOfferProtocol {
 
         state = State.SendTakeOfferFeePayedTxId;
         SendTakeOfferFeePayedTxId.run(this::onResultSendTakeOfferFeePayedTxId, this::onFault, peer,
-                messageFacade, tradeId, takeOfferFeeTxId, tradeAmount, pubKeyForThatTrade);
+                messageService, tradeId, takeOfferFeeTxId, tradeAmount, pubKeyForThatTrade);
     }
 
     public void onResultSendTakeOfferFeePayedTxId() {
@@ -247,7 +247,7 @@ public class SellerTakesOfferProtocol {
 
         // next task
         state = State.VerifyOffererAccount;
-        VerifyOffererAccount.run(this::onResultVerifyOffererAccount, this::onFault, blockChainFacade, peersAccountId,
+        VerifyOffererAccount.run(this::onResultVerifyOffererAccount, this::onFault, blockChainService, peersAccountId,
                 peersBankAccount);
     }
 
@@ -257,7 +257,7 @@ public class SellerTakesOfferProtocol {
         state = State.CreateAndSignContract;
         CreateAndSignContract.run(this::onResultCreateAndSignContract,
                 this::onFault,
-                cryptoFacade,
+                cryptoService,
                 offer,
                 tradeAmount,
                 takeOfferFeeTxId,
@@ -278,7 +278,7 @@ public class SellerTakesOfferProtocol {
         trade.setContractTakerSignature(signature);
 
         state = State.PayDeposit;
-        PayDeposit.run(this::onResultPayDeposit, this::onFault, walletFacade, securityDeposit, tradeAmount, tradeId,
+        PayDeposit.run(this::onResultPayDeposit, this::onFault, walletService, securityDeposit, tradeAmount, tradeId,
                 pubKeyForThatTrade, arbitratorPubKey, peersPubKey, preparedPeersDepositTxAsHex);
     }
 
@@ -291,8 +291,8 @@ public class SellerTakesOfferProtocol {
         SendSignedTakerDepositTxAsHex.run(this::onResultSendSignedTakerDepositTxAsHex,
                 this::onFault,
                 peer,
-                messageFacade,
-                walletFacade,
+                messageService,
+                walletService,
                 bankAccount,
                 accountId,
                 messagePublicKey,
@@ -320,7 +320,7 @@ public class SellerTakesOfferProtocol {
         checkState(state.ordinal() >= State.SendSignedTakerDepositTxAsHex.ordinal());
         checkArgument(tradeId.equals(message.getTradeId()));
         //TODO takerCommitDepositTx should be in task as well
-        Transaction tx = walletFacade.takerCommitDepositTx(message.getDepositTxAsHex());
+        Transaction tx = walletService.takerCommitDepositTx(message.getDepositTxAsHex());
         listener.onDepositTxPublished(tx);
     }
 
@@ -370,7 +370,7 @@ public class SellerTakesOfferProtocol {
         state = State.SignAndPublishPayoutTx;
         SignAndPublishPayoutTx.run(this::onResultSignAndPublishPayoutTx,
                 this::onFault,
-                walletFacade,
+                walletService,
                 tradeId,
                 depositTxAsHex,
                 offererSignatureR,
@@ -385,7 +385,7 @@ public class SellerTakesOfferProtocol {
         listener.onPayoutTxPublished(trade, transaction);
 
         state = State.SendPayoutTxToOfferer;
-        SendPayoutTxToOfferer.run(this::onResultSendPayoutTxToOfferer, this::onFault, peer, messageFacade,
+        SendPayoutTxToOfferer.run(this::onResultSendPayoutTxToOfferer, this::onFault, peer, messageService,
                 tradeId, payoutTxAsHex);
     }
 

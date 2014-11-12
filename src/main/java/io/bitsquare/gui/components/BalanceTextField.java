@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
@@ -74,23 +74,23 @@ public class BalanceTextField extends AnchorPane {
         getChildren().addAll(textField, progressIndicator);
     }
 
-    public void setup(WalletFacade walletFacade, Address address, BSFormatter formatter) {
+    public void setup(WalletService walletService, Address address, BSFormatter formatter) {
         this.formatter = formatter;
-        walletFacade.addAddressConfidenceListener(new AddressConfidenceListener(address) {
+        walletService.addAddressConfidenceListener(new AddressConfidenceListener(address) {
             @Override
             public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                 updateConfidence(confidence);
             }
         });
-        updateConfidence(walletFacade.getConfidenceForAddress(address));
+        updateConfidence(walletService.getConfidenceForAddress(address));
 
-        walletFacade.addBalanceListener(new BalanceListener(address) {
+        walletService.addBalanceListener(new BalanceListener(address) {
             @Override
             public void onBalanceChanged(Coin balance) {
                 updateBalance(balance);
             }
         });
-        updateBalance(walletFacade.getBalanceForAddress(address));
+        updateBalance(walletService.getBalanceForAddress(address));
     }
 
 

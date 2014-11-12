@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.seedwords;
 
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.UIModel;
 
 import com.google.inject.Inject;
@@ -38,9 +38,9 @@ class SeedWordsModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private SeedWordsModel(WalletFacade walletFacade) {
-        if (walletFacade != null && walletFacade.getWallet() != null)
-            mnemonicCode = walletFacade.getWallet().getKeyChainSeed().getMnemonicCode();
+    private SeedWordsModel(WalletService walletService) {
+        if (walletService != null && walletService.getWallet() != null)
+            mnemonicCode = walletService.getWallet().getKeyChainSeed().getMnemonicCode();
     }
 
 

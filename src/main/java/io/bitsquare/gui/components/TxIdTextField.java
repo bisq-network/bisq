@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.components;
 
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 
@@ -85,7 +85,7 @@ public class TxIdTextField extends AnchorPane {
         getChildren().addAll(textField, copyIcon, progressIndicator);
     }
 
-    public void setup(WalletFacade walletFacade, String txID) {
+    public void setup(WalletService walletService, String txID) {
         textField.setText(txID);
         textField.setOnMouseClicked(mouseEvent -> {
             try {
@@ -107,13 +107,13 @@ public class TxIdTextField extends AnchorPane {
             }
         });
 
-        walletFacade.addTxConfidenceListener(new TxConfidenceListener(txID) {
+        walletService.addTxConfidenceListener(new TxConfidenceListener(txID) {
             @Override
             public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                 updateConfidence(confidence);
             }
         });
-        updateConfidence(walletFacade.getConfidenceForTxId(txID));
+        updateConfidence(walletService.getConfidenceForTxId(txID));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

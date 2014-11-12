@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.trade.createoffer;
 
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
@@ -295,8 +295,8 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    WalletFacade getWalletFacade() {
-        return model.getWalletFacade();
+    WalletService getWalletService() {
+        return model.getWalletService();
     }
 
     BSFormatter getFormatter() {

@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.util.task.ExceptionHandler;
 
 import org.bitcoinj.core.Coin;
@@ -33,15 +33,15 @@ public class CreateDepositTx {
 
     public static void run(ResultHandler resultHandler,
                            ExceptionHandler exceptionHandler,
-                           WalletFacade walletFacade,
+                           WalletService walletService,
                            String tradeId,
                            Coin offererInputAmount,
                            String takerMultiSigPubKey,
                            String arbitratorPubKeyAsHex) {
         log.trace("Run task");
         try {
-            String offererPubKey = walletFacade.getAddressInfoByTradeID(tradeId).getPubKeyAsHexString();
-            Transaction transaction = walletFacade.offererCreatesMSTxAndAddPayment(
+            String offererPubKey = walletService.getAddressInfoByTradeID(tradeId).getPubKeyAsHexString();
+            Transaction transaction = walletService.offererCreatesMSTxAndAddPayment(
                     offererInputAmount, offererPubKey, takerMultiSigPubKey, arbitratorPubKeyAsHex, tradeId);
 
             String preparedOffererDepositTxAsHex = Utils.HEX.encode(transaction.bitcoinSerialize());

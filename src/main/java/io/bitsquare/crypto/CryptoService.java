@@ -39,15 +39,15 @@ import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.util.encoders.Base64;
 
 /**
- * That facade delivers crypto functionality from the bitcoinJ library
+ * That service delivers crypto functionality from the bitcoinJ library
  * //TODO still very basic as not much used yet, missing implementations
  */
-public class CryptoFacade {
-    private static final Logger log = LoggerFactory.getLogger(CryptoFacade.class);
+public class CryptoService {
+    private static final Logger log = LoggerFactory.getLogger(CryptoService.class);
 
 
     @Inject
-    public CryptoFacade() {
+    public CryptoService() {
     }
 
     // DeterministicKey does not support signMessage yet.

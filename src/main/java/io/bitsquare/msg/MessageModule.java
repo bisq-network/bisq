@@ -31,7 +31,7 @@ public abstract class MessageModule extends BitsquareModule {
 
     @Override
     protected final void configure() {
-        bind(MessageFacade.class).to(messageFacade()).asEagerSingleton();
+        bind(MessageService.class).to(messageService()).asEagerSingleton();
 
         doConfigure();
     }
@@ -39,10 +39,10 @@ public abstract class MessageModule extends BitsquareModule {
     protected void doConfigure() {
     }
 
-    protected abstract Class<? extends MessageFacade> messageFacade();
+    protected abstract Class<? extends MessageService> messageService();
 
     @Override
     protected void doClose(Injector injector) {
-        injector.getInstance(MessageFacade.class).shutDown();
+        injector.getInstance(MessageService.class).shutDown();
     }
 }

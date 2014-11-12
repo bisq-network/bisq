@@ -29,7 +29,7 @@ import java.security.PublicKey;
 
 import java.util.Locale;
 
-public interface MessageFacade extends MessageBroker {
+public interface MessageService extends MessageBroker {
 
     void sendMessage(Peer peer, Message message, OutgoingMessageListener listener);
 

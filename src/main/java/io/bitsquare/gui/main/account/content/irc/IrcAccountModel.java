@@ -28,7 +28,7 @@ import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.Region;
-import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.MessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
@@ -59,7 +59,7 @@ class IrcAccountModel extends UIModel {
 
     private final User user;
     private final AccountSettings accountSettings;
-    private final MessageFacade messageFacade;
+    private final MessageService messageService;
     private final Persistence persistence;
 
     final StringProperty nickName = new SimpleStringProperty();
@@ -78,11 +78,11 @@ class IrcAccountModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    IrcAccountModel(User user, Persistence persistence, AccountSettings accountSettings, MessageFacade messageFacade) {
+    IrcAccountModel(User user, Persistence persistence, AccountSettings accountSettings, MessageService messageService) {
         this.persistence = persistence;
         this.user = user;
         this.accountSettings = accountSettings;
-        this.messageFacade = messageFacade;
+        this.messageService = messageService;
     }
 
 
@@ -205,7 +205,7 @@ class IrcAccountModel extends UIModel {
             accountSettings.addAcceptedArbitrator(arbitrator);
             persistence.write(accountSettings);
 
-            messageFacade.addArbitrator(arbitrator);
+            messageService.addArbitrator(arbitrator);
         }
     }
 }

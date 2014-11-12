@@ -20,7 +20,7 @@ package io.bitsquare.btc;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
-import io.bitsquare.crypto.CryptoFacade;
+import io.bitsquare.crypto.CryptoService;
 import io.bitsquare.persistence.Persistence;
 
 import org.bitcoinj.core.Address;
@@ -91,8 +91,8 @@ import static org.bitcoinj.script.ScriptOpCodes.OP_RETURN;
  * TODO: use walletextension (with protobuffer) instead of saving addressEntryList via storage
  * TODO: break that class up. maybe a bitsquarewallet
  */
-public class WalletFacade {
-    private static final Logger log = LoggerFactory.getLogger(WalletFacade.class);
+public class WalletService {
+    private static final Logger log = LoggerFactory.getLogger(WalletService.class);
     private static final String LOCK_NAME = "lock";
 
     public static final String DIR_KEY = "wallet.dir";
@@ -105,7 +105,7 @@ public class WalletFacade {
 
     private final NetworkParameters params;
     private final FeePolicy feePolicy;
-    private final CryptoFacade cryptoFacade;
+    private final CryptoService cryptoService;
     private final Persistence persistence;
     private final File walletDir;
     private final String walletPrefix;
@@ -123,12 +123,12 @@ public class WalletFacade {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletFacade(NetworkParameters params, FeePolicy feePolicy, CryptoFacade cryptoFacade,
+    public WalletService(NetworkParameters params, FeePolicy feePolicy, CryptoService cryptoService,
                         Persistence persistence, UserAgent userAgent,
                         @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix) {
         this.params = params;
         this.feePolicy = feePolicy;
-        this.cryptoFacade = cryptoFacade;
+        this.cryptoService = cryptoService;
         this.persistence = persistence;
         this.walletDir = walletDir;
         this.walletPrefix = walletPrefix;
@@ -555,7 +555,7 @@ public class WalletFacade {
 
         Transaction tx = new Transaction(params);
 
-        byte[] data = cryptoFacade.getEmbeddedAccountRegistrationData(
+        byte[] data = cryptoService.getEmbeddedAccountRegistrationData(
                 getRegistrationAddressEntry().getKey(), stringifiedBankAccounts);
         tx.addOutput(Transaction.MIN_NONDUST_OUTPUT, new ScriptBuilder().op(OP_RETURN).data(data).build());
 

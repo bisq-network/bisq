@@ -25,7 +25,7 @@ import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.Region;
-import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.MessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
@@ -52,7 +52,7 @@ class RestrictionsModel extends UIModel {
     private final User user;
     private final AccountSettings accountSettings;
     private final Persistence persistence;
-    private final MessageFacade messageFacade;
+    private final MessageService messageService;
 
     final ObservableList<Locale> languageList = FXCollections.observableArrayList();
     final ObservableList<Country> countryList = FXCollections.observableArrayList();
@@ -68,11 +68,11 @@ class RestrictionsModel extends UIModel {
 
     @Inject
     private RestrictionsModel(User user, AccountSettings accountSettings, Persistence persistence,
-                              MessageFacade messageFacade) {
+                              MessageService messageService) {
         this.user = user;
         this.accountSettings = accountSettings;
         this.persistence = persistence;
-        this.messageFacade = messageFacade;
+        this.messageService = messageService;
     }
 
 
@@ -215,7 +215,7 @@ class RestrictionsModel extends UIModel {
             accountSettings.addAcceptedArbitrator(arbitrator);
             persistence.write(accountSettings);
 
-            messageFacade.addArbitrator(arbitrator);
+            messageService.addArbitrator(arbitrator);
         }
     }
 }

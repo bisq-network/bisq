@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.util.task.ExceptionHandler;
 
 import org.bitcoinj.core.Coin;
@@ -36,7 +36,7 @@ public class SignAndPublishPayoutTx {
 
     public static void run(ResultHandler resultHandler,
                            ExceptionHandler exceptionHandler,
-                           WalletFacade walletFacade,
+                           WalletService walletService,
                            String tradeId,
                            String depositTxAsHex,
                            String offererSignatureR,
@@ -47,7 +47,7 @@ public class SignAndPublishPayoutTx {
         log.trace("Run task");
         try {
 
-            walletFacade.takerSignsAndSendsTx(depositTxAsHex,
+            walletService.takerSignsAndSendsTx(depositTxAsHex,
                     offererSignatureR,
                     offererSignatureS,
                     offererPaybackAmount,

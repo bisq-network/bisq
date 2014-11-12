@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.btc.BlockChainFacade;
+import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.trade.protocol.trade.shared.tasks.VerifyPeerAccount;
 import io.bitsquare.util.task.ExceptionHandler;
 import io.bitsquare.util.task.ResultHandler;
@@ -30,8 +30,8 @@ public class VerifyOffererAccount {
     private static final Logger log = LoggerFactory.getLogger(VerifyOffererAccount.class);
 
     public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler,
-                           BlockChainFacade blockChainFacade, String peersAccountId, BankAccount peersBankAccount) {
+                           BlockChainService blockChainService, String peersAccountId, BankAccount peersBankAccount) {
         log.trace("Run task");
-        VerifyPeerAccount.run(resultHandler, exceptionHandler, blockChainFacade, peersAccountId, peersBankAccount);
+        VerifyPeerAccount.run(resultHandler, exceptionHandler, blockChainService, peersAccountId, peersBankAccount);
     }
 }

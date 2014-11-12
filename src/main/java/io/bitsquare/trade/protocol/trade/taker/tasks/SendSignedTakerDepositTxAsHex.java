@@ -18,8 +18,8 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.btc.WalletService;
+import io.bitsquare.msg.MessageService;
 import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
@@ -40,8 +40,8 @@ public class SendSignedTakerDepositTxAsHex {
     public static void run(ResultHandler resultHandler,
                            ExceptionHandler exceptionHandler,
                            Peer peer,
-                           MessageFacade messageFacade,
-                           WalletFacade walletFacade,
+                           MessageService messageService,
+                           WalletService walletService,
                            BankAccount bankAccount,
                            String accountId,
                            PublicKey messagePublicKey,
@@ -65,10 +65,10 @@ public class SendSignedTakerDepositTxAsHex {
                         .bitcoinSerialize()),
                 contractAsJson,
                 takerSignature,
-                walletFacade.getAddressInfoByTradeID(tradeId).getAddressString(),
+                walletService.getAddressInfoByTradeID(tradeId).getAddressString(),
                 takerTxOutIndex,
                 offererTxOutIndex);
-        messageFacade.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
+        messageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
             @Override
             public void onResult() {
                 log.trace("RequestOffererDepositPublicationMessage successfully arrived at peer");

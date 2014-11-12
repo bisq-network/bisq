@@ -54,7 +54,7 @@ class MainPM extends PresentationModel<MainModel> {
     final DoubleProperty blockchainSyncProgress = new SimpleDoubleProperty();
     final BooleanProperty blockchainSyncIndicatorVisible = new SimpleBooleanProperty(true);
     final StringProperty blockchainSyncIconId = new SimpleStringProperty();
-    final StringProperty walletFacadeErrorMsg = new SimpleStringProperty();
+    final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
 
     final DoubleProperty bootstrapProgress = new SimpleDoubleProperty(-1);
     final BooleanProperty bootstrapFailed = new SimpleBooleanProperty();
@@ -116,11 +116,11 @@ class MainPM extends PresentationModel<MainModel> {
                 }
         );
 
-        model.walletFacadeException.addListener((ov, oldValue, newValue) -> {
+        model.walletServiceException.addListener((ov, oldValue, newValue) -> {
             blockchainSyncProgress.set(0);
             blockchainSyncIndicatorVisible.set(false);
             blockchainSyncState.set("Startup failed.");
-            walletFacadeErrorMsg.set(((Throwable) newValue).getMessage());
+            walletServiceErrorMsg.set(((Throwable) newValue).getMessage());
         });
 
         model.networkSyncProgress.addListener((ov, oldValue, newValue) -> {

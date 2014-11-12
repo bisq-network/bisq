@@ -17,8 +17,8 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.btc.WalletService;
+import io.bitsquare.msg.MessageService;
 import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
@@ -39,8 +39,8 @@ public class SendSignedPayoutTx {
     public static void run(ResultHandler resultHandler,
                            ExceptionHandler exceptionHandler,
                            Peer peer,
-                           MessageFacade messageFacade,
-                           WalletFacade walletFacade,
+                           MessageService messageService,
+                           WalletService walletService,
                            String tradeId,
                            String takerPayoutAddress,
                            String offererPayoutAddress,
@@ -52,7 +52,7 @@ public class SendSignedPayoutTx {
             Coin offererPaybackAmount = tradeAmount.add(securityDeposit);
             @SuppressWarnings("UnnecessaryLocalVariable") Coin takerPaybackAmount = securityDeposit;
 
-            Pair<ECKey.ECDSASignature, String> result = walletFacade.offererCreatesAndSignsPayoutTx(
+            Pair<ECKey.ECDSASignature, String> result = walletService.offererCreatesAndSignsPayoutTx(
                     depositTransactionId, offererPaybackAmount, takerPaybackAmount, takerPayoutAddress, tradeId);
 
             ECKey.ECDSASignature offererSignature = result.getKey();
@@ -68,7 +68,7 @@ public class SendSignedPayoutTx {
                     takerPaybackAmount,
                     offererPayoutAddress);
 
-            messageFacade.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
+            messageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
                 @Override
                 public void onResult() {
                     log.trace("BankTransferInitedMessage successfully arrived at peer");

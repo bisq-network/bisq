@@ -50,17 +50,17 @@ public class BitcoinModule extends BitsquareModule {
         bindConstant().annotatedWith(named(UserAgent.VERSION_KEY)).to(env.getRequiredProperty(UserAgent.VERSION_KEY));
         bind(UserAgent.class).asEagerSingleton();
 
-        File walletDir = new File(env.getRequiredProperty(WalletFacade.DIR_KEY));
-        bind(File.class).annotatedWith(named(WalletFacade.DIR_KEY)).toInstance(walletDir);
-        bindConstant().annotatedWith(named(WalletFacade.PREFIX_KEY)).to(env.getRequiredProperty(WalletFacade.PREFIX_KEY));
-        bind(WalletFacade.class).asEagerSingleton();
+        File walletDir = new File(env.getRequiredProperty(WalletService.DIR_KEY));
+        bind(File.class).annotatedWith(named(WalletService.DIR_KEY)).toInstance(walletDir);
+        bindConstant().annotatedWith(named(WalletService.PREFIX_KEY)).to(env.getRequiredProperty(WalletService.PREFIX_KEY));
+        bind(WalletService.class).asEagerSingleton();
 
-        bind(BlockChainFacade.class).asEagerSingleton();
+        bind(BlockChainService.class).asEagerSingleton();
     }
 
     @Override
     protected void doClose(Injector injector) {
-        injector.getInstance(WalletFacade.class).shutDown();
+        injector.getInstance(WalletService.class).shutDown();
     }
 
     private NetworkParameters network() {

@@ -284,7 +284,7 @@ public class MainViewCB extends ViewCB<MainPM> {
 
         Label blockchainSyncLabel = new Label();
         blockchainSyncLabel.textProperty().bind(presentationModel.blockchainSyncState);
-        presentationModel.walletFacadeErrorMsg.addListener((ov, oldValue, newValue) -> {
+        presentationModel.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
             blockchainSyncLabel.setId("splash-error-state-msg");
             Popups.openErrorPopup("Error", "An error occurred at startup. \n\nError message:\n" +
                     newValue);

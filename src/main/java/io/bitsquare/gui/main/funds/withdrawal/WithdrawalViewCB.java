@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.funds.withdrawal;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.Restrictions;
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.components.Popups;
@@ -63,7 +63,7 @@ public class WithdrawalViewCB extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(WithdrawalViewCB.class);
 
 
-    private final WalletFacade walletFacade;
+    private final WalletService walletService;
     private final BSFormatter formatter;
     private final ObservableList<WithdrawalListItem> addressList = FXCollections.observableArrayList();
 
@@ -79,8 +79,8 @@ public class WithdrawalViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private WithdrawalViewCB(WalletFacade walletFacade, BSFormatter formatter) {
-        this.walletFacade = walletFacade;
+    private WithdrawalViewCB(WalletService walletService, BSFormatter formatter) {
+        this.walletService = walletService;
         this.formatter = formatter;
     }
 
@@ -124,7 +124,7 @@ public class WithdrawalViewCB extends CachedViewCB {
         fillList();
         table.setItems(addressList);
 
-        walletFacade.addBalanceListener(new BalanceListener() {
+        walletService.addBalanceListener(new BalanceListener() {
             @Override
             public void onBalanceChanged(Coin balance) {
                 fillList();
@@ -183,7 +183,7 @@ public class WithdrawalViewCB extends CachedViewCB {
                             "Are you sure you withdraw that amount?");
             if (Popups.isOK(response)) {
                 try {
-                    walletFacade.sendFunds(
+                    walletService.sendFunds(
                             withdrawFromTextField.getText(), withdrawToTextField.getText(),
                             amount, callback);
 
@@ -214,10 +214,10 @@ public class WithdrawalViewCB extends CachedViewCB {
 
     private void fillList() {
         addressList.clear();
-        List<AddressEntry> addressEntryList = walletFacade.getAddressEntryList();
+        List<AddressEntry> addressEntryList = walletService.getAddressEntryList();
         addressList.addAll(addressEntryList.stream()
-                .filter(e -> walletFacade.getBalanceForAddress(e.getAddress()).isPositive())
-                .map(anAddressEntryList -> new WithdrawalListItem(anAddressEntryList, walletFacade, formatter))
+                .filter(e -> walletService.getBalanceForAddress(e.getAddress()).isPositive())
+                .map(anAddressEntryList -> new WithdrawalListItem(anAddressEntryList, walletService, formatter))
                 .collect(Collectors.toList()));
     }
 

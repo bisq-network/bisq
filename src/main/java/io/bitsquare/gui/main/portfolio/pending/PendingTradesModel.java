@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.portfolio.pending;
 
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.offer.Direction;
@@ -58,7 +58,7 @@ class PendingTradesModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesModel.class);
 
     private final TradeManager tradeManager;
-    private final WalletFacade walletFacade;
+    private final WalletService walletService;
     private final User user;
 
     private final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
@@ -82,9 +82,9 @@ class PendingTradesModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    PendingTradesModel(TradeManager tradeManager, WalletFacade walletFacade, User user) {
+    PendingTradesModel(TradeManager tradeManager, WalletService walletService, User user) {
         this.tradeManager = tradeManager;
-        this.walletFacade = walletFacade;
+        this.walletService = walletService;
         this.user = user;
     }
 
@@ -159,7 +159,7 @@ class PendingTradesModel extends UIModel {
             trade.faultProperty().removeListener(faultChangeListener);
 
             if (txConfidenceListener != null)
-                walletFacade.removeTxConfidenceListener(txConfidenceListener);
+                walletService.removeTxConfidenceListener(txConfidenceListener);
         }
 
         selectedItem = item;
@@ -180,8 +180,8 @@ class PendingTradesModel extends UIModel {
                     updateConfidence(confidence);
                 }
             };
-            walletFacade.addTxConfidenceListener(txConfidenceListener);
-            updateConfidence(walletFacade.getConfidenceForTxId(txId.get()));
+            walletService.addTxConfidenceListener(txConfidenceListener);
+            updateConfidence(walletService.getConfidenceForTxId(txId.get()));
 
             trade.stateProperty().addListener(stateChangeListener);
             tradeState.set(trade.stateProperty().get());
@@ -222,10 +222,10 @@ class PendingTradesModel extends UIModel {
             }
         };
 
-        AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(getTrade().getId());
+        AddressEntry addressEntry = walletService.getAddressInfoByTradeID(getTrade().getId());
         String fromAddress = addressEntry.getAddressString();
         try {
-            walletFacade.sendFunds(fromAddress, toAddress, getAmountToWithdraw(), callback);
+            walletService.sendFunds(fromAddress, toAddress, getAmountToWithdraw(), callback);
         } catch (AddressFormatException | InsufficientMoneyException e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -244,7 +244,7 @@ class PendingTradesModel extends UIModel {
 
         if (Popups.isOK(response)) {
             try {
-                walletFacade.sendFunds(
+                walletService.sendFunds(
                         withdrawFromTextField.getText(), withdrawToTextField.getText(),
                         changeAddressTextField.getText(), amount, callback);
             } catch (AddressFormatException e) {
@@ -280,8 +280,8 @@ class PendingTradesModel extends UIModel {
         return FeePolicy.TX_FEE.add(isOfferer() ? FeePolicy.CREATE_OFFER_FEE : FeePolicy.TAKE_OFFER_FEE);
     }
 
-    WalletFacade getWalletFacade() {
-        return walletFacade;
+    WalletService getWalletService() {
+        return walletService;
     }
 
     PendingTradesListItem getSelectedItem() {
@@ -298,12 +298,12 @@ class PendingTradesModel extends UIModel {
     }
 
     Coin getAmountToWithdraw() {
-        AddressEntry addressEntry = walletFacade.getAddressInfoByTradeID(getTrade().getId());
+        AddressEntry addressEntry = walletService.getAddressInfoByTradeID(getTrade().getId());
         log.debug("trade id " + getTrade().getId());
         log.debug("getAddressString " + addressEntry.getAddressString());
-        log.debug("funds  " + walletFacade.getBalanceForAddress(addressEntry.getAddress()).subtract(FeePolicy
+        log.debug("funds  " + walletService.getBalanceForAddress(addressEntry.getAddress()).subtract(FeePolicy
                 .TX_FEE).toString());
-        // return walletFacade.getBalanceForAddress(addressEntry.getAddress()).subtract(FeePolicy.TX_FEE);
+        // return walletService.getBalanceForAddress(addressEntry.getAddress()).subtract(FeePolicy.TX_FEE);
 
         // TODO handle overpaid securityDeposit
         if (isOfferer())
@@ -322,7 +322,7 @@ class PendingTradesModel extends UIModel {
                 && getTrade().getState() == Trade.State.DEPOSIT_PUBLISHED) {
             // only set it once when actual state is DEPOSIT_PUBLISHED, and remove listener afterwards
             getTrade().setState(Trade.State.DEPOSIT_CONFIRMED);
-            walletFacade.removeTxConfidenceListener(txConfidenceListener);
+            walletService.removeTxConfidenceListener(txConfidenceListener);
             txConfidenceListener = null;
         }
     }

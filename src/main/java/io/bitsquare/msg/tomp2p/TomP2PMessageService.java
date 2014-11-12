@@ -19,7 +19,7 @@ package io.bitsquare.msg.tomp2p;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.msg.Message;
-import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.MessageService;
 import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.msg.listeners.GetPeerAddressListener;
@@ -59,15 +59,15 @@ import static io.bitsquare.util.tomp2p.BaseFutureUtil.isSuccess;
 
 
 /**
- * That facade delivers direct messaging and DHT functionality from the TomP2P library
+ * That service delivers direct messaging and DHT functionality from the TomP2P library
  * It is the translating domain specific functionality to the messaging layer.
- * The TomP2P library codebase shall not be used outside that facade.
+ * The TomP2P library codebase shall not be used outside that service.
  * That way we limit the dependency of the TomP2P library only to that class (and it's sub components).
  * <p>
  * TODO: improve callbacks that Platform.runLater is not necessary. We call usually that methods form teh UI thread.
  */
-class TomP2PMessageFacade implements MessageFacade {
-    private static final Logger log = LoggerFactory.getLogger(TomP2PMessageFacade.class);
+class TomP2PMessageService implements MessageService {
+    private static final Logger log = LoggerFactory.getLogger(TomP2PMessageService.class);
     private static final String ARBITRATORS_ROOT = "ArbitratorsRoot";
 
     private final TomP2PNode p2pNode;
@@ -82,7 +82,7 @@ class TomP2PMessageFacade implements MessageFacade {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PMessageFacade(User user, TomP2PNode p2pNode) {
+    public TomP2PMessageService(User user, TomP2PNode p2pNode) {
         this.user = user;
         this.p2pNode = p2pNode;
     }

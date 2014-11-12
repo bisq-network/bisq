@@ -17,7 +17,7 @@
 
 package io.bitsquare.msg.tomp2p;
 
-import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.MessageService;
 import io.bitsquare.msg.MessageModule;
 import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
@@ -58,7 +58,7 @@ public class TomP2PMessageModule extends MessageModule {
     }
 
     @Override
-    protected Class<? extends MessageFacade> messageFacade() {
-        return TomP2PMessageFacade.class;
+    protected Class<? extends MessageService> messageService() {
+        return TomP2PMessageService.class;
     }
 }

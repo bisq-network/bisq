@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.crypto.CryptoFacade;
+import io.bitsquare.crypto.CryptoService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.util.Utilities;
@@ -37,7 +37,7 @@ public class CreateAndSignContract {
 
     public static void run(ResultHandler resultHandler,
                            ExceptionHandler exceptionHandler,
-                           CryptoFacade cryptoFacade,
+                           CryptoService cryptoService,
                            Offer offer,
                            Coin tradeAmount,
                            String takeOfferFeeTxId,
@@ -54,7 +54,7 @@ public class CreateAndSignContract {
                     peersBankAccount, bankAccount, peersMessagePublicKey, messagePublicKey);
 
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = cryptoFacade.signContract(registrationKey, contractAsJson);
+            String signature = cryptoService.signContract(registrationKey, contractAsJson);
             resultHandler.onResult(contract, contractAsJson, signature);
         } catch (Throwable t) {
             log.error("Exception at sign contract " + t);
