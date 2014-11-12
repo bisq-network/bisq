@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.MessageService;
 import io.bitsquare.msg.listeners.GetPeerAddressListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.util.task.ExceptionHandler;
@@ -31,9 +31,9 @@ public class GetPeerAddress {
     private static final Logger log = LoggerFactory.getLogger(GetPeerAddress.class);
 
     public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler,
-                           MessageFacade messageFacade, PublicKey messagePublicKey) {
+                           MessageService messageService, PublicKey messagePublicKey) {
         log.trace("Run task");
-        messageFacade.getPeerAddress(messagePublicKey, new GetPeerAddressListener() {
+        messageService.getPeerAddress(messagePublicKey, new GetPeerAddressListener() {
             @Override
             public void onResult(Peer peer) {
                 log.trace("Received peer = " + peer.toString());

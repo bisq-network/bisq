@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.createoffer;
 
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferRepository;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
@@ -39,15 +39,15 @@ public class CreateOfferCoordinator {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferCoordinator.class);
 
     private final Offer offer;
-    private final WalletFacade walletFacade;
+    private final WalletService walletService;
     private final TransactionResultHandler resultHandler;
     private final FaultHandler faultHandler;
     private final OfferRepository offerRepository;
 
-    public CreateOfferCoordinator(Offer offer, WalletFacade walletFacade, TransactionResultHandler resultHandler,
+    public CreateOfferCoordinator(Offer offer, WalletService walletService, TransactionResultHandler resultHandler,
                                   FaultHandler faultHandler, OfferRepository offerRepository) {
         this.offer = offer;
-        this.walletFacade = walletFacade;
+        this.walletService = walletService;
         this.resultHandler = resultHandler;
         this.faultHandler = faultHandler;
         this.offerRepository = offerRepository;
@@ -64,7 +64,7 @@ public class CreateOfferCoordinator {
         Transaction transaction;
 
         try {
-            transaction = walletFacade.createOfferFeeTx(offer.getId());
+            transaction = walletService.createOfferFeeTx(offer.getId());
             offer.setOfferFeePaymentTxID(transaction.getHashAsString());
         } catch (InsufficientMoneyException ex) {
             faultHandler.handleFault(
@@ -76,7 +76,7 @@ public class CreateOfferCoordinator {
         }
 
         try {
-            walletFacade.broadcastCreateOfferFeeTx(transaction, new FutureCallback<Transaction>() {
+            walletService.broadcastCreateOfferFeeTx(transaction, new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     log.info("sendResult onSuccess:" + transaction);

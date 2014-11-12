@@ -18,11 +18,11 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.account.AccountSettings;
-import io.bitsquare.btc.BlockChainFacade;
-import io.bitsquare.btc.WalletFacade;
-import io.bitsquare.crypto.CryptoFacade;
+import io.bitsquare.btc.BlockChainService;
+import io.bitsquare.btc.WalletService;
+import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.msg.Message;
-import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
@@ -75,10 +75,10 @@ public class TradeManager {
     private final User user;
     private final AccountSettings accountSettings;
     private final Persistence persistence;
-    private final MessageFacade messageFacade;
-    private final BlockChainFacade blockChainFacade;
-    private final WalletFacade walletFacade;
-    private final CryptoFacade cryptoFacade;
+    private final MessageService messageService;
+    private final BlockChainService blockChainService;
+    private final WalletService walletService;
+    private final SignatureService signatureService;
     private final OfferRepository offerRepository;
 
     //TODO store TakerAsSellerProtocol in trade
@@ -99,17 +99,17 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeManager(User user, AccountSettings accountSettings, Persistence persistence, 
-                        MessageFacade messageFacade,
-                        BlockChainFacade blockChainFacade, WalletFacade walletFacade, CryptoFacade cryptoFacade,
+    public TradeManager(User user, AccountSettings accountSettings, Persistence persistence,
+                        MessageService messageService, BlockChainService blockChainService,
+                        WalletService walletService, SignatureService signatureService,
                         OfferRepository offerRepository) {
         this.user = user;
         this.accountSettings = accountSettings;
         this.persistence = persistence;
-        this.messageFacade = messageFacade;
-        this.blockChainFacade = blockChainFacade;
-        this.walletFacade = walletFacade;
-        this.cryptoFacade = cryptoFacade;
+        this.messageService = messageService;
+        this.blockChainService = blockChainService;
+        this.walletService = walletService;
+        this.signatureService = signatureService;
         this.offerRepository = offerRepository;
 
         Object offersObject = persistence.read(this, "offers");
@@ -127,7 +127,7 @@ public class TradeManager {
             closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
 
-        messageFacade.addIncomingMessageListener(this::onIncomingTradeMessage);
+        messageService.addIncomingMessageListener(this::onIncomingTradeMessage);
     }
 
 
@@ -136,7 +136,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void cleanup() {
-        messageFacade.removeIncomingMessageListener(this::onIncomingTradeMessage);
+        messageService.removeIncomingMessageListener(this::onIncomingTradeMessage);
     }
 
 
@@ -169,7 +169,7 @@ public class TradeManager {
 
         CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(
                 offer,
-                walletFacade,
+                walletService,
                 (transactionId) -> {
                     try {
                         offer.setOfferFeePaymentTxID(transactionId.getHashAsString());
@@ -246,10 +246,10 @@ public class TradeManager {
 
             BuyerAcceptsOfferProtocol buyerAcceptsOfferProtocol = new BuyerAcceptsOfferProtocol(trade,
                     sender,
-                    messageFacade,
-                    walletFacade,
-                    blockChainFacade,
-                    cryptoFacade,
+                    messageService,
+                    walletService,
+                    blockChainService,
+                    signatureService,
                     user,
                     new BuyerAcceptsOfferProtocolListener() {
                         @Override
@@ -372,7 +372,7 @@ public class TradeManager {
         };
 
         SellerTakesOfferProtocol sellerTakesOfferProtocol = new SellerTakesOfferProtocol(
-                trade, listener, messageFacade, walletFacade, blockChainFacade, cryptoFacade,
+                trade, listener, messageService, walletService, blockChainService, signatureService,
                 user);
         takerAsSellerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
         sellerTakesOfferProtocol.start();

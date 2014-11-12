@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.trade.takeoffer;
 
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.offer.Offer;
@@ -55,7 +55,7 @@ class TakeOfferModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(TakeOfferModel.class);
 
     private final TradeManager tradeManager;
-    private final WalletFacade walletFacade;
+    private final WalletService walletService;
     private final ApplicationPreferences applicationPreferences;
     private final Persistence persistence;
 
@@ -83,10 +83,10 @@ class TakeOfferModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    TakeOfferModel(TradeManager tradeManager, WalletFacade walletFacade, ApplicationPreferences applicationPreferences,
-                   Persistence persistence) {
+    TakeOfferModel(TradeManager tradeManager, WalletService walletService,
+                   ApplicationPreferences applicationPreferences, Persistence persistence) {
         this.tradeManager = tradeManager;
-        this.walletFacade = walletFacade;
+        this.walletService = walletService;
         this.applicationPreferences = applicationPreferences;
         this.persistence = persistence;
     }
@@ -146,14 +146,14 @@ class TakeOfferModel extends UIModel {
         calculateVolume();
         calculateTotalToPay();
 
-        addressEntry = walletFacade.getAddressInfoByTradeID(offer.getId());
-        walletFacade.addBalanceListener(new BalanceListener(addressEntry.getAddress()) {
+        addressEntry = walletService.getAddressInfoByTradeID(offer.getId());
+        walletService.addBalanceListener(new BalanceListener(addressEntry.getAddress()) {
             @Override
             public void onBalanceChanged(@NotNull Coin balance) {
                 updateBalance(balance);
             }
         });
-        updateBalance(walletFacade.getBalanceForAddress(addressEntry.getAddress()));
+        updateBalance(walletService.getBalanceForAddress(addressEntry.getAddress()));
     }
 
     void takeOffer() {
@@ -242,8 +242,8 @@ class TakeOfferModel extends UIModel {
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    WalletFacade getWalletFacade() {
-        return walletFacade;
+    WalletService getWalletService() {
+        return walletService;
     }
 
     AddressEntry getAddressEntry() {

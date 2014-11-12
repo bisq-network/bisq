@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.util.task.ExceptionHandler;
 import io.bitsquare.util.task.ResultHandler;
 
@@ -27,11 +27,11 @@ import org.slf4j.LoggerFactory;
 public class VerifyTakeOfferFeePayment {
     private static final Logger log = LoggerFactory.getLogger(VerifyTakeOfferFeePayment.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, WalletFacade walletFacade,
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, WalletService walletService,
                            String takeOfferFeeTxId) {
         log.trace("Run task");
         //TODO mocked yet, need a confidence listeners
-        int numOfPeersSeenTx = walletFacade.getNumOfPeersSeenTx(takeOfferFeeTxId);
+        int numOfPeersSeenTx = walletService.getNumOfPeersSeenTx(takeOfferFeeTxId);
         if (numOfPeersSeenTx > 2) {
             resultHandler.handleResult();
         }

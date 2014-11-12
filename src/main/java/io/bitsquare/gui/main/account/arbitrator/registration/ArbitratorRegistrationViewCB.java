@@ -19,13 +19,13 @@ package io.bitsquare.gui.main.account.arbitrator.registration;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.MessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
@@ -65,8 +65,8 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorRegistrationViewCB.class);
 
     private final Persistence persistence;
-    private final WalletFacade walletFacade;
-    private final MessageFacade messageFacade;
+    private final WalletService walletService;
+    private final MessageService messageService;
     private final User user;
     private final BSFormatter formatter;
     private Arbitrator arbitrator = new Arbitrator();
@@ -100,11 +100,11 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ArbitratorRegistrationViewCB(Persistence persistence, WalletFacade walletFacade,
-                                         MessageFacade messageFacade, User user, BSFormatter formatter) {
+    private ArbitratorRegistrationViewCB(Persistence persistence, WalletService walletService,
+                                         MessageService messageService, User user, BSFormatter formatter) {
         this.persistence = persistence;
-        this.walletFacade = walletFacade;
-        this.messageFacade = messageFacade;
+        this.walletService = walletService;
+        this.messageService = messageService;
         this.user = user;
         this.formatter = formatter;
     }
@@ -322,7 +322,7 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
             }
         }
 
-        messageFacade.addArbitrator(arbitrator);
+        messageService.addArbitrator(arbitrator);
     }
 
     @FXML
@@ -344,8 +344,8 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
                 "resolution.\n\nPlease pay in 2 BTC");
 
 
-        String securityDepositAddress = walletFacade.getRegistrationAddressEntry() != null ?
-                walletFacade.getRegistrationAddressEntry().toString() : "";
+        String securityDepositAddress = walletService.getRegistrationAddressEntry() != null ?
+                walletService.getRegistrationAddressEntry().toString() : "";
         securityDepositAddressTextField.setText(securityDepositAddress);
 
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
@@ -356,9 +356,9 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
             clipboard.setContent(content);
         });
 
-        paymentDoneButton.setDisable(walletFacade.getArbitratorDepositBalance().isZero());
-        log.debug("getArbitratorDepositBalance " + walletFacade.getArbitratorDepositBalance());
-        walletFacade.getWallet().addEventListener(new WalletEventListener() {
+        paymentDoneButton.setDisable(walletService.getArbitratorDepositBalance().isZero());
+        log.debug("getArbitratorDepositBalance " + walletService.getArbitratorDepositBalance());
+        walletService.getWallet().addEventListener(new WalletEventListener() {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
                 paymentDoneButton.setDisable(newBalance.isZero());
@@ -431,7 +431,7 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
 
 
     private Arbitrator getEditedArbitrator() {
-        String pubKeyAsHex = walletFacade.getArbitratorDepositAddressEntry().getPubKeyAsHexString();
+        String pubKeyAsHex = walletService.getArbitratorDepositAddressEntry().getPubKeyAsHexString();
         String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
         String name = nameTextField.getText();
         Coin fee = formatter.parseToCoin(arbitrationFeeTextField.getText());

@@ -53,7 +53,7 @@ public class ArbitratorProfileViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorProfileViewCB(ApplicationPreferences applicationPreferences, Persistence persistence, 
+    public ArbitratorProfileViewCB(ApplicationPreferences applicationPreferences, Persistence persistence,
                                    BSFormatter formatter) {
         this.applicationPreferences = applicationPreferences;
         this.persistence = persistence;

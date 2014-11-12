@@ -18,10 +18,10 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.gui.util.Profiler;
-import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.MessageService;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.persistence.Persistence;
@@ -50,20 +50,20 @@ class MainModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(MainModel.class);
 
     private final User user;
-    private final WalletFacade walletFacade;
-    private final MessageFacade messageFacade;
+    private final WalletService walletService;
+    private final MessageService messageService;
     private final TradeManager tradeManager;
     private final Persistence persistence;
 
-    private boolean messageFacadeInited;
-    private boolean walletFacadeInited;
-    private boolean facadesInitialised;
+    private boolean messageServiceInited;
+    private boolean walletServiceInited;
+    private boolean servicesInitialised;
 
     final BooleanProperty backendReady = new SimpleBooleanProperty();
     final DoubleProperty networkSyncProgress = new SimpleDoubleProperty(-1);
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty(0);
     final ObjectProperty<BootstrapState> bootstrapState = new SimpleObjectProperty<>();
-    final ObjectProperty walletFacadeException = new SimpleObjectProperty<Throwable>();
+    final ObjectProperty walletServiceException = new SimpleObjectProperty<Throwable>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -71,11 +71,11 @@ class MainModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MainModel(User user, WalletFacade walletFacade, MessageFacade messageFacade,
+    private MainModel(User user, WalletService walletService, MessageService messageService,
                       TradeManager tradeManager, Persistence persistence) {
         this.user = user;
-        this.walletFacade = walletFacade;
-        this.messageFacade = messageFacade;
+        this.walletService = walletService;
+        this.messageService = messageService;
         this.tradeManager = tradeManager;
         this.persistence = persistence;
     }
@@ -105,13 +105,13 @@ class MainModel extends UIModel {
     void initBackend() {
 
         // For testing with the bootstrap node we need the BootstrappedPeerFactory which gets started from
-        // messageFacade.init
+        // messageService.init
 
-        messageFacade.init(new BootstrapListener() {
+        messageService.init(new BootstrapListener() {
             @Override
             public void onCompleted() {
-                messageFacadeInited = true;
-                if (walletFacadeInited) onFacadesInitialised();
+                messageServiceInited = true;
+                if (walletServiceInited) onServicesInitialised();
             }
 
             @Override
@@ -125,15 +125,15 @@ class MainModel extends UIModel {
             }
         });
 
-        Profiler.printMsgWithTime("MainModel.initFacades");
+        Profiler.printMsgWithTime("MainModel.initServices");
 
-        WalletFacade.BlockchainDownloadListener blockchainDownloadListener = new WalletFacade
+        WalletService.BlockchainDownloadListener blockchainDownloadListener = new WalletService
                 .BlockchainDownloadListener() {
             @Override
             public void progress(double percentage) {
                 networkSyncProgress.set(percentage / 100.0);
 
-                if (facadesInitialised && percentage >= 100.0)
+                if (servicesInitialised && percentage >= 100.0)
                     backendReady.set(true);
             }
 
@@ -141,26 +141,26 @@ class MainModel extends UIModel {
             public void doneDownload() {
                 networkSyncProgress.set(1.0);
 
-                if (facadesInitialised)
+                if (servicesInitialised)
                     backendReady.set(true);
             }
         };
 
-        WalletFacade.StartupListener startupListener = new WalletFacade.StartupListener() {
+        WalletService.StartupListener startupListener = new WalletService.StartupListener() {
             @Override
             public void completed() {
-                walletFacadeInited = true;
-                if (messageFacadeInited)
-                    onFacadesInitialised();
+                walletServiceInited = true;
+                if (messageServiceInited)
+                    onServicesInitialised();
             }
 
             @Override
             public void failed(final Throwable failure) {
-                walletFacadeException.set(failure);
+                walletServiceException.set(failure);
             }
         };
 
-        walletFacade.initialize(Platform::runLater, blockchainDownloadListener, startupListener);
+        walletService.initialize(Platform::runLater, blockchainDownloadListener, startupListener);
     }
 
 
@@ -191,12 +191,12 @@ class MainModel extends UIModel {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onFacadesInitialised() {
+    private void onServicesInitialised() {
         tradeManager.getPendingTrades().addListener((MapChangeListener<String,
                 Trade>) change -> updateNumPendingTrades());
         updateNumPendingTrades();
 
-        facadesInitialised = true;
+        servicesInitialised = true;
 
         if (networkSyncProgress.get() >= 1.0)
             backendReady.set(true);

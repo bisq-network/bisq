@@ -25,7 +25,7 @@ import eu.hansolo.enzo.notification.NotificationBuilder;
 import eu.hansolo.enzo.notification.NotifierBuilder;
 
 /**
- * Not sure if we stick with the eu.hansolo.enzo.notification.Notification implementation, so keep it behind a facade
+ * Not sure if we stick with the eu.hansolo.enzo.notification.Notification implementation, so keep it behind a service
  */
 public class SystemNotification {
     private static final Logger log = LoggerFactory.getLogger(SystemNotification.class);

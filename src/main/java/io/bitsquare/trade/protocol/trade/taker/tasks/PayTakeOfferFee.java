@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.util.task.ExceptionHandler;
 
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -33,11 +33,11 @@ import org.slf4j.LoggerFactory;
 public class PayTakeOfferFee {
     private static final Logger log = LoggerFactory.getLogger(PayTakeOfferFee.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, WalletFacade walletFacade,
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, WalletService walletService,
                            String tradeId) {
         log.trace("Run task");
         try {
-            walletFacade.payTakeOfferFee(tradeId, new FutureCallback<Transaction>() {
+            walletService.payTakeOfferFee(tradeId, new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     log.debug("Take offer fee paid successfully. Transaction ID = " + transaction.getHashAsString());

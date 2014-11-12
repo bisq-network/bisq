@@ -25,7 +25,7 @@ import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileViewCB;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.msg.MessageFacade;
+import io.bitsquare.msg.MessageService;
 import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.persistence.Persistence;
 
@@ -53,7 +53,7 @@ public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorL
 
     private final AccountSettings accountSettings;
     private final Persistence persistence;
-    private final MessageFacade messageFacade;
+    private final MessageService messageService;
 
     private final List<Arbitrator> allArbitrators = new ArrayList<>();
     private Arbitrator currentArbitrator;
@@ -68,11 +68,11 @@ public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorL
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorBrowserViewCB(AccountSettings accountSettings, Persistence persistence, 
-                                   MessageFacade messageFacade) {
+    public ArbitratorBrowserViewCB(AccountSettings accountSettings, Persistence persistence,
+                                   MessageService messageService) {
         this.accountSettings = accountSettings;
         this.persistence = persistence;
-        this.messageFacade = messageFacade;
+        this.messageService = messageService;
     }
 
 
@@ -82,8 +82,8 @@ public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorL
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        messageFacade.addArbitratorListener(this);
-        messageFacade.getArbitrators(LanguageUtil.getDefaultLanguageLocale());
+        messageService.addArbitratorListener(this);
+        messageService.getArbitrators(LanguageUtil.getDefaultLanguageLocale());
 
         loadView(Navigation.Item.ARBITRATOR_PROFILE);
         checkButtonState();

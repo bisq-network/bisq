@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.shared.tasks;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.btc.BlockChainFacade;
+import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.util.task.ExceptionHandler;
 import io.bitsquare.util.task.ResultHandler;
 
@@ -29,10 +29,10 @@ public class VerifyPeerAccount {
     private static final Logger log = LoggerFactory.getLogger(VerifyPeerAccount.class);
 
     public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler,
-                           BlockChainFacade blockChainFacade, String peersAccountId, BankAccount peersBankAccount) {
+                           BlockChainService blockChainService, String peersAccountId, BankAccount peersBankAccount) {
         //TODO mocked yet
-        if (blockChainFacade.verifyAccountRegistration()) {
-            if (blockChainFacade.isAccountBlackListed(peersAccountId, peersBankAccount)) {
+        if (blockChainService.verifyAccountRegistration()) {
+            if (blockChainService.isAccountBlackListed(peersAccountId, peersBankAccount)) {
                 log.error("Taker is blacklisted");
                 exceptionHandler.handleException(new Exception("Taker is blacklisted"));
             }

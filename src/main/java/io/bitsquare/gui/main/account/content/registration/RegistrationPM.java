@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.registration;
 
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
@@ -122,8 +122,8 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    WalletFacade getWalletFacade() {
-        return model.getWalletFacade();
+    WalletService getWalletService() {
+        return model.getWalletService();
     }
 
     BSFormatter getFormatter() {

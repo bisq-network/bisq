@@ -29,7 +29,7 @@ run {
 processResources {
     from(sourceSets.main.resources.srcDirs) {
         include '**/*.properties'
-        filter(ReplaceTokens, tokens: [ 'app.version': project.version ])
+        filter(ReplaceTokens, tokens: ['app.version': project.version])
     }
 }
 

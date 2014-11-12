@@ -35,7 +35,7 @@
     <TitledGroupBg text="General application preferences" GridPane.rowSpan="8"/>
 
     <Label text="Bitcoin denomination:" GridPane.rowIndex="0">
-    <GridPane.margin>
+        <GridPane.margin>
             <Insets top="10"/>
         </GridPane.margin>
     </Label>

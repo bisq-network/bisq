@@ -118,7 +118,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         table.setPlaceholder(new Label("No pending trades available"));
 
         txIdChangeListener = (ov, oldValue, newValue) ->
-                txIdTextField.setup(presentationModel.getWalletFacade(), newValue);
+                txIdTextField.setup(presentationModel.getWalletService(), newValue);
 
         selectedItemChangeListener = (obsValue, oldValue, newValue) -> {
             if (oldValue != null && newValue != null)
@@ -154,7 +154,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         presentationModel.txId.addListener(txIdChangeListener);
         presentationModel.fault.addListener(faultChangeListener);
 
-        txIdTextField.setup(presentationModel.getWalletFacade(), presentationModel.txId.get());
+        txIdTextField.setup(presentationModel.getWalletService(), presentationModel.txId.get());
         table.getSelectionModel().select(presentationModel.getSelectedItem());
         table.getSelectionModel().selectedItemProperty().addListener(selectedItemChangeListener);
 

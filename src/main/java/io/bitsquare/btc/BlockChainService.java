@@ -22,11 +22,11 @@ import io.bitsquare.bank.BankAccount;
 import javax.inject.Inject;
 
 /**
- * A facade delivers blockchain functionality from the BitcoinJ library.
+ * A service delivers blockchain functionality from the BitcoinJ library.
  */
-public class BlockChainFacade {
+public class BlockChainService {
     @Inject
-    public BlockChainFacade() {
+    public BlockChainService() {
 
     }
 

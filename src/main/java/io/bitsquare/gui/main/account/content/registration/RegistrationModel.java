@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.account.content.registration;
 
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.persistence.Persistence;
@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 class RegistrationModel extends UIModel {
     private static final Logger log = LoggerFactory.getLogger(RegistrationModel.class);
 
-    private final WalletFacade walletFacade;
+    private final WalletService walletService;
     private final User user;
     private final Persistence persistence;
 
@@ -65,9 +65,9 @@ class RegistrationModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private RegistrationModel(WalletFacade walletFacade, User user, Persistence persistence) {
+    private RegistrationModel(WalletService walletService, User user, Persistence persistence) {
 
-        this.walletFacade = walletFacade;
+        this.walletService = walletService;
         this.user = user;
         this.persistence = persistence;
     }
@@ -81,15 +81,15 @@ class RegistrationModel extends UIModel {
     public void initialize() {
         super.initialize();
 
-        if (walletFacade != null && walletFacade.getWallet() != null) {
-            addressEntry = walletFacade.getRegistrationAddressEntry();
-            walletFacade.addBalanceListener(new BalanceListener(getAddressEntry().getAddress()) {
+        if (walletService != null && walletService.getWallet() != null) {
+            addressEntry = walletService.getRegistrationAddressEntry();
+            walletService.addBalanceListener(new BalanceListener(getAddressEntry().getAddress()) {
                 @Override
                 public void onBalanceChanged(@NotNull Coin balance) {
                     updateBalance(balance);
                 }
             });
-            updateBalance(walletFacade.getBalanceForAddress(getAddressEntry().getAddress()));
+            updateBalance(walletService.getBalanceForAddress(getAddressEntry().getAddress()));
         }
     }
 
@@ -140,7 +140,7 @@ class RegistrationModel extends UIModel {
             }
         };
         try {
-            walletFacade.payRegistrationFee(user.getStringifiedBankAccounts(), callback);
+            walletService.payRegistrationFee(user.getStringifiedBankAccounts(), callback);
         } catch (InsufficientMoneyException e) {
             payFeeErrorMessage.set("Fee payment failed with error: " + e.getMessage());
         }
@@ -151,8 +151,8 @@ class RegistrationModel extends UIModel {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    WalletFacade getWalletFacade() {
-        return walletFacade;
+    WalletService getWalletService() {
+        return walletService;
     }
 
     Coin getFeeAsCoin() {

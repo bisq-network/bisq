@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pending;
 
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
@@ -161,8 +161,8 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         return model.isOfferer();
     }
 
-    WalletFacade getWalletFacade() {
-        return model.getWalletFacade();
+    WalletService getWalletService() {
+        return model.getWalletService();
     }
 
     PendingTradesListItem getSelectedItem() {

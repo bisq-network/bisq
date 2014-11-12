@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.funds.withdrawal;
 
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.WalletFacade;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
@@ -42,7 +42,7 @@ public class WithdrawalListItem {
 
     private final AddressEntry addressEntry;
 
-    private final WalletFacade walletFacade;
+    private final WalletService walletService;
     private final BSFormatter formatter;
     private final AddressConfidenceListener confidenceListener;
 
@@ -52,9 +52,9 @@ public class WithdrawalListItem {
 
     private Coin balance;
 
-    public WithdrawalListItem(AddressEntry addressEntry, WalletFacade walletFacade, BSFormatter formatter) {
+    public WithdrawalListItem(AddressEntry addressEntry, WalletService walletService, BSFormatter formatter) {
         this.addressEntry = addressEntry;
-        this.walletFacade = walletFacade;
+        this.walletService = walletService;
         this.formatter = formatter;
         this.addressString.set(getAddress().toString());
 
@@ -66,31 +66,31 @@ public class WithdrawalListItem {
         progressIndicator.setPrefSize(24, 24);
         Tooltip.install(progressIndicator, tooltip);
 
-        confidenceListener = walletFacade.addAddressConfidenceListener(new AddressConfidenceListener(getAddress()) {
+        confidenceListener = walletService.addAddressConfidenceListener(new AddressConfidenceListener(getAddress()) {
             @Override
             public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                 updateConfidence(confidence);
             }
         });
 
-        updateConfidence(walletFacade.getConfidenceForAddress(getAddress()));
+        updateConfidence(walletService.getConfidenceForAddress(getAddress()));
 
 
         // balance
         balanceLabel = new Label();
-        balanceListener = walletFacade.addBalanceListener(new BalanceListener(getAddress()) {
+        balanceListener = walletService.addBalanceListener(new BalanceListener(getAddress()) {
             @Override
             public void onBalanceChanged(Coin balance) {
                 updateBalance(balance);
             }
         });
 
-        updateBalance(walletFacade.getBalanceForAddress(getAddress()));
+        updateBalance(walletService.getBalanceForAddress(getAddress()));
     }
 
     public void cleanup() {
-        walletFacade.removeAddressConfidenceListener(confidenceListener);
-        walletFacade.removeBalanceListener(balanceListener);
+        walletService.removeAddressConfidenceListener(confidenceListener);
+        walletService.removeBalanceListener(balanceListener);
     }
 
     private void updateBalance(Coin balance) {
