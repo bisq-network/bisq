@@ -65,10 +65,10 @@ public class NetworkPreferencesViewCB extends CachedViewCB<NetworkPreferencesPM>
     public void activate() {
         super.activate();
 
-        bitcoinNetworkType.setText(presentationModel.bitcoinNetworkType());
-        p2pNetworkConnection.setText(presentationModel.p2pNetworkConnection());
-        p2pNetworkAddress.setText(presentationModel.p2pNetworkAddress());
-        bootstrapAddress.setText(presentationModel.bootstrapAddress());
+        bitcoinNetworkType.setText(presentationModel.bitcoinNetworkType);
+        p2pNetworkConnection.setText(presentationModel.p2pNetworkConnection);
+        p2pNetworkAddress.setText(presentationModel.p2pNetworkAddress);
+        bootstrapAddress.setText(presentationModel.bootstrapAddress);
     }
 
     @SuppressWarnings("EmptyMethod")
