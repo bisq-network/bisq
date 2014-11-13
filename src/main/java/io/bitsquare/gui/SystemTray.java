@@ -42,6 +42,8 @@ public class SystemTray {
 
     private static final String ICON_HI_RES = "/images/system_tray_icon@2x.png";
     private static final String ICON_LO_RES = "/images/system_tray_icon.png";
+    private static final String ICON_ALT = "/system_tray_icon_alt.png";
+    
 
     private static final String SHOW_WINDOW_LABEL = "Show exchange window";
     private static final String HIDE_WINDOW_LABEL = "Hide exchange window";
@@ -81,7 +83,7 @@ public class SystemTray {
         if (Utilities.isOSX())
             path = ImageUtil.isRetina() ? ICON_HI_RES : ICON_LO_RES;
         else
-            path = ICON_HI_RES;
+            path = ICON_ALT;
 
         try {
             BufferedImage trayIconImage = ImageIO.read(getClass().getResource(path));
