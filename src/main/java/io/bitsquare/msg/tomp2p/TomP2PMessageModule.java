@@ -26,14 +26,14 @@ import com.google.inject.name.Names;
 
 import org.springframework.core.env.Environment;
 
-import static io.bitsquare.msg.tomp2p.BootstrappedPeerFactory.*;
+import static io.bitsquare.msg.tomp2p.BootstrappedPeerDHTBuilder.*;
 
 public class TomP2PMessageModule extends MessageModule {
 
     public static final String BOOTSTRAP_NODE_NAME_KEY = "bootstrap.node.name";
     public static final String BOOTSTRAP_NODE_IP_KEY = "bootstrap.node.ip";
     public static final String BOOTSTRAP_NODE_PORT_KEY = "bootstrap.node.port";
-    public static final String NETWORK_INTERFACE_KEY = BootstrappedPeerFactory.NETWORK_INTERFACE_KEY;
+    public static final String NETWORK_INTERFACE_KEY = BootstrappedPeerDHTBuilder.NETWORK_INTERFACE_KEY;
 
     public TomP2PMessageModule(Environment env) {
         super(env);
@@ -54,7 +54,7 @@ public class TomP2PMessageModule extends MessageModule {
         );
         bindConstant().annotatedWith(Names.named(NETWORK_INTERFACE_KEY)).to(
                 env.getProperty(NETWORK_INTERFACE_KEY, NETWORK_INTERFACE_UNSPECIFIED));
-        bind(BootstrappedPeerFactory.class).asEagerSingleton();
+        bind(BootstrappedPeerDHTBuilder.class).asEagerSingleton();
     }
 
     @Override

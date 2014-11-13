@@ -76,7 +76,7 @@ public class TomP2PNode {
     private PeerAddress storedPeerAddress;
 
     private PeerDHT peerDHT;
-    private BootstrappedPeerFactory bootstrappedPeerFactory;
+    private BootstrappedPeerDHTBuilder bootstrappedPeerDHTBuilder;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -84,8 +84,8 @@ public class TomP2PNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PNode(BootstrappedPeerFactory bootstrappedPeerFactory) {
-        this.bootstrappedPeerFactory = bootstrappedPeerFactory;
+    public TomP2PNode(BootstrappedPeerDHTBuilder bootstrappedPeerDHTBuilder) {
+        this.bootstrappedPeerDHTBuilder = bootstrappedPeerDHTBuilder;
     }
 
     // for unit testing
@@ -108,17 +108,17 @@ public class TomP2PNode {
 
     public void setKeyPair(@NotNull KeyPair keyPair) {
         this.keyPair = keyPair;
-        bootstrappedPeerFactory.setKeyPair(keyPair);
+        bootstrappedPeerDHTBuilder.setKeyPair(keyPair);
     }
 
     public void bootstrap(BootstrapListener bootstrapListener) {
         checkNotNull(keyPair, "keyPair must not be null.");
         checkNotNull(messageBroker, "messageBroker must not be null.");
 
-        bootstrappedPeerFactory.bootstrapState.addListener((ov, oldValue, newValue) ->
+        bootstrappedPeerDHTBuilder.bootstrapState.addListener((ov, oldValue, newValue) ->
                 bootstrapListener.onBootstrapStateChanged(newValue));
 
-        SettableFuture<PeerDHT> bootstrapFuture = bootstrappedPeerFactory.start();
+        SettableFuture<PeerDHT> bootstrapFuture = bootstrappedPeerDHTBuilder.start();
         Futures.addCallback(bootstrapFuture, new FutureCallback<PeerDHT>() {
             @Override
             public void onSuccess(@Nullable PeerDHT peerDHT) {
@@ -149,7 +149,7 @@ public class TomP2PNode {
     }
 
     public void shutDown() {
-        bootstrappedPeerFactory.shutDown();
+        bootstrappedPeerDHTBuilder.shutDown();
 
         if (peerDHT != null)
             peerDHT.shutdown();

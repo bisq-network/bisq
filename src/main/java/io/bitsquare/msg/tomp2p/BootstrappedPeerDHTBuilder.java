@@ -70,8 +70,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Creates a DHT peer and bootstraps to the network via a bootstrap node
  */
-public class BootstrappedPeerFactory {
-    private static final Logger log = LoggerFactory.getLogger(BootstrappedPeerFactory.class);
+public class BootstrappedPeerDHTBuilder {
+    private static final Logger log = LoggerFactory.getLogger(BootstrappedPeerDHTBuilder.class);
 
     public static final String BOOTSTRAP_NODE_KEY = "bootstrapNode";
     static final String NETWORK_INTERFACE_KEY = "interface";
@@ -94,10 +94,10 @@ public class BootstrappedPeerFactory {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BootstrappedPeerFactory(Persistence persistence,
-                                   @Named(Node.PORT_KEY) int port,
-                                   @Named(BOOTSTRAP_NODE_KEY) Node bootstrapNode,
-                                   @Named(NETWORK_INTERFACE_KEY) String networkInterface) {
+    public BootstrappedPeerDHTBuilder(Persistence persistence,
+                                      @Named(Node.PORT_KEY) int port,
+                                      @Named(BOOTSTRAP_NODE_KEY) Node bootstrapNode,
+                                      @Named(NETWORK_INTERFACE_KEY) String networkInterface) {
         this.persistence = persistence;
         this.port = port;
         this.bootstrapNode = bootstrapNode;
@@ -314,7 +314,7 @@ public class BootstrappedPeerFactory {
             public void operationComplete(BaseFuture future) throws Exception {
                 if (futureBootstrap.isSuccess()) {
                     setState(state, "Bootstrap successful.");
-                    persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", state);
+                    persistence.write(BootstrappedPeerDHTBuilder.this, "lastSuccessfulBootstrap", state);
                     settableFuture.set(peerDHT);
                 }
                 else {
