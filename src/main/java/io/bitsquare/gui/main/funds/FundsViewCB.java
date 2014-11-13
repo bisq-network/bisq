@@ -44,6 +44,7 @@ public class FundsViewCB extends CachedViewCB {
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
+    private Tab currentTab;
 
     @FXML Tab withdrawalTab, transactionsTab;
 
@@ -103,12 +104,6 @@ public class FundsViewCB extends CachedViewCB {
         navigation.removeListener(navigationListener);
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Navigation
@@ -118,19 +113,22 @@ public class FundsViewCB extends CachedViewCB {
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
 
+        // we want to get activate/deactivate called, so we remove the old view on tab change
+        if (currentTab != null)
+            currentTab.setContent(null);
+
         final ViewLoader loader = new ViewLoader(navigationItem);
         Node view = loader.load();
-        Tab tab = null;
         switch (navigationItem) {
             case WITHDRAWAL:
-                tab = withdrawalTab;
+                currentTab = withdrawalTab;
                 break;
             case TRANSACTIONS:
-                tab = transactionsTab;
+                currentTab = transactionsTab;
                 break;
         }
-        tab.setContent(view);
-        ((TabPane) root).getSelectionModel().select(tab);
+        currentTab.setContent(view);
+        ((TabPane) root).getSelectionModel().select(currentTab);
         Initializable childController = loader.getController();
         ((ViewCB) childController).setParent(this);
 

@@ -44,12 +44,11 @@ public class PortfolioViewCB extends CachedViewCB {
     private final Navigation navigation;
     private final TradeManager tradeManager;
 
+    private Tab currentTab;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 
     @FXML Tab offersTab, openTradesTab, closedTradesTab;
-    private Parent currentView;
-    private Tab currentTab;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -125,14 +124,14 @@ public class PortfolioViewCB extends CachedViewCB {
 
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
+        super.loadView(navigationItem);
+        
         // we want to get activate/deactivate called, so we remove the old view on tab change
         if (currentTab != null)
             currentTab.setContent(null);
 
-        super.loadView(navigationItem);
-
         final ViewLoader loader = new ViewLoader(navigationItem);
-        currentView = loader.load();
+        Node view = loader.load();
         switch (navigationItem) {
             case OFFERS:
                 currentTab = offersTab;
@@ -144,7 +143,7 @@ public class PortfolioViewCB extends CachedViewCB {
                 currentTab = closedTradesTab;
                 break;
         }
-        currentTab.setContent(currentView);
+        currentTab.setContent(view);
         ((TabPane) root).getSelectionModel().select(currentTab);
         Initializable childController = loader.getController();
         ((ViewCB) childController).setParent(this);
