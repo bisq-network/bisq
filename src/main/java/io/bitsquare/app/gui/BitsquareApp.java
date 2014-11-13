@@ -26,6 +26,7 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
+import io.bitsquare.util.Utilities;
 
 import com.google.common.base.Throwables;
 
@@ -122,8 +123,17 @@ public class BitsquareApp extends Application {
         primaryStage.setScene(scene);
         primaryStage.setMinWidth(75);
         primaryStage.setMinHeight(50);
-        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream(
-                ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png")));
+
+        // on windows the title icon is also used as task bar icon in a larger size
+        // on Linux no title icon is supported but also a large task bar icon is derived form that title icon
+        String iconPath;
+        if (Utilities.isOSX())
+            iconPath = ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png";
+        else
+            iconPath = "/images/taskbar_icon.png";
+
+        if (iconPath != null)
+            primaryStage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
 
 
         // make the UI visible
