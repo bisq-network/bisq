@@ -79,8 +79,6 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
      */
     public void terminate() {
         log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
-        if (childController != null)
-            ((ViewCB<? extends PresentationModel>) childController).terminate();
 
         if (presentationModel != null)
             presentationModel.terminate();

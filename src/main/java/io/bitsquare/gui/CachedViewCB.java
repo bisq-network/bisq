@@ -74,9 +74,7 @@ public class CachedViewCB<T extends PresentationModel> extends ViewCB<T> {
      */
     public void activate() {
         log.trace("Lifecycle: activate " + this.getClass().getSimpleName());
-       /* if (childController instanceof CachedViewCB)
-            ((CachedViewCB) childController).activate();
-*/
+
         if (presentationModel != null)
             presentationModel.activate();
     }
@@ -86,8 +84,6 @@ public class CachedViewCB<T extends PresentationModel> extends ViewCB<T> {
      */
     public void deactivate() {
         log.trace("Lifecycle: deactivate " + this.getClass().getSimpleName());
-      /*  if (childController instanceof CachedViewCB)
-            ((CachedViewCB) childController).deactivate();*/
 
         if (presentationModel != null)
             presentationModel.deactivate();
