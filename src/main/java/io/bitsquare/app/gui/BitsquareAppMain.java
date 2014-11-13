@@ -44,11 +44,12 @@ public class BitsquareAppMain extends BitsquareExecutable {
         parser.accepts(APP_DATA_DIR_KEY, "Application data directory").withRequiredArg()
                 .defaultsTo(DEFAULT_APP_DATA_DIR);
         parser.accepts(NAME_KEY, "Name of this node").withRequiredArg();
-        parser.accepts(PORT_KEY, "Port to listen on").withRequiredArg().defaultsTo(String.valueOf(Node.DEFAULT_PORT));
         parser.accepts(BITCOIN_NETWORK_KEY).withRequiredArg().defaultsTo(BitcoinModule.DEFAULT_BITCOIN_NETWORK);
+        parser.accepts(PORT_KEY, "Port to listen on").withRequiredArg().ofType(int.class).defaultsTo(Node.DEFAULT_PORT);
         parser.accepts(BOOTSTRAP_NODE_NAME_KEY).withRequiredArg().defaultsTo(BootstrapNodes.DEFAULT.getName());
         parser.accepts(BOOTSTRAP_NODE_IP_KEY).withRequiredArg().defaultsTo(BootstrapNodes.DEFAULT.getIp());
-        parser.accepts(BOOTSTRAP_NODE_PORT_KEY).withRequiredArg().defaultsTo(BootstrapNodes.DEFAULT.getPortAsString());
+        parser.accepts(BOOTSTRAP_NODE_PORT_KEY).withRequiredArg().ofType(int.class)
+                .defaultsTo(BootstrapNodes.DEFAULT.getPort());
         parser.accepts(NETWORK_INTERFACE_KEY, "Network interface").withRequiredArg();
     }
 

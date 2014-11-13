@@ -53,7 +53,7 @@ public class TomP2PMessageModule extends MessageModule {
                 Node.at(
                         env.getProperty(BOOTSTRAP_NODE_NAME_KEY, BootstrapNodes.DEFAULT.getName()),
                         env.getProperty(BOOTSTRAP_NODE_IP_KEY, BootstrapNodes.DEFAULT.getIp()),
-                        env.getProperty(BOOTSTRAP_NODE_PORT_KEY, BootstrapNodes.DEFAULT.getPortAsString())
+                        env.getProperty(BOOTSTRAP_NODE_PORT_KEY, int.class, BootstrapNodes.DEFAULT.getPort())
                 )
         );
         bindConstant().annotatedWith(Names.named(NETWORK_INTERFACE_KEY)).to(
