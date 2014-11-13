@@ -64,7 +64,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String appDataDir;
 
     public BitsquareEnvironment(OptionSet options) {
-        this(new JOptCommandLinePropertySource(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME, checkNotNull(options)));
+        this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
     }
 
     BitsquareEnvironment(PropertySource commandLineProperties) {
