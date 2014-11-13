@@ -22,13 +22,13 @@ import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.util.spring.JOptCommandLinePropertySource;
 
 import java.nio.file.Paths;
 
 import java.util.Properties;
 
 import joptsimple.OptionSet;
-import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.core.env.PropertySource;
@@ -64,7 +64,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
     private final String appDataDir;
 
     public BitsquareEnvironment(OptionSet options) {
-        this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
+        this(new JOptCommandLinePropertySource(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME, checkNotNull(options)));
     }
 
     BitsquareEnvironment(PropertySource commandLineProperties) {
