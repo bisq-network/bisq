@@ -42,7 +42,7 @@ public class SystemTray {
 
     private static final String ICON_HI_RES = "/images/system_tray_icon@2x.png";
     private static final String ICON_LO_RES = "/images/system_tray_icon.png";
-    private static final String ICON_ALT = "/system_tray_icon_alt.png";
+    private static final String ICON_ALT = "/images/system_tray_icon_alt.png";
     
 
     private static final String SHOW_WINDOW_LABEL = "Show exchange window";
