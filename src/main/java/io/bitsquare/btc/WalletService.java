@@ -285,8 +285,10 @@ public class WalletService {
     }
 
     public void shutDown() {
-        wallet.removeEventListener(walletEventListener);
-        walletAppKit.stopAsync();
+        if (wallet != null)
+            wallet.removeEventListener(walletEventListener);
+        if (walletAppKit != null)
+            walletAppKit.stopAsync();
     }
 
     public Wallet getWallet() {
