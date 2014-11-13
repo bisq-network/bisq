@@ -39,7 +39,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import net.tomp2p.connection.Bindings;
-import net.tomp2p.connection.ChannelClientConfiguration;
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.futures.BaseFuture;
@@ -54,9 +53,7 @@ import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
-import net.tomp2p.peers.PeerMap;
 import net.tomp2p.peers.PeerMapChangeListener;
-import net.tomp2p.peers.PeerMapConfiguration;
 import net.tomp2p.peers.PeerStatistic;
 import net.tomp2p.replication.IndirectReplication;
 import net.tomp2p.utils.Utils;
@@ -124,17 +121,11 @@ class BootstrappedPeerFactory {
             setState(BootstrapState.PEER_CREATION, "We create a P2P node.");
 
             Number160 peerId = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
-            PeerMapConfiguration pmc = new PeerMapConfiguration(peerId).peerNoVerification();
-            PeerMap pm = new PeerMap(pmc);
-            ChannelClientConfiguration cc = PeerBuilder.createDefaultChannelClientConfiguration();
-            cc.maxPermitsTCP(100);
-            cc.maxPermitsUDP(100);
             Bindings bindings = new Bindings();
             if (!NETWORK_INTERFACE_UNSPECIFIED.equals(networkInterface))
                 bindings.addInterface(networkInterface);
 
-            peer = new PeerBuilder(keyPair).ports(port).peerMap(pm).bindings(bindings)
-                    .channelClientConfiguration(cc).start();
+            peer = new PeerBuilder(keyPair).ports(port).bindings(bindings).start();
             peerDHT = new PeerBuilderDHT(peer).start();
             new IndirectReplication(peerDHT).start();
 
