@@ -20,6 +20,7 @@ package io.bitsquare.app.cli;
 import io.bitsquare.network.Node;
 
 import net.tomp2p.dht.PeerBuilderDHT;
+import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.nat.PeerBuilderNAT;
 import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
@@ -27,6 +28,7 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMap;
 import net.tomp2p.peers.PeerMapConfiguration;
+import net.tomp2p.replication.IndirectReplication;
 import net.tomp2p.rpc.ObjectDataReply;
 
 import org.slf4j.Logger;
@@ -63,8 +65,9 @@ public class BootstrapNode {
                 }
             });
 
-            new PeerBuilderDHT(peer).start();
+            PeerDHT peerDHT = new PeerBuilderDHT(peer).start();
             new PeerBuilderNAT(peer).start();
+            new IndirectReplication(peerDHT).start();
 
             log.debug("started");
             new Thread(new Runnable() {

@@ -59,6 +59,7 @@ import net.tomp2p.peers.PeerMap;
 import net.tomp2p.peers.PeerMapChangeListener;
 import net.tomp2p.peers.PeerMapConfiguration;
 import net.tomp2p.peers.PeerStatistic;
+import net.tomp2p.replication.IndirectReplication;
 import net.tomp2p.utils.Utils;
 
 import org.jetbrains.annotations.NotNull;
@@ -132,6 +133,7 @@ public class BootstrappedPeerFactory {
             peer = new PeerBuilder(keyPair).ports(port).peerMap(pm).bindings(bindings)
                     .channelClientConfiguration(cc).start();
             peerDHT = new PeerBuilderDHT(peer).start();
+            new IndirectReplication(peerDHT).start();
 
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
                 @Override
