@@ -17,17 +17,21 @@
 
 package io.bitsquare.gui;
 
+import io.bitsquare.BitsquareException;
 import io.bitsquare.gui.util.ImageUtil;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
-import javax.swing.*;
+import java.io.IOException;
 
 import javafx.application.Platform;
 import javafx.stage.Stage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
 
 /**
  * There is no JavaFX support yet, so we need to use AWT.
@@ -43,7 +47,6 @@ public class SystemTray {
 
     private final Stage stage;
     private final Runnable onExit;
-    private final TrayIcon trayIcon = createTrayIcon();
     private final MenuItem toggleShowHideItem = new MenuItem(HIDE_WINDOW_LABEL);
 
     public SystemTray(Stage stage, Runnable onExit) {
@@ -73,14 +76,20 @@ public class SystemTray {
         popupMenu.addSeparator();
         popupMenu.add(exitItem);
 
-        trayIcon.setPopupMenu(popupMenu);
-        trayIcon.setToolTip("Bitsquare: The decentralized bitcoin exchange");
-
-        java.awt.SystemTray self = java.awt.SystemTray.getSystemTray();
+        String path = ImageUtil.isRetina() ? ICON_HI_RES : ICON_LO_RES;
         try {
+            BufferedImage trayIconImage = ImageIO.read(getClass().getResource(path));
+            int trayIconWidth = new TrayIcon(trayIconImage).getSize().width;
+            TrayIcon trayIcon = new TrayIcon(trayIconImage.getScaledInstance(trayIconWidth, -1, Image.SCALE_SMOOTH));
+            trayIcon.setPopupMenu(popupMenu);
+            trayIcon.setToolTip("Bitsquare: The decentralized bitcoin exchange");
+
+            java.awt.SystemTray self = java.awt.SystemTray.getSystemTray();
             self.add(trayIcon);
-        } catch (AWTException ex) {
-            log.error("Icon could not be added to system tray.", ex);
+        } catch (AWTException e1) {
+            log.error("Icon could not be added to system tray.", e1);
+        } catch (IOException e2) {
+            throw new BitsquareException(e2);
         }
 
         toggleShowHideItem.addActionListener(e -> {
@@ -100,10 +109,5 @@ public class SystemTray {
     public void hideStage() {
         stage.hide();
         toggleShowHideItem.setLabel(SHOW_WINDOW_LABEL);
-    }
-
-    private TrayIcon createTrayIcon() {
-        String path = ImageUtil.isRetina() ? ICON_HI_RES : ICON_LO_RES;
-        return new TrayIcon(new ImageIcon(getClass().getResource(path)).getImage());
     }
 }
