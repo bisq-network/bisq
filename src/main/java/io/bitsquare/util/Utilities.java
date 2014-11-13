@@ -52,6 +52,22 @@ public class Utilities {
         return gson.toJson(object);
     }
 
+    public static boolean isWindows() {
+        return getOSName().contains("win");
+    }
+
+    public static boolean isOSX() {
+        return getOSName().contains("mac");
+    }
+
+    public static boolean isLinux() {
+        return getOSName().contains("darwin");
+    }
+
+    private static String getOSName() {
+        return System.getProperty("os.name").toLowerCase();
+    }
+
     public static <T> T jsonToObject(String jsonString, Class<T> classOfT) {
         Gson gson =
                 new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).setPrettyPrinting().create();

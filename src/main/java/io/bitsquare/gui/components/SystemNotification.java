@@ -17,6 +17,8 @@
 
 package io.bitsquare.gui.components;
 
+import io.bitsquare.util.Utilities;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +36,8 @@ public class SystemNotification {
     public static void openInfoNotification(String title, String message) {
         // On windows it causes problems with the hidden stage used in the hansolo Notification implementation
         // Lets deactivate it for the moment and fix that with a more native-like or real native solution later.
-        String os = System.getProperty("os.name").toLowerCase();
-        if (!os.contains("win"))
+        // Lets deactivate it for Linux as well, as it is not much tested yet
+        if (Utilities.isOSX())
             notifier.notify(NotificationBuilder.create().title(title).message(message).build());
     }
 }

@@ -19,6 +19,7 @@ package io.bitsquare.gui;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.util.Utilities;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -76,16 +77,26 @@ public class SystemTray {
         popupMenu.addSeparator();
         popupMenu.add(exitItem);
 
-        String path = ImageUtil.isRetina() ? ICON_HI_RES : ICON_LO_RES;
+        String path;
+        if (Utilities.isOSX())
+            path = ImageUtil.isRetina() ? ICON_HI_RES : ICON_LO_RES;
+        else
+            path = ICON_HI_RES;
+
         try {
             BufferedImage trayIconImage = ImageIO.read(getClass().getResource(path));
-            int trayIconWidth = new TrayIcon(trayIconImage).getSize().width;
-            TrayIcon trayIcon = new TrayIcon(trayIconImage.getScaledInstance(trayIconWidth, -1, Image.SCALE_SMOOTH));
+            TrayIcon trayIcon = new TrayIcon(trayIconImage);
+            // On Windows and Linux the icon needs to be scaled
+            // On OSX we get the correct size from the provided image 
+            if (!Utilities.isOSX()) {
+                int trayIconWidth = trayIcon.getSize().width;
+                trayIcon = new TrayIcon(trayIconImage.getScaledInstance(trayIconWidth, -1, Image.SCALE_SMOOTH));
+            }
+
             trayIcon.setPopupMenu(popupMenu);
             trayIcon.setToolTip("Bitsquare: The decentralized bitcoin exchange");
 
-            java.awt.SystemTray self = java.awt.SystemTray.getSystemTray();
-            self.add(trayIcon);
+            java.awt.SystemTray.getSystemTray().add(trayIcon);
         } catch (AWTException e1) {
             log.error("Icon could not be added to system tray.", e1);
         } catch (IOException e2) {

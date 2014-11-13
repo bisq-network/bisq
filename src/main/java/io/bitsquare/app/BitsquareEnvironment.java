@@ -22,6 +22,7 @@ import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.util.Utilities;
 import io.bitsquare.util.spring.JOptCommandLinePropertySource;
 
 import java.nio.file.Paths;
@@ -127,16 +128,13 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
 
     private static String defaultUserDataDir() {
-        String os = System.getProperty("os.name").toLowerCase();
-
-        if (os.contains("win"))
+        if (Utilities.isWindows())
             return System.getenv("APPDATA");
-
-        if (os.contains("mac"))
+        else if (Utilities.isOSX())
             return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toString();
-
-        // *nix
-        return Paths.get(System.getProperty("user.home"), ".local", "share").toString();
+        else
+            // *nix
+            return Paths.get(System.getProperty("user.home"), ".local", "share").toString();
     }
 
     private static String appDataDir(String userDataDir, String appName) {
