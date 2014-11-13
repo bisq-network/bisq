@@ -40,7 +40,8 @@ public class ApplicationPreferences implements Serializable {
     private static final long serialVersionUID = 7995048077355006861L;
     private static final Logger log = LoggerFactory.getLogger(ApplicationPreferences.class);
 
-    private List<String> btcDenominations = Arrays.asList(MonetaryFormat.CODE_BTC, MonetaryFormat.CODE_MBTC);
+    // deactivate mBit for now as most screens are not supporting it yet
+    private List<String> btcDenominations = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
 
 
     // Needed for persistence as Property objects are transient (not serializable)
