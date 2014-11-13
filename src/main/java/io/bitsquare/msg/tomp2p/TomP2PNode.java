@@ -140,8 +140,8 @@ public class TomP2PNode {
 
 
     public void shutDown() {
-        if (peerDHT != null && peerDHT.peer() != null)
-            peerDHT.peer().shutdown();
+        if (peerDHT != null)
+            peerDHT.shutdown();
     }
 
     public PeerDHT getPeerDHT() {
