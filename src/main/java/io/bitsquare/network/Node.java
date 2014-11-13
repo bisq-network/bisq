@@ -64,10 +64,6 @@ public final class Node {
         return port;
     }
 
-    public String getPortAsString() {
-        return String.valueOf(port);
-    }
-
     /**
      * Return a copy of this node with the port updated to the given value.
      */

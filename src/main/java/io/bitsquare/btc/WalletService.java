@@ -123,10 +123,10 @@ public class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletService(NetworkParameters params, FeePolicy feePolicy, SignatureService signatureService,
+    public WalletService(BitcoinNetwork bitcoinNetwork, FeePolicy feePolicy, SignatureService signatureService,
                          Persistence persistence, UserAgent userAgent,
                          @Named(DIR_KEY) File walletDir, @Named(PREFIX_KEY) String walletPrefix) {
-        this.params = params;
+        this.params = bitcoinNetwork.getParameters();
         this.feePolicy = feePolicy;
         this.signatureService = signatureService;
         this.persistence = persistence;

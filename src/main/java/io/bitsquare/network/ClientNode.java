@@ -15,29 +15,12 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.btc;
+package io.bitsquare.network;
 
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.RegTestParams;
-import org.bitcoinj.params.TestNet3Params;
+public interface ClientNode {
+    ConnectionType getConnectionType();
 
-public enum BitcoinNetwork {
+    Node getAddress();
 
-    MAINNET(MainNetParams.get()),
-    TESTNET(TestNet3Params.get()),
-    REGTEST(RegTestParams.get());
-
-    public static final String KEY = "bitcoin.network";
-    public static final BitcoinNetwork DEFAULT = TESTNET;
-
-    private final NetworkParameters parameters;
-
-    BitcoinNetwork(NetworkParameters parameters) {
-        this.parameters = parameters;
-    }
-
-    public NetworkParameters getParameters() {
-        return parameters;
-    }
+    Node getBootstrapNodeAddress();
 }

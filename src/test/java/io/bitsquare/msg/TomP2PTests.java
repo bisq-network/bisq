@@ -18,6 +18,7 @@
 package io.bitsquare.msg;
 
 import io.bitsquare.network.BootstrapNodes;
+import io.bitsquare.network.ConnectionType;
 import io.bitsquare.network.Node;
 import io.bitsquare.util.Repeat;
 import io.bitsquare.util.RepeatRule;
@@ -79,10 +80,6 @@ import static org.junit.Assert.*;
 @Ignore
 public class TomP2PTests {
     private static final Logger log = LoggerFactory.getLogger(TomP2PTests.class);
-
-    private enum ConnectionType {
-        UNKNOWN, DIRECT, NAT, RELAY
-    }
 
     // If you want to test in one specific connection mode define it directly, otherwise use UNKNOWN
     private static final ConnectionType FORCED_CONNECTION_TYPE = ConnectionType.DIRECT;

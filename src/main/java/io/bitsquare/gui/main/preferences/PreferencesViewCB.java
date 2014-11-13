@@ -141,7 +141,8 @@ public class PreferencesViewCB extends CachedViewCB {
         tab.setContent(view);
         ((TabPane) root).getSelectionModel().select(tab);
         Initializable childController = loader.getController();
-        ((ViewCB) childController).setParent(this);
+        if (childController instanceof ViewCB)
+            ((ViewCB) childController).setParent(this);
 
         return childController;
     }

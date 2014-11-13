@@ -20,6 +20,10 @@ package io.bitsquare.msg.tomp2p;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.msg.MessageBroker;
 import io.bitsquare.msg.listeners.BootstrapListener;
+import io.bitsquare.network.BootstrapState;
+import io.bitsquare.network.ClientNode;
+import io.bitsquare.network.ConnectionType;
+import io.bitsquare.network.Node;
 import io.bitsquare.network.tomp2p.TomP2PPeer;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -51,6 +55,7 @@ import net.tomp2p.futures.FutureDirect;
 import net.tomp2p.futures.FuturePeerConnection;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
+import net.tomp2p.peers.PeerSocketAddress;
 import net.tomp2p.storage.Data;
 import net.tomp2p.utils.Utils;
 
@@ -67,7 +72,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * This class is offering generic functionality of TomP2P needed for Bitsquare, like data and domain protection.
  * It does not handle any domain aspects of Bitsquare.
  */
-public class TomP2PNode {
+public class TomP2PNode implements ClientNode {
     private static final Logger log = LoggerFactory.getLogger(TomP2PNode.class);
 
     private KeyPair keyPair;
@@ -115,7 +120,7 @@ public class TomP2PNode {
         checkNotNull(keyPair, "keyPair must not be null.");
         checkNotNull(messageBroker, "messageBroker must not be null.");
 
-        bootstrappedPeerFactory.bootstrapState.addListener((ov, oldValue, newValue) ->
+        bootstrappedPeerFactory.getBootstrapState().addListener((ov, oldValue, newValue) ->
                 bootstrapListener.onBootstrapStateChanged(newValue));
 
         SettableFuture<PeerDHT> bootstrapFuture = bootstrappedPeerFactory.start();
@@ -154,11 +159,6 @@ public class TomP2PNode {
         if (peerDHT != null)
             peerDHT.shutdown();
     }
-
-    public PeerDHT getPeerDHT() {
-        return peerDHT;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Generic DHT methods
@@ -372,5 +372,34 @@ public class TomP2PNode {
         Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
         log.debug("storePeerAddress " + peerDHT.peerAddress().toString());
         return putDomainProtectedData(locationKey, data);
+    }
+
+    @Override
+    public ConnectionType getConnectionType() {
+        BootstrapState bootstrapState = bootstrappedPeerFactory.getBootstrapState().get();
+        switch (bootstrapState) {
+            case DIRECT_SUCCESS:
+                return ConnectionType.DIRECT;
+            case NAT_SUCCESS:
+                return ConnectionType.NAT;
+            case RELAY_SUCCESS:
+                return ConnectionType.RELAY;
+            default:
+                throw new BitsquareException("Invalid bootstrap state: %s", bootstrapState);
+        }
+    }
+
+    @Override
+    public Node getAddress() {
+        PeerSocketAddress socketAddress = peerDHT.peerAddress().peerSocketAddress();
+        return Node.at(
+                peerDHT.peerID().toString(),
+                socketAddress.inetAddress().getHostAddress(),
+                socketAddress.tcpPort());
+    }
+
+    @Override
+    public Node getBootstrapNodeAddress() {
+        return bootstrappedPeerFactory.getBootstrapNode();
     }
 }
