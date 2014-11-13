@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.preferences.network;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.gui.PresentationModel;
-import io.bitsquare.msg.tomp2p.BootstrappedPeerDHTBuilder;
+import io.bitsquare.msg.tomp2p.BootstrappedPeerFactory;
 import io.bitsquare.msg.tomp2p.TomP2PNode;
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.Node;
@@ -49,9 +49,9 @@ public class NetworkPreferencesPM extends PresentationModel {
 
     @Inject
     NetworkPreferencesPM(NetworkParameters networkParameters,
-                         BootstrappedPeerDHTBuilder bootstrappedPeerDHTBuilder,
+                         BootstrappedPeerFactory bootstrappedPeerFactory,
                          TomP2PNode tomP2PNode,
-                         @Named(BootstrappedPeerDHTBuilder.BOOTSTRAP_NODE_KEY) Node bootstrapNode) {
+                         @Named(BootstrappedPeerFactory.BOOTSTRAP_NODE_KEY) Node bootstrapNode) {
 
         switch (networkParameters.getId()) {
             case NetworkParameters.ID_REGTEST:
@@ -77,7 +77,7 @@ public class NetworkPreferencesPM extends PresentationModel {
                 + ", IP: " + bootstrapNode.getIp()
                 + ", Port: " + bootstrapNode.getPortAsString();
 
-        BootstrapState state = bootstrappedPeerDHTBuilder.bootstrapState.get();
+        BootstrapState state = bootstrappedPeerFactory.bootstrapState.get();
         if (state == BootstrapState.DIRECT_SUCCESS)
             p2pNetworkConnection = "Direct connection";
         else if (state == BootstrapState.NAT_SUCCESS)
