@@ -17,9 +17,8 @@
 
 package io.bitsquare.gui.main.preferences.network;
 
+import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.network.ClientNode;
-
-import org.bitcoinj.core.NetworkParameters;
 
 import java.net.URL;
 
@@ -33,20 +32,20 @@ import javafx.scene.control.*;
 
 public class NetworkPreferencesViewCB implements Initializable {
 
-    private final NetworkParameters networkParameters;
+    private final String bitcoinNetworkValue;
     private final ClientNode clientNode;
 
     @FXML TextField bitcoinNetwork, connectionType, nodeAddress, bootstrapNodeAddress;
 
     @Inject
-    public NetworkPreferencesViewCB(NetworkParameters networkParameters, ClientNode clientNode) {
-        this.networkParameters = networkParameters;
+    public NetworkPreferencesViewCB(BitcoinNetwork bitcoinNetwork, ClientNode clientNode) {
+        this.bitcoinNetworkValue = bitcoinNetwork.toString();
         this.clientNode = clientNode;
     }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        bitcoinNetwork.setText(networkParameters.getId());
+        bitcoinNetwork.setText(bitcoinNetworkValue);
         nodeAddress.setText(clientNode.getAddress().toString());
         bootstrapNodeAddress.setText(clientNode.getBootstrapNodeAddress().toString());
         connectionType.setText(clientNode.getConnectionType().toString());

@@ -17,6 +17,27 @@
 
 package io.bitsquare.btc;
 
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.TestNet3Params;
+
 public enum BitcoinNetwork {
-    MAINNET, TESTNET, REGTEST;
+
+    MAINNET(MainNetParams.get()),
+    TESTNET(TestNet3Params.get()),
+    REGTEST(RegTestParams.get());
+
+    public static final String KEY = "bitcoin.network";
+    public static final BitcoinNetwork DEFAULT = TESTNET;
+
+    private final NetworkParameters parameters;
+
+    BitcoinNetwork(NetworkParameters parameters) {
+        this.parameters = parameters;
+    }
+
+    public NetworkParameters getParameters() {
+        return parameters;
+    }
 }

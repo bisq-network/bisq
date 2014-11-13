@@ -34,8 +34,6 @@ import static com.google.inject.name.Names.named;
 
 public class BitcoinModule extends BitsquareModule {
 
-    public static final String BITCOIN_NETWORK_KEY = "bitcoin.network";
-    public static final String DEFAULT_BITCOIN_NETWORK = BitcoinNetwork.TESTNET.toString();
 
     public BitcoinModule(Environment env) {
         super(env);
@@ -43,7 +41,8 @@ public class BitcoinModule extends BitsquareModule {
 
     @Override
     protected void configure() {
-        bind(NetworkParameters.class).toInstance(network());
+        bind(BitcoinNetwork.class).toInstance(
+            env.getProperty(BitcoinNetwork.KEY, BitcoinNetwork.class, BitcoinNetwork.DEFAULT));
         bind(FeePolicy.class).asEagerSingleton();
 
         bindConstant().annotatedWith(named(UserAgent.NAME_KEY)).to(env.getRequiredProperty(UserAgent.NAME_KEY));
@@ -62,22 +61,6 @@ public class BitcoinModule extends BitsquareModule {
     @Override
     protected void doClose(Injector injector) {
         injector.getInstance(WalletService.class).shutDown();
-    }
-
-    private NetworkParameters network() {
-        BitcoinNetwork network = BitcoinNetwork.valueOf(
-                env.getProperty(BITCOIN_NETWORK_KEY, DEFAULT_BITCOIN_NETWORK).toUpperCase());
-
-        switch (network) {
-            case MAINNET:
-                return MainNetParams.get();
-            case TESTNET:
-                return TestNet3Params.get();
-            case REGTEST:
-                return RegTestParams.get();
-            default:
-                throw new IllegalArgumentException("Unknown bitcoin network: " + network);
-        }
     }
 }
 

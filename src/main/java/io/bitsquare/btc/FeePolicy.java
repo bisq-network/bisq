@@ -20,11 +20,7 @@ package io.bitsquare.btc;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.RegTestParams;
-import org.bitcoinj.params.TestNet3Params;
 
 import javax.inject.Inject;
 
@@ -49,28 +45,29 @@ public class FeePolicy {
     // Not used at the moment
     // private static final String registrationFeeAddress = "mvkDXt4QmN4Nq9dRUsRigBCaovde9nLkZR";
 
-    //
     private static String createOfferFeeAddress;
     private static String takeOfferFeeAddress;
 
-    private final NetworkParameters params;
+    private final BitcoinNetwork bitcoinNetwork;
 
     @Inject
-    public FeePolicy(NetworkParameters params) {
-        this.params = params;
+    public FeePolicy(BitcoinNetwork bitcoinNetwork) {
+        this.bitcoinNetwork = bitcoinNetwork;
 
-        if (params.equals(TestNet3Params.get())) {
-            createOfferFeeAddress = "mmm8BdTcHoc5wi75RmiQYsJ2Tr1NoZmM84";
-            takeOfferFeeAddress = "mmm8BdTcHoc5wi75RmiQYsJ2Tr1NoZmM84";
-        }
-        else if (params.equals(MainNetParams.get())) {
-            // bitsquare donation address used for the moment...
-            createOfferFeeAddress = "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7";
-            takeOfferFeeAddress = "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7";
-        }
-        else if (params.equals(RegTestParams.get())) {
-            createOfferFeeAddress = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";
-            takeOfferFeeAddress = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";
+        switch (bitcoinNetwork) {
+            case TESTNET:
+                createOfferFeeAddress = "mmm8BdTcHoc5wi75RmiQYsJ2Tr1NoZmM84";
+                takeOfferFeeAddress = "mmm8BdTcHoc5wi75RmiQYsJ2Tr1NoZmM84";
+                break;
+            case MAINNET:
+                // bitsquare donation address used for the moment...
+                createOfferFeeAddress = "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7";
+                takeOfferFeeAddress = "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7";
+                break;
+            case REGTEST:
+                createOfferFeeAddress = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";
+                takeOfferFeeAddress = "n2upbsaKAe4PD3cc4JfS7UCqPC5oNd7Ckg";
+                break;
         }
     }
 
@@ -89,7 +86,7 @@ public class FeePolicy {
     //TODO get address form arbitrator list
     public Address getAddressForCreateOfferFee() {
         try {
-            return new Address(params, createOfferFeeAddress);
+            return new Address(bitcoinNetwork.getParameters(), createOfferFeeAddress);
         } catch (AddressFormatException e) {
             e.printStackTrace();
             return null;
@@ -99,7 +96,7 @@ public class FeePolicy {
     //TODO get address form the intersection of  both traders arbitrator lists
     public Address getAddressForTakeOfferFee() {
         try {
-            return new Address(params, takeOfferFeeAddress);
+            return new Address(bitcoinNetwork.getParameters(), takeOfferFeeAddress);
         } catch (AddressFormatException e) {
             e.printStackTrace();
             return null;

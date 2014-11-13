@@ -19,15 +19,15 @@ package io.bitsquare.app.gui;
 
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.BitsquareExecutable;
-import io.bitsquare.btc.BitcoinModule;
+import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
+import io.bitsquare.util.joptsimple.EnumValueConverter;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 import static io.bitsquare.app.BitsquareEnvironment.*;
-import static io.bitsquare.btc.BitcoinModule.BITCOIN_NETWORK_KEY;
 import static io.bitsquare.msg.tomp2p.TomP2PMessageModule.*;
 import static io.bitsquare.network.Node.*;
 
@@ -44,8 +44,10 @@ public class BitsquareAppMain extends BitsquareExecutable {
         parser.accepts(APP_DATA_DIR_KEY, "Application data directory").withRequiredArg()
                 .defaultsTo(DEFAULT_APP_DATA_DIR);
         parser.accepts(NAME_KEY, "Name of this node").withRequiredArg();
-        parser.accepts(BITCOIN_NETWORK_KEY).withRequiredArg().defaultsTo(BitcoinModule.DEFAULT_BITCOIN_NETWORK);
         parser.accepts(PORT_KEY, "Port to listen on").withRequiredArg().ofType(int.class).defaultsTo(Node.DEFAULT_PORT);
+        parser.accepts(BitcoinNetwork.KEY).withRequiredArg().ofType(BitcoinNetwork.class)
+                .withValuesConvertedBy(new EnumValueConverter(BitcoinNetwork.class))
+                .defaultsTo(BitcoinNetwork.DEFAULT);
         parser.accepts(BOOTSTRAP_NODE_NAME_KEY).withRequiredArg().defaultsTo(BootstrapNodes.DEFAULT.getName());
         parser.accepts(BOOTSTRAP_NODE_IP_KEY).withRequiredArg().defaultsTo(BootstrapNodes.DEFAULT.getIp());
         parser.accepts(BOOTSTRAP_NODE_PORT_KEY).withRequiredArg().ofType(int.class)
