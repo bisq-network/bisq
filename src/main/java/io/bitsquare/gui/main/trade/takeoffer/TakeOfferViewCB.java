@@ -45,6 +45,7 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.HPos;
@@ -74,6 +75,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
     private final Navigation navigation;
     private final OverlayManager overlayManager;
     private CloseListener closeListener;
+    private BooleanProperty tabIsClosable;
 
     private boolean detailsVisible;
     private boolean advancedScreenInited;
@@ -184,8 +186,10 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
         acceptedArbitratorsTextField.setText(presentationModel.getAcceptedArbitrators());
     }
 
-    public void setCloseListener(CloseListener closeListener) {
+    public void setCloseListener(CloseListener closeListener, BooleanProperty tabIsClosable) {
         this.closeListener = closeListener;
+        this.tabIsClosable = tabIsClosable;
+        tabIsClosable.bind(presentationModel.tabIsClosable);
     }
 
 

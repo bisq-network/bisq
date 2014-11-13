@@ -44,6 +44,7 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.HPos;
@@ -79,6 +80,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     private final Navigation navigation;
     private final OverlayManager overlayManager;
     private CloseListener closeListener;
+    private BooleanProperty tabIsClosable;
 
     private boolean detailsVisible;
     private boolean advancedScreenInited;
@@ -143,6 +145,8 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     @SuppressWarnings("EmptyMethod")
     public void deactivate() {
         super.deactivate();
+
+        tabIsClosable.unbind();
     }
 
     @Override
@@ -169,9 +173,12 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
             imageView.setId("image-sell-large");
     }
 
-    public void setCloseListener(CloseListener closeListener) {
+    public void configCloseHandlers(CloseListener closeListener, BooleanProperty tabIsClosable) {
         this.closeListener = closeListener;
+        this.tabIsClosable = tabIsClosable;
+        tabIsClosable.bind(presentationModel.tabIsClosable);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers

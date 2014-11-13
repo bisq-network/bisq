@@ -188,8 +188,8 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
             createOfferViewCB = loader.getController();
             createOfferViewCB.setParent(this);
             createOfferViewCB.initWithData(direction, amount, price);
-            createOfferViewCB.setCloseListener(this::onCreateOfferViewRemoved);
             final Tab tab = new Tab("Create offer");
+            createOfferViewCB.configCloseHandlers(this::onCreateOfferViewRemoved, tab.closableProperty());
             tab.setContent(createOfferView);
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
@@ -204,8 +204,8 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
             takeOfferViewCB = loader.getController();
             takeOfferViewCB.setParent(this);
             takeOfferViewCB.initWithData(direction, amount, offer);
-            takeOfferViewCB.setCloseListener(this::onCreateOfferViewRemoved);
             final Tab tab = new Tab("Take offer");
+            takeOfferViewCB.setCloseListener(this::onCreateOfferViewRemoved, tab.closableProperty());
             tab.setContent(takeOfferView);
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);

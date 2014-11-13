@@ -81,6 +81,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     final BooleanProperty showWarningInvalidFiatDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
+    final BooleanProperty tabIsClosable = new SimpleBooleanProperty(true);
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new
@@ -347,8 +348,10 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
             updateButtonDisableState();
         });
         model.isWalletFunded.addListener((ov, oldValue, newValue) -> {
-            if (newValue)
+            if (newValue) {
                 updateButtonDisableState();
+                tabIsClosable.set(false);
+            }
         });
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
