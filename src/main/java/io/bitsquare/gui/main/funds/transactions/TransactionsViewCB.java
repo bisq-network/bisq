@@ -81,14 +81,6 @@ public class TransactionsViewCB extends CachedViewCB {
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
-
-        for (TransactionsListItem transactionsListItem : transactionsListItems)
-            transactionsListItem.cleanup();
-    }
-
-    @Override
     public void activate() {
         super.activate();
 
@@ -100,10 +92,12 @@ public class TransactionsViewCB extends CachedViewCB {
         table.setItems(transactionsListItems);
     }
 
-    @SuppressWarnings("EmptyMethod")
     @Override
-    public void terminate() {
-        super.terminate();
+    public void deactivate() {
+        super.deactivate();
+
+        for (TransactionsListItem transactionsListItem : transactionsListItems)
+            transactionsListItem.cleanup();
     }
 
 

@@ -103,5 +103,4 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
                 "= " + navigationItem);
         return null;
     }
-
 }

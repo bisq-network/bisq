@@ -20,12 +20,12 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.portfolio.PortfolioViewCB"
-         AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-         AnchorPane.topAnchor="0.0"
+         AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+         AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" tabClosingPolicy="UNAVAILABLE"
          xmlns:fx="http://javafx.com/fxml">
 
-    <Tab fx:id="offersTab" text="Open offers" closable="false"/>
-    <Tab fx:id="openTradesTab" text="Open trades" closable="false"/>
-    <Tab fx:id="closedTradesTab" text="History" closable="false"/>
+    <Tab fx:id="offersTab" text="Open offers"/>
+    <Tab fx:id="openTradesTab" text="Open trades"/>
+    <Tab fx:id="closedTradesTab" text="History"/>
 
 </TabPane>
