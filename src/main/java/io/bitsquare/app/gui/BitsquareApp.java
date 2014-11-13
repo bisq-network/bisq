@@ -129,8 +129,10 @@ public class BitsquareApp extends Application {
         String iconPath;
         if (Utilities.isOSX())
             iconPath = ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png";
+        else if (Utilities.isWindows())
+            iconPath = "/images/taskbar_icon_windows.png";
         else
-            iconPath = "/images/taskbar_icon.png";
+            iconPath = "/images/taskbar_icon_linux.png";
 
         if (iconPath != null)
             primaryStage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
