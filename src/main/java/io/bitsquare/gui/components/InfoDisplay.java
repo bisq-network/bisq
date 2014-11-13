@@ -154,13 +154,13 @@ public class InfoDisplay extends Parent {
 
     public void setText(String text) {
         this.text.set(text);
-        if (getScene() != null) {
-            Platform.runLater(() -> {
+        Platform.runLater(() -> {
+            if (getScene() != null) {
                 label.setVisible(true);
                 label.prefWidthProperty().unbind();
                 label.setPrefWidth(getScene().getWindow().getWidth() - localToScene(0, 0).getX() - 35);
-            });
-        }
+            }
+        });
     }
 
     public void setGridPane(GridPane gridPane) {
