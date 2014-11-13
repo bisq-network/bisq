@@ -48,8 +48,6 @@ import net.tomp2p.storage.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.util.tomp2p.BaseFutureUtil.isSuccess;
-
 class TomP2POfferRepository implements OfferRepository {
 
     private static final Logger log = LoggerFactory.getLogger(TomP2POfferRepository.class);
@@ -79,7 +77,7 @@ class TomP2POfferRepository implements OfferRepository {
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    if (isSuccess(future)) {
+                    if (future.isSuccess()) {
                         Platform.runLater(() -> {
                             resultHandler.handleResult();
                             offerRepositoryListeners.stream().forEach(listener -> {
@@ -168,8 +166,8 @@ class TomP2POfferRepository implements OfferRepository {
         FutureGet futureGet = p2pNode.getDataMap(locationKey);
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
-            public void operationComplete(BaseFuture baseFuture) throws Exception {
-                if (isSuccess(baseFuture)) {
+            public void operationComplete(BaseFuture future) throws Exception {
+                if (future.isSuccess()) {
                     final Map<Number640, Data> dataMap = futureGet.dataMap();
                     final List<Offer> offers = new ArrayList<>();
                     if (dataMap != null) {
@@ -199,7 +197,7 @@ class TomP2POfferRepository implements OfferRepository {
                                 listener.onOffersReceived(new ArrayList<>())));
                     }
                     else {
-                        log.error("Get offers from DHT  was not successful with reason:" + baseFuture.failedReason());
+                        log.error("Get offers from DHT  was not successful with reason:" + future.failedReason());
                     }
                 }
             }
@@ -234,7 +232,7 @@ class TomP2POfferRepository implements OfferRepository {
             putFuture.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    if (isSuccess(putFuture))
+                    if (future.isSuccess())
                         log.trace("Update invalidationTimestamp to DHT was successful. TimeStamp=" +
                                 invalidationTimestamp.get());
                     else
@@ -261,7 +259,7 @@ class TomP2POfferRepository implements OfferRepository {
         getFuture.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
-                if (isSuccess(getFuture)) {
+                if (future.isSuccess()) {
                     Data data = getFuture.data();
                     if (data != null && data.object() instanceof Long) {
                         final Object object = data.object();

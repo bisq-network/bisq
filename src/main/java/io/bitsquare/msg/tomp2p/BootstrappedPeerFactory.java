@@ -21,7 +21,6 @@ import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.Node;
 import io.bitsquare.persistence.Persistence;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
 import com.google.inject.name.Named;
@@ -79,9 +78,9 @@ public class BootstrappedPeerFactory {
     static final String NETWORK_INTERFACE_UNSPECIFIED = "<unspecified>";
 
     private KeyPair keyPair;
-    private int port;
+    private final int port;
     private final Node bootstrapNode;
-    private String networkInterface;
+    private final String networkInterface;
     private final Persistence persistence;
 
     private final SettableFuture<PeerDHT> settableFuture = SettableFuture.create();
@@ -119,7 +118,7 @@ public class BootstrappedPeerFactory {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ListenableFuture<PeerDHT> start() {
+    public SettableFuture<PeerDHT> start() {
         try {
             setState(BootstrapState.PEER_CREATION, "We create a P2P node.");
 
@@ -193,7 +192,7 @@ public class BootstrappedPeerFactory {
                     break;
             }
         } catch (IOException e) {
-            handleError(BootstrapState.PEER_CREATION, "Cannot create peer with port: " + port + ". Exeption: " + e);
+            handleError(BootstrapState.PEER_CREATION, "Cannot create peer with port: " + port + ". Exception: " + e);
         }
 
         return settableFuture;

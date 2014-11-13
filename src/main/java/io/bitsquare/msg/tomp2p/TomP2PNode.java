@@ -17,13 +17,14 @@
 
 package io.bitsquare.msg.tomp2p;
 
+import io.bitsquare.BitsquareException;
 import io.bitsquare.msg.MessageBroker;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.network.tomp2p.TomP2PPeer;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.IOException;
 
@@ -58,7 +59,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.util.tomp2p.BaseFutureUtil.isSuccess;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * The fully bootstrapped P2PNode which is responsible himself for his availability in the messaging system. It saves
@@ -110,28 +111,42 @@ public class TomP2PNode {
         bootstrappedPeerFactory.setKeyPair(keyPair);
     }
 
-    public void start(BootstrapListener bootstrapListener) {
-        setupTimerForIPCheck();
+    public void bootstrap(BootstrapListener bootstrapListener) {
+        checkNotNull(keyPair, "keyPair must not be null.");
+        checkNotNull(messageBroker, "messageBroker must not be null.");
 
-        ListenableFuture<PeerDHT> bootstrapComplete = bootstrap();
-        Futures.addCallback(bootstrapComplete, new FutureCallback<PeerDHT>() {
+        bootstrappedPeerFactory.bootstrapState.addListener((ov, oldValue, newValue) ->
+                bootstrapListener.onBootstrapStateChanged(newValue));
+
+        SettableFuture<PeerDHT> bootstrapFuture = bootstrappedPeerFactory.start();
+        Futures.addCallback(bootstrapFuture, new FutureCallback<PeerDHT>() {
             @Override
-            public void onSuccess(@Nullable PeerDHT result) {
-                log.debug("p2pNode.start success result = " + result);
-                Platform.runLater(bootstrapListener::onCompleted);
+            public void onSuccess(@Nullable PeerDHT peerDHT) {
+                if (peerDHT != null) {
+                    TomP2PNode.this.peerDHT = peerDHT;
+                    setup();
+                    Platform.runLater(bootstrapListener::onCompleted);
+                }
+                else {
+                    log.error("Error at bootstrap: peerDHT = null");
+                    Platform.runLater(() -> bootstrapListener.onFailed(
+                            new BitsquareException("Error at bootstrap: peerDHT = null")));
+                }
             }
 
             @Override
             public void onFailure(@NotNull Throwable t) {
-                log.error(t.toString());
+                log.error("Exception at bootstrap " + t.getMessage());
                 Platform.runLater(() -> bootstrapListener.onFailed(t));
             }
         });
-
-        bootstrappedPeerFactory.bootstrapState.addListener((ov, oldValue, newValue) ->
-                bootstrapListener.onBootstrapStateChanged(newValue));
     }
 
+    private void setup() {
+        setupTimerForIPCheck();
+        setupReplyHandler();
+        storeAddressAfterBootstrap();
+    }
 
     public void shutDown() {
         bootstrappedPeerFactory.shutDown();
@@ -143,6 +158,7 @@ public class TomP2PNode {
     public PeerDHT getPeerDHT() {
         return peerDHT;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Generic DHT methods
@@ -194,7 +210,7 @@ public class TomP2PNode {
         futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
-                if (isSuccess(futureDirect)) {
+                if (future.isSuccess()) {
                     log.debug("sendMessage completed");
                 }
                 else {
@@ -291,51 +307,6 @@ public class TomP2PNode {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private ListenableFuture<PeerDHT> bootstrap() {
-        ListenableFuture<PeerDHT> bootstrapComplete = bootstrappedPeerFactory.start();
-        Futures.addCallback(bootstrapComplete, new FutureCallback<PeerDHT>() {
-            @Override
-            public void onSuccess(@Nullable PeerDHT peerDHT) {
-                try {
-                    if (peerDHT != null) {
-                        TomP2PNode.this.peerDHT = peerDHT;
-                        setupReplyHandler();
-                        FuturePut futurePut = storePeerAddress();
-                        futurePut.addListener(new BaseFutureListener<BaseFuture>() {
-                            @Override
-                            public void operationComplete(BaseFuture future) throws Exception {
-                                if (isSuccess(futurePut)) {
-                                    storedPeerAddress = peerDHT.peerAddress();
-                                    log.debug("storedPeerAddress = " + storedPeerAddress);
-                                }
-                                else {
-                                    log.error("storedPeerAddress not successful");
-                                }
-                            }
-
-                            @Override
-                            public void exceptionCaught(Throwable t) throws Exception {
-                                log.error("Error at storedPeerAddress " + t.toString());
-                            }
-                        });
-                    }
-                    else {
-                        log.error("peerDHT is null");
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    log.error("Error at storePeerAddress " + e.toString());
-                }
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable t) {
-                log.error("onFailure bootstrap " + t.toString());
-            }
-        });
-        return bootstrapComplete;
-    }
-
     private void setupReplyHandler() {
         peerDHT.peer().objectDataReply((sender, request) -> {
             log.debug("handleMessage peerAddress " + sender);
@@ -360,7 +331,7 @@ public class TomP2PNode {
             public void run() {
                 if (peerDHT != null && !storedPeerAddress.equals(peerDHT.peerAddress())) {
                     try {
-                        storePeerAddress();
+                        storeAddress();
                     } catch (IOException e) {
                         e.printStackTrace();
                         log.error(e.toString());
@@ -370,7 +341,33 @@ public class TomP2PNode {
         }, checkIfIPChangedPeriod, checkIfIPChangedPeriod);
     }
 
-    private FuturePut storePeerAddress() throws IOException {
+    private void storeAddressAfterBootstrap() {
+        try {
+            FuturePut futurePut = storeAddress();
+            futurePut.addListener(new BaseFutureListener<BaseFuture>() {
+                @Override
+                public void operationComplete(BaseFuture future) throws Exception {
+                    if (future.isSuccess()) {
+                        storedPeerAddress = peerDHT.peerAddress();
+                        log.debug("storedPeerAddress = " + storedPeerAddress);
+                    }
+                    else {
+                        log.error("storedPeerAddress not successful");
+                    }
+                }
+
+                @Override
+                public void exceptionCaught(Throwable t) throws Exception {
+                    log.error("Error at storedPeerAddress " + t.toString());
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.error("Error at storePeerAddress " + e.toString());
+        }
+    }
+
+    private FuturePut storeAddress() throws IOException {
         Number160 locationKey = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
         Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
         log.debug("storePeerAddress " + peerDHT.peerAddress().toString());

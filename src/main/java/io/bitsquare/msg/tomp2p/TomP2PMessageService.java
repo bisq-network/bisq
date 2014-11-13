@@ -55,8 +55,6 @@ import net.tomp2p.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bitsquare.util.tomp2p.BaseFutureUtil.isSuccess;
-
 
 /**
  * That service delivers direct messaging and DHT functionality from the TomP2P library
@@ -95,7 +93,7 @@ class TomP2PMessageService implements MessageService {
     public void init(BootstrapListener bootstrapListener) {
         p2pNode.setMessageBroker(this);
         p2pNode.setKeyPair(user.getMessageKeyPair());
-        p2pNode.start(bootstrapListener);
+        p2pNode.bootstrap(bootstrapListener);
     }
 
     public void shutDown() {
@@ -142,7 +140,7 @@ class TomP2PMessageService implements MessageService {
         futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
-                if (isSuccess(futureDirect)) {
+                if (future.isSuccess()) {
                     Platform.runLater(listener::onResult);
                 }
                 else {
@@ -185,7 +183,7 @@ class TomP2PMessageService implements MessageService {
                         }
                     }));
 
-                    if (isSuccess(addFuture)) {
+                    if (future.isSuccess()) {
                         log.trace("Add arbitrator to DHT was successful. Stored data: [key: " + locationKey + ", " +
                                 "values: " + arbitratorData + "]");
                     }
@@ -236,7 +234,7 @@ class TomP2PMessageService implements MessageService {
         FutureGet futureGet = p2pNode.getDataMap(locationKey);
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
-            public void operationComplete(BaseFuture baseFuture) throws Exception {
+            public void operationComplete(BaseFuture future) throws Exception {
                 Platform.runLater(() -> arbitratorListeners.stream().forEach(listener ->
                 {
                     List<Arbitrator> arbitrators = new ArrayList<>();
@@ -254,12 +252,12 @@ class TomP2PMessageService implements MessageService {
 
                     listener.onArbitratorsReceived(arbitrators);
                 }));
-                if (isSuccess(baseFuture)) {
+                if (future.isSuccess()) {
                     log.trace("Get arbitrators from DHT was successful. Stored data: [key: " + locationKey + ", " +
                             "values: " + futureGet.dataMap() + "]");
                 }
                 else {
-                    log.error("Get arbitrators from DHT failed with reason:" + baseFuture.failedReason());
+                    log.error("Get arbitrators from DHT failed with reason:" + future.failedReason());
                 }
             }
         });
