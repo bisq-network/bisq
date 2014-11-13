@@ -79,6 +79,7 @@ public class BootstrappedPeerFactory {
     static final String NETWORK_INTERFACE_UNSPECIFIED = "<unspecified>";
 
     private KeyPair keyPair;
+    private int port;
     private final Node bootstrapNode;
     private String networkInterface;
     private final Persistence persistence;
@@ -95,9 +96,11 @@ public class BootstrappedPeerFactory {
 
     @Inject
     public BootstrappedPeerFactory(Persistence persistence,
+                                   @Named(Node.PORT_KEY) int port,
                                    @Named(BOOTSTRAP_NODE_KEY) Node bootstrapNode,
                                    @Named(NETWORK_INTERFACE_KEY) String networkInterface) {
         this.persistence = persistence;
+        this.port = port;
         this.bootstrapNode = bootstrapNode;
         this.networkInterface = networkInterface;
     }
@@ -116,7 +119,7 @@ public class BootstrappedPeerFactory {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ListenableFuture<PeerDHT> start(int port) {
+    public ListenableFuture<PeerDHT> start() {
         try {
             setState(BootstrapState.PEER_CREATION, "We create a P2P node.");
 
@@ -194,6 +197,11 @@ public class BootstrappedPeerFactory {
         }
 
         return settableFuture;
+    }
+
+    void shutDown() {
+        if (peerDHT != null)
+            peerDHT.shutdown();
     }
 
     // 1. Attempt: Try to discover our outside visible address

@@ -19,14 +19,11 @@ package io.bitsquare.msg.tomp2p;
 
 import io.bitsquare.msg.MessageBroker;
 import io.bitsquare.msg.listeners.BootstrapListener;
-import io.bitsquare.network.Node;
 import io.bitsquare.network.tomp2p.TomP2PPeer;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
-import com.google.inject.name.Named;
 
 import java.io.IOException;
 
@@ -73,7 +70,6 @@ public class TomP2PNode {
     private static final Logger log = LoggerFactory.getLogger(TomP2PNode.class);
 
     private KeyPair keyPair;
-    private final int port;
     private MessageBroker messageBroker;
 
     private PeerAddress storedPeerAddress;
@@ -87,9 +83,8 @@ public class TomP2PNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PNode(BootstrappedPeerFactory bootstrappedPeerFactory, @Named(Node.PORT_KEY) int port) {
+    public TomP2PNode(BootstrappedPeerFactory bootstrappedPeerFactory) {
         this.bootstrappedPeerFactory = bootstrappedPeerFactory;
-        this.port = port;
     }
 
     // for unit testing
@@ -99,7 +94,6 @@ public class TomP2PNode {
         peerDHT.peerBean().keyPair(keyPair);
         messageBroker = (message, peerAddress) -> {
         };
-        port = Node.DEFAULT_PORT;
     }
 
 
@@ -119,7 +113,7 @@ public class TomP2PNode {
     public void start(BootstrapListener bootstrapListener) {
         setupTimerForIPCheck();
 
-        ListenableFuture<PeerDHT> bootstrapComplete = bootstrap(port);
+        ListenableFuture<PeerDHT> bootstrapComplete = bootstrap();
         Futures.addCallback(bootstrapComplete, new FutureCallback<PeerDHT>() {
             @Override
             public void onSuccess(@Nullable PeerDHT result) {
@@ -140,6 +134,8 @@ public class TomP2PNode {
 
 
     public void shutDown() {
+        bootstrappedPeerFactory.shutDown();
+
         if (peerDHT != null)
             peerDHT.shutdown();
     }
@@ -295,8 +291,8 @@ public class TomP2PNode {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private ListenableFuture<PeerDHT> bootstrap(int port) {
-        ListenableFuture<PeerDHT> bootstrapComplete = bootstrappedPeerFactory.start(port);
+    private ListenableFuture<PeerDHT> bootstrap() {
+        ListenableFuture<PeerDHT> bootstrapComplete = bootstrappedPeerFactory.start();
         Futures.addCallback(bootstrapComplete, new FutureCallback<PeerDHT>() {
             @Override
             public void onSuccess(@Nullable PeerDHT peerDHT) {
