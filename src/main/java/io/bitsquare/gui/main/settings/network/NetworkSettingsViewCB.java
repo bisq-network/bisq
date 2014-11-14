@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.preferences.network;
+package io.bitsquare.gui.main.settings.network;
 
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.network.ClientNode;
@@ -30,7 +30,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
-public class NetworkPreferencesViewCB implements Initializable {
+public class NetworkSettingsViewCB implements Initializable {
 
     private final String bitcoinNetworkValue;
     private final ClientNode clientNode;
@@ -38,7 +38,7 @@ public class NetworkPreferencesViewCB implements Initializable {
     @FXML TextField bitcoinNetwork, connectionType, nodeAddress, bootstrapNodeAddress;
 
     @Inject
-    public NetworkPreferencesViewCB(BitcoinNetwork bitcoinNetwork, ClientNode clientNode) {
+    public NetworkSettingsViewCB(BitcoinNetwork bitcoinNetwork, ClientNode clientNode) {
         this.bitcoinNetworkValue = bitcoinNetwork.toString();
         this.clientNode = clientNode;
     }

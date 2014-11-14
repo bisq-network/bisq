@@ -24,7 +24,7 @@ import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.preferences.ApplicationPreferences;
+import io.bitsquare.settings.Preferences;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
@@ -56,7 +56,7 @@ class OfferBookModel extends UIModel {
 
     private final User user;
     private final OfferBook offerBook;
-    private final ApplicationPreferences applicationPreferences;
+    private final Preferences preferences;
     private final BSFormatter formatter;
     private final TradeManager tradeManager;
 
@@ -85,12 +85,12 @@ class OfferBookModel extends UIModel {
     OfferBookModel(User user,
                    TradeManager tradeManager,
                    OfferBook offerBook,
-                   ApplicationPreferences applicationPreferences,
+                   Preferences preferences,
                    BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.user = user;
         this.offerBook = offerBook;
-        this.applicationPreferences = applicationPreferences;
+        this.preferences = preferences;
         this.formatter = formatter;
 
         filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
@@ -119,7 +119,7 @@ class OfferBookModel extends UIModel {
 
         offerBook.addClient();
         user.currentBankAccountProperty().addListener(bankAccountChangeListener);
-        btcCode.bind(applicationPreferences.btcDenominationProperty());
+        btcCode.bind(preferences.btcDenominationProperty());
 
         setBankAccount(user.getCurrentBankAccount());
         applyFilter();
@@ -199,7 +199,7 @@ class OfferBookModel extends UIModel {
         // we might get rid of languages (handles viy arbitrators)
         /*
         // disjoint returns true if the two specified collections have no elements in common.
-        boolean languageResult = !Collections.disjoint(applicationPreferences.getAcceptedLanguageLocales(),
+        boolean languageResult = !Collections.disjoint(preferences.getAcceptedLanguageLocales(),
                 offer.getAcceptedLanguageLocales());
         if (!languageResult)
             restrictionsInfo.set("This offer requires that the payments account resides in one of those languages:\n" +
@@ -207,7 +207,7 @@ class OfferBookModel extends UIModel {
                     "\n\nThe country of your payments account (" + user.getCurrentBankAccount().getCountry().getName() +
                     ") is not included in that list.");
 
-        boolean arbitratorResult = !Collections.disjoint(applicationPreferences.getAcceptedArbitrators(),
+        boolean arbitratorResult = !Collections.disjoint(preferences.getAcceptedArbitrators(),
                 offer.getArbitrators());*/
 
         return countryResult;

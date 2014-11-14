@@ -24,7 +24,7 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.UIModel;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.preferences.ApplicationPreferences;
+import io.bitsquare.settings.Preferences;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 
@@ -56,7 +56,7 @@ class TakeOfferModel extends UIModel {
 
     private final TradeManager tradeManager;
     private final WalletService walletService;
-    private final ApplicationPreferences applicationPreferences;
+    private final Preferences preferences;
     private final Persistence persistence;
 
     private Offer offer;
@@ -84,10 +84,10 @@ class TakeOfferModel extends UIModel {
 
     @Inject
     TakeOfferModel(TradeManager tradeManager, WalletService walletService,
-                   ApplicationPreferences applicationPreferences, Persistence persistence) {
+                   Preferences preferences, Persistence persistence) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
-        this.applicationPreferences = applicationPreferences;
+        this.preferences = preferences;
         this.persistence = persistence;
     }
 
@@ -108,7 +108,7 @@ class TakeOfferModel extends UIModel {
     public void activate() {
         super.activate();
 
-        btcCode.bind(applicationPreferences.btcDenominationProperty());
+        btcCode.bind(preferences.btcDenominationProperty());
     }
 
     @SuppressWarnings("EmptyMethod")

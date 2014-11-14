@@ -25,6 +25,6 @@
          AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
          xmlns:fx="http://javafx.com/fxml">
     <Tab fx:id="accountSettingsTab" closable="false"/>
-    <Tab fx:id="arbitratorSettingsTab" text="Arbitrator settings" closable="false"/>
+    <Tab fx:id="arbitratorSettingsTab" text="Arbitrator setup" closable="false"/>
 
 </TabPane>

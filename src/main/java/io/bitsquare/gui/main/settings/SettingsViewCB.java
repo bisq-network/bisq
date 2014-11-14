@@ -15,13 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.preferences;
+package io.bitsquare.gui.main.settings;
 
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.ViewLoader;
-import io.bitsquare.preferences.ApplicationPreferences;
+import io.bitsquare.settings.Preferences;
 
 import java.net.URL;
 
@@ -38,16 +38,16 @@ import javafx.scene.control.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PreferencesViewCB extends CachedViewCB {
-    private static final Logger log = LoggerFactory.getLogger(PreferencesViewCB.class);
+public class SettingsViewCB extends CachedViewCB {
+    private static final Logger log = LoggerFactory.getLogger(SettingsViewCB.class);
 
     private final Navigation navigation;
-    private ApplicationPreferences applicationPreferences;
+    private Preferences preferences;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 
-    @FXML Tab applicationTab, networkTab;
+    @FXML Tab preferencesTab, networkSettingsTab;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -55,11 +55,11 @@ public class PreferencesViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    PreferencesViewCB(Navigation navigation, ApplicationPreferences applicationPreferences) {
+    SettingsViewCB(Navigation navigation, Preferences preferences) {
         super();
 
         this.navigation = navigation;
-        this.applicationPreferences = applicationPreferences;
+        this.preferences = preferences;
     }
 
 
@@ -71,17 +71,17 @@ public class PreferencesViewCB extends CachedViewCB {
     public void initialize(URL url, ResourceBundle rb) {
         navigationListener = navigationItems -> {
             if (navigationItems != null && navigationItems.length == 3
-                    && navigationItems[1] == Navigation.Item.PREFERENCES)
+                    && navigationItems[1] == Navigation.Item.SETTINGS)
                 loadView(navigationItems[2]);
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue == applicationTab)
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PREFERENCES,
-                        Navigation.Item.APPLICATION_PREFERENCES);
-            else if (newValue == networkTab)
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PREFERENCES,
-                        Navigation.Item.NETWORK_PREFERENCES);
+            if (newValue == preferencesTab)
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.SETTINGS,
+                        Navigation.Item.PREFERENCES);
+            else if (newValue == networkSettingsTab)
+                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.SETTINGS,
+                        Navigation.Item.NETWORK_SETTINGS);
         };
 
         super.initialize(url, rb);
@@ -94,14 +94,14 @@ public class PreferencesViewCB extends CachedViewCB {
         ((TabPane) root).getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
-        if (((TabPane) root).getSelectionModel().getSelectedItem() == applicationTab)
+        if (((TabPane) root).getSelectionModel().getSelectedItem() == preferencesTab)
             navigation.navigationTo(Navigation.Item.MAIN,
-                    Navigation.Item.PREFERENCES,
-                    Navigation.Item.APPLICATION_PREFERENCES);
+                    Navigation.Item.SETTINGS,
+                    Navigation.Item.PREFERENCES);
         else
             navigation.navigationTo(Navigation.Item.MAIN,
-                    Navigation.Item.PREFERENCES,
-                    Navigation.Item.NETWORK_PREFERENCES);
+                    Navigation.Item.SETTINGS,
+                    Navigation.Item.NETWORK_SETTINGS);
     }
 
     @Override
@@ -110,12 +110,6 @@ public class PreferencesViewCB extends CachedViewCB {
 
         ((TabPane) root).getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
         navigation.removeListener(navigationListener);
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
     }
 
 
@@ -131,11 +125,11 @@ public class PreferencesViewCB extends CachedViewCB {
         Parent view = loader.load();
         Tab tab = null;
         switch (navigationItem) {
-            case APPLICATION_PREFERENCES:
-                tab = applicationTab;
+            case PREFERENCES:
+                tab = preferencesTab;
                 break;
-            case NETWORK_PREFERENCES:
-                tab = networkTab;
+            case NETWORK_SETTINGS:
+                tab = networkSettingsTab;
                 break;
         }
         tab.setContent(view);

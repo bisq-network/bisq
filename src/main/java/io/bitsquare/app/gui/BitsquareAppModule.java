@@ -27,7 +27,7 @@ import io.bitsquare.msg.tomp2p.TomP2PMessageModule;
 import io.bitsquare.offer.OfferModule;
 import io.bitsquare.offer.tomp2p.TomP2POfferModule;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.preferences.ApplicationPreferences;
+import io.bitsquare.settings.Preferences;
 import io.bitsquare.trade.TradeModule;
 import io.bitsquare.user.User;
 
@@ -53,7 +53,7 @@ class BitsquareAppModule extends BitsquareModule {
     @Override
     protected void configure() {
         bind(User.class).asEagerSingleton();
-        bind(ApplicationPreferences.class).asEagerSingleton();
+        bind(Preferences.class).asEagerSingleton();
         bind(AccountSettings.class).asEagerSingleton();
 
         File persistenceDir = new File(env.getRequiredProperty(Persistence.DIR_KEY));

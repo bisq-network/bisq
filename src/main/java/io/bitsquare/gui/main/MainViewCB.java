@@ -65,7 +65,7 @@ public class MainViewCB extends ViewCB<MainPM> {
     private VBox splashScreen;
     private AnchorPane contentContainer;
     private HBox leftNavPane, rightNavPane;
-    private ToggleButton buyButton, sellButton, homeButton, msgButton, portfolioButton, fundsButton, preferencesButton,
+    private ToggleButton buyButton, sellButton, homeButton, msgButton, portfolioButton, fundsButton, settingsButton,
             accountButton;
     private Pane portfolioButtonButtonPane;
     private Label numPendingTradesLabel;
@@ -253,8 +253,8 @@ public class MainViewCB extends ViewCB<MainPM> {
             case PORTFOLIO:
                 portfolioButton.setSelected(true);
                 break;
-            case PREFERENCES:
-                preferencesButton.setSelected(true);
+            case SETTINGS:
+                settingsButton.setSelected(true);
                 break;
             case SELL:
                 sellButton.setSelected(true);
@@ -409,7 +409,7 @@ public class MainViewCB extends ViewCB<MainPM> {
 
         addBankAccountComboBox(rightNavPane);
 
-        preferencesButton = addNavButton(rightNavPane, "Preferences", Navigation.Item.PREFERENCES);
+        settingsButton = addNavButton(rightNavPane, "Settings", Navigation.Item.SETTINGS);
         accountButton = addNavButton(rightNavPane, "Account", Navigation.Item.ACCOUNT);
 
 

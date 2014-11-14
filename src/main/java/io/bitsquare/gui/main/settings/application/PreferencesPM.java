@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.preferences.application;
+package io.bitsquare.gui.main.settings.application;
 
 import io.bitsquare.gui.PresentationModel;
 
@@ -28,8 +28,8 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ApplicationPreferencesPM extends PresentationModel<ApplicationPreferencesModel> {
-    private static final Logger log = LoggerFactory.getLogger(ApplicationPreferencesPM.class);
+public class PreferencesPM extends PresentationModel<PreferencesModel> {
+    private static final Logger log = LoggerFactory.getLogger(PreferencesPM.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -37,7 +37,7 @@ public class ApplicationPreferencesPM extends PresentationModel<ApplicationPrefe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    ApplicationPreferencesPM(ApplicationPreferencesModel model) {
+    PreferencesPM(PreferencesModel model) {
         super(model);
     }
 

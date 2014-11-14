@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.preferences;
+package io.bitsquare.settings;
 
 import io.bitsquare.persistence.Persistence;
 
@@ -36,9 +36,9 @@ import javafx.beans.property.StringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ApplicationPreferences implements Serializable {
+public class Preferences implements Serializable {
     private static final long serialVersionUID = 7995048077355006861L;
-    private static final Logger log = LoggerFactory.getLogger(ApplicationPreferences.class);
+    private static final Logger log = LoggerFactory.getLogger(Preferences.class);
 
     // deactivate mBit for now as most screens are not supporting it yet
     private List<String> btcDenominations = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
@@ -61,7 +61,7 @@ public class ApplicationPreferences implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ApplicationPreferences(Persistence persistence) {
+    public Preferences(Persistence persistence) {
         this.persistence = persistence;
 
         applyPersistedSettings();

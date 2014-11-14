@@ -19,12 +19,12 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.preferences.PreferencesViewCB"
+<TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.settings.SettingsViewCB"
          AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
          AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
          xmlns:fx="http://javafx.com/fxml">
 
-    <Tab fx:id="applicationTab" text="Application preferences" closable="false"/>
-    <Tab fx:id="networkTab" text="Network" closable="false"/>
+    <Tab fx:id="preferencesTab" text="Preferences" closable="false"/>
+    <Tab fx:id="networkSettingsTab" text="Network info" closable="false"/>
 
 </TabPane>

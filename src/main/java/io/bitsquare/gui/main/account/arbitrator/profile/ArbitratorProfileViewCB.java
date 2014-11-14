@@ -21,7 +21,7 @@ import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.preferences.ApplicationPreferences;
+import io.bitsquare.settings.Preferences;
 
 import java.net.URL;
 
@@ -35,7 +35,7 @@ import javafx.scene.control.*;
 // TODO Arbitration is very basic yet
 public class ArbitratorProfileViewCB extends CachedViewCB {
 
-    private final ApplicationPreferences applicationPreferences;
+    private final Preferences preferences;
 
     private final Persistence persistence;
     private final BSFormatter formatter;
@@ -53,9 +53,9 @@ public class ArbitratorProfileViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorProfileViewCB(ApplicationPreferences applicationPreferences, Persistence persistence,
+    public ArbitratorProfileViewCB(Preferences preferences, Persistence persistence,
                                    BSFormatter formatter) {
-        this.applicationPreferences = applicationPreferences;
+        this.preferences = preferences;
         this.persistence = persistence;
 
         //  ApplicationPreferences persistedApplicationPreferences = (ApplicationPreferences) storage

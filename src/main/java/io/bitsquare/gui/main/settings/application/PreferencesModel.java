@@ -15,10 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.preferences.application;
+package io.bitsquare.gui.main.settings.application;
 
 import io.bitsquare.gui.UIModel;
-import io.bitsquare.preferences.ApplicationPreferences;
+import io.bitsquare.settings.Preferences;
 
 import com.google.inject.Inject;
 
@@ -33,10 +33,10 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ApplicationPreferencesModel extends UIModel {
-    private static final Logger log = LoggerFactory.getLogger(ApplicationPreferencesModel.class);
+class PreferencesModel extends UIModel {
+    private static final Logger log = LoggerFactory.getLogger(PreferencesModel.class);
 
-    private final ApplicationPreferences applicationPreferences;
+    private final Preferences preferences;
 
     private final ChangeListener<Boolean> useAnimationsListener;
     private final ChangeListener<Boolean> useEffectsListener;
@@ -54,13 +54,13 @@ class ApplicationPreferencesModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    ApplicationPreferencesModel(ApplicationPreferences applicationPreferences) {
-        this.applicationPreferences = applicationPreferences;
+    PreferencesModel(Preferences preferences) {
+        this.preferences = preferences;
 
-        btcDenominations = FXCollections.observableArrayList(applicationPreferences.getBtcDenominations());
-        btcDenominationListener = (ov, oldValue, newValue) -> applicationPreferences.setBtcDenomination(newValue);
-        useAnimationsListener = (ov, oldValue, newValue) -> applicationPreferences.setUseAnimations(newValue);
-        useEffectsListener = (ov, oldValue, newValue) -> applicationPreferences.setUseEffects(newValue);
+        btcDenominations = FXCollections.observableArrayList(preferences.getBtcDenominations());
+        btcDenominationListener = (ov, oldValue, newValue) -> preferences.setBtcDenomination(newValue);
+        useAnimationsListener = (ov, oldValue, newValue) -> preferences.setUseAnimations(newValue);
+        useEffectsListener = (ov, oldValue, newValue) -> preferences.setUseEffects(newValue);
     }
 
 
@@ -78,9 +78,9 @@ class ApplicationPreferencesModel extends UIModel {
     public void activate() {
         super.activate();
 
-        useAnimations.set(applicationPreferences.getUseAnimations());
-        useEffects.set(applicationPreferences.getUseEffects());
-        btcDenomination.set(applicationPreferences.getBtcDenomination());
+        useAnimations.set(preferences.getUseAnimations());
+        useEffects.set(preferences.getUseEffects());
+        btcDenomination.set(preferences.getBtcDenomination());
 
         useAnimations.addListener(useAnimationsListener);
         useEffects.addListener(useEffectsListener);

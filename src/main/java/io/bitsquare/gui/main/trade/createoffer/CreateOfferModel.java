@@ -29,7 +29,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.persistence.Persistence;
-import io.bitsquare.preferences.ApplicationPreferences;
+import io.bitsquare.settings.Preferences;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
@@ -70,7 +70,7 @@ class CreateOfferModel extends UIModel {
     private final TradeManager tradeManager;
     private final WalletService walletService;
     private final AccountSettings accountSettings;
-    private ApplicationPreferences applicationPreferences;
+    private Preferences preferences;
     private final User user;
     private final Persistence persistence;
     private final BSFormatter formatter;
@@ -113,12 +113,12 @@ class CreateOfferModel extends UIModel {
     // non private for testing
     @Inject
     public CreateOfferModel(TradeManager tradeManager, WalletService walletService, AccountSettings accountSettings,
-                            ApplicationPreferences applicationPreferences, User user, Persistence persistence,
+                            Preferences preferences, User user, Persistence persistence,
                             BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
         this.accountSettings = accountSettings;
-        this.applicationPreferences = applicationPreferences;
+        this.preferences = preferences;
         this.user = user;
         this.persistence = persistence;
         this.formatter = formatter;
@@ -156,7 +156,7 @@ class CreateOfferModel extends UIModel {
         }
 
         if (accountSettings != null)
-            btcCode.bind(applicationPreferences.btcDenominationProperty());
+            btcCode.bind(preferences.btcDenominationProperty());
 
         // we need to set it here already as initWithData is called before activate
         if (accountSettings != null)

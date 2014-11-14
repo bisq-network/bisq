@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.preferences.application;
+package io.bitsquare.gui.main.settings.application;
 
 import io.bitsquare.gui.CachedViewCB;
 
@@ -34,9 +34,9 @@ import org.slf4j.LoggerFactory;
 /**
  * This UI is not cached as it is normally only needed once.
  */
-public class ApplicationPreferencesViewCB extends CachedViewCB<ApplicationPreferencesPM> {
+public class PreferencesViewCB extends CachedViewCB<PreferencesPM> {
 
-    private static final Logger log = LoggerFactory.getLogger(ApplicationPreferencesViewCB.class);
+    private static final Logger log = LoggerFactory.getLogger(PreferencesViewCB.class);
 
     @FXML ComboBox<String> btcDenominationComboBox;
     @FXML CheckBox useAnimationsCheckBox, useEffectsCheckBox;
@@ -47,7 +47,7 @@ public class ApplicationPreferencesViewCB extends CachedViewCB<ApplicationPrefer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ApplicationPreferencesViewCB(ApplicationPreferencesPM presentationModel) {
+    private PreferencesViewCB(PreferencesPM presentationModel) {
         super(presentationModel);
     }
 
