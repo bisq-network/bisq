@@ -125,7 +125,7 @@ public class PortfolioViewCB extends CachedViewCB {
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
-        
+
         // we want to get activate/deactivate called, so we remove the old view on tab change
         if (currentTab != null)
             currentTab.setContent(null);

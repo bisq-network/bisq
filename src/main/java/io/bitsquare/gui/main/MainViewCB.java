@@ -314,7 +314,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         Label bitcoinNetworkLabel = new Label();
         bitcoinNetworkLabel.setText(bitcoinNetwork.toString());
         bitcoinNetworkLabel.setId("splash-bitcoin-network-label");
-       
+
         HBox blockchainSyncBox = new HBox();
         blockchainSyncBox.setSpacing(10);
         blockchainSyncBox.setAlignment(Pos.CENTER);

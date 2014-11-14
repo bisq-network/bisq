@@ -132,8 +132,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
             return System.getenv("APPDATA");
         else if (Utilities.isOSX())
             return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toString();
-        else
-            // *nix
+        else // *nix
             return Paths.get(System.getProperty("user.home"), ".local", "share").toString();
     }
 

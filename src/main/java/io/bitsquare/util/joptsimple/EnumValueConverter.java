@@ -43,6 +43,7 @@ public class EnumValueConverter implements ValueConverter<Enum> {
     /**
      * Attempt to resolve an enum of the specified type by looking for a label with the
      * given value, trying all case variations in the process.
+     *
      * @return the matching enum label (if any)
      * @throws IllegalArgumentException if no such label matching the given value is found.
      */

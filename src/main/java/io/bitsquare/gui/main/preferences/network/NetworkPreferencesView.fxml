@@ -40,7 +40,7 @@
     </Label>
     <TextField fx:id="bitcoinNetwork" GridPane.rowIndex="0" GridPane.columnIndex="1"
                mouseTransparent="true" focusTraversable="false">
-    <GridPane.margin>
+        <GridPane.margin>
             <Insets top="10"/>
         </GridPane.margin>
     </TextField>
@@ -60,7 +60,7 @@
     </Label>
     <TextField fx:id="bootstrapNodeAddress" GridPane.rowIndex="3" GridPane.columnIndex="1"
                mouseTransparent="true" focusTraversable="false">
-    <GridPane.margin>
+        <GridPane.margin>
             <Insets bottom="-15"/>
         </GridPane.margin>
     </TextField>
