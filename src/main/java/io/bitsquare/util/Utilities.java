@@ -61,7 +61,7 @@ public class Utilities {
     }
 
     public static boolean isLinux() {
-        return getOSName().contains("darwin");
+        return getOSName().contains("linux");
     }
 
     private static String getOSName() {
