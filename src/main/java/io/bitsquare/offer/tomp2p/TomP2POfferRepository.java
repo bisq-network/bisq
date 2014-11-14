@@ -93,7 +93,7 @@ class TomP2POfferRepository implements OfferRepository {
                                 }
                             });
 
-                            writeInvalidationTimestampToDHT(locationKey);
+                            writeInvalidationTimestampToDHT(offer.getCurrency().getCurrencyCode());
                             log.trace("Add offer to DHT was successful. Added data: [locationKey: " + locationKey +
                                     ", value: " + offerData + "]");
                         });
@@ -145,7 +145,7 @@ class TomP2POfferRepository implements OfferRepository {
                                 log.error("Remove offer from DHT failed. Error: " + e.getMessage());
                             }
                         });
-                        writeInvalidationTimestampToDHT(locationKey);
+                        writeInvalidationTimestampToDHT(offer.getCurrency().getCurrencyCode());
                     });
                 }
 
@@ -224,10 +224,10 @@ class TomP2POfferRepository implements OfferRepository {
     // Polling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void writeInvalidationTimestampToDHT(Number160 locationKey) {
+    private void writeInvalidationTimestampToDHT(String currencyCode) {
         invalidationTimestamp.set(System.currentTimeMillis());
         try {
-            FuturePut putFuture = p2pNode.putData(getInvalidatedLocationKey(locationKey),
+            FuturePut putFuture = p2pNode.putData(getInvalidatedLocationKey(currencyCode),
                     new Data(invalidationTimestamp.get()));
             putFuture.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
@@ -254,13 +254,12 @@ class TomP2POfferRepository implements OfferRepository {
     }
 
     public void requestInvalidationTimeStampFromDHT(String currencyCode) {
-        Number160 locationKey = Number160.createHash(currencyCode);
-        FutureGet getFuture = p2pNode.getData(getInvalidatedLocationKey(locationKey));
-        getFuture.addListener(new BaseFutureListener<BaseFuture>() {
+        FutureGet futureGet = p2pNode.getData(getInvalidatedLocationKey(currencyCode));
+        futureGet.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
-                    Data data = getFuture.data();
+                    Data data = futureGet.data();
                     if (data != null && data.object() instanceof Long) {
                         final Object object = data.object();
                         Platform.runLater(() -> {
@@ -273,12 +272,12 @@ class TomP2POfferRepository implements OfferRepository {
                         log.error("Get invalidationTimestamp from DHT failed. Data = " + data);
                     }
                 }
-                else if (getFuture.data() == null) {
+                else if (futureGet.data() == null) {
                     // OK as nothing is set at the moment
                     // log.trace("Get invalidationTimestamp from DHT returns null. That is ok for the startup.");
                 }
                 else {
-                    log.error("Get invalidationTimestamp from DHT failed with reason:" + getFuture.failedReason());
+                    log.error("Get invalidationTimestamp from DHT failed with reason:" + futureGet.failedReason());
                 }
             }
 
@@ -290,7 +289,7 @@ class TomP2POfferRepository implements OfferRepository {
         });
     }
 
-    private Number160 getInvalidatedLocationKey(Number160 locationKey) {
-        return Number160.createHash(locationKey + "invalidated");
+    private Number160 getInvalidatedLocationKey(String currencyCode) {
+        return Number160.createHash(currencyCode + "lastChangeTimestamp");
     }
 }
