@@ -46,9 +46,9 @@ public class NetworkPreferencesViewCB implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         bitcoinNetwork.setText(bitcoinNetworkValue);
+        connectionType.setText(clientNode.getConnectionType().toString());
         nodeAddress.setText(clientNode.getAddress().toString());
         bootstrapNodeAddress.setText(clientNode.getBootstrapNodeAddress().toString());
-        connectionType.setText(clientNode.getConnectionType().toString());
     }
 }
 

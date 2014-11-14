@@ -478,11 +478,12 @@ public class TomP2PTests {
 
     // The sendDirect operation fails in port forwarding mode because most routers does not support NAT reflections.
     // So if both clients are behind NAT they cannot send direct message to each other.
+    // Seems that in relay mode that is also not working
     // That will probably be fixed in a future version of TomP2P
     @Test
     @Repeat(STRESS_TEST_COUNT)
     public void testSendDirectBetweenLocalPeers() throws Exception {
-        if (FORCED_CONNECTION_TYPE != ConnectionType.NAT && resolvedConnectionType != ConnectionType.RELAY) {
+        if (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT || resolvedConnectionType == ConnectionType.DIRECT) {
             peer1DHT = getDHTPeer(client1Port);
             peer2DHT = getDHTPeer(client2Port);
 

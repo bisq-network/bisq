@@ -394,7 +394,7 @@ public class TomP2PNode implements ClientNode {
         PeerSocketAddress socketAddress = peerDHT.peerAddress().peerSocketAddress();
         return Node.at(
                 peerDHT.peerID().toString(),
-                socketAddress.inetAddress().getHostAddress(),
+                socketAddress.inetAddress().toString(),
                 socketAddress.tcpPort());
     }
 
