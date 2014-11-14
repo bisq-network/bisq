@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.ViewCB;
@@ -57,6 +58,7 @@ public class MainViewCB extends ViewCB<MainPM> {
     private final OverlayManager overlayManager;
     private final ToggleGroup navButtonsGroup = new ToggleGroup();
     private Transitions transitions;
+    private BitcoinNetwork bitcoinNetwork;
     private final String title;
 
     private BorderPane baseApplicationContainer;
@@ -76,12 +78,14 @@ public class MainViewCB extends ViewCB<MainPM> {
     @Inject
     private MainViewCB(MainPM presentationModel, Navigation navigation, OverlayManager overlayManager,
                        TradeManager tradeManager, Transitions transitions,
+                       BitcoinNetwork bitcoinNetwork,
                        @Named(TITLE_KEY) String title) {
         super(presentationModel);
 
         this.navigation = navigation;
         this.overlayManager = overlayManager;
         this.transitions = transitions;
+        this.bitcoinNetwork = bitcoinNetwork;
         this.title = title;
 
         tradeManager.featureNotImplementedWarningProperty().addListener((ov, oldValue, newValue) -> {
@@ -307,12 +311,17 @@ public class MainViewCB extends ViewCB<MainPM> {
             blockchainSyncIndicator.setManaged(false);
         });
 
+        Label bitcoinNetworkLabel = new Label();
+        bitcoinNetworkLabel.setText(bitcoinNetwork.toString());
+        bitcoinNetworkLabel.setId("splash-bitcoin-network-label");
+       
         HBox blockchainSyncBox = new HBox();
         blockchainSyncBox.setSpacing(10);
         blockchainSyncBox.setAlignment(Pos.CENTER);
         blockchainSyncBox.setPadding(new Insets(60, 0, 0, 0));
         blockchainSyncBox.setPrefHeight(50);
-        blockchainSyncBox.getChildren().addAll(blockchainSyncLabel, blockchainSyncIndicator, blockchainSyncIcon);
+        blockchainSyncBox.getChildren().addAll(blockchainSyncLabel, blockchainSyncIndicator,
+                blockchainSyncIcon, bitcoinNetworkLabel);
 
         Label bootstrapStateLabel = new Label();
         bootstrapStateLabel.setWrapText(true);

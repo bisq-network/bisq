@@ -41,6 +41,11 @@ lower gradient color on tab: dddddd
     -fx-text-fill: -bs-error-red;
 }
 
+#splash-bitcoin-network-label {
+    -fx-text-fill: -fx-accent;
+    -fx-weight: bold;
+}
+
 /* Main UI */
 #base-content-container {
     -fx-background-color: -bs-bg-grey;
