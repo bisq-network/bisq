@@ -19,11 +19,6 @@ package io.bitsquare.btc;
 
 import io.bitsquare.BitsquareModule;
 
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.RegTestParams;
-import org.bitcoinj.params.TestNet3Params;
-
 import com.google.inject.Injector;
 
 import java.io.File;
@@ -42,7 +37,7 @@ public class BitcoinModule extends BitsquareModule {
     @Override
     protected void configure() {
         bind(BitcoinNetwork.class).toInstance(
-            env.getProperty(BitcoinNetwork.KEY, BitcoinNetwork.class, BitcoinNetwork.DEFAULT));
+                env.getProperty(BitcoinNetwork.KEY, BitcoinNetwork.class, BitcoinNetwork.DEFAULT));
         bind(FeePolicy.class).asEagerSingleton();
 
         bindConstant().annotatedWith(named(UserAgent.NAME_KEY)).to(env.getRequiredProperty(UserAgent.NAME_KEY));

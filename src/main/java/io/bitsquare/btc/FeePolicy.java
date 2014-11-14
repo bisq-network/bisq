@@ -26,9 +26,6 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class FeePolicy {
 
     public static final Coin TX_FEE = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
