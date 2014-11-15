@@ -159,14 +159,14 @@ public class Navigation {
         // Main menu screens
         ///////////////////////////////////////////////////////////////////////////////////////////
 
-        HOME("/io/bitsquare/gui/main/home/HomeView.fxml"),
-        BUY("/io/bitsquare/gui/main/trade/BuyView.fxml"),
-        SELL("/io/bitsquare/gui/main/trade/SellView.fxml"),
-        PORTFOLIO("/io/bitsquare/gui/main/portfolio/PortfolioView.fxml"),
-        FUNDS("/io/bitsquare/gui/main/funds/FundsView.fxml"),
-        MSG("/io/bitsquare/gui/main/msg/MsgView.fxml"),
-        SETTINGS("/io/bitsquare/gui/main/settings/SettingsView.fxml"),
-        ACCOUNT("/io/bitsquare/gui/main/account/AccountView.fxml"),
+        HOME("/io/bitsquare/gui/main/home/HomeView.fxml", "Overview"),
+        BUY("/io/bitsquare/gui/main/trade/BuyView.fxml", "Buy BTC"),
+        SELL("/io/bitsquare/gui/main/trade/SellView.fxml", "Sell BTC"),
+        PORTFOLIO("/io/bitsquare/gui/main/portfolio/PortfolioView.fxml", "Portfolio"),
+        FUNDS("/io/bitsquare/gui/main/funds/FundsView.fxml", "Funds"),
+        MSG("/io/bitsquare/gui/main/msg/MsgView.fxml", "Messages"),
+        SETTINGS("/io/bitsquare/gui/main/settings/SettingsView.fxml", "Settings"),
+        ACCOUNT("/io/bitsquare/gui/main/account/AccountView.fxml", "Account"),
 
 
         ///////////////////////////////////////////////////////////////////////////////////////////
@@ -218,19 +218,33 @@ public class Navigation {
 
         ARBITRATOR_PROFILE("/io/bitsquare/gui/main/account/arbitrator/profile/ArbitratorProfileView.fxml"),
         ARBITRATOR_BROWSER("/io/bitsquare/gui/main/account/arbitrator/browser/ArbitratorBrowserView.fxml"),
-        ARBITRATOR_REGISTRATION("/io/bitsquare/gui/main/account/arbitrator/registration/ArbitratorRegistrationView" +
-                ".fxml");
+        ARBITRATOR_REGISTRATION(
+                "/io/bitsquare/gui/main/account/arbitrator/registration/ArbitratorRegistrationView.fxml");
 
 
+        private final String displayName;
         private final String fxmlUrl;
 
         Item(String fxmlUrl) {
+            this(fxmlUrl, "NONE");
+        }
+
+        Item(String fxmlUrl, String displayName) {
+            this.displayName = displayName;
             this.fxmlUrl = fxmlUrl;
         }
 
         @Override
         public String getFxmlUrl() {
             return fxmlUrl;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public String getId() {
+            return fxmlUrl.substring(fxmlUrl.lastIndexOf("/") + 1, fxmlUrl.lastIndexOf("View.fxml")).toLowerCase();
         }
     }
 }
