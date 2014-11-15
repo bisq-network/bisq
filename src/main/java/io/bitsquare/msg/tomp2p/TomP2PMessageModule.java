@@ -37,6 +37,7 @@ public class TomP2PMessageModule extends MessageModule {
     public static final String BOOTSTRAP_NODE_IP_KEY = "bootstrap.node.ip";
     public static final String BOOTSTRAP_NODE_PORT_KEY = "bootstrap.node.port";
     public static final String NETWORK_INTERFACE_KEY = BootstrappedPeerFactory.NETWORK_INTERFACE_KEY;
+    public static final String USE_MANUAL_PORT_FORWARDING_KEY = BootstrappedPeerFactory.USE_MANUAL_PORT_FORWARDING_KEY;
 
     public TomP2PMessageModule(Environment env) {
         super(env);
@@ -45,7 +46,10 @@ public class TomP2PMessageModule extends MessageModule {
     @Override
     protected void doConfigure() {
         bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(
-                env.getProperty(Node.PORT_KEY, Integer.class, Node.DEFAULT_PORT));
+                env.getProperty(Node.PORT_KEY, int.class, Node.DEFAULT_PORT));
+        bind(boolean.class).annotatedWith(Names.named(USE_MANUAL_PORT_FORWARDING_KEY)).toInstance(
+                env.getProperty(USE_MANUAL_PORT_FORWARDING_KEY, boolean.class, false));
+                
         bind(TomP2PNode.class).in(Singleton.class);
         bind(ClientNode.class).to(TomP2PNode.class);
 

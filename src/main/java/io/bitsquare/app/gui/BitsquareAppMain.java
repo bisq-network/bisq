@@ -45,6 +45,8 @@ public class BitsquareAppMain extends BitsquareExecutable {
                 .defaultsTo(DEFAULT_APP_DATA_DIR);
         parser.accepts(NAME_KEY, "Name of this node").withRequiredArg();
         parser.accepts(PORT_KEY, "Port to listen on").withRequiredArg().ofType(int.class).defaultsTo(Node.DEFAULT_PORT);
+        parser.accepts(USE_MANUAL_PORT_FORWARDING_KEY, "Use manual port forwarding")
+                .withRequiredArg().ofType(boolean.class).defaultsTo(false);
         parser.accepts(BitcoinNetwork.KEY).withRequiredArg().ofType(BitcoinNetwork.class)
                 .withValuesConvertedBy(new EnumValueConverter(BitcoinNetwork.class))
                 .defaultsTo(BitcoinNetwork.DEFAULT);

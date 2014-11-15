@@ -56,7 +56,6 @@ import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMapChangeListener;
 import net.tomp2p.peers.PeerStatistic;
 import net.tomp2p.replication.IndirectReplication;
-import net.tomp2p.utils.Utils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -73,9 +72,11 @@ class BootstrappedPeerFactory {
     static final String BOOTSTRAP_NODE_KEY = "bootstrapNode";
     static final String NETWORK_INTERFACE_KEY = "interface";
     static final String NETWORK_INTERFACE_UNSPECIFIED = "<unspecified>";
+    static final String USE_MANUAL_PORT_FORWARDING_KEY = "node.useManualPortForwarding";
 
     private KeyPair keyPair;
     private final int port;
+    private boolean useManualPortForwarding;
     private final Node bootstrapNode;
     private final String networkInterface;
     private final Persistence persistence;
@@ -94,10 +95,12 @@ class BootstrappedPeerFactory {
     @Inject
     public BootstrappedPeerFactory(Persistence persistence,
                                    @Named(Node.PORT_KEY) int port,
+                                   @Named(USE_MANUAL_PORT_FORWARDING_KEY) boolean useManualPortForwarding,
                                    @Named(BOOTSTRAP_NODE_KEY) Node bootstrapNode,
                                    @Named(NETWORK_INTERFACE_KEY) String networkInterface) {
         this.persistence = persistence;
         this.port = port;
+        this.useManualPortForwarding = useManualPortForwarding;
         this.bootstrapNode = bootstrapNode;
         this.networkInterface = networkInterface;
     }
@@ -120,12 +123,25 @@ class BootstrappedPeerFactory {
         try {
             setState(BootstrapState.PEER_CREATION, "We create a P2P node.");
 
-            Number160 peerId = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
             Bindings bindings = new Bindings();
             if (!NETWORK_INTERFACE_UNSPECIFIED.equals(networkInterface))
                 bindings.addInterface(networkInterface);
 
-            peer = new PeerBuilder(keyPair).ports(port).bindings(bindings).start();
+            if (useManualPortForwarding) {
+                peer = new PeerBuilder(keyPair)
+                        .ports(port)
+                        .bindings(bindings)
+                        .tcpPortForwarding(port)
+                        .udpPortForwarding(port)
+                        .start();
+            }
+            else {
+                peer = new PeerBuilder(keyPair)
+                        .ports(port)
+                        .bindings(bindings)
+                        .start();
+            }
+
             peerDHT = new PeerBuilderDHT(peer).start();
             new IndirectReplication(peerDHT).start();
 
@@ -203,8 +219,16 @@ class BootstrappedPeerFactory {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
-                    setState(BootstrapState.DIRECT_SUCCESS, "We are directly connected and visible to other peers.");
-                    bootstrap(BootstrapState.DIRECT_SUCCESS);
+                    if (useManualPortForwarding) {
+                        setState(BootstrapState.MANUAL_PORT_FORWARDING_SUCCESS,
+                                "We use manual port forwarding and are visible to other peers.");
+                        bootstrap(BootstrapState.MANUAL_PORT_FORWARDING_SUCCESS);
+                    }
+                    else {
+                        setState(BootstrapState.DIRECT_SUCCESS,
+                                "We are directly connected and visible to other peers.");
+                        bootstrap(BootstrapState.DIRECT_SUCCESS);
+                    }
                 }
                 else {
                     setState(BootstrapState.DIRECT_NOT_SUCCEEDED, "We are probably behind a NAT and not reachable to " +

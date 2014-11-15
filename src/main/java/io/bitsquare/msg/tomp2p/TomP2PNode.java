@@ -380,6 +380,8 @@ public class TomP2PNode implements ClientNode {
         switch (bootstrapState) {
             case DIRECT_SUCCESS:
                 return ConnectionType.DIRECT;
+            case MANUAL_PORT_FORWARDING_SUCCESS:
+                return ConnectionType.MANUAL_PORT_FORWARDING;
             case NAT_SUCCESS:
                 return ConnectionType.NAT;
             case RELAY_SUCCESS:

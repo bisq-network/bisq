@@ -18,5 +18,5 @@
 package io.bitsquare.network;
 
 public enum ConnectionType {
-    UNKNOWN, DIRECT, NAT, RELAY
+    UNKNOWN, DIRECT, MANUAL_PORT_FORWARDING, NAT, RELAY
 }
