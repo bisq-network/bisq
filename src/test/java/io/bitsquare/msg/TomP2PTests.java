@@ -84,7 +84,7 @@ public class TomP2PTests {
     private static final Logger log = LoggerFactory.getLogger(TomP2PTests.class);
 
     // If you want to test in one specific connection mode define it directly, otherwise use UNKNOWN
-    private static final ConnectionType FORCED_CONNECTION_TYPE = ConnectionType.MANUAL_PORT_FORWARDING;
+    private static final ConnectionType FORCED_CONNECTION_TYPE = ConnectionType.DIRECT;
 
     // Typically you run the bootstrap node in localhost to test direct connection.
     // If you have a setup where you are not behind a router you can also use a WAN bootstrap node.
