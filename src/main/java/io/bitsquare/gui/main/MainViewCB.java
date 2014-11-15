@@ -54,14 +54,6 @@ public class MainViewCB extends ViewCB<MainPM> {
 
     private final ToggleGroup navButtons = new ToggleGroup();
 
-    private final AnchorPane contentContainer = new AnchorPane() {{
-        setId("content-pane");
-        setLeftAnchor(this, 0d);
-        setRightAnchor(this, 0d);
-        setTopAnchor(this, 60d);
-        setBottomAnchor(this, 25d);
-    }};
-
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final OverlayManager overlayManager;
@@ -93,12 +85,16 @@ public class MainViewCB extends ViewCB<MainPM> {
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
-        ToggleButton homeButton = new NavButton(HOME) {{ setDisable(true); }};
+        ToggleButton homeButton = new NavButton(HOME) {{
+            setDisable(true); // during irc demo
+        }};
         ToggleButton buyButton = new NavButton(BUY);
         ToggleButton sellButton = new NavButton(SELL);
         ToggleButton portfolioButton = new NavButton(PORTFOLIO);
         ToggleButton fundsButton = new NavButton(FUNDS);
-        ToggleButton msgButton = new NavButton(MSG) {{ setDisable(true); }};
+        ToggleButton msgButton = new NavButton(MSG) {{
+            setDisable(true); // during irc demo
+        }};
         ToggleButton settingsButton = new NavButton(SETTINGS);
         ToggleButton accountButton = new NavButton(ACCOUNT);
         Pane portfolioButtonHolder = new Pane(portfolioButton);
@@ -117,6 +113,14 @@ public class MainViewCB extends ViewCB<MainPM> {
             setTopAnchor(this, 0d);
         }};
 
+        AnchorPane contentContainer = new AnchorPane() {{
+            setId("content-pane");
+            setLeftAnchor(this, 0d);
+            setRightAnchor(this, 0d);
+            setTopAnchor(this, 60d);
+            setBottomAnchor(this, 25d);
+        }};
+
         AnchorPane applicationContainer = new AnchorPane(leftNavPane, rightNavPane, contentContainer) {{
             setId("content-pane");
         }};
@@ -125,9 +129,22 @@ public class MainViewCB extends ViewCB<MainPM> {
             setId("base-content-container");
         }};
 
-        navigation.addListener(navigationItems -> {
-            if (isRequestToChangeNavigation(navigationItems))
-                loadSelectedNavigation(navigationItems[1]);
+        navigation.addListener(navItems -> {
+            if (navItems == null || navItems.length != 2 || navItems[0] != Navigation.Item.MAIN)
+                return;
+
+            ViewLoader.Item loaded = viewLoader.load(navItems[1].getFxmlUrl());
+            contentContainer.getChildren().setAll(loaded.view);
+            if (loaded.controller instanceof ViewCB)
+                ((ViewCB) loaded.controller).setParent(this);
+
+            navButtons.getToggles().stream()
+                    .filter(toggle -> toggle instanceof ToggleButton)
+                    .filter(button -> navItems[1].getDisplayName().equals(((ToggleButton) button).getText()))
+                    .findFirst()
+                    .orElseThrow(() ->
+                            new BitsquareException("No button matching %s found", navItems[1].getDisplayName()))
+                    .setSelected(true);
         });
 
         configureBlurring(baseApplicationContainer);
@@ -136,64 +153,22 @@ public class MainViewCB extends ViewCB<MainPM> {
 
         ((Pane) root).getChildren().addAll(baseApplicationContainer, splashScreen);
 
-        presentationModel.backendReady.addListener((ov, oldValue, newValue) -> {
-            if (newValue) {
-                bankAccountComboBoxHolder.getChildren().setAll(createBankAccountComboBox());
+        presentationModel.backendReady.addListener((ov1, prev1, ready) -> {
+            if (!ready)
+                return;
 
-                applyPendingTradesInfoIcon(presentationModel.numPendingTrades.get(), portfolioButtonHolder);
-                presentationModel.numPendingTrades.addListener((ov1, oldValue1, newValue1) ->
-                        applyPendingTradesInfoIcon((int) newValue1, portfolioButtonHolder));
+            bankAccountComboBoxHolder.getChildren().setAll(createBankAccountComboBox());
 
-                navigation.navigateToLastStoredItem();
-                transitions.fadeOutAndRemove(splashScreen, 1500);
-            }
+            applyPendingTradesInfoIcon(presentationModel.numPendingTrades.get(), portfolioButtonHolder);
+            presentationModel.numPendingTrades.addListener((ov2, prev2, numPendingTrades) ->
+                    applyPendingTradesInfoIcon((int) numPendingTrades, portfolioButtonHolder));
+
+            navigation.navigateToLastStoredItem();
+
+            transitions.fadeOutAndRemove(splashScreen, 1500);
         });
 
         Platform.runLater(presentationModel::initBackend);
-    }
-
-    private void loadSelectedNavigation(Navigation.Item selected) {
-
-        ViewLoader.Item loaded = viewLoader.load(selected.getFxmlUrl());
-        contentContainer.getChildren().setAll(loaded.view);
-        childController = loaded.controller;
-        if (childController instanceof ViewCB)
-            ((ViewCB) childController).setParent(this);
-
-        navButtons.getToggles().stream()
-                .filter(toggle -> toggle instanceof ToggleButton)
-                .filter(button -> selected.getDisplayName().equals(((ToggleButton) button).getText()))
-                .findFirst()
-                .orElseThrow(() -> new BitsquareException("No button matching %s found", selected.getDisplayName()))
-                .setSelected(true);
-    }
-
-    private void applyPendingTradesInfoIcon(int numPendingTrades, Pane targetPane) {
-        if (numPendingTrades <= 0) {
-            if (targetPane.getChildren().size() > 1) {
-                targetPane.getChildren().remove(1);
-            }
-            return;
-        }
-
-        Label numPendingTradesLabel = new Label(String.valueOf(numPendingTrades));
-        if (targetPane.getChildren().size() == 1) {
-            ImageView icon = new ImageView();
-            icon.setLayoutX(0.5);
-            icon.setId("image-alert-round");
-
-            numPendingTradesLabel.relocate(5, 1);
-            numPendingTradesLabel.setId("nav-alert-label");
-
-            Pane alert = new Pane();
-            alert.relocate(30, 9);
-            alert.setMouseTransparent(true);
-            alert.setEffect(new DropShadow(4, 1, 2, Color.GREY));
-            alert.getChildren().addAll(icon, numPendingTradesLabel);
-            targetPane.getChildren().add(alert);
-        }
-
-        SystemNotification.openInfoNotification(title, "You got a new trade message.");
     }
 
     private VBox createSplashScreen() {
@@ -318,6 +293,34 @@ public class MainViewCB extends ViewCB<MainPM> {
         return vBox;
     }
 
+    private void applyPendingTradesInfoIcon(int numPendingTrades, Pane targetPane) {
+        if (numPendingTrades <= 0) {
+            if (targetPane.getChildren().size() > 1) {
+                targetPane.getChildren().remove(1);
+            }
+            return;
+        }
+
+        Label numPendingTradesLabel = new Label(String.valueOf(numPendingTrades));
+        if (targetPane.getChildren().size() == 1) {
+            ImageView icon = new ImageView();
+            icon.setLayoutX(0.5);
+            icon.setId("image-alert-round");
+
+            numPendingTradesLabel.relocate(5, 1);
+            numPendingTradesLabel.setId("nav-alert-label");
+
+            Pane alert = new Pane();
+            alert.relocate(30, 9);
+            alert.setMouseTransparent(true);
+            alert.setEffect(new DropShadow(4, 1, 2, Color.GREY));
+            alert.getChildren().addAll(icon, numPendingTradesLabel);
+            targetPane.getChildren().add(alert);
+        }
+
+        SystemNotification.openInfoNotification(title, "You got a new trade message.");
+    }
+
     private void configureBlurring(Node node) {
         Popups.setOverlayManager(overlayManager);
 
@@ -332,10 +335,6 @@ public class MainViewCB extends ViewCB<MainPM> {
                 transitions.removeBlur(node);
             }
         });
-    }
-
-    private boolean isRequestToChangeNavigation(Navigation.Item[] navigationItems) {
-        return navigationItems != null && navigationItems.length == 2 && navigationItems[0] == Navigation.Item.MAIN;
     }
 
 
