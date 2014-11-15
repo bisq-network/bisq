@@ -53,11 +53,13 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
     private static final Logger log = LoggerFactory.getLogger(AccountSetupViewCB.class);
 
     private WizardItem seedWords, password, fiatAccount, restrictions, registration;
-    private final Navigation navigation;
     private Navigation.Listener listener;
 
     @FXML VBox leftVBox;
     @FXML AnchorPane content;
+
+    private final ViewLoader viewLoader;
+    private final Navigation navigation;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,8 +67,9 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountSetupViewCB(Navigation navigation) {
+    private AccountSetupViewCB(ViewLoader viewLoader, Navigation navigation) {
         super();
+        this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
 
@@ -186,10 +189,9 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
 
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
-        final ViewLoader loader = new ViewLoader(navigationItem);
-        final Pane view = loader.load();
-        content.getChildren().setAll(view);
-        childController = loader.getController();
+        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
+        content.getChildren().setAll(loaded.view);
+        childController = loaded.controller;
         ((ViewCB<? extends PresentationModel>) childController).setParent(this);
         ((ContextAware) childController).useSettingsContext(false);
         return childController;

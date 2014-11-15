@@ -53,7 +53,6 @@ import org.slf4j.LoggerFactory;
 public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(RestrictionsViewCB.class);
-    private final Stage primaryStage;
 
     @FXML ListView<Locale> languagesListView;
     @FXML ListView<Country> countriesListView;
@@ -63,14 +62,18 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
     @FXML ComboBox<Country> countryComboBox;
     @FXML Button completedButton, addAllEuroCountriesButton;
 
+    private final ViewLoader viewLoader;
+    private final Stage primaryStage;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private RestrictionsViewCB(RestrictionsPM presentationModel, Stage primaryStage) {
+    private RestrictionsViewCB(RestrictionsPM presentationModel, ViewLoader viewLoader, Stage primaryStage) {
         super(presentationModel);
+        this.viewLoader = viewLoader;
         this.primaryStage = primaryStage;
     }
 
@@ -187,12 +190,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
 
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
-        // TODO caching causes exception
-        final ViewLoader loader = new ViewLoader(navigationItem, false);
-        final Node view = loader.load();
-        //TODO Resolve type problem...
-        Initializable childController = loader.getController();
-        //childController.setParentController(this);
+        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
 
         final Stage stage = new Stage();
         stage.setTitle("Arbitrator selection");
@@ -204,7 +202,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
         stage.setY(primaryStage.getY() + 50);
         stage.initModality(Modality.WINDOW_MODAL);
         stage.initOwner(primaryStage);
-        Scene scene = new Scene((Parent) view, 800, 600);
+        Scene scene = new Scene((Parent) loaded.view, 800, 600);
         stage.setScene(scene);
         stage.setOnHidden(windowEvent -> {
             if (navigationItem == Navigation.Item.ARBITRATOR_BROWSER)
@@ -212,7 +210,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
         });
         stage.show();
 
-        return childController;
+        return loaded.controller;
     }
 
 

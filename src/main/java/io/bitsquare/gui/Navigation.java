@@ -17,9 +17,12 @@
 
 package io.bitsquare.gui;
 
+import io.bitsquare.BitsquareException;
 import io.bitsquare.persistence.Persistence;
 
 import com.google.inject.Inject;
+
+import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -137,16 +140,12 @@ public class Navigation {
         void onNavigationRequested(Item... items);
     }
 
-    public interface FxmlResource {
-        String getFxmlUrl();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static enum Item implements FxmlResource {
+    public static enum Item {
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Application
@@ -219,7 +218,10 @@ public class Navigation {
         ARBITRATOR_PROFILE("/io/bitsquare/gui/main/account/arbitrator/profile/ArbitratorProfileView.fxml"),
         ARBITRATOR_BROWSER("/io/bitsquare/gui/main/account/arbitrator/browser/ArbitratorBrowserView.fxml"),
         ARBITRATOR_REGISTRATION(
-                "/io/bitsquare/gui/main/account/arbitrator/registration/ArbitratorRegistrationView.fxml");
+                "/io/bitsquare/gui/main/account/arbitrator/registration/ArbitratorRegistrationView.fxml"),
+
+        // for testing, does not actually exist
+        BOGUS("/io/bitsquare/BogusView.fxml");
 
 
         private final String displayName;
@@ -234,9 +236,11 @@ public class Navigation {
             this.fxmlUrl = fxmlUrl;
         }
 
-        @Override
-        public String getFxmlUrl() {
-            return fxmlUrl;
+        public URL getFxmlUrl() {
+            URL url = Navigation.class.getResource(fxmlUrl);
+            if (url == null)
+                throw new BitsquareException("'%s' could not be loaded as a resource", fxmlUrl);
+            return url;
         }
 
         public String getDisplayName() {

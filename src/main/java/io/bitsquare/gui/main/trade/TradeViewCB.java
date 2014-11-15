@@ -47,13 +47,11 @@ import org.slf4j.LoggerFactory;
 public class TradeViewCB extends CachedViewCB implements TradeNavigator {
     private static final Logger log = LoggerFactory.getLogger(TradeViewCB.class);
 
-    // private final OfferBookInfo offerBookInfo = new OfferBookInfo();
     private OfferBookViewCB offerBookViewCB;
     private CreateOfferViewCB createOfferViewCB;
     private TakeOfferViewCB takeOfferViewCB;
     private Node createOfferView;
     private Node takeOfferView;
-    private final Navigation navigation;
     private Navigation.Listener listener;
     private Navigation.Item navigationItem;
     private Direction direction;
@@ -61,14 +59,17 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
     private Fiat price;
     private Offer offer;
 
+    private final ViewLoader viewLoader;
+    private final Navigation navigation;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected TradeViewCB(Navigation navigation) {
+    protected TradeViewCB(ViewLoader viewLoader, Navigation navigation) {
         super();
-
+        this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
 
@@ -166,13 +167,12 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
         TabPane tabPane = (TabPane) root;
         if (navigationItem == Navigation.Item.OFFER_BOOK && offerBookViewCB == null) {
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
-            ViewLoader offerBookLoader = new ViewLoader(navigationItem, false);
-            final Parent view = offerBookLoader.load();
+            ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
             final Tab tab = new Tab(direction == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
             tab.setClosable(false);
-            tab.setContent(view);
+            tab.setContent(loaded.view);
             tabPane.getTabs().add(tab);
-            offerBookViewCB = offerBookLoader.getController();
+            offerBookViewCB = (OfferBookViewCB) loaded.controller;
             offerBookViewCB.setParent(this);
 
             offerBookViewCB.setDirection(direction);
@@ -183,9 +183,9 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
         else if (navigationItem == Navigation.Item.CREATE_OFFER && createOfferViewCB == null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
-            final ViewLoader loader = new ViewLoader(navigationItem, false);
-            createOfferView = loader.load();
-            createOfferViewCB = loader.getController();
+            ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
+            createOfferView = loaded.view;
+            createOfferViewCB = (CreateOfferViewCB) loaded.controller;
             createOfferViewCB.setParent(this);
             createOfferViewCB.initWithData(direction, amount, price);
             final Tab tab = new Tab("Create offer");
@@ -199,9 +199,9 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
                 offer != null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
-            ViewLoader loader = new ViewLoader(Navigation.Item.TAKE_OFFER, false);
-            takeOfferView = loader.load();
-            takeOfferViewCB = loader.getController();
+            ViewLoader.Item loaded = viewLoader.load(Navigation.Item.TAKE_OFFER.getFxmlUrl(), false);
+            takeOfferView = loaded.view;
+            takeOfferViewCB = (TakeOfferViewCB) loaded.controller;
             takeOfferViewCB.setParent(this);
             takeOfferViewCB.initWithData(direction, amount, offer);
             final Tab tab = new Tab("Take offer");

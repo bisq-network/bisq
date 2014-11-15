@@ -62,6 +62,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         setBottomAnchor(this, 25d);
     }};
 
+    private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final OverlayManager overlayManager;
     private final Transitions transitions;
@@ -69,11 +70,11 @@ public class MainViewCB extends ViewCB<MainPM> {
     private final String title;
 
     @Inject
-    public MainViewCB(MainPM presentationModel, Navigation navigation, OverlayManager overlayManager,
-                      TradeManager tradeManager, Transitions transitions, BitcoinNetwork bitcoinNetwork,
-                      @Named(TITLE_KEY) String title) {
+    public MainViewCB(MainPM presentationModel, ViewLoader viewLoader, Navigation navigation,
+                      OverlayManager overlayManager, TradeManager tradeManager, Transitions transitions,
+                      BitcoinNetwork bitcoinNetwork, @Named(TITLE_KEY) String title) {
         super(presentationModel);
-
+        this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.overlayManager = overlayManager;
         this.transitions = transitions;
@@ -152,11 +153,12 @@ public class MainViewCB extends ViewCB<MainPM> {
     }
 
     private void loadSelectedNavigation(Navigation.Item selected) {
-        ViewLoader loader = new ViewLoader(selected);
-        contentContainer.getChildren().setAll(loader.<Node>load());
-        childController = loader.getController();
-        if (childController != null)
-            childController.setParent(this);
+
+        ViewLoader.Item loaded = viewLoader.load(selected.getFxmlUrl());
+        contentContainer.getChildren().setAll(loaded.view);
+        childController = loaded.controller;
+        if (childController instanceof ViewCB)
+            ((ViewCB) childController).setParent(this);
 
         navButtons.getToggles().stream()
                 .filter(toggle -> toggle instanceof ToggleButton)

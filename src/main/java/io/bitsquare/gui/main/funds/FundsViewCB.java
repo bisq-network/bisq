@@ -34,13 +34,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.*;
 import javafx.scene.control.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class FundsViewCB extends CachedViewCB {
-    private static final Logger log = LoggerFactory.getLogger(FundsViewCB.class);
-
-    private final Navigation navigation;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -48,15 +42,18 @@ public class FundsViewCB extends CachedViewCB {
 
     @FXML Tab withdrawalTab, transactionsTab;
 
+    private final ViewLoader viewLoader;
+    private final Navigation navigation;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    FundsViewCB(Navigation navigation) {
+    FundsViewCB(ViewLoader viewLoader, Navigation navigation) {
         super();
-
+        this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
 
@@ -117,8 +114,7 @@ public class FundsViewCB extends CachedViewCB {
         if (currentTab != null)
             currentTab.setContent(null);
 
-        final ViewLoader loader = new ViewLoader(navigationItem);
-        Node view = loader.load();
+        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         switch (navigationItem) {
             case WITHDRAWAL:
                 currentTab = withdrawalTab;
@@ -127,9 +123,9 @@ public class FundsViewCB extends CachedViewCB {
                 currentTab = transactionsTab;
                 break;
         }
-        currentTab.setContent(view);
+        currentTab.setContent(loaded.view);
         ((TabPane) root).getSelectionModel().select(currentTab);
-        Initializable childController = loader.getController();
+        Initializable childController = loaded.controller;
         ((ViewCB) childController).setParent(this);
 
         return childController;
