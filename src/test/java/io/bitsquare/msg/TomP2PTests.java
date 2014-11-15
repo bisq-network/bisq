@@ -84,7 +84,7 @@ public class TomP2PTests {
     private static final Logger log = LoggerFactory.getLogger(TomP2PTests.class);
 
     // If you want to test in one specific connection mode define it directly, otherwise use UNKNOWN
-    private static final ConnectionType FORCED_CONNECTION_TYPE = ConnectionType.DIRECT;
+    private static final ConnectionType FORCED_CONNECTION_TYPE = ConnectionType.MANUAL_PORT_FORWARDING;
 
     // Typically you run the bootstrap node in localhost to test direct connection.
     // If you have a setup where you are not behind a router you can also use a WAN bootstrap node.
@@ -116,8 +116,8 @@ public class TomP2PTests {
 
     @Before
     public void setUp() {
-        client1Port = 7777;
-        client2Port = 7778;
+        client1Port = 7367;
+        client2Port = 7368;
     }
 
     @After
@@ -153,8 +153,9 @@ public class TomP2PTests {
     @Test
     @Repeat(STRESS_TEST_COUNT)
     public void testBootstrapWithPortForwarding() throws Exception {
-        if (FORCED_CONNECTION_TYPE == ConnectionType.NAT) {
-            peer = bootstrapWithPortForwarding(client1Port);
+        if (FORCED_CONNECTION_TYPE == ConnectionType.AUTO_PORT_FORWARDING ||
+                FORCED_CONNECTION_TYPE == ConnectionType.MANUAL_PORT_FORWARDING) {
+            peer = bootstrapWithPortForwarding(client2Port);
             assertNotNull(peer);
         }
     }
@@ -570,9 +571,22 @@ public class TomP2PTests {
         Number160 peerId = Number160.createHash(UUID.randomUUID().toString());
         Peer peer = null;
         try {
-            peer = new PeerBuilder(peerId).bindings(getBindings()).behindFirewall()
-                    .ports(clientPort).start();
-
+            if (FORCED_CONNECTION_TYPE == ConnectionType.MANUAL_PORT_FORWARDING ||
+                    resolvedConnectionType == ConnectionType.MANUAL_PORT_FORWARDING) {
+                peer = new PeerBuilder(peerId).bindings(getBindings())
+                        .behindFirewall()
+                        .tcpPortForwarding(clientPort)
+                        .udpPortForwarding(clientPort)
+                        .ports(clientPort)
+                        .start();
+            }
+            else {
+                peer = new PeerBuilder(peerId).bindings(getBindings())
+                        .behindFirewall()
+                        .ports(clientPort)
+                        .start();
+            }
+            
             PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
             FutureDiscover futureDiscover = peer.discover().peerAddress(BOOTSTRAP_NODE_ADDRESS).start();
             FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
@@ -668,7 +682,12 @@ public class TomP2PTests {
         if (peer != null)
             return peer;
 
-        resolvedConnectionType = ConnectionType.NAT;
+        resolvedConnectionType = ConnectionType.MANUAL_PORT_FORWARDING;
+        peer = bootstrapWithPortForwarding(clientPort);
+        if (peer != null)
+            return peer;
+
+        resolvedConnectionType = ConnectionType.AUTO_PORT_FORWARDING;
         peer = bootstrapWithPortForwarding(clientPort);
         if (peer != null)
             return peer;
@@ -689,7 +708,7 @@ public class TomP2PTests {
         if (FORCED_CONNECTION_TYPE == ConnectionType.DIRECT) {
             peer = bootstrapDirectConnection(clientPort);
         }
-        else if (FORCED_CONNECTION_TYPE == ConnectionType.NAT) {
+        else if (FORCED_CONNECTION_TYPE == ConnectionType.AUTO_PORT_FORWARDING) {
             peer = bootstrapWithPortForwarding(clientPort);
         }
         else if (FORCED_CONNECTION_TYPE == ConnectionType.RELAY) {

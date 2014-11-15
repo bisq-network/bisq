@@ -191,7 +191,7 @@ class BootstrappedPeerFactory {
                 case RELAY_SUCCESS:
                     bootstrapWithRelay();
                     break;
-                case NAT_SUCCESS:
+                case AUTO_PORT_FORWARDING_SUCCESS:
                     tryPortForwarding();
                     break;
                 case DIRECT_SUCCESS:
@@ -246,7 +246,7 @@ class BootstrappedPeerFactory {
 
     // 2. Attempt: Try to set up port forwarding with UPNP and NAT-PMP
     private void tryPortForwarding() {
-        setState(BootstrapState.NAT_INIT, "We are trying with automatic port forwarding.");
+        setState(BootstrapState.AUTO_PORT_FORWARDING_INIT, "We are trying with automatic port forwarding.");
         FutureDiscover futureDiscover = peer.discover().peerAddress(getBootstrapAddress()).start();
         PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
         FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
@@ -254,13 +254,13 @@ class BootstrappedPeerFactory {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
-                    setState(BootstrapState.NAT_SETUP_DONE, "Automatic port forwarding is setup. " +
+                    setState(BootstrapState.AUTO_PORT_FORWARDING_SETUP_DONE, "Automatic port forwarding is setup. " +
                             "We need to do a discover process again.");
                     // we need a second discover process
                     discoverAfterPortForwarding();
                 }
                 else {
-                    setState(BootstrapState.NAT_NOT_SUCCEEDED, "Port forwarding has failed. " +
+                    setState(BootstrapState.AUTO_PORT_FORWARDING_NOT_SUCCEEDED, "Port forwarding has failed. " +
                             "We try to use a relay as next step.");
                     bootstrapWithRelay();
                 }
@@ -268,7 +268,8 @@ class BootstrappedPeerFactory {
 
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
-                handleError(BootstrapState.NAT_FAILED, "Exception at port forwarding: " + t.getMessage());
+                handleError(BootstrapState.AUTO_PORT_FORWARDING_FAILED, "Exception at port forwarding: " + t
+                        .getMessage());
             }
         });
     }
@@ -280,18 +281,19 @@ class BootstrappedPeerFactory {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
-                    setState(BootstrapState.NAT_SUCCESS, "Discover with automatic port forwarding was successful.");
-                    bootstrap(BootstrapState.NAT_SUCCESS);
+                    setState(BootstrapState.AUTO_PORT_FORWARDING_SUCCESS, "Discover with automatic port forwarding " +
+                            "was successful.");
+                    bootstrap(BootstrapState.AUTO_PORT_FORWARDING_SUCCESS);
                 }
                 else {
-                    handleError(BootstrapState.NAT_FAILED, "Discover with automatic port forwarding has failed " +
+                    handleError(BootstrapState.AUTO_PORT_FORWARDING_FAILED, "Discover with automatic port forwarding has failed " +
                             futureDiscover.failedReason());
                 }
             }
 
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
-                handleError(BootstrapState.NAT_FAILED, "Exception at discover: " + t.getMessage());
+                handleError(BootstrapState.AUTO_PORT_FORWARDING_FAILED, "Exception at discover: " + t.getMessage());
             }
         });
     }

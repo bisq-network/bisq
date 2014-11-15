@@ -382,8 +382,8 @@ public class TomP2PNode implements ClientNode {
                 return ConnectionType.DIRECT;
             case MANUAL_PORT_FORWARDING_SUCCESS:
                 return ConnectionType.MANUAL_PORT_FORWARDING;
-            case NAT_SUCCESS:
-                return ConnectionType.NAT;
+            case AUTO_PORT_FORWARDING_SUCCESS:
+                return ConnectionType.AUTO_PORT_FORWARDING;
             case RELAY_SUCCESS:
                 return ConnectionType.RELAY;
             default:

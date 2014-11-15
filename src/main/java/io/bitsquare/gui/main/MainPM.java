@@ -88,21 +88,21 @@ class MainPM extends PresentationModel<MainModel> {
 
         model.bootstrapState.addListener((ov, oldValue, newValue) -> {
                     if (newValue == BootstrapState.DIRECT_SUCCESS ||
-                            newValue == BootstrapState.NAT_SUCCESS ||
+                            newValue == BootstrapState.AUTO_PORT_FORWARDING_SUCCESS ||
                             newValue == BootstrapState.RELAY_SUCCESS) {
                         bootstrapState.set("Successfully connected to P2P network: " + newValue.getMessage());
                         bootstrapProgress.set(1);
 
                         if (newValue == BootstrapState.DIRECT_SUCCESS)
                             bootstrapIconId.set("image-connection-direct");
-                        else if (newValue == BootstrapState.NAT_SUCCESS)
+                        else if (newValue == BootstrapState.AUTO_PORT_FORWARDING_SUCCESS)
                             bootstrapIconId.set("image-connection-nat");
                         else if (newValue == BootstrapState.RELAY_SUCCESS)
                             bootstrapIconId.set("image-connection-relay");
                     }
                     else if (newValue == BootstrapState.PEER_CREATION_FAILED ||
                             newValue == BootstrapState.DIRECT_FAILED ||
-                            newValue == BootstrapState.NAT_FAILED ||
+                            newValue == BootstrapState.AUTO_PORT_FORWARDING_FAILED ||
                             newValue == BootstrapState.RELAY_FAILED) {
 
                         bootstrapErrorMsg.set(newValue.getMessage());
