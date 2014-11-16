@@ -113,6 +113,7 @@ public class TransactionsViewCB extends CachedViewCB {
     private void openTxDetails(TransactionsListItem item) {
         // TODO Open popup with details view
         log.debug("openTxDetails " + item);
+
         Popups.openWarningPopup("Under construction",
                 "This will open a details popup but that is not implemented yet.");
     }

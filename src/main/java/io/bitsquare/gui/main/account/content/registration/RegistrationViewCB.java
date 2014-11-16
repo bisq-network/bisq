@@ -109,10 +109,7 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         getProperties().put("type", "COPY");
-                        Clipboard clipboard = Clipboard.getSystemClipboard();
-                        ClipboardContent content = new ClipboardContent();
-                        content.putString(presentationModel.getTransactionId());
-                        clipboard.setContent(content);
+                         Utilities.copyToClipboard(presentationModel.getTransactionId());
                     }
                 });*/
                 actions.add(new AbstractAction(BSResources.get("shared.close")) {

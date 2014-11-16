@@ -29,6 +29,7 @@ import io.bitsquare.msg.MessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
+import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -50,7 +51,6 @@ import javax.inject.Inject;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.input.*;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
@@ -350,10 +350,7 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
 
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> {
-            Clipboard clipboard = Clipboard.getSystemClipboard();
-            ClipboardContent content = new ClipboardContent();
-            content.putString(securityDepositAddress);
-            clipboard.setContent(content);
+            Utilities.copyToClipboard(securityDepositAddress);
         });
 
         paymentDoneButton.setDisable(walletService.getArbitratorDepositBalance().isZero());

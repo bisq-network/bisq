@@ -18,6 +18,7 @@
 package io.bitsquare.gui.components;
 
 import io.bitsquare.gui.OverlayManager;
+import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
@@ -38,7 +39,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.*;
-import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.stage.Window;
 
@@ -91,12 +91,8 @@ public class AddressTextField extends AnchorPane {
         Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> {
-            if (address.get() != null && address.get().length() > 0) {
-                Clipboard clipboard = Clipboard.getSystemClipboard();
-                ClipboardContent content = new ClipboardContent();
-                content.putString(address.get());
-                clipboard.setContent(content);
-            }
+            if (address.get() != null && address.get().length() > 0)
+                Utilities.copyToClipboard(address.get());
         });
 
         Label qrCode = new Label();

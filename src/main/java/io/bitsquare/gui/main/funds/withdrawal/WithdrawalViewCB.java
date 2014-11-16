@@ -25,6 +25,7 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -46,7 +47,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.input.*;
 import javafx.util.Callback;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -308,12 +308,8 @@ public class WithdrawalViewCB extends CachedViewCB {
 
                                 if (item != null && !empty) {
                                     setGraphic(copyIcon);
-                                    copyIcon.setOnMouseClicked(e -> {
-                                        Clipboard clipboard = Clipboard.getSystemClipboard();
-                                        ClipboardContent content = new ClipboardContent();
-                                        content.putString(item.addressStringProperty().get());
-                                        clipboard.setContent(content);
-                                    });
+                                    copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(item
+                                            .addressStringProperty().get()));
 
                                 }
                                 else {

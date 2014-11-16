@@ -30,6 +30,7 @@ import io.bitsquare.gui.components.processbar.ProcessStepItem;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -232,11 +233,14 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         Help.openWindow(HelpId.PENDING_TRADE_SUMMARY);
     }
 
-    private void openOfferDetails(PendingTradesListItem item) {
+    private void openOfferDetails(String id) {
         // TODO Open popup with details view
-        log.debug("Trade details " + item);
-        Popups.openWarningPopup("Under construction", "This will open a " +
-                "details popup but that is not implemented yet.");
+        log.debug("Trade details " + id);
+        Utilities.copyToClipboard(id);
+        Popups.openWarningPopup("Under construction",
+                "The trader ID was copied to the clipboard. " +
+                        "Use that to identify your trading peer in the IRC chat room \n\n" +
+                        "Later this will open a details popup but that is not implemented yet.");
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -552,19 +556,36 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setTradeIdColumnCellFactory() {
-        idColumn.setCellFactory(TextFieldTableCell.<PendingTradesListItem, String>forTableColumn(
-                new StringConverter<String>() {
-                    @Override
-                    public String toString(String value) {
-                        return presentationModel.formatTradeId(value);
-                    }
+        idColumn.setCellFactory(
+                new Callback<TableColumn<PendingTradesListItem, String>, TableCell<PendingTradesListItem, String>>() {
 
                     @Override
-                    public String fromString(String string) {
-                        return null;
+                    public TableCell<PendingTradesListItem, String> call(TableColumn<PendingTradesListItem,
+                            String> column) {
+                        return new TableCell<PendingTradesListItem, String>() {
+                            private Hyperlink hyperlink;
+
+                            @Override
+                            public void updateItem(final String id, boolean empty) {
+                                super.updateItem(id, empty);
+
+                                if (id != null && !empty) {
+                                    hyperlink = new Hyperlink(presentationModel.formatTradeId(id));
+                                    hyperlink.setId("id-link");
+                                    Tooltip.install(hyperlink, new Tooltip(presentationModel.formatTradeId(id)));
+                                    hyperlink.setOnAction(event -> openOfferDetails(id));
+                                    setGraphic(hyperlink);
+                                }
+                                else {
+                                    setGraphic(null);
+                                    setId(null);
+                                }
+                            }
+                        };
                     }
-                }));
+                });
     }
+
 
     private void setDateColumnCellFactory() {
         dateColumn.setCellFactory(TextFieldTableCell.<PendingTradesListItem, Date>forTableColumn(

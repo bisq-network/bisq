@@ -335,10 +335,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         getProperties().put("type", "COPY");
-                        Clipboard clipboard = Clipboard.getSystemClipboard();
-                        ClipboardContent content = new ClipboardContent();
-                        content.putString(presentationModel.transactionId.get());
-                        clipboard.setContent(content);
+                         Utilities.copyToClipboard(presentationModel.transactionId.get());
                     }
                 });*/
                 actions.add(new AbstractAction(BSResources.get("shared.close")) {

@@ -35,6 +35,7 @@ import java.net.URI;
 import java.util.function.Function;
 
 import javafx.animation.AnimationTimer;
+import javafx.scene.input.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +68,16 @@ public class Utilities {
     private static String getOSName() {
         return System.getProperty("os.name").toLowerCase();
     }
+
+    public static void copyToClipboard(String content) {
+        if (content != null && content.length() > 0) {
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent clipboardContent = new ClipboardContent();
+            clipboardContent.putString(content);
+            clipboard.setContent(clipboardContent);
+        }
+    }
+
 
     public static <T> T jsonToObject(String jsonString, Class<T> classOfT) {
         Gson gson =

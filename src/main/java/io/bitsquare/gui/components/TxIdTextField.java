@@ -25,7 +25,6 @@ import io.bitsquare.util.Utilities;
 import org.bitcoinj.core.TransactionConfidence;
 
 import javafx.scene.control.*;
-import javafx.scene.input.*;
 import javafx.scene.layout.*;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -91,14 +90,7 @@ public class TxIdTextField extends AnchorPane {
             }
         });
 
-        copyIcon.setOnMouseClicked(e -> {
-            if (txID != null && txID.length() > 0) {
-                Clipboard clipboard = Clipboard.getSystemClipboard();
-                ClipboardContent content = new ClipboardContent();
-                content.putString(txID);
-                clipboard.setContent(content);
-            }
-        });
+        copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(txID));
 
         walletService.addTxConfidenceListener(new TxConfidenceListener(txID) {
             @Override
