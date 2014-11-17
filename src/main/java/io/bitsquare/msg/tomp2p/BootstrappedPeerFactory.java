@@ -46,6 +46,7 @@ import net.tomp2p.futures.BaseFutureListener;
 import net.tomp2p.futures.FutureBootstrap;
 import net.tomp2p.futures.FutureDiscover;
 import net.tomp2p.nat.FutureNAT;
+import net.tomp2p.nat.FutureRelayNAT;
 import net.tomp2p.nat.PeerBuilderNAT;
 import net.tomp2p.nat.PeerNAT;
 import net.tomp2p.p2p.Peer;
@@ -54,6 +55,7 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMapChangeListener;
 import net.tomp2p.peers.PeerStatistic;
+import net.tomp2p.relay.RelayConfig;
 import net.tomp2p.replication.IndirectReplication;
 
 import org.jetbrains.annotations.NotNull;
@@ -188,9 +190,9 @@ class BootstrappedPeerFactory {
 
             switch (lastSuccessfulBootstrap) {
                 // For the moment we don't support relay mode as it has too much problems
-               /* case RELAY_SUCCESS:
+                case RELAY_SUCCESS:
                     bootstrapWithRelay();
-                    break;*/
+                    break;
                 case AUTO_PORT_FORWARDING_SUCCESS:
                     tryPortForwarding();
                     break;
@@ -260,16 +262,16 @@ class BootstrappedPeerFactory {
                     discoverAfterPortForwarding();
                 }
                 else {
-                    handleError(BootstrapState.AUTO_PORT_FORWARDING_FAILED, "Automatic port forwarding failed. " +
+                   /* handleError(BootstrapState.AUTO_PORT_FORWARDING_FAILED, "Automatic port forwarding failed. " +
                             "Fail reason: " + future.failedReason() +
                             "\nCheck if UPnP is not enabled on your router. " +
                             "\nYou can try also to setup manual port forwarding. " +
-                            "\nRelay mode is currently not supported but will follow later. ");
+                            "\nRelay mode is currently not supported but will follow later. ");*/
 
                     // For the moment we don't support relay mode as it has too much problems
-                   /* setState(BootstrapState.AUTO_PORT_FORWARDING_NOT_SUCCEEDED, "Port forwarding has failed. " +
+                    setState(BootstrapState.AUTO_PORT_FORWARDING_NOT_SUCCEEDED, "Port forwarding has failed. " +
                             "We try to use a relay as next step.");
-                    bootstrapWithRelay();*/
+                    bootstrapWithRelay();
                 }
             }
 
@@ -308,12 +310,12 @@ class BootstrappedPeerFactory {
 
     // For the moment we don't support relay mode as it has too much problems
     // 3. Attempt: We try to use another peer as relay
-  /*  private void bootstrapWithRelay() {
+    private void bootstrapWithRelay() {
         setState(BootstrapState.RELAY_INIT, "We try to use another peer as relay.");
         FutureDiscover futureDiscover = peer.discover().peerAddress(getBootstrapAddress()).start();
         PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
         FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
-        FutureRelayNAT futureRelayNAT = peerNAT.startRelay(futureDiscover, futureNAT);
+        FutureRelayNAT futureRelayNAT = peerNAT.startRelay(RelayConfig.OpenTCP(), futureDiscover, futureNAT);
         futureRelayNAT.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
@@ -332,7 +334,7 @@ class BootstrappedPeerFactory {
                 handleError(BootstrapState.RELAY_FAILED, "Exception at bootstrapWithRelay: " + t.getMessage());
             }
         });
-    }*/
+    }
 
     private void bootstrap(BootstrapState state) {
         FutureBootstrap futureBootstrap = peer.bootstrap().peerAddress(getBootstrapAddress()).start();

@@ -56,6 +56,7 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMap;
 import net.tomp2p.peers.PeerMapConfiguration;
+import net.tomp2p.relay.RelayConfig;
 import net.tomp2p.storage.Data;
 
 import org.junit.After;
@@ -644,7 +645,7 @@ public class TomP2PTests {
             PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
             FutureDiscover futureDiscover = peer.discover().peerAddress(BOOTSTRAP_NODE_ADDRESS).start();
             FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
-            FutureRelayNAT futureRelayNAT = peerNAT.startRelay(futureDiscover, futureNAT);
+            FutureRelayNAT futureRelayNAT = peerNAT.startRelay(RelayConfig.OpenTCP(), futureDiscover, futureNAT);
             futureRelayNAT.awaitUninterruptibly();
             if (futureRelayNAT.isSuccess()) {
                 log.info("Bootstrap using relay was successful. Address = " + peer.peerAddress());
