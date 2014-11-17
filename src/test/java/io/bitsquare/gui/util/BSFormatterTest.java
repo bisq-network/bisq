@@ -74,12 +74,20 @@ public class BSFormatterTest {
         assertEquals("1.0120", formatter.formatCoin(Coin.parseCoin("1.012")));
         assertEquals("1012.30", formatter.formatCoin(Coin.parseCoin("1012.3")));
         assertEquals("1.0120", formatter.formatCoin(Coin.parseCoin("1.01200")));
-        assertEquals("1.0123", formatter.formatCoin(Coin.parseCoin("1.01234")));
+        assertEquals("1.000123", formatter.formatCoin(Coin.parseCoin("1.0001234")));
+        assertEquals("0.10", formatter.formatCoin(Coin.parseCoin("0.1")));
+        assertEquals("0.01", formatter.formatCoin(Coin.parseCoin("0.01")));
+        assertEquals("0.0010", formatter.formatCoin(Coin.parseCoin("0.001")));
+        assertEquals("0.0001", formatter.formatCoin(Coin.parseCoin("0.0001")));
+
+        assertEquals("0.000010", formatter.formatCoin(Coin.parseCoin("0.00001")));
+        assertEquals("0.000001", formatter.formatCoin(Coin.parseCoin("0.000001")));
+        assertEquals("0.00", formatter.formatCoin(Coin.parseCoin("0.0000001")));
 
         assertEquals("1.2345", formatter.formatCoin(Coin.parseCoin("1.2345")));
-        assertEquals("1.2346", formatter.formatCoin(Coin.parseCoin("1.23456")));
-        assertEquals("1.2346", formatter.formatCoin(Coin.parseCoin("1.234567")));
-        assertEquals("1.2345", formatter.formatCoin(Coin.parseCoin("1.23448")));
+        assertEquals("1.002346", formatter.formatCoin(Coin.parseCoin("1.0023456")));
+        assertEquals("1.002346", formatter.formatCoin(Coin.parseCoin("1.00234567")));
+        assertEquals("1.002345", formatter.formatCoin(Coin.parseCoin("1.0023448")));
 
         assertEquals("1.00", formatter.formatCoin(Coin.COIN));
         assertEquals("1012.30", formatter.formatCoin(Coin.parseCoin("1012.3")));
@@ -100,12 +108,20 @@ public class BSFormatterTest {
         assertEquals("1.0120 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.012")));
         assertEquals("1012.30 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1012.3")));
         assertEquals("1.0120 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.01200")));
-        assertEquals("1.0123 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.01234")));
+        assertEquals("1.012340 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.01234")));
+        assertEquals("1.012345 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.012345")));
+        assertEquals("1.012345 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.0123454")));
+        assertEquals("1.012346 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.0123455")));
+
+        assertEquals("0.10 BTC", formatter.formatCoinWithCode(Coin.parseCoin("0.1")));
+        assertEquals("0.01 BTC", formatter.formatCoinWithCode(Coin.parseCoin("0.01")));
+        assertEquals("0.0010 BTC", formatter.formatCoinWithCode(Coin.parseCoin("0.001")));
+        assertEquals("0.0001 BTC", formatter.formatCoinWithCode(Coin.parseCoin("0.0001")));
 
         assertEquals("1.2345 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.2345")));
-        assertEquals("1.2346 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.23456")));
-        assertEquals("1.2346 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.234567")));
-        assertEquals("1.2345 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.23448")));
+        assertEquals("1.002346 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.0023456")));
+        assertEquals("1.002346 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.00234567")));
+        assertEquals("1.002345 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1.0023448")));
 
         assertEquals("1.00 BTC", formatter.formatCoinWithCode(Coin.COIN));
         assertEquals("1012.30 BTC", formatter.formatCoinWithCode(Coin.parseCoin("1012.3")));

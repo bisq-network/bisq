@@ -28,15 +28,11 @@ import javax.inject.Inject;
 
 public class FeePolicy {
 
-    public static final Coin TX_FEE = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
+    public static final Coin TX_FEE = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE; // dropped down to 0.00001 BTC
 
-    // The min. REGISTRATION_FEE calculated with Transaction.MIN_NONDUST_OUTPUT would be
-    // 0.00015460 which might lead to problems for the spending wallet.
-    // Some web wallets don't allow more then 4 decimal places (need more investigation)
-    // So we use 0.0002 as that fits also to our 4 decimal places restriction for BTC values.
-    // The remaining 0.0000454 BTC is given to miners at the moment as it is lower then dust.
+    // TODO: Change REGISTRATION_FEE to 0.00001 (See https://github.com/bitsquare/bitsquare/issues/228)
     public static final Coin REGISTRATION_FEE = TX_FEE.add(TX_FEE);
-    public static final Coin CREATE_OFFER_FEE = REGISTRATION_FEE; // 0.0002
+    public static final Coin CREATE_OFFER_FEE = Coin.valueOf(20000); // 0.00002 BTC
     public static final Coin TAKE_OFFER_FEE = CREATE_OFFER_FEE;
 
     private final BitcoinNetwork bitcoinNetwork;

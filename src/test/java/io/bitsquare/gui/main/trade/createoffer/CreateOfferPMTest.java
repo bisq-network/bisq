@@ -54,6 +54,22 @@ public class CreateOfferPMTest {
         presenter.initialize();
     }
 
+    @Test
+    public void testAmount() {
+        presenter.amount.set("0.0001");
+        model.calculateAmount();
+        assertEquals("0.0001", presenter.amount.get());
+        assertEquals(Coin.parseCoin("0.0001"), model.amountAsCoin.get());
+        presenter.amount.set("0.0009");
+        model.calculateAmount();
+        assertEquals("0.0009", presenter.amount.get());
+        assertEquals(Coin.parseCoin("0.0009"), model.amountAsCoin.get());
+
+        presenter.amount.set("0.0029");
+        model.calculateAmount();
+        assertEquals("0.0029", presenter.amount.get());
+        assertEquals(Coin.parseCoin("0.0029"), model.amountAsCoin.get());
+    }
 
     @Test
     public void testBindings() {
