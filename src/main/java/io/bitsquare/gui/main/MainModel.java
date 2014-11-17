@@ -18,9 +18,10 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.UIModel;
-import io.bitsquare.gui.util.Profiler;
+import io.bitsquare.gui.Model;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.msg.MessageService;
 import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.network.BootstrapState;
@@ -40,73 +41,121 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
-import javafx.collections.ObservableList;
+import javafx.util.StringConverter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class MainModel extends UIModel {
+class MainModel implements Model {
     private static final Logger log = LoggerFactory.getLogger(MainModel.class);
-
-    private final User user;
-    private final WalletService walletService;
-    private final MessageService messageService;
-    private final TradeManager tradeManager;
-    private final Persistence persistence;
-
-    private boolean messageServiceInited;
-    private boolean walletServiceInited;
-    private boolean servicesInitialised;
 
     final BooleanProperty backendReady = new SimpleBooleanProperty();
     final DoubleProperty networkSyncProgress = new SimpleDoubleProperty(-1);
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty(0);
     final ObjectProperty<BootstrapState> bootstrapState = new SimpleObjectProperty<>();
+    final StringProperty bootstrapStateText = new SimpleStringProperty();
     final ObjectProperty walletServiceException = new SimpleObjectProperty<Throwable>();
 
+    final StringProperty bankAccountsComboBoxPrompt = new SimpleStringProperty();
+    final BooleanProperty bankAccountsComboBoxDisable = new SimpleBooleanProperty();
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    final StringProperty blockchainSyncState = new SimpleStringProperty("Initializing");
+    final DoubleProperty blockchainSyncProgress = new SimpleDoubleProperty();
+    final BooleanProperty blockchainSyncIndicatorVisible = new SimpleBooleanProperty(true);
+    final StringProperty blockchainSyncIconId = new SimpleStringProperty();
+    final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
+
+    final DoubleProperty bootstrapProgress = new SimpleDoubleProperty(-1);
+    final BooleanProperty bootstrapFailed = new SimpleBooleanProperty();
+    final StringProperty bootstrapErrorMsg = new SimpleStringProperty();
+    final StringProperty bootstrapIconId = new SimpleStringProperty();
+
+    private final User user;
+    private final WalletService walletService;
+    private final MessageService messageService;
+    private final TradeManager tradeManager;
+    private final BitcoinNetwork bitcoinNetwork;
+    private final BSFormatter formatter;
+
+    private boolean messageServiceInited;
+    private boolean walletServiceInited;
+    private boolean servicesInitialised;
+
 
     @Inject
-    private MainModel(User user, WalletService walletService, MessageService messageService,
-                      TradeManager tradeManager, Persistence persistence) {
+    public MainModel(User user, WalletService walletService, MessageService messageService, TradeManager tradeManager,
+                     BitcoinNetwork bitcoinNetwork, BSFormatter formatter, Persistence persistence) {
         this.user = user;
         this.walletService = walletService;
         this.messageService = messageService;
         this.tradeManager = tradeManager;
-        this.persistence = persistence;
+        this.formatter = formatter;
+        this.bitcoinNetwork = bitcoinNetwork;
+
+        user.getCurrentBankAccount().addListener((observable, oldValue, newValue) -> persistence.write(user));
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize() {
-        super.initialize();
+        bootstrapState.addListener((ov, oldValue, newValue) -> {
+                    if (newValue == BootstrapState.DIRECT_SUCCESS ||
+                            newValue == BootstrapState.AUTO_PORT_FORWARDING_SUCCESS ||
+                            newValue == BootstrapState.RELAY_SUCCESS) {
+                        bootstrapStateText.set("Successfully connected to P2P network: " + newValue.getMessage());
+                        bootstrapProgress.set(1);
+
+                        if (newValue == BootstrapState.DIRECT_SUCCESS)
+                            bootstrapIconId.set("image-connection-direct");
+                        else if (newValue == BootstrapState.AUTO_PORT_FORWARDING_SUCCESS)
+                            bootstrapIconId.set("image-connection-nat");
+                        else if (newValue == BootstrapState.RELAY_SUCCESS)
+                            bootstrapIconId.set("image-connection-relay");
+                    }
+                    else if (newValue == BootstrapState.PEER_CREATION_FAILED ||
+                            newValue == BootstrapState.DIRECT_FAILED ||
+                            newValue == BootstrapState.AUTO_PORT_FORWARDING_FAILED ||
+                            newValue == BootstrapState.RELAY_FAILED) {
+
+                        bootstrapErrorMsg.set(newValue.getMessage());
+                        bootstrapStateText.set("Connection to P2P network failed.");
+                        bootstrapProgress.set(0);
+                        bootstrapFailed.set(true);
+                    }
+                    else {
+                        bootstrapStateText.set("Connecting to P2P network: " + newValue.getMessage());
+                    }
+                }
+        );
+
+        walletServiceException.addListener((ov, oldValue, newValue) -> {
+            blockchainSyncProgress.set(0);
+            blockchainSyncIndicatorVisible.set(false);
+            blockchainSyncState.set("Startup failed.");
+            walletServiceErrorMsg.set(((Throwable) newValue).getMessage());
+        });
+
+        networkSyncProgress.addListener((ov, oldValue, newValue) -> {
+            setNetworkSyncProgress((double) newValue);
+
+            if ((double) newValue >= 1)
+                blockchainSyncIconId.set("image-connection-synced");
+        });
+        setNetworkSyncProgress(networkSyncProgress.get());
+
+
+        user.getBankAccounts().addListener((ListChangeListener<BankAccount>) change -> {
+            bankAccountsComboBoxDisable.set(change.getList().isEmpty());
+            bankAccountsComboBoxPrompt.set(change.getList().isEmpty() ? "No accounts" : "");
+        });
+        bankAccountsComboBoxDisable.set(user.getBankAccounts().isEmpty());
+        bankAccountsComboBoxPrompt.set(user.getBankAccounts().isEmpty() ? "No accounts" : "");
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void initBackend() {
-
-        // For testing with the bootstrap node we need the BootstrappedPeerFactory which gets started from
-        // messageService.init
-
+    public void initBackend() {
         messageService.init(new BootstrapListener() {
             @Override
             public void onCompleted() {
@@ -124,8 +173,6 @@ class MainModel extends UIModel {
                 MainModel.this.bootstrapState.set(bootstrapState);
             }
         });
-
-        Profiler.printMsgWithTime("MainModel.initServices");
 
         WalletService.BlockchainDownloadListener blockchainDownloadListener = new WalletService
                 .BlockchainDownloadListener() {
@@ -164,32 +211,28 @@ class MainModel extends UIModel {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void setCurrentBankAccount(BankAccount bankAccount) {
-        user.setCurrentBankAccount(bankAccount);
-        persistence.write(user);
+    public User getUser() {
+        return user;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    ObservableList<BankAccount> getBankAccounts() {
-        return user.getBankAccounts();
+    public TradeManager getTradeManager() {
+        return tradeManager;
     }
 
-    ObjectProperty<BankAccount> currentBankAccountProperty() {
-        return user.currentBankAccountProperty();
+    public StringConverter<BankAccount> getBankAccountsConverter() {
+        return new StringConverter<BankAccount>() {
+            @Override
+            public String toString(BankAccount bankAccount) {
+                return bankAccount.getNameOfBank();
+            }
+
+            @Override
+            public BankAccount fromString(String s) {
+                return null;
+            }
+        };
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onServicesInitialised() {
         tradeManager.getPendingTrades().addListener((MapChangeListener<String,
@@ -206,4 +249,19 @@ class MainModel extends UIModel {
         numPendingTrades.set(tradeManager.getPendingTrades().size());
     }
 
+    private void setNetworkSyncProgress(double value) {
+        blockchainSyncProgress.set(value);
+        if (value >= 1)
+            blockchainSyncState.set("Synchronization completed.");
+        else if (value > 0.0)
+            blockchainSyncState.set("Synchronizing blockchain: " + formatter.formatToPercent(value));
+        else
+            blockchainSyncState.set("Connecting to bitcoin network...");
+
+        blockchainSyncIndicatorVisible.set(value < 1);
+    }
+
+    public BitcoinNetwork getBitcoinNetwork() {
+        return bitcoinNetwork;
+    }
 }

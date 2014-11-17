@@ -121,7 +121,7 @@ class OfferBookModel extends UIModel {
         user.currentBankAccountProperty().addListener(bankAccountChangeListener);
         btcCode.bind(preferences.btcDenominationProperty());
 
-        setBankAccount(user.getCurrentBankAccount());
+        setBankAccount(user.getCurrentBankAccount().get());
         applyFilter();
     }
 
@@ -181,16 +181,18 @@ class OfferBookModel extends UIModel {
 
     boolean isTradable(Offer offer) {
         // if user has not registered yet we display all
-        if (user.getCurrentBankAccount() == null)
+        BankAccount currentBankAccount = user.getCurrentBankAccount().get();
+        if (currentBankAccount == null)
             return true;
 
-        boolean countryResult = offer.getAcceptedCountries().contains(user.getCurrentBankAccount().getCountry());
+        boolean countryResult = offer.getAcceptedCountries().contains(currentBankAccount.getCountry());
         // for IRC test version deactivate the check
         countryResult = true;
         if (!countryResult)
             restrictionsInfo.set("This offer requires that the payments account resides in one of those countries:\n" +
                     formatter.countryLocalesToString(offer.getAcceptedCountries()) +
-                    "\n\nThe country of your payments account (" + user.getCurrentBankAccount().getCountry().getName() +
+                    "\n\nThe country of your payments account (" + user.getCurrentBankAccount().get().getCountry()
+                    .getName() +
                     ") is not included in that list." +
                     "\n\n Do you want to edit your preferences now?");
 

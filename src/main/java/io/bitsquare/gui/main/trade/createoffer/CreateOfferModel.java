@@ -152,7 +152,7 @@ class CreateOfferModel extends UIModel {
         if (user != null) {
             user.currentBankAccountProperty().addListener((ov, oldValue, newValue) -> applyBankAccount(newValue));
 
-            applyBankAccount(user.getCurrentBankAccount());
+            applyBankAccount(user.getCurrentBankAccount().get());
         }
 
         if (accountSettings != null)

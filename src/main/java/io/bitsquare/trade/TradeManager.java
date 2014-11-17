@@ -18,6 +18,7 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.account.AccountSettings;
+import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
@@ -55,6 +56,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -152,16 +154,17 @@ public class TradeManager {
                                   TransactionResultHandler resultHandler,
                                   ErrorMessageHandler errorMessageHandler) {
 
+        BankAccount currentBankAccount = user.getCurrentBankAccount().get();
         Offer offer = new Offer(id,
                 user.getMessagePublicKey(),
                 direction,
                 price.getValue(),
                 amount,
                 minAmount,
-                user.getCurrentBankAccount().getBankAccountType(),
-                user.getCurrentBankAccount().getCurrency(),
-                user.getCurrentBankAccount().getCountry(),
-                user.getCurrentBankAccount().getUid(),
+                currentBankAccount.getBankAccountType(),
+                currentBankAccount.getCurrency(),
+                currentBankAccount.getCountry(),
+                currentBankAccount.getUid(),
                 accountSettings.getAcceptedArbitrators(),
                 accountSettings.getSecurityDeposit(),
                 accountSettings.getAcceptedCountries(),

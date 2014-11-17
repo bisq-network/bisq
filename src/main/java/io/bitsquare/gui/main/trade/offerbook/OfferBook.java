@@ -171,7 +171,7 @@ public class OfferBook {
     // TODO Just temporary, will be removed later when we have a push solution
     private void startPolling() {
         addListeners();
-        setBankAccount(user.getCurrentBankAccount());
+        setBankAccount(user.getCurrentBankAccount().get());
         pollingTimer = Utilities.setInterval(3000, (animationTimer) -> {
             offerRepository.requestInvalidationTimeStampFromDHT(fiatCode);
             return null;
