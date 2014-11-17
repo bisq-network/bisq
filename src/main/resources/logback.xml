@@ -26,7 +26,7 @@
     <logger name="io.bitsquare" level="TRACE"/>
 
     <logger name="org.bitcoinj" level="INFO"/>
-    <logger name="net.tomp2p" level="TRACE"/>
+    <logger name="net.tomp2p" level="WARN"/>
 
 
     <logger name="net.tomp2p.message.Encoder" level="WARN"/>

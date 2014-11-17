@@ -44,7 +44,6 @@ import javax.inject.Inject;
 
 import javafx.application.Platform;
 
-import net.tomp2p.connection.PeerConnection;
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
 import net.tomp2p.dht.FutureRemove;
@@ -52,7 +51,6 @@ import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.futures.BaseFuture;
 import net.tomp2p.futures.BaseFutureListener;
 import net.tomp2p.futures.FutureDirect;
-import net.tomp2p.futures.FuturePeerConnection;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerSocketAddress;
@@ -204,9 +202,7 @@ public class TomP2PNode implements ClientNode {
 
     public FutureDirect sendData(PeerAddress peerAddress, Object payLoad) {
         log.trace("sendData");
-        FuturePeerConnection futurePeerConnection = peerDHT.peer().createPeerConnection(peerAddress,
-                PeerConnection.HEART_BEAT_MILLIS);
-        FutureDirect futureDirect = peerDHT.peer().sendDirect(futurePeerConnection).object(payLoad).start();
+        FutureDirect futureDirect = peerDHT.peer().sendDirect(peerAddress).object(payLoad).start();
         futureDirect.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
