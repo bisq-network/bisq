@@ -48,8 +48,10 @@ public class AccountSettingsViewCB extends CachedViewCB {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSettingsViewCB.class);
 
-    private MenuItem seedWords, password, restrictions, fiatAccount, registration;
+    private final ViewLoader viewLoader;
     private final Navigation navigation;
+
+    private MenuItem seedWords, password, restrictions, fiatAccount, registration;
     private Navigation.Listener listener;
 
     @FXML private VBox leftVBox;
@@ -61,9 +63,9 @@ public class AccountSettingsViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountSettingsViewCB(Navigation navigation) {
+    private AccountSettingsViewCB(ViewLoader viewLoader, Navigation navigation) {
         super();
-
+        this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
 
@@ -146,10 +148,9 @@ public class AccountSettingsViewCB extends CachedViewCB {
 
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
-        final ViewLoader loader = new ViewLoader(navigationItem);
-        final Pane view = loader.load();
-        content.getChildren().setAll(view);
-        childController = loader.getController();
+        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
+        content.getChildren().setAll(loaded.view);
+        childController = loaded.controller;
         ((ViewCB<? extends PresentationModel>) childController).setParent(this);
         ((ContextAware) childController).useSettingsContext(true);
         return childController;

@@ -44,18 +44,16 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 // TODO Arbitration is very basic yet
 public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorListener {
-    private static final Logger log = LoggerFactory.getLogger(ArbitratorBrowserViewCB.class);
 
+    private final ViewLoader viewLoader;
     private final AccountSettings accountSettings;
     private final Persistence persistence;
     private final MessageService messageService;
 
     private final List<Arbitrator> allArbitrators = new ArrayList<>();
+
     private Arbitrator currentArbitrator;
     private ArbitratorProfileViewCB arbitratorProfileViewCB;
     private int index = -1;
@@ -63,13 +61,15 @@ public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorL
     @FXML Button prevButton, nextButton, selectButton, closeButton;
     @FXML Pane arbitratorProfile;
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorBrowserViewCB(AccountSettings accountSettings, Persistence persistence,
+    public ArbitratorBrowserViewCB(ViewLoader viewLoader, AccountSettings accountSettings, Persistence persistence,
                                    MessageService messageService) {
+        this.viewLoader = viewLoader;
         this.accountSettings = accountSettings;
         this.persistence = persistence;
         this.messageService = messageService;
@@ -139,10 +139,9 @@ public class ArbitratorBrowserViewCB extends CachedViewCB implements ArbitratorL
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
 
-        final ViewLoader loader = new ViewLoader(navigationItem);
-        Node view = loader.load();
-        ((Pane) root).getChildren().set(0, view);
-        Initializable childController = arbitratorProfileViewCB = loader.getController();
+        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
+        ((Pane) root).getChildren().set(0, loaded.view);
+        Initializable childController = arbitratorProfileViewCB = (ArbitratorProfileViewCB) loaded.controller;
         ((ViewCB) childController).setParent(this);
 
         return childController;

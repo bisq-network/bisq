@@ -26,6 +26,8 @@ import java.util.Set;
 
 import org.springframework.core.env.Environment;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public abstract class BitsquareModule extends AbstractModule {
 
     protected final Environment env;
@@ -33,6 +35,7 @@ public abstract class BitsquareModule extends AbstractModule {
     private final Set<BitsquareModule> modules = Sets.newHashSet();
 
     protected BitsquareModule(Environment env) {
+        checkNotNull(env, "Environment must not be null");
         this.env = env;
     }
 

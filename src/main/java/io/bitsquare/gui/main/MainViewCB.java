@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main;
 
+import io.bitsquare.BitsquareException;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.gui.Navigation;
@@ -25,7 +26,6 @@ import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
-import io.bitsquare.gui.util.Profiler;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.trade.TradeManager;
 
@@ -37,7 +37,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import javafx.application.Platform;
-import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.*;
@@ -48,40 +47,26 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.*;
 import javafx.scene.text.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static io.bitsquare.gui.Navigation.Item.*;
+import static javafx.scene.layout.AnchorPane.*;
 
 public class MainViewCB extends ViewCB<MainPM> {
-    private static final Logger log = LoggerFactory.getLogger(MainViewCB.class);
 
+    private final ToggleGroup navButtons = new ToggleGroup();
+
+    private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final OverlayManager overlayManager;
-    private final ToggleGroup navButtonsGroup = new ToggleGroup();
-    private Transitions transitions;
-    private BitcoinNetwork bitcoinNetwork;
+    private final Transitions transitions;
+    private final BitcoinNetwork bitcoinNetwork;
     private final String title;
 
-    private BorderPane baseApplicationContainer;
-    private VBox splashScreen;
-    private AnchorPane contentContainer;
-    private HBox leftNavPane, rightNavPane;
-    private ToggleButton buyButton, sellButton, homeButton, msgButton, portfolioButton, fundsButton, settingsButton,
-            accountButton;
-    private Pane portfolioButtonButtonPane;
-    private Label numPendingTradesLabel;
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Inject
-    private MainViewCB(MainPM presentationModel, Navigation navigation, OverlayManager overlayManager,
-                       TradeManager tradeManager, Transitions transitions,
-                       BitcoinNetwork bitcoinNetwork,
-                       @Named(TITLE_KEY) String title) {
+    public MainViewCB(MainPM presentationModel, ViewLoader viewLoader, Navigation navigation,
+                      OverlayManager overlayManager, TradeManager tradeManager, Transitions transitions,
+                      BitcoinNetwork bitcoinNetwork, @Named(TITLE_KEY) String title) {
         super(presentationModel);
-
+        this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.overlayManager = overlayManager;
         this.transitions = transitions;
@@ -96,188 +81,97 @@ public class MainViewCB extends ViewCB<MainPM> {
         });
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
-        Profiler.printMsgWithTime("MainController.initialize");
 
-        // just temp. ugly hack... Popups will be removed
-        Popups.setOverlayManager(overlayManager);
+        ToggleButton homeButton = new NavButton(HOME) {{
+            setDisable(true); // during irc demo
+        }};
+        ToggleButton buyButton = new NavButton(BUY);
+        ToggleButton sellButton = new NavButton(SELL);
+        ToggleButton portfolioButton = new NavButton(PORTFOLIO);
+        ToggleButton fundsButton = new NavButton(FUNDS);
+        ToggleButton msgButton = new NavButton(MSG) {{
+            setDisable(true); // during irc demo
+        }};
+        ToggleButton settingsButton = new NavButton(SETTINGS);
+        ToggleButton accountButton = new NavButton(ACCOUNT);
+        Pane portfolioButtonHolder = new Pane(portfolioButton);
+        Pane bankAccountComboBoxHolder = new Pane();
 
-        navigation.addListener(navigationItems -> {
-            if (navigationItems != null && navigationItems.length == 2) {
-                if (navigationItems[0] == Navigation.Item.MAIN) {
-                    loadView(navigationItems[1]);
-                    selectMainMenuButton(navigationItems[1]);
-                }
-            }
+        HBox leftNavPane = new HBox(
+                homeButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, new Pane(msgButton)) {{
+            setSpacing(10);
+            setLeftAnchor(this, 10d);
+            setTopAnchor(this, 0d);
+        }};
+
+        HBox rightNavPane = new HBox(bankAccountComboBoxHolder, settingsButton, accountButton) {{
+            setSpacing(10);
+            setRightAnchor(this, 10d);
+            setTopAnchor(this, 0d);
+        }};
+
+        AnchorPane contentContainer = new AnchorPane() {{
+            setId("content-pane");
+            setLeftAnchor(this, 0d);
+            setRightAnchor(this, 0d);
+            setTopAnchor(this, 60d);
+            setBottomAnchor(this, 25d);
+        }};
+
+        AnchorPane applicationContainer = new AnchorPane(leftNavPane, rightNavPane, contentContainer) {{
+            setId("content-pane");
+        }};
+
+        BorderPane baseApplicationContainer = new BorderPane(applicationContainer) {{
+            setId("base-content-container");
+        }};
+
+        navigation.addListener(navItems -> {
+            if (navItems == null || navItems.length != 2 || navItems[0] != Navigation.Item.MAIN)
+                return;
+
+            ViewLoader.Item loaded = viewLoader.load(navItems[1].getFxmlUrl());
+            contentContainer.getChildren().setAll(loaded.view);
+            if (loaded.controller instanceof ViewCB)
+                ((ViewCB) loaded.controller).setParent(this);
+
+            navButtons.getToggles().stream()
+                    .filter(toggle -> toggle instanceof ToggleButton)
+                    .filter(button -> navItems[1].getDisplayName().equals(((ToggleButton) button).getText()))
+                    .findFirst()
+                    .orElseThrow(() ->
+                            new BitsquareException("No button matching %s found", navItems[1].getDisplayName()))
+                    .setSelected(true);
         });
 
-        overlayManager.addListener(new OverlayManager.OverlayListener() {
-            @Override
-            public void onBlurContentRequested() {
-                transitions.blur(baseApplicationContainer);
-            }
+        configureBlurring(baseApplicationContainer);
 
-            @Override
-            public void onRemoveBlurContentRequested() {
-                transitions.removeBlur(baseApplicationContainer);
-            }
+        VBox splashScreen = createSplashScreen();
+
+        ((Pane) root).getChildren().addAll(baseApplicationContainer, splashScreen);
+
+        presentationModel.backendReady.addListener((ov1, prev1, ready) -> {
+            if (!ready)
+                return;
+
+            bankAccountComboBoxHolder.getChildren().setAll(createBankAccountComboBox());
+
+            applyPendingTradesInfoIcon(presentationModel.numPendingTrades.get(), portfolioButtonHolder);
+            presentationModel.numPendingTrades.addListener((ov2, prev2, numPendingTrades) ->
+                    applyPendingTradesInfoIcon((int) numPendingTrades, portfolioButtonHolder));
+
+            navigation.navigateToLastStoredItem();
+
+            transitions.fadeOutAndRemove(splashScreen, 1500);
         });
 
-        startup();
+        Platform.runLater(presentationModel::initBackend);
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Navigation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected Initializable loadView(Navigation.Item navigationItem) {
-        super.loadView((navigationItem));
-        final ViewLoader loader = new ViewLoader(navigationItem);
-        final Node view = loader.load();
-        contentContainer.getChildren().setAll(view);
-        childController = loader.getController();
-
-        if (childController instanceof ViewCB)
-            ((ViewCB) childController).setParent(this);
-
-        return childController;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private Methods: Startup
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void startup() {
-        baseApplicationContainer = getBaseApplicationContainer();
-        splashScreen = getSplashScreen();
-        ((StackPane) root).getChildren().addAll(baseApplicationContainer, splashScreen);
-        baseApplicationContainer.setCenter(getApplicationContainer());
-
-        Platform.runLater(this::onSplashScreenAdded);
-    }
-
-    private void onSplashScreenAdded() {
-        presentationModel.backendReady.addListener((ov, oldValue, newValue) -> {
-            if (newValue)
-                onBackendReady();
-        });
-        presentationModel.initBackend();
-    }
-
-    private void onBackendReady() {
-        Profiler.printMsgWithTime("MainController.onBackendInited");
-        addMainNavigation();
-    }
-
-    private void applyPendingTradesInfoIcon(int numPendingTrades) {
-        log.debug("numPendingTrades " + numPendingTrades);
-        if (numPendingTrades > 0) {
-            if (portfolioButtonButtonPane.getChildren().size() == 1) {
-                ImageView icon = new ImageView();
-                icon.setLayoutX(0.5);
-                icon.setId("image-alert-round");
-
-                numPendingTradesLabel = new Label(String.valueOf(numPendingTrades));
-                numPendingTradesLabel.relocate(5, 1);
-                numPendingTradesLabel.setId("nav-alert-label");
-
-                Pane alert = new Pane();
-                alert.relocate(30, 9);
-                alert.setMouseTransparent(true);
-                alert.setEffect(new DropShadow(4, 1, 2, Color.GREY));
-                alert.getChildren().addAll(icon, numPendingTradesLabel);
-                portfolioButtonButtonPane.getChildren().add(alert);
-            }
-            else {
-                numPendingTradesLabel.setText(String.valueOf(numPendingTrades));
-            }
-
-            SystemNotification.openInfoNotification(title, "You got a new trade message.");
-        }
-        else {
-            if (portfolioButtonButtonPane.getChildren().size() > 1)
-                portfolioButtonButtonPane.getChildren().remove(1);
-        }
-    }
-
-    private void onMainNavigationAdded() {
-        Profiler.printMsgWithTime("MainController.ondMainNavigationAdded");
-
-        presentationModel.numPendingTrades.addListener((ov, oldValue, newValue) ->
-        {
-            //if ((int) newValue > (int) oldValue)
-            applyPendingTradesInfoIcon((int) newValue);
-        });
-        applyPendingTradesInfoIcon(presentationModel.numPendingTrades.get());
-        navigation.navigateToLastStoredItem();
-        onContentAdded();
-    }
-
-    private void onContentAdded() {
-        Profiler.printMsgWithTime("MainController.onContentAdded");
-        transitions.fadeOutAndRemove(splashScreen, 1500);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void selectMainMenuButton(Navigation.Item item) {
-        switch (item) {
-            case HOME:
-                homeButton.setSelected(true);
-                break;
-            case FUNDS:
-                fundsButton.setSelected(true);
-                break;
-            case MSG:
-                msgButton.setSelected(true);
-                break;
-            case PORTFOLIO:
-                portfolioButton.setSelected(true);
-                break;
-            case SETTINGS:
-                settingsButton.setSelected(true);
-                break;
-            case SELL:
-                sellButton.setSelected(true);
-                break;
-            case BUY:
-                buyButton.setSelected(true);
-                break;
-            case ACCOUNT:
-                accountButton.setSelected(true);
-                break;
-            default:
-                log.error(item.getFxmlUrl() + " is no main navigation item");
-                break;
-        }
-    }
-
-    private BorderPane getBaseApplicationContainer() {
-        BorderPane borderPane = new BorderPane();
-        borderPane.setId("base-content-container");
-        return borderPane;
-    }
-
-    private VBox getSplashScreen() {
+    private VBox createSplashScreen() {
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.CENTER);
         vBox.setSpacing(10);
@@ -367,97 +261,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         return vBox;
     }
 
-    private AnchorPane getApplicationContainer() {
-        AnchorPane anchorPane = new AnchorPane();
-        anchorPane.setId("content-pane");
-
-        leftNavPane = new HBox();
-        leftNavPane.setSpacing(10);
-        AnchorPane.setLeftAnchor(leftNavPane, 10d);
-        AnchorPane.setTopAnchor(leftNavPane, 0d);
-
-        rightNavPane = new HBox();
-        rightNavPane.setSpacing(10);
-        AnchorPane.setRightAnchor(rightNavPane, 10d);
-        AnchorPane.setTopAnchor(rightNavPane, 0d);
-
-        contentContainer = new AnchorPane();
-        contentContainer.setId("content-pane");
-        AnchorPane.setLeftAnchor(contentContainer, 0d);
-        AnchorPane.setRightAnchor(contentContainer, 0d);
-        AnchorPane.setTopAnchor(contentContainer, 60d);
-        AnchorPane.setBottomAnchor(contentContainer, 25d);
-
-        anchorPane.getChildren().addAll(leftNavPane, rightNavPane, contentContainer);
-        return anchorPane;
-    }
-
-    private void addMainNavigation() {
-        homeButton = addNavButton(leftNavPane, "Overview", Navigation.Item.HOME);
-        buyButton = addNavButton(leftNavPane, "Buy BTC", Navigation.Item.BUY);
-        sellButton = addNavButton(leftNavPane, "Sell BTC", Navigation.Item.SELL);
-
-        portfolioButtonButtonPane = new Pane();
-        portfolioButton = addNavButton(portfolioButtonButtonPane, "Portfolio", Navigation.Item.PORTFOLIO);
-        leftNavPane.getChildren().add(portfolioButtonButtonPane);
-
-        fundsButton = addNavButton(leftNavPane, "Funds", Navigation.Item.FUNDS);
-
-        final Pane msgButtonHolder = new Pane();
-        msgButton = addNavButton(msgButtonHolder, "Messages", Navigation.Item.MSG);
-        leftNavPane.getChildren().add(msgButtonHolder);
-
-        addBankAccountComboBox(rightNavPane);
-
-        settingsButton = addNavButton(rightNavPane, "Settings", Navigation.Item.SETTINGS);
-        accountButton = addNavButton(rightNavPane, "Account", Navigation.Item.ACCOUNT);
-
-
-        // for irc demo
-        homeButton.setDisable(true);
-        msgButton.setDisable(true);
-
-        onMainNavigationAdded();
-    }
-
-    private ToggleButton addNavButton(Pane parent, String title, Navigation.Item navigationItem) {
-        final String url = navigationItem.getFxmlUrl();
-        int lastSlash = url.lastIndexOf("/") + 1;
-        int end = url.lastIndexOf("View.fxml");
-        final String id = url.substring(lastSlash, end).toLowerCase();
-
-        ImageView iconImageView = new ImageView();
-        iconImageView.setId("image-nav-" + id);
-
-        final ToggleButton toggleButton = new ToggleButton(title, iconImageView);
-        toggleButton.setToggleGroup(navButtonsGroup);
-        toggleButton.setId("nav-button");
-        toggleButton.setPadding(new Insets(0, -10, -10, -10));
-        toggleButton.setMinSize(50, 50);
-        toggleButton.setMaxSize(50, 50);
-        toggleButton.setContentDisplay(ContentDisplay.TOP);
-        toggleButton.setGraphicTextGap(0);
-
-        toggleButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
-            toggleButton.setMouseTransparent(newValue);
-            toggleButton.setMinSize(50, 50);
-            toggleButton.setMaxSize(50, 50);
-            toggleButton.setGraphicTextGap(newValue ? -1 : 0);
-            if (newValue) {
-                toggleButton.getGraphic().setId("image-nav-" + id + "-active");
-            }
-            else {
-                toggleButton.getGraphic().setId("image-nav-" + id);
-            }
-        });
-
-        toggleButton.setOnAction(e -> navigation.navigationTo(Navigation.Item.MAIN, navigationItem));
-
-        parent.getChildren().add(toggleButton);
-        return toggleButton;
-    }
-
-    private void addBankAccountComboBox(Pane parent) {
+    private VBox createBankAccountComboBox() {
         final ComboBox<BankAccount> comboBox = new ComboBox<>(presentationModel.getBankAccounts());
         comboBox.setLayoutY(12);
         comboBox.setVisibleRowCount(5);
@@ -485,6 +289,84 @@ public class MainViewCB extends ViewCB<MainPM> {
         vBox.setSpacing(2);
         vBox.setAlignment(Pos.CENTER);
         vBox.getChildren().setAll(comboBox, titleLabel);
-        parent.getChildren().add(vBox);
+
+        return vBox;
+    }
+
+    private void applyPendingTradesInfoIcon(int numPendingTrades, Pane targetPane) {
+        if (numPendingTrades <= 0) {
+            if (targetPane.getChildren().size() > 1) {
+                targetPane.getChildren().remove(1);
+            }
+            return;
+        }
+
+        Label numPendingTradesLabel = new Label(String.valueOf(numPendingTrades));
+        if (targetPane.getChildren().size() == 1) {
+            ImageView icon = new ImageView();
+            icon.setLayoutX(0.5);
+            icon.setId("image-alert-round");
+
+            numPendingTradesLabel.relocate(5, 1);
+            numPendingTradesLabel.setId("nav-alert-label");
+
+            Pane alert = new Pane();
+            alert.relocate(30, 9);
+            alert.setMouseTransparent(true);
+            alert.setEffect(new DropShadow(4, 1, 2, Color.GREY));
+            alert.getChildren().addAll(icon, numPendingTradesLabel);
+            targetPane.getChildren().add(alert);
+        }
+
+        SystemNotification.openInfoNotification(title, "You got a new trade message.");
+    }
+
+    private void configureBlurring(Node node) {
+        Popups.setOverlayManager(overlayManager);
+
+        overlayManager.addListener(new OverlayManager.OverlayListener() {
+            @Override
+            public void onBlurContentRequested() {
+                transitions.blur(node);
+            }
+
+            @Override
+            public void onRemoveBlurContentRequested() {
+                transitions.removeBlur(node);
+            }
+        });
+    }
+
+
+    private class NavButton extends ToggleButton {
+
+        public NavButton(Navigation.Item item) {
+            super(item.getDisplayName(), new ImageView() {{
+                setId("image-nav-" + item.getId());
+            }});
+
+            this.setToggleGroup(navButtons);
+            this.setId("nav-button");
+            this.setPadding(new Insets(0, -10, -10, -10));
+            this.setMinSize(50, 50);
+            this.setMaxSize(50, 50);
+            this.setContentDisplay(ContentDisplay.TOP);
+            this.setGraphicTextGap(0);
+
+            this.selectedProperty().addListener((ov, oldValue, newValue) -> {
+                this.setMouseTransparent(newValue);
+                this.setMinSize(50, 50);
+                this.setMaxSize(50, 50);
+                this.setGraphicTextGap(newValue ? -1 : 0);
+                if (newValue) {
+                    this.getGraphic().setId("image-nav-" + item.getId() + "-active");
+                }
+                else {
+                    this.getGraphic().setId("image-nav-" + item.getId());
+                }
+            });
+
+            this.setOnAction(e -> navigation.navigationTo(Navigation.Item.MAIN, item));
+        }
     }
 }

@@ -34,14 +34,10 @@ import javafx.scene.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 // TODO Arbitration is very basic yet
 public class ArbitratorSettingsViewCB extends CachedViewCB {
 
-    private static final Logger log = LoggerFactory.getLogger(ArbitratorSettingsViewCB.class);
-
+    private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final Stage primaryStage;
 
@@ -53,8 +49,9 @@ public class ArbitratorSettingsViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ArbitratorSettingsViewCB(Navigation navigation, Stage primaryStage) {
+    private ArbitratorSettingsViewCB(ViewLoader viewLoader, Navigation navigation, Stage primaryStage) {
         super();
+        this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.primaryStage = primaryStage;
     }
@@ -95,11 +92,8 @@ public class ArbitratorSettingsViewCB extends CachedViewCB {
 
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
-        // don't use caching here, cause exc. -> need to investigate and is rarely called so no caching is better
-        final ViewLoader loader = new ViewLoader(navigationItem, false);
-
-        final Parent view = loader.load();
-        arbitratorRegistrationViewCB = loader.getController();
+        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
+        arbitratorRegistrationViewCB = (ArbitratorRegistrationViewCB) loaded.controller;
 
         final Stage stage = new Stage();
         stage.setTitle("Arbitrator");
@@ -111,7 +105,7 @@ public class ArbitratorSettingsViewCB extends CachedViewCB {
         stage.setY(primaryStage.getY() + 50);
         stage.initModality(Modality.WINDOW_MODAL);
         stage.initOwner(primaryStage);
-        Scene scene = new Scene(view, 800, 600);
+        Scene scene = new Scene((Parent) loaded.view, 800, 600);
         stage.setScene(scene);
         stage.show();
 

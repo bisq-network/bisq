@@ -45,6 +45,9 @@ public class GuiModule extends BitsquareModule {
 
     @Override
     protected void configure() {
+        bind(GuiceControllerFactory.class).asEagerSingleton();
+        bind(ViewLoader.class).asEagerSingleton();
+
         bind(OfferBook.class).asEagerSingleton();
         bind(Navigation.class).asEagerSingleton();
         bind(OverlayManager.class).asEagerSingleton();

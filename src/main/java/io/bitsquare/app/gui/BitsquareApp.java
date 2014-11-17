@@ -19,6 +19,7 @@ package io.bitsquare.app.gui;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.account.AccountSettings;
+import io.bitsquare.gui.GuiceControllerFactory;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.ViewLoader;
@@ -47,7 +48,6 @@ import javafx.stage.Stage;
 
 import org.springframework.core.env.Environment;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.app.BitsquareEnvironment.*;
 
 public class BitsquareApp extends Application {
@@ -62,9 +62,9 @@ public class BitsquareApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
-        checkNotNull(env, "Environment must not be null");
         bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
         injector = Guice.createInjector(bitsquareAppModule);
+        injector.getInstance(GuiceControllerFactory.class).setInjector(injector);
 
 
         // route uncaught exceptions to a user-facing dialog
@@ -93,11 +93,10 @@ public class BitsquareApp extends Application {
 
         // load the main view and create the main scene
 
-        ViewLoader.setInjector(injector);
-        ViewLoader loader = new ViewLoader(Navigation.Item.MAIN, false);
-        Parent view = loader.load();
+        ViewLoader viewLoader = injector.getInstance(ViewLoader.class);
+        ViewLoader.Item loaded = viewLoader.load(Navigation.Item.MAIN.getFxmlUrl(), false);
 
-        Scene scene = new Scene(view, 1000, 600);
+        Scene scene = new Scene((Parent) loaded.view, 1000, 600);
         scene.getStylesheets().setAll(
                 "/io/bitsquare/gui/bitsquare.css",
                 "/io/bitsquare/gui/images.css");

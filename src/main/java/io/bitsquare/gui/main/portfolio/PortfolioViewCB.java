@@ -35,14 +35,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.*;
 import javafx.scene.control.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class PortfolioViewCB extends CachedViewCB {
-    private static final Logger log = LoggerFactory.getLogger(PortfolioViewCB.class);
-
-    private final Navigation navigation;
-    private final TradeManager tradeManager;
 
     private Tab currentTab;
     private Navigation.Listener navigationListener;
@@ -50,15 +43,19 @@ public class PortfolioViewCB extends CachedViewCB {
 
     @FXML Tab offersTab, openTradesTab, closedTradesTab;
 
+    private final ViewLoader viewLoader;
+    private final Navigation navigation;
+    private final TradeManager tradeManager;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    PortfolioViewCB(Navigation navigation, TradeManager tradeManager) {
+    PortfolioViewCB(ViewLoader viewLoader, Navigation navigation, TradeManager tradeManager) {
         super();
-
+        this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.tradeManager = tradeManager;
     }
@@ -130,8 +127,7 @@ public class PortfolioViewCB extends CachedViewCB {
         if (currentTab != null)
             currentTab.setContent(null);
 
-        final ViewLoader loader = new ViewLoader(navigationItem);
-        Node view = loader.load();
+        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         switch (navigationItem) {
             case OFFERS:
                 currentTab = offersTab;
@@ -143,9 +139,9 @@ public class PortfolioViewCB extends CachedViewCB {
                 currentTab = closedTradesTab;
                 break;
         }
-        currentTab.setContent(view);
+        currentTab.setContent(loaded.view);
         ((TabPane) root).getSelectionModel().select(currentTab);
-        Initializable childController = loader.getController();
+        Initializable childController = loaded.controller;
         ((ViewCB) childController).setParent(this);
 
         return childController;

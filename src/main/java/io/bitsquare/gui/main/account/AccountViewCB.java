@@ -31,7 +31,6 @@ import javax.inject.Inject;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.*;
 import javafx.scene.control.*;
 
 import org.slf4j.Logger;
@@ -41,12 +40,13 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
 
     private static final Logger log = LoggerFactory.getLogger(AccountViewCB.class);
 
-    private final Navigation navigation;
     private Navigation.Listener navigationListener;
-
     private ChangeListener<Tab> tabChangeListener;
 
     @FXML Tab accountSettingsTab, arbitratorSettingsTab;
+
+    private final ViewLoader viewLoader;
+    private final Navigation navigation;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -54,9 +54,9 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountViewCB(AccountPM presentationModel, Navigation navigation) {
+    private AccountViewCB(AccountPM presentationModel, ViewLoader viewLoader, Navigation navigation) {
         super(presentationModel);
-
+        this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
 
@@ -134,9 +134,8 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
 
-        final ViewLoader loader = new ViewLoader(navigationItem);
-        Node view = loader.load();
-        Tab tab = null;
+        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
+        final Tab tab;
         switch (navigationItem) {
             case ACCOUNT_SETTINGS:
                 tab = accountSettingsTab;
@@ -151,14 +150,16 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
             case ARBITRATOR_SETTINGS:
                 tab = arbitratorSettingsTab;
                 break;
+            default:
+                throw new IllegalArgumentException("navigation item of type " + navigationItem + " is not allowed");
         }
 
         // for IRC demo we deactivate the arbitratorSettingsTab
         arbitratorSettingsTab.setDisable(true);
 
-        tab.setContent(view);
+        tab.setContent(loaded.view);
         ((TabPane) root).getSelectionModel().select(tab);
-        Initializable childController = loader.getController();
+        Initializable childController = loaded.controller;
         ((ViewCB) childController).setParent(this);
 
         return childController;

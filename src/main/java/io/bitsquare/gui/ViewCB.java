@@ -39,7 +39,7 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
     public static final String TITLE_KEY = "view.title";
 
     protected T presentationModel;
-    protected ViewCB<? extends PresentationModel> childController;
+    protected Initializable childController;
     protected ViewCB<? extends PresentationModel> parent;
 
     @FXML protected Parent root;

@@ -35,12 +35,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.*;
 import javafx.scene.control.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class SettingsViewCB extends CachedViewCB {
-    private static final Logger log = LoggerFactory.getLogger(SettingsViewCB.class);
 
+    private final ViewLoader viewLoader;
     private final Navigation navigation;
     private Preferences preferences;
 
@@ -55,9 +52,9 @@ public class SettingsViewCB extends CachedViewCB {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    SettingsViewCB(Navigation navigation, Preferences preferences) {
+    SettingsViewCB(ViewLoader viewLoader, Navigation navigation, Preferences preferences) {
         super();
-
+        this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;
     }
@@ -121,9 +118,8 @@ public class SettingsViewCB extends CachedViewCB {
     protected Initializable loadView(Navigation.Item navigationItem) {
         super.loadView(navigationItem);
 
-        final ViewLoader loader = new ViewLoader(navigationItem);
-        Parent view = loader.load();
-        Tab tab = null;
+        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
+        final Tab tab;
         switch (navigationItem) {
             case PREFERENCES:
                 tab = preferencesTab;
@@ -131,10 +127,12 @@ public class SettingsViewCB extends CachedViewCB {
             case NETWORK_SETTINGS:
                 tab = networkSettingsTab;
                 break;
+            default:
+                throw new IllegalArgumentException("navigation item of type " + navigationItem + " is not allowed");
         }
-        tab.setContent(view);
+        tab.setContent(loaded.view);
         ((TabPane) root).getSelectionModel().select(tab);
-        Initializable childController = loader.getController();
+        Initializable childController = loaded.controller;
         if (childController instanceof ViewCB)
             ((ViewCB) childController).setParent(this);
 
