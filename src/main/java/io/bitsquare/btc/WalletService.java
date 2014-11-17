@@ -364,13 +364,11 @@ public class WalletService {
 
     private AddressEntry getNewAddressEntry(AddressEntry.AddressContext addressContext, String offerId) {
         lock.lock();
-        wallet.getLock().lock();
         DeterministicKey key = wallet.freshReceiveKey();
         AddressEntry addressEntry = new AddressEntry(key, params, addressContext, offerId);
         addressEntryList.add(addressEntry);
         saveAddressInfoList();
         lock.unlock();
-        wallet.getLock().unlock();
         return addressEntry;
     }
 

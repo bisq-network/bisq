@@ -29,6 +29,7 @@ import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.utils.MonetaryFormat;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -66,7 +67,8 @@ public class BSFormatter {
     // Input of a group separator (1,123,45) lead to an validation error.
     // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit,
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
-    private MonetaryFormat coinFormat = MonetaryFormat.BTC.repeatOptionalDecimals(2, 1);
+    private MonetaryFormat coinFormat = MonetaryFormat.BTC.optionalDecimals(2)
+            .roundingMode(RoundingMode.HALF_UP);
 
     private String currencyCode = Currency.getInstance(Locale.getDefault()).getCurrencyCode();
 
