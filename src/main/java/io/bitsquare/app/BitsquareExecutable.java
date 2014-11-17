@@ -20,6 +20,10 @@ package io.bitsquare.app;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import org.springframework.util.StringUtils;
+
+import static java.lang.String.format;
+import static java.lang.String.join;
 
 public abstract class BitsquareExecutable {
     public static final int EXIT_SUCCESS = 0;
@@ -52,6 +56,15 @@ public abstract class BitsquareExecutable {
     }
 
     protected abstract void customizeOptionParsing(OptionParser parser);
+
+    protected static String description(String descText, Object defaultValue) {
+        String description = "";
+        if (StringUtils.hasText(descText))
+            description = description.concat(descText);
+        if (defaultValue != null)
+            description = join(" ", description, format("(default: %s)", defaultValue));
+        return description;
+    }
 
     protected abstract void doExecute(OptionSet options);
 }

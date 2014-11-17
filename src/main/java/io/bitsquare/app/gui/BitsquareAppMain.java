@@ -30,6 +30,7 @@ import joptsimple.OptionSet;
 import static io.bitsquare.app.BitsquareEnvironment.*;
 import static io.bitsquare.msg.tomp2p.TomP2PMessageModule.*;
 import static io.bitsquare.network.Node.*;
+import static java.lang.String.format;
 
 public class BitsquareAppMain extends BitsquareExecutable {
 
@@ -39,22 +40,33 @@ public class BitsquareAppMain extends BitsquareExecutable {
 
     @Override
     protected void customizeOptionParsing(OptionParser parser) {
-        parser.accepts(USER_DATA_DIR_KEY, "User data directory").withRequiredArg().defaultsTo(DEFAULT_USER_DATA_DIR);
-        parser.accepts(APP_NAME_KEY, "Application name").withRequiredArg().defaultsTo(DEFAULT_APP_NAME);
-        parser.accepts(APP_DATA_DIR_KEY, "Application data directory").withRequiredArg()
-                .defaultsTo(DEFAULT_APP_DATA_DIR);
-        parser.accepts(NAME_KEY, "Name of this node").withRequiredArg();
-        parser.accepts(PORT_KEY, "Port to listen on").withRequiredArg().ofType(int.class).defaultsTo(Node.DEFAULT_PORT);
-        parser.accepts(USE_MANUAL_PORT_FORWARDING_KEY, "Use manual port forwarding")
-                .withRequiredArg().ofType(boolean.class).defaultsTo(false);
-        parser.accepts(BitcoinNetwork.KEY).withRequiredArg().ofType(BitcoinNetwork.class)
-                .withValuesConvertedBy(new EnumValueConverter(BitcoinNetwork.class))
-                .defaultsTo(BitcoinNetwork.DEFAULT);
-        parser.accepts(BOOTSTRAP_NODE_NAME_KEY).withRequiredArg().defaultsTo(BootstrapNodes.DEFAULT.getName());
-        parser.accepts(BOOTSTRAP_NODE_IP_KEY).withRequiredArg().defaultsTo(BootstrapNodes.DEFAULT.getIp());
-        parser.accepts(BOOTSTRAP_NODE_PORT_KEY).withRequiredArg().ofType(int.class)
-                .defaultsTo(BootstrapNodes.DEFAULT.getPort());
-        parser.accepts(NETWORK_INTERFACE_KEY, "Network interface").withRequiredArg();
+        parser.accepts(USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
+                .withRequiredArg();
+        parser.accepts(APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
+                .withRequiredArg();
+        parser.accepts(APP_DATA_DIR_KEY, description("Application data directory", DEFAULT_APP_DATA_DIR))
+                .withRequiredArg();
+        parser.accepts(NAME_KEY, description("Name of this node", null))
+                .withRequiredArg();
+        parser.accepts(PORT_KEY, description("Port to listen on", Node.DEFAULT_PORT))
+                .withRequiredArg()
+                .ofType(int.class);
+        parser.accepts(USE_MANUAL_PORT_FORWARDING_KEY, description("Use manual port forwarding", false))
+                .withRequiredArg()
+                .ofType(boolean.class);
+        parser.accepts(BitcoinNetwork.KEY, description("", BitcoinNetwork.DEFAULT))
+                .withRequiredArg()
+                .ofType(BitcoinNetwork.class)
+                .withValuesConvertedBy(new EnumValueConverter(BitcoinNetwork.class));
+        parser.accepts(BOOTSTRAP_NODE_NAME_KEY, description("", BootstrapNodes.DEFAULT.getName()))
+                .withRequiredArg();
+        parser.accepts(BOOTSTRAP_NODE_IP_KEY, description("", BootstrapNodes.DEFAULT.getIp()))
+                .withRequiredArg();
+        parser.accepts(BOOTSTRAP_NODE_PORT_KEY, description("", BootstrapNodes.DEFAULT.getPort()))
+                .withRequiredArg()
+                .ofType(int.class);
+        parser.accepts(NETWORK_INTERFACE_KEY, description("Network interface", null))
+                .withRequiredArg();
     }
 
     @Override
