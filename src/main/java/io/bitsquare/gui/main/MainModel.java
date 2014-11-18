@@ -23,7 +23,6 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.Model;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.msg.MessageService;
-import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
@@ -50,10 +49,11 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import rx.Observable;
+
 class MainModel implements Model {
     private static final Logger log = LoggerFactory.getLogger(MainModel.class);
 
-    final BooleanProperty backendReady = new SimpleBooleanProperty();
     final DoubleProperty networkSyncProgress = new SimpleDoubleProperty(-1);
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty(0);
     final ObjectProperty<BootstrapState> bootstrapState = new SimpleObjectProperty<>();
@@ -80,10 +80,6 @@ class MainModel implements Model {
     private final TradeManager tradeManager;
     private final BitcoinNetwork bitcoinNetwork;
     private final BSFormatter formatter;
-
-    private boolean messageServiceInited;
-    private boolean walletServiceInited;
-    private boolean servicesInitialised;
 
 
     @Inject
@@ -155,59 +151,35 @@ class MainModel implements Model {
         bankAccountsComboBoxPrompt.set(user.getBankAccounts().isEmpty() ? "No accounts" : "");
     }
 
-    public void initBackend() {
-        messageService.init(new BootstrapListener() {
-            @Override
-            public void onCompleted() {
-                messageServiceInited = true;
-                if (walletServiceInited) onServicesInitialised();
-            }
+    public Observable<?> initBackend() {
 
-            @Override
-            public void onFailed(Throwable throwable) {
-                log.error(throwable.toString());
-            }
+        walletService.getDownloadProgress().subscribe(
+                percentage -> Platform.runLater(() -> networkSyncProgress.set(percentage / 100.0)),
+                error -> Platform.runLater(() -> System.out.println("error = " + error)),
+                () -> Platform.runLater(() -> networkSyncProgress.set(1.0)));
 
-            @Override
-            public void onBootstrapStateChanged(BootstrapState bootstrapState) {
-                MainModel.this.bootstrapState.set(bootstrapState);
-            }
-        });
+        Observable<BootstrapState> message = messageService.init();
+        message.subscribe(
+                state -> Platform.runLater(() -> bootstrapState.set(state)),
+                error -> log.error(error.toString()));
 
-        WalletService.BlockchainDownloadListener blockchainDownloadListener = new WalletService
-                .BlockchainDownloadListener() {
-            @Override
-            public void progress(double percentage) {
-                networkSyncProgress.set(percentage / 100.0);
+        Observable<Object> wallet = walletService.initialize(Platform::runLater);
+        wallet.subscribe(
+                next -> { },
+                error -> Platform.runLater(() -> walletServiceException.set(error)),
+                () -> { });
 
-                if (servicesInitialised && percentage >= 100.0)
-                    backendReady.set(true);
-            }
+        Observable<?> backend = Observable.merge(message, wallet);
+        backend.subscribe(
+                next -> { },
+                error -> { },
+                () -> Platform.runLater(() -> {
+                    tradeManager.getPendingTrades().addListener(
+                            (MapChangeListener<String, Trade>) change -> updateNumPendingTrades());
+                    updateNumPendingTrades();
+                }));
 
-            @Override
-            public void doneDownload() {
-                networkSyncProgress.set(1.0);
-
-                if (servicesInitialised)
-                    backendReady.set(true);
-            }
-        };
-
-        WalletService.StartupListener startupListener = new WalletService.StartupListener() {
-            @Override
-            public void completed() {
-                walletServiceInited = true;
-                if (messageServiceInited)
-                    onServicesInitialised();
-            }
-
-            @Override
-            public void failed(final Throwable failure) {
-                walletServiceException.set(failure);
-            }
-        };
-
-        walletService.initialize(Platform::runLater, blockchainDownloadListener, startupListener);
+        return backend;
     }
 
 
@@ -233,17 +205,6 @@ class MainModel implements Model {
         };
     }
 
-
-    private void onServicesInitialised() {
-        tradeManager.getPendingTrades().addListener((MapChangeListener<String,
-                Trade>) change -> updateNumPendingTrades());
-        updateNumPendingTrades();
-
-        servicesInitialised = true;
-
-        if (networkSyncProgress.get() >= 1.0)
-            backendReady.set(true);
-    }
 
     private void updateNumPendingTrades() {
         numPendingTrades.set(tradeManager.getPendingTrades().size());

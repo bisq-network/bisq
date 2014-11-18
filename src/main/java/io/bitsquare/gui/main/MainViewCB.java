@@ -143,22 +143,24 @@ public class MainViewCB extends FxmlController<Pane, MainModel> {
 
         root.getChildren().addAll(baseApplicationContainer, splashScreen);
 
-        model.backendReady.addListener((ov1, prev1, ready) -> {
-            if (!ready)
-                return;
+        Platform.runLater(
+                () -> model.initBackend().subscribe(
+                        next -> { },
+                        error -> { },
+                        () -> Platform.runLater(() -> {
+                                    bankAccountComboBoxHolder.getChildren().setAll(createBankAccountComboBox());
 
-            bankAccountComboBoxHolder.getChildren().setAll(createBankAccountComboBox());
+                                    applyPendingTradesInfoIcon(model.numPendingTrades.get(), portfolioButtonHolder);
+                                    model.numPendingTrades.addListener((ov2, prev2, numPendingTrades) ->
+                                            applyPendingTradesInfoIcon((int) numPendingTrades, portfolioButtonHolder));
 
-            applyPendingTradesInfoIcon(model.numPendingTrades.get(), portfolioButtonHolder);
-            model.numPendingTrades.addListener((ov2, prev2, numPendingTrades) ->
-                    applyPendingTradesInfoIcon((int) numPendingTrades, portfolioButtonHolder));
+                                    navigation.navigateToLastStoredItem();
 
-            navigation.navigateToLastStoredItem();
-
-            transitions.fadeOutAndRemove(splashScreen, 1500);
-        });
-
-        Platform.runLater(model::initBackend);
+                                    transitions.fadeOutAndRemove(splashScreen, 1500);
+                                }
+                        )
+                )
+        );
     }
 
     private VBox createSplashScreen() {

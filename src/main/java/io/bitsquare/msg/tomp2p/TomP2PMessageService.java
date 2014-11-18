@@ -21,10 +21,10 @@ import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.msg.Message;
 import io.bitsquare.msg.MessageService;
 import io.bitsquare.msg.listeners.ArbitratorListener;
-import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.msg.listeners.GetPeerAddressListener;
 import io.bitsquare.msg.listeners.IncomingMessageListener;
 import io.bitsquare.msg.listeners.OutgoingMessageListener;
+import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.Peer;
 import io.bitsquare.network.tomp2p.TomP2PPeer;
 import io.bitsquare.user.User;
@@ -54,6 +54,8 @@ import net.tomp2p.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import rx.Observable;
 
 
 /**
@@ -90,10 +92,8 @@ class TomP2PMessageService implements MessageService {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void init(BootstrapListener bootstrapListener) {
-        p2pNode.setMessageBroker(this);
-        p2pNode.setKeyPair(user.getMessageKeyPair());
-        p2pNode.bootstrap(bootstrapListener);
+    public Observable<BootstrapState> init() {
+        return p2pNode.bootstrap(this, user.getMessageKeyPair());
     }
 
     public void shutDown() {
