@@ -134,12 +134,14 @@ class BootstrappedPeerFactory {
                         .bindings(bindings)
                         .tcpPortForwarding(port)
                         .udpPortForwarding(port)
+                        .behindFirewall()
                         .start();
             }
             else {
                 peer = new PeerBuilder(keyPair)
                         .ports(port)
                         .bindings(bindings)
+                        .behindFirewall()
                         .start();
             }
 
