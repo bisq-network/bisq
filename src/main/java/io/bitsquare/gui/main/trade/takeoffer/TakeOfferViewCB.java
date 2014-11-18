@@ -93,7 +93,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
             bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel,
             acceptedCountriesLabel, acceptedLanguagesLabel,
             acceptedArbitratorsLabel, amountBtcLabel,
-            priceDescriptionLabel, volumeDescriptionLabel;
+            priceDescriptionLabel, volumeDescriptionLabel, takeOfferSpinnerInfoLabel;
     @FXML Button showPaymentInfoScreenButton, showAdvancedSettingsButton, takeOfferButton;
 
     @FXML InputTextField amountTextField;
@@ -104,6 +104,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
             acceptedLanguagesTextField;
     @FXML AddressTextField addressTextField;
     @FXML BalanceTextField balanceTextField;
+    @FXML ProgressIndicator takeOfferSpinner;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -200,6 +201,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
     @FXML
     void onTakeOffer() {
         presentationModel.takeOffer();
+
     }
 
     @FXML
@@ -374,6 +376,13 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
         // buttons
         takeOfferButton.visibleProperty().bind(presentationModel.isTakeOfferButtonVisible);
         takeOfferButton.disableProperty().bind(presentationModel.isTakeOfferButtonDisabled);
+
+        takeOfferSpinnerInfoLabel.visibleProperty().bind(presentationModel.isTakeOfferSpinnerVisible);
+
+        presentationModel.isTakeOfferSpinnerVisible.addListener((ov, oldValue, newValue) -> {
+            takeOfferSpinner.setProgress(newValue ? -1 : 0);
+            takeOfferSpinner.setVisible(newValue);
+        });
     }
 
     private void showDetailsScreen() {

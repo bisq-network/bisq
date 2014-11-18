@@ -78,6 +78,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
 
     final BooleanProperty isTakeOfferButtonVisible = new SimpleBooleanProperty(false);
     final BooleanProperty isTakeOfferButtonDisabled = new SimpleBooleanProperty(true);
+    final BooleanProperty isTakeOfferSpinnerVisible = new SimpleBooleanProperty(false);
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
     final BooleanProperty tabIsClosable = new SimpleBooleanProperty(true);
@@ -186,6 +187,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
         model.requestTakeOfferSuccess.set(false);
 
         isTakeOfferButtonDisabled.set(true);
+        isTakeOfferSpinnerVisible.set(true);
 
         model.takeOffer();
     }
@@ -333,11 +335,15 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
         model.amountAsCoin.addListener((ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue)));
 
         model.requestTakeOfferErrorMessage.addListener((ov, oldValue, newValue) -> {
-            if (newValue != null)
+            if (newValue != null) {
                 isTakeOfferButtonDisabled.set(false);
+                isTakeOfferSpinnerVisible.set(false);
+            }
         });
-        model.requestTakeOfferSuccess.addListener((ov, oldValue, newValue) -> isTakeOfferButtonVisible.set
-                (!newValue));
+        model.requestTakeOfferSuccess.addListener((ov, oldValue, newValue) -> {
+            isTakeOfferButtonVisible.set(!newValue);
+            isTakeOfferSpinnerVisible.set(false);
+        });
     }
 
     private void setupBindings() {

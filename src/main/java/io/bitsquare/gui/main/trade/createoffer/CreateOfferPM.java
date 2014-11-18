@@ -77,6 +77,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
 
     final BooleanProperty isPlaceOfferButtonVisible = new SimpleBooleanProperty(false);
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
+    final BooleanProperty isPlaceOfferSpinnerVisible = new SimpleBooleanProperty(false);
     final BooleanProperty showWarningAdjustedVolume = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidFiatDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
@@ -189,6 +190,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         model.requestPlaceOfferSuccess.set(false);
 
         isPlaceOfferButtonDisabled.set(true);
+        isPlaceOfferSpinnerVisible.set(true);
 
         model.placeOffer();
     }
@@ -361,11 +363,15 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         model.volumeAsFiat.addListener((ov, oldValue, newValue) -> volume.set(formatter.formatFiat(newValue)));
 
         model.requestPlaceOfferErrorMessage.addListener((ov, oldValue, newValue) -> {
-            if (newValue != null)
+            if (newValue != null) {
                 isPlaceOfferButtonDisabled.set(false);
+                isPlaceOfferSpinnerVisible.set(false);
+            }
         });
-        model.requestPlaceOfferSuccess.addListener((ov, oldValue, newValue) -> isPlaceOfferButtonVisible.set
-                (!newValue));
+        model.requestPlaceOfferSuccess.addListener((ov, oldValue, newValue) -> {
+            isPlaceOfferButtonVisible.set(!newValue);
+            isPlaceOfferSpinnerVisible.set(false);
+        });
 
         // ObservableLists
         model.acceptedCountries.addListener((Observable o) -> acceptedCountries.set(formatter

@@ -79,6 +79,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
     private final Navigation navigation;
     private final OverlayManager overlayManager;
+
     private CloseListener closeListener;
     private BooleanProperty tabIsClosable;
 
@@ -98,7 +99,8 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
             bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel,
             acceptedCountriesLabel, acceptedCountriesLabelIcon, acceptedLanguagesLabel, acceptedLanguagesLabelIcon,
             acceptedArbitratorsLabel, acceptedArbitratorsLabelIcon, amountBtcLabel,
-            priceFiatLabel, volumeFiatLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel;
+            priceFiatLabel, volumeFiatLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel,
+            placeOfferSpinnerInfoLabel;
     @FXML Button showPaymentInfoScreenButton, showAdvancedSettingsButton, placeOfferButton;
 
     @FXML InputTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
@@ -107,6 +109,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
             acceptedLanguagesTextField;
     @FXML AddressTextField addressTextField;
     @FXML BalanceTextField balanceTextField;
+    @FXML ProgressIndicator placeOfferSpinner;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -433,6 +436,13 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         // buttons
         placeOfferButton.visibleProperty().bind(presentationModel.isPlaceOfferButtonVisible);
         placeOfferButton.disableProperty().bind(presentationModel.isPlaceOfferButtonDisabled);
+
+        placeOfferSpinnerInfoLabel.visibleProperty().bind(presentationModel.isPlaceOfferSpinnerVisible);
+
+        presentationModel.isPlaceOfferSpinnerVisible.addListener((ov, oldValue, newValue) -> {
+            placeOfferSpinner.setProgress(newValue ? -1 : 0);
+            placeOfferSpinner.setVisible(newValue);
+        });
     }
 
     private void showDetailsScreen() {

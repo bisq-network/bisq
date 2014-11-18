@@ -182,6 +182,14 @@
                 <Button fx:id="placeOfferButton" text="%createOffer.fundsBox.placeOffer" visible="false"
                         defaultButton="true"
                         onAction="#onPlaceOffer"/>
+                <ProgressIndicator fx:id="placeOfferSpinner" progress="0" visible="false" prefHeight="24"
+                                   prefWidth="24"/>
+                <Label fx:id="placeOfferSpinnerInfoLabel" text="%createOffer.fundsBox.placeOfferSpinnerInfo"
+                       visible="false">
+                    <padding>
+                        <Insets top="5.0"/>
+                    </padding>
+                </Label>
                 <GridPane.margin>
                     <Insets bottom="30" top="15.0"/>
                 </GridPane.margin>

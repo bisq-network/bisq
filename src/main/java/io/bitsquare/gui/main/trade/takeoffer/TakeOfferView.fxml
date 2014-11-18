@@ -175,6 +175,14 @@
                 <Button fx:id="takeOfferButton" text="%takeOffer.fundsBox.takeOffer" visible="false"
                         defaultButton="true"
                         onAction="#onTakeOffer"/>
+                <ProgressIndicator fx:id="takeOfferSpinner" progress="0" visible="false" prefHeight="24"
+                                   prefWidth="24"/>
+                <Label fx:id="takeOfferSpinnerInfoLabel" text="%takeOffer.fundsBox.takeOfferSpinnerInfo"
+                       visible="false">
+                    <padding>
+                        <Insets top="5.0"/>
+                    </padding>
+                </Label>
                 <GridPane.margin>
                     <Insets bottom="30" top="15.0"/>
                 </GridPane.margin>
