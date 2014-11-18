@@ -278,7 +278,8 @@ public class TradeManager {
                         public void onPayoutTxPublished(Transaction payoutTx) {
                             trade.setPayoutTx(payoutTx);
                             trade.setState(Trade.State.COMPLETED);
-                            closeTrade(trade);
+                            // We close the trade when the user has withdrawn his trade funds (see #283)
+                            //closeTrade(trade);
 
                             log.debug("trading onPayoutTxPublishedMessage");
                         }
@@ -355,7 +356,8 @@ public class TradeManager {
             public void onPayoutTxPublished(Trade trade, Transaction payoutTx) {
                 trade.setPayoutTx(payoutTx);
                 trade.setState(Trade.State.COMPLETED);
-                closeTrade(trade);
+                // We close the trade when the user has withdrawn his trade funds (see #283)
+                //closeTrade(trade);
             }
 
             @Override

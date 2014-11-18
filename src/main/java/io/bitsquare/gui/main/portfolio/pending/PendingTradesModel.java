@@ -224,6 +224,8 @@ class PendingTradesModel extends UIModel {
             log.error(e.getMessage());
         }
 
+        tradeManager.closeTrade(getTrade());
+
 /*
         Action response = Popups.openConfirmPopup(
                 "Withdrawal request", "Confirm your request",

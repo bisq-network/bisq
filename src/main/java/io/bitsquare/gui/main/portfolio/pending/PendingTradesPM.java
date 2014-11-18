@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.portfolio.pending;
 
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.PresentationModel;
-import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
@@ -134,11 +133,7 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     }
 
     void withdraw(String withdrawToAddress) {
-        // TODO address validation
-        if (withdrawToAddress != null && withdrawToAddress.length() > 0)
-            model.withdraw(withdrawToAddress);
-        else
-            Popups.openWarningPopup("Please fill in a withdrawal address where you want to send your bitcoins.");
+        model.withdraw(withdrawToAddress);
     }
 
     void withdrawAddressFocusOut(String text) {
