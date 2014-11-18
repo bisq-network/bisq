@@ -199,13 +199,15 @@ class RestrictionsModel extends UIModel {
             idVerifications.add(Arbitrator.ID_VERIFICATION.PASSPORT);
             idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
 
+            // TODO use very small sec. dposit to make testing in testnet less expensive
+            // Revert later to 0.1 BTC again
             Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
                     messagePubKeyAsHex,
                     "Manfred Karrer",
                     Arbitrator.ID_TYPE.REAL_LIFE_ID,
                     languages,
                     new Reputation(),
-                    Coin.parseCoin("0.1"),
+                    Coin.parseCoin("0.001"),
                     arbitrationMethods,
                     idVerifications,
                     "http://bitsquare.io/",
