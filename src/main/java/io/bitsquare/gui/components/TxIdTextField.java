@@ -40,6 +40,7 @@ public class TxIdTextField extends AnchorPane {
     private final Tooltip progressIndicatorTooltip;
     private final ConfidenceProgressIndicator progressIndicator;
     private final Label copyIcon;
+    private TxConfidenceListener txConfidenceListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -78,6 +79,18 @@ public class TxIdTextField extends AnchorPane {
     }
 
     public void setup(WalletService walletService, String txID) {
+        if (txConfidenceListener != null)
+            walletService.removeTxConfidenceListener(txConfidenceListener);
+
+        txConfidenceListener = new TxConfidenceListener(txID) {
+            @Override
+            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
+                updateConfidence(confidence);
+            }
+        };
+        walletService.addTxConfidenceListener(txConfidenceListener);
+        updateConfidence(walletService.getConfidenceForTxId(txID));
+
         textField.setText(txID);
         textField.setOnMouseClicked(mouseEvent -> {
             try {
@@ -91,15 +104,8 @@ public class TxIdTextField extends AnchorPane {
         });
 
         copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(txID));
-
-        walletService.addTxConfidenceListener(new TxConfidenceListener(txID) {
-            @Override
-            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                updateConfidence(confidence);
-            }
-        });
-        updateConfidence(walletService.getConfidenceForTxId(txID));
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters/Setters
@@ -109,7 +115,6 @@ public class TxIdTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     private void updateConfidence(TransactionConfidence confidence) {
         if (confidence != null) {
