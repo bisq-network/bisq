@@ -21,7 +21,6 @@ import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.locale.Country;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.MonetaryFormat;
 
 import java.io.Serializable;
 
@@ -36,11 +35,6 @@ public class AccountSettings implements Serializable {
     private List<Locale> acceptedLanguageLocales = new ArrayList<>();
     private List<Country> acceptedCountryLocales = new ArrayList<>();
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
-
-    // needed for persistence
-    private String btcDenominationString = MonetaryFormat.CODE_BTC;
-    private Boolean useAnimationsBoolean = true;
-    private Boolean useEffectsBoolean = true;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
