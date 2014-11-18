@@ -152,8 +152,6 @@ public class TomP2PNode implements ClientNode {
     }
 
     public void shutDown() {
-        bootstrappedPeerFactory.shutDown();
-
         if (peerDHT != null)
             peerDHT.shutdown();
     }

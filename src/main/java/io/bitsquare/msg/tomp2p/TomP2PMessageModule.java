@@ -23,6 +23,7 @@ import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.ClientNode;
 import io.bitsquare.network.Node;
 
+import com.google.inject.Injector;
 import com.google.inject.name.Names;
 
 import javax.inject.Singleton;
@@ -63,6 +64,13 @@ public class TomP2PMessageModule extends MessageModule {
         bindConstant().annotatedWith(Names.named(NETWORK_INTERFACE_KEY)).to(
                 env.getProperty(NETWORK_INTERFACE_KEY, NETWORK_INTERFACE_UNSPECIFIED));
         bind(BootstrappedPeerFactory.class).asEagerSingleton();
+    }
+
+    @Override
+    protected void doClose(Injector injector) {
+        super.doClose(injector);
+        
+        injector.getInstance(BootstrappedPeerFactory.class).shutDown();
     }
 
     @Override
