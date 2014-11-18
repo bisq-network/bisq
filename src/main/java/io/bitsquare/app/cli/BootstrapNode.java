@@ -54,10 +54,10 @@ public class BootstrapNode {
         try {
             Number160 peerId = Number160.createHash(name);
             peer = new PeerBuilder(peerId).ports(port).start();
-            peer.objectDataReply((sender, request) -> {
+           /* peer.objectDataReply((sender, request) -> {
                 log.trace("received request: " + request.toString());
                 return "pong";
-            });
+            });*/
 
             PeerDHT peerDHT = new PeerBuilderDHT(peer).start();
             new PeerBuilderNAT(peer).start();
@@ -66,12 +66,12 @@ public class BootstrapNode {
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
                 @Override
                 public void peerInserted(PeerAddress peerAddress, boolean verified) {
-                    log.debug("peerInserted: " + peerAddress);
+                    log.info("peerInserted: " + peerAddress);
                 }
 
                 @Override
                 public void peerRemoved(PeerAddress peerAddress, PeerStatistic storedPeerAddress) {
-                    log.debug("peerRemoved: " + peerAddress);
+                    log.info("peerRemoved: " + peerAddress);
                 }
 
                 @Override
@@ -79,11 +79,11 @@ public class BootstrapNode {
                 }
             });
 
-            log.debug("Bootstrap node started with name " + name + " and port " + port);
+            log.info("Bootstrap node started with name " + name + " and port " + port);
             new Thread(() -> {
                 while (running) {
                     for (PeerAddress peerAddress : peer.peerBean().peerMap().all()) {
-                        log.debug("Peer online: " + peerAddress);
+                        log.info("Peer online: " + peerAddress);
                     }
                     try {
                         Thread.sleep(60000);
