@@ -221,6 +221,10 @@ class BootstrappedPeerFactory {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
+
+                    // We are well connected so we can offer our capabilities as relay node for other peers
+                    new PeerBuilderNAT(peer).start();
+                    
                     if (useManualPortForwarding) {
                         setState(BootstrapState.MANUAL_PORT_FORWARDING_SUCCESS,
                                 "We use manual port forwarding and are visible to other peers.");

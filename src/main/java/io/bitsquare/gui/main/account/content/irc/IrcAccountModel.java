@@ -197,7 +197,7 @@ class IrcAccountModel extends UIModel {
                     Arbitrator.ID_TYPE.REAL_LIFE_ID,
                     languages,
                     new Reputation(),
-                    Coin.parseCoin("0.1"),
+                    Coin.parseCoin("0.001"),
                     arbitrationMethods,
                     idVerifications,
                     "http://bitsquare.io/",
