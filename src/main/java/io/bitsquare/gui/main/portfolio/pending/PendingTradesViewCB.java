@@ -133,11 +133,10 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                 txIdTextField.setup(presentationModel.getWalletService(), newValue);
 
         selectedItemChangeListener = (obsValue, oldValue, newValue) -> {
-            if (oldValue != null && newValue != null)
+            if (oldValue != null && newValue != null) {
                 presentationModel.selectTrade(newValue);
-            // TODO only clearSelection when there are more at least one remaining trades
-           /* else if (newValue == null)
-                table.getSelectionModel().clearSelection();*/
+                updateScreen();
+            }
         };
 
         listChangeListener = change -> {

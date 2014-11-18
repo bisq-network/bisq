@@ -122,6 +122,7 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
 
     void selectTrade(PendingTradesListItem item) {
         model.selectTrade(item);
+        updateState();
     }
 
     void fiatPaymentStarted() {
@@ -250,6 +251,7 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
 
     private void updateState() {
         if (model.tradeState.get() != null) {
+            log.debug("tradeState " + model.tradeState.get());
             switch (model.tradeState.get()) {
                 case DEPOSIT_PUBLISHED:
                     state.set(model.isOfferer() ? State.OFFERER_BUYER_WAIT_TX_CONF : State.TAKER_SELLER_WAIT_TX_CONF);

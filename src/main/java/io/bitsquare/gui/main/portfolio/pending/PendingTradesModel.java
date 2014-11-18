@@ -163,9 +163,6 @@ class PendingTradesModel extends UIModel {
         if (selectedItem != null) {
             isOfferer = getTrade().getOffer().getMessagePublicKey().equals(user.getMessagePublicKey());
 
-            // we want to re-trigger a change if the state is the same but different trades
-            tradeState.set(null);
-
             Trade trade = getTrade();
             if (trade.getDepositTx() != null)
                 txId.set(trade.getDepositTx().getHashAsString());
