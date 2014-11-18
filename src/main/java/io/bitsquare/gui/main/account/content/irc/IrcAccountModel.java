@@ -66,10 +66,9 @@ class IrcAccountModel extends UIModel {
     final ObjectProperty<BankAccountType> type = new SimpleObjectProperty<>();
     final ObjectProperty<Currency> currency = new SimpleObjectProperty<>();
 
-    final ObservableList<BankAccountType> allTypes = FXCollections.observableArrayList(BankAccountType
-            .getAllBankAccountTypes());
-    final ObservableList<Currency> allCurrencies = FXCollections.observableArrayList(CurrencyUtil
-            .getAllCurrencies());
+    final ObservableList<BankAccountType> allTypes =
+            FXCollections.observableArrayList(BankAccountType.getAllBankAccountTypes());
+    final ObservableList<Currency> allCurrencies = FXCollections.observableArrayList(CurrencyUtil.getAllCurrencies());
     final ObservableList<BankAccount> allBankAccounts = FXCollections.observableArrayList();
 
 

@@ -74,14 +74,10 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPm> implements Cont
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        typesComboBox.setItems(presentationModel.getAllTypes());
-        typesComboBox.setConverter(presentationModel.getTypesConverter());
-
-        currencyComboBox.setItems(presentationModel.getAllCurrencies());
-        currencyComboBox.setConverter(presentationModel.getCurrencyConverter());
-
         ircNickNameTextField.setValidator(presentationModel.getNickNameValidator());
 
+        typesComboBox.setItems(presentationModel.getAllTypes());
+        typesComboBox.setConverter(presentationModel.getTypesConverter());
         // we use a custom cell for deactivating non IRC items, later we use the standard cell and the StringConverter
         typesComboBox.setCellFactory(new Callback<ListView<BankAccountType>, ListCell<BankAccountType>>() {
             @Override
@@ -105,8 +101,36 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPm> implements Cont
                 };
             }
         });
-
         typesComboBox.getSelectionModel().select(0);
+
+        currencyComboBox.setItems(presentationModel.getAllCurrencies());
+        currencyComboBox.setConverter(presentationModel.getCurrencyConverter());
+        // we use a custom cell for deactivating non EUR items, later we use the standard cell and the StringConverter
+        currencyComboBox.setCellFactory(new Callback<ListView<Currency>, ListCell<Currency>>() {
+            @Override
+            public ListCell<Currency> call(ListView<Currency> p) {
+                return new ListCell<Currency>() {
+
+                    @Override
+                    protected void updateItem(Currency currency, boolean empty) {
+                        super.updateItem(currency, empty);
+
+                        if (currency == null || empty) {
+                            setGraphic(null);
+                        }
+                        else {
+                            setText(currency.getCurrencyCode() + " (" + currency.getDisplayName() + ")");
+
+                            if (!currency.getCurrencyCode().equals("EUR")) {
+                                setOpacity(0.3);
+                                setDisable(true);
+                            }
+                        }
+                    }
+                };
+            }
+        });
+        currencyComboBox.getSelectionModel().select(0);
 
         super.initialize(url, rb);
     }

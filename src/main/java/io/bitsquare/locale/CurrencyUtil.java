@@ -17,8 +17,6 @@
 
 package io.bitsquare.locale;
 
-import java.text.NumberFormat;
-
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
@@ -29,8 +27,8 @@ public class CurrencyUtil {
 
     public static List<Currency> getAllCurrencies() {
         final ArrayList<Currency> mainCurrencies = new ArrayList<>();
-        mainCurrencies.add(Currency.getInstance("USD"));
         mainCurrencies.add(Currency.getInstance("EUR"));
+        mainCurrencies.add(Currency.getInstance("USD"));
         mainCurrencies.add(Currency.getInstance("CNY"));
         mainCurrencies.add(Currency.getInstance("RUB"));
         mainCurrencies.add(Currency.getInstance("JPY"));
@@ -57,6 +55,8 @@ public class CurrencyUtil {
     }
 
     public static Currency getDefaultCurrency() {
-        return NumberFormat.getNumberInstance(Locale.getDefault()).getCurrency();
+        // TODO Only display EUR for the moment
+        return Currency.getInstance("EUR");
+        // NumberFormat.getNumberInstance(Locale.getDefault()).getCurrency();
     }
 }
