@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.help;
 
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.util.Utilities;
 
 import org.slf4j.Logger;
@@ -33,10 +34,12 @@ public class Help {
 
     public static void openWindow(HelpId id) {
         try {
-            Utilities.openURL("https://docs.bitsquare.io/0.1.0-SNAPSHOT/userguide/index.html");
+            Utilities.openWebPage("https://docs.bitsquare.io/0.1.0-SNAPSHOT/userguide/index.html");
             // URL url = new URL("https://docs.bitsquare.io/0.1.0-SNAPSHOT/userguide/index.html#" + id);
         } catch (Exception e) {
             log.error(e.getMessage());
+            Popups.openWarningPopup("Warning", "Opening browser failed. Please check your internet " +
+                    "connection.");
         }
     }
 

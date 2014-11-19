@@ -95,11 +95,11 @@ public class TxIdTextField extends AnchorPane {
         textField.setOnMouseClicked(mouseEvent -> {
             try {
                 // TODO get the url form the app preferences
-                Utilities.openURL("https://www.biteasy.com/testnet/transactions/" + txID);
+                Utilities.openWebPage("https://www.biteasy.com/testnet/transactions/" + txID);
                 //Utilities.openURL("https://blockchain.info/tx/" + txID);
             } catch (Exception e) {
-                log.warn(e.getMessage());
-                Popups.openWarningPopup("Warning", "Opening blockchain.info failed. Please check your internet " +
+                log.error(e.getMessage());
+                Popups.openWarningPopup("Warning", "Opening browser failed. Please check your internet " +
                         "connection.");
             }
         });

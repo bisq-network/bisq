@@ -23,8 +23,6 @@ import io.bitsquare.util.Utilities;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
 
-import java.awt.*;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
@@ -34,10 +32,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
 import javafx.stage.Window;
@@ -75,7 +70,7 @@ public class AddressTextField extends AnchorPane {
         Tooltip.install(textField, new Tooltip("Open your default Bitcoin wallet with that address."));
         textField.setOnMouseClicked(mouseEvent -> {
             try {
-                Desktop.getDesktop().browse(URI.create(getBitcoinURI()));
+                Utilities.openURI(URI.create(getBitcoinURI()));
             } catch (IOException e) {
                 log.warn(e.getMessage());
                 Popups.openWarningPopup("Warning", "Opening a system Bitcoin wallet application has failed. " +

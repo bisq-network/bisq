@@ -205,9 +205,11 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPm> implements Cont
     @FXML
     void onOpenIRC() {
         try {
-            Utilities.openURL("https://webchat.freenode.net/?channels=bitsquare-trading");
+            Utilities.openWebPage("https://webchat.freenode.net/?channels=bitsquare-trading");
         } catch (Exception e) {
-            log.error("Cannot open browser. " + e.getMessage());
+            log.error(e.getMessage());
+            Popups.openWarningPopup("Warning", "Opening browser failed. Please check your internet " +
+                    "connection.");
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////
