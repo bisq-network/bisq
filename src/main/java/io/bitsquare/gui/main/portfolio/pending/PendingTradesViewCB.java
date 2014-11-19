@@ -119,13 +119,6 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         setVolumeColumnCellFactory();
         setDateColumnCellFactory();
 
-       /* scrollPane.vvalueProperty().addListener((ov, oldValue, newValue) -> {
-            log.debug("#### vvalueProperty " + newValue);
-        });
-        scrollPane.viewportBoundsProperty().addListener((ov, oldValue, newValue) -> {
-            log.debug("#### viewportBoundsProperty " + newValue);
-        });*/
-
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No pending trades available"));
 
@@ -493,12 +486,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         fiatAmountTextField.setManaged(visible);
         holderNameTextField.setManaged(visible);
 
-
-        if (visible)
-            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        else
-            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.layout();
+        Platform.runLater(() -> scrollPane.setVvalue(visible ? scrollPane.getVmax() : 0));
     }
 
     private void setSummaryControlsVisible(boolean visible) {
@@ -538,15 +526,10 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         withdrawAddressTextField.setManaged(visible);
         withdrawButton.setManaged(visible);
 
-        if (visible) {
-            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        if (visible)
             withdrawAddressTextField.requestFocus();
-            scrollPane.setVvalue(scrollPane.getVmax());
-        }
-        else {
-            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        }
-        scrollPane.layout();
+
+        Platform.runLater(() -> scrollPane.setVvalue(visible ? scrollPane.getVmax() : 0));
     }
 
 
