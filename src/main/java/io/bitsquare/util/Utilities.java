@@ -144,15 +144,8 @@ public class Utilities {
     public static void openURI(URI uri) throws BitsquareException {
         // On Linux Desktop is poorly implemented. 
         // See https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform
-        boolean succeeded = DesktopApi.browse(uri);
-        if (!succeeded)
+        if (!DesktopApi.browse(uri))
             throw new BitsquareException("Failed to open URI: " + uri.toString());
-     /*   Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
-        if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE))
-            desktop.browse(uri);
-        else {
-            new ProcessBuilder("x-www-browser", uri.toURL().toString()).start();
-        }*/
     }
 
     public static void openWebPage(String target) throws URISyntaxException, IOException {
