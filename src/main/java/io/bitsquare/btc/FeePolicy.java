@@ -46,8 +46,8 @@ public class FeePolicy {
 
         switch (bitcoinNetwork) {
             case TESTNET:
-                createOfferFeeAddress = "mmm8BdTcHoc5wi75RmiQYsJ2Tr1NoZmM84";
-                takeOfferFeeAddress = "mmm8BdTcHoc5wi75RmiQYsJ2Tr1NoZmM84";
+                createOfferFeeAddress = "mopJDiHncoveyy7S7FZTUNVbrCxazxvGrE";
+                takeOfferFeeAddress = "mopJDiHncoveyy7S7FZTUNVbrCxazxvGrE";
                 break;
             case MAINNET:
                 // bitsquare donation address used for the moment...

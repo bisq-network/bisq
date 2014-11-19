@@ -18,10 +18,8 @@
 package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.user.User;
-
-import java.util.Currency;
-import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -46,7 +44,7 @@ public final class OptionalFiatValidator extends NumberValidator {
     public OptionalFiatValidator(User user) {
         if (user != null) {
             if (user.currentBankAccountProperty().get() == null)
-                setFiatCurrencyCode(Currency.getInstance(Locale.getDefault()).getCurrencyCode());
+                setFiatCurrencyCode(CurrencyUtil.getDefaultCurrency().getCurrencyCode());
             else if (user.currentBankAccountProperty().get() != null)
                 setFiatCurrencyCode(user.currentBankAccountProperty().get().getCurrency().getCurrencyCode());
 

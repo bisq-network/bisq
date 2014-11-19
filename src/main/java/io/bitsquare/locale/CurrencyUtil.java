@@ -20,7 +20,6 @@ package io.bitsquare.locale;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 public class CurrencyUtil {
@@ -47,9 +46,8 @@ public class CurrencyUtil {
         final List<Currency> resultList = new ArrayList<>(mainCurrencies);
         resultList.addAll(allCurrenciesList);
 
-        Currency defaultCurrency = Currency.getInstance(Locale.getDefault());
-        resultList.remove(defaultCurrency);
-        resultList.add(0, defaultCurrency);
+        resultList.remove(getDefaultCurrency());
+        resultList.add(0, getDefaultCurrency());
 
         return resultList;
     }
@@ -57,6 +55,6 @@ public class CurrencyUtil {
     public static Currency getDefaultCurrency() {
         // TODO Only display EUR for the moment
         return Currency.getInstance("EUR");
-        // NumberFormat.getNumberInstance(Locale.getDefault()).getCurrency();
+        // return Currency.getInstance(Locale.getDefault());
     }
 }

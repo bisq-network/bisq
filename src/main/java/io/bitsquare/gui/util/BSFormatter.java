@@ -20,6 +20,7 @@ package io.bitsquare.gui.util;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
+import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.user.User;
@@ -33,7 +34,6 @@ import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 
-import java.util.Currency;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -68,7 +68,7 @@ public class BSFormatter {
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
     private MonetaryFormat coinFormat = MonetaryFormat.BTC.repeatOptionalDecimals(2, 2);
 
-    private String currencyCode = Currency.getInstance(Locale.getDefault()).getCurrencyCode();
+    private String currencyCode = CurrencyUtil.getDefaultCurrency().getCurrencyCode();
 
     // format is like: 1,00  never more then 2 decimals
     private final MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0).code(0, currencyCode);
@@ -77,7 +77,7 @@ public class BSFormatter {
     @Inject
     public BSFormatter(User user) {
         if (user.currentBankAccountProperty().get() == null)
-            setFiatCurrencyCode(Currency.getInstance(Locale.getDefault()).getCurrencyCode());
+            setFiatCurrencyCode(CurrencyUtil.getDefaultCurrency().getCurrencyCode());
         else if (user.currentBankAccountProperty().get() != null)
             setFiatCurrencyCode(user.currentBankAccountProperty().get().getCurrency().getCurrencyCode());
 
