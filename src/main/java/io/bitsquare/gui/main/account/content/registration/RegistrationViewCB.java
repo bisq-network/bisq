@@ -58,6 +58,8 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
     @FXML AddressTextField addressTextField;
     @FXML BalanceTextField balanceTextField;
     @FXML Button payButton;
+    @FXML Label paymentSpinnerInfoLabel;
+    @FXML ProgressIndicator paymentSpinner;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -98,6 +100,13 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
                         BSResources.get("An error occurred when paying the registration fee"),
                         newValue);
             }
+        });
+
+        paymentSpinnerInfoLabel.visibleProperty().bind(presentationModel.isPaymentSpinnerVisible);
+
+        presentationModel.isPaymentSpinnerVisible.addListener((ov, oldValue, newValue) -> {
+            paymentSpinner.setProgress(newValue ? -1 : 0);
+            paymentSpinner.setVisible(newValue);
         });
 
         presentationModel.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {

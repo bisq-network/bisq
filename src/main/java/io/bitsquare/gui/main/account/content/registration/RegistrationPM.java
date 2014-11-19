@@ -44,6 +44,7 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
     final BooleanProperty isPayButtonDisabled = new SimpleBooleanProperty(true);
     final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
+    final BooleanProperty isPaymentSpinnerVisible = new SimpleBooleanProperty(false);
 
     // That is needed for the addressTextField
     final ObjectProperty<Address> address = new SimpleObjectProperty<>();
@@ -79,10 +80,18 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
         });
         validateInput();
 
-        model.payFeeSuccess.addListener((ov, oldValue, newValue) -> isPayButtonDisabled.set(newValue));
+        model.payFeeSuccess.addListener((ov, oldValue, newValue) -> {
+            isPayButtonDisabled.set(newValue);
+            showTransactionPublishedScreen.set(newValue);
+            isPaymentSpinnerVisible.set(false);
+        });
 
-        requestPlaceOfferErrorMessage.bind(model.payFeeErrorMessage);
-        showTransactionPublishedScreen.bind(model.payFeeSuccess);
+        model.payFeeErrorMessage.addListener((ov, oldValue, newValue) -> {
+            if (newValue != null) {
+                requestPlaceOfferErrorMessage.set(newValue);
+                isPaymentSpinnerVisible.set(false);
+            }
+        });
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -113,6 +122,7 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
         model.payFeeSuccess.set(false);
 
         isPayButtonDisabled.set(true);
+        isPaymentSpinnerVisible.set(true);
 
         model.payFee();
     }

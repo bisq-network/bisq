@@ -64,13 +64,19 @@
     <InfoDisplay gridPane="$root" onAction="#onOpenHelp" rowIndex="3"
                  text="You need to pay a 0.0002 BTC which is needed for storing your encrypted account data in the blockchain. That will be used in the trade process for account verification."/>
 
-    <Button fx:id="payButton" text="Pay registration fee" onAction="#onPayFee" GridPane.columnIndex="1"
-            GridPane.rowIndex="4"
-            defaultButton="true">
+    <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="4">
+        <Button fx:id="payButton" text="Pay registration fee" onAction="#onPayFee" defaultButton="true"/>
+        <ProgressIndicator fx:id="paymentSpinner" progress="0" visible="false" prefHeight="24"
+                           prefWidth="24"/>
+        <Label fx:id="paymentSpinnerInfoLabel" text="Payment is in progress..." visible="false">
+            <padding>
+                <Insets top="5.0"/>
+            </padding>
+        </Label>
         <GridPane.margin>
             <Insets top="15.0"/>
         </GridPane.margin>
-    </Button>
+    </HBox>
 
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="200.0"/>
