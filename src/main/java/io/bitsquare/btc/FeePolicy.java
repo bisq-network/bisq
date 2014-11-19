@@ -22,13 +22,14 @@ import io.bitsquare.BitsquareException;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
 public class FeePolicy {
 
-    public static final Coin TX_FEE = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE; // dropped down to 0.00001 BTC
+    public static final Coin TX_FEE = Coin.valueOf(10000); // we use the old fee of 0.0001 BTC to avoid problems in 
+    // testing if miners still does not support the new fee policy
+    //Transaction.REFERENCE_DEFAULT_MIN_TX_FEE; // dropped down to 0.00001 BTC
 
     // TODO: Change REGISTRATION_FEE to 0.00001 (See https://github.com/bitsquare/bitsquare/issues/228)
     public static final Coin REGISTRATION_FEE = TX_FEE.add(TX_FEE);
