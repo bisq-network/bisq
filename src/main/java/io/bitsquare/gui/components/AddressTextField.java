@@ -24,7 +24,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 
 import java.net.URI;
 
@@ -71,7 +70,7 @@ public class AddressTextField extends AnchorPane {
         textField.setOnMouseClicked(mouseEvent -> {
             try {
                 Utilities.openURI(URI.create(getBitcoinURI()));
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.warn(e.getMessage());
                 Popups.openWarningPopup("Warning", "Opening a system Bitcoin wallet application has failed. " +
                         "Perhaps you don't have one installed?");

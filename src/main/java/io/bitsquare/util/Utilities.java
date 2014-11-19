@@ -17,11 +17,11 @@
 
 package io.bitsquare.util;
 
+import io.bitsquare.BitsquareException;
+
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import java.awt.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,7 +32,6 @@ import java.io.Serializable;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 
 import java.util.function.Function;
 
@@ -41,6 +40,8 @@ import javafx.scene.input.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.mightypork.rpack.utils.DesktopApi;
 
 /**
  * General utilities
@@ -140,22 +141,23 @@ public class Utilities {
         printElapsedTime("");
     }
 
-    public static void openURI(URI uri) throws IOException {
-        Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+    public static void openURI(URI uri) throws BitsquareException {
+        // On Linux Desktop is poorly implemented. 
+        // See https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform
+        boolean succeeded = DesktopApi.browse(uri);
+        if (!succeeded)
+            throw new BitsquareException("Failed to open URI: " + uri.toString());
+     /*   Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
         if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE))
             desktop.browse(uri);
-        else
+        else {
             new ProcessBuilder("x-www-browser", uri.toURL().toString()).start();
+        }*/
     }
 
     public static void openWebPage(String target) throws URISyntaxException, IOException {
         openURI(new URI(target));
     }
-
-    public static void openURL(URL url) throws URISyntaxException, IOException {
-        openURI(url.toURI());
-    }
-
 
     public static Object copy(Serializable orig) {
         Object obj = null;
