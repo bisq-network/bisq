@@ -13,7 +13,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+// Taken form https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform
 public class DesktopApi {
     private static final Logger log = LoggerFactory.getLogger(DesktopApi.class);
 

@@ -159,6 +159,8 @@ class PendingTradesModel extends UIModel {
             Trade trade = getTrade();
             trade.stateProperty().addListener(stateChangeListener);
             tradeState.set(trade.stateProperty().get());
+            log.trace("selectTrade trade.stateProperty().get() " + trade.stateProperty().get());
+            
             if (trade.getDepositTx() != null)
                 txId.set(trade.getDepositTx().getHashAsString());
 
@@ -304,7 +306,8 @@ class PendingTradesModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateConfidence(TransactionConfidence confidence) {
-        log.debug("confidence " + confidence);
+        log.trace("updateConfidence confidence " + confidence);
+        log.trace("updateConfidence getTrade().getState() " + getTrade().getState());
         if (confidence != null &&
                 confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING
                 && (getTrade().getState() == Trade.State.DEPOSIT_PUBLISHED ||

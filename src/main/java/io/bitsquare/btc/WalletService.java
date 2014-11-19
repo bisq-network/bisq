@@ -242,6 +242,7 @@ public class WalletService {
 
             @Override
             public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                log.trace("onTransactionConfidenceChanged " + tx.getHashAsString());
                 notifyConfidenceListeners(tx);
             }
 

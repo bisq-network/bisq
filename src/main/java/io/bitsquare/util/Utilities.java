@@ -17,8 +17,6 @@
 
 package io.bitsquare.util;
 
-import io.bitsquare.BitsquareException;
-
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -31,7 +29,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 
 import java.util.function.Function;
 
@@ -141,14 +138,14 @@ public class Utilities {
         printElapsedTime("");
     }
 
-    public static void openURI(URI uri) throws BitsquareException {
+    public static void openURI(URI uri) throws Exception {
         // On Linux Desktop is poorly implemented. 
         // See https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform
         if (!DesktopApi.browse(uri))
-            throw new BitsquareException("Failed to open URI: " + uri.toString());
+            throw new Exception("Failed to open URI: " + uri.toString());
     }
 
-    public static void openWebPage(String target) throws URISyntaxException, IOException {
+    public static void openWebPage(String target) throws Exception {
         openURI(new URI(target));
     }
 
