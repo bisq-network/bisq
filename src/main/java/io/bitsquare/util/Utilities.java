@@ -21,6 +21,8 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.awt.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -76,6 +78,24 @@ public class Utilities {
             clipboardContent.putString(content);
             clipboard.setContent(clipboardContent);
         }
+    }
+
+    public static void openURI(URI uri) throws IOException {
+        if (!isLinux()
+                && Desktop.isDesktopSupported()
+                && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+            Desktop.getDesktop().browse(uri);
+        }
+        else {
+            // On Linux Desktop is poorly implemented. 
+            // See https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform
+            if (!DesktopApi.browse(uri))
+                throw new IOException("Failed to open URI: " + uri.toString());
+        }
+    }
+
+    public static void openWebPage(String target) throws Exception {
+        openURI(new URI(target));
     }
 
 
@@ -138,16 +158,6 @@ public class Utilities {
         printElapsedTime("");
     }
 
-    public static void openURI(URI uri) throws Exception {
-        // On Linux Desktop is poorly implemented. 
-        // See https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform
-        if (!DesktopApi.browse(uri))
-            throw new Exception("Failed to open URI: " + uri.toString());
-    }
-
-    public static void openWebPage(String target) throws Exception {
-        openURI(new URI(target));
-    }
 
     public static Object copy(Serializable orig) {
         Object obj = null;
