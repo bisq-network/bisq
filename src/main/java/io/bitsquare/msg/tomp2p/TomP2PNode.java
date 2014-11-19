@@ -323,13 +323,19 @@ public class TomP2PNode implements ClientNode {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                if (peerDHT != null && !storedPeerAddress.equals(peerDHT.peerAddress())) {
-                    try {
-                        storeAddress();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        log.error(e.toString());
+                if (storedPeerAddress != null) {
+                    if (peerDHT != null && !storedPeerAddress.equals(peerDHT.peerAddress())) {
+                        try {
+                            storeAddress();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            log.error(e.toString());
+                        }
                     }
+                }
+                else {
+                    log.error("storedPeerAddress is null. That should not happen. " +
+                            "Seems there is a problem with DHT storage.");
                 }
             }
         }, checkIfIPChangedPeriod, checkIfIPChangedPeriod);
