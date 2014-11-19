@@ -157,7 +157,6 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
         }
 
         public void open() {
-            log.debug("select " + processStepItem.getLabel());
             BorderStroke borderStroke = new BorderStroke(Colors.LIGHT_GREY, BorderStrokeStyle.SOLID, null,
                     new BorderWidths(borderWidth, borderWidth, borderWidth, borderWidth), Insets.EMPTY);
             this.setBorder(new Border(borderStroke));
@@ -165,7 +164,6 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
         }
 
         public void current() {
-            log.debug("select " + processStepItem.getLabel());
             BorderStroke borderStroke = new BorderStroke(Colors.GREEN, BorderStrokeStyle.SOLID, null,
                     new BorderWidths(borderWidth, borderWidth, borderWidth, borderWidth), Insets.EMPTY);
             this.setBorder(new Border(borderStroke));
@@ -173,7 +171,6 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
         }
 
         public void past() {
-            log.debug("deSelect " + processStepItem.getLabel());
             BorderStroke borderStroke = new BorderStroke(Color.valueOf("#444444"), BorderStrokeStyle.SOLID, null,
                     new BorderWidths(borderWidth, borderWidth, borderWidth, borderWidth), Insets.EMPTY);
             this.setBorder(new Border(borderStroke));

@@ -157,6 +157,8 @@ class PendingTradesModel extends UIModel {
             isOfferer = getTrade().getOffer().getMessagePublicKey().equals(user.getMessagePublicKey());
 
             Trade trade = getTrade();
+            trade.stateProperty().addListener(stateChangeListener);
+            tradeState.set(trade.stateProperty().get());
             if (trade.getDepositTx() != null)
                 txId.set(trade.getDepositTx().getHashAsString());
 
@@ -168,16 +170,6 @@ class PendingTradesModel extends UIModel {
             };
             walletService.addTxConfidenceListener(txConfidenceListener);
             updateConfidence(walletService.getConfidenceForTxId(txId.get()));
-
-            trade.stateProperty().addListener(stateChangeListener);
-
-            // It might be that we receive first the DEPOSIT_CONFIRMED (coming form bitcoin network)
-            // and then the OFFERER_ACCEPTED (coming from tomP2P network.
-            // So we don't allow to overwrite the already set DEPOSIT_CONFIRMED as that will only be possible if 
-            // the offer has already accepted
-            // TODO: The Trade.State handling should be refactored to remove that unclear situation
-            if (tradeState.get() != Trade.State.DEPOSIT_CONFIRMED)
-                tradeState.set(trade.stateProperty().get());
 
             trade.faultProperty().addListener(faultChangeListener);
             fault.set(trade.faultProperty().get());
@@ -312,9 +304,11 @@ class PendingTradesModel extends UIModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateConfidence(TransactionConfidence confidence) {
+        log.debug("confidence " + confidence);
         if (confidence != null &&
                 confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING
-                && getTrade().getState() == Trade.State.DEPOSIT_PUBLISHED) {
+                && (getTrade().getState() == Trade.State.DEPOSIT_PUBLISHED ||
+                getTrade().getState() == Trade.State.OFFERER_ACCEPTED)) {
             // only set it once when actual state is DEPOSIT_PUBLISHED, and remove listener afterwards
             getTrade().setState(Trade.State.DEPOSIT_CONFIRMED);
             walletService.removeTxConfidenceListener(txConfidenceListener);

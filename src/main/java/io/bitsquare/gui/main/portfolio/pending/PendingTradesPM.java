@@ -22,6 +22,7 @@ import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
+import io.bitsquare.trade.Trade;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -240,14 +241,16 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         return btcAddressValidator;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateState() {
-        if (model.tradeState.get() != null) {
-            log.debug("tradeState " + model.tradeState.get());
-            switch (model.tradeState.get()) {
+        Trade.State tradeState = model.tradeState.get();
+        log.trace("tradeState " + tradeState);
+        if (tradeState != null) {
+            switch (tradeState) {
                 case DEPOSIT_PUBLISHED:
                     state.set(model.isOfferer() ? State.OFFERER_BUYER_WAIT_TX_CONF : State.TAKER_SELLER_WAIT_TX_CONF);
                     break;
@@ -266,7 +269,7 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
                     // TODO error states not implemented yet
                     break;
                 default:
-                    log.warn("unhandled state " + model.tradeState.get());
+                    log.warn("unhandled state " + tradeState);
                     break;
             }
         }
