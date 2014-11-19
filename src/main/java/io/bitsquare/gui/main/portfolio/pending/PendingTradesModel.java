@@ -139,7 +139,7 @@ class PendingTradesModel extends UIModel {
         super.deactivate();
 
         tradeManager.getPendingTrades().removeListener(mapChangeListener);
-        selectTrade(null);
+        cleanUpSelectedTrade();
     }
 
 
@@ -149,14 +149,7 @@ class PendingTradesModel extends UIModel {
 
     void selectTrade(PendingTradesListItem item) {
         // clean up previous selectedItem
-        if (selectedItem != null) {
-            Trade trade = getTrade();
-            trade.stateProperty().removeListener(stateChangeListener);
-            trade.faultProperty().removeListener(faultChangeListener);
-
-            if (txConfidenceListener != null)
-                walletService.removeTxConfidenceListener(txConfidenceListener);
-        }
+        cleanUpSelectedTrade();
 
         selectedItem = item;
 
@@ -177,7 +170,14 @@ class PendingTradesModel extends UIModel {
             updateConfidence(walletService.getConfidenceForTxId(txId.get()));
 
             trade.stateProperty().addListener(stateChangeListener);
-            tradeState.set(trade.stateProperty().get());
+
+            // It might be that we receive first the DEPOSIT_CONFIRMED (coming form bitcoin network)
+            // and then the OFFERER_ACCEPTED (coming from tomP2P network.
+            // So we don't allow to overwrite the already set DEPOSIT_CONFIRMED as that will only be possible if 
+            // the offer has already accepted
+            // TODO: The Trade.State handling should be refactored to remove that unclear situation
+            if (tradeState.get() != Trade.State.DEPOSIT_CONFIRMED)
+                tradeState.set(trade.stateProperty().get());
 
             trade.faultProperty().addListener(faultChangeListener);
             fault.set(trade.faultProperty().get());
@@ -320,6 +320,17 @@ class PendingTradesModel extends UIModel {
             walletService.removeTxConfidenceListener(txConfidenceListener);
             txConfidenceListener = null;
         }
+    }
+
+    private void cleanUpSelectedTrade() {
+        if (selectedItem != null) {
+            Trade trade = getTrade();
+            trade.stateProperty().removeListener(stateChangeListener);
+            trade.faultProperty().removeListener(faultChangeListener);
+        }
+
+        if (txConfidenceListener != null)
+            walletService.removeTxConfidenceListener(txConfidenceListener);
     }
 
     private void sortList() {

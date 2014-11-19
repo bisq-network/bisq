@@ -266,7 +266,7 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
                     // TODO error states not implemented yet
                     break;
                 default:
-                    log.warn("unhandled state " + state);
+                    log.warn("unhandled state " + model.tradeState.get());
                     break;
             }
         }
