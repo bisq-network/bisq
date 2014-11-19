@@ -31,6 +31,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 import java.util.function.Function;
 
@@ -138,9 +140,20 @@ public class Utilities {
         printElapsedTime("");
     }
 
+    public static void openURI(URI uri) throws IOException {
+        Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+        if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE))
+            desktop.browse(uri);
+        else
+            new ProcessBuilder("x-www-browser", uri.toURL().toString()).start();
+    }
 
-    public static void openURL(String url) throws Exception {
-        Desktop.getDesktop().browse(new URI(url));
+    public static void openWebPage(String target) throws URISyntaxException, IOException {
+        openURI(new URI(target));
+    }
+
+    public static void openURL(URL url) throws URISyntaxException, IOException {
+        openURI(url.toURI());
     }
 
 
