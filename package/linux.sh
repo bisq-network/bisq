@@ -6,7 +6,7 @@ version=$1
 jar=$2
 mainClass=$3
 
-javapackager -deploy \
+$JAVA_HOME/bin/javapackager -deploy \
     -BappVersion=$version \
     -Bcategory=Finance \
     -BlicenseType=GPLv3 \
