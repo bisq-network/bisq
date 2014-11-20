@@ -6,7 +6,7 @@ version=$1
 jar=$2
 mainClass=$3
 
-javapackager \
+$JAVA_HOME/bin/javapackager \
     -deploy \
     -BappVersion=$version \
     -Bmac.CFBundleIdentifier=bitsquare \
