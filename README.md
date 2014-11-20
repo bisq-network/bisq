@@ -6,6 +6,7 @@
 
 What is Bitsquare?
 ------------------
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/bitsquare/bitsquare?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Bitsquare is a cross-platform desktop application that allows users to trade fiat money (dollars, euros, etc) for bitcoin without relying on centralized exchanges such as Coinbase, Bitstamp or (the former) Mt. Gox.
 
