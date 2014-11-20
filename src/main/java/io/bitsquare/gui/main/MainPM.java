@@ -87,13 +87,13 @@ class MainPM extends PresentationModel<MainModel> {
         numPendingTrades.bind(model.numPendingTrades);
 
         model.bootstrapState.addListener((ov, oldValue, newValue) -> {
-                    if (newValue == BootstrapState.DISCOVERY_NO_NAT_SUCCEEDED ||
+                    if (newValue == BootstrapState.DISCOVERY_DIRECT_SUCCEEDED ||
                             newValue == BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED ||
                             newValue == BootstrapState.RELAY_SUCCEEDED) {
                         bootstrapState.set("Successfully connected to P2P network: " + newValue.getMessage());
                         bootstrapProgress.set(1);
 
-                        if (newValue == BootstrapState.DISCOVERY_NO_NAT_SUCCEEDED)
+                        if (newValue == BootstrapState.DISCOVERY_DIRECT_SUCCEEDED)
                             bootstrapIconId.set("image-connection-direct");
                         else if (newValue == BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED)
                             bootstrapIconId.set("image-connection-nat");

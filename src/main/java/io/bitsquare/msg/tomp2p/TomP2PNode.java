@@ -377,7 +377,7 @@ public class TomP2PNode implements ClientNode {
     public ConnectionType getConnectionType() {
         BootstrapState bootstrapState = bootstrappedPeerFactory.getBootstrapState().get();
         switch (bootstrapState) {
-            case DISCOVERY_NO_NAT_SUCCEEDED:
+            case DISCOVERY_DIRECT_SUCCEEDED:
                 return ConnectionType.DIRECT;
             case DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED:
                 return ConnectionType.MANUAL_PORT_FORWARDING;

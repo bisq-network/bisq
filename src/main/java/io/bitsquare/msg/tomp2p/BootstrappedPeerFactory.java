@@ -80,6 +80,7 @@ class BootstrappedPeerFactory {
     private final SettableFuture<PeerDHT> settableFuture = SettableFuture.create();
 
     private final ObjectProperty<BootstrapState> bootstrapState = new SimpleObjectProperty<>();
+
     private Peer peer;
     private PeerDHT peerDHT;
 
@@ -135,7 +136,6 @@ class BootstrappedPeerFactory {
             }
 
             peerDHT = new PeerBuilderDHT(peer).start();
-            setState(BootstrapState.PEER_CREATED, "We created a peerDHT.");
 
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
                 @Override
@@ -197,7 +197,7 @@ class BootstrappedPeerFactory {
                         bootstrap();
                     }
                     else {
-                        setState(BootstrapState.DISCOVERY_NO_NAT_SUCCEEDED,
+                        setState(BootstrapState.DISCOVERY_DIRECT_SUCCEEDED,
                                 "We are not behind a NAT and visible to other peers.");
                         bootstrap();
                     }
@@ -265,12 +265,10 @@ class BootstrappedPeerFactory {
 
     private void bootstrap() {
         FutureBootstrap futureBootstrap = peer.bootstrap().peerAddress(getBootstrapAddress()).start();
-        setState(BootstrapState.BOOT_STRAP_STARTED, "Bootstrap started.");
         futureBootstrap.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 if (futureBootstrap.isSuccess()) {
-                    setState(BootstrapState.BOOT_STRAP_SUCCEEDED, "Bootstrap successful.");
                     settableFuture.set(peerDHT);
                 }
                 else {
