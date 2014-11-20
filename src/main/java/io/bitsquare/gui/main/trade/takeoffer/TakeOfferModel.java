@@ -162,6 +162,7 @@ class TakeOfferModel extends UIModel {
             log.debug("trade state = " + newValue);
             switch (newValue) {
                 case DEPOSIT_PUBLISHED:
+                case DEPOSIT_CONFIRMED:
                     transactionId.set(trade.getDepositTx().getHashAsString());
                     requestTakeOfferSuccess.set(true);
                     break;
