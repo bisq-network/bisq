@@ -60,6 +60,8 @@ dependencies {
     testCompile 'org.springframework:spring-test:4.1.1.RELEASE'
 }
 
+shadowJar.classifier = 'app'
+
 task packageNative(type: Exec, dependsOn: shadowJar) {
     if (Os.isFamily(Os.FAMILY_MAC))
         executable "${project.rootDir}/package/mac.sh"
@@ -72,8 +74,6 @@ task packageNative(type: Exec, dependsOn: shadowJar) {
 
     args project.version, shadowJar.archivePath, mainClassName
 }
-
-shadowJar.classifier = 'app'
 
 task appJar(dependsOn: shadowJar) {
     group = "shadow"
