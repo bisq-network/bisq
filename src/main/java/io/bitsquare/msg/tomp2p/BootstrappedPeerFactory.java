@@ -19,7 +19,6 @@ package io.bitsquare.msg.tomp2p;
 
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.Node;
-import io.bitsquare.persistence.Persistence;
 
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -54,7 +53,6 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMapChangeListener;
 import net.tomp2p.peers.PeerStatistic;
-import net.tomp2p.replication.IndirectReplication;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -78,7 +76,6 @@ class BootstrappedPeerFactory {
     private boolean useManualPortForwarding;
     private final Node bootstrapNode;
     private final String networkInterface;
-    private final Persistence persistence;
 
     private final SettableFuture<PeerDHT> settableFuture = SettableFuture.create();
 
@@ -92,12 +89,10 @@ class BootstrappedPeerFactory {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BootstrappedPeerFactory(Persistence persistence,
-                                   @Named(Node.PORT_KEY) int port,
+    public BootstrappedPeerFactory(@Named(Node.PORT_KEY) int port,
                                    @Named(USE_MANUAL_PORT_FORWARDING_KEY) boolean useManualPortForwarding,
                                    @Named(BOOTSTRAP_NODE_KEY) Node bootstrapNode,
                                    @Named(NETWORK_INTERFACE_KEY) String networkInterface) {
-        this.persistence = persistence;
         this.port = port;
         this.useManualPortForwarding = useManualPortForwarding;
         this.bootstrapNode = bootstrapNode;
@@ -120,8 +115,6 @@ class BootstrappedPeerFactory {
 
     public SettableFuture<PeerDHT> start() {
         try {
-            setState(BootstrapState.PEER_CREATION, "We create a P2P node.");
-
             Bindings bindings = new Bindings();
             if (!NETWORK_INTERFACE_UNSPECIFIED.equals(networkInterface))
                 bindings.addInterface(networkInterface);
@@ -132,19 +125,17 @@ class BootstrappedPeerFactory {
                         .bindings(bindings)
                         .tcpPortForwarding(port)
                         .udpPortForwarding(port)
-                        .behindFirewall()
                         .start();
             }
             else {
                 peer = new PeerBuilder(keyPair)
                         .ports(port)
                         .bindings(bindings)
-                        .behindFirewall()
                         .start();
             }
 
             peerDHT = new PeerBuilderDHT(peer).start();
-            new IndirectReplication(peerDHT).start();
+            setState(BootstrapState.PEER_CREATED, "We created a peerDHT.");
 
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
                 @Override
@@ -163,46 +154,10 @@ class BootstrappedPeerFactory {
                 }
             });
 
-            // We save last successful bootstrap method.
-            // Reset it to BootstrapState.DIRECT_SUCCESS after 5 start ups.
-            Object bootstrapCounterObject = persistence.read(this, "bootstrapCounter");
-            int bootstrapCounter = 0;
-            if (bootstrapCounterObject instanceof Integer)
-                bootstrapCounter = (int) bootstrapCounterObject + 1;
-
-            if (bootstrapCounter > 5) {
-                persistence.write(this, "lastSuccessfulBootstrap", BootstrapState.DIRECT_SUCCESS);
-                bootstrapCounter = 0;
-            }
-            persistence.write(this, "bootstrapCounter", bootstrapCounter);
-
-            BootstrapState lastSuccessfulBootstrap = BootstrapState.DIRECT_SUCCESS;
-            Object lastSuccessfulBootstrapObject = persistence.read(this, "lastSuccessfulBootstrap");
-            if (lastSuccessfulBootstrapObject instanceof BootstrapState)
-                lastSuccessfulBootstrap = (BootstrapState) lastSuccessfulBootstrapObject;
-            else
-                persistence.write(this, "lastSuccessfulBootstrap", lastSuccessfulBootstrap);
-
-            log.debug("lastSuccessfulBootstrap = " + lastSuccessfulBootstrap);
-
-            // just temporary always start with trying direct connection
-            lastSuccessfulBootstrap = BootstrapState.DIRECT_SUCCESS;
-
-            switch (lastSuccessfulBootstrap) {
-                // For the moment we don't support relay mode as it has too much problems
-               /* case RELAY_SUCCESS:
-                    bootstrapWithRelay();
-                    break;*/
-                case AUTO_PORT_FORWARDING_SUCCESS:
-                    tryPortForwarding();
-                    break;
-                case DIRECT_SUCCESS:
-                default:
-                    discover();
-                    break;
-            }
+            discoverExternalAddress();
         } catch (IOException e) {
-            handleError(BootstrapState.PEER_CREATION, "Cannot create peer with port: " + port + ". Exception: " + e);
+            handleError(BootstrapState.PEER_CREATION_FAILED, "Cannot create a peer with port: " +
+                    port + ". Exception: " + e);
         }
 
         return settableFuture;
@@ -213,101 +168,69 @@ class BootstrappedPeerFactory {
             peerDHT.shutdown();
     }
 
-    // 1. Attempt: Try to discover our outside visible address
-    private void discover() {
-        setState(BootstrapState.DIRECT_INIT, "We are starting discovery against a bootstrap node.");
+    // We need to discover our external address and test if we are reachable for other nodes
+    // We know our internal address from a discovery of our local network interfaces
+    // We start a discover process with our bootstrap node. 
+    // There are 4 cases:
+    // 1. If we are not behind a NAT we get reported back the same address as our internal.
+    // 2. If we are behind a NAT and manual port forwarding is setup we get reported our external address from the 
+    // bootstrap node and the bootstrap node could ping us so we know we are reachable.
+    // 3. If we are behind a NAT and the ping probes fails we need to setup port forwarding with UPnP or NAT-PMP.
+    // If that is successfully setup we need to try again a discover so we find out our external address and have 
+    // tested successfully our reachability (the additional discover is done internally from startSetupPortforwarding)
+    // 4. If the port forwarding failed we can try as last resort to open a permanent TCP connection to the 
+    // bootstrap node and use that peer as relay (currently not supported as its too unstable)
+
+    private void discoverExternalAddress() {
         FutureDiscover futureDiscover = peer.discover().peerAddress(getBootstrapAddress()).start();
-        futureDiscover.addListener(new BaseFutureListener<BaseFuture>() {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception {
-                if (future.isSuccess()) {
-
-                    // We are well connected so we can offer our capabilities as relay node for other peers
-                    new PeerBuilderNAT(peer).start();
-                    
-                    if (useManualPortForwarding) {
-                        setState(BootstrapState.MANUAL_PORT_FORWARDING_SUCCESS,
-                                "We use manual port forwarding and are visible to other peers.");
-                        bootstrap(BootstrapState.MANUAL_PORT_FORWARDING_SUCCESS);
-                    }
-                    else {
-                        setState(BootstrapState.DIRECT_SUCCESS,
-                                "We are directly connected and visible to other peers.");
-                        bootstrap(BootstrapState.DIRECT_SUCCESS);
-                    }
-                }
-                else {
-                    setState(BootstrapState.DIRECT_NOT_SUCCEEDED, "We are probably behind a NAT and not reachable to " +
-                            "other peers. We try to setup automatic port forwarding.");
-                    tryPortForwarding();
-                }
-            }
-
-            @Override
-            public void exceptionCaught(Throwable t) throws Exception {
-                handleError(BootstrapState.DIRECT_FAILED, "Exception at discover: " + t.getMessage());
-            }
-        });
-    }
-
-    // 2. Attempt: Try to set up port forwarding with UPNP and NAT-PMP
-    private void tryPortForwarding() {
-        setState(BootstrapState.AUTO_PORT_FORWARDING_INIT, "We are trying with automatic port forwarding.");
-        FutureDiscover futureDiscover = peer.discover().peerAddress(getBootstrapAddress()).start();
+        setState(BootstrapState.DISCOVERY_STARTED, "We are starting discovery against a bootstrap node.");
         PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
         FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
         futureNAT.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
-                if (future.isSuccess()) {
-                    setState(BootstrapState.AUTO_PORT_FORWARDING_SETUP_DONE, "Automatic port forwarding is setup. " +
-                            "We need to do a discover process again.");
-                    // we need a second discover process
-                    discoverAfterPortForwarding();
+                // If futureDiscover was successful we are directly connected (or manual port forwarding is set)
+                if (futureDiscover.isSuccess()) {
+                    if (useManualPortForwarding) {
+                        setState(BootstrapState.DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED,
+                                "We use manual port forwarding and are visible to other peers.");
+                        bootstrap();
+                    }
+                    else {
+                        setState(BootstrapState.DISCOVERY_NO_NAT_SUCCEEDED,
+                                "We are not behind a NAT and visible to other peers.");
+                        bootstrap();
+                    }
                 }
                 else {
-                    handleError(BootstrapState.AUTO_PORT_FORWARDING_FAILED, "Automatic port forwarding failed. " +
-                            "Fail reason: " + future.failedReason() +
-                            "\nCheck if UPnP is not enabled on your router. " +
-                            "\nYou can try also to setup manual port forwarding. " +
-                            "\nRelay mode is currently not supported but will follow later. ");
+                    setState(BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_STARTED,
+                            "We are probably behind a NAT and not reachable to other peers. " +
+                                    "We try to setup automatic port forwarding.");
+                    if (futureNAT.isSuccess()) {
+                        setState(BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED,
+                                "Discover with automatic port forwarding was successful.");
+                        bootstrap();
+                    }
+                    else {
+                        handleError(BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_FAILED, "Automatic port forwarding " +
+                                "failed. " +
+                                "Fail reason: " + future.failedReason() +
+                                "\nCheck if UPnP is not enabled on your router. " +
+                                "\nYou can try also to setup manual port forwarding. " +
+                                "\nRelay mode is currently not supported but will follow later. ");
 
-                    // For the moment we don't support relay mode as it has too much problems
+                        // For the moment we don't support relay mode as it has too much problems
                   /*  setState(BootstrapState.AUTO_PORT_FORWARDING_NOT_SUCCEEDED, "Port forwarding has failed. " +
                             "We try to use a relay as next step.");
                     bootstrapWithRelay();*/
+                    }
                 }
             }
 
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
-                handleError(BootstrapState.AUTO_PORT_FORWARDING_FAILED, "Exception at port forwarding: " + t
+                handleError(BootstrapState.DISCOVERY_FAILED, "Exception at discover visibility: " + t
                         .getMessage());
-            }
-        });
-    }
-
-    // Try to determine our outside visible address after port forwarding is setup
-    private void discoverAfterPortForwarding() {
-        FutureDiscover futureDiscover = peer.discover().peerAddress(getBootstrapAddress()).start();
-        futureDiscover.addListener(new BaseFutureListener<BaseFuture>() {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception {
-                if (future.isSuccess()) {
-                    setState(BootstrapState.AUTO_PORT_FORWARDING_SUCCESS, "Discover with automatic port forwarding " +
-                            "was successful.");
-                    bootstrap(BootstrapState.AUTO_PORT_FORWARDING_SUCCESS);
-                }
-                else {
-                    handleError(BootstrapState.AUTO_PORT_FORWARDING_FAILED, "Discover with automatic port forwarding " +
-                            "has failed " +
-                            futureDiscover.failedReason());
-                }
-            }
-
-            @Override
-            public void exceptionCaught(Throwable t) throws Exception {
-                handleError(BootstrapState.AUTO_PORT_FORWARDING_FAILED, "Exception at discover: " + t.getMessage());
             }
         });
     }
@@ -340,25 +263,25 @@ class BootstrappedPeerFactory {
         });
     }*/
 
-    private void bootstrap(BootstrapState state) {
+    private void bootstrap() {
         FutureBootstrap futureBootstrap = peer.bootstrap().peerAddress(getBootstrapAddress()).start();
+        setState(BootstrapState.BOOT_STRAP_STARTED, "Bootstrap started.");
         futureBootstrap.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 if (futureBootstrap.isSuccess()) {
-                    setState(state, "Bootstrap successful.");
-                    persistence.write(BootstrappedPeerFactory.this, "lastSuccessfulBootstrap", state);
+                    setState(BootstrapState.BOOT_STRAP_SUCCEEDED, "Bootstrap successful.");
                     settableFuture.set(peerDHT);
                 }
                 else {
-                    handleError(BootstrapState.DIRECT_NOT_SUCCEEDED, "Bootstrapping failed. " +
+                    handleError(BootstrapState.BOOT_STRAP_FAILED, "Bootstrapping failed. " +
                             futureBootstrap.failedReason());
                 }
             }
 
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
-                handleError(BootstrapState.DIRECT_FAILED, "Exception at bootstrap: " + t.getMessage());
+                handleError(BootstrapState.BOOT_STRAP_FAILED, "Exception at bootstrap: " + t.getMessage());
             }
         });
     }
@@ -399,7 +322,6 @@ class BootstrappedPeerFactory {
 
     private void handleError(BootstrapState state, String errorMessage) {
         setState(state, errorMessage, false);
-        persistence.write(this, "lastSuccessfulBootstrap", BootstrapState.DIRECT_SUCCESS);
         peerDHT.shutdown();
         settableFuture.setException(new Exception(errorMessage));
     }

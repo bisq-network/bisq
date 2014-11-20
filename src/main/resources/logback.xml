@@ -38,14 +38,19 @@
     <logger name="io.netty.channel" level="WARN"/>
     <logger name="io.netty.buffer" level="WARN"/>
 
-    <logger name="io.bitsquare.gui.ViewController" level="OFF"/>
-    <logger name="io.bitsquare.gui.CachedViewController" level="OFF"/>
-    <logger name="io.bitsquare.gui.util.Profiler" level="TRACE"/>
+    <logger name="io.bitsquare.gui.UIModel" level="WARN"/>
+    <logger name="io.bitsquare.gui.PresentationModel" level="WARN"/>
+    <logger name="io.bitsquare.gui.ViewController" level="WARN"/>
+    <logger name="io.bitsquare.gui.ViewCB" level="WARN"/>
+    <logger name="io.bitsquare.gui.CachedViewCB" level="WARN"/>
+    <logger name="io.bitsquare.gui.util.Profiler" level="WARN"/>
+    <logger name="io.bitsquare.persistence.Persistence" level="WARN"/>
 
 
     <logger name="org.bitcoinj.core.BitcoinSerializer" level="WARN"/>
     <logger name="org.bitcoinj.core.AbstractBlockChain" level="WARN"/>
     <logger name="org.bitcoinj.wallet.DeterministicKeyChain" level="WARN"/>
+    <logger name="io.bitsquare.btc.WalletService" level="WARN"/>
 
     <!--
     <logger name="org.bitcoinj.core.Wallet" level="OFF"/>

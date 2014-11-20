@@ -33,7 +33,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.tomp2p.connection.Bindings;
-import net.tomp2p.connection.ChannelClientConfiguration;
 import net.tomp2p.connection.StandardProtocolFamily;
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
@@ -54,8 +53,6 @@ import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
-import net.tomp2p.peers.PeerMap;
-import net.tomp2p.peers.PeerMapConfiguration;
 import net.tomp2p.relay.RelayConfig;
 import net.tomp2p.storage.Data;
 
@@ -529,14 +526,19 @@ public class TomP2PTests {
     private Peer bootstrapDirectConnection(int clientPort) {
         Peer peer = null;
         try {
-            Number160 peerId = Number160.createHash(UUID.randomUUID().toString());
+          /*  Number160 peerId = Number160.createHash(UUID.randomUUID().toString());
             PeerMapConfiguration pmc = new PeerMapConfiguration(peerId).peerNoVerification();
             PeerMap pm = new PeerMap(pmc);
             ChannelClientConfiguration cc = PeerBuilder.createDefaultChannelClientConfiguration();
             cc.maxPermitsTCP(100);
             cc.maxPermitsUDP(100);
             peer = new PeerBuilder(peerId).bindings(getBindings()).channelClientConfiguration(cc).peerMap(pm)
+                    .ports(clientPort).start();*/
+
+            Number160 peerId = Number160.createHash(UUID.randomUUID().toString());
+            peer = new PeerBuilder(peerId).bindings(getBindings())
                     .ports(clientPort).start();
+
             FutureDiscover futureDiscover = peer.discover().peerAddress(BOOTSTRAP_NODE_ADDRESS).start();
             futureDiscover.awaitUninterruptibly();
             if (futureDiscover.isSuccess()) {

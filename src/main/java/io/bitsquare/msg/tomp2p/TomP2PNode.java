@@ -53,7 +53,6 @@ import net.tomp2p.futures.BaseFutureListener;
 import net.tomp2p.futures.FutureDirect;
 import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
-import net.tomp2p.peers.PeerSocketAddress;
 import net.tomp2p.storage.Data;
 import net.tomp2p.utils.Utils;
 
@@ -378,13 +377,13 @@ public class TomP2PNode implements ClientNode {
     public ConnectionType getConnectionType() {
         BootstrapState bootstrapState = bootstrappedPeerFactory.getBootstrapState().get();
         switch (bootstrapState) {
-            case DIRECT_SUCCESS:
+            case DISCOVERY_NO_NAT_SUCCEEDED:
                 return ConnectionType.DIRECT;
-            case MANUAL_PORT_FORWARDING_SUCCESS:
+            case DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED:
                 return ConnectionType.MANUAL_PORT_FORWARDING;
-            case AUTO_PORT_FORWARDING_SUCCESS:
+            case DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED:
                 return ConnectionType.AUTO_PORT_FORWARDING;
-            case RELAY_SUCCESS:
+            case RELAY_SUCCEEDED:
                 return ConnectionType.RELAY;
             default:
                 throw new BitsquareException("Invalid bootstrap state: %s", bootstrapState);
@@ -393,11 +392,11 @@ public class TomP2PNode implements ClientNode {
 
     @Override
     public Node getAddress() {
-        PeerSocketAddress socketAddress = peerDHT.peerAddress().peerSocketAddress();
+        PeerAddress peerAddress = peerDHT.peerBean().serverPeerAddress();
         return Node.at(
                 peerDHT.peerID().toString(),
-                socketAddress.inetAddress().toString(),
-                socketAddress.tcpPort());
+                peerAddress.inetAddress().getHostAddress(),
+                peerAddress.peerSocketAddress().tcpPort());
     }
 
     @Override

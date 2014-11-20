@@ -20,7 +20,6 @@ package io.bitsquare.app.cli;
 import io.bitsquare.network.Node;
 
 import net.tomp2p.dht.PeerBuilderDHT;
-import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.nat.PeerBuilderNAT;
 import net.tomp2p.p2p.Peer;
 import net.tomp2p.p2p.PeerBuilder;
@@ -28,7 +27,6 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMapChangeListener;
 import net.tomp2p.peers.PeerStatistic;
-import net.tomp2p.replication.IndirectReplication;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,39 +52,41 @@ public class BootstrapNode {
         try {
             Number160 peerId = Number160.createHash(name);
             peer = new PeerBuilder(peerId).ports(port).start();
-           /* peer.objectDataReply((sender, request) -> {
+            /*peer.objectDataReply((sender, request) -> {
                 log.trace("received request: " + request.toString());
                 return "pong";
             });*/
 
-            PeerDHT peerDHT = new PeerBuilderDHT(peer).start();
+            new PeerBuilderDHT(peer).start();
             new PeerBuilderNAT(peer).start();
-            new IndirectReplication(peerDHT).start();
 
             peer.peerBean().peerMap().addPeerMapChangeListener(new PeerMapChangeListener() {
                 @Override
                 public void peerInserted(PeerAddress peerAddress, boolean verified) {
-                    log.info("peerInserted: " + peerAddress);
+                    log.debug("Peer inserted: peerAddress=" + peerAddress + ", verified=" + verified);
                 }
 
                 @Override
-                public void peerRemoved(PeerAddress peerAddress, PeerStatistic storedPeerAddress) {
-                    log.info("peerRemoved: " + peerAddress);
+                public void peerRemoved(PeerAddress peerAddress, PeerStatistic peerStatistics) {
+                    log.debug("Peer removed: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
                 }
 
                 @Override
-                public void peerUpdated(PeerAddress peerAddress, PeerStatistic storedPeerAddress) {
+                public void peerUpdated(PeerAddress peerAddress, PeerStatistic peerStatistics) {
+                    // log.debug("Peer updated: peerAddress=" + peerAddress + ", peerStatistics=" + peerStatistics);
                 }
             });
 
             log.info("Bootstrap node started with name " + name + " and port " + port);
             new Thread(() -> {
                 while (running) {
+                    log.info("List of all peers online ----------------------------");
                     for (PeerAddress peerAddress : peer.peerBean().peerMap().all()) {
-                        log.info("Peer online: " + peerAddress);
+                        log.info(peerAddress.toString());
                     }
+                    log.info("-----------------------------------------------------");
                     try {
-                        Thread.sleep(60000);
+                        Thread.sleep(10000);
                     } catch (InterruptedException e) {
                         return;
                     }

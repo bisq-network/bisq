@@ -87,22 +87,22 @@ class MainPM extends PresentationModel<MainModel> {
         numPendingTrades.bind(model.numPendingTrades);
 
         model.bootstrapState.addListener((ov, oldValue, newValue) -> {
-                    if (newValue == BootstrapState.DIRECT_SUCCESS ||
-                            newValue == BootstrapState.AUTO_PORT_FORWARDING_SUCCESS ||
-                            newValue == BootstrapState.RELAY_SUCCESS) {
+                    if (newValue == BootstrapState.DISCOVERY_NO_NAT_SUCCEEDED ||
+                            newValue == BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED ||
+                            newValue == BootstrapState.RELAY_SUCCEEDED) {
                         bootstrapState.set("Successfully connected to P2P network: " + newValue.getMessage());
                         bootstrapProgress.set(1);
 
-                        if (newValue == BootstrapState.DIRECT_SUCCESS)
+                        if (newValue == BootstrapState.DISCOVERY_NO_NAT_SUCCEEDED)
                             bootstrapIconId.set("image-connection-direct");
-                        else if (newValue == BootstrapState.AUTO_PORT_FORWARDING_SUCCESS)
+                        else if (newValue == BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED)
                             bootstrapIconId.set("image-connection-nat");
-                        else if (newValue == BootstrapState.RELAY_SUCCESS)
+                        else if (newValue == BootstrapState.RELAY_SUCCEEDED)
                             bootstrapIconId.set("image-connection-relay");
                     }
                     else if (newValue == BootstrapState.PEER_CREATION_FAILED ||
-                            newValue == BootstrapState.DIRECT_FAILED ||
-                            newValue == BootstrapState.AUTO_PORT_FORWARDING_FAILED ||
+                            newValue == BootstrapState.DISCOVERY_FAILED ||
+                            newValue == BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_FAILED ||
                             newValue == BootstrapState.RELAY_FAILED) {
 
                         bootstrapErrorMsg.set(newValue.getMessage());
