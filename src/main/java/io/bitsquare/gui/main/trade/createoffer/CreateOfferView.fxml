@@ -151,7 +151,7 @@
             </HBox>
             <TextField fx:id="totalToPayTextField" promptText="%createOffer.fundsBox.totalsNeeded.prompt"
                        GridPane.columnIndex="1" GridPane.rowIndex="4"
-                       mouseTransparent="true" editable="false" focusTraversable="false" visible="false">
+                       editable="false" focusTraversable="false" visible="false">
                 <GridPane.margin>
                     <Insets top="10.0"/>
                 </GridPane.margin>
