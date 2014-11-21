@@ -127,8 +127,10 @@ public class TomP2PNode implements ClientNode {
             public void onSuccess(@Nullable PeerDHT peerDHT) {
                 if (peerDHT != null) {
                     TomP2PNode.this.peerDHT = peerDHT;
+                    setupTimerForIPCheck();
+                    setupReplyHandler();
                     try {
-                        setup();
+                        storeAddress();
                     } catch (NetworkException e) {
                         Platform.runLater(() -> bootstrapListener.onFailed(e));
                     }
@@ -147,12 +149,6 @@ public class TomP2PNode implements ClientNode {
                 Platform.runLater(() -> bootstrapListener.onFailed(t));
             }
         });
-    }
-
-    private void setup() throws NetworkException {
-        setupTimerForIPCheck();
-        setupReplyHandler();
-        storeAddress();
     }
 
     public void shutDown() {

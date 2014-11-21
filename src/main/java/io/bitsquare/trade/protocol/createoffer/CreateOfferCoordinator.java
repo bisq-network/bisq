@@ -85,12 +85,7 @@ public class CreateOfferCoordinator {
                                 new Exception("Offer fee payment failed. Transaction = null."));
                         return;
                     }
-
-                    try {
-                        offerRepository.addOffer(offer, () -> resultHandler.onResult(transaction), faultHandler);
-                    } catch (Exception e) {
-                        faultHandler.handleFault("Offer fee payment failed.", e);
-                    }
+                    offerRepository.addOffer(offer, () -> resultHandler.onResult(transaction), faultHandler);
                 }
 
                 @Override
