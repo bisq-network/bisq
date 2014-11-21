@@ -161,6 +161,7 @@ class TakeOfferModel extends UIModel {
         trade.stateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("trade state = " + newValue);
             switch (newValue) {
+                // TODO Check why DEPOSIT_CONFIRMED can happen, refactor state handling
                 case DEPOSIT_PUBLISHED:
                 case DEPOSIT_CONFIRMED:
                     transactionId.set(trade.getDepositTx().getHashAsString());
