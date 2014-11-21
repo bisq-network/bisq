@@ -23,6 +23,7 @@ import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.ClientNode;
 import io.bitsquare.network.ConnectionType;
+import io.bitsquare.network.NetworkException;
 import io.bitsquare.network.Node;
 import io.bitsquare.network.tomp2p.TomP2PPeer;
 
@@ -126,7 +127,11 @@ public class TomP2PNode implements ClientNode {
             public void onSuccess(@Nullable PeerDHT peerDHT) {
                 if (peerDHT != null) {
                     TomP2PNode.this.peerDHT = peerDHT;
-                    setup();
+                    try {
+                        setup();
+                    } catch (NetworkException e) {
+                        Platform.runLater(() -> bootstrapListener.onFailed(e));
+                    }
                     Platform.runLater(bootstrapListener::onCompleted);
                 }
                 else {
@@ -144,10 +149,10 @@ public class TomP2PNode implements ClientNode {
         });
     }
 
-    private void setup() {
+    private void setup() throws NetworkException {
         setupTimerForIPCheck();
         setupReplyHandler();
-        storeAddressAfterBootstrap();
+        storeAddress();
     }
 
     public void shutDown() {
@@ -322,27 +327,20 @@ public class TomP2PNode implements ClientNode {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                if (storedPeerAddress != null) {
-                    if (peerDHT != null && !storedPeerAddress.equals(peerDHT.peerAddress())) {
-                        try {
-                            storeAddress();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            log.error(e.toString());
-                        }
+                if (storedPeerAddress != null && peerDHT != null
+                        && !storedPeerAddress.equals(peerDHT.peerAddress()))
+                    try {
+                        storeAddress();
+                    } catch (NetworkException e) {
+                        e.printStackTrace();
                     }
-                }
-                else {
-                    log.error("storedPeerAddress is null. That should not happen. " +
-                            "Seems there is a problem with DHT storage.");
-                }
             }
         }, checkIfIPChangedPeriod, checkIfIPChangedPeriod);
     }
 
-    private void storeAddressAfterBootstrap() {
+    private void storeAddress() throws NetworkException {
         try {
-            FuturePut futurePut = storeAddress();
+            FuturePut futurePut = saveAddress();
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
@@ -352,21 +350,25 @@ public class TomP2PNode implements ClientNode {
                     }
                     else {
                         log.error("storedPeerAddress not successful");
+                        throw new NetworkException("Storing address was not successful. Reason: "
+                                + future.failedReason());
                     }
                 }
 
                 @Override
                 public void exceptionCaught(Throwable t) throws Exception {
-                    log.error("Error at storedPeerAddress " + t.toString());
+                    log.error("Exception at storedPeerAddress " + t.toString());
+                    throw new NetworkException("Exception at storeAddress.", t);
                 }
             });
         } catch (IOException e) {
             e.printStackTrace();
-            log.error("Error at storePeerAddress " + e.toString());
+            log.error("Exception at storePeerAddress " + e.toString());
+            throw new NetworkException("Exception at storeAddress.", e);
         }
     }
 
-    private FuturePut storeAddress() throws IOException {
+    private FuturePut saveAddress() throws IOException {
         Number160 locationKey = Utils.makeSHAHash(keyPair.getPublic().getEncoded());
         Data data = new Data(new TomP2PPeer(peerDHT.peerAddress()));
         log.debug("storePeerAddress " + peerDHT.peerAddress().toString());
