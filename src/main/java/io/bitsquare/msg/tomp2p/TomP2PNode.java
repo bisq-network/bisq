@@ -19,7 +19,6 @@ package io.bitsquare.msg.tomp2p;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.msg.MessageBroker;
-import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.ClientNode;
 import io.bitsquare.network.ConnectionType;
@@ -43,8 +42,6 @@ import javax.annotation.Nullable;
 
 import javax.inject.Inject;
 
-import javafx.application.Platform;
-
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
 import net.tomp2p.dht.FutureRemove;
@@ -61,6 +58,10 @@ import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import rx.Observable;
+import rx.subjects.BehaviorSubject;
+import rx.subjects.Subject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -105,21 +106,17 @@ public class TomP2PNode implements ClientNode {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setMessageBroker(MessageBroker messageBroker) {
-        this.messageBroker = messageBroker;
-    }
-
-    public void setKeyPair(@NotNull KeyPair keyPair) {
-        this.keyPair = keyPair;
-        bootstrappedPeerFactory.setKeyPair(keyPair);
-    }
-
-    public void bootstrap(BootstrapListener bootstrapListener) {
+    public Observable<BootstrapState> bootstrap(MessageBroker messageBroker, KeyPair keyPair) {
         checkNotNull(keyPair, "keyPair must not be null.");
         checkNotNull(messageBroker, "messageBroker must not be null.");
 
-        bootstrappedPeerFactory.getBootstrapState().addListener((ov, oldValue, newValue) ->
-                bootstrapListener.onBootstrapStateChanged(newValue));
+        this.messageBroker = messageBroker;
+        this.keyPair = keyPair;
+        bootstrappedPeerFactory.setKeyPair(keyPair);
+
+        Subject<BootstrapState, BootstrapState> bootstrapState = BehaviorSubject.create();
+
+        bootstrappedPeerFactory.getBootstrapState().addListener((ov, oldValue, newValue) -> bootstrapState.onNext(newValue));
 
         SettableFuture<PeerDHT> bootstrapFuture = bootstrappedPeerFactory.start();
         Futures.addCallback(bootstrapFuture, new FutureCallback<PeerDHT>() {
@@ -132,23 +129,24 @@ public class TomP2PNode implements ClientNode {
                     try {
                         storeAddress();
                     } catch (NetworkException e) {
-                        Platform.runLater(() -> bootstrapListener.onFailed(e));
+                        bootstrapState.onError(e);
                     }
-                    Platform.runLater(bootstrapListener::onCompleted);
+                    bootstrapState.onCompleted();
                 }
                 else {
                     log.error("Error at bootstrap: peerDHT = null");
-                    Platform.runLater(() -> bootstrapListener.onFailed(
-                            new BitsquareException("Error at bootstrap: peerDHT = null")));
+                    bootstrapState.onError(new BitsquareException("Error at bootstrap: peerDHT = null"));
                 }
             }
 
             @Override
             public void onFailure(@NotNull Throwable t) {
                 log.error("Exception at bootstrap " + t.getMessage());
-                Platform.runLater(() -> bootstrapListener.onFailed(t));
+                bootstrapState.onError(t);
             }
         });
+
+        return bootstrapState.asObservable();
     }
 
     public void shutDown() {

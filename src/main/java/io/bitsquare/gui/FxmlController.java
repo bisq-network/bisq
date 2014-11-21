@@ -15,15 +15,30 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg.listeners;
+package io.bitsquare.gui;
 
-import io.bitsquare.network.BootstrapState;
+import java.net.URL;
 
-public interface BootstrapListener {
-    public void onCompleted();
+import java.util.ResourceBundle;
 
-    public void onFailed(Throwable throwable);
+import javafx.fxml.FXML;
+import javafx.scene.*;
 
-    public void onBootstrapStateChanged(BootstrapState state);
+public abstract class FxmlController<R extends Node, M extends Model> extends Controller<M> {
 
+    protected @FXML R root;
+
+    protected FxmlController(M model) {
+        super(model);
+    }
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        root.sceneProperty().addListener((ov, oldValue, newValue) -> {
+            // root node has been removed the scene
+            if (oldValue != null && newValue == null)
+                terminate();
+        });
+        super.initialize(url, rb);
+    }
 }

@@ -19,15 +19,17 @@ package io.bitsquare.msg;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.msg.listeners.ArbitratorListener;
-import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.msg.listeners.GetPeerAddressListener;
 import io.bitsquare.msg.listeners.IncomingMessageListener;
 import io.bitsquare.msg.listeners.OutgoingMessageListener;
+import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.Peer;
 
 import java.security.PublicKey;
 
 import java.util.Locale;
+
+import rx.Observable;
 
 public interface MessageService extends MessageBroker {
 
@@ -45,7 +47,7 @@ public interface MessageService extends MessageBroker {
 
     void getArbitrators(Locale defaultLanguageLocale);
 
-    void init(BootstrapListener bootstrapListener);
+    Observable<BootstrapState> init();
 
     void getPeerAddress(PublicKey messagePublicKey, GetPeerAddressListener getPeerAddressListener);
 }

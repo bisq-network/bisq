@@ -41,6 +41,7 @@ repositories {
 dependencies {
     compile 'org.bitcoinj:bitcoinj-core:0.12.2'
     compile 'net.tomp2p:tomp2p-all:5.0-Alpha.8f1cafb-SNAPSHOT'
+    compile 'io.reactivex:rxjava:1.0.0-rc.12'
     compile 'org.springframework:spring-core:4.1.1.RELEASE'
     compile 'net.sf.jopt-simple:jopt-simple:4.8'
     compile 'org.slf4j:slf4j-api:1.7.7'

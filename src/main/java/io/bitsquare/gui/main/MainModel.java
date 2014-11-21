@@ -18,11 +18,11 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.UIModel;
-import io.bitsquare.gui.util.Profiler;
+import io.bitsquare.gui.Model;
+import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.msg.MessageService;
-import io.bitsquare.msg.listeners.BootstrapListener;
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
@@ -40,170 +40,189 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
-import javafx.collections.ObservableList;
+import javafx.util.StringConverter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class MainModel extends UIModel {
+import rx.Observable;
+
+class MainModel implements Model {
     private static final Logger log = LoggerFactory.getLogger(MainModel.class);
+
+    final DoubleProperty networkSyncProgress = new SimpleDoubleProperty(-1);
+    final IntegerProperty numPendingTrades = new SimpleIntegerProperty(0);
+    final ObjectProperty<BootstrapState> bootstrapState = new SimpleObjectProperty<>();
+    final StringProperty bootstrapStateText = new SimpleStringProperty();
+    final ObjectProperty walletServiceException = new SimpleObjectProperty<Throwable>();
+
+    final StringProperty bankAccountsComboBoxPrompt = new SimpleStringProperty();
+    final BooleanProperty bankAccountsComboBoxDisable = new SimpleBooleanProperty();
+
+    final StringProperty blockchainSyncState = new SimpleStringProperty("Initializing");
+    final DoubleProperty blockchainSyncProgress = new SimpleDoubleProperty();
+    final BooleanProperty blockchainSyncIndicatorVisible = new SimpleBooleanProperty(true);
+    final StringProperty blockchainSyncIconId = new SimpleStringProperty();
+    final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
+
+    final DoubleProperty bootstrapProgress = new SimpleDoubleProperty(-1);
+    final BooleanProperty bootstrapFailed = new SimpleBooleanProperty();
+    final StringProperty bootstrapErrorMsg = new SimpleStringProperty();
+    final StringProperty bootstrapIconId = new SimpleStringProperty();
 
     private final User user;
     private final WalletService walletService;
     private final MessageService messageService;
     private final TradeManager tradeManager;
-    private final Persistence persistence;
+    private final BitcoinNetwork bitcoinNetwork;
+    private final BSFormatter formatter;
 
-    private boolean messageServiceInited;
-    private boolean walletServiceInited;
-    private boolean servicesInitialised;
-
-    final BooleanProperty backendReady = new SimpleBooleanProperty();
-    final DoubleProperty networkSyncProgress = new SimpleDoubleProperty(-1);
-    final IntegerProperty numPendingTrades = new SimpleIntegerProperty(0);
-    final ObjectProperty<BootstrapState> bootstrapState = new SimpleObjectProperty<>();
-    final ObjectProperty walletServiceException = new SimpleObjectProperty<Throwable>();
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MainModel(User user, WalletService walletService, MessageService messageService,
-                      TradeManager tradeManager, Persistence persistence) {
+    public MainModel(User user, WalletService walletService, MessageService messageService, TradeManager tradeManager,
+                     BitcoinNetwork bitcoinNetwork, BSFormatter formatter, Persistence persistence) {
         this.user = user;
         this.walletService = walletService;
         this.messageService = messageService;
         this.tradeManager = tradeManager;
-        this.persistence = persistence;
+        this.formatter = formatter;
+        this.bitcoinNetwork = bitcoinNetwork;
+
+        user.getCurrentBankAccount().addListener((observable, oldValue, newValue) -> persistence.write(user));
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize() {
-        super.initialize();
-    }
+        bootstrapState.addListener((ov, oldValue, newValue) -> {
+                    if (newValue == BootstrapState.DISCOVERY_DIRECT_SUCCEEDED ||
+                            newValue == BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED ||
+                            newValue == BootstrapState.RELAY_SUCCEEDED) {
+                        bootstrapStateText.set("Successfully connected to P2P network: " + newValue.getMessage());
+                        bootstrapProgress.set(1);
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
+                        if (newValue == BootstrapState.DISCOVERY_DIRECT_SUCCEEDED)
+                            bootstrapIconId.set("image-connection-direct");
+                        else if (newValue == BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED)
+                            bootstrapIconId.set("image-connection-nat");
+                        else if (newValue == BootstrapState.RELAY_SUCCEEDED)
+                            bootstrapIconId.set("image-connection-relay");
+                    }
+                    else if (newValue == BootstrapState.PEER_CREATION_FAILED ||
+                            newValue == BootstrapState.DISCOVERY_FAILED ||
+                            newValue == BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_FAILED ||
+                            newValue == BootstrapState.RELAY_FAILED) {
 
+                        bootstrapErrorMsg.set(newValue.getMessage());
+                        bootstrapStateText.set("Connection to P2P network failed.");
+                        bootstrapProgress.set(0);
+                        bootstrapFailed.set(true);
+                    }
+                    else {
+                        bootstrapStateText.set("Connecting to P2P network: " + newValue.getMessage());
+                    }
+                }
+        );
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void initBackend() {
-
-        // For testing with the bootstrap node we need the BootstrappedPeerFactory which gets started from
-        // messageService.init
-
-        messageService.init(new BootstrapListener() {
-            @Override
-            public void onCompleted() {
-                messageServiceInited = true;
-                if (walletServiceInited) onServicesInitialised();
-            }
-
-            @Override
-            public void onFailed(Throwable throwable) {
-                log.error(throwable.toString());
-            }
-
-            @Override
-            public void onBootstrapStateChanged(BootstrapState bootstrapState) {
-                MainModel.this.bootstrapState.set(bootstrapState);
-            }
+        walletServiceException.addListener((ov, oldValue, newValue) -> {
+            blockchainSyncProgress.set(0);
+            blockchainSyncIndicatorVisible.set(false);
+            blockchainSyncState.set("Startup failed.");
+            walletServiceErrorMsg.set(((Throwable) newValue).getMessage());
         });
 
-        Profiler.printMsgWithTime("MainModel.initServices");
+        networkSyncProgress.addListener((ov, oldValue, newValue) -> {
+            setNetworkSyncProgress((double) newValue);
 
-        WalletService.BlockchainDownloadListener blockchainDownloadListener = new WalletService
-                .BlockchainDownloadListener() {
+            if ((double) newValue >= 1)
+                blockchainSyncIconId.set("image-connection-synced");
+        });
+        setNetworkSyncProgress(networkSyncProgress.get());
+
+
+        user.getBankAccounts().addListener((ListChangeListener<BankAccount>) change -> {
+            bankAccountsComboBoxDisable.set(change.getList().isEmpty());
+            bankAccountsComboBoxPrompt.set(change.getList().isEmpty() ? "No accounts" : "");
+        });
+        bankAccountsComboBoxDisable.set(user.getBankAccounts().isEmpty());
+        bankAccountsComboBoxPrompt.set(user.getBankAccounts().isEmpty() ? "No accounts" : "");
+    }
+
+    public Observable<?> initBackend() {
+
+        walletService.getDownloadProgress().subscribe(
+                percentage -> Platform.runLater(() -> networkSyncProgress.set(percentage / 100.0)),
+                error -> Platform.runLater(() -> System.out.println("error = " + error)),
+                () -> Platform.runLater(() -> networkSyncProgress.set(1.0)));
+
+        Observable<BootstrapState> message = messageService.init();
+        message.subscribe(
+                state -> Platform.runLater(() -> bootstrapState.set(state)),
+                error -> log.error(error.toString()));
+
+        Observable<Object> wallet = walletService.initialize(Platform::runLater);
+        wallet.subscribe(
+                next -> { },
+                error -> Platform.runLater(() -> walletServiceException.set(error)),
+                () -> { });
+
+        Observable<?> backend = Observable.merge(message, wallet);
+        backend.subscribe(
+                next -> { },
+                error -> { },
+                () -> Platform.runLater(() -> {
+                    tradeManager.getPendingTrades().addListener(
+                            (MapChangeListener<String, Trade>) change -> updateNumPendingTrades());
+                    updateNumPendingTrades();
+                }));
+
+        return backend;
+    }
+
+
+    public User getUser() {
+        return user;
+    }
+
+    public TradeManager getTradeManager() {
+        return tradeManager;
+    }
+
+    public StringConverter<BankAccount> getBankAccountsConverter() {
+        return new StringConverter<BankAccount>() {
             @Override
-            public void progress(double percentage) {
-                networkSyncProgress.set(percentage / 100.0);
-
-                if (servicesInitialised && percentage >= 100.0)
-                    backendReady.set(true);
+            public String toString(BankAccount bankAccount) {
+                return bankAccount.getNameOfBank();
             }
 
             @Override
-            public void doneDownload() {
-                networkSyncProgress.set(1.0);
-
-                if (servicesInitialised)
-                    backendReady.set(true);
+            public BankAccount fromString(String s) {
+                return null;
             }
         };
-
-        WalletService.StartupListener startupListener = new WalletService.StartupListener() {
-            @Override
-            public void completed() {
-                walletServiceInited = true;
-                if (messageServiceInited)
-                    onServicesInitialised();
-            }
-
-            @Override
-            public void failed(final Throwable failure) {
-                walletServiceException.set(failure);
-            }
-        };
-
-        walletService.initialize(Platform::runLater, blockchainDownloadListener, startupListener);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void setCurrentBankAccount(BankAccount bankAccount) {
-        user.setCurrentBankAccount(bankAccount);
-        persistence.write(user);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    ObservableList<BankAccount> getBankAccounts() {
-        return user.getBankAccounts();
-    }
-
-    ObjectProperty<BankAccount> currentBankAccountProperty() {
-        return user.currentBankAccountProperty();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void onServicesInitialised() {
-        tradeManager.getPendingTrades().addListener((MapChangeListener<String,
-                Trade>) change -> updateNumPendingTrades());
-        updateNumPendingTrades();
-
-        servicesInitialised = true;
-
-        if (networkSyncProgress.get() >= 1.0)
-            backendReady.set(true);
-    }
 
     private void updateNumPendingTrades() {
         numPendingTrades.set(tradeManager.getPendingTrades().size());
     }
 
+    private void setNetworkSyncProgress(double value) {
+        blockchainSyncProgress.set(value);
+        if (value >= 1)
+            blockchainSyncState.set("Synchronization completed.");
+        else if (value > 0.0)
+            blockchainSyncState.set("Synchronizing blockchain: " + formatter.formatToPercent(value));
+        else
+            blockchainSyncState.set("Connecting to bitcoin network...");
+
+        blockchainSyncIndicatorVisible.set(value < 1);
+    }
+
+    public BitcoinNetwork getBitcoinNetwork() {
+        return bitcoinNetwork;
+    }
 }

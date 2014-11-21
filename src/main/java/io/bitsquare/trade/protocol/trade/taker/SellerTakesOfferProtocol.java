@@ -154,7 +154,7 @@ public class SellerTakesOfferProtocol {
 
         peersMessagePublicKey = offer.getMessagePublicKey();
 
-        bankAccount = user.getCurrentBankAccount();
+        bankAccount = user.getCurrentBankAccount().get();
         accountId = user.getAccountId();
         messagePublicKey = user.getMessagePublicKey();
 

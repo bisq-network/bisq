@@ -40,7 +40,7 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
 
     protected T presentationModel;
     protected Initializable childController;
-    protected ViewCB<? extends PresentationModel> parent;
+    protected Initializable parent;
 
     @FXML protected Parent root;
 
@@ -88,7 +88,7 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
      * @param parent Controller who has created this.getClass().getSimpleName() instance (via
      *               navigateToView/FXMLLoader).
      */
-    public void setParent(ViewCB<? extends PresentationModel> parent) {
+    public void setParent(Initializable parent) {
         log.trace("Lifecycle: setParentController " + this.getClass().getSimpleName() + " / parent = " +
                 parent);
         this.parent = parent;

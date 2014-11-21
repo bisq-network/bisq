@@ -148,8 +148,8 @@ public class User implements Serializable {
         return bankAccounts;
     }
 
-    public BankAccount getCurrentBankAccount() {
-        return currentBankAccount.get();
+    public ObjectProperty<BankAccount> getCurrentBankAccount() {
+        return currentBankAccount;
     }
 
     public BankAccount getBankAccount(String bankAccountId) {

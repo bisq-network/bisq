@@ -19,7 +19,7 @@ package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.btc.BitcoinNetwork;
+import io.bitsquare.gui.FxmlController;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.ViewCB;
@@ -27,11 +27,6 @@ import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.util.Transitions;
-import io.bitsquare.trade.TradeManager;
-
-import java.net.URL;
-
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -50,7 +45,7 @@ import javafx.scene.text.*;
 import static io.bitsquare.gui.Navigation.Item.*;
 import static javafx.scene.layout.AnchorPane.*;
 
-public class MainViewCB extends ViewCB<MainPM> {
+public class MainViewCB extends FxmlController<Pane, MainModel> {
 
     private final ToggleGroup navButtons = new ToggleGroup();
 
@@ -58,33 +53,28 @@ public class MainViewCB extends ViewCB<MainPM> {
     private final Navigation navigation;
     private final OverlayManager overlayManager;
     private final Transitions transitions;
-    private final BitcoinNetwork bitcoinNetwork;
     private final String title;
 
     @Inject
-    public MainViewCB(MainPM presentationModel, ViewLoader viewLoader, Navigation navigation,
-                      OverlayManager overlayManager, TradeManager tradeManager, Transitions transitions,
-                      BitcoinNetwork bitcoinNetwork, @Named(TITLE_KEY) String title) {
-        super(presentationModel);
+    public MainViewCB(MainModel model, ViewLoader viewLoader, Navigation navigation, OverlayManager overlayManager,
+                      Transitions transitions, @Named(TITLE_KEY) String title) {
+        super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.overlayManager = overlayManager;
         this.transitions = transitions;
-        this.bitcoinNetwork = bitcoinNetwork;
         this.title = title;
 
-        tradeManager.featureNotImplementedWarningProperty().addListener((ov, oldValue, newValue) -> {
+        model.getTradeManager().featureNotImplementedWarningProperty().addListener((ov, oldValue, newValue) -> {
             if (oldValue == null && newValue != null) {
                 Popups.openWarningPopup(newValue);
-                tradeManager.setFeatureNotImplementedWarning(null);
+                model.getTradeManager().setFeatureNotImplementedWarning(null);
             }
         });
     }
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
+    public void doInitialize() {
         ToggleButton homeButton = new NavButton(HOME) {{
             setDisable(true); // during irc demo
         }};
@@ -151,24 +141,26 @@ public class MainViewCB extends ViewCB<MainPM> {
 
         VBox splashScreen = createSplashScreen();
 
-        ((Pane) root).getChildren().addAll(baseApplicationContainer, splashScreen);
+        root.getChildren().addAll(baseApplicationContainer, splashScreen);
 
-        presentationModel.backendReady.addListener((ov1, prev1, ready) -> {
-            if (!ready)
-                return;
+        Platform.runLater(
+                () -> model.initBackend().subscribe(
+                        next -> { },
+                        error -> { },
+                        () -> Platform.runLater(() -> {
+                                    bankAccountComboBoxHolder.getChildren().setAll(createBankAccountComboBox());
 
-            bankAccountComboBoxHolder.getChildren().setAll(createBankAccountComboBox());
+                                    applyPendingTradesInfoIcon(model.numPendingTrades.get(), portfolioButtonHolder);
+                                    model.numPendingTrades.addListener((ov2, prev2, numPendingTrades) ->
+                                            applyPendingTradesInfoIcon((int) numPendingTrades, portfolioButtonHolder));
 
-            applyPendingTradesInfoIcon(presentationModel.numPendingTrades.get(), portfolioButtonHolder);
-            presentationModel.numPendingTrades.addListener((ov2, prev2, numPendingTrades) ->
-                    applyPendingTradesInfoIcon((int) numPendingTrades, portfolioButtonHolder));
+                                    navigation.navigateToLastStoredItem();
 
-            navigation.navigateToLastStoredItem();
-
-            transitions.fadeOutAndRemove(splashScreen, 1500);
-        });
-
-        Platform.runLater(presentationModel::initBackend);
+                                    transitions.fadeOutAndRemove(splashScreen, 1500);
+                                }
+                        )
+                )
+        );
     }
 
     private VBox createSplashScreen() {
@@ -181,8 +173,8 @@ public class MainViewCB extends ViewCB<MainPM> {
         logo.setId("image-splash-logo");
 
         Label blockchainSyncLabel = new Label();
-        blockchainSyncLabel.textProperty().bind(presentationModel.blockchainSyncState);
-        presentationModel.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
+        blockchainSyncLabel.textProperty().bind(model.blockchainSyncState);
+        model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
             blockchainSyncLabel.setId("splash-error-state-msg");
             Popups.openErrorPopup("Error", "An error occurred at startup. \n\nError message:\n" +
                     newValue);
@@ -190,13 +182,13 @@ public class MainViewCB extends ViewCB<MainPM> {
 
         ProgressBar blockchainSyncIndicator = new ProgressBar(-1);
         blockchainSyncIndicator.setPrefWidth(120);
-        blockchainSyncIndicator.progressProperty().bind(presentationModel.blockchainSyncProgress);
+        blockchainSyncIndicator.progressProperty().bind(model.blockchainSyncProgress);
 
         ImageView blockchainSyncIcon = new ImageView();
         blockchainSyncIcon.setVisible(false);
         blockchainSyncIcon.setManaged(false);
 
-        presentationModel.blockchainSyncIconId.addListener((ov, oldValue, newValue) -> {
+        model.blockchainSyncIconId.addListener((ov, oldValue, newValue) -> {
             blockchainSyncIcon.setId(newValue);
             blockchainSyncIcon.setVisible(true);
             blockchainSyncIcon.setManaged(true);
@@ -206,7 +198,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         });
 
         Label bitcoinNetworkLabel = new Label();
-        bitcoinNetworkLabel.setText(bitcoinNetwork.toString());
+        bitcoinNetworkLabel.setText(model.getBitcoinNetwork().toString());
         bitcoinNetworkLabel.setId("splash-bitcoin-network-label");
 
         HBox blockchainSyncBox = new HBox();
@@ -221,19 +213,19 @@ public class MainViewCB extends ViewCB<MainPM> {
         bootstrapStateLabel.setWrapText(true);
         bootstrapStateLabel.setMaxWidth(500);
         bootstrapStateLabel.setTextAlignment(TextAlignment.CENTER);
-        bootstrapStateLabel.textProperty().bind(presentationModel.bootstrapState);
+        bootstrapStateLabel.textProperty().bind(model.bootstrapStateText);
 
         ProgressIndicator bootstrapIndicator = new ProgressIndicator();
         bootstrapIndicator.setMaxSize(24, 24);
-        bootstrapIndicator.progressProperty().bind(presentationModel.bootstrapProgress);
+        bootstrapIndicator.progressProperty().bind(model.bootstrapProgress);
 
-        presentationModel.bootstrapFailed.addListener((ov, oldValue, newValue) -> {
+        model.bootstrapFailed.addListener((ov, oldValue, newValue) -> {
             if (newValue) {
                 bootstrapStateLabel.setId("splash-error-state-msg");
                 bootstrapIndicator.setVisible(false);
 
                 Popups.openErrorPopup("Error", "Cannot connect to P2P network. \n\nError message:\n" +
-                        presentationModel.bootstrapErrorMsg.get());
+                        model.bootstrapErrorMsg.get());
             }
         });
 
@@ -241,7 +233,7 @@ public class MainViewCB extends ViewCB<MainPM> {
         bootstrapIcon.setVisible(false);
         bootstrapIcon.setManaged(false);
 
-        presentationModel.bootstrapIconId.addListener((ov, oldValue, newValue) -> {
+        model.bootstrapIconId.addListener((ov, oldValue, newValue) -> {
             bootstrapIcon.setId(newValue);
             bootstrapIcon.setVisible(true);
             bootstrapIcon.setManaged(true);
@@ -262,21 +254,21 @@ public class MainViewCB extends ViewCB<MainPM> {
     }
 
     private VBox createBankAccountComboBox() {
-        final ComboBox<BankAccount> comboBox = new ComboBox<>(presentationModel.getBankAccounts());
+        final ComboBox<BankAccount> comboBox = new ComboBox<>(model.getUser().getBankAccounts());
         comboBox.setLayoutY(12);
         comboBox.setVisibleRowCount(5);
-        comboBox.setConverter(presentationModel.getBankAccountsConverter());
+        comboBox.setConverter(model.getBankAccountsConverter());
 
         comboBox.valueProperty().addListener((ov, oldValue, newValue) ->
-                presentationModel.setCurrentBankAccount(newValue));
+                model.getUser().setCurrentBankAccount(newValue));
 
-        comboBox.disableProperty().bind(presentationModel.bankAccountsComboBoxDisable);
-        comboBox.promptTextProperty().bind(presentationModel.bankAccountsComboBoxPrompt);
+        comboBox.disableProperty().bind(model.bankAccountsComboBoxDisable);
+        comboBox.promptTextProperty().bind(model.bankAccountsComboBoxPrompt);
 
-        presentationModel.currentBankAccountProperty().addListener((ov, oldValue, newValue) ->
+        model.getUser().currentBankAccountProperty().addListener((ov, oldValue, newValue) ->
                 comboBox.getSelectionModel().select(newValue));
 
-        comboBox.getSelectionModel().select(presentationModel.currentBankAccountProperty().get());
+        comboBox.getSelectionModel().select(model.getUser().currentBankAccountProperty().get());
 
         final Label titleLabel = new Label("Bank account");
         titleLabel.setMouseTransparent(true);
