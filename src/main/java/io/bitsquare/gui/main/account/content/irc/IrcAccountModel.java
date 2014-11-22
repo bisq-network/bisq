@@ -51,11 +51,7 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class IrcAccountModel extends UIModel {
-    private static final Logger log = LoggerFactory.getLogger(IrcAccountModel.class);
 
     private final User user;
     private final AccountSettings accountSettings;

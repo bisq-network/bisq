@@ -30,11 +30,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class PreferencesModel extends UIModel {
-    private static final Logger log = LoggerFactory.getLogger(PreferencesModel.class);
 
     private final Preferences preferences;
 

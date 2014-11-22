@@ -43,11 +43,7 @@ import java.util.Locale;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class RestrictionsModel extends UIModel {
-    private static final Logger log = LoggerFactory.getLogger(RestrictionsModel.class);
 
     private final User user;
     private final AccountSettings accountSettings;

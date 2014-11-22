@@ -24,11 +24,7 @@ import com.google.inject.Inject;
 
 import javafx.collections.ObservableList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class OffersPM extends PresentationModel<OffersModel> {
-    private static final Logger log = LoggerFactory.getLogger(OffersPM.class);
 
     private final BSFormatter formatter;
 

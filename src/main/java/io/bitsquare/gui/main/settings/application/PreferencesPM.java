@@ -25,12 +25,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class PreferencesPM extends PresentationModel<PreferencesModel> {
-    private static final Logger log = LoggerFactory.getLogger(PreferencesPM.class);
-
 
     @Inject
     PreferencesPM(PreferencesModel model) {

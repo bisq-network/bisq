@@ -21,12 +21,7 @@ import io.bitsquare.gui.PresentationModel;
 
 import com.google.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class AccountPM extends PresentationModel<AccountModel> {
-    private static final Logger log = LoggerFactory.getLogger(AccountPM.class);
-
 
     @Inject
     private AccountPM(AccountModel model) {

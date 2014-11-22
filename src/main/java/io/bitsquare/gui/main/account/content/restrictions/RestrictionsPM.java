@@ -30,11 +30,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class RestrictionsPM extends PresentationModel<RestrictionsModel> {
-    private static final Logger log = LoggerFactory.getLogger(RestrictionsPM.class);
 
     final BooleanProperty doneButtonDisable = new SimpleBooleanProperty(true);
 

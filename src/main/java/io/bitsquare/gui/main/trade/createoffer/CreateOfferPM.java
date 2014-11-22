@@ -41,13 +41,9 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 class CreateOfferPM extends PresentationModel<CreateOfferModel> {
-    private static final Logger log = LoggerFactory.getLogger(CreateOfferPM.class);
 
     private final BtcValidator btcValidator;
     private final BSFormatter formatter;

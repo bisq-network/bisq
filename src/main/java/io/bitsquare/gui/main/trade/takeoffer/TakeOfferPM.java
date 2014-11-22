@@ -38,13 +38,9 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 class TakeOfferPM extends PresentationModel<TakeOfferModel> {
-    private static final Logger log = LoggerFactory.getLogger(TakeOfferPM.class);
 
     private String offerFee;
     private String networkFee;

@@ -37,11 +37,7 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.util.StringConverter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class IrcAccountPm extends PresentationModel<IrcAccountModel> {
-    private static final Logger log = LoggerFactory.getLogger(IrcAccountPm.class);
 
     private final InputValidator nickNameValidator;
 

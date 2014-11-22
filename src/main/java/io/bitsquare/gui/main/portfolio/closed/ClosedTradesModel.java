@@ -30,11 +30,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class ClosedTradesModel extends UIModel {
-    private static final Logger log = LoggerFactory.getLogger(ClosedTradesModel.class);
 
     private final TradeManager tradeManager;
     private final User user;

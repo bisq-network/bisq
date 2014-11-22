@@ -25,11 +25,7 @@ import com.google.inject.Inject;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class SeedWordsPM extends PresentationModel<SeedWordsModel> {
-    private static final Logger log = LoggerFactory.getLogger(SeedWordsPM.class);
 
     final StringProperty seedWords = new SimpleStringProperty();
     private final BSFormatter formatter;

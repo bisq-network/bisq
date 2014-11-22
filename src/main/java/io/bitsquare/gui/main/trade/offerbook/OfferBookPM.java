@@ -35,11 +35,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.transformation.SortedList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class OfferBookPM extends PresentationModel<OfferBookModel> {
-    private static final Logger log = LoggerFactory.getLogger(OfferBookPM.class);
 
     private final OptionalBtcValidator optionalBtcValidator;
     private final BSFormatter formatter;

@@ -40,11 +40,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.util.StringConverter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class FiatAccountPm extends PresentationModel<FiatAccountModel> {
-    private static final Logger log = LoggerFactory.getLogger(FiatAccountPm.class);
 
     private final BankAccountNumberValidator bankAccountNumberValidator;
 

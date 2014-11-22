@@ -21,11 +21,7 @@ import io.bitsquare.gui.UIModel;
 
 import com.google.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class ChangePasswordModel extends UIModel {
-    private static final Logger log = LoggerFactory.getLogger(ChangePasswordModel.class);
 
     @Inject
     private ChangePasswordModel() {

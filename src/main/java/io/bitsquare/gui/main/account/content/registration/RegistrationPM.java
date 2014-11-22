@@ -34,12 +34,8 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 class RegistrationPM extends PresentationModel<RegistrationModel> {
-    private static final Logger log = LoggerFactory.getLogger(RegistrationPM.class);
 
     final BooleanProperty isPayButtonDisabled = new SimpleBooleanProperty(true);
     final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();

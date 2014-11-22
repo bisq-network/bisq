@@ -24,11 +24,7 @@ import com.google.inject.Inject;
 
 import javafx.collections.ObservableList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class ClosedTradesPM extends PresentationModel<ClosedTradesModel> {
-    private static final Logger log = LoggerFactory.getLogger(ClosedTradesPM.class);
 
     private final BSFormatter formatter;
 

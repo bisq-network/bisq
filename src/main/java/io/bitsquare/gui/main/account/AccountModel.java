@@ -22,11 +22,7 @@ import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class AccountModel extends UIModel {
-    private static final Logger log = LoggerFactory.getLogger(AccountModel.class);
 
     private final User user;
 

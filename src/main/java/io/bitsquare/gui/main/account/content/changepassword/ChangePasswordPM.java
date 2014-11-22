@@ -28,11 +28,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class ChangePasswordPM extends PresentationModel<ChangePasswordModel> {
-    private static final Logger log = LoggerFactory.getLogger(ChangePasswordPM.class);
 
     private final PasswordValidator passwordValidator;
 
