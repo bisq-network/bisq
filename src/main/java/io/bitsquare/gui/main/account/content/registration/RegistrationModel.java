@@ -85,25 +85,6 @@ class RegistrationModel extends UIModel {
         }
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-
     void payFee() {
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
             @Override

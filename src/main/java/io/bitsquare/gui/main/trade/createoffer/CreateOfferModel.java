@@ -173,19 +173,6 @@ class CreateOfferModel extends UIModel {
         }
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-
     void placeOffer() {
         // data validation is done in the trade domain
         tradeManager.requestPlaceOffer(offerId,

@@ -41,26 +41,12 @@ class RestrictionsPM extends PresentationModel<RestrictionsModel> {
     }
 
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void initialize() {
-        super.initialize();
-
-    }
-
     @Override
     public void activate() {
         super.activate();
 
         updateDoneButtonDisableState();
     }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
 
     void addLanguage(Locale locale) {
         model.addLanguage(locale);

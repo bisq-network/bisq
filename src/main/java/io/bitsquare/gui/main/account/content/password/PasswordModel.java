@@ -28,32 +28,6 @@ class PasswordModel extends UIModel {
     public PasswordModel() {
     }
 
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void initialize() {
-        super.initialize();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-
     @SuppressWarnings("EmptyMethod")
     void savePassword(String password) {
         //TODO Implement password encryption for wallet

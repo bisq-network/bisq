@@ -36,32 +36,6 @@ class ClosedTradesPM extends PresentationModel<ClosedTradesModel> {
         this.formatter = formatter;
     }
 
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void initialize() {
-        super.initialize();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-
     public ObservableList<ClosedTradesListItem> getList() {
         return model.getList();
     }

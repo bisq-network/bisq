@@ -78,7 +78,6 @@ class IrcAccountModel extends UIModel {
     }
 
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void initialize() {
         super.initialize();
@@ -92,19 +91,6 @@ class IrcAccountModel extends UIModel {
         super.activate();
         allBankAccounts.setAll(user.getBankAccounts());
     }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
 
     void saveBankAccount() {
         BankAccount bankAccount = new BankAccount(type.get(),

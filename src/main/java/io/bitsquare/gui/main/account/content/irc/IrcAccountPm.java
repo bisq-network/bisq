@@ -66,23 +66,6 @@ class IrcAccountPm extends PresentationModel<IrcAccountModel> {
         super.initialize();
     }
 
-    @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
 
     InputValidator.ValidationResult requestSaveBankAccount() {
         InputValidator.ValidationResult result = validateInput();

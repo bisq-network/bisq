@@ -31,30 +31,6 @@ class AccountModel extends UIModel {
         this.user = user;
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void initialize() {
-        super.initialize();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
     boolean getNeedRegistration() {
         return user.getAccountId() == null;
 

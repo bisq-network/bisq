@@ -32,33 +32,6 @@ public class PreferencesPM extends PresentationModel<PreferencesModel> {
         super(model);
     }
 
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void initialize() {
-        super.initialize();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-
-
     public ObservableList<String> getBtcDenominationItems() {
         return model.btcDenominations;
     }

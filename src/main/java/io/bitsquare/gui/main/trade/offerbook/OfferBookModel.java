@@ -123,13 +123,6 @@ class OfferBookModel extends UIModel {
         btcCode.unbind();
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-
     void removeOffer(Offer offer) {
         tradeManager.removeOffer(offer);
     }

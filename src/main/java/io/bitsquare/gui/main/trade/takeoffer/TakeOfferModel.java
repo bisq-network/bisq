@@ -111,13 +111,6 @@ class TakeOfferModel extends UIModel {
         btcCode.unbind();
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-
     void initWithData(Coin amount, Offer offer) {
         this.offer = offer;
 

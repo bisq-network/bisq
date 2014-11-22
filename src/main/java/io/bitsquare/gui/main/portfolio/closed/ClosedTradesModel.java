@@ -78,13 +78,6 @@ class ClosedTradesModel extends UIModel {
         tradeManager.getClosedTrades().removeListener(mapChangeListener);
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-
     public ObservableList<ClosedTradesListItem> getList() {
         return list;
     }

@@ -56,12 +56,6 @@ class PreferencesModel extends UIModel {
     }
 
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void initialize() {
-        super.initialize();
-    }
-
     @Override
     public void activate() {
         super.activate();
@@ -83,12 +77,5 @@ class PreferencesModel extends UIModel {
         useEffects.removeListener(useEffectsListener);
         btcDenomination.removeListener(btcDenominationListener);
     }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
 }
 

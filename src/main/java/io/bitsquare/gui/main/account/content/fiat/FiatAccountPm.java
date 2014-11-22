@@ -98,18 +98,6 @@ class FiatAccountPm extends PresentationModel<FiatAccountModel> {
         applyAllBankAccounts();
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
 
     InputValidator.ValidationResult requestSaveBankAccount() {
         InputValidator.ValidationResult result = validateInput();

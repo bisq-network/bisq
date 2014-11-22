@@ -96,7 +96,6 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         updateState();
     }
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
         super.deactivate();

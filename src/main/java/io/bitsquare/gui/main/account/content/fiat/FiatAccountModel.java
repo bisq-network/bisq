@@ -74,29 +74,11 @@ class FiatAccountModel extends UIModel {
     }
 
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void initialize() {
-        super.initialize();
-    }
-
     @Override
     public void activate() {
         super.activate();
 
         allBankAccounts.setAll(user.getBankAccounts());
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
     }
 
 

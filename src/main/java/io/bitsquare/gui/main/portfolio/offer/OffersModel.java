@@ -79,13 +79,6 @@ class OffersModel extends UIModel {
         tradeManager.getOffers().removeListener(offerMapChangeListener);
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-
     void removeOffer(OfferListItem item) {
         tradeManager.removeOffer(item.getOffer());
     }

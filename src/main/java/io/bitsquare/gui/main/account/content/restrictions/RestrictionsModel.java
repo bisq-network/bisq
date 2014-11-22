@@ -97,20 +97,6 @@ class RestrictionsModel extends UIModel {
         arbitratorList.setAll(accountSettings.getAcceptedArbitrators());
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-
     ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
         return FXCollections.observableArrayList(CountryUtil.getAllCountriesFor(selectedRegion));
     }
