@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Non caching version for code behind classes using the PM pattern
  */
-public class ViewCB<M> implements Initializable {
+public abstract class ViewCB<M> implements Initializable {
 
     private static final Logger log = LoggerFactory.getLogger(ViewCB.class);
 
