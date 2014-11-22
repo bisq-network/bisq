@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
 
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
-public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements ContextAware {
+public class FiatAccountViewCB extends CachedViewCB<FiatAccountPM> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(FiatAccountViewCB.class);
 
@@ -76,7 +76,7 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPm> implements Co
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    FiatAccountViewCB(FiatAccountPm presentationModel, OverlayManager overlayManager) {
+    FiatAccountViewCB(FiatAccountPM presentationModel, OverlayManager overlayManager) {
         super(presentationModel);
 
         this.overlayManager = overlayManager;

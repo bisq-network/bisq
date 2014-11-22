@@ -40,7 +40,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.util.StringConverter;
 
-class FiatAccountPm extends PresentationModel<FiatAccountModel> {
+class FiatAccountPM extends PresentationModel<FiatAccountModel> {
 
     private final BankAccountNumberValidator bankAccountNumberValidator;
 
@@ -59,7 +59,7 @@ class FiatAccountPm extends PresentationModel<FiatAccountModel> {
 
 
     @Inject
-    public FiatAccountPm(FiatAccountModel model, BankAccountNumberValidator bankAccountNumberValidator) {
+    public FiatAccountPM(FiatAccountModel model, BankAccountNumberValidator bankAccountNumberValidator) {
         super(model);
         this.bankAccountNumberValidator = bankAccountNumberValidator;
     }

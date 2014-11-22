@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 /*
 Just temporary for giving the user a possibility to test the app via simulating the bank transfer in a IRC chat.
  */
-public class IrcAccountViewCB extends CachedViewCB<IrcAccountPm> implements ContextAware {
+public class IrcAccountViewCB extends CachedViewCB<IrcAccountPM> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(IrcAccountViewCB.class);
 
@@ -63,7 +63,7 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPm> implements Cont
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    IrcAccountViewCB(IrcAccountPm presentationModel) {
+    IrcAccountViewCB(IrcAccountPM presentationModel) {
         super(presentationModel);
     }
 

@@ -37,7 +37,7 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.util.StringConverter;
 
-class IrcAccountPm extends PresentationModel<IrcAccountModel> {
+class IrcAccountPM extends PresentationModel<IrcAccountModel> {
 
     private final InputValidator nickNameValidator;
 
@@ -48,7 +48,7 @@ class IrcAccountPm extends PresentationModel<IrcAccountModel> {
 
 
     @Inject
-    public IrcAccountPm(IrcAccountModel model, BankAccountNumberValidator nickNameValidator) {
+    public IrcAccountPM(IrcAccountModel model, BankAccountNumberValidator nickNameValidator) {
         super(model);
         this.nickNameValidator = nickNameValidator;
     }
