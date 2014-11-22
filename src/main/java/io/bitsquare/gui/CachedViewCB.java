@@ -24,20 +24,33 @@ import java.util.ResourceBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * If caching is used for loader we use the CachedViewController for turning the controller into sleep mode if not
  * active and awake it at reactivation.
  */
-public class CachedViewCB<M extends Activatable & Model> extends ViewCB<M> {
+public class CachedViewCB<M extends Activatable> extends ViewCB<M> {
     private static final Logger log = LoggerFactory.getLogger(CachedViewCB.class);
 
+    protected static final Activatable EMPTY_MODEL = new Activatable() {
+        @Override
+        public void activate() {
+        }
+
+        @Override
+        public void deactivate() {
+        }
+    };
+
     public CachedViewCB(M model) {
-        super(model);
+        super(checkNotNull(model, "Model must not be null"));
     }
 
     public CachedViewCB() {
-        this(null);
+        this((M) EMPTY_MODEL);
     }
+
 
     /**
      * Get called form GUI framework when the UI is ready.

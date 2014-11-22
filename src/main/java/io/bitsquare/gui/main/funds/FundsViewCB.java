@@ -51,7 +51,6 @@ public class FundsViewCB extends CachedViewCB {
 
     @Inject
     FundsViewCB(ViewLoader viewLoader, Navigation navigation) {
-        super();
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
