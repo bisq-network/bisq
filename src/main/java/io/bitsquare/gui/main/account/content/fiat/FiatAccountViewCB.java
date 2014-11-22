@@ -107,27 +107,12 @@ public class FiatAccountViewCB extends CachedViewCB<FiatAccountPM> implements Co
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
+    public void doActivate() {
         setupListeners();
         setupBindings();
 
         selectionComboBox.setItems(model.getAllBankAccounts());
     }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ContextAware implementation

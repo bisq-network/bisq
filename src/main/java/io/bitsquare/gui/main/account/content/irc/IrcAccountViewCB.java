@@ -136,9 +136,7 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPM> implements Cont
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
+    public void doActivate() {
         setupListeners();
         setupBindings();
 
@@ -151,18 +149,6 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPM> implements Cont
                         "1. Bitcoin buyer indicates that he has started the bank transfer.\n\n" +
                         "2. Bitcoin seller confirms that he has received the national currency from the " +
                         "bank transfer."));
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
     }
 
 

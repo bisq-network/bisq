@@ -93,9 +93,7 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
+    public void doActivate() {
         // We need to remove open validation error popups
         // Platform.runLater needed as focus-out event is called after selectedIndexProperty changed
         // TODO Find a way to do that in the InputTextField directly, but a tab change does not trigger any event...
@@ -120,18 +118,9 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
         navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.OFFER_BOOK);
     }
 
-    @SuppressWarnings("EmptyMethod")
     @Override
-    public void deactivate() {
-        super.deactivate();
-
+    public void doDeactivate() {
         navigation.removeListener(listener);
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
     }
 
 

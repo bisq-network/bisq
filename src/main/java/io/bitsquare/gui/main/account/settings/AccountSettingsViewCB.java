@@ -108,9 +108,7 @@ public class AccountSettingsViewCB extends CachedViewCB {
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
+    public void doActivate() {
         navigation.addListener(listener);
         Navigation.Item[] items = navigation.getCurrentItems();
         if (items.length == 3 &&
@@ -128,16 +126,8 @@ public class AccountSettingsViewCB extends CachedViewCB {
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
-
+    public void doDeactivate() {
         navigation.removeListener(listener);
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
     }
 
 

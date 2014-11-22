@@ -65,34 +65,6 @@ public class ArbitratorProfileViewCB extends CachedViewCB {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public Methods

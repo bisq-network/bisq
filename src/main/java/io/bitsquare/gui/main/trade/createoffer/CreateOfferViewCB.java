@@ -140,15 +140,8 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
         volumeTextField.setPromptText(BSResources.get("createOffer.volume.prompt", model.fiatCode.get()));
     }
 
-    @SuppressWarnings("EmptyMethod")
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    public void deactivate() {
-        super.deactivate();
-
+    @Override
+    public void doDeactivate() {
         tabIsClosable.unbind();
     }
 

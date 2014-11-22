@@ -140,9 +140,7 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
+    public void doActivate() {
         amountTextField.setText("");
         priceTextField.setText("");
         volumeTextField.setText("");
@@ -158,19 +156,9 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
         table.sort();
     }
 
-    @SuppressWarnings("EmptyMethod")
     @Override
-    public void deactivate() {
-        super.deactivate();
-
+    public void doDeactivate() {
         removeBindings();
-
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
     }
 
 

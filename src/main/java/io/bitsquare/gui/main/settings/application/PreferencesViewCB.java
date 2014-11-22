@@ -62,9 +62,7 @@ public class PreferencesViewCB extends CachedViewCB<PreferencesPM> {
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
+    public void doActivate() {
         btcDenominationComboBox.setItems(model.getBtcDenominationItems());
         btcDenominationComboBox.getSelectionModel().select(model.btcDenomination().get());
 
@@ -74,17 +72,9 @@ public class PreferencesViewCB extends CachedViewCB<PreferencesPM> {
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
-
+    public void doDeactivate() {
         useAnimationsCheckBox.selectedProperty().unbind();
         useEffectsCheckBox.selectedProperty().unbind();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
     }
 
 

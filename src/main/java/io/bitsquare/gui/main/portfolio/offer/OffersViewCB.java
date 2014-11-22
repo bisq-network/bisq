@@ -75,24 +75,9 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
+    public void doActivate() {
         table.setItems(model.getList());
     }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private Methods

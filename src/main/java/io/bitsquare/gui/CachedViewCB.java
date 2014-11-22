@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * If caching is used for loader we use the CachedViewController for turning the controller into sleep mode if not
  * active and awake it at reactivation.
  */
-public class CachedViewCB<M extends Activatable> extends ViewCB<M> {
+public class CachedViewCB<M extends Activatable> extends ViewCB<M> implements Activatable {
     private static final Logger log = LoggerFactory.getLogger(CachedViewCB.class);
 
     protected static final Activatable EMPTY_MODEL = new Activatable() {
@@ -81,21 +81,29 @@ public class CachedViewCB<M extends Activatable> extends ViewCB<M> {
     /**
      * Used to activate resources (adding listeners, starting timers or animations,...)
      */
-    public void activate() {
-        log.trace("Lifecycle: activate " + this.getClass().getSimpleName());
-
+    @Override
+    public final void activate() {
         if (model != null)
             model.activate();
+
+        doActivate();
+    }
+
+    protected void doActivate() {
     }
 
     /**
      * Used for deactivating resources (removing listeners, stopping timers or animations,...)
      */
-    public void deactivate() {
-        log.trace("Lifecycle: deactivate " + this.getClass().getSimpleName());
-
+    @Override
+    public final void deactivate() {
         if (model != null)
             model.deactivate();
+
+        doDeactivate();
+    }
+
+    protected void doDeactivate() {
     }
 
     /**

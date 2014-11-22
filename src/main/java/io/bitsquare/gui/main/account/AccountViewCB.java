@@ -90,9 +90,7 @@ public class AccountViewCB extends CachedViewCB {
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
+    public void doActivate() {
         navigation.addListener(navigationListener);
         ((TabPane) root).getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
@@ -114,9 +112,7 @@ public class AccountViewCB extends CachedViewCB {
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
-
+    public void doDeactivate() {
         navigation.removeListener(navigationListener);
         ((TabPane) root).getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
     }

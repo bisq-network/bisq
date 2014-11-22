@@ -31,34 +31,6 @@ import org.slf4j.LoggerFactory;
 public class HomeViewCB extends CachedViewCB {
     private static final Logger log = LoggerFactory.getLogger(HomeViewCB.class);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void activate() {
-        super.activate();
-    }
-
 
 }
 

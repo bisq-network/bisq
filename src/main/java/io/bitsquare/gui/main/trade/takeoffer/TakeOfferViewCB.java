@@ -133,16 +133,6 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
         setupBindings();
     }
 
-    @SuppressWarnings("EmptyMethod")
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    public void deactivate() {
-        super.deactivate();
-    }
-
     @Override
     public void terminate() {
         super.terminate();

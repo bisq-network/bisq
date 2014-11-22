@@ -81,9 +81,7 @@ public class TransactionsViewCB extends CachedViewCB {
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
+    public void doActivate() {
         List<Transaction> transactions = walletService.getWallet().getRecentTransactions(10000, true);
         transactionsListItems = FXCollections.observableArrayList();
         transactionsListItems.addAll(transactions.stream().map(transaction ->
@@ -93,9 +91,7 @@ public class TransactionsViewCB extends CachedViewCB {
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
-
+    public void doDeactivate() {
         for (TransactionsListItem transactionsListItem : transactionsListItems)
             transactionsListItem.cleanup();
     }

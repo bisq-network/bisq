@@ -86,9 +86,7 @@ public class PortfolioViewCB extends CachedViewCB {
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
+    public void doActivate() {
         ((TabPane) root).getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
@@ -99,18 +97,10 @@ public class PortfolioViewCB extends CachedViewCB {
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
-
+    public void doDeactivate() {
         ((TabPane) root).getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
         navigation.removeListener(navigationListener);
         currentTab = null;
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
     }
 
 

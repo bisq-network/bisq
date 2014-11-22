@@ -149,9 +149,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
+    public void doActivate() {
         table.setItems(model.getList());
 
         model.getList().addListener(listChangeListener);
@@ -174,9 +172,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
-
+    public void doDeactivate() {
         table.getSelectionModel().selectedItemProperty().removeListener(selectedItemChangeListener);
         model.getList().removeListener(listChangeListener);
         model.txId.removeListener(txIdChangeListener);

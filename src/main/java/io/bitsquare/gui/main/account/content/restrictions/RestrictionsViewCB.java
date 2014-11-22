@@ -94,24 +94,10 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
+    public void doActivate() {
         languagesListView.setItems(model.getLanguageList());
         countriesListView.setItems(model.getCountryList());
         arbitratorsListView.setItems(model.getArbitratorList());
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
     }
 
 

@@ -102,9 +102,7 @@ public class WithdrawalViewCB extends CachedViewCB {
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
+    public void doActivate() {
         table.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
             if (newValue != null) {
 
@@ -133,17 +131,9 @@ public class WithdrawalViewCB extends CachedViewCB {
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
-
+    public void doDeactivate() {
         for (WithdrawalListItem item : addressList)
             item.cleanup();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
     }
 
 
