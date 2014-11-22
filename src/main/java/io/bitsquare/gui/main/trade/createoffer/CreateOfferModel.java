@@ -24,7 +24,8 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.Activatable;
+import io.bitsquare.gui.DataModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.offer.Direction;
@@ -64,7 +65,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
-class CreateOfferModel extends UIModel {
+class CreateOfferModel implements Activatable, DataModel {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferModel.class);
 
     private final TradeManager tradeManager;
@@ -151,8 +152,6 @@ class CreateOfferModel extends UIModel {
 
     @Override
     public void activate() {
-        super.activate();
-
         // might be changed after screen change
         if (accountSettings != null) {
             // set it here again to cover the case of an securityDeposit change after a screen change
@@ -163,6 +162,11 @@ class CreateOfferModel extends UIModel {
             acceptedLanguages.setAll(accountSettings.getAcceptedLanguageLocales());
             acceptedArbitrators.setAll(accountSettings.getAcceptedArbitrators());
         }
+    }
+
+    @Override
+    public void deactivate() {
+        // no-op
     }
 
     void placeOffer() {

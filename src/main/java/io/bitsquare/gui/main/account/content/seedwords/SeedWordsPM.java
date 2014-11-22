@@ -17,24 +17,28 @@
 
 package io.bitsquare.gui.main.account.content.seedwords;
 
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.btc.WalletService;
+import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.inject.Inject;
 
+import java.util.List;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-class SeedWordsPM extends PresentationModel<SeedWordsModel> {
+class SeedWordsPM implements ViewModel {
 
     final StringProperty seedWords = new SimpleStringProperty();
 
     @Inject
-    public SeedWordsPM(SeedWordsModel model, BSFormatter formatter) {
-        super(model);
-
-        if (model.getMnemonicCode() != null)
-            seedWords.set(formatter.mnemonicCodeToString(model.getMnemonicCode()));
+    public SeedWordsPM(WalletService walletService, BSFormatter formatter) {
+        if (walletService.getWallet() != null) {
+            List<String> mnemonicCode = walletService.getWallet().getKeyChainSeed().getMnemonicCode();
+            if (mnemonicCode != null) {
+                seedWords.set(formatter.mnemonicCodeToString(mnemonicCode));
+            }
+        }
     }
-
 }

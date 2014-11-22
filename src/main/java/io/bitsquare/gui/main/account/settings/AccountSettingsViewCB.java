@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.account.settings;
 
 import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.main.account.content.ContextAware;

@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.changepassword;
 
-import io.bitsquare.gui.CachedViewCB;
+import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;
@@ -36,9 +36,11 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ChangePasswordViewCB extends CachedViewCB<ChangePasswordPM> implements ContextAware {
+public class ChangePasswordViewCB extends ViewCB implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(ChangePasswordViewCB.class);
+
+    private final ChangePasswordPM model;
 
     @FXML HBox buttonsHBox;
     @FXML Button saveButton, skipButton;
@@ -50,8 +52,8 @@ public class ChangePasswordViewCB extends CachedViewCB<ChangePasswordPM> impleme
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ChangePasswordViewCB(ChangePasswordPM presentationModel) {
-        super(presentationModel);
+    private ChangePasswordViewCB(ChangePasswordPM model) {
+        this.model = model;
     }
 
 
@@ -63,30 +65,11 @@ public class ChangePasswordViewCB extends CachedViewCB<ChangePasswordPM> impleme
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
-        passwordField.textProperty().bindBidirectional(presentationModel.passwordField);
-        repeatedPasswordField.textProperty().bindBidirectional(presentationModel.repeatedPasswordField);
+        passwordField.textProperty().bindBidirectional(model.passwordField);
+        repeatedPasswordField.textProperty().bindBidirectional(model.repeatedPasswordField);
 
-        saveButton.disableProperty().bind(presentationModel.saveButtonDisabled);
+        saveButton.disableProperty().bind(model.saveButtonDisabled);
     }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ContextAware implementation
@@ -105,13 +88,13 @@ public class ChangePasswordViewCB extends CachedViewCB<ChangePasswordPM> impleme
 
     @FXML
     private void onSaved() {
-        boolean result = presentationModel.requestSavePassword();
+        boolean result = model.requestSavePassword();
         if (result) {
             if (parent instanceof MultiStepNavigation)
                 ((MultiStepNavigation) parent).nextStep(this);
         }
         else {
-            log.debug(presentationModel.getErrorMessage()); // TODO use validating TF
+            log.debug(model.getErrorMessage()); // TODO use validating TF
         }
     }
 

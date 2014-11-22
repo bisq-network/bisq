@@ -22,7 +22,8 @@ import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.Activatable;
+import io.bitsquare.gui.DataModel;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
@@ -51,7 +52,7 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-class IrcAccountModel extends UIModel {
+class IrcAccountModel implements Activatable, DataModel {
 
     private final User user;
     private final AccountSettings accountSettings;
@@ -82,8 +83,12 @@ class IrcAccountModel extends UIModel {
 
     @Override
     public void activate() {
-        super.activate();
         allBankAccounts.setAll(user.getBankAccounts());
+    }
+
+    @Override
+    public void deactivate() {
+        // no-op
     }
 
     void saveBankAccount() {

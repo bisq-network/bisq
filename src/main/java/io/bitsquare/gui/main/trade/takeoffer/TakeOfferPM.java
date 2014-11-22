@@ -18,7 +18,8 @@
 package io.bitsquare.gui.main.trade.takeoffer;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.ActivatableWithDelegate;
+import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -40,7 +41,7 @@ import javafx.beans.property.StringProperty;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-class TakeOfferPM extends PresentationModel<TakeOfferModel> {
+class TakeOfferPM extends ActivatableWithDelegate<TakeOfferModel> implements ViewModel {
 
     private String fiatCode;
     private String amountRange;
@@ -101,13 +102,13 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
 
     // setOfferBookFilter is a one time call
     void initWithData(Direction direction, Coin amount, Offer offer) {
-        model.initWithData(amount, offer);
+        delegate.initWithData(amount, offer);
 
         directionLabel = direction == Direction.BUY ?
                 BSResources.get("shared.buy") : BSResources.get("shared.sell");
 
         fiatCode = offer.getCurrency().getCurrencyCode();
-        if (!model.isMinAmountLessOrEqualAmount()) {
+        if (!delegate.isMinAmountLessOrEqualAmount()) {
             amountValidationResult.set(new InputValidator.ValidationResult(false,
                     BSResources.get("takeOffer.validation.amountSmallerThanMinAmount")));
         }
@@ -121,9 +122,9 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
         price = formatter.formatFiatWithCode(offer.getPrice());
 
         paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", offer.getId());
-        if (model.getAddressEntry() != null) {
-            addressAsString = model.getAddressEntry().getAddress().toString();
-            address.set(model.getAddressEntry().getAddress());
+        if (delegate.getAddressEntry() != null) {
+            addressAsString = delegate.getAddressEntry().getAddress().toString();
+            address.set(delegate.getAddressEntry().getAddress());
         }
 
         acceptedCountries = formatter.countryLocalesToString(offer.getAcceptedCountries());
@@ -136,17 +137,17 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
 
 
     void takeOffer() {
-        model.requestTakeOfferErrorMessage.set(null);
-        model.requestTakeOfferSuccess.set(false);
+        delegate.requestTakeOfferErrorMessage.set(null);
+        delegate.requestTakeOfferSuccess.set(false);
 
         isTakeOfferButtonDisabled.set(true);
         isTakeOfferSpinnerVisible.set(true);
 
-        model.takeOffer();
+        delegate.takeOffer();
     }
 
     void securityDepositInfoDisplayed() {
-        model.securityDepositInfoDisplayed();
+        delegate.securityDepositInfoDisplayed();
     }
 
 
@@ -164,15 +165,15 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
                 // only allow max 4 decimal places for btc values
                 setAmountToModel();
                 // reformat input
-                amount.set(formatter.formatCoin(model.amountAsCoin.get()));
+                amount.set(formatter.formatCoin(delegate.amountAsCoin.get()));
 
                 calculateVolume();
 
-                if (!model.isMinAmountLessOrEqualAmount())
+                if (!delegate.isMinAmountLessOrEqualAmount())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             BSResources.get("takeOffer.validation.amountSmallerThanMinAmount")));
 
-                if (model.isAmountLargerThanOfferAmount())
+                if (delegate.isAmountLargerThanOfferAmount())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             BSResources.get("takeOffer.validation.amountLargerThanOfferAmount")));
             }
@@ -181,7 +182,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
 
 
     WalletService getWalletService() {
-        return model.getWalletService();
+        return delegate.getWalletService();
     }
 
     BSFormatter getFormatter() {
@@ -201,7 +202,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
     }
 
     String getAmount() {
-        return formatter.formatCoinWithCode(model.amountAsCoin.get());
+        return formatter.formatCoinWithCode(delegate.amountAsCoin.get());
     }
 
     String getAmountRange() {
@@ -249,7 +250,7 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
     }
 
     Boolean displaySecurityDepositInfo() {
-        return model.displaySecurityDepositInfo();
+        return delegate.displaySecurityDepositInfo();
     }
 
 
@@ -260,12 +261,12 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
             if (isBtcInputValid(newValue).isValid) {
                 setAmountToModel();
                 calculateVolume();
-                model.calculateTotalToPay();
+                delegate.calculateTotalToPay();
             }
             updateButtonDisableState();
         });
 
-        model.isWalletFunded.addListener((ov, oldValue, newValue) -> {
+        delegate.isWalletFunded.addListener((ov, oldValue, newValue) -> {
             if (newValue) {
                 updateButtonDisableState();
                 tabIsClosable.set(false);
@@ -273,51 +274,51 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
         });
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
-        model.amountAsCoin.addListener((ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue)));
+        delegate.amountAsCoin.addListener((ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue)));
 
-        model.requestTakeOfferErrorMessage.addListener((ov, oldValue, newValue) -> {
+        delegate.requestTakeOfferErrorMessage.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 isTakeOfferButtonDisabled.set(false);
                 isTakeOfferSpinnerVisible.set(false);
             }
         });
-        model.requestTakeOfferSuccess.addListener((ov, oldValue, newValue) -> {
+        delegate.requestTakeOfferSuccess.addListener((ov, oldValue, newValue) -> {
             isTakeOfferButtonVisible.set(!newValue);
             isTakeOfferSpinnerVisible.set(false);
         });
     }
 
     private void setupBindings() {
-        volume.bind(createStringBinding(() -> formatter.formatFiatWithCode(model.volumeAsFiat.get()),
-                model.volumeAsFiat));
-        totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.totalToPayAsCoin.get()),
-                model.totalToPayAsCoin));
-        securityDeposit.bind(createStringBinding(() -> formatter.formatCoinWithCode(model.securityDepositAsCoin.get()),
-                model.securityDepositAsCoin));
+        volume.bind(createStringBinding(() -> formatter.formatFiatWithCode(delegate.volumeAsFiat.get()),
+                delegate.volumeAsFiat));
+        totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(delegate.totalToPayAsCoin.get()),
+                delegate.totalToPayAsCoin));
+        securityDeposit.bind(createStringBinding(() -> formatter.formatCoinWithCode(delegate.securityDepositAsCoin.get()),
+                delegate.securityDepositAsCoin));
 
-        totalToPayAsCoin.bind(model.totalToPayAsCoin);
+        totalToPayAsCoin.bind(delegate.totalToPayAsCoin);
 
-        requestTakeOfferErrorMessage.bind(model.requestTakeOfferErrorMessage);
-        showTransactionPublishedScreen.bind(model.requestTakeOfferSuccess);
-        transactionId.bind(model.transactionId);
+        requestTakeOfferErrorMessage.bind(delegate.requestTakeOfferErrorMessage);
+        showTransactionPublishedScreen.bind(delegate.requestTakeOfferSuccess);
+        transactionId.bind(delegate.transactionId);
 
-        btcCode.bind(model.btcCode);
+        btcCode.bind(delegate.btcCode);
     }
 
     private void calculateVolume() {
         setAmountToModel();
-        model.calculateVolume();
+        delegate.calculateVolume();
     }
 
     private void setAmountToModel() {
-        model.amountAsCoin.set(formatter.parseToCoinWith4Decimals(amount.get()));
+        delegate.amountAsCoin.set(formatter.parseToCoinWith4Decimals(amount.get()));
     }
 
     private void updateButtonDisableState() {
         isTakeOfferButtonDisabled.set(!(isBtcInputValid(amount.get()).isValid &&
-                        model.isMinAmountLessOrEqualAmount() &&
-                        !model.isAmountLargerThanOfferAmount() &&
-                        model.isWalletFunded.get())
+                        delegate.isMinAmountLessOrEqualAmount() &&
+                        !delegate.isAmountLargerThanOfferAmount() &&
+                        delegate.isWalletFunded.get())
         );
     }
 

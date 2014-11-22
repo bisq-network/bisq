@@ -18,7 +18,8 @@
 package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.ActivatableWithDelegate;
+import io.bitsquare.gui.ViewModel;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
 
@@ -30,7 +31,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 
-class RestrictionsPM extends PresentationModel<RestrictionsModel> {
+class RestrictionsPM extends ActivatableWithDelegate<RestrictionsModel> implements ViewModel {
 
     final BooleanProperty doneButtonDisable = new SimpleBooleanProperty(true);
 
@@ -42,77 +43,75 @@ class RestrictionsPM extends PresentationModel<RestrictionsModel> {
 
 
     @Override
-    public void activate() {
-        super.activate();
-
+    public void doActivate() {
         updateDoneButtonDisableState();
     }
 
     void addLanguage(Locale locale) {
-        model.addLanguage(locale);
+        delegate.addLanguage(locale);
         updateDoneButtonDisableState();
     }
 
     void removeLanguage(Locale locale) {
-        model.removeLanguage(locale);
+        delegate.removeLanguage(locale);
         updateDoneButtonDisableState();
     }
 
     void addCountry(Country country) {
-        model.addCountry(country);
+        delegate.addCountry(country);
         updateDoneButtonDisableState();
     }
 
     void removeCountry(Country country) {
-        model.removeCountry(country);
+        delegate.removeCountry(country);
         updateDoneButtonDisableState();
     }
 
     void removeArbitrator(Arbitrator arbitrator) {
-        model.removeArbitrator(arbitrator);
+        delegate.removeArbitrator(arbitrator);
         updateDoneButtonDisableState();
     }
 
     void updateArbitratorList() {
-        model.updateArbitratorList();
+        delegate.updateArbitratorList();
         updateDoneButtonDisableState();
     }
 
 
     ObservableList<Country> getListWithAllEuroCountries() {
-        return model.getListWithAllEuroCountries();
+        return delegate.getListWithAllEuroCountries();
     }
 
     ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
-        return model.getAllCountriesFor(selectedRegion);
+        return delegate.getAllCountriesFor(selectedRegion);
     }
 
     ObservableList<Locale> getLanguageList() {
-        return model.languageList;
+        return delegate.languageList;
     }
 
     ObservableList<Region> getAllRegions() {
-        return model.allRegions;
+        return delegate.allRegions;
     }
 
     ObservableList<Locale> getAllLanguages() {
-        return model.allLanguages;
+        return delegate.allLanguages;
     }
 
     ObservableList<Country> getCountryList() {
-        return model.countryList;
+        return delegate.countryList;
     }
 
     ObservableList<Arbitrator> getArbitratorList() {
-        return model.arbitratorList;
+        return delegate.arbitratorList;
     }
 
 
     //TODO Revert size() > -1 to 0(2 later). For mock testing disabled arbitratorList test
     private void updateDoneButtonDisableState() {
-        boolean isValid = model.languageList != null && model.languageList.size() > 0 &&
-                model.countryList != null && model.countryList.size() > 0 &&
-                model.arbitratorList != null && model.arbitratorList.size() > -1;
+        boolean isValid = delegate.languageList != null && delegate.languageList.size() > 0 &&
+                delegate.countryList != null && delegate.countryList.size() > 0 &&
+                delegate.arbitratorList != null && delegate.arbitratorList.size() > -1;
         doneButtonDisable.set(!isValid);
     }
 

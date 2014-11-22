@@ -15,27 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.account.content.seedwords;
+package io.bitsquare.gui;
 
-import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.UIModel;
-
-import com.google.inject.Inject;
-
-import java.util.List;
-
-class SeedWordsModel extends UIModel {
-
-    private List<String> mnemonicCode;
-
-
-    @Inject
-    public SeedWordsModel(WalletService walletService) {
-        if (walletService != null && walletService.getWallet() != null)
-            mnemonicCode = walletService.getWallet().getKeyChainSeed().getMnemonicCode();
-    }
-
-    List<String> getMnemonicCode() {
-        return mnemonicCode;
-    }
+public interface DataModel {
 }

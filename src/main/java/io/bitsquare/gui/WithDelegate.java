@@ -15,23 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.account.content.password;
+package io.bitsquare.gui;
 
-import io.bitsquare.gui.UIModel;
+public abstract class WithDelegate<D> {
 
-import com.google.inject.Inject;
+    protected final D delegate;
 
-class PasswordModel extends UIModel {
-
-
-    @Inject
-    public PasswordModel() {
+    protected WithDelegate(D delegate) {
+        this.delegate = delegate;
     }
-
-    @SuppressWarnings("EmptyMethod")
-    void savePassword(String password) {
-        //TODO Implement password encryption for wallet
-    }
-
-
 }

@@ -18,7 +18,8 @@
 package io.bitsquare.gui.main.portfolio.pending;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.ActivatableWithDelegate;
+import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
@@ -43,7 +44,7 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class PendingTradesPM extends PresentationModel<PendingTradesModel> {
+class PendingTradesPM extends ActivatableWithDelegate<PendingTradesModel> implements ViewModel {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesPM.class);
 
     enum State {
@@ -69,9 +70,9 @@ class PendingTradesPM extends PresentationModel<PendingTradesModel> {
 
 
     @Inject
-    public PendingTradesPM(PendingTradesModel model, BSFormatter formatter,
+    public PendingTradesPM(PendingTradesModel delegate, BSFormatter formatter,
                     BtcAddressValidator btcAddressValidator) {
-        super(model);
+        super(delegate);
 
         this.formatter = formatter;
         this.btcAddressValidator = btcAddressValidator;
@@ -79,42 +80,38 @@ class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     }
 
     @Override
-    public void activate() {
-        super.activate();
+    public void doActivate() {
+        txId.bind(delegate.txId);
+        fault.bind(delegate.fault);
 
-        txId.bind(model.txId);
-        fault.bind(model.fault);
-
-        model.tradeState.addListener(stateChangeListener);
+        delegate.tradeState.addListener(stateChangeListener);
         updateState();
     }
 
     @Override
-    public void deactivate() {
-        super.deactivate();
-
+    public void doDeactivate() {
         txId.unbind();
         fault.unbind();
 
-        model.tradeState.removeListener(stateChangeListener);
+        delegate.tradeState.removeListener(stateChangeListener);
     }
 
 
     void selectTrade(PendingTradesListItem item) {
-        model.selectTrade(item);
+        delegate.selectTrade(item);
         updateState();
     }
 
     void fiatPaymentStarted() {
-        model.fiatPaymentStarted();
+        delegate.fiatPaymentStarted();
     }
 
     void fiatPaymentReceived() {
-        model.fiatPaymentReceived();
+        delegate.fiatPaymentReceived();
     }
 
     void withdraw(String withdrawToAddress) {
-        model.withdraw(withdrawToAddress);
+        delegate.withdraw(withdrawToAddress);
     }
 
     void withdrawAddressFocusOut(String text) {
@@ -122,27 +119,27 @@ class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     }
 
     String getAmountToWithdraw() {
-        return formatter.formatCoinWithCode(model.getAmountToWithdraw()); //.subtract(FeePolicy.TX_FEE));
+        return formatter.formatCoinWithCode(delegate.getAmountToWithdraw()); //.subtract(FeePolicy.TX_FEE));
     }
 
     ObservableList<PendingTradesListItem> getList() {
-        return model.getList();
+        return delegate.getList();
     }
 
     boolean isOfferer() {
-        return model.isOfferer();
+        return delegate.isOfferer();
     }
 
     WalletService getWalletService() {
-        return model.getWalletService();
+        return delegate.getWalletService();
     }
 
     PendingTradesListItem getSelectedItem() {
-        return model.getSelectedItem();
+        return delegate.getSelectedItem();
     }
 
     String getCurrencyCode() {
-        return model.getCurrencyCode();
+        return delegate.getCurrencyCode();
     }
 
     // columns
@@ -163,7 +160,7 @@ class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     }
 
     String evaluateDirection(PendingTradesListItem item) {
-        return (item != null) ? formatter.formatDirection(model.getDirection(item.getTrade().getOffer())) : "";
+        return (item != null) ? formatter.formatDirection(delegate.getDirection(item.getTrade().getOffer())) : "";
     }
 
     String formatDate(Date value) {
@@ -172,45 +169,45 @@ class PendingTradesPM extends PresentationModel<PendingTradesModel> {
 
     // payment
     String getPaymentMethod() {
-        return BSResources.get(model.getTrade().getContract().getTakerBankAccount().getBankAccountType().toString());
+        return BSResources.get(delegate.getTrade().getContract().getTakerBankAccount().getBankAccountType().toString());
     }
 
     String getFiatAmount() {
-        return formatter.formatFiatWithCode(model.getTrade().getTradeVolume());
+        return formatter.formatFiatWithCode(delegate.getTrade().getTradeVolume());
     }
 
     String getHolderName() {
-        return model.getTrade().getContract().getTakerBankAccount().getAccountHolderName();
+        return delegate.getTrade().getContract().getTakerBankAccount().getAccountHolderName();
     }
 
     String getPrimaryId() {
-        return model.getTrade().getContract().getTakerBankAccount().getAccountPrimaryID();
+        return delegate.getTrade().getContract().getTakerBankAccount().getAccountPrimaryID();
     }
 
     String getSecondaryId() {
-        return model.getTrade().getContract().getTakerBankAccount().getAccountSecondaryID();
+        return delegate.getTrade().getContract().getTakerBankAccount().getAccountSecondaryID();
     }
 
     // summary
     String getTradeVolume() {
-        return formatter.formatCoinWithCode(model.getTrade().getTradeAmount());
+        return formatter.formatCoinWithCode(delegate.getTrade().getTradeAmount());
     }
 
     String getFiatVolume() {
-        return formatter.formatFiatWithCode(model.getTrade().getTradeVolume());
+        return formatter.formatFiatWithCode(delegate.getTrade().getTradeVolume());
     }
 
     String getTotalFees() {
-        return formatter.formatCoinWithCode(model.getTotalFees());
+        return formatter.formatCoinWithCode(delegate.getTotalFees());
     }
 
     String getSecurityDeposit() {
         // securityDeposit is handled different for offerer and taker.
         // Offerer have paid in the max amount, but taker might have taken less so also paid in less securityDeposit
-        if (model.isOfferer())
-            return formatter.formatCoinWithCode(model.getTrade().getOffer().getSecurityDeposit());
+        if (delegate.isOfferer())
+            return formatter.formatCoinWithCode(delegate.getTrade().getOffer().getSecurityDeposit());
         else
-            return formatter.formatCoinWithCode(model.getTrade().getSecurityDeposit());
+            return formatter.formatCoinWithCode(delegate.getTrade().getSecurityDeposit());
     }
 
     BtcAddressValidator getBtcAddressValidator() {
@@ -219,25 +216,25 @@ class PendingTradesPM extends PresentationModel<PendingTradesModel> {
 
 
     private void updateState() {
-        Trade.State tradeState = model.tradeState.get();
+        Trade.State tradeState = delegate.tradeState.get();
         log.trace("tradeState " + tradeState);
         if (tradeState != null) {
             switch (tradeState) {
                 // TODO Check why OFFERER_ACCEPTED can happen, refactor state handling
                 case OFFERER_ACCEPTED:
                 case DEPOSIT_PUBLISHED:
-                    state.set(model.isOfferer() ? State.OFFERER_BUYER_WAIT_TX_CONF : State.TAKER_SELLER_WAIT_TX_CONF);
+                    state.set(delegate.isOfferer() ? State.OFFERER_BUYER_WAIT_TX_CONF : State.TAKER_SELLER_WAIT_TX_CONF);
                     break;
                 case DEPOSIT_CONFIRMED:
-                    state.set(model.isOfferer() ? State.OFFERER_BUYER_START_PAYMENT :
+                    state.set(delegate.isOfferer() ? State.OFFERER_BUYER_START_PAYMENT :
                             State.TAKER_SELLER_WAIT_PAYMENT_STARTED);
                     break;
                 case PAYMENT_STARTED:
-                    state.set(model.isOfferer() ? State.OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED :
+                    state.set(delegate.isOfferer() ? State.OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED :
                             State.TAKER_SELLER_CONFIRM_RECEIVE_PAYMENT);
                     break;
                 case COMPLETED:
-                    state.set(model.isOfferer() ? State.OFFERER_BUYER_COMPLETED : State.TAKER_SELLER_COMPLETED);
+                    state.set(delegate.isOfferer() ? State.OFFERER_BUYER_COMPLETED : State.TAKER_SELLER_COMPLETED);
                     break;
                 case FAILED:
                     // TODO error states not implemented yet

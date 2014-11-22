@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.account.content.registration;
 
-import io.bitsquare.gui.CachedViewCB;
 import io.bitsquare.gui.OverlayManager;
+import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.components.AddressTextField;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.Popups;
@@ -48,11 +48,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements ContextAware {
+public class RegistrationViewCB extends ViewCB implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(RegistrationViewCB.class);
 
     private final OverlayManager overlayManager;
+    private final RegistrationPM model;
 
     @FXML TextField feeTextField;
     @FXML AddressTextField addressTextField;
@@ -67,8 +68,8 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private RegistrationViewCB(RegistrationPM presentationModel, OverlayManager overlayManager) {
-        super(presentationModel);
+    private RegistrationViewCB(RegistrationPM model, OverlayManager overlayManager) {
+        this.model = model;
         this.overlayManager = overlayManager;
     }
 
@@ -81,20 +82,20 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
-        feeTextField.setText(presentationModel.getFeeAsString());
-        addressTextField.setAmountAsCoin(presentationModel.getFeeAsCoin());
-        addressTextField.setPaymentLabel(presentationModel.getPaymentLabel());
-        addressTextField.setAddress(presentationModel.getAddressAsString());
+        feeTextField.setText(model.getFeeAsString());
+        addressTextField.setAmountAsCoin(model.getFeeAsCoin());
+        addressTextField.setPaymentLabel(model.getPaymentLabel());
+        addressTextField.setAddress(model.getAddressAsString());
 
         // TODO find better solution
         addressTextField.setOverlayManager(overlayManager);
 
-        balanceTextField.setup(presentationModel.getWalletService(), presentationModel.address.get(),
-                presentationModel.getFormatter());
+        balanceTextField.setup(model.getWalletService(), model.address.get(),
+                model.getFormatter());
 
-        payButton.disableProperty().bind(presentationModel.isPayButtonDisabled);
+        payButton.disableProperty().bind(model.isPayButtonDisabled);
 
-        presentationModel.requestPlaceOfferErrorMessage.addListener((o, oldValue, newValue) -> {
+        model.requestPlaceOfferErrorMessage.addListener((o, oldValue, newValue) -> {
             if (newValue != null) {
                 Popups.openErrorPopup(BSResources.get("shared.error"),
                         BSResources.get("An error occurred when paying the registration fee"),
@@ -102,14 +103,14 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
             }
         });
 
-        paymentSpinnerInfoLabel.visibleProperty().bind(presentationModel.isPaymentSpinnerVisible);
+        paymentSpinnerInfoLabel.visibleProperty().bind(model.isPaymentSpinnerVisible);
 
-        presentationModel.isPaymentSpinnerVisible.addListener((ov, oldValue, newValue) -> {
+        model.isPaymentSpinnerVisible.addListener((ov, oldValue, newValue) -> {
             paymentSpinner.setProgress(newValue ? -1 : 0);
             paymentSpinner.setVisible(newValue);
         });
 
-        presentationModel.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
+        model.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 overlayManager.blurContent();
 
@@ -144,24 +145,6 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
         });
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ContextAware implementation
@@ -181,7 +164,7 @@ public class RegistrationViewCB extends CachedViewCB<RegistrationPM> implements 
 
     @FXML
     private void onPayFee() {
-        presentationModel.payFee();
+        model.payFee();
     }
 
     @FXML

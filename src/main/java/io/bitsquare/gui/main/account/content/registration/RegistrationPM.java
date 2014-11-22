@@ -18,7 +18,8 @@
 package io.bitsquare.gui.main.account.content.registration;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.ViewModel;
+import io.bitsquare.gui.WithDelegate;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
 
@@ -35,7 +36,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 
-class RegistrationPM extends PresentationModel<RegistrationModel> {
+class RegistrationPM extends WithDelegate<RegistrationModel> implements ViewModel {
 
     final BooleanProperty isPayButtonDisabled = new SimpleBooleanProperty(true);
     final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
@@ -48,27 +49,27 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
 
 
     @Inject
-    public RegistrationPM(RegistrationModel model, BSFormatter formatter) {
-        super(model);
+    public RegistrationPM(RegistrationModel delegate, BSFormatter formatter) {
+        super(delegate);
         this.formatter = formatter;
 
-        if (model.getAddressEntry() != null) {
-            address.set(model.getAddressEntry().getAddress());
+        if (delegate.getAddressEntry() != null) {
+            address.set(delegate.getAddressEntry().getAddress());
         }
 
-        model.isWalletFunded.addListener((ov, oldValue, newValue) -> {
+        delegate.isWalletFunded.addListener((ov, oldValue, newValue) -> {
             if (newValue)
                 validateInput();
         });
         validateInput();
 
-        model.payFeeSuccess.addListener((ov, oldValue, newValue) -> {
+        delegate.payFeeSuccess.addListener((ov, oldValue, newValue) -> {
             isPayButtonDisabled.set(newValue);
             showTransactionPublishedScreen.set(newValue);
             isPaymentSpinnerVisible.set(false);
         });
 
-        model.payFeeErrorMessage.addListener((ov, oldValue, newValue) -> {
+        delegate.payFeeErrorMessage.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 requestPlaceOfferErrorMessage.set(newValue);
                 isPaymentSpinnerVisible.set(false);
@@ -77,18 +78,18 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
     }
 
     void payFee() {
-        model.payFeeErrorMessage.set(null);
-        model.payFeeSuccess.set(false);
+        delegate.payFeeErrorMessage.set(null);
+        delegate.payFeeSuccess.set(false);
 
         isPayButtonDisabled.set(true);
         isPaymentSpinnerVisible.set(true);
 
-        model.payFee();
+        delegate.payFee();
     }
 
 
     WalletService getWalletService() {
-        return model.getWalletService();
+        return delegate.getWalletService();
     }
 
     BSFormatter getFormatter() {
@@ -96,11 +97,11 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
     }
 
     Coin getFeeAsCoin() {
-        return model.getFeeAsCoin();
+        return delegate.getFeeAsCoin();
     }
 
     String getAddressAsString() {
-        return model.getAddressEntry() != null ? model.getAddressEntry().getAddress().toString() : "";
+        return delegate.getAddressEntry() != null ? delegate.getAddressEntry().getAddress().toString() : "";
     }
 
     String getPaymentLabel() {
@@ -108,16 +109,16 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
     }
 
     String getFeeAsString() {
-        return formatter.formatCoinWithCode(model.getFeeAsCoin());
+        return formatter.formatCoinWithCode(delegate.getFeeAsCoin());
     }
 
     String getTransactionId() {
-        return model.getTransactionId();
+        return delegate.getTransactionId();
     }
 
 
     private void validateInput() {
-        isPayButtonDisabled.set(!(model.isWalletFunded.get()));
+        isPayButtonDisabled.set(!(delegate.isWalletFunded.get()));
     }
 
 

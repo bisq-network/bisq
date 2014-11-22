@@ -19,7 +19,8 @@ package io.bitsquare.gui.main.account.content.fiat;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.ActivatableWithDelegate;
+import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
@@ -40,7 +41,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.util.StringConverter;
 
-class FiatAccountPM extends PresentationModel<FiatAccountModel> {
+class FiatAccountPM extends ActivatableWithDelegate<FiatAccountModel> implements ViewModel {
 
     private final BankAccountNumberValidator bankAccountNumberValidator;
 
@@ -85,10 +86,8 @@ class FiatAccountPM extends PresentationModel<FiatAccountModel> {
     }
 
     @Override
-    public void activate() {
-        super.activate();
-
-        model.allBankAccounts.addListener((ListChangeListener<BankAccount>) change -> applyAllBankAccounts());
+    public void doActivate() {
+        delegate.allBankAccounts.addListener((ListChangeListener<BankAccount>) change -> applyAllBankAccounts());
         applyAllBankAccounts();
     }
 
@@ -96,21 +95,21 @@ class FiatAccountPM extends PresentationModel<FiatAccountModel> {
     InputValidator.ValidationResult requestSaveBankAccount() {
         InputValidator.ValidationResult result = validateInput();
         if (result.isValid) {
-            model.saveBankAccount();
+            delegate.saveBankAccount();
         }
         return result;
     }
 
     void removeBankAccount() {
-        model.removeBankAccount();
+        delegate.removeBankAccount();
     }
 
     void addCountryToAcceptedCountriesList() {
-        model.addCountryToAcceptedCountriesList();
+        delegate.addCountryToAcceptedCountriesList();
     }
 
     void selectBankAccount(BankAccount bankAccount) {
-        model.selectBankAccount(bankAccount);
+        delegate.selectBankAccount(bankAccount);
     }
 
 
@@ -188,27 +187,27 @@ class FiatAccountPM extends PresentationModel<FiatAccountModel> {
 
 
     ObservableList<BankAccountType> getAllTypes() {
-        return model.allTypes;
+        return delegate.allTypes;
     }
 
     ObservableList<BankAccount> getAllBankAccounts() {
-        return model.allBankAccounts;
+        return delegate.allBankAccounts;
     }
 
     ObservableList<Currency> getAllCurrencies() {
-        return model.allCurrencies;
+        return delegate.allCurrencies;
     }
 
     ObservableList<Region> getAllRegions() {
-        return model.allRegions;
+        return delegate.allRegions;
     }
 
     BooleanProperty getCountryNotInAcceptedCountriesList() {
-        return model.countryNotInAcceptedCountriesList;
+        return delegate.countryNotInAcceptedCountriesList;
     }
 
     ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
-        return model.getAllCountriesFor(selectedRegion);
+        return delegate.getAllCountriesFor(selectedRegion);
     }
 
     BankAccountNumberValidator getBankAccountNumberValidator() {
@@ -217,23 +216,23 @@ class FiatAccountPM extends PresentationModel<FiatAccountModel> {
 
 
     void setType(BankAccountType type) {
-        model.setType(type);
+        delegate.setType(type);
         validateInput();
     }
 
     void setCountry(Country country) {
-        model.setCountry(country);
+        delegate.setCountry(country);
         validateInput();
     }
 
     void setCurrency(Currency currency) {
-        model.setCurrency(currency);
+        delegate.setCurrency(currency);
         validateInput();
     }
 
 
     private void applyAllBankAccounts() {
-        if (model.allBankAccounts.isEmpty()) {
+        if (delegate.allBankAccounts.isEmpty()) {
             selectionPrompt.set("No bank account available");
             selectionDisable.set(true);
         }
@@ -244,23 +243,23 @@ class FiatAccountPM extends PresentationModel<FiatAccountModel> {
     }
 
     private InputValidator.ValidationResult validateInput() {
-        InputValidator.ValidationResult result = bankAccountNumberValidator.validate(model.title.get());
+        InputValidator.ValidationResult result = bankAccountNumberValidator.validate(delegate.title.get());
         if (result.isValid) {
-            result = bankAccountNumberValidator.validate(model.holderName.get());
+            result = bankAccountNumberValidator.validate(delegate.holderName.get());
             if (result.isValid) {
-                result = bankAccountNumberValidator.validate(model.primaryID.get());
+                result = bankAccountNumberValidator.validate(delegate.primaryID.get());
                 if (result.isValid) {
-                    result = bankAccountNumberValidator.validate(model.secondaryID.get());
+                    result = bankAccountNumberValidator.validate(delegate.secondaryID.get());
                     if (result.isValid) {
-                        if (model.currency.get() == null)
+                        if (delegate.currency.get() == null)
                             result = new InputValidator.ValidationResult(false,
                                     "You have not selected a currency");
                         if (result.isValid) {
-                            if (model.country.get() == null)
+                            if (delegate.country.get() == null)
                                 result = new InputValidator.ValidationResult(false,
                                         "You have not selected a country of the payments account");
                             if (result.isValid) {
-                                if (model.type.get() == null)
+                                if (delegate.type.get() == null)
                                     result = new InputValidator.ValidationResult(false,
                                             "You have not selected a payments method");
                             }

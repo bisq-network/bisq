@@ -19,7 +19,8 @@ package io.bitsquare.gui.main.account.content.irc;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.ActivatableWithDelegate;
+import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
@@ -37,7 +38,7 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.util.StringConverter;
 
-class IrcAccountPM extends PresentationModel<IrcAccountModel> {
+class IrcAccountPM extends ActivatableWithDelegate<IrcAccountModel> implements ViewModel {
 
     private final InputValidator nickNameValidator;
 
@@ -64,13 +65,13 @@ class IrcAccountPM extends PresentationModel<IrcAccountModel> {
     InputValidator.ValidationResult requestSaveBankAccount() {
         InputValidator.ValidationResult result = validateInput();
         if (result.isValid) {
-            model.saveBankAccount();
+            delegate.saveBankAccount();
         }
         return result;
     }
 
     ObservableList<BankAccount> getAllBankAccounts() {
-        return model.allBankAccounts;
+        return delegate.allBankAccounts;
     }
 
     StringConverter<BankAccountType> getTypesConverter() {
@@ -107,11 +108,11 @@ class IrcAccountPM extends PresentationModel<IrcAccountModel> {
 
 
     ObservableList<BankAccountType> getAllTypes() {
-        return model.allTypes;
+        return delegate.allTypes;
     }
 
     ObservableList<Currency> getAllCurrencies() {
-        return model.allCurrencies;
+        return delegate.allCurrencies;
     }
 
     InputValidator getNickNameValidator() {
@@ -120,24 +121,24 @@ class IrcAccountPM extends PresentationModel<IrcAccountModel> {
 
 
     void setType(BankAccountType type) {
-        model.setType(type);
+        delegate.setType(type);
         validateInput();
     }
 
     void setCurrency(Currency currency) {
-        model.setCurrency(currency);
+        delegate.setCurrency(currency);
         validateInput();
     }
 
 
 
     private InputValidator.ValidationResult validateInput() {
-        InputValidator.ValidationResult result = nickNameValidator.validate(model.nickName.get());
-        if (model.currency.get() == null)
+        InputValidator.ValidationResult result = nickNameValidator.validate(delegate.nickName.get());
+        if (delegate.currency.get() == null)
             result = new InputValidator.ValidationResult(false,
                     "You have not selected a currency");
         if (result.isValid) {
-            if (model.type.get() == null)
+            if (delegate.type.get() == null)
                 result = new InputValidator.ValidationResult(false,
                         "You have not selected a payments method");
         }

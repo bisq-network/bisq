@@ -15,22 +15,33 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.account.content.changepassword;
+package io.bitsquare.gui;
 
-import io.bitsquare.gui.UIModel;
+public abstract class ActivatableWithDelegate<D extends Activatable> extends WithDelegate<D> implements  Activatable {
 
-import com.google.inject.Inject;
-
-class ChangePasswordModel extends UIModel {
-
-    @Inject
-    public ChangePasswordModel() {
+    public ActivatableWithDelegate(D delegate) {
+        super(delegate);
     }
 
-    @SuppressWarnings("EmptyMethod")
-    void savePassword(String password) {
+    @Override
+    public final void activate() {
+        if (delegate != null)
+            delegate.activate();
 
-        //TODO Implement password encryption for wallet
+        doActivate();
     }
 
+    protected void doActivate() {
+    }
+
+    @Override
+    public final void deactivate() {
+        if (delegate != null)
+            delegate.deactivate();
+
+        doDeactivate();
+    }
+
+    protected void doDeactivate() {
+    }
 }

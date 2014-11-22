@@ -20,7 +20,8 @@ package io.bitsquare.gui.main.account.content.restrictions;
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
-import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.Activatable;
+import io.bitsquare.gui.DataModel;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.LanguageUtil;
@@ -43,7 +44,7 @@ import java.util.Locale;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-class RestrictionsModel extends UIModel {
+class RestrictionsModel implements Activatable, DataModel {
 
     private final User user;
     private final AccountSettings accountSettings;
@@ -85,10 +86,14 @@ class RestrictionsModel extends UIModel {
 
     @Override
     public void activate() {
-        super.activate();
         languageList.setAll(accountSettings.getAcceptedLanguageLocales());
         countryList.setAll(accountSettings.getAcceptedCountries());
         arbitratorList.setAll(accountSettings.getAcceptedArbitrators());
+    }
+
+    @Override
+    public void deactivate() {
+        // no-op
     }
 
     ObservableList<Country> getAllCountriesFor(Region selectedRegion) {

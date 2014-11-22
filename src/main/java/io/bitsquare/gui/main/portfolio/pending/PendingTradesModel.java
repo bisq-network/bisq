@@ -21,7 +21,8 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
-import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.Activatable;
+import io.bitsquare.gui.DataModel;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Trade;
@@ -54,7 +55,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class PendingTradesModel extends UIModel {
+class PendingTradesModel implements Activatable, DataModel {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesModel.class);
 
     private final TradeManager tradeManager;
@@ -98,8 +99,6 @@ class PendingTradesModel extends UIModel {
 
     @Override
     public void activate() {
-        super.activate();
-
         list.clear();
         // transform trades to list of PendingTradesListItems and keep it updated
         tradeManager.getPendingTrades().values().stream()
@@ -122,8 +121,6 @@ class PendingTradesModel extends UIModel {
 
     @Override
     public void deactivate() {
-        super.deactivate();
-
         tradeManager.getPendingTrades().removeListener(mapChangeListener);
         cleanUpSelectedTrade();
     }

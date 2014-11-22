@@ -17,7 +17,8 @@
 
 package io.bitsquare.gui.main.portfolio.offer;
 
-import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.Activatable;
+import io.bitsquare.gui.DataModel;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.TradeManager;
@@ -31,7 +32,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 
-class OffersModel extends UIModel {
+class OffersModel implements Activatable, DataModel {
 
     private final TradeManager tradeManager;
     private final User user;
@@ -55,8 +56,6 @@ class OffersModel extends UIModel {
 
     @Override
     public void activate() {
-        super.activate();
-
         list.clear();
         list.addAll(tradeManager.getOffers().values().stream().map(OfferListItem::new).collect(Collectors.toList()));
 
@@ -68,8 +67,6 @@ class OffersModel extends UIModel {
 
     @Override
     public void deactivate() {
-        super.deactivate();
-
         tradeManager.getOffers().removeListener(offerMapChangeListener);
     }
 

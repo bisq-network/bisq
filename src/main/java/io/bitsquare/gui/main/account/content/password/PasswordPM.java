@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.password;
 
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PasswordValidator;
 
@@ -28,7 +28,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-class PasswordPM extends PresentationModel<PasswordModel> {
+class PasswordPM implements ViewModel {
 
     private final PasswordValidator passwordValidator;
 
@@ -40,8 +40,7 @@ class PasswordPM extends PresentationModel<PasswordModel> {
 
 
     @Inject
-    public PasswordPM(PasswordModel model, PasswordValidator passwordValidator) {
-        super(model);
+    public PasswordPM(PasswordValidator passwordValidator) {
         this.passwordValidator = passwordValidator;
 
         passwordField.addListener((ov) -> saveButtonDisabled.set(!validate()));
@@ -51,10 +50,14 @@ class PasswordPM extends PresentationModel<PasswordModel> {
 
     boolean requestSavePassword() {
         if (validate()) {
-            model.savePassword(passwordField.get());
+            savePassword(passwordField.get());
             return true;
         }
         return false;
+    }
+
+    void savePassword(String password) {
+        //TODO Implement password encryption for wallet
     }
 
     String getErrorMessage() {

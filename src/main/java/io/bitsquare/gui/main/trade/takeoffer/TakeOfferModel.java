@@ -21,7 +21,8 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.Activatable;
+import io.bitsquare.gui.DataModel;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Preferences;
@@ -51,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
-class TakeOfferModel extends UIModel {
+class TakeOfferModel implements Activatable, DataModel {
     private static final Logger log = LoggerFactory.getLogger(TakeOfferModel.class);
 
     private final TradeManager tradeManager;
@@ -92,16 +93,11 @@ class TakeOfferModel extends UIModel {
 
     @Override
     public void activate() {
-        super.activate();
-
         btcCode.bind(preferences.btcDenominationProperty());
     }
 
-    @SuppressWarnings("EmptyMethod")
     @Override
     public void deactivate() {
-        super.deactivate();
-
         btcCode.unbind();
     }
 

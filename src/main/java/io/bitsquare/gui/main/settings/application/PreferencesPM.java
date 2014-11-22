@@ -17,7 +17,8 @@
 
 package io.bitsquare.gui.main.settings.application;
 
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.ActivatableWithDelegate;
+import io.bitsquare.gui.ViewModel;
 
 import com.google.inject.Inject;
 
@@ -25,7 +26,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 
-class PreferencesPM extends PresentationModel<PreferencesModel> {
+class PreferencesPM extends ActivatableWithDelegate<PreferencesModel> implements ViewModel {
 
     @Inject
     public PreferencesPM(PreferencesModel model) {
@@ -33,19 +34,19 @@ class PreferencesPM extends PresentationModel<PreferencesModel> {
     }
 
     public ObservableList<String> getBtcDenominationItems() {
-        return model.btcDenominations;
+        return delegate.btcDenominations;
     }
 
     BooleanProperty useAnimations() {
-        return model.useAnimations;
+        return delegate.useAnimations;
     }
 
     BooleanProperty useEffects() {
-        return model.useEffects;
+        return delegate.useEffects;
     }
 
     StringProperty btcDenomination() {
-        return model.btcDenomination;
+        return delegate.btcDenomination;
     }
 
 

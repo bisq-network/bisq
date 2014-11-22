@@ -17,7 +17,8 @@
 
 package io.bitsquare.gui.main.trade.offerbook;
 
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.ActivatableWithDelegate;
+import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
@@ -35,7 +36,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.transformation.SortedList;
 
-class OfferBookPM extends PresentationModel<OfferBookModel> {
+class OfferBookPM extends ActivatableWithDelegate<OfferBookModel> implements ViewModel {
 
     private final OptionalBtcValidator optionalBtcValidator;
     private final BSFormatter formatter;
@@ -50,17 +51,17 @@ class OfferBookPM extends PresentationModel<OfferBookModel> {
 
 
     @Inject
-    public OfferBookPM(OfferBookModel model, OptionalFiatValidator optionalFiatValidator,
+    public OfferBookPM(OfferBookModel delegate, OptionalFiatValidator optionalFiatValidator,
                        OptionalBtcValidator optionalBtcValidator, BSFormatter formatter) {
-        super(model);
+        super(delegate);
 
         this.optionalFiatValidator = optionalFiatValidator;
         this.optionalBtcValidator = optionalBtcValidator;
         this.formatter = formatter;
 
-        btcCode.bind(model.btcCode);
-        fiatCode.bind(model.fiatCode);
-        restrictionsInfo.bind(model.restrictionsInfo);
+        btcCode.bind(delegate.btcCode);
+        fiatCode.bind(delegate.fiatCode);
+        restrictionsInfo.bind(delegate.restrictionsInfo);
 
         // Bidirectional bindings are used for all input fields: amount, price and volume
         // We do volume/amount calculation during input, so user has immediate feedback
@@ -68,7 +69,7 @@ class OfferBookPM extends PresentationModel<OfferBookModel> {
             if (isBtcInputValid(newValue).isValid) {
                 setAmountToModel();
                 setPriceToModel();
-                model.calculateVolume();
+                delegate.calculateVolume();
             }
         });
 
@@ -76,7 +77,7 @@ class OfferBookPM extends PresentationModel<OfferBookModel> {
             if (isFiatInputValid(newValue).isValid) {
                 setAmountToModel();
                 setPriceToModel();
-                model.calculateVolume();
+                delegate.calculateVolume();
             }
         });
 
@@ -84,42 +85,42 @@ class OfferBookPM extends PresentationModel<OfferBookModel> {
             if (isFiatInputValid(newValue).isValid) {
                 setPriceToModel();
                 setVolumeToModel();
-                model.calculateAmount();
+                delegate.calculateAmount();
             }
         });
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
-        model.amountAsCoinProperty().addListener((ov, oldValue, newValue) -> amount.set(formatter.formatCoin
+        delegate.amountAsCoinProperty().addListener((ov, oldValue, newValue) -> amount.set(formatter.formatCoin
                 (newValue)));
-        model.priceAsFiatProperty().addListener((ov, oldValue, newValue) -> price.set(formatter.formatFiat(newValue)));
-        model.volumeAsFiatProperty().addListener((ov, oldValue, newValue) -> volume.set(formatter.formatFiat
+        delegate.priceAsFiatProperty().addListener((ov, oldValue, newValue) -> price.set(formatter.formatFiat(newValue)));
+        delegate.volumeAsFiatProperty().addListener((ov, oldValue, newValue) -> volume.set(formatter.formatFiat
                 (newValue)));
     }
 
     void removeOffer(Offer offer) {
-        model.removeOffer(offer);
+        delegate.removeOffer(offer);
     }
 
     boolean isTradable(Offer offer) {
-        return model.isTradable(offer);
+        return delegate.isTradable(offer);
     }
 
 
     void setDirection(Direction direction) {
-        model.setDirection(direction);
+        delegate.setDirection(direction);
     }
 
 
     SortedList<OfferBookListItem> getOfferList() {
-        return model.getOfferList();
+        return delegate.getOfferList();
     }
 
     boolean isRegistered() {
-        return model.isRegistered();
+        return delegate.isRegistered();
     }
 
     boolean isMyOffer(Offer offer) {
-        return model.isMyOffer(offer);
+        return delegate.isMyOffer(offer);
     }
 
     String getAmount(OfferBookListItem item) {
@@ -145,15 +146,15 @@ class OfferBookPM extends PresentationModel<OfferBookModel> {
     }
 
     Direction getDirection() {
-        return model.getDirection();
+        return delegate.getDirection();
     }
 
     Coin getAmountAsCoin() {
-        return model.getAmountAsCoin();
+        return delegate.getAmountAsCoin();
     }
 
     Fiat getPriceAsCoin() {
-        return model.getPriceAsFiat();
+        return delegate.getPriceAsFiat();
     }
 
     private InputValidator.ValidationResult isBtcInputValid(String input) {
@@ -165,15 +166,15 @@ class OfferBookPM extends PresentationModel<OfferBookModel> {
     }
 
     private void setAmountToModel() {
-        model.setAmount(formatter.parseToCoinWith4Decimals(amount.get()));
+        delegate.setAmount(formatter.parseToCoinWith4Decimals(amount.get()));
     }
 
     private void setPriceToModel() {
-        model.setPrice(formatter.parseToFiatWith2Decimals(price.get()));
+        delegate.setPrice(formatter.parseToFiatWith2Decimals(price.get()));
     }
 
     private void setVolumeToModel() {
-        model.setVolume(formatter.parseToFiatWith2Decimals(volume.get()));
+        delegate.setVolume(formatter.parseToFiatWith2Decimals(volume.get()));
     }
 
 }

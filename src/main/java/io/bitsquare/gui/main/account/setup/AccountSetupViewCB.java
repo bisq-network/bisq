@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.account.setup;
 
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.PresentationModel;
 import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
@@ -68,7 +67,6 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
 
     @Inject
     private AccountSetupViewCB(ViewLoader viewLoader, Navigation navigation) {
-        super();
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }

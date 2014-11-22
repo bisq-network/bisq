@@ -17,19 +17,21 @@
 
 package io.bitsquare.gui.main.account;
 
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.ViewModel;
+import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
-class AccountPM extends PresentationModel<AccountModel> {
+class AccountPM implements ViewModel {
+
+    private final User user;
 
     @Inject
-    public AccountPM(AccountModel model) {
-        super(model);
+    public AccountPM(User user) {
+        this.user = user;
     }
 
     boolean getNeedRegistration() {
-        return model.getNeedRegistration();
+        return user.getAccountId() == null;
     }
-
 }

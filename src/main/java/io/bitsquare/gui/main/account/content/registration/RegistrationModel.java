@@ -21,7 +21,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.DataModel;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 
@@ -45,7 +45,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class RegistrationModel extends UIModel {
+class RegistrationModel implements DataModel {
     private static final Logger log = LoggerFactory.getLogger(RegistrationModel.class);
 
     private final WalletService walletService;

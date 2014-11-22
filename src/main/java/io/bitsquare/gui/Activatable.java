@@ -15,26 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.account;
+package io.bitsquare.gui;
 
-import io.bitsquare.gui.UIModel;
-import io.bitsquare.user.User;
+public interface Activatable {
+    void activate();
 
-import com.google.inject.Inject;
-
-class AccountModel extends UIModel {
-
-    private final User user;
-
-    @Inject
-    public AccountModel(User user) {
-        this.user = user;
-    }
-
-    boolean getNeedRegistration() {
-        return user.getAccountId() == null;
-
-    }
-
-
+    void deactivate();
 }

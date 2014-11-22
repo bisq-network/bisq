@@ -38,8 +38,8 @@
     <logger name="io.netty.channel" level="WARN"/>
     <logger name="io.netty.buffer" level="WARN"/>
 
-    <logger name="io.bitsquare.gui.UIModel" level="WARN"/>
-    <logger name="io.bitsquare.gui.PresentationModel" level="WARN"/>
+    <logger name="io.bitsquare.gui.DataModel" level="WARN"/>
+    <logger name="io.bitsquare.gui.ActivatableWithDelegate" level="WARN"/>
     <logger name="io.bitsquare.gui.ViewController" level="WARN"/>
     <logger name="io.bitsquare.gui.ViewCB" level="WARN"/>
     <logger name="io.bitsquare.gui.CachedViewCB" level="WARN"/>

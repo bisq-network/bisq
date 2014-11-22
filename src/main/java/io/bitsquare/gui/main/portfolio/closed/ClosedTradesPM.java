@@ -17,14 +17,15 @@
 
 package io.bitsquare.gui.main.portfolio.closed;
 
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.ActivatableWithDelegate;
+import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.inject.Inject;
 
 import javafx.collections.ObservableList;
 
-class ClosedTradesPM extends PresentationModel<ClosedTradesModel> {
+class ClosedTradesPM extends ActivatableWithDelegate<ClosedTradesModel> implements ViewModel {
 
     private final BSFormatter formatter;
 
@@ -37,7 +38,7 @@ class ClosedTradesPM extends PresentationModel<ClosedTradesModel> {
     }
 
     public ObservableList<ClosedTradesListItem> getList() {
-        return model.getList();
+        return delegate.getList();
     }
 
     String getTradeId(ClosedTradesListItem item) {
@@ -57,7 +58,7 @@ class ClosedTradesPM extends PresentationModel<ClosedTradesModel> {
     }
 
     String getDirectionLabel(ClosedTradesListItem item) {
-        return (item != null) ? formatter.formatDirection(model.getDirection(item.getTrade().getOffer())) : "";
+        return (item != null) ? formatter.formatDirection(delegate.getDirection(item.getTrade().getOffer())) : "";
     }
 
     String getDate(ClosedTradesListItem item) {

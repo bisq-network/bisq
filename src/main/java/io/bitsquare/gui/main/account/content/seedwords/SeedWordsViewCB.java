@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.seedwords;
 
-import io.bitsquare.gui.CachedViewCB;
+import io.bitsquare.gui.ViewCB;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;
@@ -36,12 +36,14 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SeedWordsViewCB extends CachedViewCB<SeedWordsPM> implements ContextAware {
+public class SeedWordsViewCB extends ViewCB implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(SeedWordsViewCB.class);
 
     @FXML Button completedButton;
     @FXML TextArea seedWordsTextArea;
+
+    private final SeedWordsPM model;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -49,8 +51,8 @@ public class SeedWordsViewCB extends CachedViewCB<SeedWordsPM> implements Contex
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private SeedWordsViewCB(SeedWordsPM presentationModel) {
-        super(presentationModel);
+    private SeedWordsViewCB(SeedWordsPM model) {
+        this.model = model;
     }
 
 
@@ -62,25 +64,7 @@ public class SeedWordsViewCB extends CachedViewCB<SeedWordsPM> implements Contex
     public void initialize(URL url, ResourceBundle rb) {
         super.initialize(url, rb);
 
-        seedWordsTextArea.setText(presentationModel.seedWords.get());
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void activate() {
-        super.activate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void deactivate() {
-        super.deactivate();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
+        seedWordsTextArea.setText(model.seedWords.get());
     }
 
 

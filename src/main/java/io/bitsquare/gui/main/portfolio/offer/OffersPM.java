@@ -17,14 +17,15 @@
 
 package io.bitsquare.gui.main.portfolio.offer;
 
-import io.bitsquare.gui.PresentationModel;
+import io.bitsquare.gui.ActivatableWithDelegate;
+import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.inject.Inject;
 
 import javafx.collections.ObservableList;
 
-class OffersPM extends PresentationModel<OffersModel> {
+class OffersPM extends ActivatableWithDelegate<OffersModel> implements ViewModel {
 
     private final BSFormatter formatter;
 
@@ -38,12 +39,12 @@ class OffersPM extends PresentationModel<OffersModel> {
 
 
     void removeOffer(OfferListItem item) {
-        model.removeOffer(item);
+        delegate.removeOffer(item);
     }
 
 
     public ObservableList<OfferListItem> getList() {
-        return model.getList();
+        return delegate.getList();
     }
 
     String getTradeId(OfferListItem item) {
@@ -63,7 +64,7 @@ class OffersPM extends PresentationModel<OffersModel> {
     }
 
     String getDirectionLabel(OfferListItem item) {
-        return (item != null) ? formatter.formatDirection(model.getDirection(item.getOffer())) : "";
+        return (item != null) ? formatter.formatDirection(delegate.getDirection(item.getOffer())) : "";
     }
 
     String getDate(OfferListItem item) {

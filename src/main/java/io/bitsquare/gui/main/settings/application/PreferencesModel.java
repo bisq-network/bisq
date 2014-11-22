@@ -17,7 +17,8 @@
 
 package io.bitsquare.gui.main.settings.application;
 
-import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.Activatable;
+import io.bitsquare.gui.DataModel;
 import io.bitsquare.settings.Preferences;
 
 import com.google.inject.Inject;
@@ -30,7 +31,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-class PreferencesModel extends UIModel {
+class PreferencesModel implements Activatable, DataModel {
 
     private final Preferences preferences;
 
@@ -58,8 +59,6 @@ class PreferencesModel extends UIModel {
 
     @Override
     public void activate() {
-        super.activate();
-
         useAnimations.set(preferences.getUseAnimations());
         useEffects.set(preferences.getUseEffects());
         btcDenomination.set(preferences.getBtcDenomination());
@@ -71,8 +70,6 @@ class PreferencesModel extends UIModel {
 
     @Override
     public void deactivate() {
-        super.deactivate();
-
         useAnimations.removeListener(useAnimationsListener);
         useEffects.removeListener(useEffectsListener);
         btcDenomination.removeListener(btcDenominationListener);

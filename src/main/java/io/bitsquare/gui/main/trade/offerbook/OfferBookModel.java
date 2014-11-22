@@ -18,7 +18,8 @@
 package io.bitsquare.gui.main.trade.offerbook;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.gui.UIModel;
+import io.bitsquare.gui.Activatable;
+import io.bitsquare.gui.DataModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
@@ -51,7 +52,7 @@ import org.slf4j.LoggerFactory;
 /**
  * It holds the scope specific domain data for either a buy or sell UI screen.
  */
-class OfferBookModel extends UIModel {
+class OfferBookModel implements Activatable, DataModel {
     private static final Logger log = LoggerFactory.getLogger(OfferBookModel.class);
 
     private final User user;
@@ -93,8 +94,6 @@ class OfferBookModel extends UIModel {
 
     @Override
     public void activate() {
-        super.activate();
-
         amountAsCoin.set(null);
         priceAsFiat.set(null);
         volumeAsFiat.set(null);
@@ -109,8 +108,6 @@ class OfferBookModel extends UIModel {
 
     @Override
     public void deactivate() {
-        super.deactivate();
-
         offerBook.removeClient();
         user.currentBankAccountProperty().removeListener(bankAccountChangeListener);
         btcCode.unbind();

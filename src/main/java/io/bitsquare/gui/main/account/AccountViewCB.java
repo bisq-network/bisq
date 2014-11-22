@@ -36,7 +36,7 @@ import javafx.scene.control.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountViewCB extends CachedViewCB<AccountPM> {
+public class AccountViewCB extends CachedViewCB {
 
     private static final Logger log = LoggerFactory.getLogger(AccountViewCB.class);
 
@@ -45,6 +45,7 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
 
     @FXML Tab accountSettingsTab, arbitratorSettingsTab;
 
+    private final AccountPM model;
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
@@ -54,8 +55,9 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountViewCB(AccountPM presentationModel, ViewLoader viewLoader, Navigation navigation) {
-        super(presentationModel);
+    private AccountViewCB(AccountPM model, ViewLoader viewLoader, Navigation navigation) {
+        super();
+        this.model = model;
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
@@ -96,7 +98,7 @@ public class AccountViewCB extends CachedViewCB<AccountPM> {
 
         if (navigation.getCurrentItems().length == 2 &&
                 navigation.getCurrentItems()[1] == Navigation.Item.ACCOUNT) {
-            if (presentationModel.getNeedRegistration()) {
+            if (model.getNeedRegistration()) {
                 navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
                         Navigation.Item.ACCOUNT_SETUP);
             }
