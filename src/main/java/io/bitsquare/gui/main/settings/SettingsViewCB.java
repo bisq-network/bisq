@@ -52,7 +52,6 @@ public class SettingsViewCB extends CachedViewCB {
 
     @Inject
     SettingsViewCB(ViewLoader viewLoader, Navigation navigation, Preferences preferences) {
-        super();
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;

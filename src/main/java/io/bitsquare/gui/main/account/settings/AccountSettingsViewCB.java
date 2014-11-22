@@ -63,7 +63,6 @@ public class AccountSettingsViewCB extends CachedViewCB {
 
     @Inject
     private AccountSettingsViewCB(ViewLoader viewLoader, Navigation navigation) {
-        super();
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }

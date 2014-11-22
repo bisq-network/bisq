@@ -50,7 +50,6 @@ public class ArbitratorSettingsViewCB extends CachedViewCB {
 
     @Inject
     private ArbitratorSettingsViewCB(ViewLoader viewLoader, Navigation navigation, Stage primaryStage) {
-        super();
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.primaryStage = primaryStage;

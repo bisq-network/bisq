@@ -68,7 +68,6 @@ public class TradeViewCB extends CachedViewCB implements TradeNavigator {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected TradeViewCB(ViewLoader viewLoader, Navigation navigation) {
-        super();
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }

@@ -53,7 +53,6 @@ public class PortfolioViewCB extends CachedViewCB {
 
     @Inject
     PortfolioViewCB(ViewLoader viewLoader, Navigation navigation, TradeManager tradeManager) {
-        super();
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.tradeManager = tradeManager;

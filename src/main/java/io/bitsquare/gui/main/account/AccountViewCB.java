@@ -56,7 +56,6 @@ public class AccountViewCB extends CachedViewCB {
 
     @Inject
     private AccountViewCB(AccountPM model, ViewLoader viewLoader, Navigation navigation) {
-        super();
         this.model = model;
         this.viewLoader = viewLoader;
         this.navigation = navigation;

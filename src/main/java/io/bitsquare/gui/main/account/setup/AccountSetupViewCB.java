@@ -68,7 +68,6 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
 
     @Inject
     private AccountSetupViewCB(ViewLoader viewLoader, Navigation navigation) {
-        super();
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
