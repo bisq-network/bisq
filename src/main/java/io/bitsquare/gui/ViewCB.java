@@ -68,9 +68,6 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
                     terminate();
             });
         }
-
-        if (presentationModel != null)
-            presentationModel.initialize();
     }
 
     /**

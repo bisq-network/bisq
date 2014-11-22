@@ -57,12 +57,6 @@ class OfferBookPM extends PresentationModel<OfferBookModel> {
         this.optionalFiatValidator = optionalFiatValidator;
         this.optionalBtcValidator = optionalBtcValidator;
         this.formatter = formatter;
-    }
-
-
-    @Override
-    public void initialize() {
-        super.initialize();
 
         btcCode.bind(model.btcCode);
         fiatCode.bind(model.fiatCode);

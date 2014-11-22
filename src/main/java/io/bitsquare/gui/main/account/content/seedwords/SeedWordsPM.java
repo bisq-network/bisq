@@ -28,19 +28,10 @@ import javafx.beans.property.StringProperty;
 class SeedWordsPM extends PresentationModel<SeedWordsModel> {
 
     final StringProperty seedWords = new SimpleStringProperty();
-    private final BSFormatter formatter;
-
 
     @Inject
     public SeedWordsPM(SeedWordsModel model, BSFormatter formatter) {
         super(model);
-        this.formatter = formatter;
-    }
-
-
-    @Override
-    public void initialize() {
-        super.initialize();
 
         if (model.getMnemonicCode() != null)
             seedWords.set(formatter.mnemonicCodeToString(model.getMnemonicCode()));

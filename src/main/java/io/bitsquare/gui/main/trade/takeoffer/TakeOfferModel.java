@@ -85,12 +85,6 @@ class TakeOfferModel extends UIModel {
         this.walletService = walletService;
         this.preferences = preferences;
         this.persistence = persistence;
-    }
-
-
-    @Override
-    public void initialize() {
-        super.initialize();
 
         offerFeeAsCoin.set(FeePolicy.CREATE_OFFER_FEE);
         networkFeeAsCoin.set(FeePolicy.TX_FEE);

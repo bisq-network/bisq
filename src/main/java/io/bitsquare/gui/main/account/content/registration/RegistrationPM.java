@@ -51,12 +51,6 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
     public RegistrationPM(RegistrationModel model, BSFormatter formatter) {
         super(model);
         this.formatter = formatter;
-    }
-
-
-    @Override
-    public void initialize() {
-        super.initialize();
 
         if (model.getAddressEntry() != null) {
             address.set(model.getAddressEntry().getAddress());

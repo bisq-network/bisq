@@ -66,12 +66,6 @@ class RegistrationModel extends UIModel {
         this.walletService = walletService;
         this.user = user;
         this.persistence = persistence;
-    }
-
-
-    @Override
-    public void initialize() {
-        super.initialize();
 
         if (walletService != null && walletService.getWallet() != null) {
             addressEntry = walletService.getRegistrationAddressEntry();

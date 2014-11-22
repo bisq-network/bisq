@@ -65,12 +65,6 @@ class RestrictionsModel extends UIModel {
         this.accountSettings = accountSettings;
         this.persistence = persistence;
         this.messageService = messageService;
-    }
-
-
-    @Override
-    public void initialize() {
-        super.initialize();
 
         AccountSettings persistedAccountSettings = (AccountSettings) persistence.read(accountSettings);
         if (persistedAccountSettings != null) {

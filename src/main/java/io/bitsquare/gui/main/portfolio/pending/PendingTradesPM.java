@@ -59,7 +59,7 @@ class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     }
 
     private final BSFormatter formatter;
-    private InvalidationListener stateChangeListener;
+    private final InvalidationListener stateChangeListener;
     private final BtcAddressValidator btcAddressValidator;
 
     final StringProperty txId = new SimpleStringProperty();
@@ -75,14 +75,7 @@ class PendingTradesPM extends PresentationModel<PendingTradesModel> {
 
         this.formatter = formatter;
         this.btcAddressValidator = btcAddressValidator;
-    }
-
-
-    @Override
-    public void initialize() {
-        stateChangeListener = (ov) -> updateState();
-
-        super.initialize();
+        this.stateChangeListener = (ov) -> updateState();
     }
 
     @Override

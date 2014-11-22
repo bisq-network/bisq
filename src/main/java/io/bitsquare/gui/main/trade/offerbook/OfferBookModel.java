@@ -63,7 +63,7 @@ class OfferBookModel extends UIModel {
     private final FilteredList<OfferBookListItem> filteredItems;
     private final SortedList<OfferBookListItem> sortedItems;
     // private OfferBookInfo offerBookInfo;
-    private ChangeListener<BankAccount> bankAccountChangeListener;
+    private final ChangeListener<BankAccount> bankAccountChangeListener;
 
     private final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
     private final ObjectProperty<Fiat> priceAsFiat = new SimpleObjectProperty<>();
@@ -86,16 +86,9 @@ class OfferBookModel extends UIModel {
         this.preferences = preferences;
         this.formatter = formatter;
 
-        filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
-        sortedItems = new SortedList<>(filteredItems);
-    }
-
-
-    @Override
-    public void initialize() {
-        bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
-
-        super.initialize();
+        this.filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
+        this.sortedItems = new SortedList<>(filteredItems);
+        this.bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
     }
 
     @Override

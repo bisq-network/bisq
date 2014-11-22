@@ -42,8 +42,6 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 
 class TakeOfferPM extends PresentationModel<TakeOfferModel> {
 
-    private String offerFee;
-    private String networkFee;
     private String fiatCode;
     private String amountRange;
     private String price;
@@ -62,6 +60,8 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
 
     private final BtcValidator btcValidator;
     private final BSFormatter formatter;
+    private final String offerFee;
+    private final String networkFee;
 
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty volume = new SimpleStringProperty();
@@ -91,16 +91,9 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
 
         this.btcValidator = btcValidator;
         this.formatter = formatter;
-    }
 
-
-    @Override
-    public void initialize() {
-        super.initialize();
-
-        // static
-        offerFee = formatter.formatCoinWithCode(model.offerFeeAsCoin.get());
-        networkFee = formatter.formatCoinWithCode(model.networkFeeAsCoin.get());
+        this.offerFee = formatter.formatCoinWithCode(model.offerFeeAsCoin.get());
+        this.networkFee = formatter.formatCoinWithCode(model.networkFeeAsCoin.get());
 
         setupBindings();
         setupListeners();

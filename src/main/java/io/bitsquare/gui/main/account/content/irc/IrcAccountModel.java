@@ -75,12 +75,6 @@ class IrcAccountModel extends UIModel {
         this.user = user;
         this.accountSettings = accountSettings;
         this.messageService = messageService;
-    }
-
-
-    @Override
-    public void initialize() {
-        super.initialize();
 
         if (accountSettings.getAcceptedArbitrators().isEmpty())
             addMockArbitrator();

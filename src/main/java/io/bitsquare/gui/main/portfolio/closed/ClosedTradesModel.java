@@ -36,26 +36,20 @@ class ClosedTradesModel extends UIModel {
     private final User user;
 
     private final ObservableList<ClosedTradesListItem> list = FXCollections.observableArrayList();
-    private MapChangeListener<String, Trade> mapChangeListener;
+    private final MapChangeListener<String, Trade> mapChangeListener;
 
 
     @Inject
     public ClosedTradesModel(TradeManager tradeManager, User user) {
         this.tradeManager = tradeManager;
         this.user = user;
-    }
 
-
-    @Override
-    public void initialize() {
-        mapChangeListener = change -> {
+        this.mapChangeListener = change -> {
             if (change.wasAdded())
                 list.add(new ClosedTradesListItem(change.getValueAdded()));
             else if (change.wasRemoved())
                 list.removeIf(e -> e.getTrade().getId().equals(change.getValueRemoved().getId()));
         };
-
-        super.initialize();
     }
 
     @Override

@@ -62,11 +62,7 @@ class FiatAccountPM extends PresentationModel<FiatAccountModel> {
     public FiatAccountPM(FiatAccountModel model, BankAccountNumberValidator bankAccountNumberValidator) {
         super(model);
         this.bankAccountNumberValidator = bankAccountNumberValidator;
-    }
 
-
-    @Override
-    public void initialize() {
         // input
         title.bindBidirectional(model.title);
         holderName.bindBidirectional(model.holderName);
@@ -86,8 +82,6 @@ class FiatAccountPM extends PresentationModel<FiatAccountModel> {
         holderName.addListener((ov, oldValue, newValue) -> validateInput());
         primaryID.addListener((ov, oldValue, newValue) -> validateInput());
         secondaryID.addListener((ov, oldValue, newValue) -> validateInput());
-
-        super.initialize();
     }
 
     @Override

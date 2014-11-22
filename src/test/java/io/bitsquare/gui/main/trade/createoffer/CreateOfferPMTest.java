@@ -51,7 +51,6 @@ public class CreateOfferPMTest {
         model = new CreateOfferModel(null, null, null, null, null, null, formatter);
 
         presenter = new CreateOfferPM(model, new FiatValidator(null), new BtcValidator(), formatter);
-        presenter.initialize();
     }
 
     @Test

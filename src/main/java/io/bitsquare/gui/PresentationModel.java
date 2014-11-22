@@ -32,12 +32,6 @@ public class PresentationModel<T extends UIModel> {
     public PresentationModel() {
     }
 
-    public void initialize() {
-        log.trace("Lifecycle: initialize " + this.getClass().getSimpleName());
-        if (model != null)
-            model.initialize();
-    }
-
     public void activate() {
         log.trace("Lifecycle: activate " + this.getClass().getSimpleName());
         if (model != null)

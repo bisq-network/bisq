@@ -99,14 +99,7 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         this.fiatValidator = fiatValidator;
         this.btcValidator = btcValidator;
         this.formatter = formatter;
-    }
 
-
-    @Override
-    public void initialize() {
-        super.initialize();
-
-        // static
         paymentLabel.set(BSResources.get("createOffer.fundsBox.paymentLabel", model.getOfferId()));
 
         if (model.getAddressEntry() != null) {

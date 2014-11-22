@@ -118,14 +118,8 @@ class CreateOfferModel extends UIModel {
         this.user = user;
         this.persistence = persistence;
         this.formatter = formatter;
+        this.offerId = UUID.randomUUID().toString();
 
-        offerId = UUID.randomUUID().toString();
-    }
-
-
-    @Override
-    public void initialize() {
-        // static data
         offerFeeAsCoin.set(FeePolicy.CREATE_OFFER_FEE);
         networkFeeAsCoin.set(FeePolicy.TX_FEE);
 
@@ -153,8 +147,6 @@ class CreateOfferModel extends UIModel {
         // we need to set it here already as initWithData is called before activate
         if (accountSettings != null)
             securityDepositAsCoin.set(accountSettings.getSecurityDeposit());
-
-        super.initialize();
     }
 
     @Override

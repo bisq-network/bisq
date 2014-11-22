@@ -51,19 +51,13 @@ class IrcAccountPM extends PresentationModel<IrcAccountModel> {
     public IrcAccountPM(IrcAccountModel model, BankAccountNumberValidator nickNameValidator) {
         super(model);
         this.nickNameValidator = nickNameValidator;
-    }
 
-
-    @Override
-    public void initialize() {
         // input
         ircNickName.bindBidirectional(model.nickName);
         type.bindBidirectional(model.type);
         currency.bindBidirectional(model.currency);
 
         model.nickName.addListener((ov, oldValue, newValue) -> validateInput());
-
-        super.initialize();
     }
 
 

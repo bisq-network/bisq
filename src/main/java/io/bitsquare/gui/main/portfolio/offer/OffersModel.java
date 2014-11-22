@@ -37,26 +37,20 @@ class OffersModel extends UIModel {
     private final User user;
 
     private final ObservableList<OfferListItem> list = FXCollections.observableArrayList();
-    private MapChangeListener<String, Offer> offerMapChangeListener;
+    private final MapChangeListener<String, Offer> offerMapChangeListener;
 
 
     @Inject
     public OffersModel(TradeManager tradeManager, User user) {
         this.tradeManager = tradeManager;
         this.user = user;
-    }
 
-
-    @Override
-    public void initialize() {
-        offerMapChangeListener = change -> {
+        this.offerMapChangeListener = change -> {
             if (change.wasAdded())
                 list.add(new OfferListItem(change.getValueAdded()));
             else if (change.wasRemoved())
                 list.removeIf(e -> e.getOffer().getId().equals(change.getValueRemoved().getId()));
         };
-
-        super.initialize();
     }
 
     @Override

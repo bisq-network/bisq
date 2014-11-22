@@ -64,9 +64,6 @@ public class CachedViewCB<T extends PresentationModel> extends ViewCB<T> {
                     deactivate();
             });
         }
-
-        if (presentationModel != null)
-            presentationModel.initialize();
     }
 
     /**

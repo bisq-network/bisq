@@ -66,11 +66,11 @@ class PendingTradesModel extends UIModel {
     private PendingTradesListItem selectedItem;
     private boolean isOfferer;
     private Trade closedTrade;
-
     private TxConfidenceListener txConfidenceListener;
-    private ChangeListener<Trade.State> stateChangeListener;
-    private ChangeListener<Throwable> faultChangeListener;
-    private MapChangeListener<String, Trade> mapChangeListener;
+
+    private final ChangeListener<Trade.State> stateChangeListener;
+    private final ChangeListener<Throwable> faultChangeListener;
+    private final MapChangeListener<String, Trade> mapChangeListener;
 
     final StringProperty txId = new SimpleStringProperty();
     final ObjectProperty<Trade.State> tradeState = new SimpleObjectProperty<>();
@@ -82,15 +82,11 @@ class PendingTradesModel extends UIModel {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
         this.user = user;
-    }
 
+        this.stateChangeListener = (ov, oldValue, newValue) -> tradeState.set(newValue);
+        this.faultChangeListener = (ov, oldValue, newValue) -> fault.set(newValue);
 
-    @Override
-    public void initialize() {
-        stateChangeListener = (ov, oldValue, newValue) -> tradeState.set(newValue);
-        faultChangeListener = (ov, oldValue, newValue) -> fault.set(newValue);
-
-        mapChangeListener = change -> {
+        this.mapChangeListener = change -> {
             if (change.wasAdded())
                 list.add(new PendingTradesListItem(change.getValueAdded()));
             else if (change.wasRemoved())
@@ -98,8 +94,6 @@ class PendingTradesModel extends UIModel {
 
             sortList();
         };
-
-        super.initialize();
     }
 
     @Override
@@ -148,7 +142,7 @@ class PendingTradesModel extends UIModel {
             trade.stateProperty().addListener(stateChangeListener);
             tradeState.set(trade.stateProperty().get());
             log.trace("selectTrade trade.stateProperty().get() " + trade.stateProperty().get());
-            
+
             if (trade.getDepositTx() != null)
                 txId.set(trade.getDepositTx().getHashAsString());
 
