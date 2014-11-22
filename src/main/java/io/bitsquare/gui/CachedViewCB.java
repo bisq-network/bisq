@@ -33,22 +33,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class CachedViewCB<M extends Activatable> extends ViewCB<M> implements Activatable {
     private static final Logger log = LoggerFactory.getLogger(CachedViewCB.class);
 
-    protected static final Activatable EMPTY_MODEL = new Activatable() {
-        @Override
-        public void activate() {
-        }
-
-        @Override
-        public void deactivate() {
-        }
-    };
-
     public CachedViewCB(M model) {
         super(checkNotNull(model, "Model must not be null"));
     }
 
     public CachedViewCB() {
-        this((M) EMPTY_MODEL);
+        this((M) Activatable.NOOP_INSTANCE);
     }
 
 
