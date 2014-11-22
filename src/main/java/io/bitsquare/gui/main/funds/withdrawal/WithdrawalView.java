@@ -22,7 +22,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.ActivatableView;
+import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.util.Utilities;
@@ -34,10 +34,7 @@ import org.bitcoinj.core.Transaction;
 
 import com.google.common.util.concurrent.FutureCallback;
 
-import java.net.URL;
-
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -59,7 +56,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WithdrawalView extends ActivatableView {
+public class WithdrawalView extends ViewWithActivatableModel {
     private static final Logger log = LoggerFactory.getLogger(WithdrawalView.class);
 
 
@@ -89,7 +86,7 @@ public class WithdrawalView extends ActivatableView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public void initialize() {
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No funded wallets for withdrawal available"));
 
@@ -97,8 +94,6 @@ public class WithdrawalView extends ActivatableView {
         setBalanceColumnCellFactory();
         setCopyColumnCellFactory();
         setConfidenceColumnCellFactory();
-
-        super.initialize(url, rb);
     }
 
     @Override

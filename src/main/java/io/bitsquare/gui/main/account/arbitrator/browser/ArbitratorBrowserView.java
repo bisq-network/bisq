@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.account.arbitrator.browser;
 
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
@@ -29,11 +28,8 @@ import io.bitsquare.msg.MessageService;
 import io.bitsquare.msg.listeners.ArbitratorListener;
 import io.bitsquare.persistence.Persistence;
 
-import java.net.URL;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -44,7 +40,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 // TODO Arbitration is very basic yet
-public class ArbitratorBrowserView extends ActivatableView implements ArbitratorListener {
+public class ArbitratorBrowserView extends View implements ArbitratorListener {
 
     private final ViewLoader viewLoader;
     private final AccountSettings accountSettings;
@@ -80,15 +76,12 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public void initialize() {
         messageService.addArbitratorListener(this);
         messageService.getArbitrators(LanguageUtil.getDefaultLanguageLocale());
 
         loadView(Navigation.Item.ARBITRATOR_PROFILE);
         checkButtonState();
-
-        super.initialize(url, rb);
-
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

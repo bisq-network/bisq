@@ -18,16 +18,13 @@
 package io.bitsquare.gui.main.funds.transactions;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.ActivatableView;
+import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 
 import org.bitcoinj.core.Transaction;
 
-import java.net.URL;
-
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -42,7 +39,7 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TransactionsView extends ActivatableView {
+public class TransactionsView extends ViewWithActivatableModel {
     private static final Logger log = LoggerFactory.getLogger(TransactionsView.class);
 
     private final WalletService walletService;
@@ -70,9 +67,7 @@ public class TransactionsView extends ActivatableView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
+    public void initialize() {
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No transactions available"));
 

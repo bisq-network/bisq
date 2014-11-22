@@ -17,11 +17,7 @@
 
 package io.bitsquare.gui.main.settings.application;
 
-import io.bitsquare.gui.ActivatableView;
-
-import java.net.URL;
-
-import java.util.ResourceBundle;
+import io.bitsquare.gui.ViewWithActivatableModel;
 
 import javax.inject.Inject;
 
@@ -34,7 +30,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This UI is not cached as it is normally only needed once.
  */
-public class PreferencesView extends ActivatableView<PreferencesViewModel> {
+public class PreferencesView extends ViewWithActivatableModel<PreferencesViewModel> {
 
     private static final Logger log = LoggerFactory.getLogger(PreferencesView.class);
 
@@ -55,11 +51,6 @@ public class PreferencesView extends ActivatableView<PreferencesViewModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-    }
 
     @Override
     public void doActivate() {

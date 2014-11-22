@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.trade.createoffer;
 
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
+import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.components.AddressTextField;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.InfoDisplay;
@@ -35,11 +35,8 @@ import io.bitsquare.offer.Direction;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
-import java.net.URL;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -72,7 +69,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 // TODO Implement other positioning method in InoutTextField to display it over the field instead of right side
 // priceAmountHBox is too large after redesign as to be used as layoutReference.
 
-public class CreateOfferView extends ActivatableView<CreateOfferViewModel> {
+public class CreateOfferView extends ViewWithActivatableModel<CreateOfferViewModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferView.class);
 
 
@@ -128,9 +125,7 @@ public class CreateOfferView extends ActivatableView<CreateOfferViewModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
+    protected void initialize() {
         setupListeners();
         setupBindings();
         balanceTextField.setup(model.getWalletService(), model.address.get(),
@@ -139,7 +134,7 @@ public class CreateOfferView extends ActivatableView<CreateOfferViewModel> {
     }
 
     @Override
-    public void doDeactivate() {
+    protected void doDeactivate() {
         tabIsClosable.unbind();
     }
 

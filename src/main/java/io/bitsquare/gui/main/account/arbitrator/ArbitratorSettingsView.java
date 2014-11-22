@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.account.arbitrator;
 
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewLoader;
+import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.main.account.arbitrator.registration.ArbitratorRegistrationView;
 
 import javax.inject.Inject;
@@ -31,7 +31,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 // TODO Arbitration is very basic yet
-public class ArbitratorSettingsView extends ActivatableView {
+public class ArbitratorSettingsView extends ViewWithActivatableModel {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;

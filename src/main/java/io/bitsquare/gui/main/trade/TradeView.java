@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.trade;
 
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewLoader;
+import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferView;
 import io.bitsquare.gui.main.trade.offerbook.OfferBookView;
@@ -30,10 +30,7 @@ import io.bitsquare.offer.Offer;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
-import java.net.URL;
-
 import java.util.List;
-import java.util.ResourceBundle;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
@@ -44,7 +41,7 @@ import javafx.scene.control.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TradeView extends ActivatableView implements TradeNavigator {
+public class TradeView extends ViewWithActivatableModel implements TradeNavigator {
     private static final Logger log = LoggerFactory.getLogger(TradeView.class);
 
     private OfferBookView offerBookViewCB;
@@ -78,7 +75,7 @@ public class TradeView extends ActivatableView implements TradeNavigator {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    protected void initialize() {
         direction = (this instanceof BuyView) ? Direction.BUY : Direction.SELL;
         navigationItem = (direction == Direction.BUY) ? Navigation.Item.BUY : Navigation.Item.SELL;
 
@@ -87,12 +84,10 @@ public class TradeView extends ActivatableView implements TradeNavigator {
                 loadView(navigationItems[2]);
             }
         };
-
-        super.initialize(url, rb);
     }
 
     @Override
-    public void doActivate() {
+    protected void doActivate() {
         // We need to remove open validation error popups
         // Platform.runLater needed as focus-out event is called after selectedIndexProperty changed
         // TODO Find a way to do that in the InputTextField directly, but a tab change does not trigger any event...
@@ -118,7 +113,7 @@ public class TradeView extends ActivatableView implements TradeNavigator {
     }
 
     @Override
-    public void doDeactivate() {
+    protected void doDeactivate() {
         navigation.removeListener(listener);
     }
 

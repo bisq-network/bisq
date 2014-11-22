@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.account.arbitrator.registration;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.ActivatableView;
+import io.bitsquare.gui.View;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
@@ -38,13 +38,10 @@ import org.bitcoinj.core.Wallet;
 import org.bitcoinj.core.WalletEventListener;
 import org.bitcoinj.script.Script;
 
-import java.net.URL;
-
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -61,7 +58,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // TODO Arbitration is very basic yet
-public class ArbitratorRegistrationView extends ActivatableView {
+public class ArbitratorRegistrationView extends View {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorRegistrationView.class);
 
     private final Persistence persistence;
@@ -115,9 +112,7 @@ public class ArbitratorRegistrationView extends ActivatableView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
+    public void initialize() {
         accordion.setExpandedPane(profileTitledPane);
 
         Arbitrator persistedArbitrator = (Arbitrator) persistence.read(arbitrator);

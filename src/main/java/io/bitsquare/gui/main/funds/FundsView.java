@@ -17,14 +17,10 @@
 
 package io.bitsquare.gui.main.funds;
 
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
-
-import java.net.URL;
-
-import java.util.ResourceBundle;
+import io.bitsquare.gui.ViewWithActivatableModel;
 
 import javax.inject.Inject;
 
@@ -33,7 +29,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
-public class FundsView extends ActivatableView {
+public class FundsView extends ViewWithActivatableModel {
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -61,7 +57,7 @@ public class FundsView extends ActivatableView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public void initialize() {
         navigationListener = navigationItems -> {
             if (navigationItems != null && navigationItems.length == 3
                     && navigationItems[1] == Navigation.Item.FUNDS)
@@ -74,8 +70,6 @@ public class FundsView extends ActivatableView {
             else if (newValue == transactionsTab)
                 navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.FUNDS, Navigation.Item.TRANSACTIONS);
         };
-
-        super.initialize(url, rb);
     }
 
     @Override

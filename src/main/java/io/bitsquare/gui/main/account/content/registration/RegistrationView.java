@@ -28,11 +28,8 @@ import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.locale.BSResources;
 
-import java.net.URL;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -78,9 +75,7 @@ public class RegistrationView extends View<RegistrationViewModel> implements Con
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
+    public void initialize() {
         feeTextField.setText(model.getFeeAsString());
         addressTextField.setAmountAsCoin(model.getFeeAsCoin());
         addressTextField.setPaymentLabel(model.getPaymentLabel());

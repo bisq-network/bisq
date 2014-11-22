@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.trade.offerbook;
 
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
+import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.trade.TradeNavigator;
@@ -31,11 +31,8 @@ import io.bitsquare.locale.Country;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 
-import java.net.URL;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -62,7 +59,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
  * TODO: The advanced filters are not impl. yet
  * The restrictions handling is open from the concept and is only implemented for countries yet.
  */
-public class OfferBookView extends ActivatableView<OfferBookViewModel> {
+public class OfferBookView extends ViewWithActivatableModel<OfferBookViewModel> {
     private static final Logger log = LoggerFactory.getLogger(OfferBookView.class);
 
     private final Navigation navigation;
@@ -109,7 +106,7 @@ public class OfferBookView extends ActivatableView<OfferBookViewModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public void initialize() {
         // init table
         setAmountColumnCellFactory();
         setPriceColumnCellFactory();
@@ -135,8 +132,6 @@ public class OfferBookView extends ActivatableView<OfferBookViewModel> {
         // for irc demo
         showAdvancedSettingsButton.setVisible(false);
         showAdvancedSettingsButton.setManaged(false);
-
-        super.initialize(url, rb);
     }
 
     @Override

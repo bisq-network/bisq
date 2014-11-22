@@ -23,10 +23,6 @@ import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 
-import java.net.URL;
-
-import java.util.ResourceBundle;
-
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
@@ -60,9 +56,7 @@ public class ChangePasswordView extends View<ChangePasswordViewModel> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
+    public void initialize() {
         passwordField.textProperty().bindBidirectional(model.passwordField);
         repeatedPasswordField.textProperty().bindBidirectional(model.repeatedPasswordField);
 

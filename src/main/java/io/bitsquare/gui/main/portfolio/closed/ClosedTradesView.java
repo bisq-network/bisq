@@ -17,12 +17,8 @@
 
 package io.bitsquare.gui.main.portfolio.closed;
 
-import io.bitsquare.gui.ActivatableView;
+import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.components.Popups;
-
-import java.net.URL;
-
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -34,7 +30,7 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ClosedTradesView extends ActivatableView<ClosedTradesViewModel> {
+public class ClosedTradesView extends ViewWithActivatableModel<ClosedTradesViewModel> {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradesView.class);
 
     @FXML TableColumn<ClosedTradesListItem, ClosedTradesListItem> priceColumn, amountColumn, volumeColumn,
@@ -57,7 +53,7 @@ public class ClosedTradesView extends ActivatableView<ClosedTradesViewModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public void initialize() {
         setTradeIdColumnCellFactory();
         setDirectionColumnCellFactory();
         setAmountColumnCellFactory();
@@ -67,8 +63,6 @@ public class ClosedTradesView extends ActivatableView<ClosedTradesViewModel> {
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No closed trades available"));
-
-        super.initialize(url, rb);
     }
 
     @Override

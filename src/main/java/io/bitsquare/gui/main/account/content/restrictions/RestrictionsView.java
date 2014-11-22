@@ -18,9 +18,9 @@
 package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewLoader;
+import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;
@@ -29,10 +29,7 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
 
-import java.net.URL;
-
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -50,7 +47,7 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RestrictionsView extends ActivatableView<RestrictionsViewModel> implements ContextAware {
+public class RestrictionsView extends ViewWithActivatableModel<RestrictionsViewModel> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(RestrictionsView.class);
 
@@ -83,9 +80,7 @@ public class RestrictionsView extends ActivatableView<RestrictionsViewModel> imp
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
+    public void initialize() {
         initLanguage();
         initCountry();
         initArbitrators();

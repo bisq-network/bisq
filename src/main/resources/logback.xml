@@ -42,7 +42,7 @@
     <logger name="io.bitsquare.gui.ActivatableWithDelegate" level="WARN"/>
     <logger name="io.bitsquare.gui.ViewController" level="WARN"/>
     <logger name="io.bitsquare.gui.View" level="WARN"/>
-    <logger name="io.bitsquare.gui.ActivatableView" level="WARN"/>
+    <logger name="io.bitsquare.gui.ViewWithActivatableModel" level="WARN"/>
     <logger name="io.bitsquare.gui.util.Profiler" level="WARN"/>
     <logger name="io.bitsquare.persistence.Persistence" level="WARN"/>
     <logger name="io.bitsquare.locale.BSResources" level="OFF"/>

@@ -17,10 +17,6 @@
 
 package io.bitsquare.gui;
 
-import java.net.URL;
-
-import java.util.ResourceBundle;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,43 +26,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * If caching is used for loader we use the CachedViewController for turning the controller into sleep mode if not
  * active and awake it at reactivation.
  */
-public abstract class ActivatableView<M extends Activatable> extends View<M> implements Activatable {
-    private static final Logger log = LoggerFactory.getLogger(ActivatableView.class);
+public abstract class ViewWithActivatableModel<M extends Activatable> extends View<M> {
+    private static final Logger log = LoggerFactory.getLogger(ViewWithActivatableModel.class);
 
-    public ActivatableView(M model) {
+    public ViewWithActivatableModel(M model) {
         super(checkNotNull(model, "Model must not be null"));
     }
 
-    public ActivatableView() {
+    public ViewWithActivatableModel() {
         this((M) Activatable.NOOP_INSTANCE);
     }
 
-
-    /**
-     * Get called form GUI framework when the UI is ready.
-     * In caching controllers the initialize is only used for static UI setup.
-     * The activate() method is called to start resources like.
-     *
-     * @param url
-     * @param rb
-     */
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        log.trace("Lifecycle: initialize " + this.getClass().getSimpleName());
-        if (root != null) {
-            root.sceneProperty().addListener((ov, oldValue, newValue) -> {
-                // we got removed from the scene
-                // lets terminate
-                log.trace("Lifecycle: sceneProperty changed: " + this.getClass().getSimpleName() + " / oldValue=" +
-                        oldValue + " / newValue=" + newValue);
-
-                if (oldValue == null && newValue != null)
-                    this.activate();
-                else if (oldValue != null && newValue == null)
-                    this.deactivate();
-            });
-        }
-    }
 
     /**
      * Used to activate resources (adding listeners, starting timers or animations,...)

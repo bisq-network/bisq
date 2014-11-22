@@ -60,9 +60,7 @@ public class PasswordView extends View<PasswordViewModel> implements ContextAwar
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
+    public void initialize() {
         passwordField.textProperty().bindBidirectional(model.passwordField);
         repeatedPasswordField.textProperty().bindBidirectional(model.repeatedPasswordField);
 

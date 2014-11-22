@@ -17,15 +17,11 @@
 
 package io.bitsquare.gui.main.portfolio;
 
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
+import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.trade.TradeManager;
-
-import java.net.URL;
-
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -34,7 +30,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
-public class PortfolioView extends ActivatableView {
+public class PortfolioView extends ViewWithActivatableModel {
 
     private Tab currentTab;
     private Navigation.Listener navigationListener;
@@ -64,7 +60,7 @@ public class PortfolioView extends ActivatableView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public void initialize() {
         navigationListener = navigationItems -> {
             if (navigationItems != null && navigationItems.length == 3
                     && navigationItems[1] == Navigation.Item.PORTFOLIO)
@@ -80,8 +76,6 @@ public class PortfolioView extends ActivatableView {
             else if (newValue == closedTradesTab)
                 navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO, Navigation.Item.CLOSED_TRADES);
         };
-
-        super.initialize(url, rb);
     }
 
     @Override

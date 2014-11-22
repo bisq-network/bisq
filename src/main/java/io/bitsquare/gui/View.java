@@ -59,19 +59,29 @@ public abstract class View<M> implements Initializable {
      * @param rb
      */
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public final void initialize(URL url, ResourceBundle rb) {
         log.trace("Lifecycle: initialize " + this.getClass().getSimpleName());
         if (root != null) {
             root.sceneProperty().addListener((ov, oldValue, newValue) -> {
                 // we got removed from the scene
                 // lets terminate
-                if (oldValue != null && newValue == null)
-                    terminate();
+                if (oldValue == null && newValue != null)
+                    activate();
+                else if (oldValue != null && newValue == null)
+                    deactivate();
             });
         }
+
+        initialize();
     }
 
-    public void terminate() {
+    protected void initialize() {
+    }
+
+    protected void activate() {
+    }
+
+    protected void deactivate() {
     }
 
     /**

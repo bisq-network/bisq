@@ -17,14 +17,14 @@
 
 package io.bitsquare.gui.main.home;
 
-import io.bitsquare.gui.ActivatableView;
+import io.bitsquare.gui.ViewWithActivatableModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // home is just hosting the arbiters buttons yet, but that's just for dev, not clear yet what will be in home,
 // probably overview, event history, news, charts,... -> low prio
-public class HomeView extends ActivatableView {
+public class HomeView extends ViewWithActivatableModel {
     private static final Logger log = LoggerFactory.getLogger(HomeView.class);
 
 

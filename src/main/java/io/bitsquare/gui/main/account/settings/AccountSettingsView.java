@@ -17,16 +17,12 @@
 
 package io.bitsquare.gui.main.account.settings;
 
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
+import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.util.Colors;
-
-import java.net.URL;
-
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -43,7 +39,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountSettingsView extends ActivatableView {
+public class AccountSettingsView extends ViewWithActivatableModel {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSettingsView.class);
 
@@ -73,7 +69,7 @@ public class AccountSettingsView extends ActivatableView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public void initialize() {
         listener = navigationItems -> {
             if (navigationItems != null &&
                     navigationItems.length == 4 &&
@@ -102,8 +98,6 @@ public class AccountSettingsView extends ActivatableView {
 
         leftVBox.getChildren().addAll(seedWords, password,
                 restrictions, fiatAccount, registration);
-
-        super.initialize(url, rb);
     }
 
     @Override

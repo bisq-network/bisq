@@ -17,14 +17,10 @@
 
 package io.bitsquare.gui.main.account;
 
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
-
-import java.net.URL;
-
-import java.util.ResourceBundle;
+import io.bitsquare.gui.ViewWithActivatableModel;
 
 import javax.inject.Inject;
 
@@ -36,7 +32,7 @@ import javafx.scene.control.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountView extends ActivatableView {
+public class AccountView extends ViewWithActivatableModel {
 
     private static final Logger log = LoggerFactory.getLogger(AccountView.class);
 
@@ -67,7 +63,7 @@ public class AccountView extends ActivatableView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public void initialize() {
         navigationListener = navigationItems -> {
             if (navigationItems != null &&
                     navigationItems.length == 3 &&
@@ -84,8 +80,6 @@ public class AccountView extends ActivatableView {
                         Navigation.Item.ARBITRATOR_SETTINGS);
 
         };
-
-        super.initialize(url, rb);
     }
 
     @Override

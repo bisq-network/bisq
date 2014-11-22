@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.account.content.irc;
 
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.ActivatableView;
+import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
@@ -28,10 +28,7 @@ import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.util.Utilities;
 
-import java.net.URL;
-
 import java.util.Currency;
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -47,7 +44,7 @@ import org.slf4j.LoggerFactory;
 /*
 Just temporary for giving the user a possibility to test the app via simulating the bank transfer in a IRC chat.
  */
-public class IrcAccountView extends ActivatableView<IrcAccountViewModel> implements ContextAware {
+public class IrcAccountView extends ViewWithActivatableModel<IrcAccountViewModel> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(IrcAccountView.class);
 
@@ -73,7 +70,7 @@ public class IrcAccountView extends ActivatableView<IrcAccountViewModel> impleme
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public void doActivate() {
         ircNickNameTextField.setValidator(model.getNickNameValidator());
 
         typesComboBox.setItems(model.getAllTypes());
@@ -132,11 +129,6 @@ public class IrcAccountView extends ActivatableView<IrcAccountViewModel> impleme
         });
         currencyComboBox.getSelectionModel().select(0);
 
-        super.initialize(url, rb);
-    }
-
-    @Override
-    public void doActivate() {
         setupListeners();
         setupBindings();
 

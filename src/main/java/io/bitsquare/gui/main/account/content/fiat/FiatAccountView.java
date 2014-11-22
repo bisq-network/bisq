@@ -19,8 +19,8 @@ package io.bitsquare.gui.main.account.content.fiat;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.OverlayManager;
+import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
@@ -32,12 +32,9 @@ import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
 
-import java.net.URL;
-
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -56,7 +53,7 @@ import org.slf4j.LoggerFactory;
 
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
-public class FiatAccountView extends ActivatableView<FiatAccountViewModel> implements ContextAware {
+public class FiatAccountView extends ViewWithActivatableModel<FiatAccountViewModel> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(FiatAccountView.class);
 
@@ -88,7 +85,7 @@ public class FiatAccountView extends ActivatableView<FiatAccountViewModel> imple
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public void initialize() {
         typesComboBox.setItems(model.getAllTypes());
         typesComboBox.setConverter(model.getTypesConverter());
         selectionComboBox.setConverter(model.getSelectionConverter());
@@ -102,8 +99,6 @@ public class FiatAccountView extends ActivatableView<FiatAccountViewModel> imple
         holderNameTextField.setValidator(model.getBankAccountNumberValidator());
         primaryIDTextField.setValidator(model.getBankAccountNumberValidator());
         secondaryIDTextField.setValidator(model.getBankAccountNumberValidator());
-
-        super.initialize(url, rb);
     }
 
     @Override

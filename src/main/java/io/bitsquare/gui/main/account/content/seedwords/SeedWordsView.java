@@ -23,10 +23,6 @@ import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 
-import java.net.URL;
-
-import java.util.ResourceBundle;
-
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
@@ -59,9 +55,7 @@ public class SeedWordsView extends View<SeedWordsViewModel> implements ContextAw
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
+    public void initialize() {
         seedWordsTextArea.setText(model.seedWords.get());
     }
 

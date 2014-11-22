@@ -28,10 +28,6 @@ import io.bitsquare.gui.main.account.content.registration.RegistrationView;
 import io.bitsquare.gui.main.account.content.restrictions.RestrictionsView;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
 
-import java.net.URL;
-
-import java.util.ResourceBundle;
-
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
@@ -77,7 +73,7 @@ public class AccountSetupView extends View implements MultiStepNavigation {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public void initialize() {
         listener = navigationItems -> {
             if (navigationItems != null &&
                     navigationItems.length == 4 &&
@@ -133,15 +129,16 @@ public class AccountSetupView extends View implements MultiStepNavigation {
         password.setDisable(true);
         restrictions.setDisable(true);
         registration.setDisable(true);
+    }
 
-        super.initialize(url, rb);
-
+    @Override
+    public void activate() {
         navigation.addListener(listener);
         childController = fiatAccount.show();
     }
 
     @Override
-    public void terminate() {
+    public void deactivate() {
         navigation.removeListener(listener);
     }
 

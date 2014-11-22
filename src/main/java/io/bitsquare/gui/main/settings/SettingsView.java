@@ -17,15 +17,11 @@
 
 package io.bitsquare.gui.main.settings;
 
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
+import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.settings.Preferences;
-
-import java.net.URL;
-
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -34,7 +30,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
-public class SettingsView extends ActivatableView {
+public class SettingsView extends ViewWithActivatableModel {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
@@ -63,7 +59,7 @@ public class SettingsView extends ActivatableView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public void initialize() {
         navigationListener = navigationItems -> {
             if (navigationItems != null && navigationItems.length == 3
                     && navigationItems[1] == Navigation.Item.SETTINGS)
@@ -78,8 +74,6 @@ public class SettingsView extends ActivatableView {
                 navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.SETTINGS,
                         Navigation.Item.NETWORK_SETTINGS);
         };
-
-        super.initialize(url, rb);
     }
 
     @Override

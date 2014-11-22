@@ -18,9 +18,9 @@
 package io.bitsquare.gui.main.trade.takeoffer;
 
 
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
+import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.components.AddressTextField;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.InfoDisplay;
@@ -36,11 +36,8 @@ import io.bitsquare.offer.Offer;
 
 import org.bitcoinj.core.Coin;
 
-import java.net.URL;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -68,7 +65,7 @@ import org.controlsfx.dialog.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakeOfferView extends ActivatableView<TakeOfferViewModel> {
+public class TakeOfferView extends ViewWithActivatableModel<TakeOfferViewModel> {
     private static final Logger log = LoggerFactory.getLogger(TakeOfferView.class);
 
     private final Navigation navigation;
@@ -124,9 +121,7 @@ public class TakeOfferView extends ActivatableView<TakeOfferViewModel> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        super.initialize(url, rb);
-
+    public void initialize() {
         setupListeners();
         setupBindings();
     }
