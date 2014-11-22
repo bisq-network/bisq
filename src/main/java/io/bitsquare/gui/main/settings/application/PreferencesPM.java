@@ -28,7 +28,7 @@ import javafx.collections.ObservableList;
 public class PreferencesPM extends PresentationModel<PreferencesModel> {
 
     @Inject
-    PreferencesPM(PreferencesModel model) {
+    public PreferencesPM(PreferencesModel model) {
         super(model);
     }
 

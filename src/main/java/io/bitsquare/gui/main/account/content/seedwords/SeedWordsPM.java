@@ -32,7 +32,7 @@ class SeedWordsPM extends PresentationModel<SeedWordsModel> {
 
 
     @Inject
-    private SeedWordsPM(SeedWordsModel model, BSFormatter formatter) {
+    public SeedWordsPM(SeedWordsModel model, BSFormatter formatter) {
         super(model);
         this.formatter = formatter;
     }

@@ -59,8 +59,8 @@ class RestrictionsModel extends UIModel {
 
 
     @Inject
-    private RestrictionsModel(User user, AccountSettings accountSettings, Persistence persistence,
-                              MessageService messageService) {
+    public RestrictionsModel(User user, AccountSettings accountSettings, Persistence persistence,
+                             MessageService messageService) {
         this.user = user;
         this.accountSettings = accountSettings;
         this.persistence = persistence;

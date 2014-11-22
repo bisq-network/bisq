@@ -27,7 +27,7 @@ class AccountModel extends UIModel {
     private final User user;
 
     @Inject
-    private AccountModel(User user) {
+    public AccountModel(User user) {
         this.user = user;
     }
 

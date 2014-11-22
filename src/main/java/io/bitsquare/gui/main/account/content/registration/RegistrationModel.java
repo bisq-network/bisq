@@ -61,7 +61,7 @@ class RegistrationModel extends UIModel {
 
 
     @Inject
-    private RegistrationModel(WalletService walletService, User user, Persistence persistence) {
+    public RegistrationModel(WalletService walletService, User user, Persistence persistence) {
 
         this.walletService = walletService;
         this.user = user;

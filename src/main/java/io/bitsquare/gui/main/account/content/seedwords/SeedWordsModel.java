@@ -30,7 +30,7 @@ class SeedWordsModel extends UIModel {
 
 
     @Inject
-    private SeedWordsModel(WalletService walletService) {
+    public SeedWordsModel(WalletService walletService) {
         if (walletService != null && walletService.getWallet() != null)
             mnemonicCode = walletService.getWallet().getKeyChainSeed().getMnemonicCode();
     }

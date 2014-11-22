@@ -50,10 +50,8 @@ class OfferBookPM extends PresentationModel<OfferBookModel> {
 
 
     @Inject
-    OfferBookPM(OfferBookModel model,
-                OptionalFiatValidator optionalFiatValidator,
-                OptionalBtcValidator optionalBtcValidator,
-                BSFormatter formatter) {
+    public OfferBookPM(OfferBookModel model, OptionalFiatValidator optionalFiatValidator,
+                       OptionalBtcValidator optionalBtcValidator, BSFormatter formatter) {
         super(model);
 
         this.optionalFiatValidator = optionalFiatValidator;

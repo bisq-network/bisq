@@ -25,7 +25,7 @@ class PasswordModel extends UIModel {
 
 
     @Inject
-    private PasswordModel() {
+    public PasswordModel() {
     }
 
 

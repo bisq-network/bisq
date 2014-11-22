@@ -48,7 +48,7 @@ class IrcAccountPm extends PresentationModel<IrcAccountModel> {
 
 
     @Inject
-    IrcAccountPm(IrcAccountModel model, BankAccountNumberValidator nickNameValidator) {
+    public IrcAccountPm(IrcAccountModel model, BankAccountNumberValidator nickNameValidator) {
         super(model);
         this.nickNameValidator = nickNameValidator;
     }

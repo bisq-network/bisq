@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 class ChangePasswordModel extends UIModel {
 
     @Inject
-    private ChangePasswordModel() {
+    public ChangePasswordModel() {
     }
 
     @SuppressWarnings("EmptyMethod")

@@ -36,7 +36,7 @@ class RestrictionsPM extends PresentationModel<RestrictionsModel> {
 
 
     @Inject
-    private RestrictionsPM(RestrictionsModel model) {
+    public RestrictionsPM(RestrictionsModel model) {
         super(model);
     }
 

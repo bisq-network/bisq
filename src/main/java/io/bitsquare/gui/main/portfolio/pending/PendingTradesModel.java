@@ -78,7 +78,7 @@ class PendingTradesModel extends UIModel {
 
 
     @Inject
-    PendingTradesModel(TradeManager tradeManager, WalletService walletService, User user) {
+    public PendingTradesModel(TradeManager tradeManager, WalletService walletService, User user) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
         this.user = user;

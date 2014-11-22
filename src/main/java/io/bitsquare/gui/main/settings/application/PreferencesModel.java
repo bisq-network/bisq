@@ -46,7 +46,7 @@ class PreferencesModel extends UIModel {
 
 
     @Inject
-    PreferencesModel(Preferences preferences) {
+    public PreferencesModel(Preferences preferences) {
         this.preferences = preferences;
 
         btcDenominations = FXCollections.observableArrayList(preferences.getBtcDenominations());

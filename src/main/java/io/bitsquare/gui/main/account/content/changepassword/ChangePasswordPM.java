@@ -40,7 +40,7 @@ class ChangePasswordPM extends PresentationModel<ChangePasswordModel> {
 
 
     @Inject
-    private ChangePasswordPM(ChangePasswordModel model, PasswordValidator passwordValidator) {
+    public ChangePasswordPM(ChangePasswordModel model, PasswordValidator passwordValidator) {
         super(model);
         this.passwordValidator = passwordValidator;
 

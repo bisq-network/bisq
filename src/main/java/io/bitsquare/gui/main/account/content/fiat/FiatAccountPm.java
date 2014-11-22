@@ -59,7 +59,7 @@ class FiatAccountPm extends PresentationModel<FiatAccountModel> {
 
 
     @Inject
-    FiatAccountPm(FiatAccountModel model, BankAccountNumberValidator bankAccountNumberValidator) {
+    public FiatAccountPm(FiatAccountModel model, BankAccountNumberValidator bankAccountNumberValidator) {
         super(model);
         this.bankAccountNumberValidator = bankAccountNumberValidator;
     }

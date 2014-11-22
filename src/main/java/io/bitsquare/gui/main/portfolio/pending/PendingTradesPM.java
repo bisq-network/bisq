@@ -69,7 +69,7 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
 
 
     @Inject
-    PendingTradesPM(PendingTradesModel model, BSFormatter formatter,
+    public PendingTradesPM(PendingTradesModel model, BSFormatter formatter,
                     BtcAddressValidator btcAddressValidator) {
         super(model);
 

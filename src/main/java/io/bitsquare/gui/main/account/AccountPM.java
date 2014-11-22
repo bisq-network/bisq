@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 class AccountPM extends PresentationModel<AccountModel> {
 
     @Inject
-    private AccountPM(AccountModel model) {
+    public AccountPM(AccountModel model) {
         super(model);
     }
 

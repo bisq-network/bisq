@@ -91,9 +91,8 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     final ObjectProperty<Address> address = new SimpleObjectProperty<>();
 
 
-    // non private for testing
     @Inject
-    CreateOfferPM(CreateOfferModel model, FiatValidator fiatValidator, BtcValidator btcValidator,
+    public CreateOfferPM(CreateOfferModel model, FiatValidator fiatValidator, BtcValidator btcValidator,
                   BSFormatter formatter) {
         super(model);
 

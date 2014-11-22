@@ -78,11 +78,8 @@ class OfferBookModel extends UIModel {
 
 
     @Inject
-    OfferBookModel(User user,
-                   TradeManager tradeManager,
-                   OfferBook offerBook,
-                   Preferences preferences,
-                   BSFormatter formatter) {
+    public OfferBookModel(User user, TradeManager tradeManager, OfferBook offerBook, Preferences preferences,
+                          BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.user = user;
         this.offerBook = offerBook;

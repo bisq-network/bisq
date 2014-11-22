@@ -85,9 +85,8 @@ class TakeOfferPM extends PresentationModel<TakeOfferModel> {
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
 
 
-    // non private for testing
     @Inject
-    TakeOfferPM(TakeOfferModel model, BtcValidator btcValidator, BSFormatter formatter) {
+    public TakeOfferPM(TakeOfferModel model, BtcValidator btcValidator, BSFormatter formatter) {
         super(model);
 
         this.btcValidator = btcValidator;

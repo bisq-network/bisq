@@ -48,7 +48,7 @@ class RegistrationPM extends PresentationModel<RegistrationModel> {
 
 
     @Inject
-    private RegistrationPM(RegistrationModel model, BSFormatter formatter) {
+    public RegistrationPM(RegistrationModel model, BSFormatter formatter) {
         super(model);
         this.formatter = formatter;
     }

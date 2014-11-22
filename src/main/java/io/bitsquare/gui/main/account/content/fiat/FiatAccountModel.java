@@ -67,7 +67,7 @@ class FiatAccountModel extends UIModel {
 
 
     @Inject
-    FiatAccountModel(User user, Persistence persistence, AccountSettings accountSettings) {
+    public FiatAccountModel(User user, Persistence persistence, AccountSettings accountSettings) {
         this.persistence = persistence;
         this.user = user;
         this.accountSettings = accountSettings;
