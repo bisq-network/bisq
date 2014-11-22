@@ -114,15 +114,14 @@ class TomP2PMessageService implements MessageService {
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture baseFuture) throws Exception {
-                //TODO just deactivated temporary because in relay mode with 2 local peers isSuccess returns false
-                //if (isSuccess(baseFuture) && futureGet.data() != null) {
-                final Peer peer = (Peer) futureGet.data().object();
-                Platform.runLater(() -> listener.onResult(peer));
-               /* }
+                if (baseFuture.isSuccess() && futureGet.data() != null) {
+                    final Peer peer = (Peer) futureGet.data().object();
+                    Platform.runLater(() -> listener.onResult(peer));
+                }
                 else {
                     log.error("getPeerAddress failed. failedReason = " + baseFuture.failedReason());
                     Platform.runLater(listener::onFailed);
-                }*/
+                }
             }
         });
     }
