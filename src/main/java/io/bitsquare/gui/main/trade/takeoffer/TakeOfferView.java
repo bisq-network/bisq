@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.trade.takeoffer;
 
 
 import io.bitsquare.gui.ActivatableView;
-import io.bitsquare.gui.CloseListener;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.AddressTextField;
@@ -74,7 +73,6 @@ public class TakeOfferView extends ActivatableView<TakeOfferViewModel> {
 
     private final Navigation navigation;
     private final OverlayManager overlayManager;
-    private CloseListener closeListener;
     private BooleanProperty tabIsClosable;
 
     private boolean detailsVisible;
@@ -133,16 +131,6 @@ public class TakeOfferView extends ActivatableView<TakeOfferViewModel> {
         setupBindings();
     }
 
-    @Override
-    public void terminate() {
-        super.terminate();
-
-        // Inform parent that we got removed.
-        if (closeListener != null)
-            closeListener.onClosed();
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods (called form other views/CB)
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -177,12 +165,10 @@ public class TakeOfferView extends ActivatableView<TakeOfferViewModel> {
         acceptedArbitratorsTextField.setText(model.getAcceptedArbitrators());
     }
 
-    public void setCloseListener(CloseListener closeListener, BooleanProperty tabIsClosable) {
-        this.closeListener = closeListener;
+    public void configCloseHandlers(BooleanProperty tabIsClosable) {
         this.tabIsClosable = tabIsClosable;
         tabIsClosable.bind(model.tabIsClosable);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers

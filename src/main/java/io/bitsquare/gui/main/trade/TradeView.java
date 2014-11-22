@@ -177,7 +177,7 @@ public class TradeView extends ActivatableView implements TradeNavigator {
             createOfferViewCB.setParent(this);
             createOfferViewCB.initWithData(direction, amount, price);
             final Tab tab = new Tab("Create offer");
-            createOfferViewCB.configCloseHandlers(this::onCreateOfferViewRemoved, tab.closableProperty());
+            createOfferViewCB.configCloseHandlers(tab.closableProperty());
             tab.setContent(createOfferView);
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
@@ -193,7 +193,7 @@ public class TradeView extends ActivatableView implements TradeNavigator {
             takeOfferViewCB.setParent(this);
             takeOfferViewCB.initWithData(direction, amount, offer);
             final Tab tab = new Tab("Take offer");
-            takeOfferViewCB.setCloseListener(this::onCreateOfferViewRemoved, tab.closableProperty());
+            takeOfferViewCB.configCloseHandlers(tab.closableProperty());
             tab.setContent(takeOfferView);
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);

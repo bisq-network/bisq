@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.trade.createoffer;
 
 import io.bitsquare.gui.ActivatableView;
-import io.bitsquare.gui.CloseListener;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.AddressTextField;
@@ -80,7 +79,6 @@ public class CreateOfferView extends ActivatableView<CreateOfferViewModel> {
     private final Navigation navigation;
     private final OverlayManager overlayManager;
 
-    private CloseListener closeListener;
     private BooleanProperty tabIsClosable;
 
     private boolean detailsVisible;
@@ -145,17 +143,6 @@ public class CreateOfferView extends ActivatableView<CreateOfferViewModel> {
         tabIsClosable.unbind();
     }
 
-    @Override
-    public void terminate() {
-        super.terminate();
-
-        // Inform parent that we got removed.
-        // Needed to reset disable state of createOfferButton in OfferBookController
-        if (closeListener != null)
-            closeListener.onClosed();
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods (called form other views/CB)
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -169,8 +156,7 @@ public class CreateOfferView extends ActivatableView<CreateOfferViewModel> {
             imageView.setId("image-sell-large");
     }
 
-    public void configCloseHandlers(CloseListener closeListener, BooleanProperty tabIsClosable) {
-        this.closeListener = closeListener;
+    public void configCloseHandlers(BooleanProperty tabIsClosable) {
         this.tabIsClosable = tabIsClosable;
         tabIsClosable.bind(model.tabIsClosable);
     }
