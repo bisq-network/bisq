@@ -63,8 +63,8 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPM> implements Cont
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    IrcAccountViewCB(IrcAccountPM presentationModel) {
-        super(presentationModel);
+    IrcAccountViewCB(IrcAccountPM model) {
+        super(model);
     }
 
 
@@ -74,10 +74,10 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPM> implements Cont
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        ircNickNameTextField.setValidator(presentationModel.getNickNameValidator());
+        ircNickNameTextField.setValidator(model.getNickNameValidator());
 
-        typesComboBox.setItems(presentationModel.getAllTypes());
-        typesComboBox.setConverter(presentationModel.getTypesConverter());
+        typesComboBox.setItems(model.getAllTypes());
+        typesComboBox.setConverter(model.getTypesConverter());
         // we use a custom cell for deactivating non IRC items, later we use the standard cell and the StringConverter
         typesComboBox.setCellFactory(new Callback<ListView<BankAccountType>, ListCell<BankAccountType>>() {
             @Override
@@ -88,7 +88,7 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPM> implements Cont
                     protected void updateItem(BankAccountType item, boolean empty) {
                         super.updateItem(item, empty);
 
-                        setText(presentationModel.getBankAccountType(item));
+                        setText(model.getBankAccountType(item));
 
                         if (item == null || empty) {
                             setGraphic(null);
@@ -103,8 +103,8 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPM> implements Cont
         });
         typesComboBox.getSelectionModel().select(0);
 
-        currencyComboBox.setItems(presentationModel.getAllCurrencies());
-        currencyComboBox.setConverter(presentationModel.getCurrencyConverter());
+        currencyComboBox.setItems(model.getAllCurrencies());
+        currencyComboBox.setConverter(model.getCurrencyConverter());
         // we use a custom cell for deactivating non EUR items, later we use the standard cell and the StringConverter
         currencyComboBox.setCellFactory(new Callback<ListView<Currency>, ListCell<Currency>>() {
             @Override
@@ -182,17 +182,17 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPM> implements Cont
 
     @FXML
     void onSelectType() {
-        presentationModel.setType(typesComboBox.getSelectionModel().getSelectedItem());
+        model.setType(typesComboBox.getSelectionModel().getSelectedItem());
     }
 
     @FXML
     void onSelectCurrency() {
-        presentationModel.setCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
+        model.setCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
     }
 
     @FXML
     void onSave() {
-        InputValidator.ValidationResult result = presentationModel.requestSaveBankAccount();
+        InputValidator.ValidationResult result = model.requestSaveBankAccount();
         if (result.isValid && parent instanceof MultiStepNavigation)
             ((MultiStepNavigation) parent).nextStep(this);
     }
@@ -217,14 +217,14 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPM> implements Cont
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setupListeners() {
-        presentationModel.type.addListener((ov, oldValue, newValue) -> {
+        model.type.addListener((ov, oldValue, newValue) -> {
             if (newValue != null)
                 typesComboBox.getSelectionModel().select(typesComboBox.getItems().indexOf(newValue));
             else
                 typesComboBox.getSelectionModel().clearSelection();
         });
 
-        presentationModel.currency.addListener((ov, oldValue, newValue) -> {
+        model.currency.addListener((ov, oldValue, newValue) -> {
             if (newValue != null)
                 currencyComboBox.getSelectionModel().select(currencyComboBox.getItems().indexOf(newValue));
             else
@@ -234,8 +234,8 @@ public class IrcAccountViewCB extends CachedViewCB<IrcAccountPM> implements Cont
 
     private void setupBindings() {
         // input
-        ircNickNameTextField.textProperty().bindBidirectional(presentationModel.ircNickName);
-        saveButton.disableProperty().bind(presentationModel.saveButtonDisable);
+        ircNickNameTextField.textProperty().bindBidirectional(model.ircNickName);
+        saveButton.disableProperty().bind(model.saveButtonDisable);
     }
 
 

@@ -24,7 +24,7 @@ import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.scene.*;
 
-public abstract class FxmlController<R extends Node, M extends Model> extends Controller<M> {
+public abstract class FxmlController<R extends Node, M extends XModel> extends Controller<M> {
 
     protected @FXML R root;
 

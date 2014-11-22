@@ -27,15 +27,12 @@ import org.slf4j.LoggerFactory;
 /**
  * If caching is used for loader we use the CachedViewController for turning the controller into sleep mode if not
  * active and awake it at reactivation.
- * * @param <T>       The PresentationModel used in that class
  */
-public class CachedViewCB<T extends Activatable> extends ViewCB {
+public class CachedViewCB<M extends Activatable & Model> extends ViewCB<M> {
     private static final Logger log = LoggerFactory.getLogger(CachedViewCB.class);
 
-    protected final T presentationModel;
-
-    public CachedViewCB(T presentationModel) {
-        this.presentationModel = presentationModel;
+    public CachedViewCB(M model) {
+        super(model);
     }
 
     public CachedViewCB() {
@@ -74,8 +71,8 @@ public class CachedViewCB<T extends Activatable> extends ViewCB {
     public void activate() {
         log.trace("Lifecycle: activate " + this.getClass().getSimpleName());
 
-        if (presentationModel != null)
-            presentationModel.activate();
+        if (model != null)
+            model.activate();
     }
 
     /**
@@ -84,8 +81,8 @@ public class CachedViewCB<T extends Activatable> extends ViewCB {
     public void deactivate() {
         log.trace("Lifecycle: deactivate " + this.getClass().getSimpleName());
 
-        if (presentationModel != null)
-            presentationModel.deactivate();
+        if (model != null)
+            model.deactivate();
     }
 
     /**
@@ -96,8 +93,8 @@ public class CachedViewCB<T extends Activatable> extends ViewCB {
         log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
         super.terminate();
 
-        if (presentationModel != null)
-            presentationModel.deactivate();
+        if (model != null)
+            model.deactivate();
     }
 
 }

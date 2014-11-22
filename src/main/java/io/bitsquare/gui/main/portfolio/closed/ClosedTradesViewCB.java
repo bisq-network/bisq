@@ -47,8 +47,8 @@ public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ClosedTradesViewCB(ClosedTradesPM presentationModel) {
-        super(presentationModel);
+    private ClosedTradesViewCB(ClosedTradesPM model) {
+        super(model);
     }
 
 
@@ -75,7 +75,7 @@ public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
     public void activate() {
         super.activate();
 
-        table.setItems(presentationModel.getList());
+        table.setItems(model.getList());
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -124,9 +124,9 @@ public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    hyperlink = new Hyperlink(presentationModel.getTradeId(item));
+                                    hyperlink = new Hyperlink(model.getTradeId(item));
                                     hyperlink.setId("id-link");
-                                    Tooltip.install(hyperlink, new Tooltip(presentationModel.getTradeId(item)));
+                                    Tooltip.install(hyperlink, new Tooltip(model.getTradeId(item)));
                                     hyperlink.setOnAction(event -> openOfferDetails(item));
                                     setGraphic(hyperlink);
                                 }
@@ -153,7 +153,7 @@ public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
                             public void updateItem(final ClosedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(presentationModel.getDate(item));
+                                    setText(model.getDate(item));
                                 else
                                     setText("");
                             }
@@ -175,7 +175,7 @@ public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
                             @Override
                             public void updateItem(final ClosedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(presentationModel.getAmount(item));
+                                setText(model.getAmount(item));
                             }
                         };
                     }
@@ -194,7 +194,7 @@ public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
                             @Override
                             public void updateItem(final ClosedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(presentationModel.getPrice(item));
+                                setText(model.getPrice(item));
                             }
                         };
                     }
@@ -214,7 +214,7 @@ public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
                             public void updateItem(final ClosedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(presentationModel.getVolume(item));
+                                    setText(model.getVolume(item));
                                 else
                                     setText("");
                             }
@@ -235,7 +235,7 @@ public class ClosedTradesViewCB extends CachedViewCB<ClosedTradesPM> {
                             @Override
                             public void updateItem(final ClosedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(presentationModel.getDirectionLabel(item));
+                                setText(model.getDirectionLabel(item));
                             }
                         };
                     }

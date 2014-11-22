@@ -17,36 +17,6 @@
 
 package io.bitsquare.gui;
 
-import java.net.URL;
-
-import java.util.ResourceBundle;
-
-import javafx.fxml.Initializable;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
-public abstract class Controller<M extends XModel> implements Initializable {
-
-    public static final String TITLE_KEY = "view.title";
-
-    protected M model;
-
-    protected Controller(M model) {
-        this.model = checkNotNull(model);
-    }
-
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        model.initialize();
-        doInitialize();
-    }
-
-    public final void terminate() {
-        //model.terminate();
-        //doTerminate();
-    }
-
-    protected abstract void doInitialize();
-
-    protected void doTerminate() { };
+public interface XModel {
+    void initialize();
 }

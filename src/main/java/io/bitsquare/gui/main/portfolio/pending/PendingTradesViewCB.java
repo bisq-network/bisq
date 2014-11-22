@@ -99,8 +99,8 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    PendingTradesViewCB(PendingTradesPM presentationModel, Navigation navigation) {
-        super(presentationModel);
+    PendingTradesViewCB(PendingTradesPM model, Navigation navigation) {
+        super(model);
 
         this.navigation = navigation;
     }
@@ -123,11 +123,11 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         table.setPlaceholder(new Label("No pending trades available"));
 
         txIdChangeListener = (ov, oldValue, newValue) ->
-                txIdTextField.setup(presentationModel.getWalletService(), newValue);
+                txIdTextField.setup(model.getWalletService(), newValue);
 
         selectedItemChangeListener = (obsValue, oldValue, newValue) -> {
             if (oldValue != null && newValue != null) {
-                presentationModel.selectTrade(newValue);
+                model.selectTrade(newValue);
                 updateScreen();
             }
         };
@@ -143,8 +143,8 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         takerStateChangeListener = (ov, oldValue, newValue) -> applyTakerState(newValue);
         faultChangeListener = (ov, oldValue, newValue) -> onFault(newValue);
 
-        withdrawAddressTextField.setValidator(presentationModel.getBtcAddressValidator());
-        withdrawButton.disableProperty().bind(presentationModel.withdrawalButtonDisable);
+        withdrawAddressTextField.setValidator(model.getBtcAddressValidator());
+        withdrawButton.disableProperty().bind(model.withdrawalButtonDisable);
         super.initialize(url, rb);
     }
 
@@ -152,14 +152,14 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     public void activate() {
         super.activate();
 
-        table.setItems(presentationModel.getList());
+        table.setItems(model.getList());
 
-        presentationModel.getList().addListener(listChangeListener);
-        presentationModel.txId.addListener(txIdChangeListener);
-        presentationModel.fault.addListener(faultChangeListener);
+        model.getList().addListener(listChangeListener);
+        model.txId.addListener(txIdChangeListener);
+        model.fault.addListener(faultChangeListener);
 
-        txIdTextField.setup(presentationModel.getWalletService(), presentationModel.txId.get());
-        table.getSelectionModel().select(presentationModel.getSelectedItem());
+        txIdTextField.setup(model.getWalletService(), model.txId.get());
+        table.getSelectionModel().select(model.getSelectedItem());
         table.getSelectionModel().selectedItemProperty().addListener(selectedItemChangeListener);
 
         // TODO Set focus to row does not work yet...
@@ -168,7 +168,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
 
         withdrawAddressTextField.focusedProperty().addListener((ov, oldValue, newValue) -> {
             if (oldValue && !newValue)
-                presentationModel.withdrawAddressFocusOut(withdrawAddressTextField.getText());
+                model.withdrawAddressFocusOut(withdrawAddressTextField.getText());
         });
         updateScreen();
     }
@@ -178,12 +178,12 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         super.deactivate();
 
         table.getSelectionModel().selectedItemProperty().removeListener(selectedItemChangeListener);
-        presentationModel.getList().removeListener(listChangeListener);
-        presentationModel.txId.removeListener(txIdChangeListener);
-        presentationModel.fault.removeListener(faultChangeListener);
+        model.getList().removeListener(listChangeListener);
+        model.txId.removeListener(txIdChangeListener);
+        model.fault.removeListener(faultChangeListener);
 
-        presentationModel.state.removeListener(offererStateChangeListener);
-        presentationModel.state.removeListener(takerStateChangeListener);
+        model.state.removeListener(offererStateChangeListener);
+        model.state.removeListener(takerStateChangeListener);
     }
 
 
@@ -193,18 +193,18 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
 
     @FXML
     void onPaymentStarted() {
-        presentationModel.fiatPaymentStarted();
+        model.fiatPaymentStarted();
     }
 
     @FXML
     void onConfirmPaymentReceipt() {
-        presentationModel.fiatPaymentReceived();
+        model.fiatPaymentReceived();
     }
 
     @FXML
     public void onWithdraw() {
         setSummaryControlsVisible(false);
-        presentationModel.withdraw(withdrawAddressTextField.getText());
+        model.withdraw(withdrawAddressTextField.getText());
         Platform.runLater(() ->
                 navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO,
                         Navigation.Item.CLOSED_TRADES));
@@ -212,7 +212,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
 
     @FXML
     void onOpenHelp() {
-        Help.openWindow(presentationModel.isOfferer() ? HelpId.PENDING_TRADE_OFFERER : HelpId.PENDING_TRADE_TAKER);
+        Help.openWindow(model.isOfferer() ? HelpId.PENDING_TRADE_OFFERER : HelpId.PENDING_TRADE_TAKER);
     }
 
     @FXML
@@ -240,7 +240,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateScreen() {
-        boolean dataAvailable = !presentationModel.getList().isEmpty();
+        boolean dataAvailable = !model.getList().isEmpty();
         titledGroupBg.setVisible(dataAvailable);
         processBar.setVisible(dataAvailable);
         statusLabel.setVisible(dataAvailable);
@@ -258,7 +258,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
         infoDisplay.setManaged(dataAvailable);
 
         if (dataAvailable) {
-            if (presentationModel.isOfferer())
+            if (model.isOfferer())
                 setupScreenForOfferer();
             else
                 setupScreenForTaker();
@@ -275,8 +275,8 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
             processBar.setProcessStepItems(items);
         }
 
-        presentationModel.state.addListener(offererStateChangeListener);
-        applyOffererState(presentationModel.state.get());
+        model.state.addListener(offererStateChangeListener);
+        applyOffererState(model.state.get());
     }
 
     private void setupScreenForTaker() {
@@ -290,8 +290,8 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
             processBar.setProcessStepItems(items);
         }
 
-        presentationModel.state.addListener(takerStateChangeListener);
-        applyTakerState(presentationModel.state.get());
+        model.state.addListener(takerStateChangeListener);
+        applyTakerState(model.state.get());
     }
 
     private void applyOffererState(PendingTradesPM.State state) {
@@ -321,26 +321,26 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     infoDisplay.setText("You are now safe to start the payment. You can wait for up to 6 block chain " +
                             "confirmations if you want more security.");
 
-                    paymentMethodTextField.setText(presentationModel.getPaymentMethod());
-                    fiatAmountTextField.setText(presentationModel.getFiatAmount());
-                    holderNameTextField.setText(presentationModel.getHolderName());
-                    primaryIdTextField.setText(presentationModel.getPrimaryId());
-                    secondaryIdTextField.setText(presentationModel.getSecondaryId());
+                    paymentMethodTextField.setText(model.getPaymentMethod());
+                    fiatAmountTextField.setText(model.getFiatAmount());
+                    holderNameTextField.setText(model.getHolderName());
+                    primaryIdTextField.setText(model.getPrimaryId());
+                    secondaryIdTextField.setText(model.getSecondaryId());
                     paymentsInfoDisplay.setText(BSResources.get("Copy and paste the payment account data to your " +
                                     "internet banking web page and transfer the {0} amount to the other traders " +
                                     "payment account. When the transfer is completed inform the other trader by " +
                                     "clicking the button below.",
-                            presentationModel.getCurrencyCode()));
+                            model.getCurrencyCode()));
                     break;
                 case OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED:
                     processBar.setSelectedIndex(2);
 
                     statusTextField.setText(BSResources.get("Waiting for the Bitcoin sellers confirmation " +
                                     "that the {0} payment has arrived.",
-                            presentationModel.getCurrencyCode()));
+                            model.getCurrencyCode()));
                     infoDisplay.setText(BSResources.get("When the confirmation that the {0} payment arrived at the " +
                                     "Bitcoin sellers payment account, the payout transaction will be published.",
-                            presentationModel.getCurrencyCode()));
+                            model.getCurrencyCode()));
                     break;
                 case OFFERER_BUYER_COMPLETED:
                     processBar.setSelectedIndex(3);
@@ -354,14 +354,14 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
 
                     btcTradeAmountLabel.setText("You have bought:");
                     fiatTradeAmountLabel.setText("You have paid:");
-                    btcTradeAmountTextField.setText(presentationModel.getTradeVolume());
-                    fiatTradeAmountTextField.setText(presentationModel.getFiatVolume());
-                    feesTextField.setText(presentationModel.getTotalFees());
-                    securityDepositTextField.setText(presentationModel.getSecurityDeposit());
+                    btcTradeAmountTextField.setText(model.getTradeVolume());
+                    fiatTradeAmountTextField.setText(model.getFiatVolume());
+                    feesTextField.setText(model.getTotalFees());
+                    securityDepositTextField.setText(model.getSecurityDeposit());
                     summaryInfoDisplay.setText("Your security deposit has been refunded to you. " +
                             "You can review the details to that trade any time in the closed trades screen.");
 
-                    withdrawAmountTextField.setText(presentationModel.getAmountToWithdraw());
+                    withdrawAmountTextField.setText(model.getAmountToWithdraw());
                     break;
             }
         }
@@ -388,7 +388,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                                     "That is needed to assure that the deposit input funding has not been " +
                                     "double-spent. " +
                                     "For higher trade volumes it is recommended to wait up to 6 confirmations.",
-                            presentationModel.getCurrencyCode()));
+                            model.getCurrencyCode()));
                     break;
                 case TAKER_SELLER_WAIT_PAYMENT_STARTED:
                     processBar.setSelectedIndex(1);
@@ -396,10 +396,10 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                     statusTextField.setText(BSResources.get("Deposit transaction has at least one block chain " +
                                     "confirmation. " +
                                     "Waiting that other trader starts the {0} payment.",
-                            presentationModel.getCurrencyCode()));
+                            model.getCurrencyCode()));
                     infoDisplay.setText(BSResources.get("You will get informed when the other trader has indicated " +
                                     "the {0} payment has been started.",
-                            presentationModel.getCurrencyCode()));
+                            model.getCurrencyCode()));
                     break;
                 case TAKER_SELLER_CONFIRM_RECEIVE_PAYMENT:
                     processBar.setSelectedIndex(2);
@@ -409,11 +409,11 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
 
                     statusTextField.setText(BSResources.get("The Bitcoin buyer has started the {0} payment." +
                                     "Check your payments account and confirm when you have received the payment.",
-                            presentationModel.getCurrencyCode()));
+                            model.getCurrencyCode()));
                     infoDisplay.setText(BSResources.get("It is important that you confirm when you have received the " +
                                     "{0} payment as this will publish the payout transaction where you get returned " +
                                     "your security deposit and the Bitcoin buyer receive the Bitcoin amount you sold.",
-                            presentationModel.getCurrencyCode()));
+                            model.getCurrencyCode()));
 
                     break;
                 case TAKER_SELLER_COMPLETED:
@@ -429,14 +429,14 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
 
                     btcTradeAmountLabel.setText("You have sold:");
                     fiatTradeAmountLabel.setText("You have received:");
-                    btcTradeAmountTextField.setText(presentationModel.getTradeVolume());
-                    fiatTradeAmountTextField.setText(presentationModel.getFiatVolume());
-                    feesTextField.setText(presentationModel.getTotalFees());
-                    securityDepositTextField.setText(presentationModel.getSecurityDeposit());
+                    btcTradeAmountTextField.setText(model.getTradeVolume());
+                    fiatTradeAmountTextField.setText(model.getFiatVolume());
+                    feesTextField.setText(model.getTotalFees());
+                    securityDepositTextField.setText(model.getSecurityDeposit());
                     summaryInfoDisplay.setText("Your security deposit has been refunded to you. " +
                             "You can review the details to that trade any time in the closed trades screen.");
 
-                    withdrawAmountTextField.setText(presentationModel.getAmountToWithdraw());
+                    withdrawAmountTextField.setText(model.getAmountToWithdraw());
                     break;
             }
         }
@@ -552,9 +552,9 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                                 super.updateItem(id, empty);
 
                                 if (id != null && !empty) {
-                                    hyperlink = new Hyperlink(presentationModel.formatTradeId(id));
+                                    hyperlink = new Hyperlink(model.formatTradeId(id));
                                     hyperlink.setId("id-link");
-                                    Tooltip.install(hyperlink, new Tooltip(presentationModel.formatTradeId(id)));
+                                    Tooltip.install(hyperlink, new Tooltip(model.formatTradeId(id)));
                                     hyperlink.setOnAction(event -> openOfferDetails(id));
                                     setGraphic(hyperlink);
                                 }
@@ -574,7 +574,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                 new StringConverter<Date>() {
                     @Override
                     public String toString(Date value) {
-                        return presentationModel.formatDate(value);
+                        return model.formatDate(value);
                     }
 
                     @Override
@@ -589,7 +589,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                 new StringConverter<Coin>() {
                     @Override
                     public String toString(Coin value) {
-                        return presentationModel.formatTradeAmount(value);
+                        return model.formatTradeAmount(value);
                     }
 
                     @Override
@@ -604,7 +604,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                 new StringConverter<Fiat>() {
                     @Override
                     public String toString(Fiat value) {
-                        return presentationModel.formatPrice(value);
+                        return model.formatPrice(value);
                     }
 
                     @Override
@@ -620,7 +620,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                 new StringConverter<Fiat>() {
                     @Override
                     public String toString(Fiat value) {
-                        return presentationModel.formatTradeVolume(value);
+                        return model.formatTradeVolume(value);
                     }
 
                     @Override
@@ -643,7 +643,7 @@ public class PendingTradesViewCB extends CachedViewCB<PendingTradesPM> {
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(presentationModel.evaluateDirection(item));
+                                    setText(model.evaluateDirection(item));
                                 else
                                     setText(null);
                             }

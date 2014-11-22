@@ -71,8 +71,8 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private RestrictionsViewCB(RestrictionsPM presentationModel, ViewLoader viewLoader, Stage primaryStage) {
-        super(presentationModel);
+    private RestrictionsViewCB(RestrictionsPM model, ViewLoader viewLoader, Stage primaryStage) {
+        super(model);
         this.viewLoader = viewLoader;
         this.primaryStage = primaryStage;
     }
@@ -90,16 +90,16 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
         initCountry();
         initArbitrators();
 
-        completedButton.disableProperty().bind(presentationModel.doneButtonDisable);
+        completedButton.disableProperty().bind(model.doneButtonDisable);
     }
 
     @Override
     public void activate() {
         super.activate();
 
-        languagesListView.setItems(presentationModel.getLanguageList());
-        countriesListView.setItems(presentationModel.getCountryList());
-        arbitratorsListView.setItems(presentationModel.getArbitratorList());
+        languagesListView.setItems(model.getLanguageList());
+        countriesListView.setItems(model.getCountryList());
+        arbitratorsListView.setItems(model.getArbitratorList());
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -132,7 +132,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
 
     @FXML
     private void onAddLanguage() {
-        presentationModel.addLanguage(languageComboBox.getSelectionModel().getSelectedItem());
+        model.addLanguage(languageComboBox.getSelectionModel().getSelectedItem());
         languageComboBox.getSelectionModel().clearSelection();
     }
 
@@ -140,20 +140,20 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
     private void onSelectRegion() {
         countryComboBox.setVisible(true);
         Region region = regionComboBox.getSelectionModel().getSelectedItem();
-        countryComboBox.setItems(presentationModel.getAllCountriesFor(region));
+        countryComboBox.setItems(model.getAllCountriesFor(region));
 
         addAllEuroCountriesButton.setVisible(region.getCode().equals("EU"));
     }
 
     @FXML
     private void onAddCountry() {
-        presentationModel.addCountry(countryComboBox.getSelectionModel().getSelectedItem());
+        model.addCountry(countryComboBox.getSelectionModel().getSelectedItem());
         countryComboBox.getSelectionModel().clearSelection();
     }
 
     @FXML
     private void onAddAllEuroCountries() {
-        countriesListView.setItems(presentationModel.getListWithAllEuroCountries());
+        countriesListView.setItems(model.getListWithAllEuroCountries());
     }
 
     @FXML
@@ -219,8 +219,8 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void updateArbitratorList() {
-        presentationModel.updateArbitratorList();
-        arbitratorsListView.setItems(presentationModel.getArbitratorList());
+        model.updateArbitratorList();
+        arbitratorsListView.setItems(model.getArbitratorList());
     }
 
     private void initLanguage() {
@@ -255,7 +255,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
             }
         });
 
-        languageComboBox.setItems(presentationModel.getAllLanguages());
+        languageComboBox.setItems(model.getAllLanguages());
         languageComboBox.setConverter(new StringConverter<Locale>() {
             @Override
             public String toString(Locale locale) {
@@ -270,7 +270,7 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
     }
 
     private void initCountry() {
-        regionComboBox.setItems(presentationModel.getAllRegions());
+        regionComboBox.setItems(model.getAllRegions());
         regionComboBox.setConverter(new StringConverter<io.bitsquare.locale.Region>() {
             @Override
             public String toString(io.bitsquare.locale.Region region) {
@@ -361,15 +361,15 @@ public class RestrictionsViewCB extends CachedViewCB<RestrictionsPM> implements 
     }
 
     private void removeLanguage(Locale locale) {
-        presentationModel.removeLanguage(locale);
+        model.removeLanguage(locale);
     }
 
     private void removeCountry(Country country) {
-        presentationModel.removeCountry(country);
+        model.removeCountry(country);
     }
 
     private void removeArbitrator(Arbitrator arbitrator) {
-        presentationModel.removeArbitrator(arbitrator);
+        model.removeArbitrator(arbitrator);
     }
 
 

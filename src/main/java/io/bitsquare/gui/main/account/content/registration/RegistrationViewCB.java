@@ -48,12 +48,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class RegistrationViewCB extends ViewCB implements ContextAware {
+public class RegistrationViewCB extends ViewCB<RegistrationPM> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(RegistrationViewCB.class);
 
     private final OverlayManager overlayManager;
-    private final RegistrationPM model;
 
     @FXML TextField feeTextField;
     @FXML AddressTextField addressTextField;
@@ -69,7 +68,7 @@ public class RegistrationViewCB extends ViewCB implements ContextAware {
 
     @Inject
     private RegistrationViewCB(RegistrationPM model, OverlayManager overlayManager) {
-        this.model = model;
+        super(model);
         this.overlayManager = overlayManager;
     }
 

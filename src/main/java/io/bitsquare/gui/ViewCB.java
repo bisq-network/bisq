@@ -31,7 +31,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Non caching version for code behind classes using the PM pattern
  */
-public class ViewCB implements Initializable {
+public class ViewCB<M extends Model> implements Initializable {
+
     private static final Logger log = LoggerFactory.getLogger(ViewCB.class);
 
     public static final String TITLE_KEY = "view.title";
@@ -39,7 +40,17 @@ public class ViewCB implements Initializable {
     protected Initializable childController;
     protected Initializable parent;
 
+    protected final M model;
+
     @FXML protected Parent root;
+
+    public ViewCB(M model) {
+        this.model = model;
+    }
+
+    public ViewCB() {
+        this(null);
+    }
 
     /**
      * Get called form GUI framework when the UI is ready.
@@ -87,4 +98,5 @@ public class ViewCB implements Initializable {
                 "= " + navigationItem);
         return null;
     }
+
 }

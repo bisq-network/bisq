@@ -90,12 +90,12 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBookViewCB(OfferBookPM presentationModel,
+    OfferBookViewCB(OfferBookPM model,
                     Navigation navigation,
                     OverlayManager overlayManager,
                     OptionalBtcValidator optionalBtcValidator,
                     OptionalFiatValidator optionalFiatValidator) {
-        super(presentationModel);
+        super(model);
 
         this.navigation = navigation;
         this.overlayManager = overlayManager;
@@ -150,10 +150,10 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
         setupBindings();
 
         // setOfferBookInfo has been called before
-        SortedList<OfferBookListItem> offerList = presentationModel.getOfferList();
+        SortedList<OfferBookListItem> offerList = model.getOfferList();
         table.setItems(offerList);
         offerList.comparatorProperty().bind(table.comparatorProperty());
-        priceColumn.setSortType((presentationModel.getDirection() == Direction.BUY) ?
+        priceColumn.setSortType((model.getDirection() == Direction.BUY) ?
                 TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
         table.sort();
     }
@@ -188,7 +188,7 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setDirection(Direction direction) {
-        presentationModel.setDirection(direction);
+        model.setDirection(direction);
     }
 
 
@@ -198,10 +198,10 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
 
     @FXML
     void createOffer() {
-        if (presentationModel.isRegistered()) {
+        if (model.isRegistered()) {
             createOfferButton.setDisable(true);
-            ((TradeNavigator) parent).createOffer(presentationModel.getAmountAsCoin(),
-                    presentationModel.getPriceAsCoin());
+            ((TradeNavigator) parent).createOffer(model.getAmountAsCoin(),
+                    model.getPriceAsCoin());
         }
         else {
             openSetupScreen();
@@ -264,10 +264,10 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
 
     private void takeOffer(Offer offer) {
 
-        if (presentationModel.isRegistered()) {
+        if (model.isRegistered()) {
             if (offer.getDirection() == Direction.BUY) {
-                ((TradeNavigator) parent).takeOffer(presentationModel.getAmountAsCoin(),
-                        presentationModel.getPriceAsCoin(), offer);
+                ((TradeNavigator) parent).takeOffer(model.getAmountAsCoin(),
+                        model.getPriceAsCoin(), offer);
             }
             else {
                 Popups.openInfoPopup("Not implemented yet",
@@ -352,23 +352,23 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setupBindings() {
-        amountTextField.textProperty().bindBidirectional(presentationModel.amount);
-        priceTextField.textProperty().bindBidirectional(presentationModel.price);
-        volumeTextField.textProperty().bindBidirectional(presentationModel.volume);
-        amountBtcLabel.textProperty().bind(presentationModel.btcCode);
-        priceFiatLabel.textProperty().bind(presentationModel.fiatCode);
-        volumeFiatLabel.textProperty().bind(presentationModel.fiatCode);
-        priceDescriptionLabel.textProperty().bind(presentationModel.fiatCode);
-        volumeDescriptionLabel.textProperty().bind(presentationModel.fiatCode);//Price per Bitcoin in EUR
+        amountTextField.textProperty().bindBidirectional(model.amount);
+        priceTextField.textProperty().bindBidirectional(model.price);
+        volumeTextField.textProperty().bindBidirectional(model.volume);
+        amountBtcLabel.textProperty().bind(model.btcCode);
+        priceFiatLabel.textProperty().bind(model.fiatCode);
+        volumeFiatLabel.textProperty().bind(model.fiatCode);
+        priceDescriptionLabel.textProperty().bind(model.fiatCode);
+        volumeDescriptionLabel.textProperty().bind(model.fiatCode);//Price per Bitcoin in EUR
         priceDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                        BSResources.get("Filter by price in {0}", presentationModel.fiatCode.get()),
-                presentationModel.fiatCode));
+                        BSResources.get("Filter by price in {0}", model.fiatCode.get()),
+                model.fiatCode));
         volumeDescriptionLabel.textProperty().bind(createStringBinding(() ->
-                        BSResources.get("Filter by amount in {0}", presentationModel.fiatCode.get()),
-                presentationModel.fiatCode));
+                        BSResources.get("Filter by amount in {0}", model.fiatCode.get()),
+                model.fiatCode));
         volumeTextField.promptTextProperty().bind(createStringBinding(() ->
-                        BSResources.get("Amount in {0}", presentationModel.fiatCode.get()),
-                presentationModel.fiatCode));
+                        BSResources.get("Amount in {0}", model.fiatCode.get()),
+                model.fiatCode));
     }
 
     private void removeBindings() {
@@ -419,7 +419,7 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
                             @Override
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(presentationModel.getAmount(item));
+                                setText(model.getAmount(item));
                             }
                         };
                     }
@@ -438,7 +438,7 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
                             @Override
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(presentationModel.getPrice(item));
+                                setText(model.getPrice(item));
                             }
                         };
                     }
@@ -457,7 +457,7 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
                             @Override
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(presentationModel.getVolume(item));
+                                setText(model.getVolume(item));
                             }
                         };
                     }
@@ -483,7 +483,7 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
                             }
 
                             private void verifyIfTradable(final OfferBookListItem item) {
-                                boolean isMatchingRestrictions = presentationModel.isTradable(item
+                                boolean isMatchingRestrictions = model.isTradable(item
                                         .getOffer());
                                 button.setDisable(!isMatchingRestrictions);
 
@@ -504,7 +504,7 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
                                     if (tableRow != null) {
                                         getTableRow().setTooltip(new Tooltip("Click for more information."));
                                         getTableRow().setOnMouseClicked((e) -> openRestrictionsWarning
-                                                (presentationModel.restrictionsInfo.get()));
+                                                (model.restrictionsInfo.get()));
                                     }
                                 }
                             }
@@ -517,10 +517,10 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
                                     String title;
                                     Offer offer = item.getOffer();
 
-                                    if (presentationModel.isMyOffer(offer)) {
+                                    if (model.isMyOffer(offer)) {
                                         iconView.setId("image-remove");
                                         title = "Remove";
-                                        button.setOnAction(event -> presentationModel.removeOffer(item
+                                        button.setOnAction(event -> model.removeOffer(item
                                                 .getOffer()));
                                     }
                                     else {
@@ -528,7 +528,7 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
                                             iconView.setId("image-buy");
                                         else
                                             iconView.setId("image-sell");
-                                        title = presentationModel.getDirectionLabel(offer);
+                                        title = model.getDirectionLabel(offer);
                                         button.setOnAction(event -> takeOffer(item.getOffer()));
                                     }
 
@@ -595,7 +595,7 @@ public class OfferBookViewCB extends CachedViewCB<OfferBookPM> {
                             @Override
                             public void updateItem(final OfferBookListItem offerBookListItem, boolean empty) {
                                 super.updateItem(offerBookListItem, empty);
-                                setText(presentationModel.getBankAccountType(offerBookListItem));
+                                setText(model.getBankAccountType(offerBookListItem));
                             }
                         };
                     }

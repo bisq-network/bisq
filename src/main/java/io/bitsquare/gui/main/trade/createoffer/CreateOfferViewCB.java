@@ -117,9 +117,9 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferViewCB(CreateOfferPM presentationModel, Navigation navigation,
+    private CreateOfferViewCB(CreateOfferPM model, Navigation navigation,
                               OverlayManager overlayManager) {
-        super(presentationModel);
+        super(model);
         this.navigation = navigation;
         this.overlayManager = overlayManager;
     }
@@ -135,9 +135,9 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
         setupListeners();
         setupBindings();
-        balanceTextField.setup(presentationModel.getWalletService(), presentationModel.address.get(),
-                presentationModel.getFormatter());
-        volumeTextField.setPromptText(BSResources.get("createOffer.volume.prompt", presentationModel.fiatCode.get()));
+        balanceTextField.setup(model.getWalletService(), model.address.get(),
+                model.getFormatter());
+        volumeTextField.setPromptText(BSResources.get("createOffer.volume.prompt", model.fiatCode.get()));
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -168,7 +168,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initWithData(Direction direction, Coin amount, Fiat price) {
-        presentationModel.initWithData(direction, amount, price);
+        model.initWithData(direction, amount, price);
 
         if (direction == Direction.BUY)
             imageView.setId("image-buy-large");
@@ -179,7 +179,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     public void configCloseHandlers(CloseListener closeListener, BooleanProperty tabIsClosable) {
         this.closeListener = closeListener;
         this.tabIsClosable = tabIsClosable;
-        tabIsClosable.bind(presentationModel.tabIsClosable);
+        tabIsClosable.bind(model.tabIsClosable);
     }
 
 
@@ -189,12 +189,12 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
     @FXML
     void onPlaceOffer() {
-        presentationModel.placeOffer();
+        model.placeOffer();
     }
 
     @FXML
     void onShowPayFundsScreen() {
-        if (presentationModel.displaySecurityDepositInfo()) {
+        if (model.displaySecurityDepositInfo()) {
             overlayManager.blurContent();
             List<Action> actions = new ArrayList<>();
             actions.add(new AbstractAction(BSResources.get("shared.close")) {
@@ -211,7 +211,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
                             "\nIt will be refunded to you after the trade has successfully completed.",
                     actions);
 
-            presentationModel.securityDepositInfoDisplayed();
+            model.securityDepositInfoDisplayed();
         }
 
 
@@ -241,7 +241,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
         setupTotalToPayInfoIconLabel();
 
-        presentationModel.onShowPayFundsScreen();
+        model.onShowPayFundsScreen();
     }
 
     @FXML
@@ -303,60 +303,60 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
         // focus out
         amountTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            presentationModel.onFocusOutAmountTextField(oldValue, newValue, amountTextField.getText());
-            amountTextField.setText(presentationModel.amount.get());
+            model.onFocusOutAmountTextField(oldValue, newValue, amountTextField.getText());
+            amountTextField.setText(model.amount.get());
         });
 
         minAmountTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            presentationModel.onFocusOutMinAmountTextField(oldValue, newValue, minAmountTextField.getText());
-            minAmountTextField.setText(presentationModel.minAmount.get());
+            model.onFocusOutMinAmountTextField(oldValue, newValue, minAmountTextField.getText());
+            minAmountTextField.setText(model.minAmount.get());
         });
 
         priceTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            presentationModel.onFocusOutPriceTextField(oldValue, newValue, priceTextField.getText());
-            priceTextField.setText(presentationModel.price.get());
+            model.onFocusOutPriceTextField(oldValue, newValue, priceTextField.getText());
+            priceTextField.setText(model.price.get());
         });
 
         volumeTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            presentationModel.onFocusOutVolumeTextField(oldValue, newValue, volumeTextField.getText());
-            volumeTextField.setText(presentationModel.volume.get());
+            model.onFocusOutVolumeTextField(oldValue, newValue, volumeTextField.getText());
+            volumeTextField.setText(model.volume.get());
         });
 
         // warnings
-        presentationModel.showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
+        model.showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 Popups.openWarningPopup(BSResources.get("shared.warning"),
                         BSResources.get("createOffer.amountPriceBox.warning.invalidBtcDecimalPlaces"));
-                presentationModel.showWarningInvalidBtcDecimalPlaces.set(false);
+                model.showWarningInvalidBtcDecimalPlaces.set(false);
             }
         });
 
-        presentationModel.showWarningInvalidFiatDecimalPlaces.addListener((o, oldValue, newValue) -> {
+        model.showWarningInvalidFiatDecimalPlaces.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 Popups.openWarningPopup(BSResources.get("shared.warning"),
                         BSResources.get("createOffer.amountPriceBox.warning.invalidFiatDecimalPlaces"));
-                presentationModel.showWarningInvalidFiatDecimalPlaces.set(false);
+                model.showWarningInvalidFiatDecimalPlaces.set(false);
             }
         });
 
-        presentationModel.showWarningAdjustedVolume.addListener((o, oldValue, newValue) -> {
+        model.showWarningAdjustedVolume.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 Popups.openWarningPopup(BSResources.get("shared.warning"),
                         BSResources.get("createOffer.amountPriceBox.warning.adjustedVolume"));
-                presentationModel.showWarningAdjustedVolume.set(false);
-                volumeTextField.setText(presentationModel.volume.get());
+                model.showWarningAdjustedVolume.set(false);
+                volumeTextField.setText(model.volume.get());
             }
         });
 
-        presentationModel.requestPlaceOfferErrorMessage.addListener((o, oldValue, newValue) -> {
+        model.requestPlaceOfferErrorMessage.addListener((o, oldValue, newValue) -> {
             if (newValue != null) {
                 Popups.openErrorPopup(BSResources.get("shared.error"),
                         BSResources.get("createOffer.amountPriceBox.error.message",
-                                presentationModel.requestPlaceOfferErrorMessage.get()));
+                                model.requestPlaceOfferErrorMessage.get()));
             }
         });
 
-        presentationModel.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
+        model.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 overlayManager.blurContent();
 
@@ -367,7 +367,7 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         getProperties().put("type", "COPY");
-                        Utilities.copyToClipboard(presentationModel.transactionId.get());
+                        Utilities.copyToClipboard(model.transactionId.get());
                     }
                 });*/
                 actions.add(new AbstractAction(BSResources.get("shared.close")) {
@@ -392,54 +392,54 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
     }
 
     private void setupBindings() {
-        amountBtcLabel.textProperty().bind(presentationModel.btcCode);
-        priceFiatLabel.textProperty().bind(presentationModel.fiatCode);
-        volumeFiatLabel.textProperty().bind(presentationModel.fiatCode);
-        minAmountBtcLabel.textProperty().bind(presentationModel.btcCode);
+        amountBtcLabel.textProperty().bind(model.btcCode);
+        priceFiatLabel.textProperty().bind(model.fiatCode);
+        volumeFiatLabel.textProperty().bind(model.fiatCode);
+        minAmountBtcLabel.textProperty().bind(model.btcCode);
 
         priceDescriptionLabel.textProperty().bind(createStringBinding(() ->
                         BSResources.get("createOffer.amountPriceBox.priceDescription",
-                                presentationModel.fiatCode.get()),
-                presentationModel.fiatCode));
+                                model.fiatCode.get()),
+                model.fiatCode));
         volumeDescriptionLabel.textProperty().bind(createStringBinding(() ->
                         BSResources.get("createOffer.amountPriceBox.volumeDescription",
-                                presentationModel.fiatCode.get()),
-                presentationModel.fiatCode));
+                                model.fiatCode.get()),
+                model.fiatCode));
 
-        buyLabel.textProperty().bind(presentationModel.directionLabel);
+        buyLabel.textProperty().bind(model.directionLabel);
 
-        amountTextField.textProperty().bindBidirectional(presentationModel.amount);
-        minAmountTextField.textProperty().bindBidirectional(presentationModel.minAmount);
-        priceTextField.textProperty().bindBidirectional(presentationModel.price);
-        volumeTextField.textProperty().bindBidirectional(presentationModel.volume);
+        amountTextField.textProperty().bindBidirectional(model.amount);
+        minAmountTextField.textProperty().bindBidirectional(model.minAmount);
+        priceTextField.textProperty().bindBidirectional(model.price);
+        volumeTextField.textProperty().bindBidirectional(model.volume);
 
-        totalToPayTextField.textProperty().bind(presentationModel.totalToPay);
+        totalToPayTextField.textProperty().bind(model.totalToPay);
 
-        addressTextField.amountAsCoinProperty().bind(presentationModel.totalToPayAsCoin);
-        addressTextField.paymentLabelProperty().bind(presentationModel.paymentLabel);
-        addressTextField.addressProperty().bind(presentationModel.addressAsString);
+        addressTextField.amountAsCoinProperty().bind(model.totalToPayAsCoin);
+        addressTextField.paymentLabelProperty().bind(model.paymentLabel);
+        addressTextField.addressProperty().bind(model.addressAsString);
 
-        bankAccountTypeTextField.textProperty().bind(presentationModel.bankAccountType);
-        bankAccountCurrencyTextField.textProperty().bind(presentationModel.bankAccountCurrency);
-        bankAccountCountyTextField.textProperty().bind(presentationModel.bankAccountCounty);
+        bankAccountTypeTextField.textProperty().bind(model.bankAccountType);
+        bankAccountCurrencyTextField.textProperty().bind(model.bankAccountCurrency);
+        bankAccountCountyTextField.textProperty().bind(model.bankAccountCounty);
 
-        acceptedCountriesTextField.textProperty().bind(presentationModel.acceptedCountries);
-        acceptedLanguagesTextField.textProperty().bind(presentationModel.acceptedLanguages);
-        acceptedArbitratorsTextField.textProperty().bind(presentationModel.acceptedArbitrators);
+        acceptedCountriesTextField.textProperty().bind(model.acceptedCountries);
+        acceptedLanguagesTextField.textProperty().bind(model.acceptedLanguages);
+        acceptedArbitratorsTextField.textProperty().bind(model.acceptedArbitrators);
 
         // Validation
-        amountTextField.validationResultProperty().bind(presentationModel.amountValidationResult);
-        minAmountTextField.validationResultProperty().bind(presentationModel.minAmountValidationResult);
-        priceTextField.validationResultProperty().bind(presentationModel.priceValidationResult);
-        volumeTextField.validationResultProperty().bind(presentationModel.volumeValidationResult);
+        amountTextField.validationResultProperty().bind(model.amountValidationResult);
+        minAmountTextField.validationResultProperty().bind(model.minAmountValidationResult);
+        priceTextField.validationResultProperty().bind(model.priceValidationResult);
+        volumeTextField.validationResultProperty().bind(model.volumeValidationResult);
 
         // buttons
-        placeOfferButton.visibleProperty().bind(presentationModel.isPlaceOfferButtonVisible);
-        placeOfferButton.disableProperty().bind(presentationModel.isPlaceOfferButtonDisabled);
+        placeOfferButton.visibleProperty().bind(model.isPlaceOfferButtonVisible);
+        placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
 
-        placeOfferSpinnerInfoLabel.visibleProperty().bind(presentationModel.isPlaceOfferSpinnerVisible);
+        placeOfferSpinnerInfoLabel.visibleProperty().bind(model.isPlaceOfferSpinnerVisible);
 
-        presentationModel.isPlaceOfferSpinnerVisible.addListener((ov, oldValue, newValue) -> {
+        model.isPlaceOfferSpinnerVisible.addListener((ov, oldValue, newValue) -> {
             placeOfferSpinner.setProgress(newValue ? -1 : 0);
             placeOfferSpinner.setVisible(newValue);
         });
@@ -535,18 +535,18 @@ public class CreateOfferViewCB extends CachedViewCB<CreateOfferPM> {
 
         addPayInfoEntry(infoGridPane, 0,
                 BSResources.get("createOffer.fundsBox.securityDeposit"),
-                presentationModel.securityDeposit.get());
+                model.securityDeposit.get());
         addPayInfoEntry(infoGridPane, 1, BSResources.get("createOffer.fundsBox.offerFee"),
-                presentationModel.offerFee.get());
+                model.offerFee.get());
         addPayInfoEntry(infoGridPane, 2, BSResources.get("createOffer.fundsBox.networkFee"),
-                presentationModel.networkFee.get());
+                model.networkFee.get());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
         separator.setStyle("-fx-background: #666;");
         GridPane.setConstraints(separator, 1, 3);
         infoGridPane.getChildren().add(separator);
         addPayInfoEntry(infoGridPane, 4, BSResources.get("createOffer.fundsBox.total"),
-                presentationModel.totalToPay.get());
+                model.totalToPay.get());
         totalToPayInfoPopover = new PopOver(infoGridPane);
         if (totalToPayInfoIconLabel.getScene() != null) {
             totalToPayInfoPopover.setDetachable(false);

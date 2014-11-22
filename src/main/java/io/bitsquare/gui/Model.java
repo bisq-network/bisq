@@ -18,5 +18,4 @@
 package io.bitsquare.gui;
 
 public interface Model {
-    void initialize();
 }

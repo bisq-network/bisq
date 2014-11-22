@@ -102,6 +102,7 @@ public class ArbitratorRegistrationViewCB extends CachedViewCB {
     @Inject
     private ArbitratorRegistrationViewCB(Persistence persistence, WalletService walletService,
                                          MessageService messageService, User user, BSFormatter formatter) {
+        super();
         this.persistence = persistence;
         this.walletService = walletService;
         this.messageService = messageService;

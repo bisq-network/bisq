@@ -47,8 +47,8 @@ public class PreferencesViewCB extends CachedViewCB<PreferencesPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private PreferencesViewCB(PreferencesPM presentationModel) {
-        super(presentationModel);
+    private PreferencesViewCB(PreferencesPM model) {
+        super(model);
     }
 
 
@@ -65,11 +65,11 @@ public class PreferencesViewCB extends CachedViewCB<PreferencesPM> {
     public void activate() {
         super.activate();
 
-        btcDenominationComboBox.setItems(presentationModel.getBtcDenominationItems());
-        btcDenominationComboBox.getSelectionModel().select(presentationModel.btcDenomination().get());
+        btcDenominationComboBox.setItems(model.getBtcDenominationItems());
+        btcDenominationComboBox.getSelectionModel().select(model.btcDenomination().get());
 
-        useAnimationsCheckBox.selectedProperty().bindBidirectional(presentationModel.useAnimations());
-        useEffectsCheckBox.selectedProperty().bindBidirectional(presentationModel.useEffects());
+        useAnimationsCheckBox.selectedProperty().bindBidirectional(model.useAnimations());
+        useEffectsCheckBox.selectedProperty().bindBidirectional(model.useEffects());
 
     }
 
@@ -94,6 +94,6 @@ public class PreferencesViewCB extends CachedViewCB<PreferencesPM> {
 
     @FXML
     void onSelectBtcDenomination() {
-        presentationModel.btcDenomination().set(btcDenominationComboBox.getSelectionModel().getSelectedItem());
+        model.btcDenomination().set(btcDenominationComboBox.getSelectionModel().getSelectedItem());
     }
 }

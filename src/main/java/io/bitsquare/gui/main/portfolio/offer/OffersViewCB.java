@@ -49,8 +49,8 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private OffersViewCB(OffersPM presentationModel) {
-        super(presentationModel);
+    private OffersViewCB(OffersPM model) {
+        super(model);
     }
 
 
@@ -78,7 +78,7 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
     public void activate() {
         super.activate();
 
-        table.setItems(presentationModel.getList());
+        table.setItems(model.getList());
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -99,7 +99,7 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void removeOffer(OfferListItem item) {
-        presentationModel.removeOffer(item);
+        model.removeOffer(item);
     }
 
     private void openOfferDetails(OfferListItem item) {
@@ -133,9 +133,9 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    hyperlink = new Hyperlink(presentationModel.getTradeId(item));
+                                    hyperlink = new Hyperlink(model.getTradeId(item));
                                     hyperlink.setId("id-link");
-                                    Tooltip.install(hyperlink, new Tooltip(presentationModel.getTradeId(item)));
+                                    Tooltip.install(hyperlink, new Tooltip(model.getTradeId(item)));
                                     hyperlink.setOnAction(event -> openOfferDetails(item));
                                     setGraphic(hyperlink);
                                 }
@@ -162,7 +162,7 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
                             public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(presentationModel.getDate(item));
+                                    setText(model.getDate(item));
                                 else
                                     setText("");
                             }
@@ -184,7 +184,7 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
                             @Override
                             public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(presentationModel.getAmount(item));
+                                setText(model.getAmount(item));
                             }
                         };
                     }
@@ -203,7 +203,7 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
                             @Override
                             public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(presentationModel.getPrice(item));
+                                setText(model.getPrice(item));
                             }
                         };
                     }
@@ -223,7 +223,7 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
                             public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(presentationModel.getVolume(item));
+                                    setText(model.getVolume(item));
                                 else
                                     setText("");
                             }
@@ -244,7 +244,7 @@ public class OffersViewCB extends CachedViewCB<OffersPM> {
                             @Override
                             public void updateItem(final OfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setText(presentationModel.getDirectionLabel(item));
+                                setText(model.getDirectionLabel(item));
                             }
                         };
                     }

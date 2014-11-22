@@ -36,14 +36,12 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SeedWordsViewCB extends ViewCB implements ContextAware {
+public class SeedWordsViewCB extends ViewCB<SeedWordsPM> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(SeedWordsViewCB.class);
 
     @FXML Button completedButton;
     @FXML TextArea seedWordsTextArea;
-
-    private final SeedWordsPM model;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +50,7 @@ public class SeedWordsViewCB extends ViewCB implements ContextAware {
 
     @Inject
     private SeedWordsViewCB(SeedWordsPM model) {
-        this.model = model;
+        super(model);
     }
 
 

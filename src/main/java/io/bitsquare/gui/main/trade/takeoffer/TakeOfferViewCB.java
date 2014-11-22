@@ -112,9 +112,9 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TakeOfferViewCB(TakeOfferPM presentationModel, Navigation navigation,
+    private TakeOfferViewCB(TakeOfferPM model, Navigation navigation,
                             OverlayManager overlayManager) {
-        super(presentationModel);
+        super(model);
 
         this.navigation = navigation;
         this.overlayManager = overlayManager;
@@ -158,7 +158,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initWithData(Direction direction, Coin amount, Offer offer) {
-        presentationModel.initWithData(direction, amount, offer);
+        model.initWithData(direction, amount, offer);
 
         if (direction == Direction.BUY)
             imageView.setId("image-buy-large");
@@ -166,31 +166,31 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
             imageView.setId("image-sell-large");
 
         priceDescriptionLabel.setText(BSResources.get("takeOffer.amountPriceBox.priceDescription",
-                presentationModel.getFiatCode()));
+                model.getFiatCode()));
         volumeDescriptionLabel.setText(BSResources.get("takeOffer.amountPriceBox.volumeDescription",
-                presentationModel.getFiatCode()));
+                model.getFiatCode()));
 
-        balanceTextField.setup(presentationModel.getWalletService(), presentationModel.address.get(),
-                presentationModel.getFormatter());
+        balanceTextField.setup(model.getWalletService(), model.address.get(),
+                model.getFormatter());
 
-        buyLabel.setText(presentationModel.getDirectionLabel());
-        amountRangeTextField.setText(presentationModel.getAmountRange());
-        priceTextField.setText(presentationModel.getPrice());
-        addressTextField.setPaymentLabel(presentationModel.getPaymentLabel());
-        addressTextField.setAddress(presentationModel.getAddressAsString());
-        bankAccountTypeTextField.setText(presentationModel.getBankAccountType());
-        bankAccountTypeTextField.setText(presentationModel.getBankAccountType());
-        bankAccountCurrencyTextField.setText(presentationModel.getBankAccountCurrency());
-        bankAccountCountyTextField.setText(presentationModel.getBankAccountCounty());
-        acceptedCountriesTextField.setText(presentationModel.getAcceptedCountries());
-        acceptedLanguagesTextField.setText(presentationModel.getAcceptedLanguages());
-        acceptedArbitratorsTextField.setText(presentationModel.getAcceptedArbitrators());
+        buyLabel.setText(model.getDirectionLabel());
+        amountRangeTextField.setText(model.getAmountRange());
+        priceTextField.setText(model.getPrice());
+        addressTextField.setPaymentLabel(model.getPaymentLabel());
+        addressTextField.setAddress(model.getAddressAsString());
+        bankAccountTypeTextField.setText(model.getBankAccountType());
+        bankAccountTypeTextField.setText(model.getBankAccountType());
+        bankAccountCurrencyTextField.setText(model.getBankAccountCurrency());
+        bankAccountCountyTextField.setText(model.getBankAccountCounty());
+        acceptedCountriesTextField.setText(model.getAcceptedCountries());
+        acceptedLanguagesTextField.setText(model.getAcceptedLanguages());
+        acceptedArbitratorsTextField.setText(model.getAcceptedArbitrators());
     }
 
     public void setCloseListener(CloseListener closeListener, BooleanProperty tabIsClosable) {
         this.closeListener = closeListener;
         this.tabIsClosable = tabIsClosable;
-        tabIsClosable.bind(presentationModel.tabIsClosable);
+        tabIsClosable.bind(model.tabIsClosable);
     }
 
 
@@ -200,13 +200,13 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
 
     @FXML
     void onTakeOffer() {
-        presentationModel.takeOffer();
+        model.takeOffer();
 
     }
 
     @FXML
     void onShowPayFundsScreen() {
-        if (presentationModel.displaySecurityDepositInfo()) {
+        if (model.displaySecurityDepositInfo()) {
             overlayManager.blurContent();
             List<Action> actions = new ArrayList<>();
             actions.add(new AbstractAction(BSResources.get("shared.close")) {
@@ -223,7 +223,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
                             "\nIt will be refunded to you after the trade has successfully completed.",
                     actions);
 
-            presentationModel.securityDepositInfoDisplayed();
+            model.securityDepositInfoDisplayed();
         }
 
         priceAmountPane.setInactive();
@@ -252,7 +252,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
 
         setupTotalToPayInfoIconLabel();
 
-        presentationModel.onShowPayFundsScreen();
+        model.onShowPayFundsScreen();
     }
 
     @FXML
@@ -305,28 +305,28 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
 
         // focus out
         amountTextField.focusedProperty().addListener((o, oldValue, newValue) -> {
-            presentationModel.onFocusOutAmountTextField(oldValue, newValue, amountTextField.getText());
-            amountTextField.setText(presentationModel.amount.get());
+            model.onFocusOutAmountTextField(oldValue, newValue, amountTextField.getText());
+            amountTextField.setText(model.amount.get());
         });
 
         // warnings
-        presentationModel.showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
+        model.showWarningInvalidBtcDecimalPlaces.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 Popups.openWarningPopup(BSResources.get("shared.warning"),
                         BSResources.get("takeOffer.amountPriceBox.warning.invalidBtcDecimalPlaces"));
-                presentationModel.showWarningInvalidBtcDecimalPlaces.set(false);
+                model.showWarningInvalidBtcDecimalPlaces.set(false);
             }
         });
 
-        presentationModel.requestTakeOfferErrorMessage.addListener((o, oldValue, newValue) -> {
+        model.requestTakeOfferErrorMessage.addListener((o, oldValue, newValue) -> {
             if (newValue != null) {
                 Popups.openErrorPopup(BSResources.get("shared.error"),
                         BSResources.get("takeOffer.amountPriceBox.error.message",
-                                presentationModel.requestTakeOfferErrorMessage.get()));
+                                model.requestTakeOfferErrorMessage.get()));
             }
         });
 
-        presentationModel.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
+        model.showTransactionPublishedScreen.addListener((o, oldValue, newValue) -> {
             if (newValue) {
                 overlayManager.blurContent();
 
@@ -337,7 +337,7 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         getProperties().put("type", "COPY");
-                         Utilities.copyToClipboard(presentationModel.transactionId.get());
+                         Utilities.copyToClipboard(model.transactionId.get());
                     }
                 });*/
                 actions.add(new AbstractAction(BSResources.get("shared.close")) {
@@ -364,22 +364,22 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
     }
 
     private void setupBindings() {
-        amountBtcLabel.textProperty().bind(presentationModel.btcCode);
-        amountTextField.textProperty().bindBidirectional(presentationModel.amount);
-        volumeTextField.textProperty().bindBidirectional(presentationModel.volume);
-        totalToPayTextField.textProperty().bind(presentationModel.totalToPay);
-        addressTextField.amountAsCoinProperty().bind(presentationModel.totalToPayAsCoin);
+        amountBtcLabel.textProperty().bind(model.btcCode);
+        amountTextField.textProperty().bindBidirectional(model.amount);
+        volumeTextField.textProperty().bindBidirectional(model.volume);
+        totalToPayTextField.textProperty().bind(model.totalToPay);
+        addressTextField.amountAsCoinProperty().bind(model.totalToPayAsCoin);
 
         // Validation
-        amountTextField.validationResultProperty().bind(presentationModel.amountValidationResult);
+        amountTextField.validationResultProperty().bind(model.amountValidationResult);
 
         // buttons
-        takeOfferButton.visibleProperty().bind(presentationModel.isTakeOfferButtonVisible);
-        takeOfferButton.disableProperty().bind(presentationModel.isTakeOfferButtonDisabled);
+        takeOfferButton.visibleProperty().bind(model.isTakeOfferButtonVisible);
+        takeOfferButton.disableProperty().bind(model.isTakeOfferButtonDisabled);
 
-        takeOfferSpinnerInfoLabel.visibleProperty().bind(presentationModel.isTakeOfferSpinnerVisible);
+        takeOfferSpinnerInfoLabel.visibleProperty().bind(model.isTakeOfferSpinnerVisible);
 
-        presentationModel.isTakeOfferSpinnerVisible.addListener((ov, oldValue, newValue) -> {
+        model.isTakeOfferSpinnerVisible.addListener((ov, oldValue, newValue) -> {
             takeOfferSpinner.setProgress(newValue ? -1 : 0);
             takeOfferSpinner.setVisible(newValue);
         });
@@ -452,21 +452,21 @@ public class TakeOfferViewCB extends CachedViewCB<TakeOfferPM> {
 
         addPayInfoEntry(infoGridPane, 0,
                 BSResources.get("takeOffer.fundsBox.amount"),
-                presentationModel.getAmount());
+                model.getAmount());
         addPayInfoEntry(infoGridPane, 1,
                 BSResources.get("takeOffer.fundsBox.securityDeposit"),
-                presentationModel.securityDeposit.get());
+                model.securityDeposit.get());
         addPayInfoEntry(infoGridPane, 2, BSResources.get("takeOffer.fundsBox.offerFee"),
-                presentationModel.getOfferFee());
+                model.getOfferFee());
         addPayInfoEntry(infoGridPane, 3, BSResources.get("takeOffer.fundsBox.networkFee"),
-                presentationModel.getNetworkFee());
+                model.getNetworkFee());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
         separator.setStyle("-fx-background: #666;");
         GridPane.setConstraints(separator, 1, 4);
         infoGridPane.getChildren().add(separator);
         addPayInfoEntry(infoGridPane, 5, BSResources.get("takeOffer.fundsBox.total"),
-                presentationModel.totalToPay.get());
+                model.totalToPay.get());
         totalToPayInfoPopover = new PopOver(infoGridPane);
         if (totalToPayInfoIconLabel.getScene() != null) {
             totalToPayInfoPopover.setDetachable(false);

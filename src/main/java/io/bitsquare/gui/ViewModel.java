@@ -17,5 +17,5 @@
 
 package io.bitsquare.gui;
 
-public interface ViewModel {
+public interface ViewModel extends Model {
 }

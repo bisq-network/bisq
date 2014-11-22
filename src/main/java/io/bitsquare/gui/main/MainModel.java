@@ -20,7 +20,7 @@ package io.bitsquare.gui.main;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.Model;
+import io.bitsquare.gui.XModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.BootstrapState;
@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import rx.Observable;
 
-class MainModel implements Model {
+class MainModel implements XModel {
     private static final Logger log = LoggerFactory.getLogger(MainModel.class);
 
     final DoubleProperty networkSyncProgress = new SimpleDoubleProperty(-1);

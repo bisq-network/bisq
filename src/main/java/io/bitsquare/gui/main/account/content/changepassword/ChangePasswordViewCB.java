@@ -36,11 +36,9 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ChangePasswordViewCB extends ViewCB implements ContextAware {
+public class ChangePasswordViewCB extends ViewCB<ChangePasswordPM> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(ChangePasswordViewCB.class);
-
-    private final ChangePasswordPM model;
 
     @FXML HBox buttonsHBox;
     @FXML Button saveButton, skipButton;
@@ -53,7 +51,7 @@ public class ChangePasswordViewCB extends ViewCB implements ContextAware {
 
     @Inject
     private ChangePasswordViewCB(ChangePasswordPM model) {
-        this.model = model;
+        super(model);
     }
 
 

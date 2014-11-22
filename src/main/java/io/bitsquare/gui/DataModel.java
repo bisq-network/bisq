@@ -17,5 +17,5 @@
 
 package io.bitsquare.gui;
 
-public interface DataModel {
+public interface DataModel extends Model {
 }
