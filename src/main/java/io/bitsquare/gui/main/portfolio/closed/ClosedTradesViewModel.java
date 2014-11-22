@@ -31,8 +31,8 @@ class ClosedTradesViewModel extends ActivatableWithDelegate<ClosedTradesDataMode
 
 
     @Inject
-    public ClosedTradesViewModel(ClosedTradesDataModel model, BSFormatter formatter) {
-        super(model);
+    public ClosedTradesViewModel(ClosedTradesDataModel delegate, BSFormatter formatter) {
+        super(delegate);
 
         this.formatter = formatter;
     }

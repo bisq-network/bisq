@@ -37,8 +37,8 @@ class RestrictionsViewModel extends ActivatableWithDelegate<RestrictionsDataMode
 
 
     @Inject
-    public RestrictionsViewModel(RestrictionsDataModel model) {
-        super(model);
+    public RestrictionsViewModel(RestrictionsDataModel delegate) {
+        super(delegate);
     }
 
 

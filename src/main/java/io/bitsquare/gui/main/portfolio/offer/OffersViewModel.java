@@ -31,8 +31,8 @@ class OffersViewModel extends ActivatableWithDelegate<OffersDataModel> implement
 
 
     @Inject
-    public OffersViewModel(OffersDataModel model, BSFormatter formatter) {
-        super(model);
+    public OffersViewModel(OffersDataModel delegate, BSFormatter formatter) {
+        super(delegate);
 
         this.formatter = formatter;
     }

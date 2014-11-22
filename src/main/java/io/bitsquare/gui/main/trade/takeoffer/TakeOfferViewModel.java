@@ -87,14 +87,14 @@ class TakeOfferViewModel extends ActivatableWithDelegate<TakeOfferDataModel> imp
 
 
     @Inject
-    public TakeOfferViewModel(TakeOfferDataModel model, BtcValidator btcValidator, BSFormatter formatter) {
-        super(model);
+    public TakeOfferViewModel(TakeOfferDataModel delegate, BtcValidator btcValidator, BSFormatter formatter) {
+        super(delegate);
 
         this.btcValidator = btcValidator;
         this.formatter = formatter;
 
-        this.offerFee = formatter.formatCoinWithCode(model.offerFeeAsCoin.get());
-        this.networkFee = formatter.formatCoinWithCode(model.networkFeeAsCoin.get());
+        this.offerFee = formatter.formatCoinWithCode(delegate.offerFeeAsCoin.get());
+        this.networkFee = formatter.formatCoinWithCode(delegate.networkFeeAsCoin.get());
 
         setupBindings();
         setupListeners();

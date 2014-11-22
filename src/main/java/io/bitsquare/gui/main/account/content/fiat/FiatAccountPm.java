@@ -60,26 +60,26 @@ class FiatAccountViewModel extends ActivatableWithDelegate<FiatAccountDataModel>
 
 
     @Inject
-    public FiatAccountViewModel(FiatAccountDataModel model, BankAccountNumberValidator bankAccountNumberValidator) {
-        super(model);
+    public FiatAccountViewModel(FiatAccountDataModel delegate, BankAccountNumberValidator bankAccountNumberValidator) {
+        super(delegate);
         this.bankAccountNumberValidator = bankAccountNumberValidator;
 
         // input
-        title.bindBidirectional(model.title);
-        holderName.bindBidirectional(model.holderName);
-        primaryID.bindBidirectional(model.primaryID);
-        secondaryID.bindBidirectional(model.secondaryID);
-        type.bindBidirectional(model.type);
-        country.bindBidirectional(model.country);
-        currency.bindBidirectional(model.currency);
+        title.bindBidirectional(delegate.title);
+        holderName.bindBidirectional(delegate.holderName);
+        primaryID.bindBidirectional(delegate.primaryID);
+        secondaryID.bindBidirectional(delegate.secondaryID);
+        type.bindBidirectional(delegate.type);
+        country.bindBidirectional(delegate.country);
+        currency.bindBidirectional(delegate.currency);
 
-        primaryIDPrompt.bind(model.primaryIDPrompt);
-        secondaryIDPrompt.bind(model.secondaryIDPrompt);
+        primaryIDPrompt.bind(delegate.primaryIDPrompt);
+        secondaryIDPrompt.bind(delegate.secondaryIDPrompt);
 
         selectionPrompt.set("No bank account available");
         selectionDisable.set(true);
 
-        model.title.addListener((ov, oldValue, newValue) -> validateInput());
+        delegate.title.addListener((ov, oldValue, newValue) -> validateInput());
         holderName.addListener((ov, oldValue, newValue) -> validateInput());
         primaryID.addListener((ov, oldValue, newValue) -> validateInput());
         secondaryID.addListener((ov, oldValue, newValue) -> validateInput());

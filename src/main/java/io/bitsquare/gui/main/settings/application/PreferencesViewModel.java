@@ -29,8 +29,8 @@ import javafx.collections.ObservableList;
 class PreferencesViewModel extends ActivatableWithDelegate<PreferencesDataModel> implements ViewModel {
 
     @Inject
-    public PreferencesViewModel(PreferencesDataModel model) {
-        super(model);
+    public PreferencesViewModel(PreferencesDataModel delegate) {
+        super(delegate);
     }
 
     public ObservableList<String> getBtcDenominationItems() {

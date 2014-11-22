@@ -93,19 +93,19 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
 
 
     @Inject
-    public CreateOfferViewModel(CreateOfferDataModel model, FiatValidator fiatValidator, BtcValidator btcValidator,
+    public CreateOfferViewModel(CreateOfferDataModel delegate, FiatValidator fiatValidator, BtcValidator btcValidator,
                                 BSFormatter formatter) {
-        super(model);
+        super(delegate);
 
         this.fiatValidator = fiatValidator;
         this.btcValidator = btcValidator;
         this.formatter = formatter;
 
-        paymentLabel.set(BSResources.get("createOffer.fundsBox.paymentLabel", model.getOfferId()));
+        paymentLabel.set(BSResources.get("createOffer.fundsBox.paymentLabel", delegate.getOfferId()));
 
-        if (model.getAddressEntry() != null) {
-            addressAsString.set(model.getAddressEntry().getAddress().toString());
-            address.set(model.getAddressEntry().getAddress());
+        if (delegate.getAddressEntry() != null) {
+            addressAsString.set(delegate.getAddressEntry().getAddress().toString());
+            address.set(delegate.getAddressEntry().getAddress());
         }
 
         setupBindings();

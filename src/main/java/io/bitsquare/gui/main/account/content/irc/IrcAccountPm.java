@@ -49,16 +49,16 @@ class IrcAccountViewModel extends ActivatableWithDelegate<IrcAccountDataModel> i
 
 
     @Inject
-    public IrcAccountViewModel(IrcAccountDataModel model, BankAccountNumberValidator nickNameValidator) {
-        super(model);
+    public IrcAccountViewModel(IrcAccountDataModel delegate, BankAccountNumberValidator nickNameValidator) {
+        super(delegate);
         this.nickNameValidator = nickNameValidator;
 
         // input
-        ircNickName.bindBidirectional(model.nickName);
-        type.bindBidirectional(model.type);
-        currency.bindBidirectional(model.currency);
+        ircNickName.bindBidirectional(delegate.nickName);
+        type.bindBidirectional(delegate.type);
+        currency.bindBidirectional(delegate.currency);
 
-        model.nickName.addListener((ov, oldValue, newValue) -> validateInput());
+        delegate.nickName.addListener((ov, oldValue, newValue) -> validateInput());
     }
 
 
