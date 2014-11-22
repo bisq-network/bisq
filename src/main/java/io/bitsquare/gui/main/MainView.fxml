@@ -17,7 +17,7 @@
   -->
 
 <?import javafx.scene.layout.*?>
-<StackPane fx:id="root" fx:controller="io.bitsquare.gui.main.MainViewCB"
+<StackPane fx:id="root" fx:controller="io.bitsquare.gui.main.MainView"
            prefHeight="750" prefWidth="1000" stylesheets="/io/bitsquare/gui/bitsquare.css"
            xmlns:fx="http://javafx.com/fxml">
 </StackPane>

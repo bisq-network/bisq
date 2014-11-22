@@ -20,6 +20,7 @@ package io.bitsquare.gui.main;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.XModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.msg.MessageService;
@@ -51,8 +52,8 @@ import org.slf4j.LoggerFactory;
 
 import rx.Observable;
 
-class MainModel implements XModel {
-    private static final Logger log = LoggerFactory.getLogger(MainModel.class);
+class MainViewModel implements ViewModel {
+    private static final Logger log = LoggerFactory.getLogger(MainViewModel.class);
 
     final DoubleProperty networkSyncProgress = new SimpleDoubleProperty(-1);
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty(0);
@@ -83,8 +84,9 @@ class MainModel implements XModel {
 
 
     @Inject
-    public MainModel(User user, WalletService walletService, MessageService messageService, TradeManager tradeManager,
-                     BitcoinNetwork bitcoinNetwork, BSFormatter formatter, Persistence persistence) {
+    public MainViewModel(User user, WalletService walletService, MessageService messageService,
+                         TradeManager tradeManager, BitcoinNetwork bitcoinNetwork, BSFormatter formatter,
+                         Persistence persistence) {
         this.user = user;
         this.walletService = walletService;
         this.messageService = messageService;
@@ -93,10 +95,7 @@ class MainModel implements XModel {
         this.bitcoinNetwork = bitcoinNetwork;
 
         user.getCurrentBankAccount().addListener((observable, oldValue, newValue) -> persistence.write(user));
-    }
 
-    @Override
-    public void initialize() {
         bootstrapState.addListener((ov, oldValue, newValue) -> {
                     if (newValue == BootstrapState.DISCOVERY_DIRECT_SUCCEEDED ||
                             newValue == BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED ||
@@ -150,6 +149,7 @@ class MainModel implements XModel {
         bankAccountsComboBoxDisable.set(user.getBankAccounts().isEmpty());
         bankAccountsComboBoxPrompt.set(user.getBankAccounts().isEmpty() ? "No accounts" : "");
     }
+
 
     public Observable<?> initBackend() {
 

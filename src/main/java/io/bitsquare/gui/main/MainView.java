@@ -19,7 +19,6 @@ package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.gui.FxmlController;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.View;
@@ -45,7 +44,7 @@ import javafx.scene.text.*;
 import static io.bitsquare.gui.Navigation.Item.*;
 import static javafx.scene.layout.AnchorPane.*;
 
-public class MainViewCB extends FxmlController<Pane, MainModel> {
+public class MainView extends View<MainViewModel> {
 
     private final ToggleGroup navButtons = new ToggleGroup();
 
@@ -56,8 +55,8 @@ public class MainViewCB extends FxmlController<Pane, MainModel> {
     private final String title;
 
     @Inject
-    public MainViewCB(MainModel model, ViewLoader viewLoader, Navigation navigation, OverlayManager overlayManager,
-                      Transitions transitions, @Named(TITLE_KEY) String title) {
+    public MainView(MainViewModel model, ViewLoader viewLoader, Navigation navigation, OverlayManager overlayManager,
+                    Transitions transitions, @Named(TITLE_KEY) String title) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
@@ -74,7 +73,7 @@ public class MainViewCB extends FxmlController<Pane, MainModel> {
     }
 
     @Override
-    public void doInitialize() {
+    public void initialize() {
         ToggleButton homeButton = new NavButton(HOME) {{
             setDisable(true); // during irc demo
         }};
