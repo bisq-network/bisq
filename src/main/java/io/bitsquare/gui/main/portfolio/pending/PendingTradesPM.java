@@ -43,7 +43,7 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
+class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesPM.class);
 
     enum State {

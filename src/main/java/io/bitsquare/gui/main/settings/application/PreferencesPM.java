@@ -25,7 +25,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 
-public class PreferencesPM extends PresentationModel<PreferencesModel> {
+class PreferencesPM extends PresentationModel<PreferencesModel> {
 
     @Inject
     public PreferencesPM(PreferencesModel model) {
