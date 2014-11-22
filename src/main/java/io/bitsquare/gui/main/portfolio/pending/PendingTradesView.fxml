@@ -28,7 +28,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.control.cell.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.portfolio.pending.PendingTradesViewCB"
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.portfolio.pending.PendingTradesView"
             xmlns:fx="http://javafx.com/fxml">
 
     <ScrollPane fx:id="scrollPane" fitToWidth="true" fitToHeight="true"
@@ -121,7 +121,7 @@
                 </GridPane.margin>
             </Button>
 
-            <!-- 
+            <!--
             Payments
             -->
             <TitledGroupBg fx:id="paymentsGroupBg" text="Payments details" GridPane.rowIndex="5" GridPane.rowSpan="6"
@@ -173,7 +173,7 @@
                 </GridPane.margin>
             </Button>
 
-            <!-- 
+            <!--
             Summary
             -->
             <TitledGroupBg fx:id="summaryGroupBg" text="Summary" GridPane.rowIndex="5" GridPane.rowSpan="5"
@@ -211,7 +211,7 @@
             <InfoDisplay fx:id="summaryInfoDisplay" onAction="#onOpenSummaryHelp" rowIndex="9" gridPane="$gridPane"
                          managed="false" visible="false"/>
 
-            <!-- 
+            <!--
             Withdraw
             -->
             <TitledGroupBg fx:id="withdrawGroupBg" text="Withdraw your bitcoins" GridPane.rowIndex="10"
@@ -272,4 +272,3 @@
         </GridPane>
     </ScrollPane>
 </AnchorPane>
-   

@@ -63,6 +63,6 @@ public class GuiModule extends BitsquareModule {
         bind(Stage.class).toInstance(primaryStage);
         Popups.primaryStage = primaryStage;
 
-        bindConstant().annotatedWith(Names.named(ViewCB.TITLE_KEY)).to(env.getRequiredProperty(ViewCB.TITLE_KEY));
+        bindConstant().annotatedWith(Names.named(View.TITLE_KEY)).to(env.getRequiredProperty(View.TITLE_KEY));
     }
 }

@@ -19,7 +19,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileViewCB"
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileView"
           hgap="5.0" vgap="5.0" AnchorPane.bottomAnchor="80.0" AnchorPane.leftAnchor="10.0"
           AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
           xmlns:fx="http://javafx.com/fxml">

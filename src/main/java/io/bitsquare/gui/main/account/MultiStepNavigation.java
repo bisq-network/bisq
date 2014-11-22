@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.account;
 
-import io.bitsquare.gui.ViewCB;
+import io.bitsquare.gui.View;
 
 public interface MultiStepNavigation {
-    void nextStep(ViewCB useSettingsContext);
+    void nextStep(View useSettingsContext);
 }

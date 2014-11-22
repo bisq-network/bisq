@@ -21,7 +21,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.account.arbitrator.ArbitratorSettingsViewCB"
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.account.arbitrator.ArbitratorSettingsView"
             prefHeight="660.0" prefWidth="1000.0"
             xmlns:fx="http://javafx.com/fxml">
     <VBox spacing="20">

@@ -22,7 +22,7 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.FxmlController;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
-import io.bitsquare.gui.ViewCB;
+import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
@@ -125,8 +125,8 @@ public class MainViewCB extends FxmlController<Pane, MainModel> {
 
             ViewLoader.Item loaded = viewLoader.load(navItems[1].getFxmlUrl());
             contentContainer.getChildren().setAll(loaded.view);
-            if (loaded.controller instanceof ViewCB)
-                ((ViewCB) loaded.controller).setParent(this);
+            if (loaded.controller instanceof View)
+                ((View) loaded.controller).setParent(this);
 
             navButtons.getToggles().stream()
                     .filter(toggle -> toggle instanceof ToggleButton)

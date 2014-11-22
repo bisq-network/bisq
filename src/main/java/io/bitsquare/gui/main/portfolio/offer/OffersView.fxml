@@ -21,7 +21,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.portfolio.offer.OffersViewCB"
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.portfolio.offer.OffersView"
           hgap="5.0" vgap="5"
           xmlns:fx="http://javafx.com/fxml">
     <padding>

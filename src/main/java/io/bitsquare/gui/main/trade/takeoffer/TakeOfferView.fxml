@@ -27,7 +27,7 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.trade.takeoffer.TakeOfferViewCB"
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.trade.takeoffer.TakeOfferView"
             AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0"
             AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
             xmlns:fx="http://javafx.com/fxml">
@@ -42,7 +42,7 @@
                 <Insets bottom="-10.0" left="25.0" top="30.0" right="25"/>
             </padding>
 
-            <!-- 
+            <!--
             Amount/Price group
              -->
             <TitledGroupBg fx:id="priceAmountPane" text="%takeOffer.amountPriceBox.title"
@@ -129,8 +129,8 @@
                 </GridPane.margin>
             </Button>
 
-            <!-- 
-            Pay funds group 
+            <!--
+            Pay funds group
             -->
             <TitledGroupBg fx:id="payFundsPane" text="%takeOffer.fundsBox.title" GridPane.rowIndex="4"
                            GridPane.rowSpan="4" GridPane.columnSpan="3" visible="false"/>
@@ -188,7 +188,7 @@
                 </GridPane.margin>
             </HBox>
 
-            <!-- 
+            <!--
             Advanced settings group
             -->
             <TitledGroupBg fx:id="showDetailsPane" text="%takeOffer.advancedBox.title" GridPane.columnSpan="3"
@@ -269,4 +269,3 @@
         </GridPane>
     </ScrollPane>
 </AnchorPane>
-   
