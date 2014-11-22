@@ -17,11 +17,13 @@
 
 package io.bitsquare.gui;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public abstract class WithDelegate<D> {
 
     protected final D delegate;
 
     protected WithDelegate(D delegate) {
-        this.delegate = delegate;
+        this.delegate = checkNotNull(delegate, "Delegate object must not be null");
     }
 }

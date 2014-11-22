@@ -25,10 +25,8 @@ public abstract class ActivatableWithDelegate<D extends Activatable> extends Wit
 
     @Override
     public final void activate() {
-        if (delegate != null)
-            delegate.activate();
-
-        doActivate();
+        delegate.activate();
+        this.doActivate();
     }
 
     protected void doActivate() {
@@ -36,10 +34,8 @@ public abstract class ActivatableWithDelegate<D extends Activatable> extends Wit
 
     @Override
     public final void deactivate() {
-        if (delegate != null)
-            delegate.deactivate();
-
-        doDeactivate();
+        delegate.deactivate();
+        this.doDeactivate();
     }
 
     protected void doDeactivate() {
