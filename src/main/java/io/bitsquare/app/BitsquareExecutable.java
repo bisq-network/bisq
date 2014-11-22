@@ -22,8 +22,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.springframework.util.StringUtils;
 
-import static java.lang.String.format;
-import static java.lang.String.join;
+import static java.lang.String.*;
 
 public abstract class BitsquareExecutable {
     public static final int EXIT_SUCCESS = 0;

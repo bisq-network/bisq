@@ -27,7 +27,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 
 import javafx.application.Application;
 import javafx.stage.Stage;

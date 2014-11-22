@@ -56,7 +56,6 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
