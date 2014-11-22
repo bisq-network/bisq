@@ -21,7 +21,6 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.ViewModel;
-import io.bitsquare.gui.XModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.BootstrapState;

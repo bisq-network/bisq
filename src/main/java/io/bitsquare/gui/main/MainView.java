@@ -27,6 +27,10 @@ import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.util.Transitions;
 
+import java.net.URL;
+
+import java.util.ResourceBundle;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -73,7 +77,9 @@ public class MainView extends View<MainViewModel> {
     }
 
     @Override
-    public void initialize() {
+    public void initialize(URL url, ResourceBundle rb) {
+        super.initialize(url, rb);
+
         ToggleButton homeButton = new NavButton(HOME) {{
             setDisable(true); // during irc demo
         }};
@@ -140,7 +146,7 @@ public class MainView extends View<MainViewModel> {
 
         VBox splashScreen = createSplashScreen();
 
-        root.getChildren().addAll(baseApplicationContainer, splashScreen);
+        ((StackPane) root).getChildren().addAll(baseApplicationContainer, splashScreen);
 
         Platform.runLater(
                 () -> model.initBackend().subscribe(
