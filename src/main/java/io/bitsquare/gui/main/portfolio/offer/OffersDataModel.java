@@ -15,61 +15,67 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.portfolio.closed;
+package io.bitsquare.gui.main.portfolio.offer;
 
 import io.bitsquare.gui.Activatable;
 import io.bitsquare.gui.DataModel;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
+import java.util.stream.Collectors;
+
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 
-class ClosedTradesModel implements Activatable, DataModel {
+class OffersDataModel implements Activatable, DataModel {
 
     private final TradeManager tradeManager;
     private final User user;
 
-    private final ObservableList<ClosedTradesListItem> list = FXCollections.observableArrayList();
-    private final MapChangeListener<String, Trade> mapChangeListener;
+    private final ObservableList<OfferListItem> list = FXCollections.observableArrayList();
+    private final MapChangeListener<String, Offer> offerMapChangeListener;
 
 
     @Inject
-    public ClosedTradesModel(TradeManager tradeManager, User user) {
+    public OffersDataModel(TradeManager tradeManager, User user) {
         this.tradeManager = tradeManager;
         this.user = user;
 
-        this.mapChangeListener = change -> {
+        this.offerMapChangeListener = change -> {
             if (change.wasAdded())
-                list.add(new ClosedTradesListItem(change.getValueAdded()));
+                list.add(new OfferListItem(change.getValueAdded()));
             else if (change.wasRemoved())
-                list.removeIf(e -> e.getTrade().getId().equals(change.getValueRemoved().getId()));
+                list.removeIf(e -> e.getOffer().getId().equals(change.getValueRemoved().getId()));
         };
     }
 
     @Override
     public void activate() {
         list.clear();
-        tradeManager.getClosedTrades().values().stream()
-                .forEach(e -> list.add(new ClosedTradesListItem(e)));
-        tradeManager.getClosedTrades().addListener(mapChangeListener);
+        list.addAll(tradeManager.getOffers().values().stream().map(OfferListItem::new).collect(Collectors.toList()));
 
-        // We sort by date, earliest first
-        list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
+        // we sort by date, earliest first
+        list.sort((o1, o2) -> o2.getOffer().getCreationDate().compareTo(o1.getOffer().getCreationDate()));
+
+        tradeManager.getOffers().addListener(offerMapChangeListener);
     }
 
     @Override
     public void deactivate() {
-        tradeManager.getClosedTrades().removeListener(mapChangeListener);
+        tradeManager.getOffers().removeListener(offerMapChangeListener);
     }
 
-    public ObservableList<ClosedTradesListItem> getList() {
+    void removeOffer(OfferListItem item) {
+        tradeManager.removeOffer(item.getOffer());
+    }
+
+
+    public ObservableList<OfferListItem> getList() {
         return list;
     }
 
@@ -77,5 +83,4 @@ class ClosedTradesModel implements Activatable, DataModel {
         return offer.getMessagePublicKey().equals(user.getMessagePublicKey()) ?
                 offer.getDirection() : offer.getMirroredDirection();
     }
-
 }

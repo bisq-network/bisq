@@ -52,8 +52,8 @@ import org.slf4j.LoggerFactory;
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
-class TakeOfferModel implements Activatable, DataModel {
-    private static final Logger log = LoggerFactory.getLogger(TakeOfferModel.class);
+class TakeOfferDataModel implements Activatable, DataModel {
+    private static final Logger log = LoggerFactory.getLogger(TakeOfferDataModel.class);
 
     private final TradeManager tradeManager;
     private final WalletService walletService;
@@ -80,8 +80,8 @@ class TakeOfferModel implements Activatable, DataModel {
 
 
     @Inject
-    public TakeOfferModel(TradeManager tradeManager, WalletService walletService, Preferences preferences,
-                          Persistence persistence) {
+    public TakeOfferDataModel(TradeManager tradeManager, WalletService walletService, Preferences preferences,
+                              Persistence persistence) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
         this.preferences = preferences;

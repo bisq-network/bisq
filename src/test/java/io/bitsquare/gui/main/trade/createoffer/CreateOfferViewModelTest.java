@@ -40,7 +40,7 @@ import static org.junit.Assert.*;
 public class CreateOfferViewModelTest {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferViewModelTest.class);
 
-    private CreateOfferModel model;
+    private CreateOfferDataModel model;
     private CreateOfferViewModel presenter;
 
     @Before
@@ -48,7 +48,7 @@ public class CreateOfferViewModelTest {
         BSFormatter formatter = new BSFormatter(new User());
         formatter.setLocale(Locale.US);
         formatter.setFiatCurrencyCode("USD");
-        model = new CreateOfferModel(null, null, null, null, null, null, formatter);
+        model = new CreateOfferDataModel(null, null, null, null, null, null, formatter);
 
         presenter = new CreateOfferViewModel(model, new FiatValidator(null), new BtcValidator(), formatter);
     }

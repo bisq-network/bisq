@@ -42,7 +42,7 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-class FiatAccountModel implements Activatable, DataModel {
+class FiatAccountDataModel implements Activatable, DataModel {
 
     private final User user;
     private final AccountSettings accountSettings;
@@ -68,7 +68,7 @@ class FiatAccountModel implements Activatable, DataModel {
 
 
     @Inject
-    public FiatAccountModel(User user, Persistence persistence, AccountSettings accountSettings) {
+    public FiatAccountDataModel(User user, Persistence persistence, AccountSettings accountSettings) {
         this.persistence = persistence;
         this.user = user;
         this.accountSettings = accountSettings;

@@ -26,10 +26,10 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 
-class PreferencesViewModel extends ActivatableWithDelegate<PreferencesModel> implements ViewModel {
+class PreferencesViewModel extends ActivatableWithDelegate<PreferencesDataModel> implements ViewModel {
 
     @Inject
-    public PreferencesViewModel(PreferencesModel model) {
+    public PreferencesViewModel(PreferencesDataModel model) {
         super(model);
     }
 

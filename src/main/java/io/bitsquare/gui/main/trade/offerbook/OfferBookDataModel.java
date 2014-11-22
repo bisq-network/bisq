@@ -52,8 +52,8 @@ import org.slf4j.LoggerFactory;
 /**
  * It holds the scope specific domain data for either a buy or sell UI screen.
  */
-class OfferBookModel implements Activatable, DataModel {
-    private static final Logger log = LoggerFactory.getLogger(OfferBookModel.class);
+class OfferBookDataModel implements Activatable, DataModel {
+    private static final Logger log = LoggerFactory.getLogger(OfferBookDataModel.class);
 
     private final User user;
     private final OfferBook offerBook;
@@ -79,8 +79,8 @@ class OfferBookModel implements Activatable, DataModel {
 
 
     @Inject
-    public OfferBookModel(User user, TradeManager tradeManager, OfferBook offerBook, Preferences preferences,
-                          BSFormatter formatter) {
+    public OfferBookDataModel(User user, TradeManager tradeManager, OfferBook offerBook, Preferences preferences,
+                              BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.user = user;
         this.offerBook = offerBook;

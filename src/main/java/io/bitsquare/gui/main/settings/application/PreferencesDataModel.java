@@ -31,7 +31,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-class PreferencesModel implements Activatable, DataModel {
+class PreferencesDataModel implements Activatable, DataModel {
 
     private final Preferences preferences;
 
@@ -47,7 +47,7 @@ class PreferencesModel implements Activatable, DataModel {
 
 
     @Inject
-    public PreferencesModel(Preferences preferences) {
+    public PreferencesDataModel(Preferences preferences) {
         this.preferences = preferences;
 
         btcDenominations = FXCollections.observableArrayList(preferences.getBtcDenominations());

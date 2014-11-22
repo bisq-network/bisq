@@ -31,13 +31,13 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 
-class RestrictionsViewModel extends ActivatableWithDelegate<RestrictionsModel> implements ViewModel {
+class RestrictionsViewModel extends ActivatableWithDelegate<RestrictionsDataModel> implements ViewModel {
 
     final BooleanProperty doneButtonDisable = new SimpleBooleanProperty(true);
 
 
     @Inject
-    public RestrictionsViewModel(RestrictionsModel model) {
+    public RestrictionsViewModel(RestrictionsDataModel model) {
         super(model);
     }
 

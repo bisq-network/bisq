@@ -52,7 +52,7 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-class IrcAccountModel implements Activatable, DataModel {
+class IrcAccountDataModel implements Activatable, DataModel {
 
     private final User user;
     private final AccountSettings accountSettings;
@@ -70,8 +70,8 @@ class IrcAccountModel implements Activatable, DataModel {
 
 
     @Inject
-    public IrcAccountModel(User user, Persistence persistence, AccountSettings accountSettings,
-                           MessageService messageService) {
+    public IrcAccountDataModel(User user, Persistence persistence, AccountSettings accountSettings,
+                               MessageService messageService) {
         this.persistence = persistence;
         this.user = user;
         this.accountSettings = accountSettings;

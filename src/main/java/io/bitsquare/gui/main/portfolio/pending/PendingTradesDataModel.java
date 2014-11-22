@@ -55,8 +55,8 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class PendingTradesModel implements Activatable, DataModel {
-    private static final Logger log = LoggerFactory.getLogger(PendingTradesModel.class);
+class PendingTradesDataModel implements Activatable, DataModel {
+    private static final Logger log = LoggerFactory.getLogger(PendingTradesDataModel.class);
 
     private final TradeManager tradeManager;
     private final WalletService walletService;
@@ -79,7 +79,7 @@ class PendingTradesModel implements Activatable, DataModel {
 
 
     @Inject
-    public PendingTradesModel(TradeManager tradeManager, WalletService walletService, User user) {
+    public PendingTradesDataModel(TradeManager tradeManager, WalletService walletService, User user) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
         this.user = user;

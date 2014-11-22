@@ -45,8 +45,8 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class RegistrationModel implements DataModel {
-    private static final Logger log = LoggerFactory.getLogger(RegistrationModel.class);
+class RegistrationDataModel implements DataModel {
+    private static final Logger log = LoggerFactory.getLogger(RegistrationDataModel.class);
 
     private final WalletService walletService;
     private final User user;
@@ -61,7 +61,7 @@ class RegistrationModel implements DataModel {
 
 
     @Inject
-    public RegistrationModel(WalletService walletService, User user, Persistence persistence) {
+    public RegistrationDataModel(WalletService walletService, User user, Persistence persistence) {
 
         this.walletService = walletService;
         this.user = user;

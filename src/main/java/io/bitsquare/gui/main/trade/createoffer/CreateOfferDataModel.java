@@ -65,8 +65,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
-class CreateOfferModel implements Activatable, DataModel {
-    private static final Logger log = LoggerFactory.getLogger(CreateOfferModel.class);
+class CreateOfferDataModel implements Activatable, DataModel {
+    private static final Logger log = LoggerFactory.getLogger(CreateOfferDataModel.class);
 
     private final TradeManager tradeManager;
     private final WalletService walletService;
@@ -109,9 +109,9 @@ class CreateOfferModel implements Activatable, DataModel {
 
     // non private for testing
     @Inject
-    public CreateOfferModel(TradeManager tradeManager, WalletService walletService, AccountSettings accountSettings,
-                            Preferences preferences, User user, Persistence persistence,
-                            BSFormatter formatter) {
+    public CreateOfferDataModel(TradeManager tradeManager, WalletService walletService, AccountSettings accountSettings,
+                                Preferences preferences, User user, Persistence persistence,
+                                BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
         this.accountSettings = accountSettings;

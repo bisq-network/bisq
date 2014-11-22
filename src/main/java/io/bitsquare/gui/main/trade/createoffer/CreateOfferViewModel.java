@@ -44,7 +44,7 @@ import javafx.beans.property.StringProperty;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferModel> implements ViewModel {
+class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel> implements ViewModel {
 
     private final BtcValidator btcValidator;
     private final BSFormatter formatter;
@@ -93,7 +93,7 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferModel> imp
 
 
     @Inject
-    public CreateOfferViewModel(CreateOfferModel model, FiatValidator fiatValidator, BtcValidator btcValidator,
+    public CreateOfferViewModel(CreateOfferDataModel model, FiatValidator fiatValidator, BtcValidator btcValidator,
                                 BSFormatter formatter) {
         super(model);
 

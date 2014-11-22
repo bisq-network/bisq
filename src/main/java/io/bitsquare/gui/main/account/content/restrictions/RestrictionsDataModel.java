@@ -44,7 +44,7 @@ import java.util.Locale;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-class RestrictionsModel implements Activatable, DataModel {
+class RestrictionsDataModel implements Activatable, DataModel {
 
     private final User user;
     private final AccountSettings accountSettings;
@@ -60,8 +60,8 @@ class RestrictionsModel implements Activatable, DataModel {
 
 
     @Inject
-    public RestrictionsModel(User user, AccountSettings accountSettings, Persistence persistence,
-                             MessageService messageService) {
+    public RestrictionsDataModel(User user, AccountSettings accountSettings, Persistence persistence,
+                                 MessageService messageService) {
         this.user = user;
         this.accountSettings = accountSettings;
         this.persistence = persistence;
