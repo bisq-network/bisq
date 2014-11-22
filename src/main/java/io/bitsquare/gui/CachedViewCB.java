@@ -71,9 +71,9 @@ public class CachedViewCB<M extends Activatable> extends ViewCB<M> implements Ac
                         oldValue + " / newValue=" + newValue);
 
                 if (oldValue == null && newValue != null)
-                    activate();
+                    this.activate();
                 else if (oldValue != null && newValue == null)
-                    deactivate();
+                    this.deactivate();
             });
         }
     }
@@ -83,10 +83,8 @@ public class CachedViewCB<M extends Activatable> extends ViewCB<M> implements Ac
      */
     @Override
     public final void activate() {
-        if (model != null)
-            model.activate();
-
-        doActivate();
+        model.activate();
+        this.doActivate();
     }
 
     protected void doActivate() {
@@ -97,10 +95,8 @@ public class CachedViewCB<M extends Activatable> extends ViewCB<M> implements Ac
      */
     @Override
     public final void deactivate() {
-        if (model != null)
-            model.deactivate();
-
-        doDeactivate();
+        model.deactivate();
+        this.doDeactivate();
     }
 
     protected void doDeactivate() {
@@ -111,11 +107,7 @@ public class CachedViewCB<M extends Activatable> extends ViewCB<M> implements Ac
      */
     @Override
     public void terminate() {
-        log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
-        super.terminate();
-
-        if (model != null)
-            model.deactivate();
+        model.deactivate();
     }
 
 }
