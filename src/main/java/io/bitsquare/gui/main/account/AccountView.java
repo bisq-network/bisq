@@ -116,13 +116,6 @@ public class AccountView extends ActivatableView {
         ((TabPane) root).getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
     }
 
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public void terminate() {
-        super.terminate();
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////

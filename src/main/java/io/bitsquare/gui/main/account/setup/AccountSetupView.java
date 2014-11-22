@@ -142,7 +142,6 @@ public class AccountSetupView extends View implements MultiStepNavigation {
 
     @Override
     public void terminate() {
-        super.terminate();
         navigation.removeListener(listener);
     }
 

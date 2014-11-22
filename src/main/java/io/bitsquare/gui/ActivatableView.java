@@ -92,12 +92,4 @@ public abstract class ActivatableView<M extends Activatable> extends View<M> imp
     protected void doDeactivate() {
     }
 
-    /**
-     * In caching controllers the terminate calls the deactivate method.
-     */
-    @Override
-    public void terminate() {
-        model.deactivate();
-    }
-
 }

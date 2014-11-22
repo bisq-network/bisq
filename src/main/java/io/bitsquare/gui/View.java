@@ -71,12 +71,7 @@ public abstract class View<M> implements Initializable {
         }
     }
 
-    /**
-     * Called automatically when view gets removed. Used for house keeping (removing listeners,
-     * stopping timers or animations,...).
-     */
     public void terminate() {
-        log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
     }
 
     /**
