@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account.settings;
 
-import io.bitsquare.gui.CachedView;
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
@@ -43,7 +43,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountSettingsView extends CachedView {
+public class AccountSettingsView extends ActivatableView {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSettingsView.class);
 

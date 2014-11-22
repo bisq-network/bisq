@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.trade;
 
-import io.bitsquare.gui.CachedView;
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.InputTextField;
@@ -44,7 +44,7 @@ import javafx.scene.control.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TradeView extends CachedView implements TradeNavigator {
+public class TradeView extends ActivatableView implements TradeNavigator {
     private static final Logger log = LoggerFactory.getLogger(TradeView.class);
 
     private OfferBookView offerBookViewCB;

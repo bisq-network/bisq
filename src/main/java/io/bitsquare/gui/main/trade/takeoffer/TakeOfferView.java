@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.trade.takeoffer;
 
 
-import io.bitsquare.gui.CachedView;
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.CloseListener;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
@@ -69,7 +69,7 @@ import org.controlsfx.dialog.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakeOfferView extends CachedView<TakeOfferPM> {
+public class TakeOfferView extends ActivatableView<TakeOfferPM> {
     private static final Logger log = LoggerFactory.getLogger(TakeOfferView.class);
 
     private final Navigation navigation;

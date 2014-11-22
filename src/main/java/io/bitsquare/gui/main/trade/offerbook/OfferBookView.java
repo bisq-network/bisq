@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.trade.offerbook;
 
-import io.bitsquare.gui.CachedView;
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InputTextField;
@@ -62,7 +62,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
  * TODO: The advanced filters are not impl. yet
  * The restrictions handling is open from the concept and is only implemented for countries yet.
  */
-public class OfferBookView extends CachedView<OfferBookPM> {
+public class OfferBookView extends ActivatableView<OfferBookPM> {
     private static final Logger log = LoggerFactory.getLogger(OfferBookView.class);
 
     private final Navigation navigation;

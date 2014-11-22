@@ -22,7 +22,7 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.CachedView;
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.util.Utilities;
@@ -59,7 +59,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WithdrawalView extends CachedView {
+public class WithdrawalView extends ActivatableView {
     private static final Logger log = LoggerFactory.getLogger(WithdrawalView.class);
 
 

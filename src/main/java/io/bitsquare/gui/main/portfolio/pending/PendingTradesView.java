@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pending;
 
-import io.bitsquare.gui.CachedView;
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
@@ -58,7 +58,7 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PendingTradesView extends CachedView<PendingTradesPM> {
+public class PendingTradesView extends ActivatableView<PendingTradesPM> {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesView.class);
 
 

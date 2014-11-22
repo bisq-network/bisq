@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.settings.application;
 
-import io.bitsquare.gui.CachedView;
+import io.bitsquare.gui.ActivatableView;
 
 import java.net.URL;
 
@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This UI is not cached as it is normally only needed once.
  */
-public class PreferencesView extends CachedView<PreferencesPM> {
+public class PreferencesView extends ActivatableView<PreferencesPM> {
 
     private static final Logger log = LoggerFactory.getLogger(PreferencesView.class);
 

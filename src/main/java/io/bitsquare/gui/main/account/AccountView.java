@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account;
 
-import io.bitsquare.gui.CachedView;
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
@@ -36,7 +36,7 @@ import javafx.scene.control.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountView extends CachedView {
+public class AccountView extends ActivatableView {
 
     private static final Logger log = LoggerFactory.getLogger(AccountView.class);
 

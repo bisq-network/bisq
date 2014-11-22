@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.account.arbitrator.browser;
 
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.CachedView;
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
@@ -44,7 +44,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 // TODO Arbitration is very basic yet
-public class ArbitratorBrowserView extends CachedView implements ArbitratorListener {
+public class ArbitratorBrowserView extends ActivatableView implements ArbitratorListener {
 
     private final ViewLoader viewLoader;
     private final AccountSettings accountSettings;

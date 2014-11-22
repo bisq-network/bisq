@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.funds;
 
-import io.bitsquare.gui.CachedView;
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
@@ -33,7 +33,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
-public class FundsView extends CachedView {
+public class FundsView extends ActivatableView {
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;

@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio;
 
-import io.bitsquare.gui.CachedView;
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
@@ -34,7 +34,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
-public class PortfolioView extends CachedView {
+public class PortfolioView extends ActivatableView {
 
     private Tab currentTab;
     private Navigation.Listener navigationListener;

@@ -30,14 +30,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * If caching is used for loader we use the CachedViewController for turning the controller into sleep mode if not
  * active and awake it at reactivation.
  */
-public abstract class CachedView<M extends Activatable> extends View<M> implements Activatable {
-    private static final Logger log = LoggerFactory.getLogger(CachedView.class);
+public abstract class ActivatableView<M extends Activatable> extends View<M> implements Activatable {
+    private static final Logger log = LoggerFactory.getLogger(ActivatableView.class);
 
-    public CachedView(M model) {
+    public ActivatableView(M model) {
         super(checkNotNull(model, "Model must not be null"));
     }
 
-    public CachedView() {
+    public ActivatableView() {
         this((M) Activatable.NOOP_INSTANCE);
     }
 
