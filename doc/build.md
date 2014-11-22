@@ -16,11 +16,13 @@ What follows is explained in detail in the sections below, but for those who kno
 
     $ git clone https://github.com/bitsquare/bitsquare.git
     $ cd bitsquare
-    $ ./gradlew build    # (on *nix)
+    $ ./gradlew appJar    # (on *nix)
        --- or ---
-    $ gradlew build      # (on Windows)
+    $ gradlew appJar      # (on Windows)
 
-When the build completes, you will find executables and installers specific to your platform in the `build/distributions/` directory.
+When the build completes, you will find an excutable jar in the `build/libs` directory. Run it as follows for the help screen:
+
+    $ java -jar build/libs/bitsquare-<version>-app.jar --help
 
 
 Prerequisites
@@ -54,14 +56,14 @@ However, if you're not familiar with git or it is otherwise inconvenient to use,
 
 Bitsquare uses [Gradle](http://www.gradle.org/), and the [Gradle wrapper](http://www.gradle.org/docs/current/userguide/gradle_wrapper.html) as a build system. This means you don't need to download or do anything other than run the following command within the `bitsquare` directory.
 
-    ./gradlew build
+    ./gradlew appJar
 
-> _**NOTE:** on Windows, leave out the `./` and simply run `gradlew build`._
+> _**NOTE:** on Windows, leave out the `./` and simply run `gradlew appJar`._
 
 
 ### 3. Run
 
-When the build completes, you'll find executables and installers in the `build/distributions` directory.
+When the build completes, you'll find an executable jar in the `build/libs` directory. See instructions above for how to run it.
 
 
 Problems?
