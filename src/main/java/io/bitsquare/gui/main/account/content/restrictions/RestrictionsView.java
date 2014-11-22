@@ -50,7 +50,7 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RestrictionsView extends ActivatableView<RestrictionsPM> implements ContextAware {
+public class RestrictionsView extends ActivatableView<RestrictionsViewModel> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(RestrictionsView.class);
 
@@ -71,7 +71,7 @@ public class RestrictionsView extends ActivatableView<RestrictionsPM> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private RestrictionsView(RestrictionsPM model, ViewLoader viewLoader, Stage primaryStage) {
+    private RestrictionsView(RestrictionsViewModel model, ViewLoader viewLoader, Stage primaryStage) {
         super(model);
         this.viewLoader = viewLoader;
         this.primaryStage = primaryStage;

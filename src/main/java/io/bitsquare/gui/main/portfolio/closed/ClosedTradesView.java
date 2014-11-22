@@ -34,7 +34,7 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ClosedTradesView extends ActivatableView<ClosedTradesPM> {
+public class ClosedTradesView extends ActivatableView<ClosedTradesViewModel> {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradesView.class);
 
     @FXML TableColumn<ClosedTradesListItem, ClosedTradesListItem> priceColumn, amountColumn, volumeColumn,
@@ -47,7 +47,7 @@ public class ClosedTradesView extends ActivatableView<ClosedTradesPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ClosedTradesView(ClosedTradesPM model) {
+    private ClosedTradesView(ClosedTradesViewModel model) {
         super(model);
     }
 

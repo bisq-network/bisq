@@ -45,7 +45,7 @@ public class AccountView extends ActivatableView {
 
     @FXML Tab accountSettingsTab, arbitratorSettingsTab;
 
-    private final AccountPM model;
+    private final AccountViewModel model;
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
@@ -55,7 +55,7 @@ public class AccountView extends ActivatableView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountView(AccountPM model, ViewLoader viewLoader, Navigation navigation) {
+    private AccountView(AccountViewModel model, ViewLoader viewLoader, Navigation navigation) {
         this.model = model;
         this.viewLoader = viewLoader;
         this.navigation = navigation;

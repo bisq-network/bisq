@@ -36,7 +36,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PasswordView extends View<PasswordPM> implements ContextAware {
+public class PasswordView extends View<PasswordViewModel> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(PasswordView.class);
 
@@ -50,7 +50,7 @@ public class PasswordView extends View<PasswordPM> implements ContextAware {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private PasswordView(PasswordPM model) {
+    private PasswordView(PasswordViewModel model) {
         super(model);
     }
 

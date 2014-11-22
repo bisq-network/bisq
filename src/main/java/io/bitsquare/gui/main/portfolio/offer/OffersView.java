@@ -36,7 +36,7 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffersView extends ActivatableView<OffersPM> {
+public class OffersView extends ActivatableView<OffersViewModel> {
     private static final Logger log = LoggerFactory.getLogger(OffersView.class);
 
     @FXML TableColumn<OfferListItem, OfferListItem> priceColumn, amountColumn, volumeColumn,
@@ -49,7 +49,7 @@ public class OffersView extends ActivatableView<OffersPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private OffersView(OffersPM model) {
+    private OffersView(OffersViewModel model) {
         super(model);
     }
 

@@ -58,15 +58,15 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PendingTradesView extends ActivatableView<PendingTradesPM> {
+public class PendingTradesView extends ActivatableView<PendingTradesViewModel> {
     private static final Logger log = LoggerFactory.getLogger(PendingTradesView.class);
 
 
     private ChangeListener<PendingTradesListItem> selectedItemChangeListener;
     private ListChangeListener<PendingTradesListItem> listChangeListener;
     private ChangeListener<String> txIdChangeListener;
-    private ChangeListener<PendingTradesPM.State> offererStateChangeListener;
-    private ChangeListener<PendingTradesPM.State> takerStateChangeListener;
+    private ChangeListener<PendingTradesViewModel.State> offererStateChangeListener;
+    private ChangeListener<PendingTradesViewModel.State> takerStateChangeListener;
     private ChangeListener<Throwable> faultChangeListener;
     private final Navigation navigation;
 
@@ -99,7 +99,7 @@ public class PendingTradesView extends ActivatableView<PendingTradesPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    PendingTradesView(PendingTradesPM model, Navigation navigation) {
+    PendingTradesView(PendingTradesViewModel model, Navigation navigation) {
         super(model);
 
         this.navigation = navigation;
@@ -290,7 +290,7 @@ public class PendingTradesView extends ActivatableView<PendingTradesPM> {
         applyTakerState(model.state.get());
     }
 
-    private void applyOffererState(PendingTradesPM.State state) {
+    private void applyOffererState(PendingTradesViewModel.State state) {
         setPaymentsControlsVisible(false);
         setSummaryControlsVisible(false);
 
@@ -364,7 +364,7 @@ public class PendingTradesView extends ActivatableView<PendingTradesPM> {
     }
 
 
-    private void applyTakerState(PendingTradesPM.State state) {
+    private void applyTakerState(PendingTradesViewModel.State state) {
         confirmPaymentReceiptButton.setVisible(false);
         confirmPaymentReceiptButton.setManaged(false);
 

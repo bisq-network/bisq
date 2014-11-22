@@ -41,7 +41,7 @@ import javafx.beans.property.StringProperty;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-class TakeOfferPM extends ActivatableWithDelegate<TakeOfferModel> implements ViewModel {
+class TakeOfferViewModel extends ActivatableWithDelegate<TakeOfferModel> implements ViewModel {
 
     private String fiatCode;
     private String amountRange;
@@ -87,7 +87,7 @@ class TakeOfferPM extends ActivatableWithDelegate<TakeOfferModel> implements Vie
 
 
     @Inject
-    public TakeOfferPM(TakeOfferModel model, BtcValidator btcValidator, BSFormatter formatter) {
+    public TakeOfferViewModel(TakeOfferModel model, BtcValidator btcValidator, BSFormatter formatter) {
         super(model);
 
         this.btcValidator = btcValidator;

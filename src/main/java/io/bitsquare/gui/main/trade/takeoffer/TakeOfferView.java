@@ -69,7 +69,7 @@ import org.controlsfx.dialog.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakeOfferView extends ActivatableView<TakeOfferPM> {
+public class TakeOfferView extends ActivatableView<TakeOfferViewModel> {
     private static final Logger log = LoggerFactory.getLogger(TakeOfferView.class);
 
     private final Navigation navigation;
@@ -112,7 +112,7 @@ public class TakeOfferView extends ActivatableView<TakeOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TakeOfferView(TakeOfferPM model, Navigation navigation,
+    private TakeOfferView(TakeOfferViewModel model, Navigation navigation,
                           OverlayManager overlayManager) {
         super(model);
 

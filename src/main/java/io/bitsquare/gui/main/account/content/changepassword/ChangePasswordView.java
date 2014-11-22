@@ -36,7 +36,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ChangePasswordView extends View<ChangePasswordPM> implements ContextAware {
+public class ChangePasswordView extends View<ChangePasswordViewModel> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(ChangePasswordView.class);
 
@@ -50,7 +50,7 @@ public class ChangePasswordView extends View<ChangePasswordPM> implements Contex
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ChangePasswordView(ChangePasswordPM model) {
+    private ChangePasswordView(ChangePasswordViewModel model) {
         super(model);
     }
 

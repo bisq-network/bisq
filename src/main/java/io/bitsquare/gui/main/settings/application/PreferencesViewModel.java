@@ -15,23 +15,40 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.account;
+package io.bitsquare.gui.main.settings.application;
 
+import io.bitsquare.gui.ActivatableWithDelegate;
 import io.bitsquare.gui.ViewModel;
-import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
-class AccountPM implements ViewModel {
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.StringProperty;
+import javafx.collections.ObservableList;
 
-    private final User user;
+class PreferencesViewModel extends ActivatableWithDelegate<PreferencesModel> implements ViewModel {
 
     @Inject
-    public AccountPM(User user) {
-        this.user = user;
+    public PreferencesViewModel(PreferencesModel model) {
+        super(model);
     }
 
-    boolean getNeedRegistration() {
-        return user.getAccountId() == null;
+    public ObservableList<String> getBtcDenominationItems() {
+        return delegate.btcDenominations;
     }
+
+    BooleanProperty useAnimations() {
+        return delegate.useAnimations;
+    }
+
+    BooleanProperty useEffects() {
+        return delegate.useEffects;
+    }
+
+    StringProperty btcDenomination() {
+        return delegate.btcDenomination;
+    }
+
+
+
 }

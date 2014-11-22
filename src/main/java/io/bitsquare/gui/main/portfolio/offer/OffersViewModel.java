@@ -25,13 +25,13 @@ import com.google.inject.Inject;
 
 import javafx.collections.ObservableList;
 
-class OffersPM extends ActivatableWithDelegate<OffersModel> implements ViewModel {
+class OffersViewModel extends ActivatableWithDelegate<OffersModel> implements ViewModel {
 
     private final BSFormatter formatter;
 
 
     @Inject
-    public OffersPM(OffersModel model, BSFormatter formatter) {
+    public OffersViewModel(OffersModel model, BSFormatter formatter) {
         super(model);
 
         this.formatter = formatter;

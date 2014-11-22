@@ -36,7 +36,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SeedWordsView extends View<SeedWordsPM> implements ContextAware {
+public class SeedWordsView extends View<SeedWordsViewModel> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(SeedWordsView.class);
 
@@ -49,7 +49,7 @@ public class SeedWordsView extends View<SeedWordsPM> implements ContextAware {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private SeedWordsView(SeedWordsPM model) {
+    private SeedWordsView(SeedWordsViewModel model) {
         super(model);
     }
 

@@ -44,8 +44,8 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class PendingTradesPM extends ActivatableWithDelegate<PendingTradesModel> implements ViewModel {
-    private static final Logger log = LoggerFactory.getLogger(PendingTradesPM.class);
+class PendingTradesViewModel extends ActivatableWithDelegate<PendingTradesModel> implements ViewModel {
+    private static final Logger log = LoggerFactory.getLogger(PendingTradesViewModel.class);
 
     enum State {
         TAKER_SELLER_WAIT_TX_CONF,
@@ -70,8 +70,8 @@ class PendingTradesPM extends ActivatableWithDelegate<PendingTradesModel> implem
 
 
     @Inject
-    public PendingTradesPM(PendingTradesModel delegate, BSFormatter formatter,
-                    BtcAddressValidator btcAddressValidator) {
+    public PendingTradesViewModel(PendingTradesModel delegate, BSFormatter formatter,
+                                  BtcAddressValidator btcAddressValidator) {
         super(delegate);
 
         this.formatter = formatter;

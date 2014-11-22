@@ -41,7 +41,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.util.StringConverter;
 
-class FiatAccountPM extends ActivatableWithDelegate<FiatAccountModel> implements ViewModel {
+class FiatAccountViewModel extends ActivatableWithDelegate<FiatAccountModel> implements ViewModel {
 
     private final BankAccountNumberValidator bankAccountNumberValidator;
 
@@ -60,7 +60,7 @@ class FiatAccountPM extends ActivatableWithDelegate<FiatAccountModel> implements
 
 
     @Inject
-    public FiatAccountPM(FiatAccountModel model, BankAccountNumberValidator bankAccountNumberValidator) {
+    public FiatAccountViewModel(FiatAccountModel model, BankAccountNumberValidator bankAccountNumberValidator) {
         super(model);
         this.bankAccountNumberValidator = bankAccountNumberValidator;
 

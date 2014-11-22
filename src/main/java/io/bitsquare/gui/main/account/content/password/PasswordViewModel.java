@@ -28,7 +28,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-class PasswordPM implements ViewModel {
+class PasswordViewModel implements ViewModel {
 
     private final PasswordValidator passwordValidator;
 
@@ -40,7 +40,7 @@ class PasswordPM implements ViewModel {
 
 
     @Inject
-    public PasswordPM(PasswordValidator passwordValidator) {
+    public PasswordViewModel(PasswordValidator passwordValidator) {
         this.passwordValidator = passwordValidator;
 
         passwordField.addListener((ov) -> saveButtonDisabled.set(!validate()));

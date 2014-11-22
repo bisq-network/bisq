@@ -15,40 +15,30 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.settings.application;
+package io.bitsquare.gui.main.account.content.seedwords;
 
-import io.bitsquare.gui.ActivatableWithDelegate;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.ViewModel;
+import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.inject.Inject;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.StringProperty;
-import javafx.collections.ObservableList;
+import java.util.List;
 
-class PreferencesPM extends ActivatableWithDelegate<PreferencesModel> implements ViewModel {
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
+class SeedWordsViewModel implements ViewModel {
+
+    final StringProperty seedWords = new SimpleStringProperty();
 
     @Inject
-    public PreferencesPM(PreferencesModel model) {
-        super(model);
+    public SeedWordsViewModel(WalletService walletService, BSFormatter formatter) {
+        if (walletService.getWallet() != null) {
+            List<String> mnemonicCode = walletService.getWallet().getKeyChainSeed().getMnemonicCode();
+            if (mnemonicCode != null) {
+                seedWords.set(formatter.mnemonicCodeToString(mnemonicCode));
+            }
+        }
     }
-
-    public ObservableList<String> getBtcDenominationItems() {
-        return delegate.btcDenominations;
-    }
-
-    BooleanProperty useAnimations() {
-        return delegate.useAnimations;
-    }
-
-    BooleanProperty useEffects() {
-        return delegate.useEffects;
-    }
-
-    StringProperty btcDenomination() {
-        return delegate.btcDenomination;
-    }
-
-
-
 }

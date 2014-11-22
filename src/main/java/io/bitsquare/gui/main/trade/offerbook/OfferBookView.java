@@ -62,7 +62,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
  * TODO: The advanced filters are not impl. yet
  * The restrictions handling is open from the concept and is only implemented for countries yet.
  */
-public class OfferBookView extends ActivatableView<OfferBookPM> {
+public class OfferBookView extends ActivatableView<OfferBookViewModel> {
     private static final Logger log = LoggerFactory.getLogger(OfferBookView.class);
 
     private final Navigation navigation;
@@ -90,7 +90,7 @@ public class OfferBookView extends ActivatableView<OfferBookPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBookView(OfferBookPM model,
+    OfferBookView(OfferBookViewModel model,
                   Navigation navigation,
                   OverlayManager overlayManager,
                   OptionalBtcValidator optionalBtcValidator,

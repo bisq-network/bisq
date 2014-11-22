@@ -37,11 +37,11 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
-public class CreateOfferPMTest {
-    private static final Logger log = LoggerFactory.getLogger(CreateOfferPMTest.class);
+public class CreateOfferViewModelTest {
+    private static final Logger log = LoggerFactory.getLogger(CreateOfferViewModelTest.class);
 
     private CreateOfferModel model;
-    private CreateOfferPM presenter;
+    private CreateOfferViewModel presenter;
 
     @Before
     public void setup() {
@@ -50,7 +50,7 @@ public class CreateOfferPMTest {
         formatter.setFiatCurrencyCode("USD");
         model = new CreateOfferModel(null, null, null, null, null, null, formatter);
 
-        presenter = new CreateOfferPM(model, new FiatValidator(null), new BtcValidator(), formatter);
+        presenter = new CreateOfferViewModel(model, new FiatValidator(null), new BtcValidator(), formatter);
     }
 
     @Test

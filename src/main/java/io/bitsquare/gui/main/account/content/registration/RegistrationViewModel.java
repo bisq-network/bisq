@@ -36,7 +36,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 
-class RegistrationPM extends WithDelegate<RegistrationModel> implements ViewModel {
+class RegistrationViewModel extends WithDelegate<RegistrationModel> implements ViewModel {
 
     final BooleanProperty isPayButtonDisabled = new SimpleBooleanProperty(true);
     final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
@@ -49,7 +49,7 @@ class RegistrationPM extends WithDelegate<RegistrationModel> implements ViewMode
 
 
     @Inject
-    public RegistrationPM(RegistrationModel delegate, BSFormatter formatter) {
+    public RegistrationViewModel(RegistrationModel delegate, BSFormatter formatter) {
         super(delegate);
         this.formatter = formatter;
 

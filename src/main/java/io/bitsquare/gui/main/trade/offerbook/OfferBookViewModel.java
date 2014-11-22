@@ -36,7 +36,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.transformation.SortedList;
 
-class OfferBookPM extends ActivatableWithDelegate<OfferBookModel> implements ViewModel {
+class OfferBookViewModel extends ActivatableWithDelegate<OfferBookModel> implements ViewModel {
 
     private final OptionalBtcValidator optionalBtcValidator;
     private final BSFormatter formatter;
@@ -51,8 +51,8 @@ class OfferBookPM extends ActivatableWithDelegate<OfferBookModel> implements Vie
 
 
     @Inject
-    public OfferBookPM(OfferBookModel delegate, OptionalFiatValidator optionalFiatValidator,
-                       OptionalBtcValidator optionalBtcValidator, BSFormatter formatter) {
+    public OfferBookViewModel(OfferBookModel delegate, OptionalFiatValidator optionalFiatValidator,
+                              OptionalBtcValidator optionalBtcValidator, BSFormatter formatter) {
         super(delegate);
 
         this.optionalFiatValidator = optionalFiatValidator;

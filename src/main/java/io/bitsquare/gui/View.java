@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Non caching version for code behind classes using the PM pattern
+ * Non caching version for code behind classes using the ViewModel pattern
  */
 public abstract class View<M> implements Initializable {
 

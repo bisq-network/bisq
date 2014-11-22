@@ -15,30 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.account.content.seedwords;
+package io.bitsquare.gui.main.account;
 
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.ViewModel;
-import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
-import java.util.List;
+class AccountViewModel implements ViewModel {
 
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-
-class SeedWordsPM implements ViewModel {
-
-    final StringProperty seedWords = new SimpleStringProperty();
+    private final User user;
 
     @Inject
-    public SeedWordsPM(WalletService walletService, BSFormatter formatter) {
-        if (walletService.getWallet() != null) {
-            List<String> mnemonicCode = walletService.getWallet().getKeyChainSeed().getMnemonicCode();
-            if (mnemonicCode != null) {
-                seedWords.set(formatter.mnemonicCodeToString(mnemonicCode));
-            }
-        }
+    public AccountViewModel(User user) {
+        this.user = user;
+    }
+
+    boolean getNeedRegistration() {
+        return user.getAccountId() == null;
     }
 }

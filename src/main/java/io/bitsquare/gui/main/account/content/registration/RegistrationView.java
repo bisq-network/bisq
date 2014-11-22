@@ -48,7 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class RegistrationView extends View<RegistrationPM> implements ContextAware {
+public class RegistrationView extends View<RegistrationViewModel> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(RegistrationView.class);
 
@@ -67,7 +67,7 @@ public class RegistrationView extends View<RegistrationPM> implements ContextAwa
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private RegistrationView(RegistrationPM model, OverlayManager overlayManager) {
+    private RegistrationView(RegistrationViewModel model, OverlayManager overlayManager) {
         super(model);
         this.overlayManager = overlayManager;
     }

@@ -73,7 +73,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 // TODO Implement other positioning method in InoutTextField to display it over the field instead of right side
 // priceAmountHBox is too large after redesign as to be used as layoutReference.
 
-public class CreateOfferView extends ActivatableView<CreateOfferPM> {
+public class CreateOfferView extends ActivatableView<CreateOfferViewModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferView.class);
 
 
@@ -117,7 +117,7 @@ public class CreateOfferView extends ActivatableView<CreateOfferPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferView(CreateOfferPM model, Navigation navigation,
+    private CreateOfferView(CreateOfferViewModel model, Navigation navigation,
                             OverlayManager overlayManager) {
         super(model);
         this.navigation = navigation;

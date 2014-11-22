@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This UI is not cached as it is normally only needed once.
  */
-public class PreferencesView extends ActivatableView<PreferencesPM> {
+public class PreferencesView extends ActivatableView<PreferencesViewModel> {
 
     private static final Logger log = LoggerFactory.getLogger(PreferencesView.class);
 
@@ -47,7 +47,7 @@ public class PreferencesView extends ActivatableView<PreferencesPM> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private PreferencesView(PreferencesPM model) {
+    private PreferencesView(PreferencesViewModel model) {
         super(model);
     }
 
