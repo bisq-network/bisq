@@ -62,10 +62,6 @@ class RestrictionsModel extends UIModel {
     final ObservableList<Region> allRegions = FXCollections.observableArrayList(CountryUtil.getAllRegions());
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Inject
     private RestrictionsModel(User user, AccountSettings accountSettings, Persistence persistence,
                               MessageService messageService) {
@@ -75,10 +71,6 @@ class RestrictionsModel extends UIModel {
         this.messageService = messageService;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize() {
@@ -122,10 +114,6 @@ class RestrictionsModel extends UIModel {
         super.terminate();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
         return FXCollections.observableArrayList(CountryUtil.getAllCountriesFor(selectedRegion));
@@ -177,10 +165,6 @@ class RestrictionsModel extends UIModel {
         saveSettings();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void saveSettings() {
         persistence.write(accountSettings);

@@ -95,10 +95,6 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     final ObjectProperty<Address> address = new SimpleObjectProperty<>();
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     // non private for testing
     @Inject
     CreateOfferPM(CreateOfferModel model, FiatValidator fiatValidator, BtcValidator btcValidator,
@@ -110,10 +106,6 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         this.formatter = formatter;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize() {
@@ -150,10 +142,6 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public API methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     // setOfferBookFilter is a one time call
     void initWithData(Direction direction, Coin amount, Fiat price) {
         model.setDirection(direction);
@@ -181,10 +169,6 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI actions
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     void placeOffer() {
         model.requestPlaceOfferErrorMessage.set(null);
         model.requestPlaceOfferSuccess.set(false);
@@ -195,10 +179,6 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
         model.placeOffer();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI events
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     void onShowPayFundsScreen() {
         isPlaceOfferButtonVisible.set(true);
@@ -294,10 +274,6 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     WalletService getWalletService() {
         return model.getWalletService();
     }
@@ -309,10 +285,6 @@ class CreateOfferPM extends PresentationModel<CreateOfferModel> {
     Boolean displaySecurityDepositInfo() {
         return model.displaySecurityDepositInfo();
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setupListeners() {
         // Bidirectional bindings are used for all input fields: amount, price, volume and minAmount

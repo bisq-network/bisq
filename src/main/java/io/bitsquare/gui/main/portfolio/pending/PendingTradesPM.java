@@ -68,10 +68,6 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     final BooleanProperty withdrawalButtonDisable = new SimpleBooleanProperty(true);
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Inject
     PendingTradesPM(PendingTradesModel model, BSFormatter formatter,
                     BtcAddressValidator btcAddressValidator) {
@@ -81,10 +77,6 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         this.btcAddressValidator = btcAddressValidator;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize() {
@@ -116,10 +108,6 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     void selectTrade(PendingTradesListItem item) {
         model.selectTrade(item);
         updateState();
@@ -144,10 +132,6 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
     String getAmountToWithdraw() {
         return formatter.formatCoinWithCode(model.getAmountToWithdraw()); //.subtract(FeePolicy.TX_FEE));
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     ObservableList<PendingTradesListItem> getList() {
         return model.getList();
@@ -241,10 +225,6 @@ public class PendingTradesPM extends PresentationModel<PendingTradesModel> {
         return btcAddressValidator;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateState() {
         Trade.State tradeState = model.tradeState.get();

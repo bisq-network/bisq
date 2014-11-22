@@ -43,10 +43,6 @@ class PasswordPM extends PresentationModel<PasswordModel> {
     final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty(true);
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Inject
     private PasswordPM(PasswordModel model, PasswordValidator passwordValidator) {
         super(model);
@@ -56,10 +52,6 @@ class PasswordPM extends PresentationModel<PasswordModel> {
         repeatedPasswordField.addListener((ov) -> saveButtonDisabled.set(!validate()));
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @SuppressWarnings("EmptyMethod")
     @Override
@@ -86,10 +78,6 @@ class PasswordPM extends PresentationModel<PasswordModel> {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     boolean requestSavePassword() {
         if (validate()) {
             model.savePassword(passwordField.get());
@@ -102,10 +90,6 @@ class PasswordPM extends PresentationModel<PasswordModel> {
         return errorMessage;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean validate() {
         InputValidator.ValidationResult result = passwordValidator.validate(passwordField.get());
