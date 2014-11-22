@@ -29,15 +29,17 @@ import org.slf4j.LoggerFactory;
  * active and awake it at reactivation.
  * * @param <T>       The PresentationModel used in that class
  */
-public class CachedViewCB<T extends PresentationModel> extends ViewCB<T> {
+public class CachedViewCB<T extends PresentationModel> extends ViewCB {
     private static final Logger log = LoggerFactory.getLogger(CachedViewCB.class);
 
+    protected final T presentationModel;
+
     public CachedViewCB(T presentationModel) {
-        super(presentationModel);
+        this.presentationModel = presentationModel;
     }
 
     public CachedViewCB() {
-        super();
+        this(null);
     }
 
     /**

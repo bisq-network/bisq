@@ -30,26 +30,16 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Non caching version for code behind classes using the PM pattern
- *
- * @param <T> The PresentationModel used in that class
  */
-public class ViewCB<T extends PresentationModel> implements Initializable {
+public class ViewCB implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(ViewCB.class);
 
     public static final String TITLE_KEY = "view.title";
 
-    protected T presentationModel;
     protected Initializable childController;
     protected Initializable parent;
 
     @FXML protected Parent root;
-
-    protected ViewCB(T presentationModel) {
-        this.presentationModel = presentationModel;
-    }
-
-    protected ViewCB() {
-    }
 
     /**
      * Get called form GUI framework when the UI is ready.

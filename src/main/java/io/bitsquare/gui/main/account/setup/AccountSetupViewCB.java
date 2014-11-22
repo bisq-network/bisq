@@ -154,7 +154,7 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void nextStep(ViewCB<? extends PresentationModel> childView) {
+    public void nextStep(ViewCB childView) {
         if (childView instanceof SeedWordsViewCB) {
             seedWords.onCompleted();
             childController = password.show();
@@ -192,7 +192,7 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         content.getChildren().setAll(loaded.view);
         childController = loaded.controller;
-        ((ViewCB<? extends PresentationModel>) childController).setParent(this);
+        ((ViewCB) childController).setParent(this);
         ((ContextAware) childController).useSettingsContext(false);
         return childController;
     }
@@ -201,7 +201,7 @@ public class AccountSetupViewCB extends ViewCB implements MultiStepNavigation {
 class WizardItem extends HBox {
     private static final Logger log = LoggerFactory.getLogger(WizardItem.class);
 
-    private ViewCB<? extends PresentationModel> childController;
+    private ViewCB childController;
 
     private final ImageView imageView;
     private final Label titleLabel;
@@ -248,7 +248,7 @@ class WizardItem extends HBox {
         getChildren().addAll(imageView, vBox);
     }
 
-    ViewCB<? extends PresentationModel> show() {
+    ViewCB show() {
         host.loadView(navigationItem);
        /* navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT, Navigation
                         .Item.ACCOUNT_SETUP,

@@ -151,7 +151,7 @@ public class AccountSettingsViewCB extends CachedViewCB {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         content.getChildren().setAll(loaded.view);
         childController = loaded.controller;
-        ((ViewCB<? extends PresentationModel>) childController).setParent(this);
+        ((ViewCB) childController).setParent(this);
         ((ContextAware) childController).useSettingsContext(true);
         return childController;
     }
