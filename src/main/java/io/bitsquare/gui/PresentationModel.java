@@ -20,7 +20,7 @@ package io.bitsquare.gui;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PresentationModel<T extends UIModel> {
+public abstract class PresentationModel<T extends UIModel> {
     private static final Logger log = LoggerFactory.getLogger(PresentationModel.class);
 
     protected T model;
