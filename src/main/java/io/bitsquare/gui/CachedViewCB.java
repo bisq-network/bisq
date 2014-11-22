@@ -98,7 +98,7 @@ public class CachedViewCB<T extends PresentationModel> extends ViewCB<T> {
         super.terminate();
 
         if (presentationModel != null)
-            presentationModel.terminate();
+            presentationModel.deactivate();
     }
 
 }

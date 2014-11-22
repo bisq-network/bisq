@@ -79,9 +79,6 @@ public class ViewCB<T extends PresentationModel> implements Initializable {
      */
     public void terminate() {
         log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
-
-        if (presentationModel != null)
-            presentationModel.terminate();
     }
 
     /**

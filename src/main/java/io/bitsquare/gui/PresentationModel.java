@@ -49,10 +49,4 @@ public class PresentationModel<T extends UIModel> {
         if (model != null)
             model.deactivate();
     }
-
-    public void terminate() {
-        log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
-        if (model != null)
-            model.terminate();
-    }
 }

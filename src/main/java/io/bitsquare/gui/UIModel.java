@@ -34,8 +34,4 @@ public class UIModel {
     public void deactivate() {
         log.trace("Lifecycle: deactivate " + this.getClass().getSimpleName());
     }
-
-    public void terminate() {
-        log.trace("Lifecycle: terminate " + this.getClass().getSimpleName());
-    }
 }
