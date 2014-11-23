@@ -29,7 +29,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
+class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML Tab withdrawalTab, transactionsTab;
 

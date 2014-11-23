@@ -22,7 +22,7 @@ import io.bitsquare.gui.ViewLoader;
 
 import javax.inject.Inject;
 
-public class BuyView extends TradeView {
+class BuyView extends TradeView {
 
     @Inject
     public BuyView(ViewLoader viewLoader, Navigation navigation) {

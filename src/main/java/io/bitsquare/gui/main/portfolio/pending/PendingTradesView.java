@@ -52,7 +52,7 @@ import javafx.scene.layout.*;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
-public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, PendingTradesViewModel> {
+class PendingTradesView extends ActivatableViewAndModel<AnchorPane, PendingTradesViewModel> {
 
     @FXML GridPane gridPane;
     @FXML ScrollPane scrollPane;

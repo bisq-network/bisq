@@ -25,7 +25,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
-public class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
+class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
 
     @FXML ComboBox<String> btcDenominationComboBox;
     @FXML CheckBox useAnimationsCheckBox, useEffectsCheckBox;

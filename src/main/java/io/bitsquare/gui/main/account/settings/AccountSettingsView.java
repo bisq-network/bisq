@@ -35,7 +35,7 @@ import javafx.scene.paint.*;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-public class AccountSettingsView extends ActivatableViewAndModel {
+class AccountSettingsView extends ActivatableViewAndModel {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;

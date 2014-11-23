@@ -36,7 +36,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
 
-public class AccountSetupWizard extends ActivatableView implements Wizard {
+class AccountSetupWizard extends ActivatableView implements Wizard {
 
     @FXML VBox leftVBox;
     @FXML AnchorPane content;

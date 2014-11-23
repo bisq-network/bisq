@@ -30,7 +30,7 @@ import javafx.scene.image.*;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
 
-public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewModel> {
+class OffersView extends ActivatableViewAndModel<GridPane, OffersViewModel> {
 
     @FXML TableView<OfferListItem> table;
     @FXML TableColumn<OfferListItem, OfferListItem> priceColumn, amountColumn, volumeColumn,

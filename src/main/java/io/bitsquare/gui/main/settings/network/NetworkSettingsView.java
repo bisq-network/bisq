@@ -26,7 +26,7 @@ import javax.inject.Inject;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-public class NetworkSettingsView extends InitializableView {
+class NetworkSettingsView extends InitializableView {
 
     private final String bitcoinNetworkValue;
     private final ClientNode clientNode;

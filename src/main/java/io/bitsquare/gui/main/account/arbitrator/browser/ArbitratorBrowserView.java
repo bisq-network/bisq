@@ -40,7 +40,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 // TODO Arbitration is very basic yet
-public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implements ArbitratorListener {
+class ArbitratorBrowserView extends ActivatableView<Pane, Void> implements ArbitratorListener {
 
     @FXML Button prevButton, nextButton, selectButton, closeButton;
     @FXML Pane arbitratorProfile;

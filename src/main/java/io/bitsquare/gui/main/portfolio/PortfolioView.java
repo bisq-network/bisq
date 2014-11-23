@@ -30,7 +30,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
+class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML Tab offersTab, openTradesTab, closedTradesTab;
 

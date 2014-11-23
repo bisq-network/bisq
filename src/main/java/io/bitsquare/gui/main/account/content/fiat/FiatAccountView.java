@@ -49,7 +49,7 @@ import org.controlsfx.dialog.Dialog;
 
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
-public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccountViewModel> implements Wizard.Step {
+class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccountViewModel> implements Wizard.Step {
 
     @FXML HBox buttonsHBox;
     @FXML ComboBox<Region> regionComboBox;

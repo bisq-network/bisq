@@ -30,7 +30,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
+class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML Tab preferencesTab, networkSettingsTab;
 

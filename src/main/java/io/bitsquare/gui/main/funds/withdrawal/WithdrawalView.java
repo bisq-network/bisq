@@ -53,7 +53,7 @@ import org.controlsfx.control.action.Action;
 
 import org.jetbrains.annotations.NotNull;
 
-public class WithdrawalView extends ActivatableViewAndModel {
+class WithdrawalView extends ActivatableViewAndModel {
 
     @FXML TableView<WithdrawalListItem> table;
     @FXML Button addNewAddressButton;

@@ -28,7 +28,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
-public class ChangePasswordView extends InitializableView<GridPane, ChangePasswordViewModel> implements Wizard.Step {
+class ChangePasswordView extends InitializableView<GridPane, ChangePasswordViewModel> implements Wizard.Step {
 
     @FXML HBox buttonsHBox;
     @FXML Button saveButton, skipButton;

@@ -36,7 +36,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.util.Callback;
 
-public class TransactionsView extends ActivatableViewAndModel {
+class TransactionsView extends ActivatableViewAndModel {
 
     @FXML TableView<TransactionsListItem> table;
     @FXML TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn,

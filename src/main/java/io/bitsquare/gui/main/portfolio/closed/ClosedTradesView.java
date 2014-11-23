@@ -28,7 +28,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
 
-public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTradesViewModel> {
+class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTradesViewModel> {
 
     @FXML TableView<ClosedTradesListItem> table;
     @FXML TableColumn<ClosedTradesListItem, ClosedTradesListItem> priceColumn, amountColumn, volumeColumn,

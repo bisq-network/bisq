@@ -31,7 +31,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 // TODO Arbitration is very basic yet
-public class ArbitratorSettingsView extends AbstractView {
+class ArbitratorSettingsView extends AbstractView {
 
     private ArbitratorRegistrationView arbitratorRegistrationView;
 
