@@ -146,7 +146,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
     }
 
     private void loadView(Navigation.Item navigationItem) {
-        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
+        View view = viewLoader.load(navigationItem.getFxmlUrl(), false);
 
         final Stage stage = new Stage();
         stage.setTitle("Arbitrator selection");
@@ -158,7 +158,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
         stage.setY(primaryStage.getY() + 50);
         stage.initModality(Modality.WINDOW_MODAL);
         stage.initOwner(primaryStage);
-        Scene scene = new Scene((Parent) loaded.view, 800, 600);
+        Scene scene = new Scene((Parent) view.getRoot(), 800, 600);
         stage.setScene(scene);
         stage.setOnHidden(windowEvent -> {
             if (navigationItem == Navigation.Item.ARBITRATOR_BROWSER)

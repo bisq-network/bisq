@@ -40,6 +40,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import viewfx.view.View;
+
 import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.image.*;
@@ -94,9 +96,9 @@ public class BitsquareApp extends Application {
         // load the main view and create the main scene
 
         ViewLoader viewLoader = injector.getInstance(ViewLoader.class);
-        ViewLoader.Item loaded = viewLoader.load(Navigation.Item.MAIN.getFxmlUrl(), false);
+        View view = viewLoader.load(Navigation.Item.MAIN.getFxmlUrl(), false);
 
-        Scene scene = new Scene((Parent) loaded.view, 1000, 600);
+        Scene scene = new Scene((Parent) view.getRoot(), 1000, 600);
         scene.getStylesheets().setAll(
                 "/io/bitsquare/gui/bitsquare.css",
                 "/io/bitsquare/gui/images.css");

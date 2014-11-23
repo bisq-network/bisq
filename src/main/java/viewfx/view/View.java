@@ -17,5 +17,8 @@
 
 package viewfx.view;
 
+import javafx.scene.*;
+
 public interface View {
+    Node getRoot();
 }

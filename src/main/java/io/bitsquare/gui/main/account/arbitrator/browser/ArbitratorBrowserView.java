@@ -32,6 +32,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import viewfx.view.View;
 import viewfx.view.support.ActivatableView;
 
 import javafx.fxml.FXML;
@@ -91,9 +92,9 @@ class ArbitratorBrowserView extends ActivatableView<Pane, Void> implements Arbit
 
 
     private void loadView(Navigation.Item navigationItem) {
-        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
-        root.getChildren().set(0, loaded.view);
-        arbitratorProfileView = (ArbitratorProfileView) loaded.controller;
+        View view = viewLoader.load(navigationItem.getFxmlUrl());
+        root.getChildren().set(0, view.getRoot());
+        arbitratorProfileView = (ArbitratorProfileView) view;
     }
 
     @Override

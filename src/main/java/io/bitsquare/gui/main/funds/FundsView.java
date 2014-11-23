@@ -23,6 +23,7 @@ import io.bitsquare.gui.ViewLoader;
 import javax.inject.Inject;
 
 import viewfx.model.Activatable;
+import viewfx.view.View;
 import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.value.ChangeListener;
@@ -84,7 +85,7 @@ class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         if (currentTab != null)
             currentTab.setContent(null);
 
-        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
+        View view = viewLoader.load(navigationItem.getFxmlUrl());
         switch (navigationItem) {
             case WITHDRAWAL:
                 currentTab = withdrawalTab;
@@ -93,7 +94,7 @@ class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
                 currentTab = transactionsTab;
                 break;
         }
-        currentTab.setContent(loaded.view);
+        currentTab.setContent(view.getRoot());
         root.getSelectionModel().select(currentTab);
     }
 }

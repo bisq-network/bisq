@@ -29,6 +29,7 @@ import io.bitsquare.gui.util.Transitions;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import viewfx.view.View;
 import viewfx.view.support.ActivatableView;
 
 import javafx.application.Platform;
@@ -125,8 +126,8 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
             if (navItems == null || navItems.length != 2 || navItems[0] != Navigation.Item.MAIN)
                 return;
 
-            ViewLoader.Item loaded = viewLoader.load(navItems[1].getFxmlUrl());
-            contentContainer.getChildren().setAll(loaded.view);
+            View view = viewLoader.load(navItems[1].getFxmlUrl());
+            contentContainer.getChildren().setAll(view.getRoot());
 
             navButtons.getToggles().stream()
                     .filter(toggle -> toggle instanceof ToggleButton)

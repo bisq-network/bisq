@@ -39,4 +39,8 @@ public abstract class AbstractView<R extends Node, M> implements View {
     public AbstractView() {
         this(null);
     }
+
+    public R getRoot() {
+        return root;
+    }
 }

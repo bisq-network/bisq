@@ -23,6 +23,7 @@ import io.bitsquare.gui.main.account.arbitrator.registration.ArbitratorRegistrat
 
 import javax.inject.Inject;
 
+import viewfx.view.View;
 import viewfx.view.support.AbstractView;
 
 import javafx.fxml.FXML;
@@ -47,8 +48,8 @@ class ArbitratorSettingsView extends AbstractView {
     }
 
     private void loadView(Navigation.Item navigationItem) {
-        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
-        arbitratorRegistrationView = (ArbitratorRegistrationView) loaded.controller;
+        View view = viewLoader.load(navigationItem.getFxmlUrl(), false);
+        arbitratorRegistrationView = (ArbitratorRegistrationView) view;
 
         final Stage stage = new Stage();
         stage.setTitle("Arbitrator");
@@ -60,7 +61,7 @@ class ArbitratorSettingsView extends AbstractView {
         stage.setY(primaryStage.getY() + 50);
         stage.initModality(Modality.WINDOW_MODAL);
         stage.initOwner(primaryStage);
-        Scene scene = new Scene((Parent) loaded.view, 800, 600);
+        Scene scene = new Scene((Parent) view.getRoot(), 800, 600);
         stage.setScene(scene);
         stage.show();
     }

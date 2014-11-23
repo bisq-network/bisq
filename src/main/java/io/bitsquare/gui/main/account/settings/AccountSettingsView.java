@@ -109,11 +109,10 @@ class AccountSettingsView extends ActivatableViewAndModel {
     }
 
     private void loadView(Navigation.Item navigationItem) {
-        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
-        content.getChildren().setAll(loaded.view);
-        View child = (View) loaded.controller;
-        if (child instanceof Wizard.Step)
-            ((Wizard.Step) child).hideWizardNavigation();
+        View view = viewLoader.load(navigationItem.getFxmlUrl());
+        content.getChildren().setAll(view.getRoot());
+        if (view instanceof Wizard.Step)
+            ((Wizard.Step) view).hideWizardNavigation();
     }
 
     private void selectMainMenuButton(Navigation.Item item) {

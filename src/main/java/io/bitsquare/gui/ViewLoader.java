@@ -17,10 +17,7 @@
 
 package io.bitsquare.gui;
 
-import io.bitsquare.BitsquareException;
 import io.bitsquare.locale.BSResources;
-
-import java.io.IOException;
 
 import java.net.URL;
 
@@ -29,10 +26,10 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import viewfx.view.View;
+
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.fxml.JavaFXBuilderFactory;
-import javafx.scene.*;
 import javafx.util.BuilderFactory;
 
 /**
@@ -41,7 +38,7 @@ import javafx.util.BuilderFactory;
  */
 public class ViewLoader {
 
-    private final Map<URL, Item> cache = new HashMap<>();
+    private final Map<URL, View> cache = new HashMap<>();
     private final BuilderFactory builderFactory = new JavaFXBuilderFactory();
     private final GuiceControllerFactory controllerFactory;
 
@@ -50,35 +47,18 @@ public class ViewLoader {
         this.controllerFactory = controllerFactory;
     }
 
-    public Item load(URL url) {
+    public View load(URL url) {
         return load(url, true);
     }
 
-    public Item load(URL url, boolean useCaching) {
-        Item item;
-
-        if (useCaching && cache.containsKey(url)) {
+    public View load(URL url, boolean useCaching) {
+        if (useCaching && cache.containsKey(url))
             return cache.get(url);
-        }
 
         FXMLLoader loader = new FXMLLoader(url, BSResources.getResourceBundle(), builderFactory, controllerFactory);
-        try {
-            item = new Item(loader.load(), loader.getController());
-            cache.put(url, item);
-            return item;
-        } catch (IOException e) {
-            throw new BitsquareException(e, "Failed to load view at %s", url);
-        }
-    }
-
-    public static class Item {
-        public final Node view;
-        public final Initializable controller;
-
-        Item(Node view, Initializable controller) {
-            this.view = view;
-            this.controller = controller;
-        }
+        View view = loader.getController();
+        cache.put(url, view);
+        return view;
     }
 }
 

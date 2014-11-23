@@ -122,12 +122,12 @@ public class TradeView extends ActivatableView<TabPane, Void> {
         TabPane tabPane = root;
         if (navigationItem == Navigation.Item.OFFER_BOOK && offerBookView == null) {
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
-            ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
+            View view = viewLoader.load(navigationItem.getFxmlUrl(), false);
             final Tab tab = new Tab(direction == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
             tab.setClosable(false);
-            tab.setContent(loaded.view);
+            tab.setContent(view.getRoot());
             tabPane.getTabs().add(tab);
-            offerBookView = (OfferBookView) loaded.controller;
+            offerBookView = (OfferBookView) view;
             offerBookView.setParent(this);
 
             offerBookView.setDirection(direction);
@@ -137,10 +137,10 @@ public class TradeView extends ActivatableView<TabPane, Void> {
         else if (navigationItem == Navigation.Item.CREATE_OFFER && createOfferView == null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
-            ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
-            createOfferRoot = loaded.view;
-            createOfferView = (CreateOfferView) loaded.controller;
+            View view = viewLoader.load(navigationItem.getFxmlUrl(), false);
+            createOfferView = (CreateOfferView) view;
             createOfferView.initWithData(direction, amount, price);
+            createOfferRoot = view.getRoot();
             final Tab tab = new Tab("Create offer");
             createOfferView.configCloseHandlers(tab.closableProperty());
             tab.setContent(createOfferRoot);
@@ -152,10 +152,10 @@ public class TradeView extends ActivatableView<TabPane, Void> {
                 offer != null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
-            ViewLoader.Item loaded = viewLoader.load(Navigation.Item.TAKE_OFFER.getFxmlUrl(), false);
-            takeOfferRoot = loaded.view;
-            takeOfferView = (TakeOfferView) loaded.controller;
+            View view = viewLoader.load(Navigation.Item.TAKE_OFFER.getFxmlUrl(), false);
+            takeOfferView = (TakeOfferView) view;
             takeOfferView.initWithData(direction, amount, offer);
+            takeOfferRoot = view.getRoot();
             final Tab tab = new Tab("Take offer");
             takeOfferView.configCloseHandlers(tab.closableProperty());
             tab.setContent(takeOfferRoot);

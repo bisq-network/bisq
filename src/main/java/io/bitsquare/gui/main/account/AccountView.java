@@ -22,6 +22,7 @@ import io.bitsquare.gui.ViewLoader;
 
 import javax.inject.Inject;
 
+import viewfx.view.View;
 import viewfx.view.support.ActivatableView;
 
 import javafx.beans.value.ChangeListener;
@@ -95,7 +96,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
 
     private void loadView(Navigation.Item navigationItem) {
-        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
+        View view = viewLoader.load(navigationItem.getFxmlUrl());
         final Tab tab;
         switch (navigationItem) {
             case ACCOUNT_SETTINGS:
@@ -118,7 +119,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         // for IRC demo we deactivate the arbitratorSettingsTab
         arbitratorSettingsTab.setDisable(true);
 
-        tab.setContent(loaded.view);
+        tab.setContent(view.getRoot());
         root.getSelectionModel().select(tab);
     }
 }

@@ -24,6 +24,7 @@ import io.bitsquare.settings.Preferences;
 import javax.inject.Inject;
 
 import viewfx.model.Activatable;
+import viewfx.view.View;
 import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.value.ChangeListener;
@@ -88,7 +89,7 @@ class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
     }
 
     private void loadView(Navigation.Item navigationItem) {
-        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
+        View view = viewLoader.load(navigationItem.getFxmlUrl());
         final Tab tab;
         switch (navigationItem) {
             case PREFERENCES:
@@ -100,7 +101,7 @@ class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
             default:
                 throw new IllegalArgumentException("navigation item of type " + navigationItem + " is not allowed");
         }
-        tab.setContent(loaded.view);
+        tab.setContent(view.getRoot());
         root.getSelectionModel().select(tab);
     }
 }

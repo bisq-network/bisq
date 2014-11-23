@@ -24,6 +24,7 @@ import io.bitsquare.trade.TradeManager;
 import javax.inject.Inject;
 
 import viewfx.model.Activatable;
+import viewfx.view.View;
 import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.value.ChangeListener;
@@ -92,7 +93,7 @@ class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
         if (currentTab != null)
             currentTab.setContent(null);
 
-        ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
+        View view = viewLoader.load(navigationItem.getFxmlUrl());
         switch (navigationItem) {
             case OFFERS:
                 currentTab = offersTab;
@@ -104,7 +105,7 @@ class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
                 currentTab = closedTradesTab;
                 break;
         }
-        currentTab.setContent(loaded.view);
+        currentTab.setContent(view.getRoot());
         root.getSelectionModel().select(currentTab);
     }
 }
