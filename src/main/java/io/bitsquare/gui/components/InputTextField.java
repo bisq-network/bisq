@@ -31,9 +31,6 @@ import javafx.stage.Window;
 
 import org.controlsfx.control.PopOver;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * TextField with validation support.
  * If validator is set it supports on focus out validation with that validator. If a more sophisticated validation is
@@ -48,7 +45,6 @@ import org.slf4j.LoggerFactory;
 //TODO There are some rare situation where it behaves buggy. Needs further investigation and improvements. Also
 // consider replacement with controlsFX components.
 public class InputTextField extends TextField {
-    private static final Logger log = LoggerFactory.getLogger(InputTextField.class);
 
     private final Effect invalidEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.RED, 4, 0.0, 0, 0);
 

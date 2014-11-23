@@ -33,12 +33,8 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class Preferences implements Serializable {
     private static final long serialVersionUID = 7995048077355006861L;
-    private static final Logger log = LoggerFactory.getLogger(Preferences.class);
 
     // deactivate mBit for now as most screens are not supporting it yet
     private List<String> btcDenominations = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);

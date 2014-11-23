@@ -22,11 +22,7 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class OverlayManager {
-    private static final Logger log = LoggerFactory.getLogger(OverlayManager.class);
 
     private final List<OverlayListener> listeners = new ArrayList<>();
 

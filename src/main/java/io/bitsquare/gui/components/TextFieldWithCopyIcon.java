@@ -27,11 +27,7 @@ import javafx.scene.layout.*;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class TextFieldWithCopyIcon extends AnchorPane {
-    private static final Logger log = LoggerFactory.getLogger(TextFieldWithCopyIcon.class);
 
     private final StringProperty text = new SimpleStringProperty();
 

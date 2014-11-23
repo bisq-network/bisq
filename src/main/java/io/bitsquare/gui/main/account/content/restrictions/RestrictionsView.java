@@ -43,12 +43,7 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class RestrictionsView extends ActivatableViewAndModel<RestrictionsViewModel> implements Wizard.Step {
-
-    private static final Logger log = LoggerFactory.getLogger(RestrictionsView.class);
 
     @FXML ListView<Locale> languagesListView;
     @FXML ListView<Country> countriesListView;

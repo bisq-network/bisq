@@ -27,11 +27,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.util.Callback;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class ClosedTradesView extends ActivatableViewAndModel<ClosedTradesViewModel> {
-    private static final Logger log = LoggerFactory.getLogger(ClosedTradesView.class);
 
     @FXML TableColumn<ClosedTradesListItem, ClosedTradesListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, tradeIdColumn;

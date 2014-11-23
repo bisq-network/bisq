@@ -19,16 +19,12 @@ package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.locale.BSResources;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Base class for other specialized validators.
  * <p>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
 public class InputValidator {
-    private static final Logger log = LoggerFactory.getLogger(InputValidator.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods

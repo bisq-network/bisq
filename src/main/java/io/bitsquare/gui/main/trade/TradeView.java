@@ -38,11 +38,7 @@ import javafx.collections.ListChangeListener;
 import javafx.scene.*;
 import javafx.scene.control.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class TradeView extends ActivatableView {
-    private static final Logger log = LoggerFactory.getLogger(TradeView.class);
 
     private OfferBookView offerBookView;
     private CreateOfferView createOfferView;

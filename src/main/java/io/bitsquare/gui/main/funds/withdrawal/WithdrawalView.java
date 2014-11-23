@@ -53,12 +53,7 @@ import org.controlsfx.control.action.Action;
 
 import org.jetbrains.annotations.NotNull;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class WithdrawalView extends ActivatableViewAndModel {
-    private static final Logger log = LoggerFactory.getLogger(WithdrawalView.class);
-
 
     private final WalletService walletService;
     private final BSFormatter formatter;

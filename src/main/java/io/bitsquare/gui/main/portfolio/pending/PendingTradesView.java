@@ -52,12 +52,7 @@ import javafx.scene.layout.*;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class PendingTradesView extends ActivatableViewAndModel<PendingTradesViewModel> {
-    private static final Logger log = LoggerFactory.getLogger(PendingTradesView.class);
-
 
     private ChangeListener<PendingTradesListItem> selectedItemChangeListener;
     private ListChangeListener<PendingTradesListItem> listChangeListener;

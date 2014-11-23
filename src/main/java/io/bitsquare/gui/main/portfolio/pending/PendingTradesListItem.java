@@ -26,14 +26,10 @@ import java.util.Date;
 
 import javafx.beans.property.ObjectProperty;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.
  */
 public class PendingTradesListItem {
-    private static final Logger log = LoggerFactory.getLogger(PendingTradesListItem.class);
 
     private final Trade trade;
 

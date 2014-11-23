@@ -62,11 +62,7 @@ import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class TakeOfferView extends ActivatableViewAndModel<TakeOfferViewModel> {
-    private static final Logger log = LoggerFactory.getLogger(TakeOfferView.class);
 
     private final Navigation navigation;
     private final OverlayManager overlayManager;

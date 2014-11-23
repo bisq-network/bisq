@@ -23,11 +23,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class TitledGroupBg extends Pane {
-    private static final Logger log = LoggerFactory.getLogger(TitledGroupBg.class);
 
     private final Label label;
     private final StringProperty text = new SimpleStringProperty();

@@ -32,11 +32,7 @@ import javafx.scene.effect.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class BalanceTextField extends AnchorPane {
-    private static final Logger log = LoggerFactory.getLogger(BalanceTextField.class);
 
     private final TextField textField;
     private final Tooltip progressIndicatorTooltip;

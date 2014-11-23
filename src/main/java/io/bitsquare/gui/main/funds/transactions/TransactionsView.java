@@ -36,11 +36,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.util.Callback;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class TransactionsView extends ActivatableViewAndModel {
-    private static final Logger log = LoggerFactory.getLogger(TransactionsView.class);
 
     private final WalletService walletService;
     private final BSFormatter formatter;

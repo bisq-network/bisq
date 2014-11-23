@@ -17,12 +17,8 @@
 
 package io.bitsquare.gui.util.validation;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 public final class BankAccountNumberValidator extends InputValidator {
-    private static final Logger log = LoggerFactory.getLogger(BankAccountNumberValidator.class);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods

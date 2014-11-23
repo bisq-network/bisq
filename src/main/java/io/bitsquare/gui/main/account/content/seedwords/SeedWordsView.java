@@ -28,12 +28,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class SeedWordsView extends InitializableView<SeedWordsViewModel> implements Wizard.Step {
-
-    private static final Logger log = LoggerFactory.getLogger(SeedWordsView.class);
 
     private Wizard parent;
 

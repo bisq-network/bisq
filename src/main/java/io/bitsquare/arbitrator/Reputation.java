@@ -19,9 +19,6 @@ package io.bitsquare.arbitrator;
 
 import java.io.Serializable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 //TODO still open if we use that really...
 
 /**
@@ -29,8 +26,6 @@ import org.slf4j.LoggerFactory;
  */
 public class Reputation implements Serializable {
     private static final long serialVersionUID = -3073174320050879490L;
-
-    private static final Logger log = LoggerFactory.getLogger(Reputation.class);
 
     //TODO
     public Reputation() {

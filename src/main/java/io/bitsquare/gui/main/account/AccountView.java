@@ -28,12 +28,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class AccountView extends ActivatableViewAndModel {
-
-    private static final Logger log = LoggerFactory.getLogger(AccountView.class);
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;

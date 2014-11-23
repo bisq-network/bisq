@@ -24,15 +24,10 @@ import javax.inject.Inject;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * This UI is not cached as it is normally only needed once.
  */
 public class PreferencesView extends ActivatableViewAndModel<PreferencesViewModel> {
-
-    private static final Logger log = LoggerFactory.getLogger(PreferencesView.class);
 
     @FXML ComboBox<String> btcDenominationComboBox;
     @FXML CheckBox useAnimationsCheckBox, useEffectsCheckBox;

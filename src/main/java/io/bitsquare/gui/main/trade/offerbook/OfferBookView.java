@@ -51,9 +51,6 @@ import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 /**
@@ -61,7 +58,6 @@ import static javafx.beans.binding.Bindings.createStringBinding;
  * The restrictions handling is open from the concept and is only implemented for countries yet.
  */
 public class OfferBookView extends ActivatableViewAndModel<OfferBookViewModel> implements ChildView<TradeView> {
-    private static final Logger log = LoggerFactory.getLogger(OfferBookView.class);
 
     private final Navigation navigation;
     private final OverlayManager overlayManager;

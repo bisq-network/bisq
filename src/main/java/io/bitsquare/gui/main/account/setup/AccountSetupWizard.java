@@ -36,15 +36,10 @@ import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * This UI is not cached as it is normally only needed once.
  */
 public class AccountSetupWizard extends ActivatableView implements Wizard {
-
-    private static final Logger log = LoggerFactory.getLogger(AccountSetupWizard.class);
 
     private WizardItem seedWords, password, fiatAccount, restrictions, registration;
     private Navigation.Listener listener;
@@ -187,7 +182,6 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
 }
 
 class WizardItem extends HBox {
-    private static final Logger log = LoggerFactory.getLogger(WizardItem.class);
 
     private final ImageView imageView;
     private final Label titleLabel;

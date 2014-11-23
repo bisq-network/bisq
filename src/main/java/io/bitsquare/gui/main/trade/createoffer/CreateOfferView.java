@@ -61,17 +61,11 @@ import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 // TODO Implement other positioning method in InoutTextField to display it over the field instead of right side
 // priceAmountHBox is too large after redesign as to be used as layoutReference.
-
 public class CreateOfferView extends ActivatableViewAndModel<CreateOfferViewModel> {
-    private static final Logger log = LoggerFactory.getLogger(CreateOfferView.class);
-
 
     private final Navigation navigation;
     private final OverlayManager overlayManager;

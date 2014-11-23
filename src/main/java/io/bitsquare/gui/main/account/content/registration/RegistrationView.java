@@ -19,10 +19,10 @@ package io.bitsquare.gui.main.account.content.registration;
 
 import io.bitsquare.gui.InitializableView;
 import io.bitsquare.gui.OverlayManager;
+import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.components.AddressTextField;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.locale.BSResources;
@@ -40,13 +40,7 @@ import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
 public class RegistrationView extends InitializableView<RegistrationViewModel> implements Wizard.Step {
-
-    private static final Logger log = LoggerFactory.getLogger(RegistrationView.class);
 
     private final OverlayManager overlayManager;
 

@@ -19,14 +19,10 @@ package io.bitsquare.gui.main.portfolio.closed;
 
 import io.bitsquare.trade.Trade;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.
  */
 class ClosedTradesListItem {
-    private static final Logger log = LoggerFactory.getLogger(ClosedTradesListItem.class);
 
     private final Trade trade;
 

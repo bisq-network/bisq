@@ -54,12 +54,8 @@ import javafx.util.StringConverter;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 // TODO Arbitration is very basic yet
 public class ArbitratorRegistrationView extends ActivatableView {
-    private static final Logger log = LoggerFactory.getLogger(ArbitratorRegistrationView.class);
 
     private final Persistence persistence;
     private final WalletService walletService;

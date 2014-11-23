@@ -32,11 +32,8 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class TransactionsListItem {
-    private static final Logger log = LoggerFactory.getLogger(TransactionsListItem.class);
+
     private final StringProperty date = new SimpleStringProperty();
     private final StringProperty amount = new SimpleStringProperty();
     private final StringProperty type = new SimpleStringProperty();

@@ -35,12 +35,7 @@ import javafx.scene.paint.*;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class AccountSettingsView extends ActivatableViewAndModel {
-
-    private static final Logger log = LoggerFactory.getLogger(AccountSettingsView.class);
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
@@ -167,7 +162,6 @@ public class AccountSettingsView extends ActivatableViewAndModel {
 }
 
 class MenuItem extends ToggleButton {
-    private static final Logger log = LoggerFactory.getLogger(MenuItem.class);
 
     MenuItem(Navigation navigation, String title, Navigation.Item navigationItem,
              ToggleGroup toggleGroup) {
