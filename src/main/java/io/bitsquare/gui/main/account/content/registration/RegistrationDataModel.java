@@ -34,7 +34,7 @@ import com.google.inject.Inject;
 
 import javax.annotation.Nullable;
 
-import viewfx.DataModel;
+import viewfx.model.DataModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

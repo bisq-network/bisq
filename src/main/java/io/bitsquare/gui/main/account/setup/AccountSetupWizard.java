@@ -27,9 +27,9 @@ import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
 
 import javax.inject.Inject;
 
-import viewfx.ActivatableView;
-import viewfx.View;
-import viewfx.Wizard;
+import viewfx.view.support.ActivatableView;
+import viewfx.view.View;
+import viewfx.view.Wizard;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;

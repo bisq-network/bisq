@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 
 import java.util.List;
 
-import viewfx.ViewModel;
+import viewfx.model.ViewModel;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;

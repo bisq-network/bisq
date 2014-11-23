@@ -44,7 +44,7 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-import viewfx.ActivatableView;
+import viewfx.view.support.ActivatableView;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;

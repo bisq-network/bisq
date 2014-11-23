@@ -35,8 +35,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import viewfx.ActivatableViewAndModel;
-import viewfx.ChildView;
+import viewfx.view.support.ActivatableViewAndModel;
+import viewfx.view.ChildView;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;

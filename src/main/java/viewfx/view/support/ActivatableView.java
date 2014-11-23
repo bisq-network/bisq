@@ -15,37 +15,35 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package viewfx;
+package viewfx.view.support;
 
 import javafx.scene.*;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+public abstract class ActivatableView<R extends Node, M> extends InitializableView<R, M> {
 
-public abstract class ActivatableViewAndModel<R extends Node, M extends Activatable> extends ActivatableView<R, M> {
-
-    public ActivatableViewAndModel(M model) {
-        super(checkNotNull(model, "Model must not be null"));
+    public ActivatableView(M model) {
+        super(model);
     }
 
-    public ActivatableViewAndModel() {
-        this((M) Activatable.NOOP_INSTANCE);
-    }
-
-    @Override
-    public final void activate() {
-        model.activate();
-        this.doActivate();
-    }
-
-    protected void doActivate() {
+    public ActivatableView() {
+        this(null);
     }
 
     @Override
-    public final void deactivate() {
-        model.deactivate();
-        this.doDeactivate();
+    protected void prepareInitialize() {
+        if (root != null) {
+            root.sceneProperty().addListener((ov, oldValue, newValue) -> {
+                if (oldValue == null && newValue != null)
+                    activate();
+                else if (oldValue != null && newValue == null)
+                    deactivate();
+            });
+        }
     }
 
-    protected void doDeactivate() {
+    protected void activate() {
+    }
+
+    protected void deactivate() {
     }
 }

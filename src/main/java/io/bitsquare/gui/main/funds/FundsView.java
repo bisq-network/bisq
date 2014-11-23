@@ -22,8 +22,8 @@ import io.bitsquare.gui.ViewLoader;
 
 import javax.inject.Inject;
 
-import viewfx.Activatable;
-import viewfx.ActivatableViewAndModel;
+import viewfx.model.Activatable;
+import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;

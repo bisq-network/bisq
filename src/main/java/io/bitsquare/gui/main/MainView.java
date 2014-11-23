@@ -29,7 +29,7 @@ import io.bitsquare.gui.util.Transitions;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import viewfx.ActivatableView;
+import viewfx.view.support.ActivatableView;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;

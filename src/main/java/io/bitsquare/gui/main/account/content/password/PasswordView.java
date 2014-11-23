@@ -22,8 +22,8 @@ import io.bitsquare.gui.main.help.HelpId;
 
 import javax.inject.Inject;
 
-import viewfx.InitializableView;
-import viewfx.Wizard;
+import viewfx.view.support.InitializableView;
+import viewfx.view.Wizard;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;

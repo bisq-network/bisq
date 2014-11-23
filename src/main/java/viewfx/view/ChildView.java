@@ -15,22 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package viewfx;
+package viewfx.view;
 
-public interface Activatable {
-    void activate();
+import viewfx.view.View;
 
-    void deactivate();
-
-
-    Activatable NOOP_INSTANCE = new Activatable() {;
-        @Override
-        public void activate() {
-        }
-
-        @Override
-        public void deactivate() {
-        }
-    };
-
+public interface ChildView<Parent extends View> extends View {
+    void setParent(Parent parent);
 }

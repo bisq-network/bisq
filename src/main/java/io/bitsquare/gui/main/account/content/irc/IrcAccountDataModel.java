@@ -43,8 +43,8 @@ import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 
-import viewfx.Activatable;
-import viewfx.DataModel;
+import viewfx.model.Activatable;
+import viewfx.model.DataModel;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

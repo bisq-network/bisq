@@ -28,8 +28,8 @@ import java.util.Currency;
 
 import javax.inject.Inject;
 
-import viewfx.ActivatableViewAndModel;
-import viewfx.Wizard;
+import viewfx.view.support.ActivatableViewAndModel;
+import viewfx.view.Wizard;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;

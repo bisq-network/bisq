@@ -23,7 +23,7 @@ import io.bitsquare.gui.main.account.arbitrator.registration.ArbitratorRegistrat
 
 import javax.inject.Inject;
 
-import viewfx.AbstractView;
+import viewfx.view.support.AbstractView;
 
 import javafx.fxml.FXML;
 import javafx.scene.*;

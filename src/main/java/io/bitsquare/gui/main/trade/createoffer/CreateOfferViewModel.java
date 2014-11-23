@@ -31,8 +31,8 @@ import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
 
-import viewfx.ActivatableWithDelegate;
-import viewfx.ViewModel;
+import viewfx.model.support.ActivatableWithDelegate;
+import viewfx.model.ViewModel;
 
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;

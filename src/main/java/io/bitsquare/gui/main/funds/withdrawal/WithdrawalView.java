@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import viewfx.ActivatableViewAndModel;
+import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;

@@ -35,8 +35,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import viewfx.ActivatableViewAndModel;
-import viewfx.Wizard;
+import viewfx.view.support.ActivatableViewAndModel;
+import viewfx.view.Wizard;
 
 import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;

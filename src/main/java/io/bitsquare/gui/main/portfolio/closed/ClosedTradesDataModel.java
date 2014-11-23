@@ -25,8 +25,8 @@ import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
-import viewfx.Activatable;
-import viewfx.DataModel;
+import viewfx.model.Activatable;
+import viewfx.model.DataModel;
 
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;

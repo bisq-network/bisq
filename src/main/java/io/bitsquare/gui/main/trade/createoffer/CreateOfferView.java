@@ -39,7 +39,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import viewfx.ActivatableViewAndModel;
+import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.event.ActionEvent;

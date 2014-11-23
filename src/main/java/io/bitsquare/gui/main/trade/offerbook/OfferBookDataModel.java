@@ -35,8 +35,8 @@ import com.google.inject.Inject;
 
 import java.util.Comparator;
 
-import viewfx.Activatable;
-import viewfx.DataModel;
+import viewfx.model.Activatable;
+import viewfx.model.DataModel;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

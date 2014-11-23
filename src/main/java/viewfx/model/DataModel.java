@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package viewfx;
+package viewfx.model;
 
-public interface View {
+public interface DataModel extends Model {
 }

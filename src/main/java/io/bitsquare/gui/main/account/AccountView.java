@@ -22,7 +22,7 @@ import io.bitsquare.gui.ViewLoader;
 
 import javax.inject.Inject;
 
-import viewfx.ActivatableView;
+import viewfx.view.support.ActivatableView;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;

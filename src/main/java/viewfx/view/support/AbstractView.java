@@ -15,12 +15,28 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package viewfx;
+package viewfx.view.support;
 
-public interface Wizard extends View {
-    void nextStep(Step currentStep);
+import viewfx.view.View;
 
-    public interface Step extends ChildView<Wizard> {
-        void hideWizardNavigation();
+import javafx.fxml.FXML;
+import javafx.scene.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public abstract class AbstractView<R extends Node, M> implements View {
+
+    protected final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    protected @FXML R root;
+    protected final M model;
+
+    public AbstractView(M model) {
+        this.model = model;
+    }
+
+    public AbstractView() {
+        this(null);
     }
 }

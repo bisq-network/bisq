@@ -15,8 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package viewfx;
+package viewfx.model;
 
-public interface ChildView<Parent extends View> extends View {
-    void setParent(Parent parent);
+public interface ViewModel extends Model {
 }

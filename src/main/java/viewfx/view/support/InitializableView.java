@@ -15,35 +15,34 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package viewfx;
+package viewfx.view.support;
 
+import java.net.URL;
+
+import java.util.ResourceBundle;
+
+import javafx.fxml.Initializable;
 import javafx.scene.*;
 
-public abstract class ActivatableView<R extends Node, M> extends InitializableView<R, M> {
+public abstract class InitializableView<R extends Node, M> extends AbstractView<R, M> implements Initializable {
 
-    public ActivatableView(M model) {
+    public InitializableView(M model) {
         super(model);
     }
 
-    public ActivatableView() {
+    public InitializableView() {
         this(null);
     }
 
     @Override
+    public final void initialize(URL location, ResourceBundle resources) {
+        prepareInitialize();
+        initialize();
+    }
+
     protected void prepareInitialize() {
-        if (root != null) {
-            root.sceneProperty().addListener((ov, oldValue, newValue) -> {
-                if (oldValue == null && newValue != null)
-                    activate();
-                else if (oldValue != null && newValue == null)
-                    deactivate();
-            });
-        }
     }
 
-    protected void activate() {
-    }
-
-    protected void deactivate() {
+    protected void initialize() {
     }
 }

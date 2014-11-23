@@ -23,9 +23,9 @@ import io.bitsquare.gui.util.Colors;
 
 import javax.inject.Inject;
 
-import viewfx.ActivatableViewAndModel;
-import viewfx.View;
-import viewfx.Wizard;
+import viewfx.view.support.ActivatableViewAndModel;
+import viewfx.view.View;
+import viewfx.view.Wizard;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;

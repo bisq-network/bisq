@@ -30,7 +30,7 @@ import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
 
-import viewfx.ViewModel;
+import viewfx.model.ViewModel;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;

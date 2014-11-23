@@ -26,8 +26,8 @@ import com.google.inject.Inject;
 
 import java.util.stream.Collectors;
 
-import viewfx.Activatable;
-import viewfx.DataModel;
+import viewfx.model.Activatable;
+import viewfx.model.DataModel;
 
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;

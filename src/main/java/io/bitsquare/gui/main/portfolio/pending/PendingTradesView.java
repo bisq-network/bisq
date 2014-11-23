@@ -40,7 +40,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import viewfx.ActivatableViewAndModel;
+import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;

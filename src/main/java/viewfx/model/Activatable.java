@@ -15,34 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package viewfx;
+package viewfx.model;
 
-import java.net.URL;
+public interface Activatable {
 
-import java.util.ResourceBundle;
+    void activate();
 
-import javafx.fxml.Initializable;
-import javafx.scene.*;
+    void deactivate();
 
-public abstract class InitializableView<R extends Node, M> extends AbstractView<R, M> implements Initializable {
 
-    public InitializableView(M model) {
-        super(model);
-    }
+    Activatable NOOP_INSTANCE = new Activatable() {;
+        @Override
+        public void activate() {
+        }
 
-    public InitializableView() {
-        this(null);
-    }
+        @Override
+        public void deactivate() {
+        }
+    };
 
-    @Override
-    public final void initialize(URL location, ResourceBundle resources) {
-        prepareInitialize();
-        initialize();
-    }
-
-    protected void prepareInitialize() {
-    }
-
-    protected void initialize() {
-    }
 }
