@@ -1,4 +1,4 @@
-package net.mightypork.rpack.utils;
+package io.bitsquare.util;
 
 import java.awt.*;
 
@@ -10,12 +10,9 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-// Taken form https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform
-public class DesktopApi {
-    private static final Logger log = LoggerFactory.getLogger(DesktopApi.class);
+// Taken form https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform,
+// originally net.mightypork.rpack.utils.DesktopApi
+class DesktopUtil {
 
     public static boolean browse(URI uri) {
 
