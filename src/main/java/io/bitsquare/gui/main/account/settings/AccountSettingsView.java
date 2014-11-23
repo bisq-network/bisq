@@ -27,7 +27,6 @@ import io.bitsquare.gui.util.Colors;
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -132,10 +131,11 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         content.getChildren().setAll(loaded.view);
-        childController = (View) loaded.controller;
-        childController.setParent(this);
-        ((ContextAware) childController).useSettingsContext(true);
-        return childController;
+        View child = (View) loaded.controller;
+        child.setParent(this);
+        if (child instanceof ContextAware)
+            ((ContextAware) child).useSettingsContext(true);
+        return child;
     }
 
 

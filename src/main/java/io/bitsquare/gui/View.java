@@ -33,7 +33,6 @@ public class View<M> {
     protected final M model;
     protected @FXML Parent root;
 
-    protected View childController;
     protected Initializable parent;
 
 

@@ -32,7 +32,6 @@ import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
@@ -82,29 +81,29 @@ public class AccountSetupView extends ActivatableView implements MultiStepNaviga
 
                 switch (navigationItems[3]) {
                     case SEED_WORDS:
-                        childController = seedWords.show();
+                        seedWords.show();
                         break;
                     case ADD_PASSWORD:
                         seedWords.onCompleted();
-                        childController = password.show();
+                        password.show();
                         break;
                     case RESTRICTIONS:
                         seedWords.onCompleted();
                         password.onCompleted();
-                        childController = restrictions.show();
+                        restrictions.show();
                         break;
                     case FIAT_ACCOUNT:
                         seedWords.onCompleted();
                         password.onCompleted();
                         restrictions.onCompleted();
-                        childController = fiatAccount.show();
+                        fiatAccount.show();
                         break;
                     case REGISTRATION:
                         seedWords.onCompleted();
                         password.onCompleted();
                         restrictions.onCompleted();
                         fiatAccount.onCompleted();
-                        childController = registration.show();
+                        registration.show();
                         break;
                 }
             }
@@ -135,7 +134,7 @@ public class AccountSetupView extends ActivatableView implements MultiStepNaviga
     @Override
     public void activate() {
         navigation.addListener(listener);
-        childController = fiatAccount.show();
+        fiatAccount.show();
     }
 
     @Override
@@ -152,23 +151,22 @@ public class AccountSetupView extends ActivatableView implements MultiStepNaviga
     public void nextStep(View childView) {
         if (childView instanceof SeedWordsView) {
             seedWords.onCompleted();
-            childController = password.show();
+            password.show();
         }
         else if (childView instanceof PasswordView) {
             password.onCompleted();
-            childController = restrictions.show();
+            restrictions.show();
         }
         else if (childView instanceof RestrictionsView) {
             restrictions.onCompleted();
-            childController = fiatAccount.show();
+            fiatAccount.show();
         }
         else if (childView instanceof IrcAccountView) {
             fiatAccount.onCompleted();
-            childController = registration.show();
+            registration.show();
         }
         else if (childView instanceof RegistrationView) {
             registration.onCompleted();
-            childController = null;
 
             if (navigation.getItemsForReturning() != null)
                 navigation.navigationTo(navigation.getItemsForReturning());
@@ -186,17 +184,16 @@ public class AccountSetupView extends ActivatableView implements MultiStepNaviga
     protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         content.getChildren().setAll(loaded.view);
-        childController = (View) loaded.controller;
-        childController.setParent(this);
-        ((ContextAware) childController).useSettingsContext(false);
-        return childController;
+        View child = (View) loaded.controller;
+        child.setParent(this);
+        if (child instanceof ContextAware)
+            ((ContextAware) child).useSettingsContext(false);
+        return child;
     }
 }
 
 class WizardItem extends HBox {
     private static final Logger log = LoggerFactory.getLogger(WizardItem.class);
-
-    private View childController;
 
     private final ImageView imageView;
     private final Label titleLabel;
@@ -243,7 +240,7 @@ class WizardItem extends HBox {
         getChildren().addAll(imageView, vBox);
     }
 
-    View show() {
+    void show() {
         host.loadView(navigationItem);
        /* navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT, Navigation
                         .Item.ACCOUNT_SETUP,
@@ -253,8 +250,6 @@ class WizardItem extends HBox {
         imageView.setId("image-arrow-blue");
         titleLabel.setId("wizard-title-active");
         subTitleLabel.setId("wizard-sub-title-active");
-
-        return childController;
     }
 
     void onCompleted() {

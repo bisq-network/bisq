@@ -35,7 +35,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;

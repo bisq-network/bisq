@@ -26,7 +26,6 @@ import javax.inject.Inject;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
 import org.slf4j.Logger;

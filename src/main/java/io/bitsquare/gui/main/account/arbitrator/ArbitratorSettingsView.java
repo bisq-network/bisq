@@ -25,7 +25,6 @@ import io.bitsquare.gui.main.account.arbitrator.registration.ArbitratorRegistrat
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
