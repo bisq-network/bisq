@@ -57,10 +57,6 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
     @FXML Pane arbitratorProfile;
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Inject
     public ArbitratorBrowserView(ViewLoader viewLoader, AccountSettings accountSettings, Persistence persistence,
                                  MessageService messageService) {
@@ -71,10 +67,6 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
     public void initialize() {
         messageService.addArbitratorListener(this);
@@ -83,10 +75,6 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
         loadView(Navigation.Item.ARBITRATOR_PROFILE);
         checkButtonState();
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Navigation
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
    /* public Initializable loadViewAndGetChildController(Navigation.Item item) {
         final ViewLoader loader = new ViewLoader(getClass().getResource(item.getFxmlUrl()));
@@ -104,20 +92,12 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
     }*/
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Navigation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
     protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         ((Pane) root).getChildren().set(0, loaded.view);
         return arbitratorProfileView = (ArbitratorProfileView) loaded.controller;
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface implementation: ArbitratorListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onArbitratorAdded(Arbitrator arbitrator) {
@@ -140,10 +120,6 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
     public void onArbitratorRemoved(Arbitrator arbitrator) {
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI handlers
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
     public void onPrevious() {
@@ -177,10 +153,6 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
         stage.close();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void checkButtonState() {
         prevButton.setDisable(index < 1);

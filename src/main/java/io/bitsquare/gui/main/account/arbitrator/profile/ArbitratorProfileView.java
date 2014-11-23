@@ -44,10 +44,6 @@ public class ArbitratorProfileView extends AbstractView {
     @FXML TextArea descriptionTextArea;
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Inject
     public ArbitratorProfileView(Preferences preferences, Persistence persistence,
                                  BSFormatter formatter) {
@@ -61,10 +57,6 @@ public class ArbitratorProfileView extends AbstractView {
     }
 
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void applyArbitrator(Arbitrator arbitrator) {
         if (arbitrator != null && arbitrator.getIdType() != null) {

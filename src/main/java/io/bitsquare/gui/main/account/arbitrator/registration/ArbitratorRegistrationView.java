@@ -88,10 +88,6 @@ public class ArbitratorRegistrationView extends ActivatableView {
     @FXML ConfidenceProgressIndicator progressIndicator;
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Inject
     private ArbitratorRegistrationView(Persistence persistence, WalletService walletService,
                                        MessageService messageService, User user, BSFormatter formatter) {
@@ -102,10 +98,6 @@ public class ArbitratorRegistrationView extends ActivatableView {
         this.formatter = formatter;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void initialize() {
@@ -184,10 +176,6 @@ public class ArbitratorRegistrationView extends ActivatableView {
         });
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public void setEditMode(boolean isEditMode) {
         this.isEditMode = isEditMode;
 
@@ -198,10 +186,6 @@ public class ArbitratorRegistrationView extends ActivatableView {
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI handlers
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @FXML
     public void onSelectIDType() {
@@ -302,10 +286,6 @@ public class ArbitratorRegistrationView extends ActivatableView {
     public void onPaymentDone() {
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setupPaySecurityDepositScreen() {
         infoLabel.setText("You need to pay 2 x the max. trading volume as security deposit.\n\nThat payment will be " +
