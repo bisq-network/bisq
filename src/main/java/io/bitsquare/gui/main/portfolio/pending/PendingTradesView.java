@@ -54,29 +54,21 @@ import javafx.util.StringConverter;
 
 public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, PendingTradesViewModel> {
 
-    private ChangeListener<PendingTradesListItem> selectedItemChangeListener;
-    private ListChangeListener<PendingTradesListItem> listChangeListener;
-    private ChangeListener<String> txIdChangeListener;
-    private ChangeListener<PendingTradesViewModel.State> offererStateChangeListener;
-    private ChangeListener<PendingTradesViewModel.State> takerStateChangeListener;
-    private ChangeListener<Throwable> faultChangeListener;
-    private final Navigation navigation;
-
-    @FXML ScrollPane scrollPane;
     @FXML GridPane gridPane;
-    @FXML TitledGroupBg titledGroupBg, paymentsGroupBg, summaryGroupBg, withdrawGroupBg;
+    @FXML ScrollPane scrollPane;
     @FXML ProcessStepBar processBar;
+    @FXML TxIdTextField txIdTextField;
+    @FXML TableView<PendingTradesListItem> table;
+    @FXML InputTextField withdrawAddressTextField;
+    @FXML InfoDisplay infoDisplay, paymentsInfoDisplay, summaryInfoDisplay;
+    @FXML Button confirmPaymentReceiptButton, paymentsButton, withdrawButton;
+    @FXML TitledGroupBg titledGroupBg, paymentsGroupBg, summaryGroupBg, withdrawGroupBg;
+    @FXML TextFieldWithCopyIcon fiatAmountTextField, holderNameTextField, secondaryIdTextField, primaryIdTextField;
+    @FXML TextField statusTextField, paymentMethodTextField, btcTradeAmountTextField, fiatTradeAmountTextField,
+            feesTextField, securityDepositTextField, withdrawAmountTextField;
     @FXML Label statusLabel, txIdLabel, paymentMethodLabel, fiatAmountLabel, holderNameLabel, primaryIdLabel,
             secondaryIdLabel, btcTradeAmountLabel, fiatTradeAmountLabel, feesLabel, securityDepositLabel,
             withdrawAmountLabel, withdrawAddressLabel;
-    @FXML TextField statusTextField, paymentMethodTextField, btcTradeAmountTextField, fiatTradeAmountTextField,
-            feesTextField, securityDepositTextField, withdrawAmountTextField;
-    @FXML InputTextField withdrawAddressTextField;
-    @FXML TxIdTextField txIdTextField;
-    @FXML InfoDisplay infoDisplay, paymentsInfoDisplay, summaryInfoDisplay;
-    @FXML Button confirmPaymentReceiptButton, paymentsButton, withdrawButton;
-    @FXML TextFieldWithCopyIcon fiatAmountTextField, holderNameTextField, secondaryIdTextField, primaryIdTextField;
-    @FXML TableView<PendingTradesListItem> table;
 
     @FXML TableColumn<PendingTradesListItem, Fiat> priceColumn;
     @FXML TableColumn<PendingTradesListItem, Fiat> tradeVolumeColumn;
@@ -85,16 +77,21 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
     @FXML TableColumn<PendingTradesListItem, Date> dateColumn;
     @FXML TableColumn<PendingTradesListItem, Coin> tradeAmountColumn;
 
+    private ChangeListener<PendingTradesListItem> selectedItemChangeListener;
+    private ListChangeListener<PendingTradesListItem> listChangeListener;
+    private ChangeListener<String> txIdChangeListener;
+    private ChangeListener<PendingTradesViewModel.State> offererStateChangeListener;
+    private ChangeListener<PendingTradesViewModel.State> takerStateChangeListener;
+    private ChangeListener<Throwable> faultChangeListener;
 
+    private final Navigation navigation;
 
     @Inject
-    PendingTradesView(PendingTradesViewModel model, Navigation navigation) {
+    public PendingTradesView(PendingTradesViewModel model, Navigation navigation) {
         super(model);
 
         this.navigation = navigation;
     }
-
-
 
     @Override
     public void initialize() {
@@ -166,8 +163,6 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         model.state.removeListener(offererStateChangeListener);
         model.state.removeListener(takerStateChangeListener);
     }
-
-
 
     @FXML
     void onPaymentStarted() {
@@ -342,7 +337,6 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         }
     }
 
-
     private void applyTakerState(PendingTradesViewModel.State state) {
         confirmPaymentReceiptButton.setVisible(false);
         confirmPaymentReceiptButton.setManaged(false);
@@ -507,8 +501,6 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         Platform.runLater(() -> scrollPane.setVvalue(visible ? scrollPane.getVmax() : 0));
     }
 
-
-
     private void setTradeIdColumnCellFactory() {
         idColumn.setCellFactory(
                 new Callback<TableColumn<PendingTradesListItem, String>, TableCell<PendingTradesListItem, String>>() {
@@ -539,7 +531,6 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
                     }
                 });
     }
-
 
     private void setDateColumnCellFactory() {
         dateColumn.setCellFactory(TextFieldTableCell.<PendingTradesListItem, Date>forTableColumn(

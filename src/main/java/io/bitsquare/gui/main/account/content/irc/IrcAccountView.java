@@ -36,15 +36,10 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-/*
-Just temporary for giving the user a possibility to test the app via simulating the bank transfer in a IRC chat.
+/**
+ * Just temporary for giving the user a possibility to test the app via simulating the bank transfer in a IRC chat.
  */
 public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccountViewModel> implements Wizard.Step {
-
-    private static final Logger log = LoggerFactory.getLogger(IrcAccountView.class);
 
     @FXML HBox buttonsHBox;
     @FXML InputTextField ircNickNameTextField;
@@ -54,12 +49,10 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
 
     private Wizard parent;
 
-
     @Inject
-    IrcAccountView(IrcAccountViewModel model) {
+    public IrcAccountView(IrcAccountViewModel model) {
         super(model);
     }
-
 
     @Override
     public void doActivate() {
@@ -135,7 +128,6 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
                         "bank transfer."));
     }
 
-
     @Override
     public void setParent(Wizard parent) {
         this.parent = parent;
@@ -144,8 +136,6 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
     @Override
     public void hideWizardNavigation() {
     }
-
-
 
     @FXML
     void onSelectType() {
@@ -179,7 +169,6 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
         }
     }
 
-
     private void setupListeners() {
         model.type.addListener((ov, oldValue, newValue) -> {
             if (newValue != null)
@@ -201,7 +190,5 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
         ircNickNameTextField.textProperty().bindBidirectional(model.ircNickName);
         saveButton.disableProperty().bind(model.saveButtonDisable);
     }
-
-
 }
 

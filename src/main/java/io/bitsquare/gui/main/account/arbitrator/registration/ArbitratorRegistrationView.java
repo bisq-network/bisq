@@ -58,36 +58,34 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 // TODO Arbitration is very basic yet
 public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void> {
 
-    private final Persistence persistence;
-    private final WalletService walletService;
-    private final MessageService messageService;
-    private final User user;
-    private final BSFormatter formatter;
-    private Arbitrator arbitrator = new Arbitrator();
-    private boolean isEditMode;
-
-    private List<Locale> languageList = new ArrayList<>();
-
-    private List<Arbitrator.METHOD> methodList = new ArrayList<>();
-
-    private List<Arbitrator.ID_VERIFICATION> idVerificationList = new ArrayList<>();
-    private Arbitrator.ID_TYPE idType;
-
     @FXML Accordion accordion;
-    @FXML TitledPane profileTitledPane, paySecurityDepositTitledPane;
+    @FXML TextArea descriptionTextArea;
     @FXML Button saveProfileButton, paymentDoneButton;
     @FXML Label nameLabel, infoLabel, copyIcon, confirmationLabel;
     @FXML ComboBox<Locale> languageComboBox;
     @FXML ComboBox<Arbitrator.ID_TYPE> idTypeComboBox;
     @FXML ComboBox<Arbitrator.METHOD> methodsComboBox;
+    @FXML ConfidenceProgressIndicator progressIndicator;
     @FXML ComboBox<Arbitrator.ID_VERIFICATION> idVerificationsComboBox;
+    @FXML TitledPane profileTitledPane, paySecurityDepositTitledPane;
     @FXML TextField nameTextField, idTypeTextField, languagesTextField, maxTradeVolumeTextField,
             passiveServiceFeeTextField, minPassiveServiceFeeTextField, arbitrationFeeTextField,
             minArbitrationFeeTextField, methodsTextField, idVerificationsTextField, webPageTextField,
             securityDepositAddressTextField, balanceTextField;
-    @FXML TextArea descriptionTextArea;
-    @FXML ConfidenceProgressIndicator progressIndicator;
 
+    private boolean isEditMode;
+    private Arbitrator.ID_TYPE idType;
+
+    private List<Locale> languageList = new ArrayList<>();
+    private List<Arbitrator.METHOD> methodList = new ArrayList<>();
+    private List<Arbitrator.ID_VERIFICATION> idVerificationList = new ArrayList<>();
+    private Arbitrator arbitrator = new Arbitrator();
+
+    private final Persistence persistence;
+    private final WalletService walletService;
+    private final MessageService messageService;
+    private final User user;
+    private final BSFormatter formatter;
 
     @Inject
     private ArbitratorRegistrationView(Persistence persistence, WalletService walletService,
@@ -98,7 +96,6 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
         this.user = user;
         this.formatter = formatter;
     }
-
 
     @Override
     public void initialize() {
@@ -187,7 +184,6 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
         }
     }
 
-
     @FXML
     public void onSelectIDType() {
         idType = idTypeComboBox.getSelectionModel().getSelectedItem();
@@ -244,7 +240,6 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
         methodsTextField.setText("");
     }
 
-
     @FXML
     public void onAddIDVerification() {
         Arbitrator.ID_VERIFICATION idVerification = idVerificationsComboBox.getSelectionModel().getSelectedItem();
@@ -286,7 +281,6 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
     @FXML
     public void onPaymentDone() {
     }
-
 
     private void setupPaySecurityDepositScreen() {
         infoLabel.setText("You need to pay 2 x the max. trading volume as security deposit.\n\nThat payment will be " +

@@ -55,14 +55,10 @@ public class TradeView extends ActivatableView<TabPane, Void> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
-
-
     protected TradeView(ViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
-
-
 
     @Override
     protected void initialize() {
@@ -121,8 +117,6 @@ public class TradeView extends ActivatableView<TabPane, Void> {
         navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.TAKE_OFFER);
     }
 
-
-
     @Override
     protected View loadView(Navigation.Item navigationItem) {
         TabPane tabPane = root;
@@ -172,10 +166,6 @@ public class TradeView extends ActivatableView<TabPane, Void> {
         return null;
     }
 
-
-
-
-
     private void onCreateOfferViewRemoved() {
         createOfferView = null;
         offerBookView.enableCreateOfferButton();
@@ -190,6 +180,5 @@ public class TradeView extends ActivatableView<TabPane, Void> {
         // update the navigation state
         navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.OFFER_BOOK);
     }
-
 }
 

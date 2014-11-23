@@ -31,24 +31,20 @@ import javafx.scene.control.*;
 
 public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
+    @FXML Tab withdrawalTab, transactionsTab;
+
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
     private Tab currentTab;
 
-    @FXML Tab withdrawalTab, transactionsTab;
-
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-
-
 
     @Inject
     FundsView(ViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
-
-
 
     @Override
     public void initialize() {
@@ -83,8 +79,6 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.removeListener(navigationListener);
     }
 
-
-
     @Override
     protected View loadView(Navigation.Item navigationItem) {
         // we want to get activate/deactivate called, so we remove the old view on tab change
@@ -104,6 +98,5 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         root.getSelectionModel().select(currentTab);
         return (View) loaded.controller;
     }
-
 }
 

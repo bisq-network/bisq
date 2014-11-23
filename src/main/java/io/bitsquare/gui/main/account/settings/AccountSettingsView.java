@@ -46,15 +46,11 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     @FXML private VBox leftVBox;
     @FXML private AnchorPane content;
 
-
-
     @Inject
     private AccountSettingsView(ViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
-
-
 
     @Override
     public void initialize() {
@@ -111,8 +107,6 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         navigation.removeListener(listener);
     }
 
-
-
     @Override
     protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
@@ -122,8 +116,6 @@ public class AccountSettingsView extends ActivatableViewAndModel {
             ((Wizard.Step) child).hideWizardNavigation();
         return child;
     }
-
-
 
     private void selectMainMenuButton(Navigation.Item item) {
         switch (item) {
@@ -148,6 +140,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         }
     }
 }
+
 
 class MenuItem extends ToggleButton {
 

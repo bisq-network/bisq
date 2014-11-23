@@ -31,7 +31,6 @@ public abstract class ActivatableViewAndModel<R extends Node, M extends Activata
         this((M) Activatable.NOOP_INSTANCE);
     }
 
-
     @Override
     public final void activate() {
         model.activate();
@@ -49,5 +48,4 @@ public abstract class ActivatableViewAndModel<R extends Node, M extends Activata
 
     protected void doDeactivate() {
     }
-
 }

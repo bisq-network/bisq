@@ -32,26 +32,22 @@ import javafx.scene.control.*;
 
 public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
 
+    @FXML Tab offersTab, openTradesTab, closedTradesTab;
+
     private Tab currentTab;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
-
-    @FXML Tab offersTab, openTradesTab, closedTradesTab;
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final TradeManager tradeManager;
 
-
-
     @Inject
-    PortfolioView(ViewLoader viewLoader, Navigation navigation, TradeManager tradeManager) {
+    public PortfolioView(ViewLoader viewLoader, Navigation navigation, TradeManager tradeManager) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.tradeManager = tradeManager;
     }
-
-
 
     @Override
     public void initialize() {
@@ -89,8 +85,6 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
         navigation.removeListener(navigationListener);
         currentTab = null;
     }
-
-
 
     @Override
     protected View loadView(Navigation.Item navigationItem) {

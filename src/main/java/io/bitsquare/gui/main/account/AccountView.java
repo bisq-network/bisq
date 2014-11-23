@@ -30,14 +30,13 @@ import javafx.scene.control.*;
 
 public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
+    @FXML Tab accountSettingsTab, arbitratorSettingsTab;
+
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 
-    @FXML Tab accountSettingsTab, arbitratorSettingsTab;
-
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-
 
     @Inject
     private AccountView(AccountViewModel model, ViewLoader viewLoader, Navigation navigation) {
@@ -45,7 +44,6 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
-
 
     @Override
     public void initialize() {

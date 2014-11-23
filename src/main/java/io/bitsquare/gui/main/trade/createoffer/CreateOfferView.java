@@ -67,40 +67,34 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 // priceAmountHBox is too large after redesign as to be used as layoutReference.
 public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateOfferViewModel> {
 
-    private final Navigation navigation;
-    private final OverlayManager overlayManager;
-
-    private BooleanProperty tabIsClosable;
-
-    private boolean detailsVisible;
-    private boolean advancedScreenInited;
-
-    private ImageView expand;
-    private ImageView collapse;
-    private PopOver totalToPayInfoPopover;
-
-    @FXML InfoDisplay advancedInfoDisplay, fundsBoxInfoDisplay;
     @FXML ScrollPane scrollPane;
     @FXML ImageView imageView;
+    @FXML AddressTextField addressTextField;
+    @FXML BalanceTextField balanceTextField;
+    @FXML ProgressIndicator placeOfferSpinner;
+    @FXML InfoDisplay advancedInfoDisplay, fundsBoxInfoDisplay;
     @FXML TitledGroupBg priceAmountPane, payFundsPane, showDetailsPane;
-    @FXML Label buyLabel, addressLabel,
-            balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
-            bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel,
-            acceptedCountriesLabel, acceptedCountriesLabelIcon, acceptedLanguagesLabel, acceptedLanguagesLabelIcon,
-            acceptedArbitratorsLabel, acceptedArbitratorsLabelIcon, amountBtcLabel,
-            priceFiatLabel, volumeFiatLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel,
-            placeOfferSpinnerInfoLabel;
     @FXML Button showPaymentInfoScreenButton, showAdvancedSettingsButton, placeOfferButton;
-
     @FXML InputTextField amountTextField, minAmountTextField, priceTextField, volumeTextField;
     @FXML TextField acceptedArbitratorsTextField, totalToPayTextField, bankAccountTypeTextField,
             bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField,
             acceptedLanguagesTextField;
-    @FXML AddressTextField addressTextField;
-    @FXML BalanceTextField balanceTextField;
-    @FXML ProgressIndicator placeOfferSpinner;
+    @FXML Label buyLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel, bankAccountTypeLabel,
+            bankAccountCurrencyLabel, bankAccountCountyLabel, acceptedCountriesLabel, acceptedCountriesLabelIcon,
+            acceptedLanguagesLabel, acceptedLanguagesLabelIcon, acceptedArbitratorsLabel,
+            acceptedArbitratorsLabelIcon, amountBtcLabel, priceFiatLabel, volumeFiatLabel, minAmountBtcLabel,
+            priceDescriptionLabel, volumeDescriptionLabel,
+            placeOfferSpinnerInfoLabel;
 
+    private ImageView expand;
+    private ImageView collapse;
+    private PopOver totalToPayInfoPopover;
+    private BooleanProperty tabIsClosable;
+    private boolean detailsVisible;
+    private boolean advancedScreenInited;
 
+    private final Navigation navigation;
+    private final OverlayManager overlayManager;
 
     @Inject
     private CreateOfferView(CreateOfferViewModel model, Navigation navigation,
@@ -109,8 +103,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         this.navigation = navigation;
         this.overlayManager = overlayManager;
     }
-
-
 
     @Override
     protected void initialize() {
@@ -126,7 +118,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         tabIsClosable.unbind();
     }
 
-
     public void initWithData(Direction direction, Coin amount, Fiat price) {
         model.initWithData(direction, amount, price);
 
@@ -140,8 +131,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         this.tabIsClosable = tabIsClosable;
         tabIsClosable.bind(model.tabIsClosable);
     }
-
-
 
     @FXML
     void onPlaceOffer() {
@@ -230,8 +219,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         Help.openWindow(HelpId.CREATE_OFFER_ADVANCED);
     }
 
-
-
     private void openAccountSettings() {
         navigation.navigationTo(Navigation.Item.MAIN,
                 Navigation.Item.ACCOUNT,
@@ -245,8 +232,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO, Navigation.Item.OFFERS);
     }
-
-
 
     private void setupListeners() {
         scrollPane.setOnScroll(e -> InputTextField.hideErrorMessageDisplay());

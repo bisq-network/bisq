@@ -64,40 +64,32 @@ import org.controlsfx.dialog.Dialog;
 
 public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOfferViewModel> {
 
-    private final Navigation navigation;
-    private final OverlayManager overlayManager;
-    private BooleanProperty tabIsClosable;
+    @FXML ScrollPane scrollPane;
+    @FXML ImageView imageView;
+    @FXML InputTextField amountTextField;
+    @FXML AddressTextField addressTextField;
+    @FXML BalanceTextField balanceTextField;
+    @FXML ProgressIndicator takeOfferSpinner;
+    @FXML InfoDisplay advancedInfoDisplay, fundsBoxInfoDisplay;
+    @FXML TitledGroupBg priceAmountPane, payFundsPane, showDetailsPane;
+    @FXML Button showPaymentInfoScreenButton, showAdvancedSettingsButton, takeOfferButton;
+    @FXML TextField priceTextField, volumeTextField, acceptedArbitratorsTextField, totalToPayTextField,
+            bankAccountTypeTextField, bankAccountCurrencyTextField, bankAccountCountyTextField,
+            acceptedCountriesTextField, acceptedLanguagesTextField;
+    @FXML Label buyLabel, addressLabel, amountRangeTextField, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
+            bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel, acceptedCountriesLabel,
+            acceptedLanguagesLabel, acceptedArbitratorsLabel, amountBtcLabel, priceDescriptionLabel,
+            volumeDescriptionLabel, takeOfferSpinnerInfoLabel;
 
+    private BooleanProperty tabIsClosable;
     private boolean detailsVisible;
     private boolean advancedScreenInited;
-
     private ImageView expand;
     private ImageView collapse;
     private PopOver totalToPayInfoPopover;
 
-    @FXML InfoDisplay advancedInfoDisplay, fundsBoxInfoDisplay;
-    @FXML ScrollPane scrollPane;
-    @FXML ImageView imageView;
-    @FXML TitledGroupBg priceAmountPane, payFundsPane, showDetailsPane;
-    @FXML Label buyLabel, addressLabel, amountRangeTextField,
-            balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
-            bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel,
-            acceptedCountriesLabel, acceptedLanguagesLabel,
-            acceptedArbitratorsLabel, amountBtcLabel,
-            priceDescriptionLabel, volumeDescriptionLabel, takeOfferSpinnerInfoLabel;
-    @FXML Button showPaymentInfoScreenButton, showAdvancedSettingsButton, takeOfferButton;
-
-    @FXML InputTextField amountTextField;
-    @FXML TextField priceTextField, volumeTextField, acceptedArbitratorsTextField,
-            totalToPayTextField,
-            bankAccountTypeTextField,
-            bankAccountCurrencyTextField, bankAccountCountyTextField, acceptedCountriesTextField,
-            acceptedLanguagesTextField;
-    @FXML AddressTextField addressTextField;
-    @FXML BalanceTextField balanceTextField;
-    @FXML ProgressIndicator takeOfferSpinner;
-
-
+    private final Navigation navigation;
+    private final OverlayManager overlayManager;
 
     @Inject
     private TakeOfferView(TakeOfferViewModel model, Navigation navigation,
@@ -108,14 +100,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         this.overlayManager = overlayManager;
     }
 
-
-
     @Override
     public void initialize() {
         setupListeners();
         setupBindings();
     }
-
 
     public void initWithData(Direction direction, Coin amount, Offer offer) {
         model.initWithData(direction, amount, offer);
@@ -151,7 +140,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         this.tabIsClosable = tabIsClosable;
         tabIsClosable.bind(model.tabIsClosable);
     }
-
 
     @FXML
     void onTakeOffer() {
@@ -240,14 +228,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         Help.openWindow(HelpId.TAKE_OFFER_ADVANCED);
     }
 
-
-
     private void close() {
         TabPane tabPane = ((TabPane) (root.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
     }
-
-
 
     private void setupListeners() {
         scrollPane.setOnScroll(e -> InputTextField.hideErrorMessageDisplay());

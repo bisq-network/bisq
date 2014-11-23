@@ -53,35 +53,30 @@ import org.controlsfx.dialog.Dialog;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-/**
- * TODO: The advanced filters are not impl. yet
- * The restrictions handling is open from the concept and is only implemented for countries yet.
- */
-public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel> implements
-        ChildView<TradeView> {
+public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel>
+        implements ChildView<TradeView> {
+
+    @FXML CheckBox showOnlyMatchingCheckBox;
+    @FXML TableView<OfferBookListItem> table;
+    @FXML InputTextField volumeTextField, amountTextField, priceTextField;
+    @FXML Button createOfferButton, showAdvancedSettingsButton, openCountryFilterButton, openPaymentMethodsFilterButton;
+    @FXML TableColumn<OfferBookListItem, OfferBookListItem> priceColumn, amountColumn, volumeColumn, directionColumn,
+            countryColumn, bankAccountTypeColumn;
+    @FXML Label amountBtcLabel, priceDescriptionLabel, priceFiatLabel, volumeDescriptionLabel, volumeFiatLabel,
+            extendedButton1Label, extendedButton2Label, extendedCheckBoxLabel;
+
+    private TradeView parent;
+    private ImageView expand;
+    private ImageView collapse;
+
+    private boolean detailsVisible;
+    private boolean advancedScreenInited;
+
 
     private final Navigation navigation;
     private final OverlayManager overlayManager;
     private final OptionalBtcValidator optionalBtcValidator;
     private final OptionalFiatValidator optionalFiatValidator;
-
-    private boolean detailsVisible;
-    private boolean advancedScreenInited;
-
-    private ImageView expand;
-    private ImageView collapse;
-
-    @FXML CheckBox showOnlyMatchingCheckBox;
-    @FXML Label amountBtcLabel, priceDescriptionLabel, priceFiatLabel, volumeDescriptionLabel,
-            volumeFiatLabel, extendedButton1Label, extendedButton2Label, extendedCheckBoxLabel;
-    @FXML InputTextField volumeTextField, amountTextField, priceTextField;
-    @FXML TableView<OfferBookListItem> table;
-    @FXML Button createOfferButton, showAdvancedSettingsButton, openCountryFilterButton, openPaymentMethodsFilterButton;
-    @FXML TableColumn<OfferBookListItem, OfferBookListItem> priceColumn, amountColumn, volumeColumn,
-            directionColumn, countryColumn, bankAccountTypeColumn;
-
-    private TradeView parent;
-
 
     @Inject
     OfferBookView(OfferBookViewModel model,
@@ -96,8 +91,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         this.optionalBtcValidator = optionalBtcValidator;
         this.optionalFiatValidator = optionalFiatValidator;
     }
-
-
 
     @Override
     public void initialize() {
@@ -150,19 +143,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         removeBindings();
     }
 
-
-
     public void enableCreateOfferButton() {
         createOfferButton.setDisable(false);
     }
 
-
-
     public void setDirection(Direction direction) {
         model.setDirection(direction);
     }
-
-
 
     @FXML
     void createOffer() {
@@ -204,8 +191,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     void onOpenPaymentMethodsFilter() {
         Popups.openWarningPopup("Under construction", "This feature is not implemented yet.");
     }
-
-
 
     private void openSetupScreen() {
         overlayManager.blurContent();
@@ -309,8 +294,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         showOnlyMatchingCheckBox.setManaged(visible);
     }
 
-
-
     private void setupBindings() {
         amountTextField.textProperty().bindBidirectional(model.amount);
         priceTextField.textProperty().bindBidirectional(model.price);
@@ -362,12 +345,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 .getBankAccountType()));
     }
 
-
     public void setParent(TradeView parent) {
         this.parent = parent;
     }
-
-
 
     private void setAmountColumnCellFactory() {
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));

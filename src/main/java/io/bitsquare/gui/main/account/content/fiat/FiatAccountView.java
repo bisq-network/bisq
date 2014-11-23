@@ -60,18 +60,15 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
     @FXML ComboBox<BankAccountType> typesComboBox;
     @FXML ComboBox<Currency> currencyComboBox;
 
-    private final OverlayManager overlayManager;
-
     private Wizard parent;
 
+    private final OverlayManager overlayManager;
 
     @Inject
-    FiatAccountView(FiatAccountViewModel model, OverlayManager overlayManager) {
+    public FiatAccountView(FiatAccountViewModel model, OverlayManager overlayManager) {
         super(model);
-
         this.overlayManager = overlayManager;
     }
-
 
     @Override
     public void initialize() {
@@ -98,8 +95,6 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
         selectionComboBox.setItems(model.getAllBankAccounts());
     }
 
-
-
     @Override
     public void setParent(Wizard parent) {
         this.parent = parent;
@@ -109,7 +104,6 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
     public void hideWizardNavigation() {
         buttonsHBox.getChildren().remove(completedButton);
     }
-
 
     @FXML
     void onSelectAccount() {
@@ -259,7 +253,6 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
         removeBankAccountButton.disableProperty().bind(createBooleanBinding(() ->
                         (selectionComboBox.getSelectionModel().selectedIndexProperty().get() == -1),
                 selectionComboBox.getSelectionModel().selectedIndexProperty()));
-
     }
 }
 

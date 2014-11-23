@@ -32,25 +32,21 @@ import javafx.scene.control.*;
 
 public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
-    private final ViewLoader viewLoader;
-    private final Navigation navigation;
-    private Preferences preferences;
+    @FXML Tab preferencesTab, networkSettingsTab;
 
+    private Preferences preferences;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 
-    @FXML Tab preferencesTab, networkSettingsTab;
-
-
+    private final ViewLoader viewLoader;
+    private final Navigation navigation;
 
     @Inject
-    SettingsView(ViewLoader viewLoader, Navigation navigation, Preferences preferences) {
+    public SettingsView(ViewLoader viewLoader, Navigation navigation, Preferences preferences) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;
     }
-
-
 
     @Override
     public void initialize() {
@@ -91,8 +87,6 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
         navigation.removeListener(navigationListener);
     }
 
-
-
     @Override
     protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
@@ -111,6 +105,5 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
         root.getSelectionModel().select(tab);
         return (View) loaded.controller;
     }
-
 }
 

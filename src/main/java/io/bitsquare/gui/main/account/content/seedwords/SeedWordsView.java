@@ -30,19 +30,15 @@ import javafx.scene.layout.*;
 
 public class SeedWordsView extends InitializableView<GridPane, SeedWordsViewModel> implements Wizard.Step {
 
-    private Wizard parent;
-
     @FXML Button completedButton;
     @FXML TextArea seedWordsTextArea;
 
-
+    private Wizard parent;
 
     @Inject
     private SeedWordsView(SeedWordsViewModel model) {
         super(model);
     }
-
-
 
     @Override
     public void initialize() {
@@ -58,8 +54,6 @@ public class SeedWordsView extends InitializableView<GridPane, SeedWordsViewMode
     public void hideWizardNavigation() {
         root.getChildren().remove(completedButton);
     }
-
-
 
     @FXML
     private void onCompleted() {

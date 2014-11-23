@@ -55,17 +55,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class WithdrawalView extends ActivatableViewAndModel {
 
+    @FXML TableView<WithdrawalListItem> table;
+    @FXML Button addNewAddressButton;
+    @FXML TextField withdrawFromTextField, withdrawToTextField, amountTextField;
+    @FXML TableColumn<WithdrawalListItem, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
+            confidenceColumn;
+
     private final WalletService walletService;
     private final BSFormatter formatter;
     private final ObservableList<WithdrawalListItem> addressList = FXCollections.observableArrayList();
-
-    @FXML TableView<WithdrawalListItem> table;
-    @FXML TableColumn<WithdrawalListItem, WithdrawalListItem> labelColumn, addressColumn, balanceColumn, copyColumn,
-            confidenceColumn;
-    @FXML Button addNewAddressButton;
-    @FXML TextField withdrawFromTextField, withdrawToTextField, amountTextField;
-
-
 
     @Inject
     private WithdrawalView(WalletService walletService, BSFormatter formatter) {
@@ -119,8 +117,6 @@ public class WithdrawalView extends ActivatableViewAndModel {
         for (WithdrawalListItem item : addressList)
             item.cleanup();
     }
-
-
 
     @FXML
     public void onWithdraw() {
@@ -178,8 +174,6 @@ public class WithdrawalView extends ActivatableViewAndModel {
 
     }
 
-
-
     private void fillList() {
         addressList.clear();
         List<AddressEntry> addressEntryList = walletService.getAddressEntryList();
@@ -188,7 +182,6 @@ public class WithdrawalView extends ActivatableViewAndModel {
                 .map(anAddressEntryList -> new WithdrawalListItem(anAddressEntryList, walletService, formatter))
                 .collect(Collectors.toList()));
     }
-
 
     private void setLabelColumnCellFactory() {
         labelColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));

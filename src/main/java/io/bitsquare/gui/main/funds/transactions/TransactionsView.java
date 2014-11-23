@@ -38,23 +38,20 @@ import javafx.util.Callback;
 
 public class TransactionsView extends ActivatableViewAndModel {
 
-    private final WalletService walletService;
-    private final BSFormatter formatter;
-    private ObservableList<TransactionsListItem> transactionsListItems;
-
     @FXML TableView<TransactionsListItem> table;
     @FXML TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn,
             confidenceColumn;
 
+    private ObservableList<TransactionsListItem> transactionsListItems;
 
+    private final WalletService walletService;
+    private final BSFormatter formatter;
 
     @Inject
     private TransactionsView(WalletService walletService, BSFormatter formatter) {
         this.walletService = walletService;
         this.formatter = formatter;
     }
-
-
 
     @Override
     public void initialize() {
@@ -81,10 +78,6 @@ public class TransactionsView extends ActivatableViewAndModel {
             transactionsListItem.cleanup();
     }
 
-
-
-
-
     private void openTxDetails(TransactionsListItem item) {
         // TODO Open popup with details view
         log.debug("openTxDetails " + item);
@@ -92,8 +85,6 @@ public class TransactionsView extends ActivatableViewAndModel {
         Popups.openWarningPopup("Under construction",
                 "This will open a details popup but that is not implemented yet.");
     }
-
-
 
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
@@ -154,6 +145,5 @@ public class TransactionsView extends ActivatableViewAndModel {
                     }
                 });
     }
-
 }
 

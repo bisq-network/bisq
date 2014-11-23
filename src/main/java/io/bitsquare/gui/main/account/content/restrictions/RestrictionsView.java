@@ -53,12 +53,10 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
     @FXML ComboBox<Country> countryComboBox;
     @FXML Button completedButton, addAllEuroCountriesButton;
 
-    private final ViewLoader viewLoader;
-    private final Stage primaryStage;
-
     private Wizard parent;
 
-
+    private final ViewLoader viewLoader;
+    private final Stage primaryStage;
 
     @Inject
     private RestrictionsView(RestrictionsViewModel model, ViewLoader viewLoader, Stage primaryStage) {
@@ -66,8 +64,6 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
         this.viewLoader = viewLoader;
         this.primaryStage = primaryStage;
     }
-
-
 
     @Override
     public void initialize() {
@@ -85,7 +81,6 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
         arbitratorsListView.setItems(model.getArbitratorList());
     }
 
-
     @Override
     public void setParent(Wizard parent) {
         this.parent = parent;
@@ -95,8 +90,6 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
     public void hideWizardNavigation() {
         root.getChildren().remove(completedButton);
     }
-
-
 
     @FXML
     private void onAddLanguage() {
@@ -151,8 +144,6 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
         Help.openWindow(HelpId.SETUP_RESTRICTION_ARBITRATORS);
     }
 
-
-
     @Override
     protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
@@ -177,8 +168,6 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
 
         return (View) loaded.controller;
     }
-
-
 
     void updateArbitratorList() {
         model.updateArbitratorList();
@@ -333,23 +322,5 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
     private void removeArbitrator(Arbitrator arbitrator) {
         model.removeArbitrator(arbitrator);
     }
-
-
-
-   /* private void addCountry(Country country) {
-        if (!countryList.contains(country) && country != null) {
-            countryList.add(country);
-            settings.addAcceptedCountry(country);
-            saveSettings();
-        }
-    }*/
-
-  /* private void addLanguage(Locale locale) {
-        if (locale != null && !languageList.contains(locale)) {
-            languageList.add(locale);
-            settings.addAcceptedLanguageLocale(locale);
-        }
-    }*/
-
 }
 

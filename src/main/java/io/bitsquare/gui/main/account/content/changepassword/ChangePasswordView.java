@@ -28,12 +28,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class ChangePasswordView extends InitializableView<GridPane, ChangePasswordViewModel> implements Wizard.Step {
-
-    private static final Logger log = LoggerFactory.getLogger(ChangePasswordView.class);
 
     @FXML HBox buttonsHBox;
     @FXML Button saveButton, skipButton;
@@ -41,12 +36,10 @@ public class ChangePasswordView extends InitializableView<GridPane, ChangePasswo
 
     private Wizard parent;
 
-
     @Inject
     private ChangePasswordView(ChangePasswordViewModel model) {
         super(model);
     }
-
 
     @Override
     public void initialize() {
@@ -66,7 +59,6 @@ public class ChangePasswordView extends InitializableView<GridPane, ChangePasswo
         buttonsHBox.getChildren().remove(skipButton);
     }
 
-
     @FXML
     private void onSaved() {
         if (model.requestSavePassword())
@@ -84,6 +76,5 @@ public class ChangePasswordView extends InitializableView<GridPane, ChangePasswo
     private void onSkipped() {
         parent.nextStep(this);
     }
-
 }
 

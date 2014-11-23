@@ -32,18 +32,14 @@ import javafx.util.Callback;
 
 public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewModel> {
 
+    @FXML TableView<OfferListItem> table;
     @FXML TableColumn<OfferListItem, OfferListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, offerIdColumn, removeItemColumn;
-    @FXML TableView<OfferListItem> table;
-
-
 
     @Inject
-    private OffersView(OffersViewModel model) {
+    public OffersView(OffersViewModel model) {
         super(model);
     }
-
-
 
     @Override
     public void initialize() {
@@ -64,7 +60,6 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
         table.setItems(model.getList());
     }
 
-
     private void removeOffer(OfferListItem item) {
         model.removeOffer(item);
     }
@@ -78,8 +73,6 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
                         "Use that to identify your trading peer in the IRC chat room \n\n" +
                         "Later this will open a details popup but that is not implemented yet.");
     }
-
-
 
     private void setOfferIdColumnCellFactory() {
         offerIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
@@ -134,7 +127,6 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
                     }
                 });
     }
-
 
     private void setAmountColumnCellFactory() {
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
@@ -214,7 +206,6 @@ public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewMode
                     }
                 });
     }
-
 
     private void setRemoveColumnCellFactory() {
         removeItemColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));

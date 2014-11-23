@@ -36,29 +36,22 @@ import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
 
-/**
- * This UI is not cached as it is normally only needed once.
- */
 public class AccountSetupWizard extends ActivatableView implements Wizard {
-
-    private WizardItem seedWords, password, fiatAccount, restrictions, registration;
-    private Navigation.Listener listener;
 
     @FXML VBox leftVBox;
     @FXML AnchorPane content;
 
+    private WizardItem seedWords, password, fiatAccount, restrictions, registration;
+    private Navigation.Listener listener;
+
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-
-
 
     @Inject
     private AccountSetupWizard(ViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
-
-
 
     @Override
     public void initialize() {
@@ -130,7 +123,6 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
         navigation.removeListener(listener);
     }
 
-
     @Override
     public void nextStep(Step currentStep) {
         if (currentStep instanceof SeedWordsView) {
@@ -159,8 +151,6 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
         }
     }
 
-
-
     @Override
     protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
@@ -171,6 +161,7 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
         return child;
     }
 }
+
 
 class WizardItem extends HBox {
 

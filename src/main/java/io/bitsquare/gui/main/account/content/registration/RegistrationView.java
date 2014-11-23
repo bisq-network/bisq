@@ -43,8 +43,6 @@ import org.controlsfx.dialog.Dialog;
 
 public class RegistrationView extends InitializableView<GridPane, RegistrationViewModel> implements Wizard.Step {
 
-    private final OverlayManager overlayManager;
-
     @FXML TextField feeTextField;
     @FXML AddressTextField addressTextField;
     @FXML BalanceTextField balanceTextField;
@@ -54,15 +52,13 @@ public class RegistrationView extends InitializableView<GridPane, RegistrationVi
 
     private Wizard parent;
 
-
+    private final OverlayManager overlayManager;
 
     @Inject
     private RegistrationView(RegistrationViewModel model, OverlayManager overlayManager) {
         super(model);
         this.overlayManager = overlayManager;
     }
-
-
 
     @Override
     public void initialize() {
@@ -128,7 +124,6 @@ public class RegistrationView extends InitializableView<GridPane, RegistrationVi
         });
     }
 
-
     @Override
     public void setParent(Wizard parent) {
         this.parent = parent;
@@ -137,8 +132,6 @@ public class RegistrationView extends InitializableView<GridPane, RegistrationVi
     @Override
     public void hideWizardNavigation() {
     }
-
-
 
     @FXML
     private void onPayFee() {
@@ -149,8 +142,5 @@ public class RegistrationView extends InitializableView<GridPane, RegistrationVi
     private void onOpenHelp() {
         Help.openWindow(HelpId.PAY_ACCOUNT_FEE);
     }
-
-
-
 }
 

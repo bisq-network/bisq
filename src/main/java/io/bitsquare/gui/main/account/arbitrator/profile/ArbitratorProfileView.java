@@ -31,32 +31,21 @@ import javafx.scene.control.*;
 // TODO Arbitration is very basic yet
 public class ArbitratorProfileView extends AbstractView {
 
-    private final Preferences preferences;
+    @FXML Label nameLabel;
+    @FXML TextArea descriptionTextArea;
+    @FXML TextField nameTextField, languagesTextField, reputationTextField, feeTextField, methodsTextField,
+            passiveServiceFeeTextField, idVerificationsTextField, webPageTextField, maxTradeVolumeTextField;
 
+    private final Preferences preferences;
     private final Persistence persistence;
     private final BSFormatter formatter;
 
-
-    @FXML Label nameLabel;
-    @FXML TextField nameTextField, languagesTextField, reputationTextField,
-            feeTextField, methodsTextField, passiveServiceFeeTextField,
-            idVerificationsTextField, webPageTextField, maxTradeVolumeTextField;
-    @FXML TextArea descriptionTextArea;
-
-
     @Inject
-    public ArbitratorProfileView(Preferences preferences, Persistence persistence,
-                                 BSFormatter formatter) {
+    public ArbitratorProfileView(Preferences preferences, Persistence persistence, BSFormatter formatter) {
         this.preferences = preferences;
         this.persistence = persistence;
-
-        //  ApplicationPreferences persistedApplicationPreferences = (ApplicationPreferences) storage
-        // .read(settings.getClass().getName());
-        // settings.applyPersistedSettings(persistedApplicationPreferences);
         this.formatter = formatter;
     }
-
-
 
     public void applyArbitrator(Arbitrator arbitrator) {
         if (arbitrator != null && arbitrator.getIdType() != null) {
@@ -85,6 +74,5 @@ public class ArbitratorProfileView extends AbstractView {
             descriptionTextArea.setText(arbitrator.getDescription());
         }
     }
-
 }
 

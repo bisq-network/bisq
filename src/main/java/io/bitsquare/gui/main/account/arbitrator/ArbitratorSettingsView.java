@@ -33,12 +33,11 @@ import javafx.stage.Stage;
 // TODO Arbitration is very basic yet
 public class ArbitratorSettingsView extends AbstractView {
 
+    private ArbitratorRegistrationView arbitratorRegistrationView;
+
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final Stage primaryStage;
-
-    private ArbitratorRegistrationView arbitratorRegistrationView;
-
 
     @Inject
     private ArbitratorSettingsView(ViewLoader viewLoader, Navigation navigation, Stage primaryStage) {
@@ -46,8 +45,6 @@ public class ArbitratorSettingsView extends AbstractView {
         this.navigation = navigation;
         this.primaryStage = primaryStage;
     }
-
-
 
     @Override
     protected View loadView(Navigation.Item navigationItem) {
@@ -70,7 +67,6 @@ public class ArbitratorSettingsView extends AbstractView {
 
         return arbitratorRegistrationView;
     }
-
 
     @FXML
     public void onArbitratorRegistration() {

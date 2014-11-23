@@ -25,22 +25,15 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
-/**
- * This UI is not cached as it is normally only needed once.
- */
 public class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
 
     @FXML ComboBox<String> btcDenominationComboBox;
     @FXML CheckBox useAnimationsCheckBox, useEffectsCheckBox;
 
-
-
     @Inject
-    private PreferencesView(PreferencesViewModel model) {
+    public PreferencesView(PreferencesViewModel model) {
         super(model);
     }
-
-
 
     @Override
     public void doActivate() {
@@ -57,8 +50,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         useAnimationsCheckBox.selectedProperty().unbind();
         useEffectsCheckBox.selectedProperty().unbind();
     }
-
-
 
     @FXML
     void onSelectBtcDenomination() {

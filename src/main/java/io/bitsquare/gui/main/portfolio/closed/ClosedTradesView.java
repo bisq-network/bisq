@@ -30,18 +30,14 @@ import javafx.util.Callback;
 
 public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTradesViewModel> {
 
+    @FXML TableView<ClosedTradesListItem> table;
     @FXML TableColumn<ClosedTradesListItem, ClosedTradesListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, tradeIdColumn;
-    @FXML TableView<ClosedTradesListItem> table;
-
-
 
     @Inject
-    private ClosedTradesView(ClosedTradesViewModel model) {
+    public ClosedTradesView(ClosedTradesViewModel model) {
         super(model);
     }
-
-
 
     @Override
     public void initialize() {
@@ -61,16 +57,12 @@ public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTr
         table.setItems(model.getList());
     }
 
-
-
     private void openOfferDetails(ClosedTradesListItem item) {
         // TODO Open popup with details view
         log.debug("Trade details " + item);
         Popups.openWarningPopup("Under construction", "This will open a details " +
                 "popup but that is not implemented yet.");
     }
-
-
 
     private void setTradeIdColumnCellFactory() {
         tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));

@@ -23,18 +23,5 @@ import javax.inject.Inject;
 
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 public class MsgView extends AbstractView {
-
-
-    @Inject
-    private MsgView() {
-    }
-
-
-
-
-
-
-
-
 }
 

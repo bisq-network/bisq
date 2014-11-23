@@ -42,20 +42,19 @@ import javafx.stage.Stage;
 // TODO Arbitration is very basic yet
 public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implements ArbitratorListener {
 
-    private final ViewLoader viewLoader;
-    private final AccountSettings accountSettings;
-    private final Persistence persistence;
-    private final MessageService messageService;
-
-    private final List<Arbitrator> allArbitrators = new ArrayList<>();
+    @FXML Button prevButton, nextButton, selectButton, closeButton;
+    @FXML Pane arbitratorProfile;
 
     private Arbitrator currentArbitrator;
     private ArbitratorProfileView arbitratorProfileView;
     private int index = -1;
 
-    @FXML Button prevButton, nextButton, selectButton, closeButton;
-    @FXML Pane arbitratorProfile;
+    private final List<Arbitrator> allArbitrators = new ArrayList<>();
 
+    private final ViewLoader viewLoader;
+    private final AccountSettings accountSettings;
+    private final Persistence persistence;
+    private final MessageService messageService;
 
     @Inject
     public ArbitratorBrowserView(ViewLoader viewLoader, AccountSettings accountSettings, Persistence persistence,
@@ -65,7 +64,6 @@ public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implement
         this.persistence = persistence;
         this.messageService = messageService;
     }
-
 
     @Override
     public void initialize() {
