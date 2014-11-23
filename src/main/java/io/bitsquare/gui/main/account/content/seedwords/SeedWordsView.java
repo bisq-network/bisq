@@ -66,9 +66,8 @@ public class SeedWordsView extends InitializableView<SeedWordsViewModel> impleme
     }
 
     @Override
-    public void useSettingsContext(boolean useSettingsContext) {
-        if (useSettingsContext)
-            ((GridPane) root).getChildren().remove(completedButton);
+    public void hideWizardNavigation() {
+        ((GridPane) root).getChildren().remove(completedButton);
     }
 
 

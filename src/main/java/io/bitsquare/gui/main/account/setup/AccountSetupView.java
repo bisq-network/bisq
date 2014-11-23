@@ -184,10 +184,8 @@ public class AccountSetupView extends ActivatableView implements Wizard {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         content.getChildren().setAll(loaded.view);
         View child = (View) loaded.controller;
-        if (child instanceof Wizard.Step) {
+        if (child instanceof Wizard.Step)
             ((Step) child).setParent(this);
-            ((Step) child).useSettingsContext(false);
-        }
         return child;
     }
 }

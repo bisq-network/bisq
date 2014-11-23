@@ -21,6 +21,6 @@ public interface Wizard {
     void nextStep(View current);
 
     public interface Step extends ChildOf<Wizard> {
-        void useSettingsContext(boolean useSettingsContext);
+        void hideWizardNavigation();
     }
 }

@@ -147,7 +147,7 @@ public class RegistrationView extends InitializableView<RegistrationViewModel> i
     }
 
     @Override
-    public void useSettingsContext(boolean useSettingsContext) {
+    public void hideWizardNavigation() {
     }
 
 

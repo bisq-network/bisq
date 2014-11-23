@@ -103,9 +103,8 @@ public class RestrictionsView extends ActivatableViewAndModel<RestrictionsViewMo
     }
 
     @Override
-    public void useSettingsContext(boolean useSettingsContext) {
-        if (useSettingsContext)
-            ((GridPane) root).getChildren().remove(completedButton);
+    public void hideWizardNavigation() {
+        ((GridPane) root).getChildren().remove(completedButton);
     }
 
 

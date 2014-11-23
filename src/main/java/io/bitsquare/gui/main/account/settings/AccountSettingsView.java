@@ -21,6 +21,7 @@ import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
+import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.util.Colors;
 
 import javax.inject.Inject;
@@ -131,6 +132,8 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         content.getChildren().setAll(loaded.view);
         View child = (View) loaded.controller;
+        if (child instanceof Wizard.Step)
+            ((Wizard.Step) child).hideWizardNavigation();
         return child;
     }
 

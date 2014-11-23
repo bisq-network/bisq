@@ -75,9 +75,8 @@ public class PasswordView extends InitializableView<PasswordViewModel> implement
     }
 
     @Override
-    public void useSettingsContext(boolean useSettingsContext) {
-        if (useSettingsContext)
-            buttonsHBox.getChildren().remove(skipButton);
+    public void hideWizardNavigation() {
+        buttonsHBox.getChildren().remove(skipButton);
     }
 
 

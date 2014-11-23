@@ -119,9 +119,8 @@ public class FiatAccountView extends ActivatableViewAndModel<FiatAccountViewMode
     }
 
     @Override
-    public void useSettingsContext(boolean useSettingsContext) {
-        if (useSettingsContext)
-            buttonsHBox.getChildren().remove(completedButton);
+    public void hideWizardNavigation() {
+        buttonsHBox.getChildren().remove(completedButton);
     }
 
 

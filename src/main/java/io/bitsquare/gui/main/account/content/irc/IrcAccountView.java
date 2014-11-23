@@ -150,7 +150,7 @@ public class IrcAccountView extends ActivatableViewAndModel<IrcAccountViewModel>
     }
 
     @Override
-    public void useSettingsContext(boolean useSettingsContext) {
+    public void hideWizardNavigation() {
     }
 
 
