@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account;
 
-import io.bitsquare.gui.ActivatableViewAndModel;
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
@@ -28,21 +28,20 @@ import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-public class AccountView extends ActivatableViewAndModel {
+public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
 
     @FXML Tab accountSettingsTab, arbitratorSettingsTab;
 
-    private final AccountViewModel model;
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
 
     @Inject
     private AccountView(AccountViewModel model, ViewLoader viewLoader, Navigation navigation) {
-        this.model = model;
+        super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
@@ -69,9 +68,9 @@ public class AccountView extends ActivatableViewAndModel {
     }
 
     @Override
-    public void doActivate() {
+    public void activate() {
         navigation.addListener(navigationListener);
-        ((TabPane) root).getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
+        root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
         if (navigation.getCurrentItems().length == 2 &&
                 navigation.getCurrentItems()[1] == Navigation.Item.ACCOUNT) {
@@ -80,7 +79,7 @@ public class AccountView extends ActivatableViewAndModel {
                         Navigation.Item.ACCOUNT_SETUP);
             }
             else {
-                if (((TabPane) root).getSelectionModel().getSelectedItem() == accountSettingsTab)
+                if (root.getSelectionModel().getSelectedItem() == accountSettingsTab)
                     navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
                             Navigation.Item.ACCOUNT_SETTINGS);
                 else
@@ -91,9 +90,9 @@ public class AccountView extends ActivatableViewAndModel {
     }
 
     @Override
-    public void doDeactivate() {
+    public void deactivate() {
         navigation.removeListener(navigationListener);
-        ((TabPane) root).getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
+        root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
     }
 
 
@@ -123,7 +122,7 @@ public class AccountView extends ActivatableViewAndModel {
         arbitratorSettingsTab.setDisable(true);
 
         tab.setContent(loaded.view);
-        ((TabPane) root).getSelectionModel().select(tab);
+        root.getSelectionModel().select(tab);
         return (View) loaded.controller;
     }
 }

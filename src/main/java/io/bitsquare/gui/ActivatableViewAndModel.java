@@ -17,9 +17,11 @@
 
 package io.bitsquare.gui;
 
+import javafx.scene.*;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public abstract class ActivatableViewAndModel<M extends Activatable> extends ActivatableView<M> {
+public abstract class ActivatableViewAndModel<R extends Parent, M extends Activatable> extends ActivatableView<R, M> {
 
     public ActivatableViewAndModel(M model) {
         super(checkNotNull(model, "Model must not be null"));

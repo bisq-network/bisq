@@ -38,7 +38,7 @@ import javafx.collections.ListChangeListener;
 import javafx.scene.*;
 import javafx.scene.control.*;
 
-public class TradeView extends ActivatableView {
+public class TradeView extends ActivatableView<TabPane, Void> {
 
     private OfferBookView offerBookView;
     private CreateOfferView createOfferView;
@@ -81,7 +81,7 @@ public class TradeView extends ActivatableView {
         // We need to remove open validation error popups
         // Platform.runLater needed as focus-out event is called after selectedIndexProperty changed
         // TODO Find a way to do that in the InputTextField directly, but a tab change does not trigger any event...
-        TabPane tabPane = (TabPane) root;
+        TabPane tabPane = root;
         tabPane.getSelectionModel().selectedIndexProperty()
                 .addListener((observableValue, oldValue, newValue) ->
                         Platform.runLater(InputTextField::hideErrorMessageDisplay));
@@ -125,7 +125,7 @@ public class TradeView extends ActivatableView {
 
     @Override
     protected View loadView(Navigation.Item navigationItem) {
-        TabPane tabPane = (TabPane) root;
+        TabPane tabPane = root;
         if (navigationItem == Navigation.Item.OFFER_BOOK && offerBookView == null) {
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
             ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);

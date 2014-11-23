@@ -27,9 +27,10 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
+import javafx.scene.layout.*;
 import javafx.util.Callback;
 
-public class OffersView extends ActivatableViewAndModel<OffersViewModel> {
+public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewModel> {
 
     @FXML TableColumn<OfferListItem, OfferListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, offerIdColumn, removeItemColumn;

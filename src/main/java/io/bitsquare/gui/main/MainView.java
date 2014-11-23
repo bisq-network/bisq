@@ -44,7 +44,7 @@ import javafx.scene.text.*;
 import static io.bitsquare.gui.Navigation.Item.*;
 import static javafx.scene.layout.AnchorPane.*;
 
-public class MainView extends ActivatableView<MainViewModel> {
+public class MainView extends ActivatableView<StackPane, MainViewModel> {
 
     public static final String TITLE_KEY = "view.title";
 
@@ -140,7 +140,7 @@ public class MainView extends ActivatableView<MainViewModel> {
 
         VBox splashScreen = createSplashScreen();
 
-        ((StackPane) root).getChildren().addAll(baseApplicationContainer, splashScreen);
+        root.getChildren().addAll(baseApplicationContainer, splashScreen);
 
         Platform.runLater(
                 () -> model.initBackend().subscribe(

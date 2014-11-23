@@ -17,7 +17,9 @@
 
 package io.bitsquare.gui;
 
-public abstract class ActivatableView<M> extends InitializableView<M> {
+import javafx.scene.*;
+
+public abstract class ActivatableView<R extends Parent, M> extends InitializableView<R, M> {
 
     public ActivatableView(M model) {
         super(model);

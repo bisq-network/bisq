@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio;
 
+import io.bitsquare.gui.Activatable;
 import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
@@ -29,7 +30,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-public class PortfolioView extends ActivatableViewAndModel {
+public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     private Tab currentTab;
     private Navigation.Listener navigationListener;
@@ -73,7 +74,7 @@ public class PortfolioView extends ActivatableViewAndModel {
 
     @Override
     public void doActivate() {
-        ((TabPane) root).getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
+        root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
         if (tradeManager.getPendingTrades().size() == 0)
@@ -84,7 +85,7 @@ public class PortfolioView extends ActivatableViewAndModel {
 
     @Override
     public void doDeactivate() {
-        ((TabPane) root).getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
+        root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
         navigation.removeListener(navigationListener);
         currentTab = null;
     }
@@ -111,7 +112,7 @@ public class PortfolioView extends ActivatableViewAndModel {
                 break;
         }
         currentTab.setContent(loaded.view);
-        ((TabPane) root).getSelectionModel().select(currentTab);
+        root.getSelectionModel().select(currentTab);
         return (View) loaded.controller;
     }
 }

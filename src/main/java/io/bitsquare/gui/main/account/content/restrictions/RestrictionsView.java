@@ -43,7 +43,7 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
-public class RestrictionsView extends ActivatableViewAndModel<RestrictionsViewModel> implements Wizard.Step {
+public class RestrictionsView extends ActivatableViewAndModel<GridPane, RestrictionsViewModel> implements Wizard.Step {
 
     @FXML ListView<Locale> languagesListView;
     @FXML ListView<Country> countriesListView;
@@ -93,7 +93,7 @@ public class RestrictionsView extends ActivatableViewAndModel<RestrictionsViewMo
 
     @Override
     public void hideWizardNavigation() {
-        ((GridPane) root).getChildren().remove(completedButton);
+        root.getChildren().remove(completedButton);
     }
 
 

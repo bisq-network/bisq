@@ -52,7 +52,7 @@ import javafx.scene.layout.*;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
-public class PendingTradesView extends ActivatableViewAndModel<PendingTradesViewModel> {
+public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, PendingTradesViewModel> {
 
     private ChangeListener<PendingTradesListItem> selectedItemChangeListener;
     private ListChangeListener<PendingTradesListItem> listChangeListener;

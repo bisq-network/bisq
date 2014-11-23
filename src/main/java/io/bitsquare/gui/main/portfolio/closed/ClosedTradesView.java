@@ -25,9 +25,10 @@ import javax.inject.Inject;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.util.Callback;
 
-public class ClosedTradesView extends ActivatableViewAndModel<ClosedTradesViewModel> {
+public class ClosedTradesView extends ActivatableViewAndModel<GridPane, ClosedTradesViewModel> {
 
     @FXML TableColumn<ClosedTradesListItem, ClosedTradesListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, dateColumn, tradeIdColumn;

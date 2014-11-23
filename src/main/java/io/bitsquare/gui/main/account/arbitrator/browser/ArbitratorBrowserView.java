@@ -40,7 +40,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 // TODO Arbitration is very basic yet
-public class ArbitratorBrowserView extends ActivatableView implements ArbitratorListener {
+public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implements ArbitratorListener {
 
     private final ViewLoader viewLoader;
     private final AccountSettings accountSettings;
@@ -95,7 +95,7 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
     @Override
     protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
-        ((Pane) root).getChildren().set(0, loaded.view);
+        root.getChildren().set(0, loaded.view);
         return arbitratorProfileView = (ArbitratorProfileView) loaded.controller;
     }
 

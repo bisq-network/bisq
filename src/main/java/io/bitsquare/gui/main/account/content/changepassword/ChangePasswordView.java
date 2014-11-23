@@ -31,7 +31,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ChangePasswordView extends InitializableView<ChangePasswordViewModel> implements Wizard.Step {
+public class ChangePasswordView extends InitializableView<GridPane, ChangePasswordViewModel> implements Wizard.Step {
 
     private static final Logger log = LoggerFactory.getLogger(ChangePasswordView.class);
 

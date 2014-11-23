@@ -57,7 +57,8 @@ import static javafx.beans.binding.Bindings.createStringBinding;
  * TODO: The advanced filters are not impl. yet
  * The restrictions handling is open from the concept and is only implemented for countries yet.
  */
-public class OfferBookView extends ActivatableViewAndModel<OfferBookViewModel> implements ChildView<TradeView> {
+public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel> implements
+        ChildView<TradeView> {
 
     private final Navigation navigation;
     private final OverlayManager overlayManager;
@@ -287,7 +288,7 @@ public class OfferBookView extends ActivatableViewAndModel<OfferBookViewModel> i
     }
 
     private void toggleDetailsScreen(boolean visible) {
-        ((GridPane) root).setVgap(visible ? 5 : 0);
+        root.setVgap(visible ? 5 : 0);
 
         extendedButton1Label.setVisible(visible);
         extendedButton1Label.setManaged(visible);

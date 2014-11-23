@@ -23,12 +23,12 @@ import javafx.scene.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractView<M> implements View {
+public abstract class AbstractView<R extends Parent, M> implements View {
 
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
+    protected @FXML R root;
     protected final M model;
-    protected @FXML Parent root;
 
     public AbstractView(M model) {
         this.model = model;

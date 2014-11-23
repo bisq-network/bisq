@@ -48,6 +48,7 @@ import javax.inject.Inject;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
@@ -55,7 +56,7 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 // TODO Arbitration is very basic yet
-public class ArbitratorRegistrationView extends ActivatableView {
+public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void> {
 
     private final Persistence persistence;
     private final WalletService walletService;

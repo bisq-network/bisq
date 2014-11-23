@@ -62,7 +62,7 @@ import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 
-public class TakeOfferView extends ActivatableViewAndModel<TakeOfferViewModel> {
+public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOfferViewModel> {
 
     private final Navigation navigation;
     private final OverlayManager overlayManager;

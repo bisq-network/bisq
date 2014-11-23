@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 /*
 Just temporary for giving the user a possibility to test the app via simulating the bank transfer in a IRC chat.
  */
-public class IrcAccountView extends ActivatableViewAndModel<IrcAccountViewModel> implements Wizard.Step {
+public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccountViewModel> implements Wizard.Step {
 
     private static final Logger log = LoggerFactory.getLogger(IrcAccountView.class);
 

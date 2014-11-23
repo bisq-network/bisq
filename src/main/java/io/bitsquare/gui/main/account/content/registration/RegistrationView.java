@@ -35,12 +35,13 @@ import javax.inject.Inject;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
 
 import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 
-public class RegistrationView extends InitializableView<RegistrationViewModel> implements Wizard.Step {
+public class RegistrationView extends InitializableView<GridPane, RegistrationViewModel> implements Wizard.Step {
 
     private final OverlayManager overlayManager;
 
@@ -110,8 +111,7 @@ public class RegistrationView extends InitializableView<RegistrationViewModel> i
                     public void handle(ActionEvent actionEvent) {
                         getProperties().put("type", "CLOSE");
                         try {
-                            if (parent instanceof Wizard)
-                                ((Wizard) parent).nextStep(RegistrationView.this);
+                            parent.nextStep(RegistrationView.this);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

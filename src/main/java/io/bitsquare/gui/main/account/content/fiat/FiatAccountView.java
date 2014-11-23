@@ -21,9 +21,9 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.OverlayManager;
+import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -47,14 +47,9 @@ import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
-public class FiatAccountView extends ActivatableViewAndModel<FiatAccountViewModel> implements Wizard.Step {
-
-    private static final Logger log = LoggerFactory.getLogger(FiatAccountView.class);
+public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccountViewModel> implements Wizard.Step {
 
     @FXML HBox buttonsHBox;
     @FXML ComboBox<Region> regionComboBox;

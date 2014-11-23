@@ -28,7 +28,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
-public class SeedWordsView extends InitializableView<SeedWordsViewModel> implements Wizard.Step {
+public class SeedWordsView extends InitializableView<GridPane, SeedWordsViewModel> implements Wizard.Step {
 
     private Wizard parent;
 
@@ -56,7 +56,7 @@ public class SeedWordsView extends InitializableView<SeedWordsViewModel> impleme
 
     @Override
     public void hideWizardNavigation() {
-        ((GridPane) root).getChildren().remove(completedButton);
+        root.getChildren().remove(completedButton);
     }
 
 

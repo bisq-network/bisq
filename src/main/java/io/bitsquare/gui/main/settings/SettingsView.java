@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.settings;
 
+import io.bitsquare.gui.Activatable;
 import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
@@ -29,7 +30,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-public class SettingsView extends ActivatableViewAndModel {
+public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
@@ -71,10 +72,10 @@ public class SettingsView extends ActivatableViewAndModel {
 
     @Override
     public void doActivate() {
-        ((TabPane) root).getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
+        root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
-        if (((TabPane) root).getSelectionModel().getSelectedItem() == preferencesTab)
+        if (root.getSelectionModel().getSelectedItem() == preferencesTab)
             navigation.navigationTo(Navigation.Item.MAIN,
                     Navigation.Item.SETTINGS,
                     Navigation.Item.PREFERENCES);
@@ -86,7 +87,7 @@ public class SettingsView extends ActivatableViewAndModel {
 
     @Override
     public void doDeactivate() {
-        ((TabPane) root).getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
+        root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
         navigation.removeListener(navigationListener);
     }
 
@@ -107,7 +108,7 @@ public class SettingsView extends ActivatableViewAndModel {
                 throw new IllegalArgumentException("navigation item of type " + navigationItem + " is not allowed");
         }
         tab.setContent(loaded.view);
-        ((TabPane) root).getSelectionModel().select(tab);
+        root.getSelectionModel().select(tab);
         return (View) loaded.controller;
     }
 
