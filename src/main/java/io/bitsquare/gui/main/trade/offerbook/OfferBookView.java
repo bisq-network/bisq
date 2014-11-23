@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.trade.offerbook;
 
 import io.bitsquare.gui.ActivatableViewAndModel;
-import io.bitsquare.gui.ChildOf;
+import io.bitsquare.gui.ChildView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InputTextField;
@@ -60,7 +60,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
  * TODO: The advanced filters are not impl. yet
  * The restrictions handling is open from the concept and is only implemented for countries yet.
  */
-public class OfferBookView extends ActivatableViewAndModel<OfferBookViewModel> implements ChildOf<TradeView> {
+public class OfferBookView extends ActivatableViewAndModel<OfferBookViewModel> implements ChildView<TradeView> {
     private static final Logger log = LoggerFactory.getLogger(OfferBookView.class);
 
     private final Navigation navigation;

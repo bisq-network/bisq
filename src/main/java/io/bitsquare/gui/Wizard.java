@@ -20,7 +20,7 @@ package io.bitsquare.gui;
 public interface Wizard extends View {
     void nextStep(Step currentStep);
 
-    public interface Step extends ChildOf<Wizard> {
+    public interface Step extends ChildView<Wizard> {
         void hideWizardNavigation();
     }
 }

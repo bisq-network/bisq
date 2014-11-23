@@ -17,6 +17,6 @@
 
 package io.bitsquare.gui;
 
-public interface ChildOf<Parent extends View> extends View {
+public interface ChildView<Parent extends View> extends View {
     void setParent(Parent parent);
 }
