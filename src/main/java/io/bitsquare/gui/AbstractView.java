@@ -23,7 +23,7 @@ import javafx.scene.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractView<R extends Parent, M> implements View {
+public abstract class AbstractView<R extends Node, M> implements View {
 
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 

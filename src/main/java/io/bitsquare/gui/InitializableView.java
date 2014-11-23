@@ -24,7 +24,7 @@ import java.util.ResourceBundle;
 import javafx.fxml.Initializable;
 import javafx.scene.*;
 
-public abstract class InitializableView<R extends Parent, M> extends AbstractView<R, M> implements Initializable {
+public abstract class InitializableView<R extends Node, M> extends AbstractView<R, M> implements Initializable {
 
     public InitializableView(M model) {
         super(model);

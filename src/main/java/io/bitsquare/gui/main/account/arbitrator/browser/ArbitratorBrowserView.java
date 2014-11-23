@@ -82,7 +82,7 @@ public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implement
             final Node view = loader.load();
             arbitratorProfileView = loader.getController();
             arbitratorProfileView.setParentController(this);
-            ((Pane) root).getChildren().set(0, view);
+            root.getChildren().set(0, view);
 
             return arbitratorProfileView;
         } catch (IOException e) {
