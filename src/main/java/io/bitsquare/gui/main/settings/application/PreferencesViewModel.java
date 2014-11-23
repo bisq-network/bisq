@@ -19,8 +19,8 @@ package io.bitsquare.gui.main.settings.application;
 
 import com.google.inject.Inject;
 
-import viewfx.model.support.ActivatableWithDelegate;
 import viewfx.model.ViewModel;
+import viewfx.model.support.ActivatableWithDelegate;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;

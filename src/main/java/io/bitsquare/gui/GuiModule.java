@@ -31,6 +31,8 @@ import io.bitsquare.gui.util.validation.PasswordValidator;
 
 import com.google.inject.name.Names;
 
+import viewfx.view.support.guice.GuiceViewFactory;
+
 import javafx.stage.Stage;
 
 import org.springframework.core.env.Environment;
@@ -46,7 +48,7 @@ public class GuiModule extends BitsquareModule {
 
     @Override
     protected void configure() {
-        bind(GuiceControllerFactory.class).asEagerSingleton();
+        bind(GuiceViewFactory.class).asEagerSingleton();
         bind(ViewLoader.class).asEagerSingleton();
 
         bind(OfferBook.class).asEagerSingleton();

@@ -30,9 +30,9 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-import viewfx.view.support.ActivatableViewAndModel;
 import viewfx.view.View;
 import viewfx.view.Wizard;
+import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.fxml.FXML;
 import javafx.scene.*;

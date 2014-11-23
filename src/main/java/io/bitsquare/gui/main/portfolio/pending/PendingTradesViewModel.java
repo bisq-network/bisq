@@ -30,8 +30,8 @@ import com.google.inject.Inject;
 
 import java.util.Date;
 
-import viewfx.model.support.ActivatableWithDelegate;
 import viewfx.model.ViewModel;
+import viewfx.model.support.ActivatableWithDelegate;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;

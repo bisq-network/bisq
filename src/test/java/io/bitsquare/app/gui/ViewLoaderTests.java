@@ -19,7 +19,6 @@ package io.bitsquare.app.gui;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.app.BitsquareEnvironment;
-import io.bitsquare.gui.GuiceControllerFactory;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewLoader;
 
@@ -27,6 +26,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import java.net.MalformedURLException;
+
+import viewfx.view.support.guice.GuiceViewFactory;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -61,14 +62,14 @@ public class ViewLoaderTests {
             Thread.sleep(10);
     }
 
-    private GuiceControllerFactory controllerFactory;
+    private GuiceViewFactory controllerFactory;
 
     @Before
     public void setUp() {
         OptionParser parser = new OptionParser();
         BitsquareEnvironment env = new BitsquareEnvironment(parser.parse(new String[]{}));
         Injector injector = Guice.createInjector(new BitsquareAppModule(env, TestApp.primaryStage));
-        controllerFactory = injector.getInstance(GuiceControllerFactory.class);
+        controllerFactory = injector.getInstance(GuiceViewFactory.class);
         controllerFactory.setInjector(injector);
     }
 

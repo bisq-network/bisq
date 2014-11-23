@@ -19,7 +19,6 @@ package io.bitsquare.app.gui;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.account.AccountSettings;
-import io.bitsquare.gui.GuiceControllerFactory;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.ViewLoader;
@@ -41,6 +40,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import viewfx.view.View;
+import viewfx.view.support.guice.GuiceViewFactory;
 
 import javafx.application.Application;
 import javafx.scene.*;
@@ -66,7 +66,7 @@ public class BitsquareApp extends Application {
     public void start(Stage primaryStage) throws IOException {
         bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
         injector = Guice.createInjector(bitsquareAppModule);
-        injector.getInstance(GuiceControllerFactory.class).setInjector(injector);
+        injector.getInstance(GuiceViewFactory.class).setInjector(injector);
 
 
         // route uncaught exceptions to a user-facing dialog

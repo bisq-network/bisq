@@ -17,6 +17,7 @@
 
 package viewfx.view;
 
-public interface ChildView<Parent extends View> extends View {
-    void setParent(Parent parent);
+import javafx.util.Callback;
+
+public interface ViewFactory extends Callback<Class<?>, Object> {
 }

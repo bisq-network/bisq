@@ -25,8 +25,8 @@ import com.google.inject.Inject;
 
 import java.util.Locale;
 
-import viewfx.model.support.ActivatableWithDelegate;
 import viewfx.model.ViewModel;
+import viewfx.model.support.ActivatableWithDelegate;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

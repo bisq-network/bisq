@@ -15,23 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui;
+package viewfx.view.support.guice;
 
 import com.google.common.base.Preconditions;
 
 import com.google.inject.Injector;
 
-import javafx.util.Callback;
+import viewfx.view.ViewFactory;
 
 /**
- * A JavaFX controller factory for constructing controllers via Guice DI. To
+ * A JavaFX controller factory for constructing viewfx Views using Guice. To
  * install this in the {@link javafx.fxml.FXMLLoader}, pass it as a parameter to
  * {@link javafx.fxml.FXMLLoader#setControllerFactory(javafx.util.Callback)}.
  * <p>
  * Once set, make sure you do <b>not</b> use the static methods on
  * {@link javafx.fxml.FXMLLoader} when creating your JavaFX node.
  */
-public class GuiceControllerFactory implements Callback<Class<?>, Object> {
+public class GuiceViewFactory implements ViewFactory {
 
     private Injector injector;
 

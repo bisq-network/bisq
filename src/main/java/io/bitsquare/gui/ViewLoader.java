@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import viewfx.view.View;
+import viewfx.view.support.guice.GuiceViewFactory;
 
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.JavaFXBuilderFactory;
@@ -40,10 +41,10 @@ public class ViewLoader {
 
     private final Map<URL, View> cache = new HashMap<>();
     private final BuilderFactory builderFactory = new JavaFXBuilderFactory();
-    private final GuiceControllerFactory controllerFactory;
+    private final GuiceViewFactory controllerFactory;
 
     @Inject
-    public ViewLoader(GuiceControllerFactory controllerFactory) {
+    public ViewLoader(GuiceViewFactory controllerFactory) {
         this.controllerFactory = controllerFactory;
     }
 

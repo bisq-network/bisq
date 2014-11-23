@@ -30,8 +30,8 @@ import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
-import viewfx.model.support.ActivatableWithDelegate;
 import viewfx.model.ViewModel;
+import viewfx.model.support.ActivatableWithDelegate;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;

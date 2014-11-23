@@ -31,8 +31,8 @@ import org.bitcoinj.utils.Fiat;
 
 import java.util.List;
 
-import viewfx.view.support.ActivatableView;
 import viewfx.view.View;
+import viewfx.view.support.ActivatableView;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;

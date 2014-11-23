@@ -30,8 +30,8 @@ import org.bitcoinj.utils.Fiat;
 
 import com.google.inject.Inject;
 
-import viewfx.model.support.ActivatableWithDelegate;
 import viewfx.model.ViewModel;
+import viewfx.model.support.ActivatableWithDelegate;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;

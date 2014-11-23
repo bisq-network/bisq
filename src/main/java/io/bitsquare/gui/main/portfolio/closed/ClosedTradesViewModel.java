@@ -21,8 +21,8 @@ import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.inject.Inject;
 
-import viewfx.model.support.ActivatableWithDelegate;
 import viewfx.model.ViewModel;
+import viewfx.model.support.ActivatableWithDelegate;
 
 import javafx.collections.ObservableList;
 
