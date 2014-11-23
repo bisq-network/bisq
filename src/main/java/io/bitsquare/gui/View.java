@@ -33,7 +33,7 @@ public class View<M> {
     protected final M model;
     protected @FXML Parent root;
 
-    protected Initializable childController;
+    protected View childController;
     protected Initializable parent;
 
 
@@ -49,6 +49,7 @@ public class View<M> {
         this.parent = parent;
     }
 
-    protected Initializable loadView(Navigation.Item navigationItem) {
+    protected View loadView(Navigation.Item navigationItem) {
+        throw new UnsupportedOperationException("loadView not implemented");
     }
 }

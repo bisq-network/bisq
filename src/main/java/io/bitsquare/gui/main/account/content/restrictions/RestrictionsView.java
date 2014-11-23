@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.account.content.restrictions;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
@@ -170,7 +171,7 @@ public class RestrictionsView extends ActivatableViewAndModel<RestrictionsViewMo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected Initializable loadView(Navigation.Item navigationItem) {
+    protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
 
         final Stage stage = new Stage();
@@ -191,7 +192,7 @@ public class RestrictionsView extends ActivatableViewAndModel<RestrictionsViewMo
         });
         stage.show();
 
-        return loaded.controller;
+        return (View) loaded.controller;
     }
 
 

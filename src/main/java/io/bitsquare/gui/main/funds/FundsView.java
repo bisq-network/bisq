@@ -95,9 +95,7 @@ public class FundsView extends ActivatableViewAndModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected Initializable loadView(Navigation.Item navigationItem) {
-        super.loadView(navigationItem);
-
+    protected View loadView(Navigation.Item navigationItem) {
         // we want to get activate/deactivate called, so we remove the old view on tab change
         if (currentTab != null)
             currentTab.setContent(null);
@@ -113,8 +111,8 @@ public class FundsView extends ActivatableViewAndModel {
         }
         currentTab.setContent(loaded.view);
         ((TabPane) root).getSelectionModel().select(currentTab);
-        Initializable childController = loaded.controller;
-        ((View) childController).setParent(this);
+        View childController = (View) loaded.controller;
+        childController.setParent(this);
 
         return childController;
     }

@@ -183,11 +183,11 @@ public class AccountSetupView extends ActivatableView implements MultiStepNaviga
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected Initializable loadView(Navigation.Item navigationItem) {
+    protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         content.getChildren().setAll(loaded.view);
-        childController = loaded.controller;
-        ((View) childController).setParent(this);
+        childController = (View) loaded.controller;
+        childController.setParent(this);
         ((ContextAware) childController).useSettingsContext(false);
         return childController;
     }
@@ -196,7 +196,7 @@ public class AccountSetupView extends ActivatableView implements MultiStepNaviga
 class WizardItem extends HBox {
     private static final Logger log = LoggerFactory.getLogger(WizardItem.class);
 
-    private Initializable childController;
+    private View childController;
 
     private final ImageView imageView;
     private final Label titleLabel;
@@ -243,7 +243,7 @@ class WizardItem extends HBox {
         getChildren().addAll(imageView, vBox);
     }
 
-    Initializable show() {
+    View show() {
         host.loadView(navigationItem);
        /* navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT, Navigation
                         .Item.ACCOUNT_SETUP,

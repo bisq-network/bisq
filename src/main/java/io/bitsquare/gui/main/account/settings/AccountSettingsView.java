@@ -129,11 +129,11 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected Initializable loadView(Navigation.Item navigationItem) {
+    protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         content.getChildren().setAll(loaded.view);
-        childController = loaded.controller;
-        ((View) childController).setParent(this);
+        childController = (View) loaded.controller;
+        childController.setParent(this);
         ((ContextAware) childController).useSettingsContext(true);
         return childController;
     }

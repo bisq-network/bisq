@@ -103,9 +103,7 @@ public class SettingsView extends ActivatableViewAndModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected Initializable loadView(Navigation.Item navigationItem) {
-        super.loadView(navigationItem);
-
+    protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         final Tab tab;
         switch (navigationItem) {
@@ -120,9 +118,8 @@ public class SettingsView extends ActivatableViewAndModel {
         }
         tab.setContent(loaded.view);
         ((TabPane) root).getSelectionModel().select(tab);
-        Initializable childController = loaded.controller;
-        if (childController instanceof View)
-            ((View) childController).setParent(this);
+        View childController = (View) loaded.controller;
+        childController.setParent(this);
 
         return childController;
     }

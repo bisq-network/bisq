@@ -58,7 +58,7 @@ public class ArbitratorSettingsView extends View {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected Initializable loadView(Navigation.Item navigationItem) {
+    protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
         arbitratorRegistrationViewCB = (ArbitratorRegistrationView) loaded.controller;
 
