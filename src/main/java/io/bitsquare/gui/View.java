@@ -18,7 +18,6 @@
 package io.bitsquare.gui;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.*;
 
 import org.slf4j.Logger;
@@ -31,19 +30,12 @@ public class View<M> {
     protected final M model;
     protected @FXML Parent root;
 
-    protected Initializable parent;
-
-
     public View(M model) {
         this.model = model;
     }
 
     public View() {
         this(null);
-    }
-
-    public void setParent(Initializable parent) {
-        this.parent = parent;
     }
 
     protected View loadView(Navigation.Item navigationItem) {

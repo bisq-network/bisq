@@ -117,10 +117,7 @@ public class SettingsView extends ActivatableViewAndModel {
         }
         tab.setContent(loaded.view);
         ((TabPane) root).getSelectionModel().select(tab);
-        View childController = (View) loaded.controller;
-        childController.setParent(this);
-
-        return childController;
+        return (View) loaded.controller;
     }
 
 }

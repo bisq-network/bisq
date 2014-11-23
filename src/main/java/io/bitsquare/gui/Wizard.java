@@ -15,10 +15,12 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.account;
+package io.bitsquare.gui;
 
-import io.bitsquare.gui.View;
+public interface Wizard {
+    void nextStep(View current);
 
-public interface MultiStepNavigation {
-    void nextStep(View useSettingsContext);
+    public interface Step extends ChildOf<Wizard> {
+        void useSettingsContext(boolean useSettingsContext);
+    }
 }

@@ -17,12 +17,9 @@
 
 package io.bitsquare.gui.main.msg;
 
-import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 
 import javax.inject.Inject;
-
-import javafx.fxml.Initializable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -112,10 +112,7 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
     protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         ((Pane) root).getChildren().set(0, loaded.view);
-        View childController = arbitratorProfileViewCB = (ArbitratorProfileView) loaded.controller;
-        childController.setParent(this);
-
-        return childController;
+        return arbitratorProfileViewCB = (ArbitratorProfileView) loaded.controller;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

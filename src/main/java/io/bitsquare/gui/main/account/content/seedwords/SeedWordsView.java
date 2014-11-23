@@ -18,8 +18,7 @@
 package io.bitsquare.gui.main.account.content.seedwords;
 
 import io.bitsquare.gui.InitializableView;
-import io.bitsquare.gui.main.account.MultiStepNavigation;
-import io.bitsquare.gui.main.account.content.ContextAware;
+import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 
@@ -32,9 +31,11 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SeedWordsView extends InitializableView<SeedWordsViewModel> implements ContextAware {
+public class SeedWordsView extends InitializableView<SeedWordsViewModel> implements Wizard.Step {
 
     private static final Logger log = LoggerFactory.getLogger(SeedWordsView.class);
+
+    private Wizard parent;
 
     @FXML Button completedButton;
     @FXML TextArea seedWordsTextArea;
@@ -59,10 +60,10 @@ public class SeedWordsView extends InitializableView<SeedWordsViewModel> impleme
         seedWordsTextArea.setText(model.seedWords.get());
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // ContextAware implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    @Override
+    public void setParent(Wizard parent) {
+        this.parent = parent;
+    }
 
     @Override
     public void useSettingsContext(boolean useSettingsContext) {
@@ -77,8 +78,7 @@ public class SeedWordsView extends InitializableView<SeedWordsViewModel> impleme
 
     @FXML
     private void onCompleted() {
-        if (parent instanceof MultiStepNavigation)
-            ((MultiStepNavigation) parent).nextStep(this);
+        parent.nextStep(this);
     }
 
     @FXML

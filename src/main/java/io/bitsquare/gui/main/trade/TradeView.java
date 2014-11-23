@@ -41,7 +41,7 @@ import javafx.scene.control.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TradeView extends ActivatableView implements TradeNavigator {
+public class TradeView extends ActivatableView {
     private static final Logger log = LoggerFactory.getLogger(TradeView.class);
 
     private OfferBookView offerBookViewCB;
@@ -118,25 +118,17 @@ public class TradeView extends ActivatableView implements TradeNavigator {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // TradeNavigator implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
     public void createOffer(Coin amount, Fiat price) {
         this.amount = amount;
         this.price = price;
-        navigation.navigationTo(Navigation.Item.MAIN, navigationItem,
-                Navigation.Item.CREATE_OFFER);
+        navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.CREATE_OFFER);
     }
 
-    @Override
     public void takeOffer(Coin amount, Fiat price, Offer offer) {
         this.amount = amount;
         this.price = price;
         this.offer = offer;
-        navigation.navigationTo(Navigation.Item.MAIN, navigationItem,
-                Navigation.Item.TAKE_OFFER);
+        navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.TAKE_OFFER);
     }
 
 
@@ -168,7 +160,6 @@ public class TradeView extends ActivatableView implements TradeNavigator {
             ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
             createOfferView = loaded.view;
             createOfferViewCB = (CreateOfferView) loaded.controller;
-            createOfferViewCB.setParent(this);
             createOfferViewCB.initWithData(direction, amount, price);
             final Tab tab = new Tab("Create offer");
             createOfferViewCB.configCloseHandlers(tab.closableProperty());
@@ -184,7 +175,6 @@ public class TradeView extends ActivatableView implements TradeNavigator {
             ViewLoader.Item loaded = viewLoader.load(Navigation.Item.TAKE_OFFER.getFxmlUrl(), false);
             takeOfferView = loaded.view;
             takeOfferViewCB = (TakeOfferView) loaded.controller;
-            takeOfferViewCB.setParent(this);
             takeOfferViewCB.initWithData(direction, amount, offer);
             final Tab tab = new Tab("Take offer");
             takeOfferViewCB.configCloseHandlers(tab.closableProperty());

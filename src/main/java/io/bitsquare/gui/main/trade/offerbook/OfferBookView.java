@@ -18,11 +18,12 @@
 package io.bitsquare.gui.main.trade.offerbook;
 
 import io.bitsquare.gui.ActivatableViewAndModel;
+import io.bitsquare.gui.ChildOf;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.main.trade.TradeNavigator;
+import io.bitsquare.gui.main.trade.TradeView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
 import io.bitsquare.gui.util.validation.OptionalFiatValidator;
@@ -59,7 +60,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
  * TODO: The advanced filters are not impl. yet
  * The restrictions handling is open from the concept and is only implemented for countries yet.
  */
-public class OfferBookView extends ActivatableViewAndModel<OfferBookViewModel> {
+public class OfferBookView extends ActivatableViewAndModel<OfferBookViewModel> implements ChildOf<TradeView> {
     private static final Logger log = LoggerFactory.getLogger(OfferBookView.class);
 
     private final Navigation navigation;
@@ -81,6 +82,8 @@ public class OfferBookView extends ActivatableViewAndModel<OfferBookViewModel> {
     @FXML Button createOfferButton, showAdvancedSettingsButton, openCountryFilterButton, openPaymentMethodsFilterButton;
     @FXML TableColumn<OfferBookListItem, OfferBookListItem> priceColumn, amountColumn, volumeColumn,
             directionColumn, countryColumn, bankAccountTypeColumn;
+
+    private TradeView parent;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -183,8 +186,7 @@ public class OfferBookView extends ActivatableViewAndModel<OfferBookViewModel> {
     void createOffer() {
         if (model.isRegistered()) {
             createOfferButton.setDisable(true);
-            ((TradeNavigator) parent).createOffer(model.getAmountAsCoin(),
-                    model.getPriceAsCoin());
+            parent.createOffer(model.getAmountAsCoin(), model.getPriceAsCoin());
         }
         else {
             openSetupScreen();
@@ -249,8 +251,7 @@ public class OfferBookView extends ActivatableViewAndModel<OfferBookViewModel> {
 
         if (model.isRegistered()) {
             if (offer.getDirection() == Direction.BUY) {
-                ((TradeNavigator) parent).takeOffer(model.getAmountAsCoin(),
-                        model.getPriceAsCoin(), offer);
+                parent.takeOffer(model.getAmountAsCoin(), model.getPriceAsCoin(), offer);
             }
             else {
                 Popups.openInfoPopup("Not implemented yet",
@@ -383,6 +384,11 @@ public class OfferBookView extends ActivatableViewAndModel<OfferBookViewModel> {
                 .getBankAccountCountry().getName()));
         bankAccountTypeColumn.setComparator((o1, o2) -> o1.getOffer().getBankAccountType().compareTo(o2.getOffer()
                 .getBankAccountType()));
+    }
+
+
+    public void setParent(TradeView parent) {
+        this.parent = parent;
     }
 
 

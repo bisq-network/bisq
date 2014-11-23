@@ -23,8 +23,7 @@ import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.main.account.MultiStepNavigation;
-import io.bitsquare.gui.main.account.content.ContextAware;
+import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -53,7 +52,7 @@ import org.slf4j.LoggerFactory;
 
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
-public class FiatAccountView extends ActivatableViewAndModel<FiatAccountViewModel> implements ContextAware {
+public class FiatAccountView extends ActivatableViewAndModel<FiatAccountViewModel> implements Wizard.Step {
 
     private static final Logger log = LoggerFactory.getLogger(FiatAccountView.class);
 
@@ -65,7 +64,10 @@ public class FiatAccountView extends ActivatableViewAndModel<FiatAccountViewMode
     @FXML ComboBox<BankAccount> selectionComboBox;
     @FXML ComboBox<BankAccountType> typesComboBox;
     @FXML ComboBox<Currency> currencyComboBox;
+
     private final OverlayManager overlayManager;
+
+    private Wizard parent;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -109,9 +111,12 @@ public class FiatAccountView extends ActivatableViewAndModel<FiatAccountViewMode
         selectionComboBox.setItems(model.getAllBankAccounts());
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // ContextAware implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    @Override
+    public void setParent(Wizard parent) {
+        this.parent = parent;
+    }
 
     @Override
     public void useSettingsContext(boolean useSettingsContext) {
@@ -167,8 +172,7 @@ public class FiatAccountView extends ActivatableViewAndModel<FiatAccountViewMode
 
     @FXML
     void onCompleted() {
-        if (parent instanceof MultiStepNavigation)
-            ((MultiStepNavigation) parent).nextStep(this);
+        parent.nextStep(this);
     }
 
     @FXML

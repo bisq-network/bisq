@@ -21,11 +21,9 @@ import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.main.account.MultiStepNavigation;
-import io.bitsquare.gui.main.account.content.ContextAware;
+import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
-import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.util.Utilities;
 
 import java.util.Currency;
@@ -44,7 +42,7 @@ import org.slf4j.LoggerFactory;
 /*
 Just temporary for giving the user a possibility to test the app via simulating the bank transfer in a IRC chat.
  */
-public class IrcAccountView extends ActivatableViewAndModel<IrcAccountViewModel> implements ContextAware {
+public class IrcAccountView extends ActivatableViewAndModel<IrcAccountViewModel> implements Wizard.Step {
 
     private static final Logger log = LoggerFactory.getLogger(IrcAccountView.class);
 
@@ -53,6 +51,8 @@ public class IrcAccountView extends ActivatableViewAndModel<IrcAccountViewModel>
     @FXML Button saveButton;
     @FXML ComboBox<BankAccountType> typesComboBox;
     @FXML ComboBox<Currency> currencyComboBox;
+
+    private Wizard parent;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -144,9 +144,10 @@ public class IrcAccountView extends ActivatableViewAndModel<IrcAccountViewModel>
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // ContextAware implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    @Override
+    public void setParent(Wizard parent) {
+        this.parent = parent;
+    }
 
     @Override
     public void useSettingsContext(boolean useSettingsContext) {
@@ -170,9 +171,8 @@ public class IrcAccountView extends ActivatableViewAndModel<IrcAccountViewModel>
 
     @FXML
     void onSave() {
-        InputValidator.ValidationResult result = model.requestSaveBankAccount();
-        if (result.isValid && parent instanceof MultiStepNavigation)
-            ((MultiStepNavigation) parent).nextStep(this);
+        if (model.requestSaveBankAccount().isValid)
+            parent.nextStep(this);
     }
 
     @FXML

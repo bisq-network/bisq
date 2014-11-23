@@ -18,8 +18,7 @@
 package io.bitsquare.gui.main.account.content.password;
 
 import io.bitsquare.gui.InitializableView;
-import io.bitsquare.gui.main.account.MultiStepNavigation;
-import io.bitsquare.gui.main.account.content.ContextAware;
+import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 
@@ -32,13 +31,15 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PasswordView extends InitializableView<PasswordViewModel> implements ContextAware {
+public class PasswordView extends InitializableView<PasswordViewModel> implements Wizard.Step {
 
     private static final Logger log = LoggerFactory.getLogger(PasswordView.class);
 
     @FXML HBox buttonsHBox;
     @FXML Button saveButton, skipButton;
     @FXML PasswordField oldPasswordField, passwordField, repeatedPasswordField;
+
+    private Wizard parent;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -69,6 +70,11 @@ public class PasswordView extends InitializableView<PasswordViewModel> implement
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
+    public void setParent(Wizard parent) {
+        this.parent = parent;
+    }
+
+    @Override
     public void useSettingsContext(boolean useSettingsContext) {
         if (useSettingsContext)
             buttonsHBox.getChildren().remove(skipButton);
@@ -81,21 +87,16 @@ public class PasswordView extends InitializableView<PasswordViewModel> implement
 
     @FXML
     private void onSaved() {
-        boolean result = model.requestSavePassword();
-        if (result) {
-            if (parent instanceof MultiStepNavigation)
-                ((MultiStepNavigation) parent).nextStep(this);
-        }
-        else {
+        if (model.requestSavePassword())
+            parent.nextStep(this);
+        else
             // TODO use validating passwordTF
             log.debug(model.getErrorMessage());
-        }
     }
 
     @FXML
     private void onSkipped() {
-        if (parent instanceof MultiStepNavigation)
-            ((MultiStepNavigation) parent).nextStep(this);
+        parent.nextStep(this);
     }
 
     @FXML

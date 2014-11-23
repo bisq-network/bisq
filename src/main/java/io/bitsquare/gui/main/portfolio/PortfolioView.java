@@ -121,10 +121,7 @@ public class PortfolioView extends ActivatableViewAndModel {
         }
         currentTab.setContent(loaded.view);
         ((TabPane) root).getSelectionModel().select(currentTab);
-        View childController = (View) loaded.controller;
-        childController.setParent(this);
-
-        return childController;
+        return (View) loaded.controller;
     }
 }
 

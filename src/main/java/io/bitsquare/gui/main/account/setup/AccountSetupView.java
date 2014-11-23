@@ -21,8 +21,7 @@ import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
-import io.bitsquare.gui.main.account.MultiStepNavigation;
-import io.bitsquare.gui.main.account.content.ContextAware;
+import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.main.account.content.irc.IrcAccountView;
 import io.bitsquare.gui.main.account.content.password.PasswordView;
 import io.bitsquare.gui.main.account.content.registration.RegistrationView;
@@ -43,7 +42,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This UI is not cached as it is normally only needed once.
  */
-public class AccountSetupView extends ActivatableView implements MultiStepNavigation {
+public class AccountSetupView extends ActivatableView implements Wizard {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSetupView.class);
 
@@ -185,9 +184,10 @@ public class AccountSetupView extends ActivatableView implements MultiStepNaviga
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         content.getChildren().setAll(loaded.view);
         View child = (View) loaded.controller;
-        child.setParent(this);
-        if (child instanceof ContextAware)
-            ((ContextAware) child).useSettingsContext(false);
+        if (child instanceof Wizard.Step) {
+            ((Step) child).setParent(this);
+            ((Step) child).useSettingsContext(false);
+        }
         return child;
     }
 }

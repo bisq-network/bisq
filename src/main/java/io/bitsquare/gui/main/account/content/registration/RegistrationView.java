@@ -22,8 +22,7 @@ import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.AddressTextField;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.Popups;
-import io.bitsquare.gui.main.account.MultiStepNavigation;
-import io.bitsquare.gui.main.account.content.ContextAware;
+import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.locale.BSResources;
@@ -45,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class RegistrationView extends InitializableView<RegistrationViewModel> implements ContextAware {
+public class RegistrationView extends InitializableView<RegistrationViewModel> implements Wizard.Step {
 
     private static final Logger log = LoggerFactory.getLogger(RegistrationView.class);
 
@@ -57,6 +56,8 @@ public class RegistrationView extends InitializableView<RegistrationViewModel> i
     @FXML Button payButton;
     @FXML Label paymentSpinnerInfoLabel;
     @FXML ProgressIndicator paymentSpinner;
+
+    private Wizard parent;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -121,8 +122,8 @@ public class RegistrationView extends InitializableView<RegistrationViewModel> i
                     public void handle(ActionEvent actionEvent) {
                         getProperties().put("type", "CLOSE");
                         try {
-                            if (parent instanceof MultiStepNavigation)
-                                ((MultiStepNavigation) parent).nextStep(RegistrationView.this);
+                            if (parent instanceof Wizard)
+                                ((Wizard) parent).nextStep(RegistrationView.this);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -140,15 +141,13 @@ public class RegistrationView extends InitializableView<RegistrationViewModel> i
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // ContextAware implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    @Override
+    public void setParent(Wizard parent) {
+        this.parent = parent;
+    }
 
     @Override
     public void useSettingsContext(boolean useSettingsContext) {
-        if (useSettingsContext) {
-            // TODO not impl. yet
-        }
     }
 
 

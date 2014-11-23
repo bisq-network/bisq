@@ -15,15 +15,8 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.trade;
+package io.bitsquare.gui;
 
-import io.bitsquare.offer.Offer;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
-
-public interface TradeNavigator {
-    void createOffer(Coin amount, Fiat price);
-
-    void takeOffer(Coin amount, Fiat price, Offer offer);
+public interface ChildOf<Parent> {
+    void setParent(Parent parent);
 }

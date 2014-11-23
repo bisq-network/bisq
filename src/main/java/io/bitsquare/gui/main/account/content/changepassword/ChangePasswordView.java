@@ -18,8 +18,7 @@
 package io.bitsquare.gui.main.account.content.changepassword;
 
 import io.bitsquare.gui.InitializableView;
-import io.bitsquare.gui.main.account.MultiStepNavigation;
-import io.bitsquare.gui.main.account.content.ContextAware;
+import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 
@@ -32,13 +31,15 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ChangePasswordView extends InitializableView<ChangePasswordViewModel> implements ContextAware {
+public class ChangePasswordView extends InitializableView<ChangePasswordViewModel> implements Wizard.Step {
 
     private static final Logger log = LoggerFactory.getLogger(ChangePasswordView.class);
 
     @FXML HBox buttonsHBox;
     @FXML Button saveButton, skipButton;
     @FXML PasswordField oldPasswordField, passwordField, repeatedPasswordField;
+
+    private Wizard parent;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -63,9 +64,10 @@ public class ChangePasswordView extends InitializableView<ChangePasswordViewMode
         saveButton.disableProperty().bind(model.saveButtonDisabled);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // ContextAware implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    @Override
+    public void setParent(Wizard parent) {
+        this.parent = parent;
+    }
 
     @Override
     public void useSettingsContext(boolean useSettingsContext) {
@@ -80,14 +82,10 @@ public class ChangePasswordView extends InitializableView<ChangePasswordViewMode
 
     @FXML
     private void onSaved() {
-        boolean result = model.requestSavePassword();
-        if (result) {
-            if (parent instanceof MultiStepNavigation)
-                ((MultiStepNavigation) parent).nextStep(this);
-        }
-        else {
+        if (model.requestSavePassword())
+            parent.nextStep(this);
+        else
             log.debug(model.getErrorMessage()); // TODO use validating TF
-        }
     }
 
     @FXML
@@ -97,8 +95,7 @@ public class ChangePasswordView extends InitializableView<ChangePasswordViewMode
 
     @FXML
     private void onSkipped() {
-        if (parent instanceof MultiStepNavigation)
-            ((MultiStepNavigation) parent).nextStep(this);
+        parent.nextStep(this);
     }
 
 }

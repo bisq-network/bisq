@@ -22,8 +22,7 @@ import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
-import io.bitsquare.gui.main.account.MultiStepNavigation;
-import io.bitsquare.gui.main.account.content.ContextAware;
+import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.ImageUtil;
@@ -35,7 +34,6 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
@@ -48,7 +46,7 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RestrictionsView extends ActivatableViewAndModel<RestrictionsViewModel> implements ContextAware {
+public class RestrictionsView extends ActivatableViewAndModel<RestrictionsViewModel> implements Wizard.Step {
 
     private static final Logger log = LoggerFactory.getLogger(RestrictionsView.class);
 
@@ -62,6 +60,8 @@ public class RestrictionsView extends ActivatableViewAndModel<RestrictionsViewMo
 
     private final ViewLoader viewLoader;
     private final Stage primaryStage;
+
+    private Wizard parent;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -97,9 +97,10 @@ public class RestrictionsView extends ActivatableViewAndModel<RestrictionsViewMo
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // ContextAware implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    @Override
+    public void setParent(Wizard parent) {
+        this.parent = parent;
+    }
 
     @Override
     public void useSettingsContext(boolean useSettingsContext) {
@@ -146,8 +147,8 @@ public class RestrictionsView extends ActivatableViewAndModel<RestrictionsViewMo
 
     @FXML
     private void onCompleted() {
-        if (parent instanceof MultiStepNavigation)
-            ((MultiStepNavigation) parent).nextStep(this);
+        if (parent instanceof Wizard)
+            ((Wizard) parent).nextStep(this);
     }
 
     @FXML
