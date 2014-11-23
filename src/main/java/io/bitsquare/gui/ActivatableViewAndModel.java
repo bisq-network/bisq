@@ -17,30 +17,19 @@
 
 package io.bitsquare.gui;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * If caching is used for loader we use the CachedViewController for turning the controller into sleep mode if not
- * active and awake it at reactivation.
- */
-public abstract class ViewWithActivatableModel<M extends Activatable> extends View<M> {
-    private static final Logger log = LoggerFactory.getLogger(ViewWithActivatableModel.class);
+public abstract class ActivatableViewAndModel<M extends Activatable> extends ActivatableView<M> {
 
-    public ViewWithActivatableModel(M model) {
+    public ActivatableViewAndModel(M model) {
         super(checkNotNull(model, "Model must not be null"));
     }
 
-    public ViewWithActivatableModel() {
+    public ActivatableViewAndModel() {
         this((M) Activatable.NOOP_INSTANCE);
     }
 
 
-    /**
-     * Used to activate resources (adding listeners, starting timers or animations,...)
-     */
     @Override
     public final void activate() {
         model.activate();
@@ -50,9 +39,6 @@ public abstract class ViewWithActivatableModel<M extends Activatable> extends Vi
     protected void doActivate() {
     }
 
-    /**
-     * Used for deactivating resources (removing listeners, stopping timers or animations,...)
-     */
     @Override
     public final void deactivate() {
         model.deactivate();

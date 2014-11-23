@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.changepassword;
 
-import io.bitsquare.gui.View;
+import io.bitsquare.gui.InitializableView;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;
@@ -32,7 +32,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ChangePasswordView extends View<ChangePasswordViewModel> implements ContextAware {
+public class ChangePasswordView extends InitializableView<ChangePasswordViewModel> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(ChangePasswordView.class);
 

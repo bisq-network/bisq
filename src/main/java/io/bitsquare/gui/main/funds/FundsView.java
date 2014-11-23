@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.main.funds;
 
+import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
-import io.bitsquare.gui.ViewWithActivatableModel;
 
 import javax.inject.Inject;
 
@@ -29,7 +29,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
-public class FundsView extends ViewWithActivatableModel {
+public class FundsView extends ActivatableViewAndModel {
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;

@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.offer;
 
-import io.bitsquare.gui.ViewWithActivatableModel;
+import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.util.Utilities;
 
@@ -32,7 +32,7 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OffersView extends ViewWithActivatableModel<OffersViewModel> {
+public class OffersView extends ActivatableViewAndModel<OffersViewModel> {
     private static final Logger log = LoggerFactory.getLogger(OffersView.class);
 
     @FXML TableColumn<OfferListItem, OfferListItem> priceColumn, amountColumn, volumeColumn,

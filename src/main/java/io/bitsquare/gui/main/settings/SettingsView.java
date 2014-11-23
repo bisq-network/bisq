@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.main.settings;
 
+import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
-import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.settings.Preferences;
 
 import javax.inject.Inject;
@@ -30,7 +30,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
-public class SettingsView extends ViewWithActivatableModel {
+public class SettingsView extends ActivatableViewAndModel {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;

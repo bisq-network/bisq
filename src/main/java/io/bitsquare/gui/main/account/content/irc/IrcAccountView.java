@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.account.content.irc;
 
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.ViewWithActivatableModel;
+import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 /*
 Just temporary for giving the user a possibility to test the app via simulating the bank transfer in a IRC chat.
  */
-public class IrcAccountView extends ViewWithActivatableModel<IrcAccountViewModel> implements ContextAware {
+public class IrcAccountView extends ActivatableViewAndModel<IrcAccountViewModel> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(IrcAccountView.class);
 

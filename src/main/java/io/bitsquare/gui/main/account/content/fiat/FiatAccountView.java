@@ -19,8 +19,8 @@ package io.bitsquare.gui.main.account.content.fiat;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
+import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.OverlayManager;
-import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
 
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
-public class FiatAccountView extends ViewWithActivatableModel<FiatAccountViewModel> implements ContextAware {
+public class FiatAccountView extends ActivatableViewAndModel<FiatAccountViewModel> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(FiatAccountView.class);
 

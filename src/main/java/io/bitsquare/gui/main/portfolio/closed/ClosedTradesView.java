@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.closed;
 
-import io.bitsquare.gui.ViewWithActivatableModel;
+import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.components.Popups;
 
 import javax.inject.Inject;
@@ -30,7 +30,7 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ClosedTradesView extends ViewWithActivatableModel<ClosedTradesViewModel> {
+public class ClosedTradesView extends ActivatableViewAndModel<ClosedTradesViewModel> {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradesView.class);
 
     @FXML TableColumn<ClosedTradesListItem, ClosedTradesListItem> priceColumn, amountColumn, volumeColumn,

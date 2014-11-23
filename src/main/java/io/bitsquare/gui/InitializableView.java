@@ -15,14 +15,33 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.home;
+package io.bitsquare.gui;
 
-import io.bitsquare.gui.View;
+import java.net.URL;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ResourceBundle;
 
-// home is just hosting the arbiters buttons yet, but that's just for dev, not clear yet what will be in home,
-// probably overview, event history, news, charts,... -> low prio
-public class HomeView extends View {
+import javafx.fxml.Initializable;
+
+public class InitializableView<M> extends View<M> implements Initializable {
+
+    public InitializableView(M model) {
+        super(model);
+    }
+
+    public InitializableView() {
+        this(null);
+    }
+
+    @Override
+    public final void initialize(URL location, ResourceBundle resources) {
+        prepareInitialize();
+        initialize();
+    }
+
+    protected void prepareInitialize() {
+    }
+
+    protected void initialize() {
+    }
 }

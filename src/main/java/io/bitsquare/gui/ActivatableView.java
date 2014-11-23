@@ -15,14 +15,33 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.home;
+package io.bitsquare.gui;
 
-import io.bitsquare.gui.View;
+public abstract class ActivatableView<M> extends InitializableView<M> {
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+    public ActivatableView(M model) {
+        super(model);
+    }
 
-// home is just hosting the arbiters buttons yet, but that's just for dev, not clear yet what will be in home,
-// probably overview, event history, news, charts,... -> low prio
-public class HomeView extends View {
+    public ActivatableView() {
+        this(null);
+    }
+
+    @Override
+    protected void prepareInitialize() {
+        if (root != null) {
+            root.sceneProperty().addListener((ov, oldValue, newValue) -> {
+                if (oldValue == null && newValue != null)
+                    activate();
+                else if (oldValue != null && newValue == null)
+                    deactivate();
+            });
+        }
+    }
+
+    protected void activate() {
+    }
+
+    protected void deactivate() {
+    }
 }

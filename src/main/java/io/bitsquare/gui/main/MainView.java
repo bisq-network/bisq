@@ -19,6 +19,7 @@ package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.View;
@@ -44,7 +45,7 @@ import javafx.scene.text.*;
 import static io.bitsquare.gui.Navigation.Item.*;
 import static javafx.scene.layout.AnchorPane.*;
 
-public class MainView extends View<MainViewModel> {
+public class MainView extends ActivatableView<MainViewModel> {
 
     private final ToggleGroup navButtons = new ToggleGroup();
 

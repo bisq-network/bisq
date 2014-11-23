@@ -20,7 +20,7 @@ package io.bitsquare.gui.main.account.arbitrator.registration;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.View;
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
@@ -58,7 +58,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // TODO Arbitration is very basic yet
-public class ArbitratorRegistrationView extends View {
+public class ArbitratorRegistrationView extends ActivatableView {
     private static final Logger log = LoggerFactory.getLogger(ArbitratorRegistrationView.class);
 
     private final Persistence persistence;

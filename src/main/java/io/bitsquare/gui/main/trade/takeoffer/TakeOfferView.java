@@ -18,9 +18,9 @@
 package io.bitsquare.gui.main.trade.takeoffer;
 
 
+import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
-import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.components.AddressTextField;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.InfoDisplay;
@@ -65,7 +65,7 @@ import org.controlsfx.dialog.Dialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakeOfferView extends ViewWithActivatableModel<TakeOfferViewModel> {
+public class TakeOfferView extends ActivatableViewAndModel<TakeOfferViewModel> {
     private static final Logger log = LoggerFactory.getLogger(TakeOfferView.class);
 
     private final Navigation navigation;

@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.main.portfolio;
 
+import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
-import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.trade.TradeManager;
 
 import javax.inject.Inject;
@@ -30,7 +30,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
-public class PortfolioView extends ViewWithActivatableModel {
+public class PortfolioView extends ActivatableViewAndModel {
 
     private Tab currentTab;
     private Navigation.Listener navigationListener;

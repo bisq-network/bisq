@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.main.account;
 
+import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
-import io.bitsquare.gui.ViewWithActivatableModel;
 
 import javax.inject.Inject;
 
@@ -32,7 +32,7 @@ import javafx.scene.control.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccountView extends ViewWithActivatableModel {
+public class AccountView extends ActivatableViewAndModel {
 
     private static final Logger log = LoggerFactory.getLogger(AccountView.class);
 
@@ -116,8 +116,6 @@ public class AccountView extends ViewWithActivatableModel {
 
     @Override
     protected Initializable loadView(Navigation.Item navigationItem) {
-        super.loadView(navigationItem);
-
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         final Tab tab;
         switch (navigationItem) {

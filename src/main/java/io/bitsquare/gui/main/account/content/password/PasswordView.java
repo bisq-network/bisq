@@ -17,15 +17,11 @@
 
 package io.bitsquare.gui.main.account.content.password;
 
-import io.bitsquare.gui.View;
+import io.bitsquare.gui.InitializableView;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
-
-import java.net.URL;
-
-import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -36,7 +32,7 @@ import javafx.scene.layout.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PasswordView extends View<PasswordViewModel> implements ContextAware {
+public class PasswordView extends InitializableView<PasswordViewModel> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(PasswordView.class);
 

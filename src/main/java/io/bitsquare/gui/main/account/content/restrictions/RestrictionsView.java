@@ -18,9 +18,9 @@
 package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewLoader;
-import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.main.account.MultiStepNavigation;
 import io.bitsquare.gui.main.account.content.ContextAware;
 import io.bitsquare.gui.main.help.Help;
@@ -47,7 +47,7 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RestrictionsView extends ViewWithActivatableModel<RestrictionsViewModel> implements ContextAware {
+public class RestrictionsView extends ActivatableViewAndModel<RestrictionsViewModel> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(RestrictionsView.class);
 

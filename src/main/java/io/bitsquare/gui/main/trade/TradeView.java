@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.trade;
 
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.ViewLoader;
-import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferView;
 import io.bitsquare.gui.main.trade.offerbook.OfferBookView;
@@ -41,7 +41,7 @@ import javafx.scene.control.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TradeView extends ViewWithActivatableModel implements TradeNavigator {
+public class TradeView extends ActivatableView implements TradeNavigator {
     private static final Logger log = LoggerFactory.getLogger(TradeView.class);
 
     private OfferBookView offerBookViewCB;
@@ -87,7 +87,7 @@ public class TradeView extends ViewWithActivatableModel implements TradeNavigato
     }
 
     @Override
-    protected void doActivate() {
+    protected void activate() {
         // We need to remove open validation error popups
         // Platform.runLater needed as focus-out event is called after selectedIndexProperty changed
         // TODO Find a way to do that in the InputTextField directly, but a tab change does not trigger any event...
@@ -113,7 +113,7 @@ public class TradeView extends ViewWithActivatableModel implements TradeNavigato
     }
 
     @Override
-    protected void doDeactivate() {
+    protected void deactivate() {
         navigation.removeListener(listener);
     }
 

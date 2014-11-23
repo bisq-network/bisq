@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.account.setup;
 
+import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
@@ -43,7 +44,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This UI is not cached as it is normally only needed once.
  */
-public class AccountSetupView extends View implements MultiStepNavigation {
+public class AccountSetupView extends ActivatableView implements MultiStepNavigation {
 
     private static final Logger log = LoggerFactory.getLogger(AccountSetupView.class);
 
@@ -195,7 +196,7 @@ public class AccountSetupView extends View implements MultiStepNavigation {
 class WizardItem extends HBox {
     private static final Logger log = LoggerFactory.getLogger(WizardItem.class);
 
-    private View childController;
+    private Initializable childController;
 
     private final ImageView imageView;
     private final Label titleLabel;
@@ -242,7 +243,7 @@ class WizardItem extends HBox {
         getChildren().addAll(imageView, vBox);
     }
 
-    View show() {
+    Initializable show() {
         host.loadView(navigationItem);
        /* navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT, Navigation
                         .Item.ACCOUNT_SETUP,

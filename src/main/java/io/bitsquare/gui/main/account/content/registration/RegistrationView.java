@@ -17,8 +17,8 @@
 
 package io.bitsquare.gui.main.account.content.registration;
 
+import io.bitsquare.gui.InitializableView;
 import io.bitsquare.gui.OverlayManager;
-import io.bitsquare.gui.View;
 import io.bitsquare.gui.components.AddressTextField;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.Popups;
@@ -45,7 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class RegistrationView extends View<RegistrationViewModel> implements ContextAware {
+public class RegistrationView extends InitializableView<RegistrationViewModel> implements ContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(RegistrationView.class);
 

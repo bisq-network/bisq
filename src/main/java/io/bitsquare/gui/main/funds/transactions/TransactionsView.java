@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.funds.transactions;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.ViewWithActivatableModel;
+import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 
@@ -39,7 +39,7 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TransactionsView extends ViewWithActivatableModel {
+public class TransactionsView extends ActivatableViewAndModel {
     private static final Logger log = LoggerFactory.getLogger(TransactionsView.class);
 
     private final WalletService walletService;

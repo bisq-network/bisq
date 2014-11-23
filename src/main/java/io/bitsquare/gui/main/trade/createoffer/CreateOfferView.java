@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.trade.createoffer;
 
+import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
-import io.bitsquare.gui.ViewWithActivatableModel;
 import io.bitsquare.gui.components.AddressTextField;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.InfoDisplay;
@@ -69,7 +69,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 // TODO Implement other positioning method in InoutTextField to display it over the field instead of right side
 // priceAmountHBox is too large after redesign as to be used as layoutReference.
 
-public class CreateOfferView extends ViewWithActivatableModel<CreateOfferViewModel> {
+public class CreateOfferView extends ActivatableViewAndModel<CreateOfferViewModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateOfferView.class);
 
 
