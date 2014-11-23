@@ -37,7 +37,7 @@ public class ArbitratorSettingsView extends AbstractView {
     private final Navigation navigation;
     private final Stage primaryStage;
 
-    private ArbitratorRegistrationView arbitratorRegistrationViewCB;
+    private ArbitratorRegistrationView arbitratorRegistrationView;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +60,7 @@ public class ArbitratorSettingsView extends AbstractView {
     @Override
     protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
-        arbitratorRegistrationViewCB = (ArbitratorRegistrationView) loaded.controller;
+        arbitratorRegistrationView = (ArbitratorRegistrationView) loaded.controller;
 
         final Stage stage = new Stage();
         stage.setTitle("Arbitrator");
@@ -76,7 +76,7 @@ public class ArbitratorSettingsView extends AbstractView {
         stage.setScene(scene);
         stage.show();
 
-        return arbitratorRegistrationViewCB;
+        return arbitratorRegistrationView;
     }
 
 
@@ -92,7 +92,7 @@ public class ArbitratorSettingsView extends AbstractView {
     @FXML
     public void onArbitratorEdit() {
         loadView(Navigation.Item.ARBITRATOR_REGISTRATION);
-        arbitratorRegistrationViewCB.setEditMode(true);
+        arbitratorRegistrationView.setEditMode(true);
     }
 }
 

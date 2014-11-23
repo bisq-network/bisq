@@ -44,11 +44,11 @@ import org.slf4j.LoggerFactory;
 public class TradeView extends ActivatableView {
     private static final Logger log = LoggerFactory.getLogger(TradeView.class);
 
-    private OfferBookView offerBookViewCB;
-    private CreateOfferView createOfferViewCB;
-    private TakeOfferView takeOfferViewCB;
-    private Node createOfferView;
-    private Node takeOfferView;
+    private OfferBookView offerBookView;
+    private CreateOfferView createOfferView;
+    private TakeOfferView takeOfferView;
+    private Node createOfferRoot;
+    private Node takeOfferRoot;
     private Navigation.Listener listener;
     private Navigation.Item navigationItem;
     private Direction direction;
@@ -101,9 +101,9 @@ public class TradeView extends ActivatableView {
             change.next();
             List<? extends Tab> removedTabs = change.getRemoved();
             if (removedTabs.size() == 1) {
-                if (removedTabs.get(0).getContent().equals(createOfferView))
+                if (removedTabs.get(0).getContent().equals(createOfferRoot))
                     onCreateOfferViewRemoved();
-                else if (removedTabs.get(0).getContent().equals(takeOfferView))
+                else if (removedTabs.get(0).getContent().equals(takeOfferRoot))
                     onTakeOfferViewRemoved();
             }
         });
@@ -139,49 +139,48 @@ public class TradeView extends ActivatableView {
     @Override
     protected View loadView(Navigation.Item navigationItem) {
         TabPane tabPane = (TabPane) root;
-        if (navigationItem == Navigation.Item.OFFER_BOOK && offerBookViewCB == null) {
+        if (navigationItem == Navigation.Item.OFFER_BOOK && offerBookView == null) {
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
             ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
             final Tab tab = new Tab(direction == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
             tab.setClosable(false);
             tab.setContent(loaded.view);
             tabPane.getTabs().add(tab);
-            offerBookViewCB = (OfferBookView) loaded.controller;
-            offerBookViewCB.setParent(this);
+            offerBookView = (OfferBookView) loaded.controller;
+            offerBookView.setParent(this);
 
-            offerBookViewCB.setDirection(direction);
-            // offerBookViewCB.setNavigationListener(n -> loadView(n));
+            offerBookView.setDirection(direction);
 
-            return offerBookViewCB;
+            return offerBookView;
         }
-        else if (navigationItem == Navigation.Item.CREATE_OFFER && createOfferViewCB == null) {
+        else if (navigationItem == Navigation.Item.CREATE_OFFER && createOfferView == null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
             ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
-            createOfferView = loaded.view;
-            createOfferViewCB = (CreateOfferView) loaded.controller;
-            createOfferViewCB.initWithData(direction, amount, price);
+            createOfferRoot = loaded.view;
+            createOfferView = (CreateOfferView) loaded.controller;
+            createOfferView.initWithData(direction, amount, price);
             final Tab tab = new Tab("Create offer");
-            createOfferViewCB.configCloseHandlers(tab.closableProperty());
-            tab.setContent(createOfferView);
+            createOfferView.configCloseHandlers(tab.closableProperty());
+            tab.setContent(createOfferRoot);
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
-            return createOfferViewCB;
+            return createOfferView;
         }
-        else if (navigationItem == Navigation.Item.TAKE_OFFER && takeOfferViewCB == null &&
+        else if (navigationItem == Navigation.Item.TAKE_OFFER && takeOfferView == null &&
                 offer != null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
             ViewLoader.Item loaded = viewLoader.load(Navigation.Item.TAKE_OFFER.getFxmlUrl(), false);
-            takeOfferView = loaded.view;
-            takeOfferViewCB = (TakeOfferView) loaded.controller;
-            takeOfferViewCB.initWithData(direction, amount, offer);
+            takeOfferRoot = loaded.view;
+            takeOfferView = (TakeOfferView) loaded.controller;
+            takeOfferView.initWithData(direction, amount, offer);
             final Tab tab = new Tab("Take offer");
-            takeOfferViewCB.configCloseHandlers(tab.closableProperty());
-            tab.setContent(takeOfferView);
+            takeOfferView.configCloseHandlers(tab.closableProperty());
+            tab.setContent(takeOfferRoot);
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
-            return takeOfferViewCB;
+            return takeOfferView;
         }
         return null;
     }
@@ -197,15 +196,15 @@ public class TradeView extends ActivatableView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onCreateOfferViewRemoved() {
-        createOfferViewCB = null;
-        offerBookViewCB.enableCreateOfferButton();
+        createOfferView = null;
+        offerBookView.enableCreateOfferButton();
 
         // update the navigation state
         navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.OFFER_BOOK);
     }
 
     private void onTakeOfferViewRemoved() {
-        takeOfferViewCB = null;
+        takeOfferView = null;
 
         // update the navigation state
         navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.OFFER_BOOK);

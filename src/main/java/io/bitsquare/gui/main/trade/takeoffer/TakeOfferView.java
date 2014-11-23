@@ -127,7 +127,7 @@ public class TakeOfferView extends ActivatableViewAndModel<TakeOfferViewModel> {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods (called form other views/CB)
+    // Public methods (called form other views)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initWithData(Direction direction, Coin amount, Offer offer) {

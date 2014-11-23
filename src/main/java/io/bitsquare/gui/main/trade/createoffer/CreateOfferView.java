@@ -139,7 +139,7 @@ public class CreateOfferView extends ActivatableViewAndModel<CreateOfferViewMode
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods (called form other views/CB)
+    // Public methods (called form other views)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initWithData(Direction direction, Coin amount, Fiat price) {

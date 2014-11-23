@@ -50,7 +50,7 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
     private final List<Arbitrator> allArbitrators = new ArrayList<>();
 
     private Arbitrator currentArbitrator;
-    private ArbitratorProfileView arbitratorProfileViewCB;
+    private ArbitratorProfileView arbitratorProfileView;
     private int index = -1;
 
     @FXML Button prevButton, nextButton, selectButton, closeButton;
@@ -92,11 +92,11 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
         final ViewLoader loader = new ViewLoader(getClass().getResource(item.getFxmlUrl()));
         try {
             final Node view = loader.load();
-            arbitratorProfileViewCB = loader.getController();
-            arbitratorProfileViewCB.setParentController(this);
+            arbitratorProfileView = loader.getController();
+            arbitratorProfileView.setParentController(this);
             ((Pane) root).getChildren().set(0, view);
 
-            return arbitratorProfileViewCB;
+            return arbitratorProfileView;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -112,7 +112,7 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
     protected View loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         ((Pane) root).getChildren().set(0, loaded.view);
-        return arbitratorProfileViewCB = (ArbitratorProfileView) loaded.controller;
+        return arbitratorProfileView = (ArbitratorProfileView) loaded.controller;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +131,7 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
         if (!allArbitrators.isEmpty()) {
             index = 0;
             currentArbitrator = allArbitrators.get(index);
-            arbitratorProfileViewCB.applyArbitrator(currentArbitrator);
+            arbitratorProfileView.applyArbitrator(currentArbitrator);
             checkButtonState();
         }
     }
@@ -150,7 +150,7 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
         if (index > 0) {
             index--;
             currentArbitrator = allArbitrators.get(index);
-            arbitratorProfileViewCB.applyArbitrator(currentArbitrator);
+            arbitratorProfileView.applyArbitrator(currentArbitrator);
         }
         checkButtonState();
     }
@@ -160,7 +160,7 @@ public class ArbitratorBrowserView extends ActivatableView implements Arbitrator
         if (index < allArbitrators.size() - 1) {
             index++;
             currentArbitrator = allArbitrators.get(index);
-            arbitratorProfileViewCB.applyArbitrator(currentArbitrator);
+            arbitratorProfileView.applyArbitrator(currentArbitrator);
         }
         checkButtonState();
     }
