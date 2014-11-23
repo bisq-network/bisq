@@ -142,29 +142,25 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // MultiStepNavigation implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
-    public void nextStep(View childView) {
-        if (childView instanceof SeedWordsView) {
+    public void nextStep(Step currentStep) {
+        if (currentStep instanceof SeedWordsView) {
             seedWords.onCompleted();
             password.show();
         }
-        else if (childView instanceof PasswordView) {
+        else if (currentStep instanceof PasswordView) {
             password.onCompleted();
             restrictions.show();
         }
-        else if (childView instanceof RestrictionsView) {
+        else if (currentStep instanceof RestrictionsView) {
             restrictions.onCompleted();
             fiatAccount.show();
         }
-        else if (childView instanceof IrcAccountView) {
+        else if (currentStep instanceof IrcAccountView) {
             fiatAccount.onCompleted();
             registration.show();
         }
-        else if (childView instanceof RegistrationView) {
+        else if (currentStep instanceof RegistrationView) {
             registration.onCompleted();
 
             if (navigation.getItemsForReturning() != null)

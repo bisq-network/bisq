@@ -23,7 +23,7 @@ import java.util.ResourceBundle;
 
 import javafx.fxml.Initializable;
 
-public class InitializableView<M> extends View<M> implements Initializable {
+public class InitializableView<M> extends BasicView<M> implements Initializable {
 
     public InitializableView(M model) {
         super(model);

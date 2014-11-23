@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.home;
 
-import io.bitsquare.gui.View;
+import io.bitsquare.gui.BasicView;
 
 // home is just hosting the arbiters buttons yet, but that's just for dev, not clear yet what will be in home,
 // probably overview, event history, news, charts,... -> low prio
-public class HomeView extends View {
+public class HomeView extends BasicView {
 }

@@ -17,10 +17,28 @@
 
 package io.bitsquare.gui;
 
-public interface Wizard extends View {
-    void nextStep(Step currentStep);
+import javafx.fxml.FXML;
+import javafx.scene.*;
 
-    public interface Step extends ChildOf<Wizard> {
-        void hideWizardNavigation();
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public abstract class BasicView<M> implements View {
+
+    protected final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    protected final M model;
+    protected @FXML Parent root;
+
+    public BasicView(M model) {
+        this.model = model;
+    }
+
+    public BasicView() {
+        this(null);
+    }
+
+    protected View loadView(Navigation.Item navigationItem) {
+        throw new UnsupportedOperationException("loadView not implemented");
     }
 }

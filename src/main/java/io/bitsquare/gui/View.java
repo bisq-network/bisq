@@ -17,28 +17,5 @@
 
 package io.bitsquare.gui;
 
-import javafx.fxml.FXML;
-import javafx.scene.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class View<M> {
-
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
-
-    protected final M model;
-    protected @FXML Parent root;
-
-    public View(M model) {
-        this.model = model;
-    }
-
-    public View() {
-        this(null);
-    }
-
-    protected View loadView(Navigation.Item navigationItem) {
-        throw new UnsupportedOperationException("loadView not implemented");
-    }
+public interface View {
 }

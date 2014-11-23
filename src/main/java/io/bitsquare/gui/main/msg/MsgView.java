@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.msg;
 
-import io.bitsquare.gui.View;
+import io.bitsquare.gui.BasicView;
 
 import javax.inject.Inject;
 
@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 
 
-public class MsgView extends View {
+public class MsgView extends BasicView {
     private static final Logger log = LoggerFactory.getLogger(MsgView.class);
 
 
