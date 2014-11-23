@@ -27,7 +27,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import viewfx.view.View;
-import viewfx.view.support.guice.GuiceViewFactory;
+import viewfx.view.ViewFactory;
 
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.JavaFXBuilderFactory;
@@ -41,11 +41,11 @@ public class ViewLoader {
 
     private final Map<URL, View> cache = new HashMap<>();
     private final BuilderFactory builderFactory = new JavaFXBuilderFactory();
-    private final GuiceViewFactory controllerFactory;
+    private final ViewFactory viewFactory;
 
     @Inject
-    public ViewLoader(GuiceViewFactory controllerFactory) {
-        this.controllerFactory = controllerFactory;
+    public ViewLoader(ViewFactory viewFactory) {
+        this.viewFactory = viewFactory;
     }
 
     public View load(URL url) {
@@ -56,7 +56,7 @@ public class ViewLoader {
         if (useCaching && cache.containsKey(url))
             return cache.get(url);
 
-        FXMLLoader loader = new FXMLLoader(url, BSResources.getResourceBundle(), builderFactory, controllerFactory);
+        FXMLLoader loader = new FXMLLoader(url, BSResources.getResourceBundle(), builderFactory, viewFactory);
         View view = loader.getController();
         cache.put(url, view);
         return view;
