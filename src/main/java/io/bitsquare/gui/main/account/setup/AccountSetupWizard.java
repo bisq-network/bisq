@@ -42,9 +42,9 @@ import org.slf4j.LoggerFactory;
 /**
  * This UI is not cached as it is normally only needed once.
  */
-public class AccountSetupView extends ActivatableView implements Wizard {
+public class AccountSetupWizard extends ActivatableView implements Wizard {
 
-    private static final Logger log = LoggerFactory.getLogger(AccountSetupView.class);
+    private static final Logger log = LoggerFactory.getLogger(AccountSetupWizard.class);
 
     private WizardItem seedWords, password, fiatAccount, restrictions, registration;
     private Navigation.Listener listener;
@@ -61,7 +61,7 @@ public class AccountSetupView extends ActivatableView implements Wizard {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private AccountSetupView(ViewLoader viewLoader, Navigation navigation) {
+    private AccountSetupWizard(ViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
@@ -196,12 +196,12 @@ class WizardItem extends HBox {
     private final ImageView imageView;
     private final Label titleLabel;
     private final Label subTitleLabel;
-    private final AccountSetupView host;
+    private final AccountSetupWizard parent;
     private final Navigation.Item navigationItem;
 
-    WizardItem(AccountSetupView host, String title, String subTitle,
+    WizardItem(AccountSetupWizard parent, String title, String subTitle,
                Navigation.Item navigationItem) {
-        this.host = host;
+        this.parent = parent;
         this.navigationItem = navigationItem;
 
         setId("wizard-item-background-deactivated");
@@ -239,7 +239,7 @@ class WizardItem extends HBox {
     }
 
     void show() {
-        host.loadView(navigationItem);
+        parent.loadView(navigationItem);
        /* navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT, Navigation
                         .Item.ACCOUNT_SETUP,
                 navigationItem);*/

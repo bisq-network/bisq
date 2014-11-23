@@ -19,7 +19,7 @@
 
 
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.account.setup.AccountSetupView"
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.account.setup.AccountSetupWizard"
             xmlns:fx="http://javafx.com/fxml">
 
     <VBox fx:id="leftVBox" spacing="5" prefWidth="300" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="15"

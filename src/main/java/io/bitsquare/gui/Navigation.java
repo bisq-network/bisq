@@ -191,7 +191,7 @@ public class Navigation {
         NETWORK_SETTINGS("/io/bitsquare/gui/main/settings/network/NetworkSettingsView.fxml"),
 
         // account
-        ACCOUNT_SETUP("/io/bitsquare/gui/main/account/setup/AccountSetupView.fxml"),
+        ACCOUNT_SETUP("/io/bitsquare/gui/main/account/setup/AccountSetupWizard.fxml"),
         ACCOUNT_SETTINGS("/io/bitsquare/gui/main/account/settings/AccountSettingsView.fxml"),
         ARBITRATOR_SETTINGS("/io/bitsquare/gui/main/account/arbitrator/ArbitratorSettingsView.fxml"),
 
