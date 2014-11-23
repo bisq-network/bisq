@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.account.arbitrator.profile;
 
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.BasicView;
+import io.bitsquare.gui.AbstractView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Preferences;
@@ -29,7 +29,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
 // TODO Arbitration is very basic yet
-public class ArbitratorProfileView extends BasicView {
+public class ArbitratorProfileView extends AbstractView {
 
     private final Preferences preferences;
 
