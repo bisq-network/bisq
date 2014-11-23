@@ -26,8 +26,6 @@ import org.slf4j.LoggerFactory;
 
 public class View<M> {
 
-    public static final String TITLE_KEY = "view.title";
-
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     protected final M model;

@@ -47,6 +47,8 @@ import static javafx.scene.layout.AnchorPane.*;
 
 public class MainView extends ActivatableView<MainViewModel> {
 
+    public static final String TITLE_KEY = "view.title";
+
     private final ToggleGroup navButtons = new ToggleGroup();
 
     private final ViewLoader viewLoader;
@@ -57,7 +59,7 @@ public class MainView extends ActivatableView<MainViewModel> {
 
     @Inject
     public MainView(MainViewModel model, ViewLoader viewLoader, Navigation navigation, OverlayManager overlayManager,
-                    Transitions transitions, @Named(TITLE_KEY) String title) {
+                    Transitions transitions, @Named(MainView.TITLE_KEY) String title) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
