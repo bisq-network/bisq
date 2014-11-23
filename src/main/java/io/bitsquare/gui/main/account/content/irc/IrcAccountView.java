@@ -18,8 +18,6 @@
 package io.bitsquare.gui.main.account.content.irc;
 
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.ActivatableViewAndModel;
-import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.help.Help;
@@ -29,6 +27,9 @@ import io.bitsquare.util.Utilities;
 import java.util.Currency;
 
 import javax.inject.Inject;
+
+import viewfx.ActivatableViewAndModel;
+import viewfx.Wizard;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;

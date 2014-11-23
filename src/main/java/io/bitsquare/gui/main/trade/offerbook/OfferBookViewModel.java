@@ -17,8 +17,6 @@
 
 package io.bitsquare.gui.main.trade.offerbook;
 
-import io.bitsquare.gui.ActivatableWithDelegate;
-import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
@@ -31,6 +29,9 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import com.google.inject.Inject;
+
+import viewfx.ActivatableWithDelegate;
+import viewfx.ViewModel;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;

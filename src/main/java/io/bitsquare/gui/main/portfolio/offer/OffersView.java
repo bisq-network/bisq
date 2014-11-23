@@ -17,11 +17,12 @@
 
 package io.bitsquare.gui.main.portfolio.offer;
 
-import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.util.Utilities;
 
 import javax.inject.Inject;
+
+import viewfx.ActivatableViewAndModel;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.fxml.FXML;

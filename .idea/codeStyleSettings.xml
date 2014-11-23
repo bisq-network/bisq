@@ -48,6 +48,8 @@
             <emptyLine />
             <package name="javax.swing" withSubpackages="true" static="false" />
             <emptyLine />
+            <package name="viewfx" withSubpackages="true" static="false" />
+            <emptyLine />
             <package name="javafx" withSubpackages="true" static="false" />
             <emptyLine />
             <package name="com.sun.javafx" withSubpackages="true" static="false" />
@@ -87,4 +89,3 @@
     <option name="USE_PER_PROJECT_SETTINGS" value="true" />
   </component>
 </project>
-

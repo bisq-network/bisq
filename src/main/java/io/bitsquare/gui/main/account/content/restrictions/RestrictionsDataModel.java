@@ -20,8 +20,6 @@ package io.bitsquare.gui.main.account.content.restrictions;
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
-import io.bitsquare.gui.Activatable;
-import io.bitsquare.gui.DataModel;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.LanguageUtil;
@@ -40,6 +38,9 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import viewfx.Activatable;
+import viewfx.DataModel;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

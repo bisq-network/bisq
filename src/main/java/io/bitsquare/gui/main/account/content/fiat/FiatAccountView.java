@@ -19,9 +19,7 @@ package io.bitsquare.gui.main.account.content.fiat;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.OverlayManager;
-import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.help.Help;
@@ -36,6 +34,9 @@ import java.util.Currency;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import viewfx.ActivatableViewAndModel;
+import viewfx.Wizard;
 
 import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;

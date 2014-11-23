@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.account.arbitrator.registration;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
@@ -44,6 +43,8 @@ import java.util.List;
 import java.util.Locale;
 
 import javax.inject.Inject;
+
+import viewfx.ActivatableView;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;

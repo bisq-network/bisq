@@ -18,14 +18,15 @@
 package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.ActivatableWithDelegate;
-import io.bitsquare.gui.ViewModel;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.Region;
 
 import com.google.inject.Inject;
 
 import java.util.Locale;
+
+import viewfx.ActivatableWithDelegate;
+import viewfx.ViewModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

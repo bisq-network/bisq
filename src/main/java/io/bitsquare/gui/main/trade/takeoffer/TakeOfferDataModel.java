@@ -21,8 +21,6 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.Activatable;
-import io.bitsquare.gui.DataModel;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Preferences;
@@ -34,6 +32,9 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import com.google.inject.Inject;
+
+import viewfx.Activatable;
+import viewfx.DataModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;

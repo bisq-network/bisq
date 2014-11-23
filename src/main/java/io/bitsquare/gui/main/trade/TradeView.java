@@ -17,9 +17,7 @@
 
 package io.bitsquare.gui.main.trade;
 
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferView;
@@ -32,6 +30,9 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import java.util.List;
+
+import viewfx.ActivatableView;
+import viewfx.View;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
@@ -117,8 +118,7 @@ public class TradeView extends ActivatableView<TabPane, Void> {
         navigation.navigationTo(Navigation.Item.MAIN, navigationItem, Navigation.Item.TAKE_OFFER);
     }
 
-    @Override
-    protected View loadView(Navigation.Item navigationItem) {
+    private View loadView(Navigation.Item navigationItem) {
         TabPane tabPane = root;
         if (navigationItem == Navigation.Item.OFFER_BOOK && offerBookView == null) {
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.

@@ -17,14 +17,15 @@
 
 package io.bitsquare.gui.main.account.settings;
 
-import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
-import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.util.Colors;
 
 import javax.inject.Inject;
+
+import viewfx.ActivatableViewAndModel;
+import viewfx.View;
+import viewfx.Wizard;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -107,14 +108,12 @@ class AccountSettingsView extends ActivatableViewAndModel {
         navigation.removeListener(listener);
     }
 
-    @Override
-    protected View loadView(Navigation.Item navigationItem) {
+    private void loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         content.getChildren().setAll(loaded.view);
         View child = (View) loaded.controller;
         if (child instanceof Wizard.Step)
             ((Wizard.Step) child).hideWizardNavigation();
-        return child;
     }
 
     private void selectMainMenuButton(Navigation.Item item) {

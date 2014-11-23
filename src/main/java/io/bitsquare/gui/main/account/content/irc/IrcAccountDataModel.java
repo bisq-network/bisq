@@ -22,8 +22,6 @@ import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.Activatable;
-import io.bitsquare.gui.DataModel;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
@@ -44,6 +42,9 @@ import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
+
+import viewfx.Activatable;
+import viewfx.DataModel;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

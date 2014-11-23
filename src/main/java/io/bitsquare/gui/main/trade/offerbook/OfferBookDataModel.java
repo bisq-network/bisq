@@ -18,8 +18,6 @@
 package io.bitsquare.gui.main.trade.offerbook;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.gui.Activatable;
-import io.bitsquare.gui.DataModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
@@ -36,6 +34,9 @@ import org.bitcoinj.utils.Fiat;
 import com.google.inject.Inject;
 
 import java.util.Comparator;
+
+import viewfx.Activatable;
+import viewfx.DataModel;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

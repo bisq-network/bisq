@@ -15,37 +15,34 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui;
+package viewfx;
 
+import java.net.URL;
+
+import java.util.ResourceBundle;
+
+import javafx.fxml.Initializable;
 import javafx.scene.*;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+public abstract class InitializableView<R extends Node, M> extends AbstractView<R, M> implements Initializable {
 
-public abstract class ActivatableViewAndModel<R extends Node, M extends Activatable> extends ActivatableView<R, M> {
-
-    public ActivatableViewAndModel(M model) {
-        super(checkNotNull(model, "Model must not be null"));
+    public InitializableView(M model) {
+        super(model);
     }
 
-    public ActivatableViewAndModel() {
-        this((M) Activatable.NOOP_INSTANCE);
-    }
-
-    @Override
-    public final void activate() {
-        model.activate();
-        this.doActivate();
-    }
-
-    protected void doActivate() {
+    public InitializableView() {
+        this(null);
     }
 
     @Override
-    public final void deactivate() {
-        model.deactivate();
-        this.doDeactivate();
+    public final void initialize(URL location, ResourceBundle resources) {
+        prepareInitialize();
+        initialize();
     }
 
-    protected void doDeactivate() {
+    protected void prepareInitialize() {
+    }
+
+    protected void initialize() {
     }
 }

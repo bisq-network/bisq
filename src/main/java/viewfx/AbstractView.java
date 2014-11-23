@@ -15,35 +15,26 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui;
+package viewfx;
 
+import javafx.fxml.FXML;
 import javafx.scene.*;
 
-public abstract class ActivatableView<R extends Node, M> extends InitializableView<R, M> {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    public ActivatableView(M model) {
-        super(model);
+public abstract class AbstractView<R extends Node, M> implements View {
+
+    protected final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    protected @FXML R root;
+    protected final M model;
+
+    public AbstractView(M model) {
+        this.model = model;
     }
 
-    public ActivatableView() {
+    public AbstractView() {
         this(null);
-    }
-
-    @Override
-    protected void prepareInitialize() {
-        if (root != null) {
-            root.sceneProperty().addListener((ov, oldValue, newValue) -> {
-                if (oldValue == null && newValue != null)
-                    activate();
-                else if (oldValue != null && newValue == null)
-                    deactivate();
-            });
-        }
-    }
-
-    protected void activate() {
-    }
-
-    protected void deactivate() {
     }
 }

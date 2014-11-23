@@ -20,8 +20,6 @@ package io.bitsquare.gui.main.account.content.fiat;
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.Activatable;
-import io.bitsquare.gui.DataModel;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
@@ -32,6 +30,9 @@ import io.bitsquare.user.User;
 import com.google.inject.Inject;
 
 import java.util.Currency;
+
+import viewfx.Activatable;
+import viewfx.DataModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;

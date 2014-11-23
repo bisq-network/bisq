@@ -17,8 +17,6 @@
 
 package io.bitsquare.gui.main.trade.offerbook;
 
-import io.bitsquare.gui.ActivatableViewAndModel;
-import io.bitsquare.gui.ChildView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InputTextField;
@@ -36,6 +34,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import viewfx.ActivatableViewAndModel;
+import viewfx.ChildView;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;

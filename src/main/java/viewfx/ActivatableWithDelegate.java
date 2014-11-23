@@ -15,7 +15,29 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui;
+package viewfx;
 
-public interface DataModel extends Model {
+public abstract class ActivatableWithDelegate<D extends Activatable> extends WithDelegate<D> implements  Activatable {
+
+    public ActivatableWithDelegate(D delegate) {
+        super(delegate);
+    }
+
+    @Override
+    public final void activate() {
+        delegate.activate();
+        this.doActivate();
+    }
+
+    protected void doActivate() {
+    }
+
+    @Override
+    public final void deactivate() {
+        delegate.deactivate();
+        this.doDeactivate();
+    }
+
+    protected void doDeactivate() {
+    }
 }

@@ -17,14 +17,14 @@
 
 package io.bitsquare.gui.main.portfolio;
 
-import io.bitsquare.gui.Activatable;
-import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.trade.TradeManager;
 
 import javax.inject.Inject;
+
+import viewfx.Activatable;
+import viewfx.ActivatableViewAndModel;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -86,8 +86,7 @@ class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
         currentTab = null;
     }
 
-    @Override
-    protected View loadView(Navigation.Item navigationItem) {
+    private void loadView(Navigation.Item navigationItem) {
 
         // we want to get activate/deactivate called, so we remove the old view on tab change
         if (currentTab != null)
@@ -107,7 +106,6 @@ class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
         }
         currentTab.setContent(loaded.view);
         root.getSelectionModel().select(currentTab);
-        return (View) loaded.controller;
     }
 }
 

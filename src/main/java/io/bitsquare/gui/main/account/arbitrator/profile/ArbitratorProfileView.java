@@ -18,12 +18,13 @@
 package io.bitsquare.gui.main.account.arbitrator.profile;
 
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.AbstractView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Preferences;
 
 import javax.inject.Inject;
+
+import viewfx.AbstractView;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;

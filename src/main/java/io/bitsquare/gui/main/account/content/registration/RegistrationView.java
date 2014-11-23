@@ -17,9 +17,7 @@
 
 package io.bitsquare.gui.main.account.content.registration;
 
-import io.bitsquare.gui.InitializableView;
 import io.bitsquare.gui.OverlayManager;
-import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.components.AddressTextField;
 import io.bitsquare.gui.components.BalanceTextField;
 import io.bitsquare.gui.components.Popups;
@@ -31,6 +29,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import viewfx.InitializableView;
+import viewfx.Wizard;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

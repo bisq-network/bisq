@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.portfolio.pending;
 
-import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
@@ -40,6 +39,8 @@ import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import viewfx.ActivatableViewAndModel;
 
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;

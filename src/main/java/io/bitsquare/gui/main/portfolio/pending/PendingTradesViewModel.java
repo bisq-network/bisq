@@ -18,8 +18,6 @@
 package io.bitsquare.gui.main.portfolio.pending;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.ActivatableWithDelegate;
-import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.BSResources;
@@ -31,6 +29,9 @@ import org.bitcoinj.utils.Fiat;
 import com.google.inject.Inject;
 
 import java.util.Date;
+
+import viewfx.ActivatableWithDelegate;
+import viewfx.ViewModel;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;

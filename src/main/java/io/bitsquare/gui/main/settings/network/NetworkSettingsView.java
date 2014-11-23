@@ -18,10 +18,11 @@
 package io.bitsquare.gui.main.settings.network;
 
 import io.bitsquare.btc.BitcoinNetwork;
-import io.bitsquare.gui.InitializableView;
 import io.bitsquare.network.ClientNode;
 
 import javax.inject.Inject;
+
+import viewfx.InitializableView;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;

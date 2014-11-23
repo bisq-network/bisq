@@ -17,9 +17,7 @@
 
 package io.bitsquare.gui.main.msg;
 
-import io.bitsquare.gui.AbstractView;
-
-import javax.inject.Inject;
+import viewfx.AbstractView;
 
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 class MsgView extends AbstractView {

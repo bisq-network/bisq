@@ -15,30 +15,22 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui;
+package viewfx;
 
-import javafx.fxml.FXML;
-import javafx.scene.*;
+public interface Activatable {
+    void activate();
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+    void deactivate();
 
-public abstract class AbstractView<R extends Node, M> implements View {
 
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
+    Activatable NOOP_INSTANCE = new Activatable() {;
+        @Override
+        public void activate() {
+        }
 
-    protected @FXML R root;
-    protected final M model;
+        @Override
+        public void deactivate() {
+        }
+    };
 
-    public AbstractView(M model) {
-        this.model = model;
-    }
-
-    public AbstractView() {
-        this(null);
-    }
-
-    protected View loadView(Navigation.Item navigationItem) {
-        throw new UnsupportedOperationException("loadView not implemented");
-    }
 }

@@ -18,12 +18,13 @@
 package io.bitsquare.gui.main.account.content.seedwords;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.inject.Inject;
 
 import java.util.List;
+
+import viewfx.ViewModel;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;

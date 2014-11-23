@@ -18,11 +18,8 @@
 package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
-import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.ImageUtil;
@@ -32,6 +29,10 @@ import io.bitsquare.locale.Region;
 import java.util.Locale;
 
 import javax.inject.Inject;
+
+import viewfx.ActivatableViewAndModel;
+import viewfx.View;
+import viewfx.Wizard;
 
 import javafx.fxml.FXML;
 import javafx.scene.*;
@@ -144,8 +145,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
         Help.openWindow(HelpId.SETUP_RESTRICTION_ARBITRATORS);
     }
 
-    @Override
-    protected View loadView(Navigation.Item navigationItem) {
+    private void loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl(), false);
 
         final Stage stage = new Stage();
@@ -165,8 +165,6 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
                 updateArbitratorList();
         });
         stage.show();
-
-        return (View) loaded.controller;
     }
 
     void updateArbitratorList() {

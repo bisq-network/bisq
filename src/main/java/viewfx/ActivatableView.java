@@ -15,12 +15,35 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui;
+package viewfx;
 
-public interface Wizard extends View {
-    void nextStep(Step currentStep);
+import javafx.scene.*;
 
-    public interface Step extends ChildView<Wizard> {
-        void hideWizardNavigation();
+public abstract class ActivatableView<R extends Node, M> extends InitializableView<R, M> {
+
+    public ActivatableView(M model) {
+        super(model);
+    }
+
+    public ActivatableView() {
+        this(null);
+    }
+
+    @Override
+    protected void prepareInitialize() {
+        if (root != null) {
+            root.sceneProperty().addListener((ov, oldValue, newValue) -> {
+                if (oldValue == null && newValue != null)
+                    activate();
+                else if (oldValue != null && newValue == null)
+                    deactivate();
+            });
+        }
+    }
+
+    protected void activate() {
+    }
+
+    protected void deactivate() {
     }
 }

@@ -17,11 +17,12 @@
 
 package io.bitsquare.gui.main.portfolio.closed;
 
-import io.bitsquare.gui.ActivatableWithDelegate;
-import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.inject.Inject;
+
+import viewfx.ActivatableWithDelegate;
+import viewfx.ViewModel;
 
 import javafx.collections.ObservableList;
 

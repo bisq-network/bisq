@@ -17,12 +17,12 @@
 
 package io.bitsquare.gui.main.account;
 
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
 
 import javax.inject.Inject;
+
+import viewfx.ActivatableView;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -94,8 +94,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
     }
 
 
-    @Override
-    protected View loadView(Navigation.Item navigationItem) {
+    private void loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         final Tab tab;
         switch (navigationItem) {
@@ -121,6 +120,5 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
         tab.setContent(loaded.view);
         root.getSelectionModel().select(tab);
-        return (View) loaded.controller;
     }
 }

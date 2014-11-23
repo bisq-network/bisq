@@ -15,22 +15,12 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui;
+package viewfx;
 
-public interface Activatable {
-    void activate();
+public interface Wizard extends View {
+    void nextStep(Step currentStep);
 
-    void deactivate();
-
-
-    Activatable NOOP_INSTANCE = new Activatable() {;
-        @Override
-        public void activate() {
-        }
-
-        @Override
-        public void deactivate() {
-        }
-    };
-
+    public interface Step extends ChildView<Wizard> {
+        void hideWizardNavigation();
+    }
 }

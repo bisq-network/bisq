@@ -18,8 +18,6 @@
 package io.bitsquare.gui.main.trade.createoffer;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.ActivatableWithDelegate;
-import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
@@ -32,6 +30,9 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+
+import viewfx.ActivatableWithDelegate;
+import viewfx.ViewModel;
 
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;

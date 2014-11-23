@@ -15,7 +15,15 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui;
+package viewfx;
 
-public interface Model {
+import static com.google.common.base.Preconditions.checkNotNull;
+
+public abstract class WithDelegate<D> {
+
+    protected final D delegate;
+
+    protected WithDelegate(D delegate) {
+        this.delegate = checkNotNull(delegate, "Delegate object must not be null");
+    }
 }

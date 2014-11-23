@@ -19,8 +19,6 @@ package io.bitsquare.gui.main.account.content.irc;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.gui.ActivatableWithDelegate;
-import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BSResources;
@@ -28,6 +26,9 @@ import io.bitsquare.locale.BSResources;
 import com.google.inject.Inject;
 
 import java.util.Currency;
+
+import viewfx.ActivatableWithDelegate;
+import viewfx.ViewModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;

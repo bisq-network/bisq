@@ -21,8 +21,6 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.TxConfidenceListener;
-import io.bitsquare.gui.Activatable;
-import io.bitsquare.gui.DataModel;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Trade;
@@ -40,6 +38,9 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 
 import java.util.Optional;
+
+import viewfx.Activatable;
+import viewfx.DataModel;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

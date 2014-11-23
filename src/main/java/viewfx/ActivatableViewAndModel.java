@@ -15,15 +15,37 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui;
+package viewfx;
+
+import javafx.scene.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public abstract class WithDelegate<D> {
+public abstract class ActivatableViewAndModel<R extends Node, M extends Activatable> extends ActivatableView<R, M> {
 
-    protected final D delegate;
+    public ActivatableViewAndModel(M model) {
+        super(checkNotNull(model, "Model must not be null"));
+    }
 
-    protected WithDelegate(D delegate) {
-        this.delegate = checkNotNull(delegate, "Delegate object must not be null");
+    public ActivatableViewAndModel() {
+        this((M) Activatable.NOOP_INSTANCE);
+    }
+
+    @Override
+    public final void activate() {
+        model.activate();
+        this.doActivate();
+    }
+
+    protected void doActivate() {
+    }
+
+    @Override
+    public final void deactivate() {
+        model.deactivate();
+        this.doDeactivate();
+    }
+
+    protected void doDeactivate() {
     }
 }

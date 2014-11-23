@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.trade.takeoffer;
 
 
-import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.AddressTextField;
@@ -40,6 +39,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import viewfx.ActivatableViewAndModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.event.ActionEvent;

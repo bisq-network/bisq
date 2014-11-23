@@ -19,9 +19,7 @@ package io.bitsquare.gui.main.account.arbitrator.browser;
 
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileView;
 import io.bitsquare.locale.LanguageUtil;
@@ -33,6 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import viewfx.ActivatableView;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -90,11 +90,10 @@ class ArbitratorBrowserView extends ActivatableView<Pane, Void> implements Arbit
     }*/
 
 
-    @Override
-    protected View loadView(Navigation.Item navigationItem) {
+    private void loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         root.getChildren().set(0, loaded.view);
-        return arbitratorProfileView = (ArbitratorProfileView) loaded.controller;
+        arbitratorProfileView = (ArbitratorProfileView) loaded.controller;
     }
 
     @Override

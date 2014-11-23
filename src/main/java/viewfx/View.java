@@ -15,34 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui;
+package viewfx;
 
-import java.net.URL;
-
-import java.util.ResourceBundle;
-
-import javafx.fxml.Initializable;
-import javafx.scene.*;
-
-public abstract class InitializableView<R extends Node, M> extends AbstractView<R, M> implements Initializable {
-
-    public InitializableView(M model) {
-        super(model);
-    }
-
-    public InitializableView() {
-        this(null);
-    }
-
-    @Override
-    public final void initialize(URL location, ResourceBundle resources) {
-        prepareInitialize();
-        initialize();
-    }
-
-    protected void prepareInitialize() {
-    }
-
-    protected void initialize() {
-    }
+public interface View {
 }

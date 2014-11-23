@@ -17,11 +17,12 @@
 
 package io.bitsquare.gui.main.account.content.changepassword;
 
-import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PasswordValidator;
 
 import com.google.inject.Inject;
+
+import viewfx.ViewModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

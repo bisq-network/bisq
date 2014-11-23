@@ -17,12 +17,13 @@
 
 package io.bitsquare.gui.main.account.content.password;
 
-import io.bitsquare.gui.InitializableView;
-import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 
 import javax.inject.Inject;
+
+import viewfx.InitializableView;
+import viewfx.Wizard;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;

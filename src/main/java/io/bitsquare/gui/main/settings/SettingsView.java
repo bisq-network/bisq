@@ -17,14 +17,14 @@
 
 package io.bitsquare.gui.main.settings;
 
-import io.bitsquare.gui.Activatable;
-import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.settings.Preferences;
 
 import javax.inject.Inject;
+
+import viewfx.Activatable;
+import viewfx.ActivatableViewAndModel;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -87,8 +87,7 @@ class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.removeListener(navigationListener);
     }
 
-    @Override
-    protected View loadView(Navigation.Item navigationItem) {
+    private void loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         final Tab tab;
         switch (navigationItem) {
@@ -103,7 +102,6 @@ class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
         }
         tab.setContent(loaded.view);
         root.getSelectionModel().select(tab);
-        return (View) loaded.controller;
     }
 }
 

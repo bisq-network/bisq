@@ -17,11 +17,8 @@
 
 package io.bitsquare.gui.main.account.setup;
 
-import io.bitsquare.gui.ActivatableView;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.View;
 import io.bitsquare.gui.ViewLoader;
-import io.bitsquare.gui.Wizard;
 import io.bitsquare.gui.main.account.content.irc.IrcAccountView;
 import io.bitsquare.gui.main.account.content.password.PasswordView;
 import io.bitsquare.gui.main.account.content.registration.RegistrationView;
@@ -29,6 +26,10 @@ import io.bitsquare.gui.main.account.content.restrictions.RestrictionsView;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
 
 import javax.inject.Inject;
+
+import viewfx.ActivatableView;
+import viewfx.View;
+import viewfx.Wizard;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -151,14 +152,12 @@ class AccountSetupWizard extends ActivatableView implements Wizard {
         }
     }
 
-    @Override
-    protected View loadView(Navigation.Item navigationItem) {
+    protected void loadView(Navigation.Item navigationItem) {
         ViewLoader.Item loaded = viewLoader.load(navigationItem.getFxmlUrl());
         content.getChildren().setAll(loaded.view);
         View child = (View) loaded.controller;
         if (child instanceof Wizard.Step)
             ((Step) child).setParent(this);
-        return child;
     }
 }
 

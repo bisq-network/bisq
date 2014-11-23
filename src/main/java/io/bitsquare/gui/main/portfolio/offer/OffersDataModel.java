@@ -17,8 +17,6 @@
 
 package io.bitsquare.gui.main.portfolio.offer;
 
-import io.bitsquare.gui.Activatable;
-import io.bitsquare.gui.DataModel;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.TradeManager;
@@ -27,6 +25,9 @@ import io.bitsquare.user.User;
 import com.google.inject.Inject;
 
 import java.util.stream.Collectors;
+
+import viewfx.Activatable;
+import viewfx.DataModel;
 
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;

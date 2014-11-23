@@ -22,7 +22,6 @@ import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.gui.ActivatableViewAndModel;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.util.Utilities;
@@ -38,6 +37,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+
+import viewfx.ActivatableViewAndModel;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;

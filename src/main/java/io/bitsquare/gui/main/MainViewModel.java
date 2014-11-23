@@ -20,7 +20,6 @@ package io.bitsquare.gui.main;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.BootstrapState;
@@ -30,6 +29,8 @@ import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 
 import com.google.inject.Inject;
+
+import viewfx.ViewModel;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
