@@ -37,7 +37,8 @@ import java.util.ResourceBundle;
 
 import viewfx.view.ViewFactory;
 import viewfx.view.ViewLoader;
-import viewfx.view.fxml.FxmlViewLoader;
+import viewfx.view.support.CachingViewLoader;
+import viewfx.view.support.fxml.FxmlViewLoader;
 import viewfx.view.support.guice.GuiceViewFactory;
 
 import javafx.stage.Stage;
@@ -60,6 +61,7 @@ public class GuiModule extends BitsquareModule {
 
         bind(ResourceBundle.class).toInstance(BSResources.getResourceBundle());
         bind(ViewLoader.class).to(FxmlViewLoader.class).asEagerSingleton();
+        bind(CachingViewLoader.class).asEagerSingleton();
 
         bind(OfferBook.class).asEagerSingleton();
         bind(Navigation.class).asEagerSingleton();

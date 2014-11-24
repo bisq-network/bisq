@@ -15,14 +15,12 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package viewfx.view.fxml;
+package viewfx.view.support.fxml;
 
 import java.io.IOException;
 
 import java.net.URL;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 import javax.inject.Inject;
@@ -33,9 +31,8 @@ import viewfx.view.ViewLoader;
 
 import javafx.fxml.FXMLLoader;
 
-public class FxmlViewLoader implements ViewLoader<URL> {
+public class FxmlViewLoader implements ViewLoader {
 
-    private final Map<URL, View> cache = new HashMap<>();
     private final ViewFactory viewFactory;
     private final ResourceBundle resourceBundle;
 
@@ -45,22 +42,17 @@ public class FxmlViewLoader implements ViewLoader<URL> {
         this.resourceBundle = resourceBundle;
     }
 
-    @Override
-    public View load(URL url) {
-        return load(url, true);
-    }
+    public View load(Object location) {
+        if (!(location instanceof URL))
+            throw new IllegalArgumentException("FXML view locations must be of type URL");
 
-    public View load(URL url, boolean useCaching) {
-        if (useCaching && cache.containsKey(url))
-            return cache.get(url);
+        URL url = (URL) location;
 
         try {
             FXMLLoader loader = new FXMLLoader(url, resourceBundle);
             loader.setControllerFactory(viewFactory);
             loader.load();
-            View view = loader.getController();
-            cache.put(url, view);
-            return view;
+            return loader.getController();
         } catch (IOException ex) {
             throw new RuntimeException("Failed to load View at location " + url, ex);
         }

@@ -31,7 +31,8 @@ import org.bitcoinj.utils.Fiat;
 import java.util.List;
 
 import viewfx.view.View;
-import viewfx.view.fxml.FxmlViewLoader;
+import viewfx.view.ViewLoader;
+import viewfx.view.support.CachingViewLoader;
 import viewfx.view.support.ActivatableView;
 
 import javafx.application.Platform;
@@ -53,10 +54,10 @@ public class TradeView extends ActivatableView<TabPane, Void> {
     private Fiat price;
     private Offer offer;
 
-    private final FxmlViewLoader viewLoader;
+    private final ViewLoader viewLoader;
     private final Navigation navigation;
 
-    protected TradeView(FxmlViewLoader viewLoader, Navigation navigation) {
+    protected TradeView(CachingViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
@@ -122,7 +123,7 @@ public class TradeView extends ActivatableView<TabPane, Void> {
         TabPane tabPane = root;
         if (navigationItem == Navigation.Item.OFFER_BOOK && offerBookView == null) {
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
-            View view = viewLoader.load(navigationItem.getFxmlUrl(), false);
+            View view = viewLoader.load(navigationItem.getFxmlUrl());
             final Tab tab = new Tab(direction == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
             tab.setClosable(false);
             tab.setContent(view.getRoot());
@@ -137,7 +138,7 @@ public class TradeView extends ActivatableView<TabPane, Void> {
         else if (navigationItem == Navigation.Item.CREATE_OFFER && createOfferView == null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
-            View view = viewLoader.load(navigationItem.getFxmlUrl(), false);
+            View view = viewLoader.load(navigationItem.getFxmlUrl());
             createOfferView = (CreateOfferView) view;
             createOfferView.initWithData(direction, amount, price);
             createOfferRoot = view.getRoot();
@@ -152,7 +153,7 @@ public class TradeView extends ActivatableView<TabPane, Void> {
                 offer != null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
-            View view = viewLoader.load(Navigation.Item.TAKE_OFFER.getFxmlUrl(), false);
+            View view = viewLoader.load(Navigation.Item.TAKE_OFFER.getFxmlUrl());
             takeOfferView = (TakeOfferView) view;
             takeOfferView.initWithData(direction, amount, offer);
             takeOfferRoot = view.getRoot();

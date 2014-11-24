@@ -15,19 +15,32 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.trade;
+package viewfx.view.support;
 
-import io.bitsquare.gui.Navigation;
+import java.util.HashMap;
 
 import javax.inject.Inject;
 
-import viewfx.view.support.CachingViewLoader;
+import viewfx.view.View;
+import viewfx.view.ViewLoader;
 
-class BuyView extends TradeView {
+public class CachingViewLoader implements ViewLoader {
+
+    private final HashMap<Object, View> cache = new HashMap<>();
+    private final ViewLoader delegate;
 
     @Inject
-    public BuyView(CachingViewLoader viewLoader, Navigation navigation) {
-        super(viewLoader, navigation);
+    public CachingViewLoader(ViewLoader delegate) {
+        this.delegate = delegate;
+    }
+
+    @Override
+    public View load(Object location) {
+        if (cache.containsKey(location))
+            return cache.get(location);
+
+        View view = delegate.load(location);
+        cache.put(location, view);
+        return view;
     }
 }
-

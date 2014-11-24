@@ -39,7 +39,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import viewfx.view.View;
-import viewfx.view.fxml.FxmlViewLoader;
+import viewfx.view.ViewLoader;
+import viewfx.view.support.CachingViewLoader;
 import viewfx.view.support.guice.GuiceViewFactory;
 
 import javafx.application.Application;
@@ -95,8 +96,8 @@ public class BitsquareApp extends Application {
 
         // load the main view and create the main scene
 
-        FxmlViewLoader viewLoader = injector.getInstance(FxmlViewLoader.class);
-        View view = viewLoader.load(Navigation.Item.MAIN.getFxmlUrl(), false);
+        ViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
+        View view = viewLoader.load(Navigation.Item.MAIN.getFxmlUrl());
 
         Scene scene = new Scene((Parent) view.getRoot(), 1000, 600);
         scene.getStylesheets().setAll(

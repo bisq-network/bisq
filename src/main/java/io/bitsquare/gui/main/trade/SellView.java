@@ -21,12 +21,12 @@ import io.bitsquare.gui.Navigation;
 
 import javax.inject.Inject;
 
-import viewfx.view.fxml.FxmlViewLoader;
+import viewfx.view.support.CachingViewLoader;
 
 class SellView extends TradeView {
 
     @Inject
-    public SellView(FxmlViewLoader viewLoader, Navigation navigation) {
+    public SellView(CachingViewLoader viewLoader, Navigation navigation) {
         super(viewLoader, navigation);
     }
 }

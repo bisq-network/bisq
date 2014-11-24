@@ -30,8 +30,9 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import viewfx.view.View;
-import viewfx.view.fxml.FxmlViewLoader;
+import viewfx.view.ViewLoader;
 import viewfx.view.Wizard;
+import viewfx.view.support.CachingViewLoader;
 import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.fxml.FXML;
@@ -56,11 +57,11 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
 
     private Wizard parent;
 
-    private final FxmlViewLoader viewLoader;
+    private final ViewLoader viewLoader;
     private final Stage primaryStage;
 
     @Inject
-    private RestrictionsView(RestrictionsViewModel model, FxmlViewLoader viewLoader, Stage primaryStage) {
+    private RestrictionsView(RestrictionsViewModel model, CachingViewLoader viewLoader, Stage primaryStage) {
         super(model);
         this.viewLoader = viewLoader;
         this.primaryStage = primaryStage;
@@ -146,7 +147,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
     }
 
     private void loadView(Navigation.Item navigationItem) {
-        View view = viewLoader.load(navigationItem.getFxmlUrl(), false);
+        View view = viewLoader.load(navigationItem.getFxmlUrl());
 
         final Stage stage = new Stage();
         stage.setTitle("Arbitrator selection");

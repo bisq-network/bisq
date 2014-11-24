@@ -17,6 +17,6 @@
 
 package viewfx.view;
 
-public interface ViewLoader<Location> {
-    View load(Location location);
+public interface ViewLoader {
+    View load(Object location);
 }
