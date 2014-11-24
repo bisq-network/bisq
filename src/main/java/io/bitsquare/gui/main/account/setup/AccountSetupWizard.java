@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.account.setup;
 
+import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.account.content.irc.IrcAccountView;
 import io.bitsquare.gui.main.account.content.password.PasswordView;
@@ -59,7 +60,7 @@ class AccountSetupWizard extends ActivatableView implements Wizard {
         listener = navigationItems -> {
             if (navigationItems != null &&
                     navigationItems.length == 4 &&
-                    navigationItems[2] == Navigation.Item.ACCOUNT_SETUP) {
+                    navigationItems[2] == FxmlView.ACCOUNT_SETUP) {
 
                 switch (navigationItems[3]) {
                     case SEED_WORDS:
@@ -92,18 +93,18 @@ class AccountSetupWizard extends ActivatableView implements Wizard {
         };
 
         seedWords = new WizardItem(this, "Backup wallet seed", "Write down the seed word for your wallet",
-                Navigation.Item.SEED_WORDS);
+                FxmlView.SEED_WORDS);
         password = new WizardItem(this, "Setup password", "Protect your wallet with a password",
-                Navigation.Item.ADD_PASSWORD);
+                FxmlView.ADD_PASSWORD);
         restrictions = new WizardItem(this, "Select arbitrators",
                 "Select which arbitrators you want to use for trading",
-                Navigation.Item.RESTRICTIONS);
+                FxmlView.RESTRICTIONS);
         fiatAccount = new WizardItem(this, " Setup Payments account(s)",
                 "You need to setup at least one payment account",
-                Navigation.Item.FIAT_ACCOUNT);
+                FxmlView.FIAT_ACCOUNT);
         registration = new WizardItem(this, "Register your account",
                 "The registration in the Blockchain requires a payment of 0.0002 BTC",
-                Navigation.Item.REGISTRATION);
+                FxmlView.REGISTRATION);
 
         leftVBox.getChildren().addAll(seedWords, password, restrictions, fiatAccount, registration);
 
@@ -148,12 +149,12 @@ class AccountSetupWizard extends ActivatableView implements Wizard {
             if (navigation.getItemsForReturning() != null)
                 navigation.navigationTo(navigation.getItemsForReturning());
             else
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.BUY);
+                navigation.navigationTo(FxmlView.MAIN, FxmlView.BUY);
         }
     }
 
-    protected void loadView(Navigation.Item navigationItem) {
-        View view = viewLoader.load(navigationItem.getFxmlUrl());
+    protected void loadView(FxmlView navigationItem) {
+        View view = viewLoader.load(navigationItem.getLocation());
         content.getChildren().setAll(view.getRoot());
         if (view instanceof Wizard.Step)
             ((Step) view).setParent(this);
@@ -167,10 +168,10 @@ class WizardItem extends HBox {
     private final Label titleLabel;
     private final Label subTitleLabel;
     private final AccountSetupWizard parent;
-    private final Navigation.Item navigationItem;
+    private final FxmlView navigationItem;
 
     WizardItem(AccountSetupWizard parent, String title, String subTitle,
-               Navigation.Item navigationItem) {
+               FxmlView navigationItem) {
         this.parent = parent;
         this.navigationItem = navigationItem;
 

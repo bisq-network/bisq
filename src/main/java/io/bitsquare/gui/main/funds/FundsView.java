@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.funds;
 
+import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 
 import javax.inject.Inject;
@@ -51,15 +52,15 @@ class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
     public void initialize() {
         navigationListener = navigationItems -> {
             if (navigationItems != null && navigationItems.length == 3
-                    && navigationItems[1] == Navigation.Item.FUNDS)
+                    && navigationItems[1] == FxmlView.FUNDS)
                 loadView(navigationItems[2]);
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == withdrawalTab)
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.FUNDS, Navigation.Item.WITHDRAWAL);
+                navigation.navigationTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.WITHDRAWAL);
             else if (newValue == transactionsTab)
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.FUNDS, Navigation.Item.TRANSACTIONS);
+                navigation.navigationTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.TRANSACTIONS);
         };
     }
 
@@ -69,9 +70,9 @@ class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.addListener(navigationListener);
 
         if (root.getSelectionModel().getSelectedItem() == transactionsTab)
-            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.FUNDS, Navigation.Item.TRANSACTIONS);
+            navigation.navigationTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.TRANSACTIONS);
         else
-            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.FUNDS, Navigation.Item.WITHDRAWAL);
+            navigation.navigationTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.WITHDRAWAL);
     }
 
     @Override
@@ -80,12 +81,12 @@ class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.removeListener(navigationListener);
     }
 
-    private void loadView(Navigation.Item navigationItem) {
+    private void loadView(FxmlView navigationItem) {
         // we want to get activate/deactivate called, so we remove the old view on tab change
         if (currentTab != null)
             currentTab.setContent(null);
 
-        View view = viewLoader.load(navigationItem.getFxmlUrl());
+        View view = viewLoader.load(navigationItem.getLocation());
         switch (navigationItem) {
             case WITHDRAWAL:
                 currentTab = withdrawalTab;

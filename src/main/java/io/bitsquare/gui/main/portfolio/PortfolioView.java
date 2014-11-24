@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio;
 
+import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.trade.TradeManager;
 
@@ -54,18 +55,18 @@ class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
     public void initialize() {
         navigationListener = navigationItems -> {
             if (navigationItems != null && navigationItems.length == 3
-                    && navigationItems[1] == Navigation.Item.PORTFOLIO)
+                    && navigationItems[1] == FxmlView.PORTFOLIO)
                 loadView(navigationItems[2]);
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == offersTab)
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO, Navigation.Item.OFFERS);
+                navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.OFFERS);
             else if (newValue == openTradesTab)
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO,
-                        Navigation.Item.PENDING_TRADES);
+                navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO,
+                        FxmlView.PENDING_TRADES);
             else if (newValue == closedTradesTab)
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO, Navigation.Item.CLOSED_TRADES);
+                navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.CLOSED_TRADES);
         };
     }
 
@@ -75,9 +76,9 @@ class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.addListener(navigationListener);
 
         if (tradeManager.getPendingTrades().size() == 0)
-            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO, Navigation.Item.OFFERS);
+            navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.OFFERS);
         else
-            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO, Navigation.Item.PENDING_TRADES);
+            navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.PENDING_TRADES);
     }
 
     @Override
@@ -87,13 +88,13 @@ class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
         currentTab = null;
     }
 
-    private void loadView(Navigation.Item navigationItem) {
+    private void loadView(FxmlView navigationItem) {
 
         // we want to get activate/deactivate called, so we remove the old view on tab change
         if (currentTab != null)
             currentTab.setContent(null);
 
-        View view = viewLoader.load(navigationItem.getFxmlUrl());
+        View view = viewLoader.load(navigationItem.getLocation());
         switch (navigationItem) {
             case OFFERS:
                 currentTab = offersTab;

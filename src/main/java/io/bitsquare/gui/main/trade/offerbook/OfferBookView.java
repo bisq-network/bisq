@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.trade.offerbook;
 
+import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InputTextField;
@@ -203,8 +204,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 Dialog.Actions.OK.handle(actionEvent);
                 overlayManager.removeBlurContent();
                 navigation.setItemsForReturning(navigation.getCurrentItems());
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
-                        Navigation.Item.ACCOUNT_SETUP);
+                navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                        FxmlView.ACCOUNT_SETUP);
             }
         });
         Popups.openInfoPopup("You don't have setup a trading account.",
@@ -254,9 +255,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 actions);
 
         if (Popups.isYes(response))
-            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
-                    Navigation.Item.ACCOUNT_SETTINGS,
-                    Navigation.Item.RESTRICTIONS);
+            navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                    FxmlView.ACCOUNT_SETTINGS,
+                    FxmlView.RESTRICTIONS);
         else
             table.getSelectionModel().clearSelection();
     }

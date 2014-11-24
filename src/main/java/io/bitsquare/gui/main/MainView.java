@@ -19,6 +19,7 @@ package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.Popups;
@@ -43,7 +44,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.*;
 import javafx.scene.text.*;
 
-import static io.bitsquare.gui.Navigation.Item.*;
+import static io.bitsquare.gui.FxmlView.*;
 import static javafx.scene.layout.AnchorPane.*;
 
 public class MainView extends ActivatableView<StackPane, MainViewModel> {
@@ -123,10 +124,10 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
         }};
 
         navigation.addListener(navItems -> {
-            if (navItems == null || navItems.length != 2 || navItems[0] != Navigation.Item.MAIN)
+            if (navItems == null || navItems.length != 2 || navItems[0] != FxmlView.MAIN)
                 return;
 
-            View view = viewLoader.load(navItems[1].getFxmlUrl());
+            View view = viewLoader.load(navItems[1].getLocation());
             contentContainer.getChildren().setAll(view.getRoot());
 
             navButtons.getToggles().stream()
@@ -333,7 +334,7 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
 
     private class NavButton extends ToggleButton {
 
-        public NavButton(Navigation.Item item) {
+        public NavButton(FxmlView item) {
             super(item.getDisplayName(), new ImageView() {{
                 setId("image-nav-" + item.getId());
             }});
@@ -359,7 +360,7 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
                 }
             });
 
-            this.setOnAction(e -> navigation.navigationTo(Navigation.Item.MAIN, item));
+            this.setOnAction(e -> navigation.navigationTo(FxmlView.MAIN, item));
         }
     }
 }

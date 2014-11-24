@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.settings;
 
+import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.settings.Preferences;
 
@@ -53,17 +54,17 @@ class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
     public void initialize() {
         navigationListener = navigationItems -> {
             if (navigationItems != null && navigationItems.length == 3
-                    && navigationItems[1] == Navigation.Item.SETTINGS)
+                    && navigationItems[1] == FxmlView.SETTINGS)
                 loadView(navigationItems[2]);
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == preferencesTab)
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.SETTINGS,
-                        Navigation.Item.PREFERENCES);
+                navigation.navigationTo(FxmlView.MAIN, FxmlView.SETTINGS,
+                        FxmlView.PREFERENCES);
             else if (newValue == networkSettingsTab)
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.SETTINGS,
-                        Navigation.Item.NETWORK_SETTINGS);
+                navigation.navigationTo(FxmlView.MAIN, FxmlView.SETTINGS,
+                        FxmlView.NETWORK_SETTINGS);
         };
     }
 
@@ -73,13 +74,13 @@ class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.addListener(navigationListener);
 
         if (root.getSelectionModel().getSelectedItem() == preferencesTab)
-            navigation.navigationTo(Navigation.Item.MAIN,
-                    Navigation.Item.SETTINGS,
-                    Navigation.Item.PREFERENCES);
+            navigation.navigationTo(FxmlView.MAIN,
+                    FxmlView.SETTINGS,
+                    FxmlView.PREFERENCES);
         else
-            navigation.navigationTo(Navigation.Item.MAIN,
-                    Navigation.Item.SETTINGS,
-                    Navigation.Item.NETWORK_SETTINGS);
+            navigation.navigationTo(FxmlView.MAIN,
+                    FxmlView.SETTINGS,
+                    FxmlView.NETWORK_SETTINGS);
     }
 
     @Override
@@ -88,8 +89,8 @@ class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.removeListener(navigationListener);
     }
 
-    private void loadView(Navigation.Item navigationItem) {
-        View view = viewLoader.load(navigationItem.getFxmlUrl());
+    private void loadView(FxmlView navigationItem) {
+        View view = viewLoader.load(navigationItem.getLocation());
         final Tab tab;
         switch (navigationItem) {
             case PREFERENCES:

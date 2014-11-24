@@ -19,7 +19,7 @@ package io.bitsquare.app.gui;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.app.BitsquareEnvironment;
-import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.FxmlView;
 import io.bitsquare.locale.BSResources;
 
 import com.google.inject.Guice;
@@ -81,11 +81,11 @@ public class ViewLoaderTests {
 
     @Test(expected = BitsquareException.class)
     public void loadingBogusFxmlResourceShouldThrow() throws MalformedURLException {
-        new FxmlViewLoader(viewFactory, resourceBundle).load(Navigation.Item.BOGUS.getFxmlUrl());
+        new FxmlViewLoader(viewFactory, resourceBundle).load(FxmlView.BOGUS.getLocation());
     }
 
     @Test
     public void loadingValidFxmlResourceShouldNotThrow() {
-        new FxmlViewLoader(viewFactory, resourceBundle).load(Navigation.Item.ACCOUNT.getFxmlUrl());
+        new FxmlViewLoader(viewFactory, resourceBundle).load(FxmlView.ACCOUNT.getLocation());
     }
 }

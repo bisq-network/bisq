@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.account;
 
+import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 
 import javax.inject.Inject;
@@ -51,17 +52,17 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         navigationListener = navigationItems -> {
             if (navigationItems != null &&
                     navigationItems.length == 3 &&
-                    navigationItems[1] == Navigation.Item.ACCOUNT)
+                    navigationItems[1] == FxmlView.ACCOUNT)
                 loadView(navigationItems[2]);
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == accountSettingsTab)
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
-                        Navigation.Item.ACCOUNT_SETTINGS);
+                navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                        FxmlView.ACCOUNT_SETTINGS);
             else
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
-                        Navigation.Item.ARBITRATOR_SETTINGS);
+                navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                        FxmlView.ARBITRATOR_SETTINGS);
 
         };
     }
@@ -72,18 +73,18 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
         if (navigation.getCurrentItems().length == 2 &&
-                navigation.getCurrentItems()[1] == Navigation.Item.ACCOUNT) {
+                navigation.getCurrentItems()[1] == FxmlView.ACCOUNT) {
             if (model.getNeedRegistration()) {
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
-                        Navigation.Item.ACCOUNT_SETUP);
+                navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                        FxmlView.ACCOUNT_SETUP);
             }
             else {
                 if (root.getSelectionModel().getSelectedItem() == accountSettingsTab)
-                    navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
-                            Navigation.Item.ACCOUNT_SETTINGS);
+                    navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                            FxmlView.ACCOUNT_SETTINGS);
                 else
-                    navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
-                            Navigation.Item.ARBITRATOR_SETTINGS);
+                    navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                            FxmlView.ARBITRATOR_SETTINGS);
             }
         }
     }
@@ -95,8 +96,8 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
     }
 
 
-    private void loadView(Navigation.Item navigationItem) {
-        View view = viewLoader.load(navigationItem.getFxmlUrl());
+    private void loadView(FxmlView navigationItem) {
+        View view = viewLoader.load(navigationItem.getLocation());
         final Tab tab;
         switch (navigationItem) {
             case ACCOUNT_SETTINGS:

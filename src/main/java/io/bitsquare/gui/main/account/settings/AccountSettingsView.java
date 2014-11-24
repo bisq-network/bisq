@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.account.settings;
 
+import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.util.Colors;
 
@@ -58,7 +59,7 @@ class AccountSettingsView extends ActivatableViewAndModel {
         listener = navigationItems -> {
             if (navigationItems != null &&
                     navigationItems.length == 4 &&
-                    navigationItems[2] == Navigation.Item.ACCOUNT_SETTINGS) {
+                    navigationItems[2] == FxmlView.ACCOUNT_SETTINGS) {
                 loadView(navigationItems[3]);
                 selectMainMenuButton(navigationItems[3]);
             }
@@ -66,15 +67,15 @@ class AccountSettingsView extends ActivatableViewAndModel {
 
         ToggleGroup toggleGroup = new ToggleGroup();
         seedWords = new MenuItem(navigation, "Wallet seed",
-                Navigation.Item.SEED_WORDS, toggleGroup);
+                FxmlView.SEED_WORDS, toggleGroup);
         password = new MenuItem(navigation, "Wallet password",
-                Navigation.Item.CHANGE_PASSWORD, toggleGroup);
+                FxmlView.CHANGE_PASSWORD, toggleGroup);
         restrictions = new MenuItem(navigation, "Arbitrator selection",
-                Navigation.Item.RESTRICTIONS, toggleGroup);
+                FxmlView.RESTRICTIONS, toggleGroup);
         fiatAccount = new MenuItem(navigation, "Payments account(s)",
-                Navigation.Item.FIAT_ACCOUNT, toggleGroup);
+                FxmlView.FIAT_ACCOUNT, toggleGroup);
         registration = new MenuItem(navigation, "Renew your account",
-                Navigation.Item.REGISTRATION, toggleGroup);
+                FxmlView.REGISTRATION, toggleGroup);
 
         seedWords.setDisable(true);
         password.setDisable(true);
@@ -88,15 +89,15 @@ class AccountSettingsView extends ActivatableViewAndModel {
     @Override
     public void doActivate() {
         navigation.addListener(listener);
-        Navigation.Item[] items = navigation.getCurrentItems();
+        FxmlView[] items = navigation.getCurrentItems();
         if (items.length == 3 &&
-                items[2] == Navigation.Item.ACCOUNT_SETTINGS) {
-            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
-                    Navigation.Item.ACCOUNT_SETTINGS, Navigation.Item.FIAT_ACCOUNT);
+                items[2] == FxmlView.ACCOUNT_SETTINGS) {
+            navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                    FxmlView.ACCOUNT_SETTINGS, FxmlView.FIAT_ACCOUNT);
         }
         else {
             if (items.length == 4 &&
-                    items[2] == Navigation.Item.ACCOUNT_SETTINGS) {
+                    items[2] == FxmlView.ACCOUNT_SETTINGS) {
                 loadView(items[3]);
                 selectMainMenuButton(items[3]);
             }
@@ -108,14 +109,14 @@ class AccountSettingsView extends ActivatableViewAndModel {
         navigation.removeListener(listener);
     }
 
-    private void loadView(Navigation.Item navigationItem) {
-        View view = viewLoader.load(navigationItem.getFxmlUrl());
+    private void loadView(FxmlView navigationItem) {
+        View view = viewLoader.load(navigationItem.getLocation());
         content.getChildren().setAll(view.getRoot());
         if (view instanceof Wizard.Step)
             ((Wizard.Step) view).hideWizardNavigation();
     }
 
-    private void selectMainMenuButton(Navigation.Item item) {
+    private void selectMainMenuButton(FxmlView item) {
         switch (item) {
             case SEED_WORDS:
                 seedWords.setSelected(true);
@@ -133,7 +134,7 @@ class AccountSettingsView extends ActivatableViewAndModel {
                 registration.setSelected(true);
                 break;
             default:
-                log.error(item.getFxmlUrl() + " is invalid");
+                log.error(item.getLocation() + " is invalid");
                 break;
         }
     }
@@ -142,7 +143,7 @@ class AccountSettingsView extends ActivatableViewAndModel {
 
 class MenuItem extends ToggleButton {
 
-    MenuItem(Navigation navigation, String title, Navigation.Item navigationItem,
+    MenuItem(Navigation navigation, String title, FxmlView navigationItem,
              ToggleGroup toggleGroup) {
 
         setToggleGroup(toggleGroup);
@@ -154,17 +155,17 @@ class MenuItem extends ToggleButton {
 
         Label icon = new Label();
         icon.setTextFill(Paint.valueOf("#999"));
-        if (navigationItem.equals(Navigation.Item.SEED_WORDS))
+        if (navigationItem.equals(FxmlView.SEED_WORDS))
             AwesomeDude.setIcon(icon, AwesomeIcon.INFO_SIGN);
-        else if (navigationItem.equals(Navigation.Item.REGISTRATION))
+        else if (navigationItem.equals(FxmlView.REGISTRATION))
             AwesomeDude.setIcon(icon, AwesomeIcon.BRIEFCASE);
         else
             AwesomeDude.setIcon(icon, AwesomeIcon.EDIT_SIGN);
 
         setGraphic(icon);
 
-        setOnAction((event) -> navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT,
-                Navigation.Item.ACCOUNT_SETTINGS, navigationItem));
+        setOnAction((event) -> navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                FxmlView.ACCOUNT_SETTINGS, navigationItem));
 
         selectedProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue) {

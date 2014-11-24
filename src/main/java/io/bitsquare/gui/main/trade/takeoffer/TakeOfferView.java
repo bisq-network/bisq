@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.trade.takeoffer;
 
 
+import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.AddressTextField;
@@ -280,8 +281,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         getProperties().put("type", "CLOSE");
                         try {
                             close();
-                            navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO,
-                                    Navigation.Item.PENDING_TRADES);
+                            navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO,
+                                    FxmlView.PENDING_TRADES);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

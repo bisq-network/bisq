@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.trade.createoffer;
 
+import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.AddressTextField;
@@ -221,17 +222,17 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void openAccountSettings() {
-        navigation.navigationTo(Navigation.Item.MAIN,
-                Navigation.Item.ACCOUNT,
-                Navigation.Item.ACCOUNT_SETTINGS,
-                Navigation.Item.RESTRICTIONS);
+        navigation.navigationTo(FxmlView.MAIN,
+                FxmlView.ACCOUNT,
+                FxmlView.ACCOUNT_SETTINGS,
+                FxmlView.RESTRICTIONS);
     }
 
     private void close() {
         TabPane tabPane = ((TabPane) (root.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
 
-        navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO, Navigation.Item.OFFERS);
+        navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.OFFERS);
     }
 
     private void setupListeners() {

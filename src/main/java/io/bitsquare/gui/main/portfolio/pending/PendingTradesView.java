@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pending;
 
+import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
@@ -180,8 +181,8 @@ class PendingTradesView extends ActivatableViewAndModel<AnchorPane, PendingTrade
         setSummaryControlsVisible(false);
         model.withdraw(withdrawAddressTextField.getText());
         Platform.runLater(() ->
-                navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.PORTFOLIO,
-                        Navigation.Item.CLOSED_TRADES));
+                navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO,
+                        FxmlView.CLOSED_TRADES));
     }
 
     @FXML

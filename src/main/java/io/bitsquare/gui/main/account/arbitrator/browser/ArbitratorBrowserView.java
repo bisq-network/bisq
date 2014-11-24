@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.account.arbitrator.browser;
 
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileView;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.msg.MessageService;
@@ -71,7 +71,7 @@ class ArbitratorBrowserView extends ActivatableView<Pane, Void> implements Arbit
         messageService.addArbitratorListener(this);
         messageService.getArbitrators(LanguageUtil.getDefaultLanguageLocale());
 
-        loadView(Navigation.Item.ARBITRATOR_PROFILE);
+        loadView(FxmlView.ARBITRATOR_PROFILE);
         checkButtonState();
     }
 
@@ -91,8 +91,8 @@ class ArbitratorBrowserView extends ActivatableView<Pane, Void> implements Arbit
     }*/
 
 
-    private void loadView(Navigation.Item navigationItem) {
-        View view = viewLoader.load(navigationItem.getFxmlUrl());
+    private void loadView(FxmlView navigationItem) {
+        View view = viewLoader.load(navigationItem.getLocation());
         root.getChildren().set(0, view.getRoot());
         arbitratorProfileView = (ArbitratorProfileView) view;
     }

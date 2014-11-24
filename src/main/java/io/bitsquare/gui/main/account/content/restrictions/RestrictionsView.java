@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.ImageUtil;
@@ -121,7 +121,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
 
     @FXML
     private void onOpenArbitratorScreen() {
-        loadView(Navigation.Item.ARBITRATOR_BROWSER);
+        loadView(FxmlView.ARBITRATOR_BROWSER);
     }
 
 
@@ -146,8 +146,8 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
         Help.openWindow(HelpId.SETUP_RESTRICTION_ARBITRATORS);
     }
 
-    private void loadView(Navigation.Item navigationItem) {
-        View view = viewLoader.load(navigationItem.getFxmlUrl());
+    private void loadView(FxmlView navigationItem) {
+        View view = viewLoader.load(navigationItem.getLocation());
 
         final Stage stage = new Stage();
         stage.setTitle("Arbitrator selection");
@@ -162,7 +162,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
         Scene scene = new Scene((Parent) view.getRoot(), 800, 600);
         stage.setScene(scene);
         stage.setOnHidden(windowEvent -> {
-            if (navigationItem == Navigation.Item.ARBITRATOR_BROWSER)
+            if (navigationItem == FxmlView.ARBITRATOR_BROWSER)
                 updateArbitratorList();
         });
         stage.show();
