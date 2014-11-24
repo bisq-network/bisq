@@ -31,6 +31,7 @@ import io.bitsquare.gui.util.validation.PasswordValidator;
 
 import com.google.inject.name.Names;
 
+import viewfx.view.ViewFactory;
 import viewfx.view.support.ViewLoader;
 import viewfx.view.support.guice.GuiceViewFactory;
 
@@ -49,7 +50,7 @@ public class GuiModule extends BitsquareModule {
 
     @Override
     protected void configure() {
-        bind(GuiceViewFactory.class).asEagerSingleton();
+        bind(ViewFactory.class).to(GuiceViewFactory.class).asEagerSingleton();
         bind(ViewLoader.class).asEagerSingleton();
 
         bind(OfferBook.class).asEagerSingleton();
