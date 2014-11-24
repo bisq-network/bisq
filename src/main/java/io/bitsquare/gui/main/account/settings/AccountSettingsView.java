@@ -67,7 +67,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     @Override
     public void initialize() {
         listener = viewPath -> {
-            if (viewPath.size() != 4 || !viewPath.contains(AccountSettingsView.class))
+            if (viewPath.size() != 4 || viewPath.indexOf(AccountSettingsView.class) != 2)
                 return;
 
             loadView(viewPath.tip());
@@ -94,8 +94,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         navigation.addListener(listener);
         ViewPath viewPath = navigation.getCurrentPath();
         if (viewPath.size() == 3 && viewPath.indexOf(AccountSettingsView.class) == 2) {
-            navigation.navigateTo(
-                    ViewPath.to(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountView.class));
+            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountView.class);
         }
         else if (viewPath.size() == 4 && viewPath.indexOf(AccountSettingsView.class) == 2) {
             loadView(viewPath.get(3));
@@ -148,8 +147,8 @@ class MenuItem extends ToggleButton {
 
         setGraphic(icon);
 
-        setOnAction((event) -> navigation.navigateTo(
-                ViewPath.to(MainView.class, AccountView.class, AccountSettingsView.class, viewClass)));
+        setOnAction((event) ->
+                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, viewClass));
 
         selectedProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue) {
