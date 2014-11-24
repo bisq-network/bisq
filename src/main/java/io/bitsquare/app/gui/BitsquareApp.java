@@ -21,7 +21,6 @@ import io.bitsquare.BitsquareException;
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.SystemTray;
-import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
@@ -40,6 +39,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import viewfx.view.View;
+import viewfx.view.support.ViewLoader;
 import viewfx.view.support.guice.GuiceViewFactory;
 
 import javafx.application.Application;

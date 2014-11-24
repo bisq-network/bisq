@@ -18,11 +18,11 @@
 package io.bitsquare.gui.main.account;
 
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.ViewLoader;
 
 import javax.inject.Inject;
 
 import viewfx.view.View;
+import viewfx.view.support.ViewLoader;
 import viewfx.view.support.ActivatableView;
 
 import javafx.beans.value.ChangeListener;

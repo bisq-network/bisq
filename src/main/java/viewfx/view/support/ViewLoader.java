@@ -15,9 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui;
-
-import io.bitsquare.locale.BSResources;
+package viewfx.view.support;
 
 import java.net.URL;
 
@@ -30,17 +28,10 @@ import viewfx.view.View;
 import viewfx.view.ViewFactory;
 
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.JavaFXBuilderFactory;
-import javafx.util.BuilderFactory;
 
-/**
- * Guice support for fxml controllers
- * Support caching to speed up switches between UI screens.
- */
 public class ViewLoader {
 
     private final Map<URL, View> cache = new HashMap<>();
-    private final BuilderFactory builderFactory = new JavaFXBuilderFactory();
     private final ViewFactory viewFactory;
 
     @Inject
@@ -56,7 +47,9 @@ public class ViewLoader {
         if (useCaching && cache.containsKey(url))
             return cache.get(url);
 
-        FXMLLoader loader = new FXMLLoader(url, BSResources.getResourceBundle(), builderFactory, viewFactory);
+        FXMLLoader loader = new FXMLLoader(url);
+        loader.setControllerFactory(viewFactory);
+
         View view = loader.getController();
         cache.put(url, view);
         return view;

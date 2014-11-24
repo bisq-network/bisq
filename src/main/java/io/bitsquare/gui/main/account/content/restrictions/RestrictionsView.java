@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.ImageUtil;
@@ -31,6 +30,7 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import viewfx.view.View;
+import viewfx.view.support.ViewLoader;
 import viewfx.view.Wizard;
 import viewfx.view.support.ActivatableViewAndModel;
 

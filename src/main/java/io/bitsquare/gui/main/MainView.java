@@ -21,7 +21,6 @@ import io.bitsquare.BitsquareException;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
-import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
 import io.bitsquare.gui.util.Transitions;
@@ -30,6 +29,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import viewfx.view.View;
+import viewfx.view.support.ViewLoader;
 import viewfx.view.support.ActivatableView;
 
 import javafx.application.Platform;

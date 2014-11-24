@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.account.setup;
 
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.main.account.content.irc.IrcAccountView;
 import io.bitsquare.gui.main.account.content.password.PasswordView;
 import io.bitsquare.gui.main.account.content.registration.RegistrationView;
@@ -27,9 +26,10 @@ import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
 
 import javax.inject.Inject;
 
-import viewfx.view.support.ActivatableView;
 import viewfx.view.View;
+import viewfx.view.support.ViewLoader;
 import viewfx.view.Wizard;
+import viewfx.view.support.ActivatableView;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;

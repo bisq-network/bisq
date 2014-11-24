@@ -18,13 +18,13 @@
 package io.bitsquare.gui.main.portfolio;
 
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.trade.TradeManager;
 
 import javax.inject.Inject;
 
 import viewfx.model.Activatable;
 import viewfx.view.View;
+import viewfx.view.support.ViewLoader;
 import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.value.ChangeListener;

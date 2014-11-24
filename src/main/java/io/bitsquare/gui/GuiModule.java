@@ -31,6 +31,7 @@ import io.bitsquare.gui.util.validation.PasswordValidator;
 
 import com.google.inject.name.Names;
 
+import viewfx.view.support.ViewLoader;
 import viewfx.view.support.guice.GuiceViewFactory;
 
 import javafx.stage.Stage;

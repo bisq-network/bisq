@@ -20,7 +20,6 @@ package io.bitsquare.gui.main.account.arbitrator.browser;
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileView;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.msg.MessageService;
@@ -33,6 +32,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import viewfx.view.View;
+import viewfx.view.support.ViewLoader;
 import viewfx.view.support.ActivatableView;
 
 import javafx.fxml.FXML;

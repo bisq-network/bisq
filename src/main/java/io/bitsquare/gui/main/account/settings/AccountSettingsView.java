@@ -18,14 +18,14 @@
 package io.bitsquare.gui.main.account.settings;
 
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.util.Colors;
 
 import javax.inject.Inject;
 
-import viewfx.view.support.ActivatableViewAndModel;
 import viewfx.view.View;
+import viewfx.view.support.ViewLoader;
 import viewfx.view.Wizard;
+import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;

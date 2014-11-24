@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.trade;
 
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferView;
 import io.bitsquare.gui.main.trade.offerbook.OfferBookView;
@@ -32,6 +31,7 @@ import org.bitcoinj.utils.Fiat;
 import java.util.List;
 
 import viewfx.view.View;
+import viewfx.view.support.ViewLoader;
 import viewfx.view.support.ActivatableView;
 
 import javafx.application.Platform;

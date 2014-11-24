@@ -20,13 +20,13 @@ package io.bitsquare.app.gui;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.ViewLoader;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import java.net.MalformedURLException;
 
+import viewfx.view.support.ViewLoader;
 import viewfx.view.support.guice.GuiceViewFactory;
 
 import javafx.application.Application;

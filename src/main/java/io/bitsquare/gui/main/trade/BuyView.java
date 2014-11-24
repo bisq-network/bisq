@@ -18,9 +18,10 @@
 package io.bitsquare.gui.main.trade;
 
 import io.bitsquare.gui.Navigation;
-import io.bitsquare.gui.ViewLoader;
 
 import javax.inject.Inject;
+
+import viewfx.view.support.ViewLoader;
 
 class BuyView extends TradeView {
 
