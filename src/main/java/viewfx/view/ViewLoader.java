@@ -15,19 +15,8 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.trade;
+package viewfx.view;
 
-import io.bitsquare.gui.Navigation;
-
-import javax.inject.Inject;
-
-import viewfx.view.fxml.FxmlViewLoader;
-
-class BuyView extends TradeView {
-
-    @Inject
-    public BuyView(FxmlViewLoader viewLoader, Navigation navigation) {
-        super(viewLoader, navigation);
-    }
+public interface ViewLoader<Location> {
+    View load(Location location);
 }
-

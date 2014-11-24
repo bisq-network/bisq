@@ -32,7 +32,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import viewfx.view.View;
-import viewfx.view.support.ViewLoader;
+import viewfx.view.ViewLoader;
 import viewfx.view.support.ActivatableView;
 
 import javafx.fxml.FXML;

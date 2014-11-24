@@ -23,7 +23,7 @@ import io.bitsquare.gui.util.Colors;
 import javax.inject.Inject;
 
 import viewfx.view.View;
-import viewfx.view.support.ViewLoader;
+import viewfx.view.ViewLoader;
 import viewfx.view.Wizard;
 import viewfx.view.support.ActivatableViewAndModel;
 

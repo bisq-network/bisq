@@ -29,7 +29,7 @@ import java.net.MalformedURLException;
 
 import java.util.ResourceBundle;
 
-import viewfx.view.support.ViewLoader;
+import viewfx.view.fxml.FxmlViewLoader;
 import viewfx.view.support.guice.GuiceViewFactory;
 
 import javafx.application.Application;
@@ -81,11 +81,11 @@ public class ViewLoaderTests {
 
     @Test(expected = BitsquareException.class)
     public void loadingBogusFxmlResourceShouldThrow() throws MalformedURLException {
-        new ViewLoader(viewFactory, resourceBundle).load(Navigation.Item.BOGUS.getFxmlUrl(), false);
+        new FxmlViewLoader(viewFactory, resourceBundle).load(Navigation.Item.BOGUS.getFxmlUrl(), false);
     }
 
     @Test
     public void loadingValidFxmlResourceShouldNotThrow() {
-        new ViewLoader(viewFactory, resourceBundle).load(Navigation.Item.ACCOUNT.getFxmlUrl(), false);
+        new FxmlViewLoader(viewFactory, resourceBundle).load(Navigation.Item.ACCOUNT.getFxmlUrl(), false);
     }
 }

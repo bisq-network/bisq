@@ -36,7 +36,8 @@ import com.google.inject.name.Names;
 import java.util.ResourceBundle;
 
 import viewfx.view.ViewFactory;
-import viewfx.view.support.ViewLoader;
+import viewfx.view.ViewLoader;
+import viewfx.view.fxml.FxmlViewLoader;
 import viewfx.view.support.guice.GuiceViewFactory;
 
 import javafx.stage.Stage;
@@ -58,7 +59,7 @@ public class GuiModule extends BitsquareModule {
         bind(ViewFactory.class).to(GuiceViewFactory.class);
 
         bind(ResourceBundle.class).toInstance(BSResources.getResourceBundle());
-        bind(ViewLoader.class).asEagerSingleton();
+        bind(ViewLoader.class).to(FxmlViewLoader.class).asEagerSingleton();
 
         bind(OfferBook.class).asEagerSingleton();
         bind(Navigation.class).asEagerSingleton();

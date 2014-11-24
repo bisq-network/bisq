@@ -24,7 +24,7 @@ import javax.inject.Inject;
 
 import viewfx.model.Activatable;
 import viewfx.view.View;
-import viewfx.view.support.ViewLoader;
+import viewfx.view.ViewLoader;
 import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.value.ChangeListener;

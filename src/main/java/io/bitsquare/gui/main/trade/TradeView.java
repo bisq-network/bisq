@@ -31,7 +31,7 @@ import org.bitcoinj.utils.Fiat;
 import java.util.List;
 
 import viewfx.view.View;
-import viewfx.view.support.ViewLoader;
+import viewfx.view.fxml.FxmlViewLoader;
 import viewfx.view.support.ActivatableView;
 
 import javafx.application.Platform;
@@ -53,10 +53,10 @@ public class TradeView extends ActivatableView<TabPane, Void> {
     private Fiat price;
     private Offer offer;
 
-    private final ViewLoader viewLoader;
+    private final FxmlViewLoader viewLoader;
     private final Navigation navigation;
 
-    protected TradeView(ViewLoader viewLoader, Navigation navigation) {
+    protected TradeView(FxmlViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }

@@ -30,7 +30,7 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import viewfx.view.View;
-import viewfx.view.support.ViewLoader;
+import viewfx.view.fxml.FxmlViewLoader;
 import viewfx.view.Wizard;
 import viewfx.view.support.ActivatableViewAndModel;
 
@@ -56,11 +56,11 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
 
     private Wizard parent;
 
-    private final ViewLoader viewLoader;
+    private final FxmlViewLoader viewLoader;
     private final Stage primaryStage;
 
     @Inject
-    private RestrictionsView(RestrictionsViewModel model, ViewLoader viewLoader, Stage primaryStage) {
+    private RestrictionsView(RestrictionsViewModel model, FxmlViewLoader viewLoader, Stage primaryStage) {
         super(model);
         this.viewLoader = viewLoader;
         this.primaryStage = primaryStage;

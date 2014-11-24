@@ -29,7 +29,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import viewfx.view.View;
-import viewfx.view.support.ViewLoader;
+import viewfx.view.ViewLoader;
 import viewfx.view.support.ActivatableView;
 
 import javafx.application.Platform;

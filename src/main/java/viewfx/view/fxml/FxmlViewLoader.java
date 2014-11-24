@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package viewfx.view.support;
+package viewfx.view.fxml;
 
 import java.io.IOException;
 
@@ -29,21 +29,23 @@ import javax.inject.Inject;
 
 import viewfx.view.View;
 import viewfx.view.ViewFactory;
+import viewfx.view.ViewLoader;
 
 import javafx.fxml.FXMLLoader;
 
-public class ViewLoader {
+public class FxmlViewLoader implements ViewLoader<URL> {
 
     private final Map<URL, View> cache = new HashMap<>();
     private final ViewFactory viewFactory;
     private final ResourceBundle resourceBundle;
 
     @Inject
-    public ViewLoader(ViewFactory viewFactory, ResourceBundle resourceBundle) {
+    public FxmlViewLoader(ViewFactory viewFactory, ResourceBundle resourceBundle) {
         this.viewFactory = viewFactory;
         this.resourceBundle = resourceBundle;
     }
 
+    @Override
     public View load(URL url) {
         return load(url, true);
     }
