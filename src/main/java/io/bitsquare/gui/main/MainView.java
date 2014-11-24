@@ -156,7 +156,7 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
                                     model.numPendingTrades.addListener((ov2, prev2, numPendingTrades) ->
                                             applyPendingTradesInfoIcon((int) numPendingTrades, portfolioButtonHolder));
 
-                                    navigation.navigateToLastStoredItem();
+                                    navigation.navigateToLastOpenView();
 
                                     transitions.fadeOutAndRemove(splashScreen, 1500);
                                 }
@@ -360,7 +360,7 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
                 }
             });
 
-            this.setOnAction(e -> navigation.navigationTo(FxmlView.MAIN, item));
+            this.setOnAction(e -> navigation.navigateTo(FxmlView.MAIN, item));
         }
     }
 }

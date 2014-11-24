@@ -281,7 +281,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         getProperties().put("type", "CLOSE");
                         try {
                             close();
-                            navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO,
+                            navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO,
                                     FxmlView.PENDING_TRADES);
                         } catch (Exception e) {
                             e.printStackTrace();

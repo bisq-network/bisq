@@ -146,10 +146,10 @@ class AccountSetupWizard extends ActivatableView implements Wizard {
         else if (currentStep instanceof RegistrationView) {
             registration.onCompleted();
 
-            if (navigation.getItemsForReturning() != null)
-                navigation.navigationTo(navigation.getItemsForReturning());
+            if (navigation.getReturnPath() != null)
+                navigation.navigateTo(navigation.getReturnPath());
             else
-                navigation.navigationTo(FxmlView.MAIN, FxmlView.BUY);
+                navigation.navigateTo(FxmlView.MAIN, FxmlView.BUY);
         }
     }
 

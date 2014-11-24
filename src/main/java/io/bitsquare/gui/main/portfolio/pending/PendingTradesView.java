@@ -181,7 +181,7 @@ class PendingTradesView extends ActivatableViewAndModel<AnchorPane, PendingTrade
         setSummaryControlsVisible(false);
         model.withdraw(withdrawAddressTextField.getText());
         Platform.runLater(() ->
-                navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO,
+                navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO,
                         FxmlView.CLOSED_TRADES));
     }
 

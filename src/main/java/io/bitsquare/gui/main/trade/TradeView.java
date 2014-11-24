@@ -98,7 +98,7 @@ public class TradeView extends ActivatableView<TabPane, Void> {
         });
 
         navigation.addListener(listener);
-        navigation.navigationTo(FxmlView.MAIN, navigationItem, FxmlView.OFFER_BOOK);
+        navigation.navigateTo(FxmlView.MAIN, navigationItem, FxmlView.OFFER_BOOK);
     }
 
     @Override
@@ -110,14 +110,14 @@ public class TradeView extends ActivatableView<TabPane, Void> {
     public void createOffer(Coin amount, Fiat price) {
         this.amount = amount;
         this.price = price;
-        navigation.navigationTo(FxmlView.MAIN, navigationItem, FxmlView.CREATE_OFFER);
+        navigation.navigateTo(FxmlView.MAIN, navigationItem, FxmlView.CREATE_OFFER);
     }
 
     public void takeOffer(Coin amount, Fiat price, Offer offer) {
         this.amount = amount;
         this.price = price;
         this.offer = offer;
-        navigation.navigationTo(FxmlView.MAIN, navigationItem, FxmlView.TAKE_OFFER);
+        navigation.navigateTo(FxmlView.MAIN, navigationItem, FxmlView.TAKE_OFFER);
     }
 
     private View loadView(FxmlView navigationItem) {
@@ -173,14 +173,14 @@ public class TradeView extends ActivatableView<TabPane, Void> {
         offerBookView.enableCreateOfferButton();
 
         // update the navigation state
-        navigation.navigationTo(FxmlView.MAIN, navigationItem, FxmlView.OFFER_BOOK);
+        navigation.navigateTo(FxmlView.MAIN, navigationItem, FxmlView.OFFER_BOOK);
     }
 
     private void onTakeOfferViewRemoved() {
         takeOfferView = null;
 
         // update the navigation state
-        navigation.navigationTo(FxmlView.MAIN, navigationItem, FxmlView.OFFER_BOOK);
+        navigation.navigateTo(FxmlView.MAIN, navigationItem, FxmlView.OFFER_BOOK);
     }
 }
 

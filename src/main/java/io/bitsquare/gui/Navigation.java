@@ -26,72 +26,71 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Navigation {
-    // New listeners can be added during iteration so we use CopyOnWriteArrayList to prevent invalid array
-    // modification
+
+    private static final String CURRENT_PATH_KEY = "currentPath";
+
+    // TODO: MAIN->BUY is the default view for now; should be MAIN->HOME later
+    private static final FxmlView[] DEFAULT_PATH = new FxmlView[]{ FxmlView.MAIN, FxmlView.BUY };
+
+    // New listeners can be added during iteration so we use CopyOnWriteArrayList to
+    // prevent invalid array modification
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
+
     private final Persistence persistence;
-    private FxmlView[] currentItems;
 
-    // Used for returning to the last important view
-    // After setup is done we want to return to the last opened view (e.g. sell/buy)
-    private FxmlView[] itemsForReturning;
+    private FxmlView[] currentPath;
 
+    // Used for returning to the last important view. After setup is done we want to
+    // return to the last opened view (e.g. sell/buy)
+    private FxmlView[] returnPath;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     public Navigation(Persistence persistence) {
         this.persistence = persistence;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public void navigateTo(FxmlView... newPath) {
+        if (newPath == null)
+            return;
 
-    public void navigationTo(FxmlView... items) {
         List<FxmlView> temp = new ArrayList<>();
-        if (items != null) {
-            for (int i = 0; i < items.length; i++) {
-                FxmlView item = items[i];
-                temp.add(item);
-                if (currentItems == null ||
-                        (currentItems != null &&
-                                currentItems.length > i &&
-                                item != currentItems[i] &&
-                                i != items.length - 1)) {
-                    List<FxmlView> temp2 = new ArrayList<>(temp);
-                    for (int n = i + 1; n < items.length; n++) {
-                        FxmlView[] newTemp = new FxmlView[i + 1];
-                        currentItems = temp2.toArray(newTemp);
-                        navigationTo(currentItems);
-                        item = items[n];
-                        temp2.add(item);
-                    }
+        for (int i = 0; i < newPath.length; i++) {
+            FxmlView element = newPath[i];
+            temp.add(element);
+            if (currentPath == null ||
+                    (currentPath != null &&
+                            currentPath.length > i &&
+                            element != currentPath[i] &&
+                            i != newPath.length - 1)) {
+                List<FxmlView> temp2 = new ArrayList<>(temp);
+                for (int n = i + 1; n < newPath.length; n++) {
+                    FxmlView[] newTemp = new FxmlView[i + 1];
+                    currentPath = temp2.toArray(newTemp);
+                    navigateTo(currentPath);
+                    element = newPath[n];
+                    temp2.add(element);
                 }
             }
-
-            currentItems = items;
-
-            persistence.write(this, "navigationItems", items);
-            listeners.stream().forEach((e) -> e.onNavigationRequested(items));
         }
+
+        currentPath = newPath;
+        persistence.write(this, CURRENT_PATH_KEY, currentPath);
+        listeners.stream().forEach((e) -> e.onNavigationRequested(currentPath));
     }
 
-    public void navigateToLastStoredItem() {
-        FxmlView[] items = (FxmlView[]) persistence.read(this, "navigationItems");
-        // TODO we set BUY as default yet, should be HOME later
-        if (items == null || items.length == 0)
-            items = new FxmlView[]{FxmlView.MAIN, FxmlView.BUY};
+    public void navigateToLastOpenView() {
+        FxmlView[] lastPath = (FxmlView[]) persistence.read(this, CURRENT_PATH_KEY);
 
-        navigationTo(items);
+        if (lastPath == null || lastPath.length == 0)
+            lastPath = DEFAULT_PATH;
+
+        navigateTo(lastPath);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Listeners
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public static interface Listener {
+        void onNavigationRequested(FxmlView... path);
+    }
 
     public void addListener(Listener listener) {
         listeners.add(listener);
@@ -101,40 +100,16 @@ public class Navigation {
         listeners.remove(listener);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public FxmlView[] getItemsForReturning() {
-        return itemsForReturning;
+    public FxmlView[] getReturnPath() {
+        return returnPath;
     }
 
-    public FxmlView[] getCurrentItems() {
-        return currentItems;
+    public FxmlView[] getCurrentPath() {
+        return currentPath;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setItemsForReturning(FxmlView[] itemsForReturning) {
-        this.itemsForReturning = itemsForReturning;
+    public void setReturnPath(FxmlView[] returnPath) {
+        this.returnPath = returnPath;
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static interface Listener {
-        void onNavigationRequested(FxmlView... items);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Enum
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
 }

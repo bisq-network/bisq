@@ -58,10 +58,10 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == accountSettingsTab)
-                navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
                         FxmlView.ACCOUNT_SETTINGS);
             else
-                navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
                         FxmlView.ARBITRATOR_SETTINGS);
 
         };
@@ -72,18 +72,18 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         navigation.addListener(navigationListener);
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
-        if (navigation.getCurrentItems().length == 2 &&
-                navigation.getCurrentItems()[1] == FxmlView.ACCOUNT) {
+        if (navigation.getCurrentPath().length == 2 &&
+                navigation.getCurrentPath()[1] == FxmlView.ACCOUNT) {
             if (model.getNeedRegistration()) {
-                navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
                         FxmlView.ACCOUNT_SETUP);
             }
             else {
                 if (root.getSelectionModel().getSelectedItem() == accountSettingsTab)
-                    navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                    navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
                             FxmlView.ACCOUNT_SETTINGS);
                 else
-                    navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                    navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
                             FxmlView.ARBITRATOR_SETTINGS);
             }
         }

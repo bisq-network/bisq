@@ -222,7 +222,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void openAccountSettings() {
-        navigation.navigationTo(FxmlView.MAIN,
+        navigation.navigateTo(FxmlView.MAIN,
                 FxmlView.ACCOUNT,
                 FxmlView.ACCOUNT_SETTINGS,
                 FxmlView.RESTRICTIONS);
@@ -232,7 +232,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         TabPane tabPane = ((TabPane) (root.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
 
-        navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.OFFERS);
+        navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.OFFERS);
     }
 
     private void setupListeners() {

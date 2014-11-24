@@ -58,9 +58,9 @@ class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == withdrawalTab)
-                navigation.navigationTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.WITHDRAWAL);
+                navigation.navigateTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.WITHDRAWAL);
             else if (newValue == transactionsTab)
-                navigation.navigationTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.TRANSACTIONS);
+                navigation.navigateTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.TRANSACTIONS);
         };
     }
 
@@ -70,9 +70,9 @@ class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.addListener(navigationListener);
 
         if (root.getSelectionModel().getSelectedItem() == transactionsTab)
-            navigation.navigationTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.TRANSACTIONS);
+            navigation.navigateTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.TRANSACTIONS);
         else
-            navigation.navigationTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.WITHDRAWAL);
+            navigation.navigateTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.WITHDRAWAL);
     }
 
     @Override

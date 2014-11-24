@@ -61,12 +61,12 @@ class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == offersTab)
-                navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.OFFERS);
+                navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.OFFERS);
             else if (newValue == openTradesTab)
-                navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO,
+                navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO,
                         FxmlView.PENDING_TRADES);
             else if (newValue == closedTradesTab)
-                navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.CLOSED_TRADES);
+                navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.CLOSED_TRADES);
         };
     }
 
@@ -76,9 +76,9 @@ class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.addListener(navigationListener);
 
         if (tradeManager.getPendingTrades().size() == 0)
-            navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.OFFERS);
+            navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.OFFERS);
         else
-            navigation.navigationTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.PENDING_TRADES);
+            navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.PENDING_TRADES);
     }
 
     @Override

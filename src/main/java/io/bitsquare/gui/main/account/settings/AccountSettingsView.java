@@ -89,10 +89,10 @@ class AccountSettingsView extends ActivatableViewAndModel {
     @Override
     public void doActivate() {
         navigation.addListener(listener);
-        FxmlView[] items = navigation.getCurrentItems();
+        FxmlView[] items = navigation.getCurrentPath();
         if (items.length == 3 &&
                 items[2] == FxmlView.ACCOUNT_SETTINGS) {
-            navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+            navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
                     FxmlView.ACCOUNT_SETTINGS, FxmlView.FIAT_ACCOUNT);
         }
         else {
@@ -164,7 +164,7 @@ class MenuItem extends ToggleButton {
 
         setGraphic(icon);
 
-        setOnAction((event) -> navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+        setOnAction((event) -> navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
                 FxmlView.ACCOUNT_SETTINGS, navigationItem));
 
         selectedProperty().addListener((ov, oldValue, newValue) -> {

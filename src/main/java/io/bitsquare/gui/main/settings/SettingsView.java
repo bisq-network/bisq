@@ -60,10 +60,10 @@ class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == preferencesTab)
-                navigation.navigationTo(FxmlView.MAIN, FxmlView.SETTINGS,
+                navigation.navigateTo(FxmlView.MAIN, FxmlView.SETTINGS,
                         FxmlView.PREFERENCES);
             else if (newValue == networkSettingsTab)
-                navigation.navigationTo(FxmlView.MAIN, FxmlView.SETTINGS,
+                navigation.navigateTo(FxmlView.MAIN, FxmlView.SETTINGS,
                         FxmlView.NETWORK_SETTINGS);
         };
     }
@@ -74,11 +74,11 @@ class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.addListener(navigationListener);
 
         if (root.getSelectionModel().getSelectedItem() == preferencesTab)
-            navigation.navigationTo(FxmlView.MAIN,
+            navigation.navigateTo(FxmlView.MAIN,
                     FxmlView.SETTINGS,
                     FxmlView.PREFERENCES);
         else
-            navigation.navigationTo(FxmlView.MAIN,
+            navigation.navigateTo(FxmlView.MAIN,
                     FxmlView.SETTINGS,
                     FxmlView.NETWORK_SETTINGS);
     }

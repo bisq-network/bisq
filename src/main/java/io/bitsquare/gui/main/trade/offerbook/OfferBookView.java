@@ -203,8 +203,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 getProperties().put("type", "OK");
                 Dialog.Actions.OK.handle(actionEvent);
                 overlayManager.removeBlurContent();
-                navigation.setItemsForReturning(navigation.getCurrentItems());
-                navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+                navigation.setReturnPath(navigation.getCurrentPath());
+                navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
                         FxmlView.ACCOUNT_SETUP);
             }
         });
@@ -255,7 +255,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 actions);
 
         if (Popups.isYes(response))
-            navigation.navigationTo(FxmlView.MAIN, FxmlView.ACCOUNT,
+            navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
                     FxmlView.ACCOUNT_SETTINGS,
                     FxmlView.RESTRICTIONS);
         else
