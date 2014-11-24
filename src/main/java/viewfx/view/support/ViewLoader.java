@@ -17,10 +17,13 @@
 
 package viewfx.view.support;
 
+import java.io.IOException;
+
 import java.net.URL;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
@@ -33,10 +36,12 @@ public class ViewLoader {
 
     private final Map<URL, View> cache = new HashMap<>();
     private final ViewFactory viewFactory;
+    private final ResourceBundle resourceBundle;
 
     @Inject
-    public ViewLoader(ViewFactory viewFactory) {
+    public ViewLoader(ViewFactory viewFactory, ResourceBundle resourceBundle) {
         this.viewFactory = viewFactory;
+        this.resourceBundle = resourceBundle;
     }
 
     public View load(URL url) {
@@ -47,12 +52,16 @@ public class ViewLoader {
         if (useCaching && cache.containsKey(url))
             return cache.get(url);
 
-        FXMLLoader loader = new FXMLLoader(url);
-        loader.setControllerFactory(viewFactory);
-
-        View view = loader.getController();
-        cache.put(url, view);
-        return view;
+        try {
+            FXMLLoader loader = new FXMLLoader(url, resourceBundle);
+            loader.setControllerFactory(viewFactory);
+            loader.load();
+            View view = loader.getController();
+            cache.put(url, view);
+            return view;
+        } catch (IOException ex) {
+            throw new RuntimeException("Failed to load View at location " + url, ex);
+        }
     }
 }
 

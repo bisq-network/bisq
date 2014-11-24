@@ -28,8 +28,12 @@ import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PasswordValidator;
+import io.bitsquare.locale.BSResources;
 
+import com.google.inject.Singleton;
 import com.google.inject.name.Names;
+
+import java.util.ResourceBundle;
 
 import viewfx.view.ViewFactory;
 import viewfx.view.support.ViewLoader;
@@ -50,7 +54,10 @@ public class GuiModule extends BitsquareModule {
 
     @Override
     protected void configure() {
-        bind(ViewFactory.class).to(GuiceViewFactory.class).asEagerSingleton();
+        bind(GuiceViewFactory.class).in(Singleton.class);
+        bind(ViewFactory.class).to(GuiceViewFactory.class);
+
+        bind(ResourceBundle.class).toInstance(BSResources.getResourceBundle());
         bind(ViewLoader.class).asEagerSingleton();
 
         bind(OfferBook.class).asEagerSingleton();

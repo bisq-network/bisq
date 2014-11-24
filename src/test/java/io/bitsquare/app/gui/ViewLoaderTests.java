@@ -20,11 +20,14 @@ package io.bitsquare.app.gui;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.locale.BSResources;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import java.net.MalformedURLException;
+
+import java.util.ResourceBundle;
 
 import viewfx.view.support.ViewLoader;
 import viewfx.view.support.guice.GuiceViewFactory;
@@ -63,6 +66,7 @@ public class ViewLoaderTests {
     }
 
     private GuiceViewFactory viewFactory;
+    private ResourceBundle resourceBundle;
 
     @Before
     public void setUp() {
@@ -71,15 +75,17 @@ public class ViewLoaderTests {
         Injector injector = Guice.createInjector(new BitsquareAppModule(env, TestApp.primaryStage));
         viewFactory = injector.getInstance(GuiceViewFactory.class);
         viewFactory.setInjector(injector);
+
+        resourceBundle = BSResources.getResourceBundle();
     }
 
     @Test(expected = BitsquareException.class)
     public void loadingBogusFxmlResourceShouldThrow() throws MalformedURLException {
-        new ViewLoader(viewFactory).load(Navigation.Item.BOGUS.getFxmlUrl(), false);
+        new ViewLoader(viewFactory, resourceBundle).load(Navigation.Item.BOGUS.getFxmlUrl(), false);
     }
 
     @Test
     public void loadingValidFxmlResourceShouldNotThrow() {
-        new ViewLoader(viewFactory).load(Navigation.Item.ACCOUNT.getFxmlUrl(), false);
+        new ViewLoader(viewFactory, resourceBundle).load(Navigation.Item.ACCOUNT.getFxmlUrl(), false);
     }
 }
