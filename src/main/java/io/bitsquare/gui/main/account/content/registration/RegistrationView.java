@@ -30,8 +30,9 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import viewfx.view.support.InitializableView;
+import viewfx.view.FxmlView;
 import viewfx.view.Wizard;
+import viewfx.view.support.InitializableView;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -42,6 +43,7 @@ import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 
+@FxmlView
 public class RegistrationView extends InitializableView<GridPane, RegistrationViewModel> implements Wizard.Step {
 
     @FXML TextField feeTextField;

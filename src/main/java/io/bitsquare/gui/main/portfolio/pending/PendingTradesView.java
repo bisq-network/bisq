@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.portfolio.pending;
 
-import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
@@ -27,8 +26,11 @@ import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.components.processbar.ProcessStepBar;
 import io.bitsquare.gui.components.processbar.ProcessStepItem;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
+import io.bitsquare.gui.main.portfolio.PortfolioView;
+import io.bitsquare.gui.main.portfolio.closed.ClosedTradesView;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.util.Utilities;
 
@@ -41,6 +43,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.application.Platform;
@@ -54,7 +57,8 @@ import javafx.scene.layout.*;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
-class PendingTradesView extends ActivatableViewAndModel<AnchorPane, PendingTradesViewModel> {
+@FxmlView
+public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, PendingTradesViewModel> {
 
     @FXML GridPane gridPane;
     @FXML ScrollPane scrollPane;
@@ -180,9 +184,7 @@ class PendingTradesView extends ActivatableViewAndModel<AnchorPane, PendingTrade
     public void onWithdraw() {
         setSummaryControlsVisible(false);
         model.withdraw(withdrawAddressTextField.getText());
-        Platform.runLater(() ->
-                navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO,
-                        FxmlView.CLOSED_TRADES));
+        Platform.runLater(() -> navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class));
     }
 
     @FXML

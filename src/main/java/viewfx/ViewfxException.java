@@ -15,13 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.msg;
+package viewfx;
 
-import viewfx.view.FxmlView;
-import viewfx.view.support.AbstractView;
+public class ViewfxException extends RuntimeException {
 
-// will be probably only used for arbitration communication, will be renamed and the icon changed
-@FxmlView
-public class MsgView extends AbstractView {
+    public ViewfxException(Throwable cause, String format, Object... args) {
+        super(String.format(format, args), cause);
+    }
 }
-

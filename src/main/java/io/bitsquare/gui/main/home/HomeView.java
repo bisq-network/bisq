@@ -17,9 +17,11 @@
 
 package io.bitsquare.gui.main.home;
 
+import viewfx.view.FxmlView;
 import viewfx.view.support.AbstractView;
 
 // home is just hosting the arbiters buttons yet, but that's just for dev, not clear yet what will be in home,
 // probably overview, event history, news, charts,... -> low prio
-class HomeView extends AbstractView {
+@FxmlView
+public class HomeView extends AbstractView {
 }

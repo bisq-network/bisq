@@ -17,43 +17,48 @@
 
 package io.bitsquare.gui.main.account.arbitrator;
 
-import io.bitsquare.gui.FxmlView;
-import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.account.arbitrator.registration.ArbitratorRegistrationView;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
-import viewfx.view.support.CachingViewLoader;
 import viewfx.view.support.AbstractView;
+import viewfx.view.support.CachingViewLoader;
 
 import javafx.fxml.FXML;
 import javafx.scene.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-// TODO Arbitration is very basic yet
-class ArbitratorSettingsView extends AbstractView {
-
-    private ArbitratorRegistrationView arbitratorRegistrationView;
+@FxmlView
+public class ArbitratorSettingsView extends AbstractView {
 
     private final ViewLoader viewLoader;
-    private final Navigation navigation;
     private final Stage primaryStage;
 
     @Inject
-    private ArbitratorSettingsView(CachingViewLoader viewLoader, Navigation navigation, Stage primaryStage) {
+    private ArbitratorSettingsView(CachingViewLoader viewLoader, Stage primaryStage) {
         this.viewLoader = viewLoader;
-        this.navigation = navigation;
         this.primaryStage = primaryStage;
     }
 
-    private void loadView(FxmlView navigationItem) {
-        View view = viewLoader.load(navigationItem.getLocation());
-        arbitratorRegistrationView = (ArbitratorRegistrationView) view;
+    @FXML
+    public void onArbitratorRegistration() {
+        View view = viewLoader.load(ArbitratorRegistrationView.class);
+        showStage(view);
+    }
 
-        final Stage stage = new Stage();
+    @FXML
+    public void onArbitratorEdit() {
+        View view = viewLoader.load(ArbitratorRegistrationView.class);
+        showStage(view);
+        ((ArbitratorRegistrationView) view).setEditMode(true);
+    }
+
+    private void showStage(View view) {
+        Stage stage = new Stage();
         stage.setTitle("Arbitrator");
         stage.setMinWidth(800);
         stage.setMinHeight(400);
@@ -66,17 +71,6 @@ class ArbitratorSettingsView extends AbstractView {
         Scene scene = new Scene((Parent) view.getRoot(), 800, 600);
         stage.setScene(scene);
         stage.show();
-    }
-
-    @FXML
-    public void onArbitratorRegistration() {
-        loadView(FxmlView.ARBITRATOR_REGISTRATION);
-    }
-
-    @FXML
-    public void onArbitratorEdit() {
-        loadView(FxmlView.ARBITRATOR_REGISTRATION);
-        arbitratorRegistrationView.setEditMode(true);
     }
 }
 

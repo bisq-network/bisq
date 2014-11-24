@@ -44,6 +44,7 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.support.ActivatableView;
 
 import javafx.collections.FXCollections;
@@ -56,7 +57,7 @@ import javafx.util.StringConverter;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-// TODO Arbitration is very basic yet
+@FxmlView
 public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void> {
 
     @FXML Accordion accordion;
@@ -119,7 +120,6 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
                 return locale.getDisplayLanguage();
             }
 
-
             @Override
             public Locale fromString(String s) {
                 return null;
@@ -129,12 +129,10 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
         idTypeComboBox.setItems(FXCollections.observableArrayList(
                 new ArrayList<>(EnumSet.allOf(Arbitrator.ID_TYPE.class))));
         idTypeComboBox.setConverter(new StringConverter<Arbitrator.ID_TYPE>() {
-
             @Override
             public String toString(Arbitrator.ID_TYPE item) {
                 return BSResources.get(item.toString());
             }
-
 
             @Override
             public Arbitrator.ID_TYPE fromString(String s) {
@@ -145,12 +143,10 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
         methodsComboBox.setItems(FXCollections.observableArrayList(new ArrayList<>(EnumSet.allOf(Arbitrator.METHOD
                 .class))));
         methodsComboBox.setConverter(new StringConverter<Arbitrator.METHOD>() {
-
             @Override
             public String toString(Arbitrator.METHOD item) {
                 return BSResources.get(item.toString());
             }
-
 
             @Override
             public Arbitrator.METHOD fromString(String s) {
@@ -161,12 +157,10 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
         idVerificationsComboBox.setItems(
                 FXCollections.observableArrayList(new ArrayList<>(EnumSet.allOf(Arbitrator.ID_VERIFICATION.class))));
         idVerificationsComboBox.setConverter(new StringConverter<Arbitrator.ID_VERIFICATION>() {
-
             @Override
             public String toString(Arbitrator.ID_VERIFICATION item) {
                 return BSResources.get(item.toString());
             }
-
 
             @Override
             public Arbitrator.ID_VERIFICATION fromString(String s) {
@@ -374,7 +368,6 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
             idVerificationList = arbitrator.getIdVerifications();
         }
     }
-
 
     private Arbitrator getEditedArbitrator() {
         String pubKeyAsHex = walletService.getArbitratorDepositAddressEntry().getPubKeyAsHexString();

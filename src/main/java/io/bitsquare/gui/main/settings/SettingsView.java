@@ -17,13 +17,16 @@
 
 package io.bitsquare.gui.main.settings;
 
-import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.settings.application.PreferencesView;
+import io.bitsquare.gui.main.settings.network.NetworkSettingsView;
 import io.bitsquare.settings.Preferences;
 
 import javax.inject.Inject;
 
 import viewfx.model.Activatable;
+import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.support.ActivatableViewAndModel;
@@ -32,7 +35,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
+@FxmlView
+public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML Tab preferencesTab, networkSettingsTab;
 
@@ -52,19 +56,16 @@ class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
-        navigationListener = navigationItems -> {
-            if (navigationItems != null && navigationItems.length == 3
-                    && navigationItems[1] == FxmlView.SETTINGS)
-                loadView(navigationItems[2]);
+        navigationListener = viewPath -> {
+            if (viewPath.size() == 3 && viewPath.indexOf(SettingsView.class) == 1)
+                loadView(viewPath.tip());
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == preferencesTab)
-                navigation.navigateTo(FxmlView.MAIN, FxmlView.SETTINGS,
-                        FxmlView.PREFERENCES);
+                navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
             else if (newValue == networkSettingsTab)
-                navigation.navigateTo(FxmlView.MAIN, FxmlView.SETTINGS,
-                        FxmlView.NETWORK_SETTINGS);
+                navigation.navigateTo(MainView.class, SettingsView.class, NetworkSettingsView.class);
         };
     }
 
@@ -74,13 +75,9 @@ class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.addListener(navigationListener);
 
         if (root.getSelectionModel().getSelectedItem() == preferencesTab)
-            navigation.navigateTo(FxmlView.MAIN,
-                    FxmlView.SETTINGS,
-                    FxmlView.PREFERENCES);
+            navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
         else
-            navigation.navigateTo(FxmlView.MAIN,
-                    FxmlView.SETTINGS,
-                    FxmlView.NETWORK_SETTINGS);
+            navigation.navigateTo(MainView.class, SettingsView.class, NetworkSettingsView.class);
     }
 
     @Override
@@ -89,19 +86,17 @@ class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.removeListener(navigationListener);
     }
 
-    private void loadView(FxmlView navigationItem) {
-        View view = viewLoader.load(navigationItem.getLocation());
+    private void loadView(Class<? extends View> viewClass) {
         final Tab tab;
-        switch (navigationItem) {
-            case PREFERENCES:
-                tab = preferencesTab;
-                break;
-            case NETWORK_SETTINGS:
-                tab = networkSettingsTab;
-                break;
-            default:
-                throw new IllegalArgumentException("navigation item of type " + navigationItem + " is not allowed");
-        }
+
+        if (viewClass == PreferencesView.class)
+            tab = preferencesTab;
+        else if (viewClass == NetworkSettingsView.class)
+            tab = networkSettingsTab;
+        else
+            throw new IllegalArgumentException("Navigation to " + viewClass + " is not supported");
+
+        View view = viewLoader.load(viewClass);
         tab.setContent(view.getRoot());
         root.getSelectionModel().select(tab);
     }

@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -37,7 +38,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.util.Callback;
 
-class TransactionsView extends ActivatableViewAndModel {
+@FxmlView
+public class TransactionsView extends ActivatableViewAndModel {
 
     @FXML TableView<TransactionsListItem> table;
     @FXML TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn,

@@ -22,14 +22,16 @@ import io.bitsquare.gui.main.help.HelpId;
 
 import javax.inject.Inject;
 
-import viewfx.view.support.InitializableView;
+import viewfx.view.FxmlView;
 import viewfx.view.Wizard;
+import viewfx.view.support.InitializableView;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
-class ChangePasswordView extends InitializableView<GridPane, ChangePasswordViewModel> implements Wizard.Step {
+@FxmlView
+public class ChangePasswordView extends InitializableView<GridPane, ChangePasswordViewModel> implements Wizard.Step {
 
     @FXML HBox buttonsHBox;
     @FXML Button saveButton, skipButton;

@@ -28,6 +28,7 @@ import java.util.Currency;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.support.ActivatableViewAndModel;
 import viewfx.view.Wizard;
 
@@ -40,6 +41,7 @@ import javafx.util.Callback;
 /**
  * Just temporary for giving the user a possibility to test the app via simulating the bank transfer in a IRC chat.
  */
+@FxmlView
 public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccountViewModel> implements Wizard.Step {
 
     @FXML HBox buttonsHBox;

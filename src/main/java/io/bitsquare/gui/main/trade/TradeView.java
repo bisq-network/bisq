@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.trade;
 
-import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferView;
 import io.bitsquare.gui.main.trade.offerbook.OfferBookView;
 import io.bitsquare.gui.main.trade.takeoffer.TakeOfferView;
@@ -33,15 +33,16 @@ import java.util.List;
 
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
-import viewfx.view.support.CachingViewLoader;
 import viewfx.view.support.ActivatableView;
+import viewfx.view.support.CachingViewLoader;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.scene.*;
 import javafx.scene.control.*;
 
-public class TradeView extends ActivatableView<TabPane, Void> {
+
+public abstract class TradeView extends ActivatableView<TabPane, Void> {
 
     private OfferBookView offerBookView;
     private CreateOfferView createOfferView;
@@ -49,28 +50,25 @@ public class TradeView extends ActivatableView<TabPane, Void> {
     private Node createOfferRoot;
     private Node takeOfferRoot;
     private Navigation.Listener listener;
-    private FxmlView navigationItem;
-    private Direction direction;
     private Coin amount;
     private Fiat price;
     private Offer offer;
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
+    private final Direction direction;
 
     protected TradeView(CachingViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
+        this.direction = (this instanceof BuyView) ? Direction.BUY : Direction.SELL;
     }
 
     @Override
     protected void initialize() {
-        direction = (this instanceof BuyView) ? Direction.BUY : Direction.SELL;
-        navigationItem = (direction == Direction.BUY) ? FxmlView.BUY : FxmlView.SELL;
-
-        listener = navigationItems -> {
-            if (navigationItems != null && navigationItems.length == 3 && navigationItems[1] == navigationItem) {
-                loadView(navigationItems[2]);
+        listener = viewPath -> {
+            if (viewPath.size() == 3 && viewPath.indexOf(this.getClass()) == 1) {
+                loadView(viewPath.tip());
             }
         };
     }
@@ -98,7 +96,7 @@ public class TradeView extends ActivatableView<TabPane, Void> {
         });
 
         navigation.addListener(listener);
-        navigation.navigateTo(FxmlView.MAIN, navigationItem, FxmlView.OFFER_BOOK);
+        navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);
     }
 
     @Override
@@ -110,21 +108,21 @@ public class TradeView extends ActivatableView<TabPane, Void> {
     public void createOffer(Coin amount, Fiat price) {
         this.amount = amount;
         this.price = price;
-        navigation.navigateTo(FxmlView.MAIN, navigationItem, FxmlView.CREATE_OFFER);
+        navigation.navigateTo(MainView.class, this.getClass(), CreateOfferView.class);
     }
 
     public void takeOffer(Coin amount, Fiat price, Offer offer) {
         this.amount = amount;
         this.price = price;
         this.offer = offer;
-        navigation.navigateTo(FxmlView.MAIN, navigationItem, FxmlView.TAKE_OFFER);
+        navigation.navigateTo(MainView.class, this.getClass(), TakeOfferView.class);
     }
 
-    private View loadView(FxmlView navigationItem) {
+    private View loadView(Class<? extends View> viewClass) {
         TabPane tabPane = root;
-        if (navigationItem == FxmlView.OFFER_BOOK && offerBookView == null) {
+        if (viewClass == OfferBookView.class && offerBookView == null) {
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
-            View view = viewLoader.load(navigationItem.getLocation());
+            View view = viewLoader.load(viewClass);
             final Tab tab = new Tab(direction == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
             tab.setClosable(false);
             tab.setContent(view.getRoot());
@@ -136,10 +134,10 @@ public class TradeView extends ActivatableView<TabPane, Void> {
 
             return offerBookView;
         }
-        else if (navigationItem == FxmlView.CREATE_OFFER && createOfferView == null) {
+        else if (viewClass == CreateOfferView.class && createOfferView == null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
-            View view = viewLoader.load(navigationItem.getLocation());
+            View view = viewLoader.load(viewClass);
             createOfferView = (CreateOfferView) view;
             createOfferView.initWithData(direction, amount, price);
             createOfferRoot = view.getRoot();
@@ -150,11 +148,11 @@ public class TradeView extends ActivatableView<TabPane, Void> {
             tabPane.getSelectionModel().select(tab);
             return createOfferView;
         }
-        else if (navigationItem == FxmlView.TAKE_OFFER && takeOfferView == null &&
+        else if (viewClass == TakeOfferView.class && takeOfferView == null &&
                 offer != null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
-            View view = viewLoader.load(FxmlView.TAKE_OFFER.getLocation());
+            View view = viewLoader.load(TakeOfferView.class);
             takeOfferView = (TakeOfferView) view;
             takeOfferView.initWithData(direction, amount, offer);
             takeOfferRoot = view.getRoot();
@@ -173,14 +171,14 @@ public class TradeView extends ActivatableView<TabPane, Void> {
         offerBookView.enableCreateOfferButton();
 
         // update the navigation state
-        navigation.navigateTo(FxmlView.MAIN, navigationItem, FxmlView.OFFER_BOOK);
+        navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);
     }
 
     private void onTakeOfferViewRemoved() {
         takeOfferView = null;
 
         // update the navigation state
-        navigation.navigateTo(FxmlView.MAIN, navigationItem, FxmlView.OFFER_BOOK);
+        navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);
     }
 }
 

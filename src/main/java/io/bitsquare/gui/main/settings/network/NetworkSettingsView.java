@@ -22,12 +22,14 @@ import io.bitsquare.network.ClientNode;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.support.InitializableView;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-class NetworkSettingsView extends InitializableView {
+@FxmlView
+public class NetworkSettingsView extends InitializableView {
 
     private final String bitcoinNetworkValue;
     private final ClientNode clientNode;

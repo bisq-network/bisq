@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.trade.createoffer;
 
-import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.AddressTextField;
@@ -26,8 +25,14 @@ import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.TitledGroupBg;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.account.AccountView;
+import io.bitsquare.gui.main.account.content.restrictions.RestrictionsView;
+import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
+import io.bitsquare.gui.main.portfolio.PortfolioView;
+import io.bitsquare.gui.main.portfolio.offer.OffersView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
@@ -40,6 +45,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.property.BooleanProperty;
@@ -67,6 +73,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 
 // TODO Implement other positioning method in InoutTextField to display it over the field instead of right side
 // priceAmountHBox is too large after redesign as to be used as layoutReference.
+@FxmlView
 public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateOfferViewModel> {
 
     @FXML ScrollPane scrollPane;
@@ -222,17 +229,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void openAccountSettings() {
-        navigation.navigateTo(FxmlView.MAIN,
-                FxmlView.ACCOUNT,
-                FxmlView.ACCOUNT_SETTINGS,
-                FxmlView.RESTRICTIONS);
+        navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, RestrictionsView.class);
     }
 
     private void close() {
         TabPane tabPane = ((TabPane) (root.getParent().getParent()));
         tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
 
-        navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.OFFERS);
+        navigation.navigateTo(MainView.class, PortfolioView.class, OffersView.class);
     }
 
     private void setupListeners() {

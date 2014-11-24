@@ -19,17 +19,16 @@ package io.bitsquare.gui.main.account.arbitrator.profile;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.persistence.Persistence;
-import io.bitsquare.settings.Preferences;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.support.AbstractView;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-// TODO Arbitration is very basic yet
+@FxmlView
 public class ArbitratorProfileView extends AbstractView {
 
     @FXML Label nameLabel;
@@ -37,14 +36,10 @@ public class ArbitratorProfileView extends AbstractView {
     @FXML TextField nameTextField, languagesTextField, reputationTextField, feeTextField, methodsTextField,
             passiveServiceFeeTextField, idVerificationsTextField, webPageTextField, maxTradeVolumeTextField;
 
-    private final Preferences preferences;
-    private final Persistence persistence;
     private final BSFormatter formatter;
 
     @Inject
-    public ArbitratorProfileView(Preferences preferences, Persistence persistence, BSFormatter formatter) {
-        this.preferences = preferences;
-        this.persistence = persistence;
+    public ArbitratorProfileView(BSFormatter formatter) {
         this.formatter = formatter;
     }
 

@@ -17,18 +17,21 @@
 
 package io.bitsquare.app.gui;
 
-import io.bitsquare.BitsquareException;
 import io.bitsquare.app.BitsquareEnvironment;
-import io.bitsquare.gui.FxmlView;
+import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.locale.BSResources;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+import java.io.File;
+
 import java.net.MalformedURLException;
+import java.net.URL;
 
 import java.util.ResourceBundle;
 
+import viewfx.ViewfxException;
 import viewfx.view.support.fxml.FxmlViewLoader;
 import viewfx.view.support.guice.GuiceViewFactory;
 
@@ -79,13 +82,26 @@ public class ViewLoaderTests {
         resourceBundle = BSResources.getResourceBundle();
     }
 
-    @Test(expected = BitsquareException.class)
+    @Test(expected = ViewfxException.class)
     public void loadingBogusFxmlResourceShouldThrow() throws MalformedURLException {
-        new FxmlViewLoader(viewFactory, resourceBundle).load(FxmlView.BOGUS.getLocation());
+        URL uri = new File("/tmp/bogus1234").toURI().toURL();
+        new FxmlViewLoader(viewFactory, resourceBundle).load(uri);
     }
 
     @Test
-    public void loadingValidFxmlResourceShouldNotThrow() {
-        new FxmlViewLoader(viewFactory, resourceBundle).load(FxmlView.ACCOUNT.getLocation());
+    public void loadingValidFxmlResourceShouldNotThrow() throws MalformedURLException {
+        String path = "/Users/cbeams/Desktop/bitsquare/bitsquare/build/resources/main/" +
+                        "io/bitsquare/gui/main/account/AccountView.fxml";
+        new FxmlViewLoader(viewFactory, resourceBundle).load(new File(path).toURI().toURL());
+    }
+
+    @Test
+    public void loadingFromValidFxmlViewClassShouldNotThrow() {
+        new FxmlViewLoader(viewFactory, resourceBundle).load(FundsView.class);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void loadingFromNonViewClassShouldThrow() {
+        new FxmlViewLoader(viewFactory, resourceBundle).load(File.class);
     }
 }

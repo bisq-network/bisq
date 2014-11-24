@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.trade.takeoffer;
 
 
-import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.AddressTextField;
@@ -27,8 +26,11 @@ import io.bitsquare.gui.components.InfoDisplay;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.TitledGroupBg;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
+import io.bitsquare.gui.main.portfolio.PortfolioView;
+import io.bitsquare.gui.main.portfolio.pending.PendingTradesView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.offer.Direction;
@@ -41,6 +43,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.property.BooleanProperty;
@@ -64,6 +67,7 @@ import org.controlsfx.control.action.AbstractAction;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.dialog.Dialog;
 
+@FxmlView
 public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOfferViewModel> {
 
     @FXML ScrollPane scrollPane;
@@ -281,8 +285,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         getProperties().put("type", "CLOSE");
                         try {
                             close();
-                            navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO,
-                                    FxmlView.PENDING_TRADES);
+                            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

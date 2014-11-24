@@ -17,16 +17,19 @@
 
 package io.bitsquare.gui.main.account.setup;
 
-import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.account.content.fiat.FiatAccountView;
 import io.bitsquare.gui.main.account.content.irc.IrcAccountView;
 import io.bitsquare.gui.main.account.content.password.PasswordView;
 import io.bitsquare.gui.main.account.content.registration.RegistrationView;
 import io.bitsquare.gui.main.account.content.restrictions.RestrictionsView;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
+import io.bitsquare.gui.main.trade.BuyView;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.Wizard;
@@ -38,7 +41,8 @@ import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
 
-class AccountSetupWizard extends ActivatableView implements Wizard {
+@FxmlView
+public class AccountSetupWizard extends ActivatableView implements Wizard {
 
     @FXML VBox leftVBox;
     @FXML AnchorPane content;
@@ -57,54 +61,49 @@ class AccountSetupWizard extends ActivatableView implements Wizard {
 
     @Override
     public void initialize() {
-        listener = navigationItems -> {
-            if (navigationItems != null &&
-                    navigationItems.length == 4 &&
-                    navigationItems[2] == FxmlView.ACCOUNT_SETUP) {
+        listener = viewPath -> {
+            if (viewPath.size() != 4 || !viewPath.contains(this.getClass()))
+                return;
 
-                switch (navigationItems[3]) {
-                    case SEED_WORDS:
-                        seedWords.show();
-                        break;
-                    case ADD_PASSWORD:
-                        seedWords.onCompleted();
-                        password.show();
-                        break;
-                    case RESTRICTIONS:
-                        seedWords.onCompleted();
-                        password.onCompleted();
-                        restrictions.show();
-                        break;
-                    case FIAT_ACCOUNT:
-                        seedWords.onCompleted();
-                        password.onCompleted();
-                        restrictions.onCompleted();
-                        fiatAccount.show();
-                        break;
-                    case REGISTRATION:
-                        seedWords.onCompleted();
-                        password.onCompleted();
-                        restrictions.onCompleted();
-                        fiatAccount.onCompleted();
-                        registration.show();
-                        break;
-                }
+            Class<? extends View> viewClass = viewPath.tip();
+
+            if (viewClass == SeedWordsView.class) {
+                seedWords.show();
+            }
+            else if (viewClass == PasswordView.class) {
+                seedWords.onCompleted();
+                password.show();
+            }
+            else if (viewClass == RestrictionsView.class) {
+                seedWords.onCompleted();
+                password.onCompleted();
+                restrictions.show();
+            }
+            else if (viewClass == FiatAccountView.class) {
+                seedWords.onCompleted();
+                password.onCompleted();
+                restrictions.onCompleted();
+                fiatAccount.show();
+            }
+            else if (viewClass == RegistrationView.class) {
+                seedWords.onCompleted();
+                password.onCompleted();
+                restrictions.onCompleted();
+                fiatAccount.onCompleted();
+                registration.show();
             }
         };
 
-        seedWords = new WizardItem(this, "Backup wallet seed", "Write down the seed word for your wallet",
-                FxmlView.SEED_WORDS);
-        password = new WizardItem(this, "Setup password", "Protect your wallet with a password",
-                FxmlView.ADD_PASSWORD);
-        restrictions = new WizardItem(this, "Select arbitrators",
-                "Select which arbitrators you want to use for trading",
-                FxmlView.RESTRICTIONS);
-        fiatAccount = new WizardItem(this, " Setup Payments account(s)",
-                "You need to setup at least one payment account",
-                FxmlView.FIAT_ACCOUNT);
-        registration = new WizardItem(this, "Register your account",
-                "The registration in the Blockchain requires a payment of 0.0002 BTC",
-                FxmlView.REGISTRATION);
+        seedWords = new WizardItem(SeedWordsView.class,
+                "Backup wallet seed", "Write down the seed word for your wallet");
+        password = new WizardItem(PasswordView.class,
+                "Setup password", "Protect your wallet with a password");
+        restrictions = new WizardItem(RestrictionsView.class,
+                "Select arbitrators", "Select which arbitrators you want to use for trading");
+        fiatAccount = new WizardItem(FiatAccountView.class,
+                " Setup Payments account(s)", "You need to setup at least one payment account");
+        registration = new WizardItem(RegistrationView.class,
+                "Register your account", "The registration in the Blockchain requires a payment of 0.0002 BTC");
 
         leftVBox.getChildren().addAll(seedWords, password, restrictions, fiatAccount, registration);
 
@@ -149,83 +148,77 @@ class AccountSetupWizard extends ActivatableView implements Wizard {
             if (navigation.getReturnPath() != null)
                 navigation.navigateTo(navigation.getReturnPath());
             else
-                navigation.navigateTo(FxmlView.MAIN, FxmlView.BUY);
+                navigation.navigateTo(MainView.class, BuyView.class);
         }
     }
 
-    protected void loadView(FxmlView navigationItem) {
-        View view = viewLoader.load(navigationItem.getLocation());
+    protected void loadView(Class<? extends View> viewClass) {
+        View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
         if (view instanceof Wizard.Step)
             ((Step) view).setParent(this);
     }
-}
 
 
-class WizardItem extends HBox {
+    private class WizardItem extends HBox {
 
-    private final ImageView imageView;
-    private final Label titleLabel;
-    private final Label subTitleLabel;
-    private final AccountSetupWizard parent;
-    private final FxmlView navigationItem;
+        private final ImageView imageView;
+        private final Label titleLabel;
+        private final Label subTitleLabel;
+        private final Class<? extends View> viewClass;
 
-    WizardItem(AccountSetupWizard parent, String title, String subTitle,
-               FxmlView navigationItem) {
-        this.parent = parent;
-        this.navigationItem = navigationItem;
+        WizardItem(Class<? extends View> viewClass, String title, String subTitle) {
+            this.viewClass = viewClass;
 
-        setId("wizard-item-background-deactivated");
-        setSpacing(5);
-        setPrefWidth(200);
+            setId("wizard-item-background-deactivated");
+            setSpacing(5);
+            setPrefWidth(200);
 
-        imageView = new ImageView();
-        imageView.setId("image-arrow-grey");
-        imageView.setFitHeight(15);
-        imageView.setFitWidth(20);
-        imageView.setPickOnBounds(true);
-        imageView.setMouseTransparent(true);
-        HBox.setMargin(imageView, new Insets(8, 0, 0, 8));
+            imageView = new ImageView();
+            imageView.setId("image-arrow-grey");
+            imageView.setFitHeight(15);
+            imageView.setFitWidth(20);
+            imageView.setPickOnBounds(true);
+            imageView.setMouseTransparent(true);
+            HBox.setMargin(imageView, new Insets(8, 0, 0, 8));
 
-        titleLabel = new Label(title);
-        titleLabel.setId("wizard-title-deactivated");
-        titleLabel.setLayoutX(7);
-        titleLabel.setMouseTransparent(true);
+            titleLabel = new Label(title);
+            titleLabel.setId("wizard-title-deactivated");
+            titleLabel.setLayoutX(7);
+            titleLabel.setMouseTransparent(true);
 
-        subTitleLabel = new Label(subTitle);
-        subTitleLabel.setId("wizard-sub-title-deactivated");
-        subTitleLabel.setLayoutX(40);
-        subTitleLabel.setLayoutY(33);
-        subTitleLabel.setMaxWidth(250);
-        subTitleLabel.setWrapText(true);
-        subTitleLabel.setMouseTransparent(true);
+            subTitleLabel = new Label(subTitle);
+            subTitleLabel.setId("wizard-sub-title-deactivated");
+            subTitleLabel.setLayoutX(40);
+            subTitleLabel.setLayoutY(33);
+            subTitleLabel.setMaxWidth(250);
+            subTitleLabel.setWrapText(true);
+            subTitleLabel.setMouseTransparent(true);
 
-        final VBox vBox = new VBox();
-        vBox.setSpacing(1);
-        HBox.setMargin(vBox, new Insets(5, 0, 8, 0));
-        vBox.setMouseTransparent(true);
-        vBox.getChildren().addAll(titleLabel, subTitleLabel);
+            final VBox vBox = new VBox();
+            vBox.setSpacing(1);
+            HBox.setMargin(vBox, new Insets(5, 0, 8, 0));
+            vBox.setMouseTransparent(true);
+            vBox.getChildren().addAll(titleLabel, subTitleLabel);
 
-        getChildren().addAll(imageView, vBox);
-    }
+            getChildren().addAll(imageView, vBox);
+        }
 
-    void show() {
-        parent.loadView(navigationItem);
-       /* navigation.navigationTo(Navigation.Item.MAIN, Navigation.Item.ACCOUNT, Navigation
-                        .Item.ACCOUNT_SETUP,
-                navigationItem);*/
+        void show() {
+            loadView(viewClass);
 
-        setId("wizard-item-background-active");
-        imageView.setId("image-arrow-blue");
-        titleLabel.setId("wizard-title-active");
-        subTitleLabel.setId("wizard-sub-title-active");
-    }
+            setId("wizard-item-background-active");
+            imageView.setId("image-arrow-blue");
+            titleLabel.setId("wizard-title-active");
+            subTitleLabel.setId("wizard-sub-title-active");
+        }
 
-    void onCompleted() {
-        setId("wizard-item-background-completed");
-        imageView.setId("image-tick");
-        titleLabel.setId("wizard-title-completed");
-        subTitleLabel.setId("wizard-sub-title-completed");
+        void onCompleted() {
+            setId("wizard-item-background-completed");
+            imageView.setId("image-tick");
+            titleLabel.setId("wizard-title-completed");
+            subTitleLabel.setId("wizard-sub-title-completed");
+        }
     }
 }
 

@@ -19,16 +19,24 @@ package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.components.SystemNotification;
+import io.bitsquare.gui.main.account.AccountView;
+import io.bitsquare.gui.main.funds.FundsView;
+import io.bitsquare.gui.main.home.HomeView;
+import io.bitsquare.gui.main.msg.MsgView;
+import io.bitsquare.gui.main.portfolio.PortfolioView;
+import io.bitsquare.gui.main.settings.SettingsView;
+import io.bitsquare.gui.main.trade.BuyView;
+import io.bitsquare.gui.main.trade.SellView;
 import io.bitsquare.gui.util.Transitions;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.support.ActivatableView;
@@ -44,9 +52,9 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.*;
 import javafx.scene.text.*;
 
-import static io.bitsquare.gui.FxmlView.*;
 import static javafx.scene.layout.AnchorPane.*;
 
+@FxmlView
 public class MainView extends ActivatableView<StackPane, MainViewModel> {
 
     public static final String TITLE_KEY = "view.title";
@@ -79,18 +87,18 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
 
     @Override
     protected void activate() {
-        ToggleButton homeButton = new NavButton(HOME) {{
+        ToggleButton homeButton = new NavButton(HomeView.class, "Overview") {{
             setDisable(true); // during irc demo
         }};
-        ToggleButton buyButton = new NavButton(BUY);
-        ToggleButton sellButton = new NavButton(SELL);
-        ToggleButton portfolioButton = new NavButton(PORTFOLIO);
-        ToggleButton fundsButton = new NavButton(FUNDS);
-        ToggleButton msgButton = new NavButton(MSG) {{
+        ToggleButton buyButton = new NavButton(BuyView.class, "Buy BTC");
+        ToggleButton sellButton = new NavButton(SellView.class, "Sell BTC");
+        ToggleButton portfolioButton = new NavButton(PortfolioView.class, "Portfolio");
+        ToggleButton fundsButton = new NavButton(FundsView.class, "Funds");
+        ToggleButton msgButton = new NavButton(MsgView.class, "Messages") {{
             setDisable(true); // during irc demo
         }};
-        ToggleButton settingsButton = new NavButton(SETTINGS);
-        ToggleButton accountButton = new NavButton(ACCOUNT);
+        ToggleButton settingsButton = new NavButton(SettingsView.class, "Settings");
+        ToggleButton accountButton = new NavButton(AccountView.class, "Account");
         Pane portfolioButtonHolder = new Pane(portfolioButton);
         Pane bankAccountComboBoxHolder = new Pane();
 
@@ -123,19 +131,19 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
             setId("base-content-container");
         }};
 
-        navigation.addListener(navItems -> {
-            if (navItems == null || navItems.length != 2 || navItems[0] != FxmlView.MAIN)
+        navigation.addListener(viewPath -> {
+            if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
                 return;
 
-            View view = viewLoader.load(navItems[1].getLocation());
+            Class<? extends View> viewClass = viewPath.tip();
+            View view = viewLoader.load(viewClass);
             contentContainer.getChildren().setAll(view.getRoot());
 
             navButtons.getToggles().stream()
-                    .filter(toggle -> toggle instanceof ToggleButton)
-                    .filter(button -> navItems[1].getDisplayName().equals(((ToggleButton) button).getText()))
+                    .filter(toggle -> toggle instanceof NavButton)
+                    .filter(button -> viewClass == ((NavButton) button).viewClass)
                     .findFirst()
-                    .orElseThrow(() ->
-                            new BitsquareException("No button matching %s found", navItems[1].getDisplayName()))
+                    .orElseThrow(() -> new BitsquareException("No button matching %s found", viewClass))
                     .setSelected(true);
         });
 
@@ -334,10 +342,14 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
 
     private class NavButton extends ToggleButton {
 
-        public NavButton(FxmlView item) {
-            super(item.getDisplayName(), new ImageView() {{
-                setId("image-nav-" + item.getId());
+        private final Class<? extends View> viewClass;
+
+        public NavButton(Class<? extends View> viewClass, String title) {
+            super(title, new ImageView() {{
+                setId("image-nav-" + viewId(viewClass));
             }});
+
+            this.viewClass = viewClass;
 
             this.setToggleGroup(navButtons);
             this.setId("nav-button");
@@ -353,14 +365,24 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
                 this.setMaxSize(50, 50);
                 this.setGraphicTextGap(newValue ? -1 : 0);
                 if (newValue) {
-                    this.getGraphic().setId("image-nav-" + item.getId() + "-active");
+                    this.getGraphic().setId("image-nav-" + viewId(viewClass) + "-active");
                 }
                 else {
-                    this.getGraphic().setId("image-nav-" + item.getId());
+                    this.getGraphic().setId("image-nav-" + viewId(viewClass));
                 }
             });
 
-            this.setOnAction(e -> navigation.navigateTo(FxmlView.MAIN, item));
+            this.setOnAction(e -> navigation.navigateTo(MainView.class, viewClass));
         }
+
+    }
+
+    private static String viewId(Class<? extends View> viewClass) {
+        String viewName = viewClass.getSimpleName();
+        String suffix = "View";
+        int suffixIdx = viewName.indexOf(suffix);
+        if (suffixIdx != viewName.length() - suffix.length())
+            throw new IllegalArgumentException("Cannot get ID for " + viewClass + ": class must end in " + suffix);
+        return viewName.substring(0, suffixIdx).toLowerCase();
     }
 }

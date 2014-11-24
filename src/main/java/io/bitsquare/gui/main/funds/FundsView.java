@@ -17,12 +17,15 @@
 
 package io.bitsquare.gui.main.funds;
 
-import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.funds.transactions.TransactionsView;
+import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 
 import javax.inject.Inject;
 
 import viewfx.model.Activatable;
+import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.support.ActivatableViewAndModel;
@@ -31,7 +34,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
+@FxmlView
+public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML Tab withdrawalTab, transactionsTab;
 
@@ -43,24 +47,23 @@ class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
     private final Navigation navigation;
 
     @Inject
-    FundsView(ViewLoader viewLoader, Navigation navigation) {
+    public FundsView(ViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
 
     @Override
     public void initialize() {
-        navigationListener = navigationItems -> {
-            if (navigationItems != null && navigationItems.length == 3
-                    && navigationItems[1] == FxmlView.FUNDS)
-                loadView(navigationItems[2]);
+        navigationListener = viewPath -> {
+            if (viewPath.size() == 3 && viewPath.indexOf(FundsView.class) == 1)
+                loadView(viewPath.tip());
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == withdrawalTab)
-                navigation.navigateTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.WITHDRAWAL);
+                navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
             else if (newValue == transactionsTab)
-                navigation.navigateTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.TRANSACTIONS);
+                navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
         };
     }
 
@@ -70,9 +73,9 @@ class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.addListener(navigationListener);
 
         if (root.getSelectionModel().getSelectedItem() == transactionsTab)
-            navigation.navigateTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.TRANSACTIONS);
+            navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
         else
-            navigation.navigateTo(FxmlView.MAIN, FxmlView.FUNDS, FxmlView.WITHDRAWAL);
+        navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
     }
 
     @Override
@@ -81,20 +84,17 @@ class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.removeListener(navigationListener);
     }
 
-    private void loadView(FxmlView navigationItem) {
+    private void loadView(Class<? extends View> viewClass) {
         // we want to get activate/deactivate called, so we remove the old view on tab change
         if (currentTab != null)
             currentTab.setContent(null);
 
-        View view = viewLoader.load(navigationItem.getLocation());
-        switch (navigationItem) {
-            case WITHDRAWAL:
-                currentTab = withdrawalTab;
-                break;
-            case TRANSACTIONS:
-                currentTab = transactionsTab;
-                break;
-        }
+        if (viewClass == WithdrawalView.class)
+            currentTab = withdrawalTab;
+        if (viewClass == TransactionsView.class)
+            currentTab = transactionsTab;
+
+        View view = viewLoader.load(viewClass);
         currentTab.setContent(view.getRoot());
         root.getSelectionModel().select(currentTab);
     }

@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.account.content.restrictions;
 
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.FxmlView;
+import io.bitsquare.gui.main.account.arbitrator.browser.ArbitratorBrowserView;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import io.bitsquare.gui.util.ImageUtil;
@@ -29,6 +29,7 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.Wizard;
@@ -45,6 +46,7 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
+@FxmlView
 public class RestrictionsView extends ActivatableViewAndModel<GridPane, RestrictionsViewModel> implements Wizard.Step {
 
     @FXML ListView<Locale> languagesListView;
@@ -120,8 +122,9 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
     }
 
     @FXML
-    private void onOpenArbitratorScreen() {
-        loadView(FxmlView.ARBITRATOR_BROWSER);
+    private void onOpenArbitratorScreen(){
+        View view = viewLoader.load(ArbitratorBrowserView.class);
+        showStage(view);
     }
 
 
@@ -146,9 +149,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
         Help.openWindow(HelpId.SETUP_RESTRICTION_ARBITRATORS);
     }
 
-    private void loadView(FxmlView navigationItem) {
-        View view = viewLoader.load(navigationItem.getLocation());
-
+    private void showStage(View view) {
         final Stage stage = new Stage();
         stage.setTitle("Arbitrator selection");
         stage.setMinWidth(800);
@@ -162,7 +163,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
         Scene scene = new Scene((Parent) view.getRoot(), 800, 600);
         stage.setScene(scene);
         stage.setOnHidden(windowEvent -> {
-            if (navigationItem == FxmlView.ARBITRATOR_BROWSER)
+            if (view instanceof ArbitratorBrowserView)
                 updateArbitratorList();
         });
         stage.show();

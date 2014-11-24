@@ -19,9 +19,9 @@ package io.bitsquare.app.gui;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.account.AccountSettings;
-import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
@@ -97,7 +97,7 @@ public class BitsquareApp extends Application {
         // load the main view and create the main scene
 
         ViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
-        View view = viewLoader.load(FxmlView.MAIN.getLocation());
+        View view = viewLoader.load(MainView.class);
 
         Scene scene = new Scene((Parent) view.getRoot(), 1000, 600);
         scene.getStylesheets().setAll(

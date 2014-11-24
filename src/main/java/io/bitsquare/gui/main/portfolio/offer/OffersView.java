@@ -22,6 +22,7 @@ import io.bitsquare.util.Utilities;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -31,7 +32,8 @@ import javafx.scene.image.*;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
 
-class OffersView extends ActivatableViewAndModel<GridPane, OffersViewModel> {
+@FxmlView
+public class OffersView extends ActivatableViewAndModel<GridPane, OffersViewModel> {
 
     @FXML TableView<OfferListItem> table;
     @FXML TableColumn<OfferListItem, OfferListItem> priceColumn, amountColumn, volumeColumn,

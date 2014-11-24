@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -54,7 +55,8 @@ import org.controlsfx.control.action.Action;
 
 import org.jetbrains.annotations.NotNull;
 
-class WithdrawalView extends ActivatableViewAndModel {
+@FxmlView
+public class WithdrawalView extends ActivatableViewAndModel {
 
     @FXML TableView<WithdrawalListItem> table;
     @FXML Button addNewAddressButton;

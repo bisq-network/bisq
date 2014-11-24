@@ -17,20 +17,26 @@
 
 package io.bitsquare.gui;
 
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.trade.BuyView;
 import io.bitsquare.persistence.Persistence;
 
 import com.google.inject.Inject;
+
+import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import viewfx.view.View;
+import viewfx.view.ViewPath;
+
 public class Navigation {
 
     private static final String CURRENT_PATH_KEY = "currentPath";
 
-    // TODO: MAIN->BUY is the default view for now; should be MAIN->HOME later
-    private static final FxmlView[] DEFAULT_PATH = new FxmlView[]{ FxmlView.MAIN, FxmlView.BUY };
+    private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, BuyView.class);
 
     // New listeners can be added during iteration so we use CopyOnWriteArrayList to
     // prevent invalid array modification
@@ -38,11 +44,11 @@ public class Navigation {
 
     private final Persistence persistence;
 
-    private FxmlView[] currentPath;
+    private ViewPath currentPath;
 
     // Used for returning to the last important view. After setup is done we want to
     // return to the last opened view (e.g. sell/buy)
-    private FxmlView[] returnPath;
+    private ViewPath returnPath;
 
 
     @Inject
@@ -50,46 +56,50 @@ public class Navigation {
         this.persistence = persistence;
     }
 
-    public void navigateTo(FxmlView... newPath) {
+    public void navigateTo(Class<? extends View>... viewClasses) {
+        navigateTo(ViewPath.to(viewClasses));
+    }
+
+    public void navigateTo(ViewPath newPath) {
         if (newPath == null)
             return;
 
-        List<FxmlView> temp = new ArrayList<>();
-        for (int i = 0; i < newPath.length; i++) {
-            FxmlView element = newPath[i];
-            temp.add(element);
+        ArrayList<Class<? extends View>> temp = new ArrayList<>();
+        for (int i = 0; i < newPath.size(); i++) {
+            Class<? extends View> viewClass = newPath.get(i);
+            temp.add(viewClass);
             if (currentPath == null ||
                     (currentPath != null &&
-                            currentPath.length > i &&
-                            element != currentPath[i] &&
-                            i != newPath.length - 1)) {
-                List<FxmlView> temp2 = new ArrayList<>(temp);
-                for (int n = i + 1; n < newPath.length; n++) {
-                    FxmlView[] newTemp = new FxmlView[i + 1];
-                    currentPath = temp2.toArray(newTemp);
+                            currentPath.size() > i &&
+                            viewClass != currentPath.get(i) &&
+                            i != newPath.size() - 1)) {
+                ArrayList<Class<? extends View>> temp2 = new ArrayList<>(temp);
+                for (int n = i + 1; n < newPath.size(); n++) {
+                    Class<? extends View>[] newTemp = new Class[i + 1];
+                    currentPath = ViewPath.to(temp2.toArray(newTemp));
                     navigateTo(currentPath);
-                    element = newPath[n];
-                    temp2.add(element);
+                    viewClass = newPath.get(n);
+                    temp2.add(viewClass);
                 }
             }
         }
 
         currentPath = newPath;
-        persistence.write(this, CURRENT_PATH_KEY, currentPath);
+        persistence.write(this, CURRENT_PATH_KEY, (List<? extends Serializable>)currentPath);
         listeners.stream().forEach((e) -> e.onNavigationRequested(currentPath));
     }
 
     public void navigateToLastOpenView() {
-        FxmlView[] lastPath = (FxmlView[]) persistence.read(this, CURRENT_PATH_KEY);
+        ViewPath lastPath = (ViewPath) persistence.read(this, CURRENT_PATH_KEY);
 
-        if (lastPath == null || lastPath.length == 0)
-            lastPath = DEFAULT_PATH;
+        if (lastPath == null || lastPath.size() == 0)
+            lastPath = DEFAULT_VIEW_PATH;
 
         navigateTo(lastPath);
     }
 
     public static interface Listener {
-        void onNavigationRequested(FxmlView... path);
+        void onNavigationRequested(ViewPath path);
     }
 
     public void addListener(Listener listener) {
@@ -100,16 +110,15 @@ public class Navigation {
         listeners.remove(listener);
     }
 
-    public FxmlView[] getReturnPath() {
+    public ViewPath getReturnPath() {
         return returnPath;
     }
 
-    public FxmlView[] getCurrentPath() {
+    public ViewPath getCurrentPath() {
         return currentPath;
     }
 
-    public void setReturnPath(FxmlView[] returnPath) {
+    public void setReturnPath(ViewPath returnPath) {
         this.returnPath = returnPath;
     }
-
 }

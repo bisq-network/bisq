@@ -22,13 +22,15 @@ import io.bitsquare.gui.main.help.HelpId;
 
 import javax.inject.Inject;
 
-import viewfx.view.support.InitializableView;
+import viewfx.view.FxmlView;
 import viewfx.view.Wizard;
+import viewfx.view.support.InitializableView;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
+@FxmlView
 public class SeedWordsView extends InitializableView<GridPane, SeedWordsViewModel> implements Wizard.Step {
 
     @FXML Button completedButton;

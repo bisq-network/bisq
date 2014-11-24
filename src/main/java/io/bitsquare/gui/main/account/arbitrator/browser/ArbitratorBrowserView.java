@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.account.arbitrator.browser;
 
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.arbitrator.Arbitrator;
-import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.main.account.arbitrator.profile.ArbitratorProfileView;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.msg.MessageService;
@@ -31,6 +30,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.support.ActivatableView;
@@ -40,8 +40,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
-// TODO Arbitration is very basic yet
-class ArbitratorBrowserView extends ActivatableView<Pane, Void> implements ArbitratorListener {
+@FxmlView
+public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implements ArbitratorListener {
 
     @FXML Button prevButton, nextButton, selectButton, closeButton;
     @FXML Pane arbitratorProfile;
@@ -71,30 +71,11 @@ class ArbitratorBrowserView extends ActivatableView<Pane, Void> implements Arbit
         messageService.addArbitratorListener(this);
         messageService.getArbitrators(LanguageUtil.getDefaultLanguageLocale());
 
-        loadView(FxmlView.ARBITRATOR_PROFILE);
-        checkButtonState();
-    }
-
-   /* public Initializable loadViewAndGetChildController(Navigation.Item item) {
-        final ViewLoader loader = new ViewLoader(getClass().getResource(item.getFxmlUrl()));
-        try {
-            final Node view = loader.load();
-            arbitratorProfileView = loader.getController();
-            arbitratorProfileView.setParentController(this);
-            root.getChildren().set(0, view);
-
-            return arbitratorProfileView;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }*/
-
-
-    private void loadView(FxmlView navigationItem) {
-        View view = viewLoader.load(navigationItem.getLocation());
+        View view = viewLoader.load(ArbitratorProfileView.class);
         root.getChildren().set(0, view.getRoot());
         arbitratorProfileView = (ArbitratorProfileView) view;
+
+        checkButtonState();
     }
 
     @Override
@@ -117,7 +98,6 @@ class ArbitratorBrowserView extends ActivatableView<Pane, Void> implements Arbit
     @Override
     public void onArbitratorRemoved(Arbitrator arbitrator) {
     }
-
 
     @FXML
     public void onPrevious() {
@@ -150,7 +130,6 @@ class ArbitratorBrowserView extends ActivatableView<Pane, Void> implements Arbit
         Stage stage = (Stage) root.getScene().getWindow();
         stage.close();
     }
-
 
     private void checkButtonState() {
         prevButton.setDisable(index < 1);

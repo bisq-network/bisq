@@ -15,13 +15,32 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.msg;
+package viewfx.view;
 
-import viewfx.view.FxmlView;
-import viewfx.view.support.AbstractView;
+import java.util.ArrayList;
+import java.util.Arrays;
 
-// will be probably only used for arbitration communication, will be renamed and the icon changed
-@FxmlView
-public class MsgView extends AbstractView {
+public class ViewPath extends ArrayList<Class<? extends View>> {
+
+    public ViewPath() {
+    }
+
+    public static ViewPath to(Class<? extends View>... elements) {
+        ViewPath path = new ViewPath();
+        path.addAll(Arrays.asList(elements));
+        return path;
+    }
+
+    public static ViewPath from(ViewPath original) {
+        ViewPath path = new ViewPath();
+        path.addAll(original);
+        return path;
+    }
+
+    public Class<? extends View> tip() {
+        if (size() == 0)
+            return null;
+
+        return get(size()-1);
+    }
 }
-

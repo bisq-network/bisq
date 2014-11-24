@@ -17,19 +17,25 @@
 
 package io.bitsquare.gui.main.account;
 
-import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.account.arbitrator.ArbitratorSettingsView;
+import io.bitsquare.gui.main.account.settings.AccountSettingsView;
+import io.bitsquare.gui.main.account.setup.AccountSetupWizard;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
+import viewfx.view.ViewPath;
 import viewfx.view.support.ActivatableView;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
+@FxmlView
 public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
     @FXML Tab accountSettingsTab, arbitratorSettingsTab;
@@ -49,21 +55,16 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
     @Override
     public void initialize() {
-        navigationListener = navigationItems -> {
-            if (navigationItems != null &&
-                    navigationItems.length == 3 &&
-                    navigationItems[1] == FxmlView.ACCOUNT)
-                loadView(navigationItems[2]);
+        navigationListener = viewPath -> {
+            if (viewPath.size() == 3 && viewPath.indexOf(AccountView.class) == 1)
+                loadView(viewPath);
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == accountSettingsTab)
-                navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
-                        FxmlView.ACCOUNT_SETTINGS);
+                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
             else
-                navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
-                        FxmlView.ARBITRATOR_SETTINGS);
-
+                navigation.navigateTo(MainView.class, AccountView.class, ArbitratorSettingsView.class);
         };
     }
 
@@ -72,21 +73,16 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         navigation.addListener(navigationListener);
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
-        if (navigation.getCurrentPath().length == 2 &&
-                navigation.getCurrentPath()[1] == FxmlView.ACCOUNT) {
-            if (model.getNeedRegistration()) {
-                navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
-                        FxmlView.ACCOUNT_SETUP);
-            }
-            else {
-                if (root.getSelectionModel().getSelectedItem() == accountSettingsTab)
-                    navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
-                            FxmlView.ACCOUNT_SETTINGS);
-                else
-                    navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
-                            FxmlView.ARBITRATOR_SETTINGS);
-            }
-        }
+        if (!navigation.getCurrentPath().contains(AccountView.class))
+            return;
+
+        if (model.getNeedRegistration())
+            navigation.navigateTo(MainView.class, AccountView.class, AccountSetupWizard.class);
+
+        else if (root.getSelectionModel().getSelectedItem() == accountSettingsTab)
+            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
+
+        navigation.navigateTo(MainView.class, AccountView.class, ArbitratorSettingsView.class);
     }
 
     @Override
@@ -95,31 +91,31 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
     }
 
+    private void loadView(ViewPath viewPath) {
+        Tab tab;
+        Class<? extends View> viewClass = viewPath.tip();
 
-    private void loadView(FxmlView navigationItem) {
-        View view = viewLoader.load(navigationItem.getLocation());
-        final Tab tab;
-        switch (navigationItem) {
-            case ACCOUNT_SETTINGS:
-                tab = accountSettingsTab;
-                tab.setText("Account settings");
-                arbitratorSettingsTab.setDisable(false);
-                break;
-            case ACCOUNT_SETUP:
-                tab = accountSettingsTab;
-                tab.setText("Account setup");
-                arbitratorSettingsTab.setDisable(true);
-                break;
-            case ARBITRATOR_SETTINGS:
-                tab = arbitratorSettingsTab;
-                break;
-            default:
-                throw new IllegalArgumentException("navigation item of type " + navigationItem + " is not allowed");
+        if (viewClass == AccountSettingsView.class) {
+            tab = accountSettingsTab;
+            tab.setText("Account settings");
+            arbitratorSettingsTab.setDisable(false);
+        }
+        else if (viewClass == AccountSetupWizard.class) {
+            tab = accountSettingsTab;
+            tab.setText("Account setup");
+            arbitratorSettingsTab.setDisable(true);
+        }
+        else if (viewClass == ArbitratorSettingsView.class) {
+            tab = arbitratorSettingsTab;
+        }
+        else {
+            throw new IllegalArgumentException("Loading " + viewClass + " from " + this + " is not supported");
         }
 
         // for IRC demo we deactivate the arbitratorSettingsTab
         arbitratorSettingsTab.setDisable(true);
 
+        View view = viewLoader.load(viewClass);
         tab.setContent(view.getRoot());
         root.getSelectionModel().select(tab);
     }

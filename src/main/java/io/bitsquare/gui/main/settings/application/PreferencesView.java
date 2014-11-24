@@ -19,13 +19,15 @@ package io.bitsquare.gui.main.settings.application;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
-class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
+@FxmlView
+public class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
 
     @FXML ComboBox<String> btcDenominationComboBox;
     @FXML CheckBox useAnimationsCheckBox, useEffectsCheckBox;

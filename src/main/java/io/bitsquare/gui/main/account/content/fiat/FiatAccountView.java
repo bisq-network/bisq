@@ -35,8 +35,9 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import viewfx.view.support.ActivatableViewAndModel;
+import viewfx.view.FxmlView;
 import viewfx.view.Wizard;
+import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
@@ -50,7 +51,8 @@ import org.controlsfx.dialog.Dialog;
 
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
-class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccountViewModel> implements Wizard.Step {
+@FxmlView
+public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccountViewModel> implements Wizard.Step {
 
     @FXML HBox buttonsHBox;
     @FXML ComboBox<Region> regionComboBox;

@@ -17,14 +17,23 @@
 
 package io.bitsquare.gui.main.account.settings;
 
-import io.bitsquare.gui.FxmlView;
+import io.bitsquare.BitsquareException;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.account.AccountView;
+import io.bitsquare.gui.main.account.content.changepassword.ChangePasswordView;
+import io.bitsquare.gui.main.account.content.fiat.FiatAccountView;
+import io.bitsquare.gui.main.account.content.registration.RegistrationView;
+import io.bitsquare.gui.main.account.content.restrictions.RestrictionsView;
+import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
 import io.bitsquare.gui.util.Colors;
 
 import javax.inject.Inject;
 
+import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
+import viewfx.view.ViewPath;
 import viewfx.view.Wizard;
 import viewfx.view.support.ActivatableViewAndModel;
 
@@ -37,7 +46,8 @@ import javafx.scene.paint.*;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-class AccountSettingsView extends ActivatableViewAndModel {
+@FxmlView
+public class AccountSettingsView extends ActivatableViewAndModel {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
@@ -56,51 +66,40 @@ class AccountSettingsView extends ActivatableViewAndModel {
 
     @Override
     public void initialize() {
-        listener = navigationItems -> {
-            if (navigationItems != null &&
-                    navigationItems.length == 4 &&
-                    navigationItems[2] == FxmlView.ACCOUNT_SETTINGS) {
-                loadView(navigationItems[3]);
-                selectMainMenuButton(navigationItems[3]);
-            }
+        listener = viewPath -> {
+            if (viewPath.size() != 4 || !viewPath.contains(AccountSettingsView.class))
+                return;
+
+            loadView(viewPath.tip());
+            selectMainMenuButton(viewPath.tip());
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
-        seedWords = new MenuItem(navigation, "Wallet seed",
-                FxmlView.SEED_WORDS, toggleGroup);
-        password = new MenuItem(navigation, "Wallet password",
-                FxmlView.CHANGE_PASSWORD, toggleGroup);
-        restrictions = new MenuItem(navigation, "Arbitrator selection",
-                FxmlView.RESTRICTIONS, toggleGroup);
-        fiatAccount = new MenuItem(navigation, "Payments account(s)",
-                FxmlView.FIAT_ACCOUNT, toggleGroup);
-        registration = new MenuItem(navigation, "Renew your account",
-                FxmlView.REGISTRATION, toggleGroup);
+        seedWords = new MenuItem(navigation, toggleGroup, "Wallet seed", SeedWordsView.class);
+        password = new MenuItem(navigation, toggleGroup, "Wallet password", ChangePasswordView.class);
+        restrictions = new MenuItem(navigation, toggleGroup, "Arbitrator selection", RestrictionsView.class);
+        fiatAccount = new MenuItem(navigation, toggleGroup, "Payments account(s)", FiatAccountView.class);
+        registration = new MenuItem(navigation, toggleGroup, "Renew your account", RegistrationView.class);
 
         seedWords.setDisable(true);
         password.setDisable(true);
         restrictions.setDisable(true);
         registration.setDisable(true);
 
-        leftVBox.getChildren().addAll(seedWords, password,
-                restrictions, fiatAccount, registration);
+        leftVBox.getChildren().addAll(seedWords, password, restrictions, fiatAccount, registration);
     }
 
     @Override
     public void doActivate() {
         navigation.addListener(listener);
-        FxmlView[] items = navigation.getCurrentPath();
-        if (items.length == 3 &&
-                items[2] == FxmlView.ACCOUNT_SETTINGS) {
-            navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
-                    FxmlView.ACCOUNT_SETTINGS, FxmlView.FIAT_ACCOUNT);
+        ViewPath viewPath = navigation.getCurrentPath();
+        if (viewPath.size() == 3 && viewPath.indexOf(AccountSettingsView.class) == 2) {
+            navigation.navigateTo(
+                    ViewPath.to(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountView.class));
         }
-        else {
-            if (items.length == 4 &&
-                    items[2] == FxmlView.ACCOUNT_SETTINGS) {
-                loadView(items[3]);
-                selectMainMenuButton(items[3]);
-            }
+        else if (viewPath.size() == 4 && viewPath.indexOf(AccountSettingsView.class) == 2) {
+            loadView(viewPath.get(3));
+            selectMainMenuButton(viewPath.get(3));
         }
     }
 
@@ -109,42 +108,27 @@ class AccountSettingsView extends ActivatableViewAndModel {
         navigation.removeListener(listener);
     }
 
-    private void loadView(FxmlView navigationItem) {
-        View view = viewLoader.load(navigationItem.getLocation());
+    private void loadView(Class<? extends View> viewClass) {
+        View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
         if (view instanceof Wizard.Step)
             ((Wizard.Step) view).hideWizardNavigation();
     }
 
-    private void selectMainMenuButton(FxmlView item) {
-        switch (item) {
-            case SEED_WORDS:
-                seedWords.setSelected(true);
-                break;
-            case CHANGE_PASSWORD:
-                password.setSelected(true);
-                break;
-            case RESTRICTIONS:
-                restrictions.setSelected(true);
-                break;
-            case FIAT_ACCOUNT:
-                fiatAccount.setSelected(true);
-                break;
-            case REGISTRATION:
-                registration.setSelected(true);
-                break;
-            default:
-                log.error(item.getLocation() + " is invalid");
-                break;
-        }
+    private void selectMainMenuButton(Class<? extends View> viewClass) {
+        if (viewClass == SeedWordsView.class) seedWords.setSelected(true);
+        else if (viewClass == ChangePasswordView.class) password.setSelected(true);
+        else if (viewClass == RestrictionsView.class) restrictions.setSelected(true);
+        else if (viewClass == FiatAccountView.class) fiatAccount.setSelected(true);
+        else if (viewClass == RegistrationView.class) registration.setSelected(true);
+        else throw new BitsquareException("Selecting main menu button for " + viewClass + " is not supported");
     }
 }
 
 
 class MenuItem extends ToggleButton {
 
-    MenuItem(Navigation navigation, String title, FxmlView navigationItem,
-             ToggleGroup toggleGroup) {
+    MenuItem(Navigation navigation, ToggleGroup toggleGroup, String title, Class<? extends View> viewClass) {
 
         setToggleGroup(toggleGroup);
         setText(title);
@@ -155,17 +139,17 @@ class MenuItem extends ToggleButton {
 
         Label icon = new Label();
         icon.setTextFill(Paint.valueOf("#999"));
-        if (navigationItem.equals(FxmlView.SEED_WORDS))
+        if (viewClass == SeedWordsView.class)
             AwesomeDude.setIcon(icon, AwesomeIcon.INFO_SIGN);
-        else if (navigationItem.equals(FxmlView.REGISTRATION))
+        else if (viewClass == RegistrationView.class)
             AwesomeDude.setIcon(icon, AwesomeIcon.BRIEFCASE);
         else
             AwesomeDude.setIcon(icon, AwesomeIcon.EDIT_SIGN);
 
         setGraphic(icon);
 
-        setOnAction((event) -> navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
-                FxmlView.ACCOUNT_SETTINGS, navigationItem));
+        setOnAction((event) -> navigation.navigateTo(
+                ViewPath.to(MainView.class, AccountView.class, AccountSettingsView.class, viewClass)));
 
         selectedProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue) {

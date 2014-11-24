@@ -17,11 +17,15 @@
 
 package io.bitsquare.gui.main.trade.offerbook;
 
-import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.OverlayManager;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.account.AccountView;
+import io.bitsquare.gui.main.account.content.restrictions.RestrictionsView;
+import io.bitsquare.gui.main.account.settings.AccountSettingsView;
+import io.bitsquare.gui.main.account.setup.AccountSetupWizard;
 import io.bitsquare.gui.main.trade.TradeView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
@@ -36,8 +40,9 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import viewfx.view.support.ActivatableViewAndModel;
 import viewfx.view.ChildView;
+import viewfx.view.FxmlView;
+import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
@@ -55,6 +60,7 @@ import org.controlsfx.dialog.Dialog;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
+@FxmlView
 public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel>
         implements ChildView<TradeView> {
 
@@ -204,8 +210,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 Dialog.Actions.OK.handle(actionEvent);
                 overlayManager.removeBlurContent();
                 navigation.setReturnPath(navigation.getCurrentPath());
-                navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
-                        FxmlView.ACCOUNT_SETUP);
+                navigation.navigateTo(MainView.class, AccountView.class, AccountSetupWizard.class);
             }
         });
         Popups.openInfoPopup("You don't have setup a trading account.",
@@ -255,9 +260,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 actions);
 
         if (Popups.isYes(response))
-            navigation.navigateTo(FxmlView.MAIN, FxmlView.ACCOUNT,
-                    FxmlView.ACCOUNT_SETTINGS,
-                    FxmlView.RESTRICTIONS);
+            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, RestrictionsView.class);
         else
             table.getSelectionModel().clearSelection();
     }

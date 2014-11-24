@@ -17,13 +17,17 @@
 
 package io.bitsquare.gui.main.portfolio;
 
-import io.bitsquare.gui.FxmlView;
 import io.bitsquare.gui.Navigation;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.portfolio.closed.ClosedTradesView;
+import io.bitsquare.gui.main.portfolio.offer.OffersView;
+import io.bitsquare.gui.main.portfolio.pending.PendingTradesView;
 import io.bitsquare.trade.TradeManager;
 
 import javax.inject.Inject;
 
 import viewfx.model.Activatable;
+import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.support.ActivatableViewAndModel;
@@ -32,7 +36,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
+@FxmlView
+public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML Tab offersTab, openTradesTab, closedTradesTab;
 
@@ -53,20 +58,18 @@ class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
-        navigationListener = navigationItems -> {
-            if (navigationItems != null && navigationItems.length == 3
-                    && navigationItems[1] == FxmlView.PORTFOLIO)
-                loadView(navigationItems[2]);
+        navigationListener = viewPath -> {
+            if (viewPath.size() == 3 && viewPath.indexOf(PortfolioView.class) == 1)
+                loadView(viewPath.tip());
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == offersTab)
-                navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.OFFERS);
+                navigation.navigateTo(MainView.class, PortfolioView.class, OffersView.class);
             else if (newValue == openTradesTab)
-                navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO,
-                        FxmlView.PENDING_TRADES);
+                navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
             else if (newValue == closedTradesTab)
-                navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.CLOSED_TRADES);
+                navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class);
         };
     }
 
@@ -76,9 +79,9 @@ class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.addListener(navigationListener);
 
         if (tradeManager.getPendingTrades().size() == 0)
-            navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.OFFERS);
+            navigation.navigateTo(MainView.class, PortfolioView.class, OffersView.class);
         else
-            navigation.navigateTo(FxmlView.MAIN, FxmlView.PORTFOLIO, FxmlView.PENDING_TRADES);
+            navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
     }
 
     @Override
@@ -88,24 +91,19 @@ class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
         currentTab = null;
     }
 
-    private void loadView(FxmlView navigationItem) {
-
+    private void loadView(Class<? extends View> viewClass) {
         // we want to get activate/deactivate called, so we remove the old view on tab change
         if (currentTab != null)
             currentTab.setContent(null);
 
-        View view = viewLoader.load(navigationItem.getLocation());
-        switch (navigationItem) {
-            case OFFERS:
+        if (viewClass == OffersView.class)
                 currentTab = offersTab;
-                break;
-            case PENDING_TRADES:
+        if (viewClass == PendingTradesView.class)
                 currentTab = openTradesTab;
-                break;
-            case CLOSED_TRADES:
+        if (viewClass == ClosedTradesView.class)
                 currentTab = closedTradesTab;
-                break;
-        }
+
+        View view = viewLoader.load(viewClass);
         currentTab.setContent(view.getRoot());
         root.getSelectionModel().select(currentTab);
     }

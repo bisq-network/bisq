@@ -25,11 +25,15 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import viewfx.ViewfxException;
+import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewFactory;
 import viewfx.view.ViewLoader;
 
 import javafx.fxml.FXMLLoader;
+
+import org.springframework.core.annotation.AnnotationUtils;
 
 public class FxmlViewLoader implements ViewLoader {
 
@@ -42,20 +46,41 @@ public class FxmlViewLoader implements ViewLoader {
         this.resourceBundle = resourceBundle;
     }
 
-    public View load(Object location) {
-        if (!(location instanceof URL))
-            throw new IllegalArgumentException("FXML view locations must be of type URL");
+    public View load(Class<?> clazz) {
+        if (!View.class.isAssignableFrom(clazz))
+            throw new IllegalArgumentException("Class must be of generic type Class<? extends View>: " + clazz);
 
-        URL url = (URL) location;
+        @SuppressWarnings("unchecked")
+        Class<? extends View> viewClass = (Class<? extends View>) clazz;
 
+        FxmlView fxmlView = AnnotationUtils.getAnnotation(viewClass, FxmlView.class);
+        try {
+            String path = fxmlView.convention().newInstance().apply(viewClass);
+            return load(viewClass.getClassLoader().getResource(path));
+        } catch (InstantiationException | IllegalAccessException ex) {
+            throw new ViewfxException(ex, "Failed to load View from class %s", viewClass);
+        }
+    }
+
+    public View load(URL url) {
         try {
             FXMLLoader loader = new FXMLLoader(url, resourceBundle);
             loader.setControllerFactory(viewFactory);
             loader.load();
             return loader.getController();
         } catch (IOException ex) {
-            throw new RuntimeException("Failed to load View at location " + url, ex);
+            throw new ViewfxException(ex, "Failed to load View at location %s", url);
         }
+    }
+
+    public View load(Object location) {
+        if (location instanceof URL)
+            return load((URL) location);
+        if (location instanceof Class<?>)
+            return load((Class) location);
+
+        throw new IllegalArgumentException("Argument is not of type URL or Class: " + location);
+
     }
 }
 
