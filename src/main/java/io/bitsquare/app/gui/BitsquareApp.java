@@ -148,6 +148,7 @@ public class BitsquareApp extends Application {
     @Override
     public void stop() {
         bitsquareAppModule.close(injector);
+        System.exit(0);
     }
 
 
