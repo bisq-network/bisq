@@ -22,13 +22,13 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.account.content.restrictions.RestrictionsViewCB" hgap="5.0"
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.account.content.restrictions.RestrictionsView" hgap="5.0"
           vgap="5.0"
           AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
 
-    <!-- 
+    <!--
     languages
      -->
     <TitledGroupBg text="Add languages" GridPane.rowSpan="3"/>
@@ -47,7 +47,7 @@
     <InfoDisplay gridPane="$root" onAction="#onOpenLanguagesHelp" rowIndex="2"
                  text="Trade with users who have at least 1 shared language."/>
 
-    <!-- 
+    <!--
     countries
     -->
     <TitledGroupBg text="Add countries" GridPane.rowIndex="3" GridPane.rowSpan="3">
@@ -84,7 +84,7 @@
                  text="Restrict trades with these payments account countries."/>
 
 
-    <!-- 
+    <!--
     arbitrators
      -->
     <TitledGroupBg text="Add arbitrators" GridPane.rowIndex="6" GridPane.rowSpan="3">

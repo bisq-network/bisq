@@ -32,11 +32,7 @@ import javafx.scene.effect.*;
 import javafx.scene.layout.*;
 import javafx.util.Duration;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class Transitions {
-    private static final Logger log = LoggerFactory.getLogger(Transitions.class);
 
     public final static int DEFAULT_DURATION = 400;
 

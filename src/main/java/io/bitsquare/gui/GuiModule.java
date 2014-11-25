@@ -19,6 +19,7 @@ package io.bitsquare.gui;
 
 import io.bitsquare.BitsquareModule;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.trade.offerbook.OfferBook;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Transitions;
@@ -27,8 +28,18 @@ import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PasswordValidator;
+import io.bitsquare.locale.BSResources;
 
+import com.google.inject.Singleton;
 import com.google.inject.name.Names;
+
+import java.util.ResourceBundle;
+
+import viewfx.view.ViewFactory;
+import viewfx.view.ViewLoader;
+import viewfx.view.support.CachingViewLoader;
+import viewfx.view.support.fxml.FxmlViewLoader;
+import viewfx.view.support.guice.InjectorViewFactory;
 
 import javafx.stage.Stage;
 
@@ -45,8 +56,12 @@ public class GuiModule extends BitsquareModule {
 
     @Override
     protected void configure() {
-        bind(GuiceControllerFactory.class).asEagerSingleton();
-        bind(ViewLoader.class).asEagerSingleton();
+        bind(InjectorViewFactory.class).in(Singleton.class);
+        bind(ViewFactory.class).to(InjectorViewFactory.class);
+
+        bind(ResourceBundle.class).toInstance(BSResources.getResourceBundle());
+        bind(ViewLoader.class).to(FxmlViewLoader.class).asEagerSingleton();
+        bind(CachingViewLoader.class).asEagerSingleton();
 
         bind(OfferBook.class).asEagerSingleton();
         bind(Navigation.class).asEagerSingleton();
@@ -63,6 +78,6 @@ public class GuiModule extends BitsquareModule {
         bind(Stage.class).toInstance(primaryStage);
         Popups.primaryStage = primaryStage;
 
-        bindConstant().annotatedWith(Names.named(ViewCB.TITLE_KEY)).to(env.getRequiredProperty(ViewCB.TITLE_KEY));
+        bindConstant().annotatedWith(Names.named(MainView.TITLE_KEY)).to(env.getRequiredProperty(MainView.TITLE_KEY));
     }
 }

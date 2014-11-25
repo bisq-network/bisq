@@ -17,89 +17,90 @@
 
 package io.bitsquare.gui;
 
-import io.bitsquare.BitsquareException;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.trade.BuyView;
 import io.bitsquare.persistence.Persistence;
 
 import com.google.inject.Inject;
 
-import java.net.URL;
+import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import viewfx.view.View;
+import viewfx.view.ViewPath;
 
 public class Navigation {
-    private static final Logger log = LoggerFactory.getLogger(Navigation.class);
 
-    // New listeners can be added during iteration so we use CopyOnWriteArrayList to prevent invalid array
-    // modification
+    private static final String CURRENT_PATH_KEY = "currentPath";
+
+    private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, BuyView.class);
+
+    // New listeners can be added during iteration so we use CopyOnWriteArrayList to
+    // prevent invalid array modification
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
+
     private final Persistence persistence;
-    private Item[] currentItems;
 
-    // Used for returning to the last important view
-    // After setup is done we want to return to the last opened view (e.g. sell/buy)
-    private Item[] itemsForReturning;
+    private ViewPath currentPath;
 
+    // Used for returning to the last important view. After setup is done we want to
+    // return to the last opened view (e.g. sell/buy)
+    private ViewPath returnPath;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     public Navigation(Persistence persistence) {
         this.persistence = persistence;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public void navigateTo(Class<? extends View>... viewClasses) {
+        navigateTo(ViewPath.to(viewClasses));
+    }
 
-    public void navigationTo(Item... items) {
-        List<Item> temp = new ArrayList<>();
-        if (items != null) {
-            for (int i = 0; i < items.length; i++) {
-                Item item = items[i];
-                temp.add(item);
-                if (currentItems == null ||
-                        (currentItems != null &&
-                                currentItems.length > i &&
-                                item != currentItems[i] &&
-                                i != items.length - 1)) {
-                    List<Item> temp2 = new ArrayList<>(temp);
-                    for (int n = i + 1; n < items.length; n++) {
-                        Item[] newTemp = new Item[i + 1];
-                        currentItems = temp2.toArray(newTemp);
-                        navigationTo(currentItems);
-                        item = items[n];
-                        temp2.add(item);
-                    }
+    public void navigateTo(ViewPath newPath) {
+        if (newPath == null)
+            return;
+
+        ArrayList<Class<? extends View>> temp = new ArrayList<>();
+        for (int i = 0; i < newPath.size(); i++) {
+            Class<? extends View> viewClass = newPath.get(i);
+            temp.add(viewClass);
+            if (currentPath == null ||
+                    (currentPath != null &&
+                            currentPath.size() > i &&
+                            viewClass != currentPath.get(i) &&
+                            i != newPath.size() - 1)) {
+                ArrayList<Class<? extends View>> temp2 = new ArrayList<>(temp);
+                for (int n = i + 1; n < newPath.size(); n++) {
+                    Class<? extends View>[] newTemp = new Class[i + 1];
+                    currentPath = ViewPath.to(temp2.toArray(newTemp));
+                    navigateTo(currentPath);
+                    viewClass = newPath.get(n);
+                    temp2.add(viewClass);
                 }
             }
-
-            currentItems = items;
-
-            persistence.write(this, "navigationItems", items);
-            listeners.stream().forEach((e) -> e.onNavigationRequested(items));
         }
+
+        currentPath = newPath;
+        persistence.write(this, CURRENT_PATH_KEY, (List<? extends Serializable>)currentPath);
+        listeners.stream().forEach((e) -> e.onNavigationRequested(currentPath));
     }
 
-    public void navigateToLastStoredItem() {
-        Item[] items = (Item[]) persistence.read(this, "navigationItems");
-        // TODO we set BUY as default yet, should be HOME later
-        if (items == null || items.length == 0)
-            items = new Item[]{Item.MAIN, Item.BUY};
+    public void navigateToLastOpenView() {
+        ViewPath lastPath = (ViewPath) persistence.read(this, CURRENT_PATH_KEY);
 
-        navigationTo(items);
+        if (lastPath == null || lastPath.size() == 0)
+            lastPath = DEFAULT_VIEW_PATH;
+
+        navigateTo(lastPath);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Listeners
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public static interface Listener {
+        void onNavigationRequested(ViewPath path);
+    }
 
     public void addListener(Listener listener) {
         listeners.add(listener);
@@ -109,146 +110,15 @@ public class Navigation {
         listeners.remove(listener);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public Item[] getItemsForReturning() {
-        return itemsForReturning;
+    public ViewPath getReturnPath() {
+        return returnPath;
     }
 
-    public Item[] getCurrentItems() {
-        return currentItems;
+    public ViewPath getCurrentPath() {
+        return currentPath;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setItemsForReturning(Item[] itemsForReturning) {
-        this.itemsForReturning = itemsForReturning;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static interface Listener {
-        void onNavigationRequested(Item... items);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Enum
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static enum Item {
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        // Application
-        ///////////////////////////////////////////////////////////////////////////////////////////
-
-        MAIN("/io/bitsquare/gui/main/MainView.fxml"),
-
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        // Main menu screens
-        ///////////////////////////////////////////////////////////////////////////////////////////
-
-        HOME("/io/bitsquare/gui/main/home/HomeView.fxml", "Overview"),
-        BUY("/io/bitsquare/gui/main/trade/BuyView.fxml", "Buy BTC"),
-        SELL("/io/bitsquare/gui/main/trade/SellView.fxml", "Sell BTC"),
-        PORTFOLIO("/io/bitsquare/gui/main/portfolio/PortfolioView.fxml", "Portfolio"),
-        FUNDS("/io/bitsquare/gui/main/funds/FundsView.fxml", "Funds"),
-        MSG("/io/bitsquare/gui/main/msg/MsgView.fxml", "Messages"),
-        SETTINGS("/io/bitsquare/gui/main/settings/SettingsView.fxml", "Settings"),
-        ACCOUNT("/io/bitsquare/gui/main/account/AccountView.fxml", "Account"),
-
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        // Sub  menus
-        ///////////////////////////////////////////////////////////////////////////////////////////
-
-        // buy/sell (trade)
-        OFFER_BOOK("/io/bitsquare/gui/main/trade/offerbook/OfferBookView.fxml"),
-        CREATE_OFFER("/io/bitsquare/gui/main/trade/createoffer/CreateOfferView.fxml"),
-        TAKE_OFFER("/io/bitsquare/gui/main/trade/takeoffer/TakeOfferView.fxml"),
-
-        // portfolio
-        OFFERS("/io/bitsquare/gui/main/portfolio/offer/OffersView.fxml"),
-        PENDING_TRADES("/io/bitsquare/gui/main/portfolio/pending/PendingTradesView.fxml"),
-        CLOSED_TRADES("/io/bitsquare/gui/main/portfolio/closed/ClosedTradesView.fxml"),
-
-        // funds
-        WITHDRAWAL("/io/bitsquare/gui/main/funds/withdrawal/WithdrawalView.fxml"),
-        TRANSACTIONS("/io/bitsquare/gui/main/funds/transactions/TransactionsView.fxml"),
-
-        // settings
-        PREFERENCES("/io/bitsquare/gui/main/settings/application/PreferencesView.fxml"),
-        NETWORK_SETTINGS("/io/bitsquare/gui/main/settings/network/NetworkSettingsView.fxml"),
-
-        // account
-        ACCOUNT_SETUP("/io/bitsquare/gui/main/account/setup/AccountSetupView.fxml"),
-        ACCOUNT_SETTINGS("/io/bitsquare/gui/main/account/settings/AccountSettingsView.fxml"),
-        ARBITRATOR_SETTINGS("/io/bitsquare/gui/main/account/arbitrator/ArbitratorSettingsView.fxml"),
-
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        // Content in sub  menus
-        ///////////////////////////////////////////////////////////////////////////////////////////
-
-        // account content
-        SEED_WORDS("/io/bitsquare/gui/main/account/content/seedwords/SeedWordsView.fxml"),
-        ADD_PASSWORD("/io/bitsquare/gui/main/account/content/password/PasswordView.fxml"),
-        CHANGE_PASSWORD("/io/bitsquare/gui/main/account/content/password/PasswordView.fxml"),
-        RESTRICTIONS("/io/bitsquare/gui/main/account/content/restrictions/RestrictionsView.fxml"),
-        REGISTRATION("/io/bitsquare/gui/main/account/content/registration/RegistrationView.fxml"),
-        FIAT_ACCOUNT("/io/bitsquare/gui/main/account/content/irc/IrcAccountView.fxml"),
-
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        // Popups
-        ///////////////////////////////////////////////////////////////////////////////////////////
-
-        // arbitrator
-
-        ARBITRATOR_PROFILE("/io/bitsquare/gui/main/account/arbitrator/profile/ArbitratorProfileView.fxml"),
-        ARBITRATOR_BROWSER("/io/bitsquare/gui/main/account/arbitrator/browser/ArbitratorBrowserView.fxml"),
-        ARBITRATOR_REGISTRATION(
-                "/io/bitsquare/gui/main/account/arbitrator/registration/ArbitratorRegistrationView.fxml"),
-
-        // for testing, does not actually exist
-        BOGUS("/io/bitsquare/BogusView.fxml");
-
-
-        private final String displayName;
-        private final String fxmlUrl;
-
-        Item(String fxmlUrl) {
-            this(fxmlUrl, "NONE");
-        }
-
-        Item(String fxmlUrl, String displayName) {
-            this.displayName = displayName;
-            this.fxmlUrl = fxmlUrl;
-        }
-
-        public URL getFxmlUrl() {
-            URL url = Navigation.class.getResource(fxmlUrl);
-            if (url == null)
-                throw new BitsquareException("'%s' could not be loaded as a resource", fxmlUrl);
-            return url;
-        }
-
-        public String getDisplayName() {
-            return displayName;
-        }
-
-        public String getId() {
-            return fxmlUrl.substring(fxmlUrl.lastIndexOf("/") + 1, fxmlUrl.lastIndexOf("View.fxml")).toLowerCase();
-        }
+    public void setReturnPath(ViewPath returnPath) {
+        this.returnPath = returnPath;
     }
 }

@@ -19,7 +19,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.portfolio.PortfolioViewCB"
+<TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.portfolio.PortfolioView"
          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" tabClosingPolicy="UNAVAILABLE"
          xmlns:fx="http://javafx.com/fxml">

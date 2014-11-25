@@ -23,16 +23,12 @@ import io.bitsquare.user.User;
 
 import javax.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * FiatNumberValidator for validating fiat values.
  * <p>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
 public final class FiatValidator extends NumberValidator {
-    private static final Logger log = LoggerFactory.getLogger(FiatValidator.class);
 
     //TODO Find appropriate values - depends on currencies
     public static final double MIN_FIAT_VALUE = 0.01; // usually a cent is the smallest currency unit

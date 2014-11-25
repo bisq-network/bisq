@@ -19,11 +19,9 @@ package io.bitsquare.app.gui;
 
 import io.bitsquare.BitsquareException;
 import io.bitsquare.account.AccountSettings;
-import io.bitsquare.gui.GuiceControllerFactory;
-import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.SystemTray;
-import io.bitsquare.gui.ViewLoader;
 import io.bitsquare.gui.components.Popups;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
@@ -39,6 +37,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import viewfx.view.View;
+import viewfx.view.ViewLoader;
+import viewfx.view.support.CachingViewLoader;
+import viewfx.view.support.guice.InjectorViewFactory;
 
 import javafx.application.Application;
 import javafx.scene.*;
@@ -64,7 +67,7 @@ public class BitsquareApp extends Application {
     public void start(Stage primaryStage) throws IOException {
         bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
         injector = Guice.createInjector(bitsquareAppModule);
-        injector.getInstance(GuiceControllerFactory.class).setInjector(injector);
+        injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
 
         // route uncaught exceptions to a user-facing dialog
@@ -93,10 +96,10 @@ public class BitsquareApp extends Application {
 
         // load the main view and create the main scene
 
-        ViewLoader viewLoader = injector.getInstance(ViewLoader.class);
-        ViewLoader.Item loaded = viewLoader.load(Navigation.Item.MAIN.getFxmlUrl(), false);
+        ViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
+        View view = viewLoader.load(MainView.class);
 
-        Scene scene = new Scene((Parent) loaded.view, 1000, 600);
+        Scene scene = new Scene((Parent) view.getRoot(), 1000, 600);
         scene.getStylesheets().setAll(
                 "/io/bitsquare/gui/bitsquare.css",
                 "/io/bitsquare/gui/images.css");

@@ -19,9 +19,6 @@ package io.bitsquare.gui.components;
 
 import io.bitsquare.util.Utilities;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import eu.hansolo.enzo.notification.Notification;
 import eu.hansolo.enzo.notification.NotificationBuilder;
 import eu.hansolo.enzo.notification.NotifierBuilder;
@@ -30,7 +27,6 @@ import eu.hansolo.enzo.notification.NotifierBuilder;
  * Not sure if we stick with the eu.hansolo.enzo.notification.Notification implementation, so keep it behind a service
  */
 public class SystemNotification {
-    private static final Logger log = LoggerFactory.getLogger(SystemNotification.class);
     private static final Notification.Notifier notifier = NotifierBuilder.create().build();
 
     public static void openInfoNotification(String title, String message) {

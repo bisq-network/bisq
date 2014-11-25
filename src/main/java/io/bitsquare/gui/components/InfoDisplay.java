@@ -39,9 +39,6 @@ import javafx.scene.text.*;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Convenience Component for info icon, info text and link display in a GridPane.
  * Only the properties needed are supported.
@@ -49,7 +46,6 @@ import org.slf4j.LoggerFactory;
  * but add the children nodes to the gridPane.
  */
 public class InfoDisplay extends Parent {
-    private static final Logger log = LoggerFactory.getLogger(InfoDisplay.class);
 
     private final StringProperty text = new SimpleStringProperty();
     private final IntegerProperty rowIndex = new SimpleIntegerProperty(0);

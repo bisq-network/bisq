@@ -19,7 +19,7 @@
 
 
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.account.settings.AccountSettingsViewCB"
+<AnchorPane fx:id="root" fx:controller="io.bitsquare.gui.main.account.settings.AccountSettingsView"
             prefHeight="660.0" prefWidth="1000.0"
             xmlns:fx="http://javafx.com/fxml">
 

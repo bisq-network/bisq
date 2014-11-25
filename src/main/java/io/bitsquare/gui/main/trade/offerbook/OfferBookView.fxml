@@ -24,7 +24,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.trade.offerbook.OfferBookViewCB"
+<GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.trade.offerbook.OfferBookView"
           hgap="5.0" vgap="0"
           xmlns:fx="http://javafx.com/fxml">
     <padding>

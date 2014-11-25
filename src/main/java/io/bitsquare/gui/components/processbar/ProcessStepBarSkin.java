@@ -35,11 +35,7 @@ import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, BehaviorBase<ProcessStepBar<T>>> {
-    private static final Logger log = LoggerFactory.getLogger(ProcessStepBarSkin.class);
 
     private final ProcessStepBar<T> controller;
     private LabelWithBorder currentLabelWithBorder;

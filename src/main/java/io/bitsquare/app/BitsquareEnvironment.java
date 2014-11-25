@@ -20,7 +20,7 @@ package io.bitsquare.app;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.ViewCB;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.util.Utilities;
 import io.bitsquare.util.spring.JOptCommandLinePropertySource;
@@ -122,7 +122,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
             setProperty(Persistence.DIR_KEY, appDataDir);
             setProperty(Persistence.PREFIX_KEY, appName + "_pref");
 
-            setProperty(ViewCB.TITLE_KEY, appName);
+            setProperty(MainView.TITLE_KEY, appName);
         }});
     }
 

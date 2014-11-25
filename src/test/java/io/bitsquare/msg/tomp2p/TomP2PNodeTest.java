@@ -43,9 +43,6 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static org.junit.Assert.*;
 
 // TODO Reactivate tests when TomP2PNode is using original code again. we deactivated the security features atm.
@@ -53,7 +50,6 @@ import static org.junit.Assert.*;
 // investigate what has broken it, probably from update to latest head
 @Ignore
 public class TomP2PNodeTest {
-    private static final Logger log = LoggerFactory.getLogger(TomP2PNodeTest.class);
 
     final private static Random rnd = new Random(42L);
 

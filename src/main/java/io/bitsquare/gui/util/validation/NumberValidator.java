@@ -19,9 +19,6 @@ package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.locale.BSResources;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * NumberValidator for validating basic number values.
  * Localisation not supported at the moment
@@ -31,8 +28,6 @@ import org.slf4j.LoggerFactory;
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
 public abstract class NumberValidator extends InputValidator {
-    private static final Logger log = LoggerFactory.getLogger(NumberValidator.class);
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected methods

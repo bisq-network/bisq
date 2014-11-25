@@ -40,8 +40,6 @@ import javafx.scene.input.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.mightypork.rpack.utils.DesktopApi;
-
 /**
  * General utilities
  */
@@ -87,9 +85,9 @@ public class Utilities {
             Desktop.getDesktop().browse(uri);
         }
         else {
-            // On Linux Desktop is poorly implemented. 
+            // On Linux Desktop is poorly implemented.
             // See https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform
-            if (!DesktopApi.browse(uri))
+            if (!DesktopUtil.browse(uri))
                 throw new IOException("Failed to open URI: " + uri.toString());
         }
     }

@@ -23,16 +23,12 @@ import org.bitcoinj.core.NetworkParameters;
 
 import java.math.BigDecimal;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * BtcValidator for validating BTC values.
  * <p>
  * That class implements just what we need for the moment. It is not intended as a general purpose library class.
  */
 public final class OptionalBtcValidator extends NumberValidator {
-    private static final Logger log = LoggerFactory.getLogger(OptionalBtcValidator.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
