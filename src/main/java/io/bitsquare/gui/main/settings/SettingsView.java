@@ -88,15 +88,12 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     private void loadView(Class<? extends View> viewClass) {
         final Tab tab;
-
-        if (viewClass == PreferencesView.class)
-            tab = preferencesTab;
-        else if (viewClass == NetworkSettingsView.class)
-            tab = networkSettingsTab;
-        else
-            throw new IllegalArgumentException("Navigation to " + viewClass + " is not supported");
-
         View view = viewLoader.load(viewClass);
+
+        if (view instanceof PreferencesView) tab = preferencesTab;
+        else if (view instanceof NetworkSettingsView) tab = networkSettingsTab;
+        else throw new IllegalArgumentException("Navigation to " + viewClass + " is not supported");
+
         tab.setContent(view.getRoot());
         root.getSelectionModel().select(tab);
     }

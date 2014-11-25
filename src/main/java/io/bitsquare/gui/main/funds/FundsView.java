@@ -89,12 +89,11 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         if (currentTab != null)
             currentTab.setContent(null);
 
-        if (viewClass == WithdrawalView.class)
-            currentTab = withdrawalTab;
-        if (viewClass == TransactionsView.class)
-            currentTab = transactionsTab;
-
         View view = viewLoader.load(viewClass);
+
+        if (view instanceof WithdrawalView) currentTab = withdrawalTab;
+        else if (view instanceof TransactionsView) currentTab = transactionsTab;
+
         currentTab.setContent(view.getRoot());
         root.getSelectionModel().select(currentTab);
     }

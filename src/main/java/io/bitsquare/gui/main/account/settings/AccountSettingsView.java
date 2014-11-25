@@ -71,7 +71,6 @@ public class AccountSettingsView extends ActivatableViewAndModel {
                 return;
 
             loadView(viewPath.tip());
-            selectMainMenuButton(viewPath.tip());
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
@@ -98,7 +97,6 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         }
         else if (viewPath.size() == 4 && viewPath.indexOf(AccountSettingsView.class) == 2) {
             loadView(viewPath.get(3));
-            selectMainMenuButton(viewPath.get(3));
         }
     }
 
@@ -112,15 +110,13 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         content.getChildren().setAll(view.getRoot());
         if (view instanceof Wizard.Step)
             ((Wizard.Step) view).hideWizardNavigation();
-    }
 
-    private void selectMainMenuButton(Class<? extends View> viewClass) {
-        if (viewClass == SeedWordsView.class) seedWords.setSelected(true);
-        else if (viewClass == ChangePasswordView.class) password.setSelected(true);
-        else if (viewClass == RestrictionsView.class) restrictions.setSelected(true);
-        else if (viewClass == IrcAccountView.class) ircAccount.setSelected(true);
-        else if (viewClass == RegistrationView.class) registration.setSelected(true);
-        else throw new BitsquareException("Selecting main menu button for " + viewClass + " is not supported");
+        if (view instanceof SeedWordsView) seedWords.setSelected(true);
+        else if (view instanceof ChangePasswordView) password.setSelected(true);
+        else if (view instanceof RestrictionsView) restrictions.setSelected(true);
+        else if (view instanceof IrcAccountView) ircAccount.setSelected(true);
+        else if (view instanceof RegistrationView) registration.setSelected(true);
+        else throw new BitsquareException("Selecting main menu button for view " + view + " is not supported");
     }
 }
 

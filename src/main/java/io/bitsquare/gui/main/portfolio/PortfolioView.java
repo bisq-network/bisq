@@ -96,14 +96,12 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
         if (currentTab != null)
             currentTab.setContent(null);
 
-        if (viewClass == OffersView.class)
-                currentTab = offersTab;
-        if (viewClass == PendingTradesView.class)
-                currentTab = openTradesTab;
-        if (viewClass == ClosedTradesView.class)
-                currentTab = closedTradesTab;
-
         View view = viewLoader.load(viewClass);
+
+        if (view instanceof OffersView) currentTab = offersTab;
+        else if (view instanceof PendingTradesView) currentTab = openTradesTab;
+        else if (view instanceof ClosedTradesView) currentTab = closedTradesTab;
+
         currentTab.setContent(view.getRoot());
         root.getSelectionModel().select(currentTab);
     }

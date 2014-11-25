@@ -41,7 +41,6 @@ import javafx.collections.ListChangeListener;
 import javafx.scene.*;
 import javafx.scene.control.*;
 
-
 public abstract class TradeView extends ActivatableView<TabPane, Void> {
 
     private OfferBookView offerBookView;
@@ -120,9 +119,10 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
 
     private View loadView(Class<? extends View> viewClass) {
         TabPane tabPane = root;
-        if (viewClass == OfferBookView.class && offerBookView == null) {
+        View view = viewLoader.load(viewClass);
+
+        if (view instanceof OfferBookView && offerBookView == null) {
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
-            View view = viewLoader.load(viewClass);
             final Tab tab = new Tab(direction == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
             tab.setClosable(false);
             tab.setContent(view.getRoot());
@@ -134,10 +134,9 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
 
             return offerBookView;
         }
-        else if (viewClass == CreateOfferView.class && createOfferView == null) {
+        else if (view instanceof CreateOfferView && createOfferView == null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
-            View view = viewLoader.load(viewClass);
             createOfferView = (CreateOfferView) view;
             createOfferView.initWithData(direction, amount, price);
             createOfferRoot = view.getRoot();
@@ -148,11 +147,9 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
             tabPane.getSelectionModel().select(tab);
             return createOfferView;
         }
-        else if (viewClass == TakeOfferView.class && takeOfferView == null &&
-                offer != null) {
+        else if (view instanceof TakeOfferView && takeOfferView == null && offer != null) {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
-            View view = viewLoader.load(TakeOfferView.class);
             takeOfferView = (TakeOfferView) view;
             takeOfferView.initWithData(direction, amount, offer);
             takeOfferRoot = view.getRoot();

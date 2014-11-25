@@ -95,28 +95,28 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
     private void loadView(Class<? extends View> viewClass) {
         Tab tab;
+        View view = viewLoader.load(viewClass);
 
-        if (viewClass == AccountSettingsView.class) {
+        if (view instanceof AccountSettingsView) {
             tab = accountSettingsTab;
             tab.setText("Account settings");
             arbitratorSettingsTab.setDisable(false);
         }
-        else if (viewClass == AccountSetupWizard.class) {
+        else if (view instanceof AccountSetupWizard) {
             tab = accountSettingsTab;
             tab.setText("Account setup");
             arbitratorSettingsTab.setDisable(true);
         }
-        else if (viewClass == ArbitratorSettingsView.class) {
+        else if (view instanceof ArbitratorSettingsView) {
             tab = arbitratorSettingsTab;
         }
         else {
-            throw new IllegalArgumentException("Loading " + viewClass + " from " + this + " is not supported");
+            throw new IllegalArgumentException("View not supported: " + view);
         }
 
         // for IRC demo we deactivate the arbitratorSettingsTab
         arbitratorSettingsTab.setDisable(true);
 
-        View view = viewLoader.load(viewClass);
         tab.setContent(view.getRoot());
         root.getSelectionModel().select(tab);
     }
