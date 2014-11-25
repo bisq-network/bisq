@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.account.setup;
 
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.account.content.fiat.FiatAccountView;
 import io.bitsquare.gui.main.account.content.irc.IrcAccountView;
 import io.bitsquare.gui.main.account.content.password.PasswordView;
 import io.bitsquare.gui.main.account.content.registration.RegistrationView;
@@ -47,7 +46,7 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
     @FXML VBox leftVBox;
     @FXML AnchorPane content;
 
-    private WizardItem seedWords, password, fiatAccount, restrictions, registration;
+    private WizardItem seedWords, password, ircAccount, restrictions, registration;
     private Navigation.Listener listener;
 
     private final ViewLoader viewLoader;
@@ -79,17 +78,17 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
                 password.onCompleted();
                 restrictions.show();
             }
-            else if (viewClass == FiatAccountView.class) {
+            else if (viewClass == IrcAccountView.class) {
                 seedWords.onCompleted();
                 password.onCompleted();
                 restrictions.onCompleted();
-                fiatAccount.show();
+                ircAccount.show();
             }
             else if (viewClass == RegistrationView.class) {
                 seedWords.onCompleted();
                 password.onCompleted();
                 restrictions.onCompleted();
-                fiatAccount.onCompleted();
+                ircAccount.onCompleted();
                 registration.show();
             }
         };
@@ -100,12 +99,12 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
                 "Setup password", "Protect your wallet with a password");
         restrictions = new WizardItem(RestrictionsView.class,
                 "Select arbitrators", "Select which arbitrators you want to use for trading");
-        fiatAccount = new WizardItem(FiatAccountView.class,
+        ircAccount = new WizardItem(IrcAccountView.class,
                 " Setup Payments account(s)", "You need to setup at least one payment account");
         registration = new WizardItem(RegistrationView.class,
                 "Register your account", "The registration in the Blockchain requires a payment of 0.0002 BTC");
 
-        leftVBox.getChildren().addAll(seedWords, password, restrictions, fiatAccount, registration);
+        leftVBox.getChildren().addAll(seedWords, password, restrictions, ircAccount, registration);
 
         seedWords.setDisable(true);
         password.setDisable(true);
@@ -116,7 +115,7 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
     @Override
     public void activate() {
         navigation.addListener(listener);
-        fiatAccount.show();
+        ircAccount.show();
     }
 
     @Override
@@ -136,10 +135,10 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
         }
         else if (currentStep instanceof RestrictionsView) {
             restrictions.onCompleted();
-            fiatAccount.show();
+            ircAccount.show();
         }
         else if (currentStep instanceof IrcAccountView) {
-            fiatAccount.onCompleted();
+            ircAccount.onCompleted();
             registration.show();
         }
         else if (currentStep instanceof RegistrationView) {

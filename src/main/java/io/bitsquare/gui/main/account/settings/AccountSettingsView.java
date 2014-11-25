@@ -22,7 +22,7 @@ import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.changepassword.ChangePasswordView;
-import io.bitsquare.gui.main.account.content.fiat.FiatAccountView;
+import io.bitsquare.gui.main.account.content.irc.IrcAccountView;
 import io.bitsquare.gui.main.account.content.registration.RegistrationView;
 import io.bitsquare.gui.main.account.content.restrictions.RestrictionsView;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
@@ -52,7 +52,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
-    private MenuItem seedWords, password, restrictions, fiatAccount, registration;
+    private MenuItem seedWords, password, restrictions, ircAccount, registration;
     private Navigation.Listener listener;
 
     @FXML private VBox leftVBox;
@@ -78,7 +78,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         seedWords = new MenuItem(navigation, toggleGroup, "Wallet seed", SeedWordsView.class);
         password = new MenuItem(navigation, toggleGroup, "Wallet password", ChangePasswordView.class);
         restrictions = new MenuItem(navigation, toggleGroup, "Arbitrator selection", RestrictionsView.class);
-        fiatAccount = new MenuItem(navigation, toggleGroup, "Payments account(s)", FiatAccountView.class);
+        ircAccount = new MenuItem(navigation, toggleGroup, "Payments account(s)", IrcAccountView.class);
         registration = new MenuItem(navigation, toggleGroup, "Renew your account", RegistrationView.class);
 
         seedWords.setDisable(true);
@@ -86,7 +86,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         restrictions.setDisable(true);
         registration.setDisable(true);
 
-        leftVBox.getChildren().addAll(seedWords, password, restrictions, fiatAccount, registration);
+        leftVBox.getChildren().addAll(seedWords, password, restrictions, ircAccount, registration);
     }
 
     @Override
@@ -94,7 +94,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         navigation.addListener(listener);
         ViewPath viewPath = navigation.getCurrentPath();
         if (viewPath.size() == 3 && viewPath.indexOf(AccountSettingsView.class) == 2) {
-            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountView.class);
+            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, IrcAccountView.class);
         }
         else if (viewPath.size() == 4 && viewPath.indexOf(AccountSettingsView.class) == 2) {
             loadView(viewPath.get(3));
@@ -118,7 +118,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         if (viewClass == SeedWordsView.class) seedWords.setSelected(true);
         else if (viewClass == ChangePasswordView.class) password.setSelected(true);
         else if (viewClass == RestrictionsView.class) restrictions.setSelected(true);
-        else if (viewClass == FiatAccountView.class) fiatAccount.setSelected(true);
+        else if (viewClass == IrcAccountView.class) ircAccount.setSelected(true);
         else if (viewClass == RegistrationView.class) registration.setSelected(true);
         else throw new BitsquareException("Selecting main menu button for " + viewClass + " is not supported");
     }
