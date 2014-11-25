@@ -244,7 +244,7 @@ class CreateOfferDataModel implements Activatable, DataModel {
     @SuppressWarnings("NullableProblems")
     void setDirection(Direction direction) {
         // direction can not be changed once it is initially set
-        checkArgument(this.direction == null);
+        checkArgument(direction == null);
         this.direction = direction;
     }
 
