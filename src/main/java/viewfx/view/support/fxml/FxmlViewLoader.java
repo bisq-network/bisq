@@ -33,10 +33,7 @@ import viewfx.view.ViewLoader;
 
 import javafx.fxml.FXMLLoader;
 
-import java.lang.reflect.Constructor;
-import org.springframework.cglib.core.ReflectUtils;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.util.ReflectionUtils;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.springframework.core.annotation.AnnotationUtils.getDefaultValue;
@@ -53,12 +50,7 @@ public class FxmlViewLoader implements ViewLoader {
     }
 
     @SuppressWarnings("unchecked")
-    public View load(Class<?> clazz) {
-        if (!View.class.isAssignableFrom(clazz))
-            throw new IllegalArgumentException("Class must be of generic type Class<? extends View>: " + clazz);
-
-        Class<? extends View> viewClass = (Class<? extends View>) clazz;
-
+    public View load(Class<? extends View> viewClass) {
         FxmlView fxmlView = AnnotationUtils.getAnnotation(viewClass, FxmlView.class);
 
         final Class<? extends FxmlView.PathConvention> convention;
@@ -94,39 +86,30 @@ public class FxmlViewLoader implements ViewLoader {
                         "Failed to load view class [%s] because FXML file at [%s] could not be loaded " +
                                 "as a classpath resource. Does it exist?", viewClass, specifiedLocation);
 
-            return load(fxmlUrl);
+            return loadFromFxml(fxmlUrl);
         } catch (InstantiationException | IllegalAccessException ex) {
             throw new ViewfxException(ex, "Failed to load view from class %s", viewClass);
         }
     }
 
-    public View load(URL url) {
-        checkNotNull(url, "FXML URL must not be null");
+    public View loadFromFxml(URL fxmlUrl) {
+        checkNotNull(fxmlUrl, "FXML URL must not be null");
         try {
-            FXMLLoader loader = new FXMLLoader(url, resourceBundle);
+            FXMLLoader loader = new FXMLLoader(fxmlUrl, resourceBundle);
             loader.setControllerFactory(viewFactory);
             loader.load();
             Object controller = loader.getController();
             if (controller == null)
                 throw new ViewfxException("Failed to load view from FXML file at [%s]. " +
-                        "Does it declare an fx:controller attribute?", url);
+                        "Does it declare an fx:controller attribute?", fxmlUrl);
             if (!(controller instanceof View))
                 throw new ViewfxException("Controller of type [%s] loaded from FXML file at [%s] " +
-                        "does not implement [%s] as expected.", controller.getClass(), url, View.class);
+                        "does not implement [%s] as expected.", controller.getClass(), fxmlUrl, View.class);
             return (View) controller;
         } catch (IOException ex) {
-            throw new ViewfxException(ex, "Failed to load view from FXML file at [%s]", url);
+            throw new ViewfxException(ex, "Failed to load view from FXML file at [%s]", fxmlUrl);
         }
     }
 
-    public View load(Object location) {
-        if (location instanceof URL)
-            return load((URL) location);
-        if (location instanceof Class<?>)
-            return load((Class) location);
-
-        throw new IllegalArgumentException("Argument is not of type URL or Class: " + location);
-
-    }
 }
 

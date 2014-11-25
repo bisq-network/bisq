@@ -35,12 +35,12 @@ public class CachingViewLoader implements ViewLoader {
     }
 
     @Override
-    public View load(Object location) {
-        if (cache.containsKey(location))
-            return cache.get(location);
+    public View load(Class<? extends View> viewClass) {
+        if (cache.containsKey(viewClass))
+            return cache.get(viewClass);
 
-        View view = delegate.load(location);
-        cache.put(location, view);
+        View view = delegate.load(viewClass);
+        cache.put(viewClass, view);
         return view;
     }
 }

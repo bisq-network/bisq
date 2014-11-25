@@ -18,5 +18,5 @@
 package viewfx.view;
 
 public interface ViewLoader {
-    View load(Object location);
+    View load(Class<? extends View> viewClass);
 }

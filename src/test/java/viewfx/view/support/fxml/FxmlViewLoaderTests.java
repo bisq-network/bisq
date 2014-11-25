@@ -36,7 +36,6 @@ import org.junit.rules.ExpectedException;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.mock;
 
 public class FxmlViewLoaderTests {
@@ -87,17 +86,6 @@ public class FxmlViewLoaderTests {
         given(viewFactory.call(MissingFxmlViewAnnotation.class)).willReturn(new MissingFxmlViewAnnotation());
         View view = viewLoader.load(MissingFxmlViewAnnotation.class);
         assertThat(view, instanceOf(MissingFxmlViewAnnotation.class));
-    }
-
-
-    static class NonView {
-    }
-
-    @Test
-    public void nonViewClassShouldThrow() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Class must be of generic type");
-        viewLoader.load(NonView.class);
     }
 
 
