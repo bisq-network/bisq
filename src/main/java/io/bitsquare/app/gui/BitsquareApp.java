@@ -41,7 +41,7 @@ import java.nio.file.Paths;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.support.CachingViewLoader;
-import viewfx.view.support.guice.GuiceViewFactory;
+import viewfx.view.support.guice.InjectorViewFactory;
 
 import javafx.application.Application;
 import javafx.scene.*;
@@ -67,7 +67,7 @@ public class BitsquareApp extends Application {
     public void start(Stage primaryStage) throws IOException {
         bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
         injector = Guice.createInjector(bitsquareAppModule);
-        injector.getInstance(GuiceViewFactory.class).setInjector(injector);
+        injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
 
         // route uncaught exceptions to a user-facing dialog

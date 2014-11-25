@@ -23,15 +23,7 @@ import com.google.inject.Injector;
 
 import viewfx.view.ViewFactory;
 
-/**
- * A JavaFX controller factory for constructing viewfx Views using Guice. To
- * install this in the {@link javafx.fxml.FXMLLoader}, pass it as a parameter to
- * {@link javafx.fxml.FXMLLoader#setControllerFactory(javafx.util.Callback)}.
- * <p>
- * Once set, make sure you do <b>not</b> use the static methods on
- * {@link javafx.fxml.FXMLLoader} when creating your JavaFX node.
- */
-public class GuiceViewFactory implements ViewFactory {
+public class InjectorViewFactory implements ViewFactory {
 
     private Injector injector;
 
