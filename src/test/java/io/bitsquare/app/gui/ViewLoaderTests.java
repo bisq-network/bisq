@@ -89,13 +89,6 @@ public class ViewLoaderTests {
     }
 
     @Test
-    public void loadingValidFxmlResourceShouldNotThrow() throws MalformedURLException {
-        String path = "/Users/cbeams/Desktop/bitsquare/bitsquare/build/resources/main/" +
-                        "io/bitsquare/gui/main/account/AccountView.fxml";
-        new FxmlViewLoader(viewFactory, resourceBundle).load(new File(path).toURI().toURL());
-    }
-
-    @Test
     public void loadingFromValidFxmlViewClassShouldNotThrow() {
         new FxmlViewLoader(viewFactory, resourceBundle).load(FundsView.class);
     }
