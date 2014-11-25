@@ -57,7 +57,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
     public void initialize() {
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(AccountView.class) == 1)
-                loadView(viewPath);
+                loadView(viewPath.tip());
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
@@ -73,16 +73,18 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         navigation.addListener(navigationListener);
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
-        if (!navigation.getCurrentPath().contains(AccountView.class))
-            return;
-
-        if (model.getNeedRegistration())
-            navigation.navigateTo(MainView.class, AccountView.class, AccountSetupWizard.class);
-
-        else if (root.getSelectionModel().getSelectedItem() == accountSettingsTab)
-            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
-
-        navigation.navigateTo(MainView.class, AccountView.class, ArbitratorSettingsView.class);
+        if (navigation.getCurrentPath().size() == 2 &&
+                navigation.getCurrentPath().get(1) == AccountView.class) {
+            if (model.getNeedRegistration()) {
+                navigation.navigateTo(MainView.class, AccountView.class, AccountSetupWizard.class);
+            }
+            else {
+                if (root.getSelectionModel().getSelectedItem() == accountSettingsTab)
+                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
+                else
+                    navigation.navigateTo(MainView.class, AccountView.class, ArbitratorSettingsView.class);
+            }
+        }
     }
 
     @Override
@@ -91,9 +93,8 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
     }
 
-    private void loadView(ViewPath viewPath) {
+    private void loadView(Class<? extends View> viewClass) {
         Tab tab;
-        Class<? extends View> viewClass = viewPath.tip();
 
         if (viewClass == AccountSettingsView.class) {
             tab = accountSettingsTab;
