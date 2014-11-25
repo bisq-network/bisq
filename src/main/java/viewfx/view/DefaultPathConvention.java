@@ -15,17 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package viewfx;
+package viewfx.view;
 
-import static java.lang.String.format;
+import org.springframework.util.ClassUtils;
 
-public class ViewfxException extends RuntimeException {
-
-    public ViewfxException(Throwable cause, String format, Object... args) {
-        super(format(format, args), cause);
-    }
-
-    public ViewfxException(String format, Object... args) {
-        super(format(format, args));
+public class DefaultPathConvention implements FxmlView.PathConvention {
+    @Override
+    public String apply(Class<? extends View> viewClass) {
+        return ClassUtils.convertClassNameToResourcePath(viewClass.getName()).concat(".fxml");
     }
 }

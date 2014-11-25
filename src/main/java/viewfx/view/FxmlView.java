@@ -23,7 +23,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import org.springframework.util.ClassUtils;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -40,12 +39,8 @@ public @interface FxmlView {
      * By default it is the fully-qualified view class name, converted to a resource path, replacing the
      * {@code .class} suffix replaced with {@code .fxml}.
      */
-    Class<? extends Function<Class<? extends View>, String>> convention() default DefaultFxmlPathConvention.class;
+    Class<? extends PathConvention> convention() default DefaultPathConvention.class;
 
-    static class DefaultFxmlPathConvention implements Function<Class<? extends View>, String> {
-        @Override
-        public String apply(Class<? extends View> viewClass) {
-            return ClassUtils.convertClassNameToResourcePath(viewClass.getName()).concat(".fxml");
-        }
+    static interface PathConvention extends Function<Class<? extends View>, String> {
     }
 }

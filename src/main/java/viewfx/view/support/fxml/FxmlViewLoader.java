@@ -33,7 +33,13 @@ import viewfx.view.ViewLoader;
 
 import javafx.fxml.FXMLLoader;
 
+import java.lang.reflect.Constructor;
+import org.springframework.cglib.core.ReflectUtils;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.util.ReflectionUtils;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static org.springframework.core.annotation.AnnotationUtils.getDefaultValue;
 
 public class FxmlViewLoader implements ViewLoader {
 
@@ -46,30 +52,70 @@ public class FxmlViewLoader implements ViewLoader {
         this.resourceBundle = resourceBundle;
     }
 
+    @SuppressWarnings("unchecked")
     public View load(Class<?> clazz) {
         if (!View.class.isAssignableFrom(clazz))
             throw new IllegalArgumentException("Class must be of generic type Class<? extends View>: " + clazz);
 
-        @SuppressWarnings("unchecked")
         Class<? extends View> viewClass = (Class<? extends View>) clazz;
 
         FxmlView fxmlView = AnnotationUtils.getAnnotation(viewClass, FxmlView.class);
+
+        final Class<? extends FxmlView.PathConvention> convention;
+        final Class<? extends FxmlView.PathConvention> defaultConvention =
+                (Class<? extends FxmlView.PathConvention>) getDefaultValue(FxmlView.class,  "convention");
+
+        final String specifiedLocation;
+        final String defaultLocation = (String) getDefaultValue(FxmlView.class, "location");
+
+        if (fxmlView == null) {
+            convention = defaultConvention;
+            specifiedLocation = defaultLocation;
+        }
+        else {
+            convention = fxmlView.convention();
+            specifiedLocation = fxmlView.location();
+        }
+
+        if (convention == null || specifiedLocation == null)
+            throw new IllegalStateException("Convention and location should never be null.");
+
+
         try {
-            String path = fxmlView.convention().newInstance().apply(viewClass);
-            return load(viewClass.getClassLoader().getResource(path));
+            final String resolvedLocation;
+            if (specifiedLocation.equals(defaultLocation))
+                resolvedLocation = convention.newInstance().apply(viewClass);
+            else
+                resolvedLocation = specifiedLocation;
+
+            URL fxmlUrl = viewClass.getClassLoader().getResource(resolvedLocation);
+            if (fxmlUrl == null)
+                throw new ViewfxException(
+                        "Failed to load view class [%s] because FXML file at [%s] could not be loaded " +
+                                "as a classpath resource. Does it exist?", viewClass, specifiedLocation);
+
+            return load(fxmlUrl);
         } catch (InstantiationException | IllegalAccessException ex) {
-            throw new ViewfxException(ex, "Failed to load View from class %s", viewClass);
+            throw new ViewfxException(ex, "Failed to load view from class %s", viewClass);
         }
     }
 
     public View load(URL url) {
+        checkNotNull(url, "FXML URL must not be null");
         try {
             FXMLLoader loader = new FXMLLoader(url, resourceBundle);
             loader.setControllerFactory(viewFactory);
             loader.load();
-            return loader.getController();
+            Object controller = loader.getController();
+            if (controller == null)
+                throw new ViewfxException("Failed to load view from FXML file at [%s]. " +
+                        "Does it declare an fx:controller attribute?", url);
+            if (!(controller instanceof View))
+                throw new ViewfxException("Controller of type [%s] loaded from FXML file at [%s] " +
+                        "does not implement [%s] as expected.", controller.getClass(), url, View.class);
+            return (View) controller;
         } catch (IOException ex) {
-            throw new ViewfxException(ex, "Failed to load View at location %s", url);
+            throw new ViewfxException(ex, "Failed to load view from FXML file at [%s]", url);
         }
     }
 
