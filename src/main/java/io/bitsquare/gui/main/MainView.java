@@ -40,6 +40,7 @@ import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.support.ActivatableView;
+import viewfx.view.support.CachingViewLoader;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -68,7 +69,8 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
     private final String title;
 
     @Inject
-    public MainView(MainViewModel model, ViewLoader viewLoader, Navigation navigation, OverlayManager overlayManager,
+    public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, OverlayManager
+            overlayManager,
                     Transitions transitions, @Named(MainView.TITLE_KEY) String title) {
         super(model);
         this.viewLoader = viewLoader;

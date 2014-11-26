@@ -35,7 +35,6 @@ import java.util.List;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.support.ActivatableView;
-import viewfx.view.support.CachingViewLoader;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
@@ -58,7 +57,7 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
     private final Navigation navigation;
     private final Direction direction;
 
-    protected TradeView(CachingViewLoader viewLoader, Navigation navigation) {
+    protected TradeView(ViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.direction = (this instanceof BuyView) ? Direction.BUY : Direction.SELL;
