@@ -103,7 +103,6 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
         navigation.removeListener(listener);
     }
 
-
     public void createOffer(Coin amount, Fiat price) {
         this.amount = amount;
         this.price = price;
@@ -128,7 +127,26 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
             tab.setContent(view.getRoot());
             tabPane.getTabs().add(tab);
             offerBookView = (OfferBookView) view;
-            offerBookView.setParent(this);
+
+            OfferActionHandler offerActionHandler = new OfferActionHandler() {
+                @Override
+                public void createOffer(Coin amount, Fiat price) {
+                    TradeView.this.amount = amount;
+                    TradeView.this.price = price;
+                    TradeView.this.navigation.navigateTo(MainView.class, TradeView.this.getClass(),
+                            CreateOfferView.class);
+                }
+
+                @Override
+                public void takeOffer(Coin amount, Fiat price, Offer offer) {
+                    TradeView.this.amount = amount;
+                    TradeView.this.price = price;
+                    TradeView.this.offer = offer;
+                    TradeView.this.navigation.navigateTo(MainView.class, TradeView.this.getClass(),
+                            TakeOfferView.class);
+                }
+            };
+            offerBookView.setOfferActionHandler(offerActionHandler);
 
             offerBookView.setDirection(direction);
 
@@ -176,6 +194,12 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
 
         // update the navigation state
         navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);
+    }
+
+    public interface OfferActionHandler {
+        void createOffer(Coin amount, Fiat price);
+
+        void takeOffer(Coin amount, Fiat price, Offer offer);
     }
 }
 

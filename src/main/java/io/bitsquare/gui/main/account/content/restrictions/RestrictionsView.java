@@ -33,8 +33,8 @@ import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.Wizard;
-import viewfx.view.support.CachingViewLoader;
 import viewfx.view.support.ActivatableViewAndModel;
+import viewfx.view.support.CachingViewLoader;
 
 import javafx.fxml.FXML;
 import javafx.scene.*;
@@ -57,7 +57,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
     @FXML ComboBox<Country> countryComboBox;
     @FXML Button completedButton, addAllEuroCountriesButton;
 
-    private Wizard parent;
+    private Wizard wizard;
 
     private final ViewLoader viewLoader;
     private final Stage primaryStage;
@@ -86,8 +86,8 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
     }
 
     @Override
-    public void setParent(Wizard parent) {
-        this.parent = parent;
+    public void setWizard(Wizard wizard) {
+        this.wizard = wizard;
     }
 
     @Override
@@ -130,8 +130,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
 
     @FXML
     private void onCompleted() {
-        if (parent instanceof Wizard)
-            ((Wizard) parent).nextStep(this);
+            wizard.nextStep(this);
     }
 
     @FXML

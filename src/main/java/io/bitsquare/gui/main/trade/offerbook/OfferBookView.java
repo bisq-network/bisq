@@ -40,7 +40,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import viewfx.view.ChildView;
 import viewfx.view.FxmlView;
 import viewfx.view.support.ActivatableViewAndModel;
 
@@ -61,8 +60,7 @@ import org.controlsfx.dialog.Dialog;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 @FxmlView
-public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel>
-        implements ChildView<TradeView> {
+public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel> {
 
     @FXML CheckBox showOnlyMatchingCheckBox;
     @FXML TableView<OfferBookListItem> table;
@@ -73,7 +71,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @FXML Label amountBtcLabel, priceDescriptionLabel, priceFiatLabel, volumeDescriptionLabel, volumeFiatLabel,
             extendedButton1Label, extendedButton2Label, extendedCheckBoxLabel;
 
-    private TradeView parent;
     private ImageView expand;
     private ImageView collapse;
 
@@ -85,6 +82,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final OverlayManager overlayManager;
     private final OptionalBtcValidator optionalBtcValidator;
     private final OptionalFiatValidator optionalFiatValidator;
+    private TradeView.OfferActionHandler offerActionHandler;
 
     @Inject
     OfferBookView(OfferBookViewModel model,
@@ -163,7 +161,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     void createOffer() {
         if (model.isRegistered()) {
             createOfferButton.setDisable(true);
-            parent.createOffer(model.getAmountAsCoin(), model.getPriceAsCoin());
+            offerActionHandler.createOffer(model.getAmountAsCoin(), model.getPriceAsCoin());
         }
         else {
             openSetupScreen();
@@ -222,7 +220,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         if (model.isRegistered()) {
             if (offer.getDirection() == Direction.BUY) {
-                parent.takeOffer(model.getAmountAsCoin(), model.getPriceAsCoin(), offer);
+                offerActionHandler.takeOffer(model.getAmountAsCoin(), model.getPriceAsCoin(), offer);
             }
             else {
                 Popups.openInfoPopup("Not implemented yet",
@@ -350,8 +348,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 .getBankAccountType()));
     }
 
-    public void setParent(TradeView parent) {
-        this.parent = parent;
+    public void setOfferActionHandler(TradeView.OfferActionHandler offerActionHandler) {
+        this.offerActionHandler = offerActionHandler;
     }
 
     private void setAmountColumnCellFactory() {

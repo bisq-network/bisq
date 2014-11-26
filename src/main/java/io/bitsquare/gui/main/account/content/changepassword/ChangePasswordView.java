@@ -37,7 +37,7 @@ public class ChangePasswordView extends InitializableView<GridPane, ChangePasswo
     @FXML Button saveButton, skipButton;
     @FXML PasswordField oldPasswordField, passwordField, repeatedPasswordField;
 
-    private Wizard parent;
+    private Wizard wizard;
 
     @Inject
     private ChangePasswordView(ChangePasswordViewModel model) {
@@ -53,8 +53,8 @@ public class ChangePasswordView extends InitializableView<GridPane, ChangePasswo
     }
 
     @Override
-    public void setParent(Wizard parent) {
-        this.parent = parent;
+    public void setWizard(Wizard wizard) {
+        this.wizard = wizard;
     }
 
     @Override
@@ -65,7 +65,7 @@ public class ChangePasswordView extends InitializableView<GridPane, ChangePasswo
     @FXML
     private void onSaved() {
         if (model.requestSavePassword())
-            parent.nextStep(this);
+            wizard.nextStep(this);
         else
             log.debug(model.getErrorMessage()); // TODO use validating TF
     }
@@ -77,7 +77,7 @@ public class ChangePasswordView extends InitializableView<GridPane, ChangePasswo
 
     @FXML
     private void onSkipped() {
-        parent.nextStep(this);
+        wizard.nextStep(this);
     }
 }
 

@@ -37,7 +37,7 @@ public class PasswordView extends InitializableView<GridPane, PasswordViewModel>
     @FXML Button saveButton, skipButton;
     @FXML PasswordField oldPasswordField, passwordField, repeatedPasswordField;
 
-    private Wizard parent;
+    private Wizard wizard;
 
     @Inject
     private PasswordView(PasswordViewModel model) {
@@ -53,8 +53,8 @@ public class PasswordView extends InitializableView<GridPane, PasswordViewModel>
     }
 
     @Override
-    public void setParent(Wizard parent) {
-        this.parent = parent;
+    public void setWizard(Wizard wizard) {
+        this.wizard = wizard;
     }
 
     @Override
@@ -65,14 +65,14 @@ public class PasswordView extends InitializableView<GridPane, PasswordViewModel>
     @FXML
     private void onSaved() {
         if (model.requestSavePassword())
-            parent.nextStep(this);
+            wizard.nextStep(this);
         else
             log.debug(model.getErrorMessage()); // TODO use validating passwordTF
     }
 
     @FXML
     private void onSkipped() {
-        parent.nextStep(this);
+        wizard.nextStep(this);
     }
 
     @FXML

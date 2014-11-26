@@ -155,7 +155,7 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
         if (view instanceof Wizard.Step)
-            ((Step) view).setParent(this);
+            ((Step) view).setWizard(this);
     }
 
 

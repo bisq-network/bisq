@@ -63,7 +63,7 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
     @FXML ComboBox<BankAccountType> typesComboBox;
     @FXML ComboBox<Currency> currencyComboBox;
 
-    private Wizard parent;
+    private Wizard wizard;
 
     private final OverlayManager overlayManager;
 
@@ -99,8 +99,8 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
     }
 
     @Override
-    public void setParent(Wizard parent) {
-        this.parent = parent;
+    public void setWizard(Wizard wizard) {
+        this.wizard = wizard;
     }
 
     @Override
@@ -151,7 +151,7 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
 
     @FXML
     void onCompleted() {
-        parent.nextStep(this);
+        wizard.nextStep(this);
     }
 
     @FXML

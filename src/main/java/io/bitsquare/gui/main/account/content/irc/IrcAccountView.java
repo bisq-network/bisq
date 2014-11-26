@@ -29,8 +29,8 @@ import java.util.Currency;
 import javax.inject.Inject;
 
 import viewfx.view.FxmlView;
-import viewfx.view.support.ActivatableViewAndModel;
 import viewfx.view.Wizard;
+import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -50,7 +50,7 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
     @FXML ComboBox<BankAccountType> typesComboBox;
     @FXML ComboBox<Currency> currencyComboBox;
 
-    private Wizard parent;
+    private Wizard wizard;
 
     @Inject
     public IrcAccountView(IrcAccountViewModel model) {
@@ -132,8 +132,8 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
     }
 
     @Override
-    public void setParent(Wizard parent) {
-        this.parent = parent;
+    public void setWizard(Wizard wizard) {
+        this.wizard = wizard;
     }
 
     @Override
@@ -153,7 +153,7 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
     @FXML
     void onSave() {
         if (model.requestSaveBankAccount().isValid)
-            parent.nextStep(this);
+            wizard.nextStep(this);
     }
 
     @FXML

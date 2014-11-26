@@ -36,7 +36,7 @@ public class SeedWordsView extends InitializableView<GridPane, SeedWordsViewMode
     @FXML Button completedButton;
     @FXML TextArea seedWordsTextArea;
 
-    private Wizard parent;
+    private Wizard wizard;
 
     @Inject
     private SeedWordsView(SeedWordsViewModel model) {
@@ -49,8 +49,8 @@ public class SeedWordsView extends InitializableView<GridPane, SeedWordsViewMode
     }
 
     @Override
-    public void setParent(Wizard parent) {
-        this.parent = parent;
+    public void setWizard(Wizard wizard) {
+        this.wizard = wizard;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class SeedWordsView extends InitializableView<GridPane, SeedWordsViewMode
 
     @FXML
     private void onCompleted() {
-        parent.nextStep(this);
+        wizard.nextStep(this);
     }
 
     @FXML

@@ -20,7 +20,9 @@ package viewfx.view;
 public interface Wizard extends View {
     void nextStep(Step currentStep);
 
-    public interface Step extends ChildView<Wizard> {
+    public interface Step {
         void hideWizardNavigation();
+
+        void setWizard(Wizard wizard);
     }
 }

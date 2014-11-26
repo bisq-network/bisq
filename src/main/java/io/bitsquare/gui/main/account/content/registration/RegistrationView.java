@@ -53,7 +53,7 @@ public class RegistrationView extends InitializableView<GridPane, RegistrationVi
     @FXML Label paymentSpinnerInfoLabel;
     @FXML ProgressIndicator paymentSpinner;
 
-    private Wizard parent;
+    private Wizard wizard;
 
     private final OverlayManager overlayManager;
 
@@ -110,7 +110,7 @@ public class RegistrationView extends InitializableView<GridPane, RegistrationVi
                     public void handle(ActionEvent actionEvent) {
                         getProperties().put("type", "CLOSE");
                         try {
-                            parent.nextStep(RegistrationView.this);
+                            wizard.nextStep(RegistrationView.this);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -128,8 +128,8 @@ public class RegistrationView extends InitializableView<GridPane, RegistrationVi
     }
 
     @Override
-    public void setParent(Wizard parent) {
-        this.parent = parent;
+    public void setWizard(Wizard wizard) {
+        this.wizard = wizard;
     }
 
     @Override
