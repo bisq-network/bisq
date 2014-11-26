@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.trade;
 
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.trade.createoffer.CreateOfferView;
 import io.bitsquare.gui.main.trade.offerbook.OfferBookView;
@@ -38,16 +39,16 @@ import viewfx.view.support.CachingViewLoader;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
-import javafx.scene.*;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
 
 public abstract class TradeView extends ActivatableView<TabPane, Void> {
 
     private OfferBookView offerBookView;
     private CreateOfferView createOfferView;
     private TakeOfferView takeOfferView;
-    private Node createOfferRoot;
-    private Node takeOfferRoot;
+    private AnchorPane createOfferPane;
+    private AnchorPane takeOfferPane;
     private Navigation.Listener listener;
     private Coin amount;
     private Fiat price;
@@ -87,9 +88,9 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
             change.next();
             List<? extends Tab> removedTabs = change.getRemoved();
             if (removedTabs.size() == 1) {
-                if (removedTabs.get(0).getContent().equals(createOfferRoot))
+                if (removedTabs.get(0).getContent().equals(createOfferPane))
                     onCreateOfferViewRemoved();
-                else if (removedTabs.get(0).getContent().equals(takeOfferRoot))
+                else if (removedTabs.get(0).getContent().equals(takeOfferPane))
                     onTakeOfferViewRemoved();
             }
         });
@@ -131,6 +132,13 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
             OfferActionHandler offerActionHandler = new OfferActionHandler() {
                 @Override
                 public void createOffer(Coin amount, Fiat price) {
+                    if (TradeView.this instanceof SellView) {
+                        Popups.openWarningPopup("Warning",
+                                "Please note that a sell offer is not supported yet for trading",
+                                "You can create the offer and it appears in the offerbook, " +
+                                        "but nobody can take the offer.\n" +
+                                        "That will be implemented in an upcoming development milestone.");
+                    }
                     TradeView.this.amount = amount;
                     TradeView.this.price = price;
                     TradeView.this.navigation.navigateTo(MainView.class, TradeView.this.getClass(),
@@ -157,10 +165,10 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
             // in different graphs
             createOfferView = (CreateOfferView) view;
             createOfferView.initWithData(direction, amount, price);
-            createOfferRoot = view.getRoot();
+            createOfferPane = ((CreateOfferView) view).getRoot();
             final Tab tab = new Tab("Create offer");
             createOfferView.configCloseHandlers(tab.closableProperty());
-            tab.setContent(createOfferRoot);
+            tab.setContent(createOfferPane);
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
             return createOfferView;
@@ -170,10 +178,10 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
             // in different graphs
             takeOfferView = (TakeOfferView) view;
             takeOfferView.initWithData(direction, amount, offer);
-            takeOfferRoot = view.getRoot();
+            takeOfferPane = ((TakeOfferView) view).getRoot();
             final Tab tab = new Tab("Take offer");
             takeOfferView.configCloseHandlers(tab.closableProperty());
-            tab.setContent(takeOfferRoot);
+            tab.setContent(takeOfferPane);
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
             return takeOfferView;
