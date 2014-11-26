@@ -418,34 +418,48 @@ public class TradeManager {
         log.trace("onIncomingTradeMessage sender " + sender);
 
         String tradeId = tradeMessage.getTradeId();
-
-        if (tradeMessage instanceof RequestTakeOfferMessage) {
-            createOffererAsBuyerProtocol(tradeId, sender);
+        if (tradeId != null) {
+            if (tradeMessage instanceof RequestTakeOfferMessage) {
+                createOffererAsBuyerProtocol(tradeId, sender);
+            }
+            else if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
+                takerAsSellerProtocolMap.get(tradeId).onRespondToTakeOfferRequestMessage(
+                        (RespondToTakeOfferRequestMessage) tradeMessage);
+            }
+            else if (tradeMessage instanceof TakeOfferFeePayedMessage) {
+                offererAsBuyerProtocolMap.get(tradeId).onTakeOfferFeePayedMessage((TakeOfferFeePayedMessage)
+                        tradeMessage);
+            }
+            else if (tradeMessage instanceof RequestTakerDepositPaymentMessage) {
+                takerAsSellerProtocolMap.get(tradeId).onRequestTakerDepositPaymentMessage(
+                        (RequestTakerDepositPaymentMessage) tradeMessage);
+            }
+            else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
+                offererAsBuyerProtocolMap.get(tradeId).onRequestOffererPublishDepositTxMessage(
+                        (RequestOffererPublishDepositTxMessage) tradeMessage);
+            }
+            else if (tradeMessage instanceof DepositTxPublishedMessage) {
+                persistPendingTrades();
+                takerAsSellerProtocolMap.get(tradeId).onDepositTxPublishedMessage((DepositTxPublishedMessage)
+                        tradeMessage);
+            }
+            else if (tradeMessage instanceof BankTransferInitedMessage) {
+                // Here happened a null pointer. I assume the only possible reason was that we got a null for the 
+                // tradeID
+                // as the takerAsSellerProtocolMap need to have that trade got added earlier.
+                // For getting better info we add a check. tradeId is checked above.
+                if (takerAsSellerProtocolMap.get(tradeId) == null)
+                    log.error("takerAsSellerProtocolMap.get(tradeId) = null. That must not happen.");
+                takerAsSellerProtocolMap.get(tradeId).onBankTransferInitedMessage((BankTransferInitedMessage)
+                        tradeMessage);
+            }
+            else if (tradeMessage instanceof PayoutTxPublishedMessage) {
+                offererAsBuyerProtocolMap.get(tradeId).onPayoutTxPublishedMessage((PayoutTxPublishedMessage)
+                        tradeMessage);
+            }
         }
-        else if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
-            takerAsSellerProtocolMap.get(tradeId).onRespondToTakeOfferRequestMessage(
-                    (RespondToTakeOfferRequestMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof TakeOfferFeePayedMessage) {
-            offererAsBuyerProtocolMap.get(tradeId).onTakeOfferFeePayedMessage((TakeOfferFeePayedMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof RequestTakerDepositPaymentMessage) {
-            takerAsSellerProtocolMap.get(tradeId).onRequestTakerDepositPaymentMessage(
-                    (RequestTakerDepositPaymentMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
-            offererAsBuyerProtocolMap.get(tradeId).onRequestOffererPublishDepositTxMessage(
-                    (RequestOffererPublishDepositTxMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof DepositTxPublishedMessage) {
-            persistPendingTrades();
-            takerAsSellerProtocolMap.get(tradeId).onDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof BankTransferInitedMessage) {
-            takerAsSellerProtocolMap.get(tradeId).onBankTransferInitedMessage((BankTransferInitedMessage) tradeMessage);
-        }
-        else if (tradeMessage instanceof PayoutTxPublishedMessage) {
-            offererAsBuyerProtocolMap.get(tradeId).onPayoutTxPublishedMessage((PayoutTxPublishedMessage) tradeMessage);
+        else {
+            log.error("tradeId from onIncomingTradeMessage is null. That must not happen.");
         }
     }
 

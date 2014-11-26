@@ -156,6 +156,9 @@ public class BuyerAcceptsOfferProtocol {
         tradeId = trade.getId();
         offer = trade.getOffer();
 
+        checkNotNull(tradeId);
+        checkNotNull(offer);
+
         //TODO use first for now
         arbitratorPubKey = offer.getArbitrators().get(0).getPubKeyAsHex();
 

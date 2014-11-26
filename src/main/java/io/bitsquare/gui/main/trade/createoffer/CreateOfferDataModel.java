@@ -59,7 +59,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Domain for that UI element.
@@ -244,7 +244,7 @@ class CreateOfferDataModel implements Activatable, DataModel {
     @SuppressWarnings("NullableProblems")
     void setDirection(Direction direction) {
         // direction can not be changed once it is initially set
-        checkArgument(direction != null);
+        checkNotNull(direction);
         this.direction = direction;
     }
 

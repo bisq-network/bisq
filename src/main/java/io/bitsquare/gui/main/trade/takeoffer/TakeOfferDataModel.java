@@ -129,15 +129,22 @@ class TakeOfferDataModel implements Activatable, DataModel {
     }
 
     void takeOffer() {
-        Trade trade = tradeManager.takeOffer(amountAsCoin.get(), offer);
+        final Trade trade = tradeManager.takeOffer(amountAsCoin.get(), offer);
         trade.stateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("trade state = " + newValue);
             switch (newValue) {
                 // TODO Check why DEPOSIT_CONFIRMED can happen, refactor state handling
                 case DEPOSIT_PUBLISHED:
                 case DEPOSIT_CONFIRMED:
-                    transactionId.set(trade.getDepositTx().getHashAsString());
-                    requestTakeOfferSuccess.set(true);
+                    // TODO null pointer happened here!
+                    if (trade.getDepositTx() != null) {
+                        transactionId.set(trade.getDepositTx().getHashAsString());
+                        requestTakeOfferSuccess.set(true);
+                    }
+                    else {
+                        log.warn("trade.getDepositTx() = null. at trade state " + newValue +
+                                " That should not happen and needs more investigation why it can happen.");
+                    }
                     break;
                 case FAILED:
                     requestTakeOfferErrorMessage.set("An error occurred. Error: " + trade.getFault().getMessage());
