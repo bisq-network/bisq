@@ -33,6 +33,7 @@ import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.Wizard;
 import viewfx.view.support.ActivatableView;
+import viewfx.view.support.CachingViewLoader;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -53,7 +54,7 @@ public class AccountSetupWizard extends ActivatableView implements Wizard {
     private final Navigation navigation;
 
     @Inject
-    private AccountSetupWizard(ViewLoader viewLoader, Navigation navigation) {
+    private AccountSetupWizard(CachingViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }

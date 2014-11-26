@@ -30,6 +30,7 @@ import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.support.ActivatableViewAndModel;
+import viewfx.view.support.CachingViewLoader;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -48,7 +49,7 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
     private final Navigation navigation;
 
     @Inject
-    public SettingsView(ViewLoader viewLoader, Navigation navigation, Preferences preferences) {
+    public SettingsView(CachingViewLoader viewLoader, Navigation navigation, Preferences preferences) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;

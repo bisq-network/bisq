@@ -34,6 +34,7 @@ import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.support.ActivatableView;
+import viewfx.view.support.CachingViewLoader;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -58,7 +59,7 @@ public class ArbitratorBrowserView extends ActivatableView<Pane, Void> implement
     private final MessageService messageService;
 
     @Inject
-    public ArbitratorBrowserView(ViewLoader viewLoader, AccountSettings accountSettings, Persistence persistence,
+    public ArbitratorBrowserView(CachingViewLoader viewLoader, AccountSettings accountSettings, Persistence persistence,
                                  MessageService messageService) {
         this.viewLoader = viewLoader;
         this.accountSettings = accountSettings;

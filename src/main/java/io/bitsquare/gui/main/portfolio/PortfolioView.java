@@ -31,6 +31,7 @@ import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.support.ActivatableViewAndModel;
+import viewfx.view.support.CachingViewLoader;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -50,7 +51,7 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
     private final TradeManager tradeManager;
 
     @Inject
-    public PortfolioView(ViewLoader viewLoader, Navigation navigation, TradeManager tradeManager) {
+    public PortfolioView(CachingViewLoader viewLoader, Navigation navigation, TradeManager tradeManager) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.tradeManager = tradeManager;

@@ -28,8 +28,8 @@ import javax.inject.Inject;
 import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
-import viewfx.view.ViewPath;
 import viewfx.view.support.ActivatableView;
+import viewfx.view.support.CachingViewLoader;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -45,9 +45,11 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
+    private View accountSetupWizardView;
+    private Tab tab;
 
     @Inject
-    private AccountView(AccountViewModel model, ViewLoader viewLoader, Navigation navigation) {
+    private AccountView(AccountViewModel model, CachingViewLoader viewLoader, Navigation navigation) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
@@ -73,8 +75,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         navigation.addListener(navigationListener);
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
-        if (navigation.getCurrentPath().size() == 2 &&
-                navigation.getCurrentPath().get(1) == AccountView.class) {
+        if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == AccountView.class) {
             if (model.getNeedRegistration()) {
                 navigation.navigateTo(MainView.class, AccountView.class, AccountSetupWizard.class);
             }
@@ -91,10 +92,12 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
     public void deactivate() {
         navigation.removeListener(navigationListener);
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
+
+        if (accountSetupWizardView != null)
+            tab.setContent(null);
     }
 
     private void loadView(Class<? extends View> viewClass) {
-        Tab tab;
         View view = viewLoader.load(viewClass);
 
         if (view instanceof AccountSettingsView) {
@@ -106,6 +109,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
             tab = accountSettingsTab;
             tab.setText("Account setup");
             arbitratorSettingsTab.setDisable(true);
+            accountSetupWizardView = view;
         }
         else if (view instanceof ArbitratorSettingsView) {
             tab = arbitratorSettingsTab;

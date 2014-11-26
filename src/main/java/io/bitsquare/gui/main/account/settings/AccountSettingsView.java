@@ -36,6 +36,7 @@ import viewfx.view.ViewLoader;
 import viewfx.view.ViewPath;
 import viewfx.view.Wizard;
 import viewfx.view.support.ActivatableViewAndModel;
+import viewfx.view.support.CachingViewLoader;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -59,7 +60,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     @FXML private AnchorPane content;
 
     @Inject
-    private AccountSettingsView(ViewLoader viewLoader, Navigation navigation) {
+    private AccountSettingsView(CachingViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }

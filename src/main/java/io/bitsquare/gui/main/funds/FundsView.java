@@ -29,6 +29,7 @@ import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.support.ActivatableViewAndModel;
+import viewfx.view.support.CachingViewLoader;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -47,7 +48,7 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
     private final Navigation navigation;
 
     @Inject
-    public FundsView(ViewLoader viewLoader, Navigation navigation) {
+    public FundsView(CachingViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
@@ -75,13 +76,14 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         if (root.getSelectionModel().getSelectedItem() == transactionsTab)
             navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
         else
-        navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
+            navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
     }
 
     @Override
     public void doDeactivate() {
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
         navigation.removeListener(navigationListener);
+        currentTab = null;
     }
 
     private void loadView(Class<? extends View> viewClass) {
@@ -91,8 +93,10 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
         View view = viewLoader.load(viewClass);
 
-        if (view instanceof WithdrawalView) currentTab = withdrawalTab;
-        else if (view instanceof TransactionsView) currentTab = transactionsTab;
+        if (view instanceof WithdrawalView)
+            currentTab = withdrawalTab;
+        else if (view instanceof TransactionsView)
+            currentTab = transactionsTab;
 
         currentTab.setContent(view.getRoot());
         root.getSelectionModel().select(currentTab);
