@@ -122,7 +122,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
     }
 
     @FXML
-    private void onOpenArbitratorScreen(){
+    private void onOpenArbitratorScreen() {
         View view = viewLoader.load(ArbitratorBrowserView.class);
         showStage(view);
     }
@@ -130,6 +130,7 @@ public class RestrictionsView extends ActivatableViewAndModel<GridPane, Restrict
 
     @FXML
     private void onCompleted() {
+        if (wizard != null)
             wizard.nextStep(this);
     }
 

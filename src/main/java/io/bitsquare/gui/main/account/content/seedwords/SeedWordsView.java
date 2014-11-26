@@ -60,7 +60,8 @@ public class SeedWordsView extends InitializableView<GridPane, SeedWordsViewMode
 
     @FXML
     private void onCompleted() {
-        wizard.nextStep(this);
+        if (wizard != null)
+            wizard.nextStep(this);
     }
 
     @FXML

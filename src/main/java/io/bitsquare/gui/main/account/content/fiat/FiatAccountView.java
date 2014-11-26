@@ -151,7 +151,8 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
 
     @FXML
     void onCompleted() {
-        wizard.nextStep(this);
+        if (wizard != null)
+            wizard.nextStep(this);
     }
 
     @FXML

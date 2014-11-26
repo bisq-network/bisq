@@ -64,7 +64,7 @@ public class PasswordView extends InitializableView<GridPane, PasswordViewModel>
 
     @FXML
     private void onSaved() {
-        if (model.requestSavePassword())
+        if (wizard != null && model.requestSavePassword())
             wizard.nextStep(this);
         else
             log.debug(model.getErrorMessage()); // TODO use validating passwordTF
@@ -72,7 +72,8 @@ public class PasswordView extends InitializableView<GridPane, PasswordViewModel>
 
     @FXML
     private void onSkipped() {
-        wizard.nextStep(this);
+        if (wizard != null)
+            wizard.nextStep(this);
     }
 
     @FXML

@@ -109,11 +109,8 @@ public class RegistrationView extends InitializableView<GridPane, RegistrationVi
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         getProperties().put("type", "CLOSE");
-                        try {
+                        if (wizard != null)
                             wizard.nextStep(RegistrationView.this);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
                         Dialog.Actions.CLOSE.handle(actionEvent);
                         overlayManager.removeBlurContent();
                     }
