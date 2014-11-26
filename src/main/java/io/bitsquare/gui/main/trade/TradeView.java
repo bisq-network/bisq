@@ -118,9 +118,10 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
 
     private View loadView(Class<? extends View> viewClass) {
         TabPane tabPane = root;
-        View view = viewLoader.load(viewClass);
+        View view;
 
-        if (view instanceof OfferBookView && offerBookView == null) {
+        if (viewClass == OfferBookView.class && offerBookView == null) {
+            view = viewLoader.load(viewClass);
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
             final Tab tab = new Tab(direction == Direction.BUY ? "Buy Bitcoin" : "Sell Bitcoin");
             tab.setClosable(false);
@@ -159,7 +160,8 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
 
             return offerBookView;
         }
-        else if (view instanceof CreateOfferView && createOfferView == null) {
+        else if (viewClass == CreateOfferView.class && createOfferView == null) {
+            view = viewLoader.load(viewClass);
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
             createOfferView = (CreateOfferView) view;
@@ -172,7 +174,8 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
             tabPane.getSelectionModel().select(tab);
             return createOfferView;
         }
-        else if (view instanceof TakeOfferView && takeOfferView == null && offer != null) {
+        else if (viewClass == TakeOfferView.class && takeOfferView == null && offer != null) {
+            view = viewLoader.load(viewClass);
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
             takeOfferView = (TakeOfferView) view;
