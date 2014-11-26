@@ -41,6 +41,9 @@ public class BitsquareAppMain extends BitsquareExecutable {
     protected void customizeOptionParsing(OptionParser parser) {
         parser.accepts(USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
                 .withRequiredArg();
+        parser.accepts(USER_DATA_CLEAN_DIR_KEY, description("Clean user data directory", false))
+                .withRequiredArg()
+                .ofType(boolean.class);
         parser.accepts(APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
                 .withRequiredArg();
         parser.accepts(APP_DATA_DIR_KEY, description("Application data directory", DEFAULT_APP_DATA_DIR))

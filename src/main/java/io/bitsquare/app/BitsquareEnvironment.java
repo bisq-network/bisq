@@ -25,6 +25,8 @@ import io.bitsquare.persistence.Persistence;
 import io.bitsquare.util.Utilities;
 import io.bitsquare.util.spring.JOptCommandLinePropertySource;
 
+import java.io.File;
+
 import java.nio.file.Paths;
 
 import java.util.Properties;
@@ -38,6 +40,7 @@ import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePropertySource;
+import org.springframework.util.FileSystemUtils;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -45,6 +48,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
     public static final String APP_VERSION_KEY = "app.version";
 
+    public static final String USER_DATA_CLEAN_DIR_KEY = "user.data.clean.dir";
     public static final String USER_DATA_DIR_KEY = "user.data.dir";
     public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
 
@@ -89,6 +93,12 @@ public class BitsquareEnvironment extends StandardEnvironment {
             propertySources.addLast(defaultProperties());
         } catch (Exception ex) {
             throw new BitsquareException(ex);
+        }
+
+        boolean cleanUserDataDir = commandLineProperties.containsProperty(USER_DATA_CLEAN_DIR_KEY) &&
+                commandLineProperties.getProperty(USER_DATA_CLEAN_DIR_KEY).equals("true");
+        if (cleanUserDataDir) {
+            FileSystemUtils.deleteRecursively(new File(appDataDir));
         }
     }
 
