@@ -38,6 +38,8 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import net.tomp2p.connection.Bindings;
+import net.tomp2p.connection.ChannelClientConfiguration;
+import net.tomp2p.connection.ChannelServerConfiguration;
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.dht.PeerDHT;
 import net.tomp2p.futures.BaseFuture;
@@ -58,6 +60,8 @@ import org.jetbrains.annotations.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
 
 
 /**
@@ -116,12 +120,22 @@ class BootstrappedPeerFactory {
 
     public SettableFuture<PeerDHT> start() {
         try {
+            DefaultEventExecutorGroup eventExecutorGroup = new DefaultEventExecutorGroup(250);
+            ChannelClientConfiguration clientConf = PeerBuilder.createDefaultChannelClientConfiguration();
+            clientConf.pipelineFilter(new PeerBuilder.EventExecutorGroupFilter(eventExecutorGroup));
+
+            ChannelServerConfiguration serverConf = PeerBuilder.createDefaultChannelServerConfiguration();
+            serverConf.pipelineFilter(new PeerBuilder.EventExecutorGroupFilter(eventExecutorGroup));
+            serverConf.connectionTimeoutTCPMillis(5000);
+
             Bindings bindings = new Bindings();
             if (!NETWORK_INTERFACE_UNSPECIFIED.equals(networkInterface))
                 bindings.addInterface(networkInterface);
 
             if (useManualPortForwarding) {
                 peer = new PeerBuilder(keyPair)
+                        .channelClientConfiguration(clientConf)
+                        .channelServerConfiguration(serverConf)
                         .ports(port)
                         .bindings(bindings)
                         .tcpPortForwarding(port)
@@ -130,6 +144,8 @@ class BootstrappedPeerFactory {
             }
             else {
                 peer = new PeerBuilder(keyPair)
+                        .channelClientConfiguration(clientConf)
+                        .channelServerConfiguration(serverConf)
                         .ports(port)
                         .bindings(bindings)
                         .start();
