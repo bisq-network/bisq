@@ -20,6 +20,7 @@ package io.bitsquare.gui.main;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.BootstrapState;
@@ -45,6 +46,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
+import javafx.collections.ObservableList;
 import javafx.util.StringConverter;
 
 import org.slf4j.Logger;
@@ -57,6 +59,7 @@ class MainViewModel implements ViewModel {
 
     final DoubleProperty networkSyncProgress = new SimpleDoubleProperty(-1);
     final IntegerProperty numPendingTrades = new SimpleIntegerProperty(0);
+    final StringProperty numPendingTradesAsString = new SimpleStringProperty();
     final ObjectProperty<BootstrapState> bootstrapState = new SimpleObjectProperty<>();
     final StringProperty bootstrapStateText = new SimpleStringProperty();
     final ObjectProperty walletServiceException = new SimpleObjectProperty<Throwable>();
@@ -69,17 +72,22 @@ class MainViewModel implements ViewModel {
     final BooleanProperty blockchainSyncIndicatorVisible = new SimpleBooleanProperty(true);
     final StringProperty blockchainSyncIconId = new SimpleStringProperty();
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
+    final BooleanProperty isReadyForMainScreen = new SimpleBooleanProperty();
 
     final DoubleProperty bootstrapProgress = new SimpleDoubleProperty(-1);
     final BooleanProperty bootstrapFailed = new SimpleBooleanProperty();
     final StringProperty bootstrapErrorMsg = new SimpleStringProperty();
     final StringProperty bootstrapIconId = new SimpleStringProperty();
 
+    final StringProperty featureNotImplementedWarning = new SimpleStringProperty();
+    final ObjectProperty<BankAccount> currentBankAccount = new SimpleObjectProperty<>();
+    final String bitcoinNetworkAsString;
+
     private final User user;
     private final WalletService walletService;
     private final MessageService messageService;
     private final TradeManager tradeManager;
-    private final BitcoinNetwork bitcoinNetwork;
+
     private final BSFormatter formatter;
 
 
@@ -92,9 +100,12 @@ class MainViewModel implements ViewModel {
         this.messageService = messageService;
         this.tradeManager = tradeManager;
         this.formatter = formatter;
-        this.bitcoinNetwork = bitcoinNetwork;
+
+        bitcoinNetworkAsString = bitcoinNetwork.toString();
 
         user.getCurrentBankAccount().addListener((observable, oldValue, newValue) -> persistence.write(user));
+
+        currentBankAccount.bind(user.currentBankAccountProperty());
 
         bootstrapState.addListener((ov, oldValue, newValue) -> {
                     if (newValue == BootstrapState.DISCOVERY_DIRECT_SUCCEEDED ||
@@ -148,21 +159,29 @@ class MainViewModel implements ViewModel {
         });
         bankAccountsComboBoxDisable.set(user.getBankAccounts().isEmpty());
         bankAccountsComboBoxPrompt.set(user.getBankAccounts().isEmpty() ? "No accounts" : "");
+
+
+        tradeManager.featureNotImplementedWarningProperty().addListener((ov, oldValue, newValue) -> {
+            if (oldValue == null && newValue != null) {
+                featureNotImplementedWarning.set(newValue);
+                Popups.openWarningPopup(newValue);
+                tradeManager.setFeatureNotImplementedWarning(null);
+            }
+        });
     }
 
 
-    public Observable<?> initBackend() {
+    public void initBackend() {
 
         walletService.getDownloadProgress().subscribe(
                 percentage -> Platform.runLater(() -> networkSyncProgress.set(percentage / 100.0)),
-                error -> Platform.runLater(() -> System.out.println("error = " + error)),
+                error -> log.error(error.toString()),
                 () -> Platform.runLater(() -> networkSyncProgress.set(1.0)));
 
         Observable<BootstrapState> message = messageService.init();
         message.publish();
         message.subscribe(
-                state ->
-                        Platform.runLater(() -> bootstrapState.set(state)),
+                state -> Platform.runLater(() -> bootstrapState.set(state)),
                 error -> log.error(error.toString()),
                 () -> log.trace("message completed"));
 
@@ -180,23 +199,19 @@ class MainViewModel implements ViewModel {
                 error -> log.error(error.toString()),
                 () -> Platform.runLater(() -> {
                     log.trace("backend completed");
-                    tradeManager.getPendingTrades().addListener(
-                            (MapChangeListener<String, Trade>) change -> updateNumPendingTrades());
-                    updateNumPendingTrades();
+                    backEndCompleted();
                 })
         );
 
-        return backend;
     }
 
-
-    public User getUser() {
-        return user;
+    private void backEndCompleted() {
+        tradeManager.getPendingTrades().addListener(
+                (MapChangeListener<String, Trade>) change -> updateNumPendingTrades());
+        updateNumPendingTrades();
+        isReadyForMainScreen.set(true);
     }
 
-    public TradeManager getTradeManager() {
-        return tradeManager;
-    }
 
     public StringConverter<BankAccount> getBankAccountsConverter() {
         return new StringConverter<BankAccount>() {
@@ -214,8 +229,9 @@ class MainViewModel implements ViewModel {
 
 
     private void updateNumPendingTrades() {
-        log.debug("updateNumPendingTrades " + tradeManager.getPendingTrades().size());
         numPendingTrades.set(tradeManager.getPendingTrades().size());
+        if (numPendingTrades.get() > 0)
+            numPendingTradesAsString.set(String.valueOf(numPendingTrades.get()));
     }
 
     private void setNetworkSyncProgress(double value) {
@@ -230,7 +246,12 @@ class MainViewModel implements ViewModel {
         blockchainSyncIndicatorVisible.set(value < 1);
     }
 
-    public BitcoinNetwork getBitcoinNetwork() {
-        return bitcoinNetwork;
+    public ObservableList<BankAccount> getBankAccounts() {
+        return user.getBankAccounts();
     }
+
+    public void setCurrentBankAccount(BankAccount currentBankAccount) {
+        user.setCurrentBankAccount(currentBankAccount);
+    }
+
 }

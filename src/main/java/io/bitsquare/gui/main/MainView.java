@@ -39,8 +39,8 @@ import javax.inject.Named;
 import viewfx.view.FxmlView;
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
-import viewfx.view.support.ActivatableView;
 import viewfx.view.support.CachingViewLoader;
+import viewfx.view.support.InitializableView;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -56,7 +56,7 @@ import javafx.scene.text.*;
 import static javafx.scene.layout.AnchorPane.*;
 
 @FxmlView
-public class MainView extends ActivatableView<StackPane, MainViewModel> {
+public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     public static final String TITLE_KEY = "view.title";
 
@@ -78,17 +78,10 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
         this.overlayManager = overlayManager;
         this.transitions = transitions;
         this.title = title;
-
-        model.getTradeManager().featureNotImplementedWarningProperty().addListener((ov, oldValue, newValue) -> {
-            if (oldValue == null && newValue != null) {
-                Popups.openWarningPopup(newValue);
-                model.getTradeManager().setFeatureNotImplementedWarning(null);
-            }
-        });
     }
 
     @Override
-    protected void activate() {
+    protected void initialize() {
         ToggleButton homeButton = new NavButton(HomeView.class, "Overview") {{
             setDisable(true); // during irc demo
         }};
@@ -133,6 +126,8 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
             setId("base-content-container");
         }};
 
+        setupNotificationIcon(portfolioButtonHolder);
+
         navigation.addListener(viewPath -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
                 return;
@@ -155,26 +150,49 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
 
         root.getChildren().addAll(baseApplicationContainer, splashScreen);
 
-        Platform.runLater(
-                () -> model.initBackend().subscribe(
-                        next -> {
-                        },
-                        error -> {
-                        },
-                        () -> Platform.runLater(() -> {
-                                    bankAccountComboBoxHolder.getChildren().setAll(createBankAccountComboBox());
+        model.isReadyForMainScreen.addListener((ov, oldValue, newValue) -> {
+            if (newValue) {
+                bankAccountComboBoxHolder.getChildren().setAll(createBankAccountComboBox());
 
-                                    applyPendingTradesInfoIcon(model.numPendingTrades.get(), portfolioButtonHolder);
-                                    model.numPendingTrades.addListener((ov2, prev2, numPendingTrades) ->
-                                            applyPendingTradesInfoIcon((int) numPendingTrades, portfolioButtonHolder));
+                navigation.navigateToLastOpenView();
 
-                                    navigation.navigateToLastOpenView();
+                transitions.fadeOutAndRemove(splashScreen, 1500);
+            }
+        });
 
-                                    transitions.fadeOutAndRemove(splashScreen, 1500);
-                                }
-                        )
-                )
-        );
+        model.featureNotImplementedWarning.addListener((ov, oldValue, newValue) -> {
+            if (oldValue == null && newValue != null)
+                Popups.openWarningPopup(newValue);
+        });
+
+        // Delay a bit to give time for rendering the splash screen
+        Platform.runLater(() -> model.initBackend());
+    }
+
+    private void setupNotificationIcon(Pane portfolioButtonHolder) {
+        Label numPendingTradesLabel = new Label();
+        numPendingTradesLabel.textProperty().bind(model.numPendingTradesAsString);
+        numPendingTradesLabel.relocate(5, 1);
+        numPendingTradesLabel.setId("nav-alert-label");
+
+        ImageView icon = new ImageView();
+        icon.setLayoutX(0.5);
+        icon.setId("image-alert-round");
+
+        Pane notification = new Pane();
+        notification.relocate(30, 9);
+        notification.setMouseTransparent(true);
+        notification.setVisible(model.numPendingTrades.get() > 0);
+        notification.setEffect(new DropShadow(4, 1, 2, Color.GREY));
+        notification.getChildren().addAll(icon, numPendingTradesLabel);
+        portfolioButtonHolder.getChildren().add(notification);
+
+        model.numPendingTrades.addListener((ov, oldValue, newValue) -> {
+            notification.setVisible((int) newValue > 0);
+
+            if ((int) newValue > 0)
+                SystemNotification.openInfoNotification(title, "You got a new trade message.");
+        });
     }
 
     private VBox createSplashScreen() {
@@ -212,7 +230,7 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
         });
 
         Label bitcoinNetworkLabel = new Label();
-        bitcoinNetworkLabel.setText(model.getBitcoinNetwork().toString());
+        bitcoinNetworkLabel.setText(model.bitcoinNetworkAsString);
         bitcoinNetworkLabel.setId("splash-bitcoin-network-label");
 
         HBox blockchainSyncBox = new HBox();
@@ -268,21 +286,19 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
     }
 
     private VBox createBankAccountComboBox() {
-        final ComboBox<BankAccount> comboBox = new ComboBox<>(model.getUser().getBankAccounts());
+        final ComboBox<BankAccount> comboBox = new ComboBox<>(model.getBankAccounts());
         comboBox.setLayoutY(12);
         comboBox.setVisibleRowCount(5);
         comboBox.setConverter(model.getBankAccountsConverter());
-
-        comboBox.valueProperty().addListener((ov, oldValue, newValue) ->
-                model.getUser().setCurrentBankAccount(newValue));
-
         comboBox.disableProperty().bind(model.bankAccountsComboBoxDisable);
         comboBox.promptTextProperty().bind(model.bankAccountsComboBoxPrompt);
 
-        model.getUser().currentBankAccountProperty().addListener((ov, oldValue, newValue) ->
-                comboBox.getSelectionModel().select(newValue));
+        comboBox.getSelectionModel().selectedItemProperty().addListener((ov, oldValue, newValue) ->
+                model.setCurrentBankAccount(newValue));
 
-        comboBox.getSelectionModel().select(model.getUser().currentBankAccountProperty().get());
+        model.currentBankAccount.addListener((ov, oldValue, newValue) ->
+                comboBox.getSelectionModel().select(newValue));
+        comboBox.getSelectionModel().select(model.currentBankAccount.get());
 
         final Label titleLabel = new Label("Bank account");
         titleLabel.setMouseTransparent(true);
@@ -299,33 +315,6 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
         return vBox;
     }
 
-    private void applyPendingTradesInfoIcon(int numPendingTrades, Pane targetPane) {
-        if (numPendingTrades <= 0) {
-            if (targetPane.getChildren().size() > 1) {
-                targetPane.getChildren().remove(1);
-            }
-            return;
-        }
-
-        Label numPendingTradesLabel = new Label(String.valueOf(numPendingTrades));
-        if (targetPane.getChildren().size() == 1) {
-            ImageView icon = new ImageView();
-            icon.setLayoutX(0.5);
-            icon.setId("image-alert-round");
-
-            numPendingTradesLabel.relocate(5, 1);
-            numPendingTradesLabel.setId("nav-alert-label");
-
-            Pane alert = new Pane();
-            alert.relocate(30, 9);
-            alert.setMouseTransparent(true);
-            alert.setEffect(new DropShadow(4, 1, 2, Color.GREY));
-            alert.getChildren().addAll(icon, numPendingTradesLabel);
-            targetPane.getChildren().add(alert);
-        }
-
-        SystemNotification.openInfoNotification(title, "You got a new trade message.");
-    }
 
     private void configureBlurring(Node node) {
         Popups.setOverlayManager(overlayManager);

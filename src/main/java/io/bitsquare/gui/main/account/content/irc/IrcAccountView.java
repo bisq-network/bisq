@@ -152,7 +152,8 @@ public class IrcAccountView extends ActivatableViewAndModel<GridPane, IrcAccount
 
     @FXML
     void onSave() {
-        if (wizard != null && model.requestSaveBankAccount().isValid)
+        boolean isValid = model.requestSaveBankAccount().isValid;
+        if (wizard != null && isValid)
             wizard.nextStep(this);
     }
 
