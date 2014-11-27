@@ -41,13 +41,13 @@ public class BitsquareEnvironmentTests {
         PropertySource commandlineProps = new MockPropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME)
                 .withProperty("key.x", "x.commandline");
 
-        PropertySource filesystemProps = new MockPropertySource(BITSQUARE_FILESYSTEM_PROPERTY_SOURCE_NAME)
+        PropertySource filesystemProps = new MockPropertySource(BITSQUARE_APP_DIR_PROPERTY_SOURCE_NAME)
                 .withProperty("key.x", "x.env")
                 .withProperty("key.y", "y.env");
 
         ConfigurableEnvironment env = new BitsquareEnvironment(commandlineProps) {
             @Override
-            PropertySource<?> filesystemProperties() {
+            PropertySource<?> appDirProperties() {
                 return filesystemProps;
             }
         };
@@ -56,10 +56,11 @@ public class BitsquareEnvironmentTests {
         assertThat(propertySources.precedenceOf(named(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME)), equalTo(0));
         assertThat(propertySources.precedenceOf(named(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME)), equalTo(1));
         assertThat(propertySources.precedenceOf(named(SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME)), equalTo(2));
-        assertThat(propertySources.precedenceOf(named(BITSQUARE_FILESYSTEM_PROPERTY_SOURCE_NAME)), equalTo(3));
-        assertThat(propertySources.precedenceOf(named(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME)), equalTo(4));
-        assertThat(propertySources.precedenceOf(named(BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME)), equalTo(5));
-        assertThat(propertySources.size(), equalTo(6));
+        assertThat(propertySources.precedenceOf(named(BITSQUARE_APP_DIR_PROPERTY_SOURCE_NAME)), equalTo(3));
+        assertThat(propertySources.precedenceOf(named(BITSQUARE_HOME_DIR_PROPERTY_SOURCE_NAME)), equalTo(4));
+        assertThat(propertySources.precedenceOf(named(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME)), equalTo(5));
+        assertThat(propertySources.precedenceOf(named(BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME)), equalTo(6));
+        assertThat(propertySources.size(), equalTo(7));
 
         assertThat(env.getProperty("key.x"), equalTo("x.commandline")); // commandline value wins due to precedence
         assertThat(env.getProperty("key.y"), equalTo("y.env")); // env value wins because it's the only one available
