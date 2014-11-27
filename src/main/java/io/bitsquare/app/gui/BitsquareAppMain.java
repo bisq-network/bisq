@@ -30,6 +30,7 @@ import joptsimple.OptionSet;
 import static io.bitsquare.app.BitsquareEnvironment.*;
 import static io.bitsquare.msg.tomp2p.TomP2PMessageModule.*;
 import static io.bitsquare.network.Node.*;
+import static java.util.Arrays.asList;
 
 public class BitsquareAppMain extends BitsquareExecutable {
 
@@ -45,7 +46,8 @@ public class BitsquareAppMain extends BitsquareExecutable {
                 .withRequiredArg();
         parser.accepts(APP_DATA_DIR_KEY, description("Application data directory", DEFAULT_APP_DATA_DIR))
                 .withRequiredArg();
-        parser.accepts(APP_DATA_DIR_CLEAN_KEY, description("Clean application data dir", DEFAULT_APP_DATA_DIR_CLEAN))
+        parser.acceptsAll(asList(APP_DATA_DIR_CLEAN_KEY, "clean"),
+                description("Clean application data directory", DEFAULT_APP_DATA_DIR_CLEAN))
                 .withRequiredArg()
                 .ofType(boolean.class);
         parser.accepts(NAME_KEY, description("Name of this node", null))

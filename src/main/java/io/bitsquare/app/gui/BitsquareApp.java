@@ -79,7 +79,9 @@ public class BitsquareApp extends Application {
 
         // initialize the application data directory (if necessary)
 
-        initAppDir(env.getRequiredProperty(APP_DATA_DIR_KEY), env.getProperty(APP_DATA_DIR_CLEAN_KEY, boolean.class));
+        initAppDir(
+                env.getRequiredProperty(APP_DATA_DIR_KEY),
+                env.getRequiredProperty(APP_DATA_DIR_CLEAN_KEY, boolean.class));
 
 
         // load and apply any stored settings
