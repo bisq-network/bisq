@@ -33,7 +33,6 @@ import java.security.KeyPair;
 
 import javax.inject.Inject;
 
-import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
@@ -331,7 +330,7 @@ class BootstrappedPeerFactory {
             log.error(message);
 
         bootstrapState.setMessage(message);
-        Platform.runLater(() -> this.bootstrapState.set(bootstrapState));
+        this.bootstrapState.set(bootstrapState);
     }
 
     private void handleError(BootstrapState state, String errorMessage) {

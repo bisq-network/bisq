@@ -114,9 +114,12 @@ public class TomP2PNode implements ClientNode {
         this.keyPair = keyPair;
         bootstrappedPeerFactory.setKeyPair(keyPair);
 
-        Subject<BootstrapState, BootstrapState> bootstrapState = BehaviorSubject.create();
+        Subject<BootstrapState, BootstrapState> bootstrapStateSubject = BehaviorSubject.create();
 
-        bootstrappedPeerFactory.getBootstrapState().addListener((ov, oldValue, newValue) -> bootstrapState.onNext(newValue));
+        bootstrappedPeerFactory.getBootstrapState().addListener((ov, oldValue, newValue) -> {
+            log.debug("BootstrapState changed " + newValue);
+            bootstrapStateSubject.onNext(newValue);
+        });
 
         SettableFuture<PeerDHT> bootstrapFuture = bootstrappedPeerFactory.start();
         Futures.addCallback(bootstrapFuture, new FutureCallback<PeerDHT>() {
@@ -129,24 +132,24 @@ public class TomP2PNode implements ClientNode {
                     try {
                         storeAddress();
                     } catch (NetworkException e) {
-                        bootstrapState.onError(e);
+                        bootstrapStateSubject.onError(e);
                     }
-                    bootstrapState.onCompleted();
+                    bootstrapStateSubject.onCompleted();
                 }
                 else {
                     log.error("Error at bootstrap: peerDHT = null");
-                    bootstrapState.onError(new BitsquareException("Error at bootstrap: peerDHT = null"));
+                    bootstrapStateSubject.onError(new BitsquareException("Error at bootstrap: peerDHT = null"));
                 }
             }
 
             @Override
             public void onFailure(@NotNull Throwable t) {
                 log.error("Exception at bootstrap " + t.getMessage());
-                bootstrapState.onError(t);
+                bootstrapStateSubject.onError(t);
             }
         });
 
-        return bootstrapState.asObservable();
+        return bootstrapStateSubject.asObservable();
     }
 
     public void shutDown() {

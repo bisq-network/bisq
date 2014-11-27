@@ -157,8 +157,10 @@ public class MainView extends ActivatableView<StackPane, MainViewModel> {
 
         Platform.runLater(
                 () -> model.initBackend().subscribe(
-                        next -> { },
-                        error -> { },
+                        next -> {
+                        },
+                        error -> {
+                        },
                         () -> Platform.runLater(() -> {
                                     bankAccountComboBoxHolder.getChildren().setAll(createBankAccountComboBox());
 

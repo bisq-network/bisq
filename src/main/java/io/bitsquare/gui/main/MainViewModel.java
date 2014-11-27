@@ -159,25 +159,32 @@ class MainViewModel implements ViewModel {
                 () -> Platform.runLater(() -> networkSyncProgress.set(1.0)));
 
         Observable<BootstrapState> message = messageService.init();
+        message.publish();
         message.subscribe(
-                state -> Platform.runLater(() -> bootstrapState.set(state)),
-                error -> log.error(error.toString()));
+                state ->
+                        Platform.runLater(() -> bootstrapState.set(state)),
+                error -> log.error(error.toString()),
+                () -> log.trace("message completed"));
 
         Observable<Object> wallet = walletService.initialize(Platform::runLater);
         wallet.subscribe(
-                next -> { },
+                next -> {
+                },
                 error -> Platform.runLater(() -> walletServiceException.set(error)),
-                () -> { });
+                () -> log.trace("wallet completed"));
 
         Observable<?> backend = Observable.merge(message, wallet);
         backend.subscribe(
-                next -> { },
-                error -> { },
+                next -> {
+                },
+                error -> log.error(error.toString()),
                 () -> Platform.runLater(() -> {
+                    log.trace("backend completed");
                     tradeManager.getPendingTrades().addListener(
                             (MapChangeListener<String, Trade>) change -> updateNumPendingTrades());
                     updateNumPendingTrades();
-                }));
+                })
+        );
 
         return backend;
     }
@@ -207,6 +214,7 @@ class MainViewModel implements ViewModel {
 
 
     private void updateNumPendingTrades() {
+        log.debug("updateNumPendingTrades " + tradeManager.getPendingTrades().size());
         numPendingTrades.set(tradeManager.getPendingTrades().size());
     }
 
