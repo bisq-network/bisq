@@ -50,6 +50,7 @@ import javafx.scene.input.*;
 import javafx.stage.Stage;
 
 import org.springframework.core.env.Environment;
+import org.springframework.util.FileSystemUtils;
 
 import static io.bitsquare.app.BitsquareEnvironment.*;
 
@@ -78,7 +79,7 @@ public class BitsquareApp extends Application {
 
         // initialize the application data directory (if necessary)
 
-        initAppDir(env.getRequiredProperty(APP_DATA_DIR_KEY));
+        initAppDir(env.getRequiredProperty(APP_DATA_DIR_KEY), env.getProperty(APP_DATA_DIR_CLEAN_KEY, boolean.class));
 
 
         // load and apply any stored settings
@@ -152,13 +153,15 @@ public class BitsquareApp extends Application {
     }
 
 
-    private void initAppDir(String appDir) {
+    private void initAppDir(String appDir, boolean doClean) {
         Path dir = Paths.get(appDir);
         if (Files.exists(dir)) {
-            if (!Files.isWritable(dir)) {
+            if (!Files.isWritable(dir))
                 throw new BitsquareException("Application data directory '%s' is not writeable", dir);
-            }
-            return;
+            if (doClean)
+                FileSystemUtils.deleteRecursively(dir.toFile());
+            else
+                return;
         }
         try {
             Files.createDirectory(dir);

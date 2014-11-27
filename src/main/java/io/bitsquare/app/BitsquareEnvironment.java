@@ -25,8 +25,6 @@ import io.bitsquare.persistence.Persistence;
 import io.bitsquare.util.Utilities;
 import io.bitsquare.util.spring.JOptCommandLinePropertySource;
 
-import java.io.File;
-
 import java.nio.file.Paths;
 
 import java.util.Properties;
@@ -40,7 +38,6 @@ import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePropertySource;
-import org.springframework.util.FileSystemUtils;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -48,7 +45,6 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
     public static final String APP_VERSION_KEY = "app.version";
 
-    public static final String USER_DATA_CLEAN_DIR_KEY = "user.data.clean.dir";
     public static final String USER_DATA_DIR_KEY = "user.data.dir";
     public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
 
@@ -57,6 +53,9 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
     public static final String APP_DATA_DIR_KEY = "app.data.dir";
     public static final String DEFAULT_APP_DATA_DIR = appDataDir(DEFAULT_USER_DATA_DIR, DEFAULT_APP_NAME);
+
+    public static final String APP_DATA_DIR_CLEAN_KEY = "app.data.dir.clean";
+    public static final String DEFAULT_APP_DATA_DIR_CLEAN = "false";
 
     static final String BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME = "bitsquareDefaultProperties";
     static final String BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME = "bitsquareClasspathProperties";
@@ -94,12 +93,6 @@ public class BitsquareEnvironment extends StandardEnvironment {
         } catch (Exception ex) {
             throw new BitsquareException(ex);
         }
-
-        boolean cleanUserDataDir = commandLineProperties.containsProperty(USER_DATA_CLEAN_DIR_KEY) &&
-                commandLineProperties.getProperty(USER_DATA_CLEAN_DIR_KEY).equals("true");
-        if (cleanUserDataDir) {
-            FileSystemUtils.deleteRecursively(new File(appDataDir));
-        }
     }
 
 
@@ -121,6 +114,8 @@ public class BitsquareEnvironment extends StandardEnvironment {
     PropertySource<?> defaultProperties() throws Exception {
         return new PropertiesPropertySource(BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {{
             setProperty(APP_DATA_DIR_KEY, appDataDir);
+            setProperty(APP_DATA_DIR_CLEAN_KEY, DEFAULT_APP_DATA_DIR_CLEAN);
+
             setProperty(APP_NAME_KEY, appName);
 
             setProperty(UserAgent.NAME_KEY, appName);
