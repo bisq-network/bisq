@@ -66,9 +66,8 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
     @Override
     protected void initialize() {
         listener = viewPath -> {
-            if (viewPath.size() == 3 && viewPath.indexOf(this.getClass()) == 1) {
+            if (viewPath.size() == 3 && viewPath.indexOf(this.getClass()) == 1)
                 loadView(viewPath.tip());
-            }
         };
     }
 
@@ -116,7 +115,7 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
         navigation.navigateTo(MainView.class, this.getClass(), TakeOfferView.class);
     }
 
-    private View loadView(Class<? extends View> viewClass) {
+    private void loadView(Class<? extends View> viewClass) {
         TabPane tabPane = root;
         View view;
 
@@ -157,8 +156,6 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
             offerBookView.setOfferActionHandler(offerActionHandler);
 
             offerBookView.setDirection(direction);
-
-            return offerBookView;
         }
         else if (viewClass == CreateOfferView.class && createOfferView == null) {
             view = viewLoader.load(viewClass);
@@ -172,7 +169,6 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
             tab.setContent(createOfferPane);
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
-            return createOfferView;
         }
         else if (viewClass == TakeOfferView.class && takeOfferView == null && offer != null) {
             view = viewLoader.load(viewClass);
@@ -186,9 +182,7 @@ public abstract class TradeView extends ActivatableView<TabPane, Void> {
             tab.setContent(takeOfferPane);
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
-            return takeOfferView;
         }
-        return null;
     }
 
     private void onCreateOfferViewRemoved() {
