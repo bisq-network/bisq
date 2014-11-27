@@ -66,8 +66,8 @@ import io.netty.util.concurrent.DefaultEventExecutorGroup;
 /**
  * Creates a DHT peer and bootstraps to the network via a bootstrap node
  */
-class BootstrappedPeerFactory {
-    private static final Logger log = LoggerFactory.getLogger(BootstrappedPeerFactory.class);
+class BootstrappedPeerBuilder {
+    private static final Logger log = LoggerFactory.getLogger(BootstrappedPeerBuilder.class);
 
     static final String BOOTSTRAP_NODE_KEY = "bootstrapNode";
     static final String NETWORK_INTERFACE_KEY = "interface";
@@ -93,7 +93,7 @@ class BootstrappedPeerFactory {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BootstrappedPeerFactory(@Named(Node.PORT_KEY) int port,
+    public BootstrappedPeerBuilder(@Named(Node.PORT_KEY) int port,
                                    @Named(USE_MANUAL_PORT_FORWARDING_KEY) boolean useManualPortForwarding,
                                    @Named(BOOTSTRAP_NODE_KEY) Node bootstrapNode,
                                    @Named(NETWORK_INTERFACE_KEY) String networkInterface) {

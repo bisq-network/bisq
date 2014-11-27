@@ -80,7 +80,7 @@ public class TomP2PNode implements ClientNode {
     private PeerAddress storedPeerAddress;
 
     private PeerDHT peerDHT;
-    private BootstrappedPeerFactory bootstrappedPeerFactory;
+    private BootstrappedPeerBuilder bootstrappedPeerBuilder;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -88,8 +88,8 @@ public class TomP2PNode implements ClientNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TomP2PNode(BootstrappedPeerFactory bootstrappedPeerFactory) {
-        this.bootstrappedPeerFactory = bootstrappedPeerFactory;
+    public TomP2PNode(BootstrappedPeerBuilder bootstrappedPeerBuilder) {
+        this.bootstrappedPeerBuilder = bootstrappedPeerBuilder;
     }
 
     // for unit testing
@@ -112,16 +112,16 @@ public class TomP2PNode implements ClientNode {
 
         this.messageBroker = messageBroker;
         this.keyPair = keyPair;
-        bootstrappedPeerFactory.setKeyPair(keyPair);
+        bootstrappedPeerBuilder.setKeyPair(keyPair);
 
         Subject<BootstrapState, BootstrapState> bootstrapStateSubject = BehaviorSubject.create();
 
-        bootstrappedPeerFactory.getBootstrapState().addListener((ov, oldValue, newValue) -> {
+        bootstrappedPeerBuilder.getBootstrapState().addListener((ov, oldValue, newValue) -> {
             log.debug("BootstrapState changed " + newValue);
             bootstrapStateSubject.onNext(newValue);
         });
 
-        SettableFuture<PeerDHT> bootstrapFuture = bootstrappedPeerFactory.start();
+        SettableFuture<PeerDHT> bootstrapFuture = bootstrappedPeerBuilder.start();
         Futures.addCallback(bootstrapFuture, new FutureCallback<PeerDHT>() {
             @Override
             public void onSuccess(@Nullable PeerDHT peerDHT) {
@@ -374,7 +374,7 @@ public class TomP2PNode implements ClientNode {
 
     @Override
     public ConnectionType getConnectionType() {
-        BootstrapState bootstrapState = bootstrappedPeerFactory.getBootstrapState().get();
+        BootstrapState bootstrapState = bootstrappedPeerBuilder.getBootstrapState().get();
         switch (bootstrapState) {
             case DISCOVERY_DIRECT_SUCCEEDED:
                 return ConnectionType.DIRECT;
@@ -400,6 +400,6 @@ public class TomP2PNode implements ClientNode {
 
     @Override
     public Node getBootstrapNodeAddress() {
-        return bootstrappedPeerFactory.getBootstrapNode();
+        return bootstrappedPeerBuilder.getBootstrapNode();
     }
 }
