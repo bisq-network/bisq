@@ -87,7 +87,6 @@ class MainViewModel implements ViewModel {
     private final WalletService walletService;
     private final MessageService messageService;
     private final TradeManager tradeManager;
-
     private final BSFormatter formatter;
 
 
@@ -170,9 +169,7 @@ class MainViewModel implements ViewModel {
         });
     }
 
-
     public void initBackend() {
-
         walletService.getDownloadProgress().subscribe(
                 percentage -> Platform.runLater(() -> networkSyncProgress.set(percentage / 100.0)),
                 error -> log.error(error.toString()),
@@ -197,21 +194,17 @@ class MainViewModel implements ViewModel {
                 next -> {
                 },
                 error -> log.error(error.toString()),
-                () -> Platform.runLater(() -> {
-                    log.trace("backend completed");
-                    backEndCompleted();
-                })
+                () -> Platform.runLater(() -> backEndCompleted())
         );
-
     }
 
     private void backEndCompleted() {
+        log.trace("backend completed");
         tradeManager.getPendingTrades().addListener(
                 (MapChangeListener<String, Trade>) change -> updateNumPendingTrades());
         updateNumPendingTrades();
         isReadyForMainScreen.set(true);
     }
-
 
     public StringConverter<BankAccount> getBankAccountsConverter() {
         return new StringConverter<BankAccount>() {
@@ -227,6 +220,13 @@ class MainViewModel implements ViewModel {
         };
     }
 
+    public ObservableList<BankAccount> getBankAccounts() {
+        return user.getBankAccounts();
+    }
+
+    public void setCurrentBankAccount(BankAccount currentBankAccount) {
+        user.setCurrentBankAccount(currentBankAccount);
+    }
 
     private void updateNumPendingTrades() {
         numPendingTrades.set(tradeManager.getPendingTrades().size());
@@ -245,13 +245,4 @@ class MainViewModel implements ViewModel {
 
         blockchainSyncIndicatorVisible.set(value < 1);
     }
-
-    public ObservableList<BankAccount> getBankAccounts() {
-        return user.getBankAccounts();
-    }
-
-    public void setCurrentBankAccount(BankAccount currentBankAccount) {
-        user.setCurrentBankAccount(currentBankAccount);
-    }
-
 }
