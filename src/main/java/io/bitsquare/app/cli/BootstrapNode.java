@@ -19,6 +19,8 @@ package io.bitsquare.app.cli;
 
 import io.bitsquare.network.Node;
 
+import net.tomp2p.connection.ChannelClientConfiguration;
+import net.tomp2p.connection.ChannelServerConfiguration;
 import net.tomp2p.dht.PeerBuilderDHT;
 import net.tomp2p.nat.PeerBuilderNAT;
 import net.tomp2p.p2p.Peer;
@@ -31,6 +33,7 @@ import net.tomp2p.peers.PeerStatistic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import org.springframework.core.env.Environment;
 
 public class BootstrapNode {
@@ -51,7 +54,21 @@ public class BootstrapNode {
 
         try {
             Number160 peerId = Number160.createHash(name);
-            peer = new PeerBuilder(peerId).ports(port).start();
+
+            DefaultEventExecutorGroup eventExecutorGroup = new DefaultEventExecutorGroup(250);
+            ChannelClientConfiguration clientConf = PeerBuilder.createDefaultChannelClientConfiguration();
+            clientConf.pipelineFilter(new PeerBuilder.EventExecutorGroupFilter(eventExecutorGroup));
+
+            ChannelServerConfiguration serverConf = PeerBuilder.createDefaultChannelServerConfiguration();
+            serverConf.pipelineFilter(new PeerBuilder.EventExecutorGroupFilter(eventExecutorGroup));
+            serverConf.connectionTimeoutTCPMillis(5000);
+
+            peer = new PeerBuilder(peerId)
+                    .ports(port)
+                    .channelClientConfiguration(clientConf)
+                    .channelServerConfiguration(serverConf)
+                    .start();
+            
             /*peer.objectDataReply((sender, request) -> {
                 log.trace("received request: " + request.toString());
                 return "pong";
@@ -84,9 +101,8 @@ public class BootstrapNode {
                     for (PeerAddress peerAddress : peer.peerBean().peerMap().all()) {
                         log.info(peerAddress.toString());
                     }
-                    log.info("-----------------------------------------------------");
                     try {
-                        Thread.sleep(10000);
+                        Thread.sleep(60000);
                     } catch (InterruptedException e) {
                         return;
                     }
