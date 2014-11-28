@@ -1,15 +1,15 @@
 ;This file will be executed next to the application bundle image
 ;I.e. current directory will contain folder Bitsquare with application files
 [Setup]
-AppId={{io.bitsquare.app.gui}}
+AppId={{bitsquare}}
 AppName=Bitsquare
 AppVersion=0.1.0
 AppVerName=Bitsquare 0.1.0
 AppPublisher=Bitsquare
 AppComments=Bitsquare
 AppCopyright=Copyright (C) 2014
-;AppPublisherURL=http://java.com/
-;AppSupportURL=http://java.com/
+AppPublisherURL=https://bitsquare.io
+AppSupportURL=https://bitsquare.io
 ;AppUpdatesURL=http://java.com/
 DefaultDirName={localappdata}\Bitsquare
 DisableStartupPrompt=Yes
