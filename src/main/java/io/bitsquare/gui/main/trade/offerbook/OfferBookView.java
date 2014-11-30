@@ -31,7 +31,6 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
 import io.bitsquare.gui.util.validation.OptionalFiatValidator;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.locale.Country;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 
@@ -47,7 +46,6 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
@@ -59,6 +57,8 @@ import org.controlsfx.dialog.Dialog;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
+// Note: countryColumn is deactivated in alpha version
+
 @FxmlView
 public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel> {
 
@@ -67,7 +67,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @FXML InputTextField volumeTextField, amountTextField, priceTextField;
     @FXML Button createOfferButton, showAdvancedSettingsButton, openCountryFilterButton, openPaymentMethodsFilterButton;
     @FXML TableColumn<OfferBookListItem, OfferBookListItem> priceColumn, amountColumn, volumeColumn, directionColumn,
-            countryColumn, bankAccountTypeColumn;
+    /*countryColumn,*/ bankAccountTypeColumn;
     @FXML Label amountBtcLabel, priceDescriptionLabel, priceFiatLabel, volumeDescriptionLabel, volumeFiatLabel,
             extendedButton1Label, extendedButton2Label, extendedCheckBoxLabel;
 
@@ -104,7 +104,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         setAmountColumnCellFactory();
         setPriceColumnCellFactory();
         setVolumeColumnCellFactory();
-        setCountryColumnCellFactory();
+      /*  setCountryColumnCellFactory();*/
         setBankAccountTypeColumnCellFactory();
         setDirectionColumnCellFactory();
 
@@ -342,8 +342,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
         volumeColumn.setComparator((o1, o2) ->
                 o1.getOffer().getOfferVolume().compareTo(o2.getOffer().getOfferVolume()));
-        countryColumn.setComparator((o1, o2) -> o1.getOffer().getBankAccountCountry().getName().compareTo(o2.getOffer()
-                .getBankAccountCountry().getName()));
+      /*  countryColumn.setComparator((o1, o2) -> o1.getOffer().getBankAccountCountry().getName().compareTo(o2
+      .getOffer()
+                .getBankAccountCountry().getName()));*/
         bankAccountTypeColumn.setComparator((o1, o2) -> o1.getOffer().getBankAccountType().compareTo(o2.getOffer()
                 .getBankAccountType()));
     }
@@ -493,7 +494,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 });
     }
 
-    private void setCountryColumnCellFactory() {
+   /* private void setCountryColumnCellFactory() {
         countryColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         countryColumn.setCellFactory(
                 new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
@@ -526,7 +527,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         };
                     }
                 });
-    }
+    }*/
 
     private void setBankAccountTypeColumnCellFactory() {
         bankAccountTypeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));

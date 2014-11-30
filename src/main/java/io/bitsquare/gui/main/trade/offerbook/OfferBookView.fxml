@@ -134,7 +134,7 @@
             <TableColumn text="Amount in BTC (Min.)" fx:id="amountColumn" minWidth="130"/>
             <TableColumn text="Price" fx:id="priceColumn" minWidth="130"/>
             <TableColumn text="Amount in EUR (Min.)" fx:id="volumeColumn" minWidth="130"/>
-            <TableColumn text="Country" fx:id="countryColumn" minWidth="60"/>
+            <!--<TableColumn text="Country" fx:id="countryColumn" minWidth="60"/>-->
             <TableColumn text="Bank transfer type" fx:id="bankAccountTypeColumn" minWidth="130"/>
             <TableColumn text="" fx:id="directionColumn" minWidth="80" sortable="false"/>
 
