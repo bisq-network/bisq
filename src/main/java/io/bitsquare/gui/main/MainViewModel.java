@@ -17,19 +17,35 @@
 
 package io.bitsquare.gui.main;
 
+import io.bitsquare.account.AccountSettings;
+import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.btc.BitcoinNetwork;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.CountryUtil;
+import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
+import io.bitsquare.util.DSAKeyUtil;
+
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Utils;
 
 import com.google.inject.Inject;
+
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.List;
+import java.util.Locale;
 
 import viewfx.model.ViewModel;
 
@@ -88,17 +104,20 @@ class MainViewModel implements ViewModel {
     private final MessageService messageService;
     private final TradeManager tradeManager;
     private final BSFormatter formatter;
-
+    private Persistence persistence;
+    private AccountSettings accountSettings;
 
     @Inject
     public MainViewModel(User user, WalletService walletService, MessageService messageService,
                          TradeManager tradeManager, BitcoinNetwork bitcoinNetwork, BSFormatter formatter,
-                         Persistence persistence) {
+                         Persistence persistence, AccountSettings accountSettings) {
         this.user = user;
         this.walletService = walletService;
         this.messageService = messageService;
         this.tradeManager = tradeManager;
         this.formatter = formatter;
+        this.persistence = persistence;
+        this.accountSettings = accountSettings;
 
         bitcoinNetworkAsString = bitcoinNetwork.toString();
 
@@ -204,6 +223,27 @@ class MainViewModel implements ViewModel {
                 (MapChangeListener<String, Trade>) change -> updateNumPendingTrades());
         updateNumPendingTrades();
         isReadyForMainScreen.set(true);
+
+        // For alpha version
+        // uses messageService, so don't call it before backend is ready
+        if (accountSettings.getAcceptedArbitrators().isEmpty())
+            addMockArbitrator();
+
+        // For alpha version
+        if (!user.isRegistered()) {
+            BankAccount bankAccount = new BankAccount(BankAccountType.IRC,
+                    Currency.getInstance("EUR"),
+                    CountryUtil.getDefaultCountry(),
+                    "Demo",
+                    "Demo",
+                    "Demo",
+                    "Demo");
+            user.setBankAccount(bankAccount);
+            persistence.write(user);
+
+            user.setAccountID(walletService.getRegistrationAddressEntry().toString());
+            persistence.write(user.getClass().getName(), user);
+        }
     }
 
     public StringConverter<BankAccount> getBankAccountsConverter() {
@@ -244,5 +284,36 @@ class MainViewModel implements ViewModel {
             blockchainSyncState.set("Connecting to bitcoin network...");
 
         blockchainSyncIndicatorVisible.set(value < 1);
+    }
+
+    private void addMockArbitrator() {
+        if (accountSettings.getAcceptedArbitrators().isEmpty() && user.getMessageKeyPair() != null) {
+            String pubKeyAsHex = Utils.HEX.encode(new ECKey().getPubKey());
+            String messagePubKeyAsHex = DSAKeyUtil.getHexStringFromPublicKey(user.getMessagePublicKey());
+            List<Locale> languages = new ArrayList<>();
+            languages.add(LanguageUtil.getDefaultLanguageLocale());
+            List<Arbitrator.METHOD> arbitrationMethods = new ArrayList<>();
+            arbitrationMethods.add(Arbitrator.METHOD.TLS_NOTARY);
+            List<Arbitrator.ID_VERIFICATION> idVerifications = new ArrayList<>();
+            idVerifications.add(Arbitrator.ID_VERIFICATION.PASSPORT);
+            idVerifications.add(Arbitrator.ID_VERIFICATION.GOV_ID);
+
+            Arbitrator arbitrator = new Arbitrator(pubKeyAsHex,
+                    messagePubKeyAsHex,
+                    "Manfred Karrer",
+                    Arbitrator.ID_TYPE.REAL_LIFE_ID,
+                    languages,
+                    new Reputation(),
+                    Coin.parseCoin("0.001"),
+                    arbitrationMethods,
+                    idVerifications,
+                    "https://bitsquare.io/",
+                    "Bla bla...");
+
+            accountSettings.addAcceptedArbitrator(arbitrator);
+            persistence.write(accountSettings);
+
+            messageService.addArbitrator(arbitrator);
+        }
     }
 }

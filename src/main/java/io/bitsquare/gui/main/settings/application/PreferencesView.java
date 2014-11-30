@@ -42,6 +42,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         btcDenominationComboBox.setItems(model.getBtcDenominationItems());
         btcDenominationComboBox.getSelectionModel().select(model.btcDenomination().get());
 
+        // For alpha
+        btcDenominationComboBox.setDisable(true);
+
         useAnimationsCheckBox.selectedProperty().bindBidirectional(model.useAnimations());
         useEffectsCheckBox.selectedProperty().bindBidirectional(model.useEffects());
 

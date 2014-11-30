@@ -210,7 +210,7 @@ class OfferBookDataModel implements Activatable, DataModel {
     }
 
     boolean isRegistered() {
-        return user.getAccountId() != null;
+        return user.isRegistered();
     }
 
     boolean isMyOffer(Offer offer) {

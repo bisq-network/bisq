@@ -22,11 +22,9 @@ import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
-import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.locale.Region;
 import io.bitsquare.msg.MessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
@@ -106,12 +104,6 @@ class IrcAccountDataModel implements Activatable, DataModel {
         reset();
     }
 
-
-    ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
-        return FXCollections.observableArrayList(CountryUtil.getAllCountriesFor(selectedRegion));
-    }
-
-
     void setType(BankAccountType type) {
         this.type.set(type);
     }
@@ -119,7 +111,6 @@ class IrcAccountDataModel implements Activatable, DataModel {
     void setCurrency(Currency currency) {
         this.currency.set(currency);
     }
-
 
     private void reset() {
         nickName.set(null);
@@ -130,10 +121,6 @@ class IrcAccountDataModel implements Activatable, DataModel {
 
     private void saveUser() {
         persistence.write(user);
-    }
-
-    private void saveSettings() {
-        persistence.write(accountSettings);
     }
 
     private void addMockArbitrator() {
@@ -157,7 +144,7 @@ class IrcAccountDataModel implements Activatable, DataModel {
                     Coin.parseCoin("0.001"),
                     arbitrationMethods,
                     idVerifications,
-                    "http://bitsquare.io/",
+                    "https://bitsquare.io/",
                     "Bla bla...");
 
             accountSettings.addAcceptedArbitrator(arbitrator);

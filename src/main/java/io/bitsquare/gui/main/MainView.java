@@ -83,17 +83,19 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     @Override
     protected void initialize() {
         ToggleButton homeButton = new NavButton(HomeView.class, "Overview") {{
-            setDisable(true); // during irc demo
+            setDisable(true); // alpha
         }};
         ToggleButton buyButton = new NavButton(BuyView.class, "Buy BTC");
         ToggleButton sellButton = new NavButton(SellView.class, "Sell BTC");
         ToggleButton portfolioButton = new NavButton(PortfolioView.class, "Portfolio");
         ToggleButton fundsButton = new NavButton(FundsView.class, "Funds");
         ToggleButton msgButton = new NavButton(MsgView.class, "Messages") {{
-            setDisable(true); // during irc demo
+            setDisable(true); // alpha
         }};
         ToggleButton settingsButton = new NavButton(SettingsView.class, "Settings");
-        ToggleButton accountButton = new NavButton(AccountView.class, "Account");
+        ToggleButton accountButton = new NavButton(AccountView.class, "Account") {{
+            setDisable(true); // alpha
+        }};
         Pane portfolioButtonHolder = new Pane(portfolioButton);
         Pane bankAccountComboBoxHolder = new Pane();
 
@@ -312,6 +314,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         vBox.setAlignment(Pos.CENTER);
         vBox.getChildren().setAll(comboBox, titleLabel);
 
+        // For alpha
+        vBox.setDisable(true);
+        
         return vBox;
     }
 

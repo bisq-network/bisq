@@ -140,6 +140,10 @@ public class User implements Serializable {
         return accountID;
     }
 
+    public boolean isRegistered() {
+        return getAccountId() != null;
+    }
+
     public ObservableList<BankAccount> getBankAccounts() {
         return bankAccounts;
     }

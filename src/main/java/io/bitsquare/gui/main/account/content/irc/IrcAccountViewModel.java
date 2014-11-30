@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.account.content.irc;
 
-import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -69,10 +68,6 @@ class IrcAccountViewModel extends ActivatableWithDelegate<IrcAccountDataModel> i
             delegate.saveBankAccount();
         }
         return result;
-    }
-
-    ObservableList<BankAccount> getAllBankAccounts() {
-        return delegate.allBankAccounts;
     }
 
     StringConverter<BankAccountType> getTypesConverter() {
