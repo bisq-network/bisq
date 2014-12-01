@@ -33,17 +33,17 @@ public class HandleTakeOfferRequest {
     public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, Peer peer,
                            MessageService messageService, Trade.State tradeState, String tradeId) {
         log.trace("Run task");
-        boolean takeOfferRequestAccepted = tradeState == Trade.State.OPEN;
-        if (!takeOfferRequestAccepted) {
+        boolean isTradeIsOpen = tradeState == Trade.State.OPEN;
+        if (!isTradeIsOpen) {
             log.warn("Received take offer request but the offer not marked as open anymore.");
         }
         RespondToTakeOfferRequestMessage tradeMessage =
-                new RespondToTakeOfferRequestMessage(tradeId, takeOfferRequestAccepted);
+                new RespondToTakeOfferRequestMessage(tradeId, isTradeIsOpen);
         messageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
             @Override
             public void onResult() {
                 log.trace("RespondToTakeOfferRequestMessage successfully arrived at peer");
-                resultHandler.onResult(takeOfferRequestAccepted);
+                resultHandler.onResult(isTradeIsOpen);
             }
 
             @Override

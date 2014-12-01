@@ -61,7 +61,8 @@
                 </Label>
             </VBox>
 
-            <HBox GridPane.columnIndex="1" alignment="CENTER_LEFT" spacing="5">
+            <HBox GridPane.columnIndex="1" alignment="CENTER_LEFT" spacing="5"
+                    >
                 <GridPane.margin>
                     <Insets right="10.0" top="20.0"/>
                 </GridPane.margin>
@@ -108,7 +109,8 @@
                 </VBox>
             </HBox>
 
-            <VBox GridPane.columnIndex="1" GridPane.rowIndex="1" spacing="4">
+            <VBox GridPane.columnIndex="1" GridPane.rowIndex="1" spacing="4"
+                    >
                 <GridPane.margin>
                     <Insets right="10.0" top="5.0" bottom="5.0"/>
                 </GridPane.margin>
@@ -121,8 +123,19 @@
             <InfoDisplay gridPane="$gridPane" onAction="#onOpenGeneralHelp" rowIndex="2"
                          text="%takeOffer.amountPriceBox.info"/>
 
+            <Label fx:id="isOfferAvailableLabel" text="%takeOffer.fundsBox.isOfferAvailable" GridPane.rowIndex="3">
+                <GridPane.margin>
+                    <Insets top="15.0"/>
+                </GridPane.margin>
+            </Label>
+            <ProgressIndicator fx:id="isOfferAvailableProgressIndicator" progress="-1" maxWidth="24" maxHeight="24"
+                               GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.halignment="LEFT">
+                <GridPane.margin>
+                    <Insets top="15.0"/>
+                </GridPane.margin>
+            </ProgressIndicator>
             <Button fx:id="showPaymentInfoScreenButton" text="%takeOffer.amountPriceBox.next" id="show-details-button"
-                    GridPane.columnIndex="1" GridPane.rowIndex="3" defaultButton="true"
+                    GridPane.columnIndex="1" GridPane.rowIndex="3" defaultButton="true" visible="false"
                     onAction="#onShowPayFundsScreen">
                 <GridPane.margin>
                     <Insets top="15.0"/>

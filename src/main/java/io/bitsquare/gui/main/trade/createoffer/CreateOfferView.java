@@ -234,8 +234,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void close() {
         TabPane tabPane = ((TabPane) (root.getParent().getParent()));
-        tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
 
+        // Might fix #315  Offerbook tab gets closed 
+        // tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
+        tabPane.getTabs().remove(1);
         navigation.navigateTo(MainView.class, PortfolioView.class, OffersView.class);
     }
 

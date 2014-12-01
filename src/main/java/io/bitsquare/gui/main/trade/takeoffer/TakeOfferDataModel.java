@@ -21,11 +21,16 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
+import io.bitsquare.msg.MessageService;
+import io.bitsquare.msg.listeners.GetPeerAddressListener;
+import io.bitsquare.msg.listeners.OutgoingMessageListener;
+import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Preferences;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.protocol.trade.taker.messages.RequestIsOfferAvailableMessage;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
@@ -56,8 +61,15 @@ import org.slf4j.LoggerFactory;
 class TakeOfferDataModel implements Activatable, DataModel {
     private static final Logger log = LoggerFactory.getLogger(TakeOfferDataModel.class);
 
+    enum OfferAvailableState {
+        UNKNOWN,
+        OFFER_NOT_AVAILABLE,
+        OFFER_AVAILABLE
+    }
+
     private final TradeManager tradeManager;
     private final WalletService walletService;
+    private MessageService messageService;
     private final Preferences preferences;
     private final Persistence persistence;
 
@@ -79,12 +91,19 @@ class TakeOfferDataModel implements Activatable, DataModel {
     final ObjectProperty<Coin> offerFeeAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> networkFeeAsCoin = new SimpleObjectProperty<>();
 
+    final ObjectProperty<OfferAvailableState> offerIsAvailable = new SimpleObjectProperty<>(OfferAvailableState
+            .UNKNOWN);
+
+    // 
+    private boolean isActivated;
 
     @Inject
-    public TakeOfferDataModel(TradeManager tradeManager, WalletService walletService, Preferences preferences,
+    public TakeOfferDataModel(TradeManager tradeManager, WalletService walletService, MessageService messageService,
+                              Preferences preferences,
                               Persistence persistence) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
+        this.messageService = messageService;
         this.preferences = preferences;
         this.persistence = persistence;
 
@@ -94,11 +113,13 @@ class TakeOfferDataModel implements Activatable, DataModel {
 
     @Override
     public void activate() {
+        isActivated = true;
         btcCode.bind(preferences.btcDenominationProperty());
     }
 
     @Override
     public void deactivate() {
+        isActivated = false;
         btcCode.unbind();
     }
 
@@ -126,7 +147,49 @@ class TakeOfferDataModel implements Activatable, DataModel {
             }
         });
         updateBalance(walletService.getBalanceForAddress(addressEntry.getAddress()));
+
+        getPeerAddress(offer);
     }
+
+    // TODO: Should be moved to a domain and handled with add/remove listeners instead of isActivated
+    // or maybe with rx?
+    private void getPeerAddress(Offer offer) {
+        messageService.getPeerAddress(offer.getMessagePublicKey(), new GetPeerAddressListener() {
+            @Override
+            public void onResult(Peer peer) {
+                if (isActivated)
+                    isOfferAvailable(peer, offer.getId());
+            }
+
+            @Override
+            public void onFailed() {
+                if (isActivated)
+                    log.error("The offerers address have not been found. That should never happen.");
+            }
+        });
+    }
+
+    private void isOfferAvailable(Peer peer, String offerId) {
+        messageService.sendMessage(peer, new RequestIsOfferAvailableMessage(offerId),
+                new OutgoingMessageListener() {
+                    @Override
+                    public void onResult() {
+                        if (isActivated) {
+                            log.trace("RequestIsOfferAvailableMessage successfully arrived at peer");
+                            offerIsAvailable.set(OfferAvailableState.OFFER_AVAILABLE);
+                        }
+                    }
+
+                    @Override
+                    public void onFailed() {
+                        if (isActivated) {
+                            log.error("RequestIsOfferAvailableMessage  did not arrive at peer");
+                            offerIsAvailable.set(OfferAvailableState.OFFER_NOT_AVAILABLE);
+                        }
+                    }
+                });
+    }
+
 
     void takeOffer() {
         final Trade trade = tradeManager.takeOffer(amountAsCoin.get(), offer);
@@ -212,7 +275,6 @@ class TakeOfferDataModel implements Activatable, DataModel {
     void securityDepositInfoDisplayed() {
         persistence.write("displaySecurityDepositInfo", false);
     }
-
 
 
     WalletService getWalletService() {

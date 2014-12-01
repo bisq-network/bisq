@@ -24,6 +24,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.msg.Message;
 import io.bitsquare.msg.MessageService;
+import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
@@ -37,10 +38,12 @@ import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocolListen
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RequestTakerDepositPaymentMessage;
+import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
 import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocol;
 import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocolListener;
 import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.taker.messages.RequestIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
@@ -419,7 +422,25 @@ public class TradeManager {
 
         String tradeId = tradeMessage.getTradeId();
         if (tradeId != null) {
-            if (tradeMessage instanceof RequestTakeOfferMessage) {
+            if (tradeMessage instanceof RequestIsOfferAvailableMessage) {
+                // TODO Does not fit in any of the 2 protocols, but should not be here as well...
+                // Lets keep it until we refactor the trade process
+                boolean isOfferOpen = getTrade(tradeId) == null;
+                RespondToIsOfferAvailableMessage replyMessage =
+                        new RespondToIsOfferAvailableMessage(tradeId, isOfferOpen);
+                messageService.sendMessage(sender, replyMessage, new OutgoingMessageListener() {
+                    @Override
+                    public void onResult() {
+                        log.trace("RespondToTakeOfferRequestMessage successfully arrived at peer");
+                    }
+
+                    @Override
+                    public void onFailed() {
+                        log.error("AcceptTakeOfferRequestMessage  did not arrive at peer");
+                    }
+                });
+            }
+            else if (tradeMessage instanceof RequestTakeOfferMessage) {
                 createOffererAsBuyerProtocol(tradeId, sender);
             }
             else if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {

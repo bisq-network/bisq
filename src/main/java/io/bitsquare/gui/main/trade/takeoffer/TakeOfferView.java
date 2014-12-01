@@ -82,14 +82,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     @FXML TextField priceTextField, volumeTextField, acceptedArbitratorsTextField, totalToPayTextField,
             bankAccountTypeTextField, bankAccountCurrencyTextField, bankAccountCountyTextField,
             acceptedCountriesTextField, acceptedLanguagesTextField;
-    @FXML Label buyLabel, addressLabel, amountRangeTextField, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
+    @FXML Label isOfferAvailableLabel, buyLabel, addressLabel, amountRangeTextField, balanceLabel, totalToPayLabel,
+            totalToPayInfoIconLabel,
             bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel, acceptedCountriesLabel,
             acceptedLanguagesLabel, acceptedArbitratorsLabel, amountBtcLabel, priceDescriptionLabel,
             volumeDescriptionLabel, takeOfferSpinnerInfoLabel;
+    @FXML ProgressIndicator isOfferAvailableProgressIndicator;
 
-    private BooleanProperty tabIsClosable;
-    private boolean detailsVisible;
-    private boolean advancedScreenInited;
     private ImageView expand;
     private ImageView collapse;
     private PopOver totalToPayInfoPopover;
@@ -140,10 +139,26 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         acceptedCountriesTextField.setText(model.getAcceptedCountries());
         acceptedLanguagesTextField.setText(model.getAcceptedLanguages());
         acceptedArbitratorsTextField.setText(model.getAcceptedArbitrators());
+
+        model.offerIsAvailable.addListener((ov, oldValue, newValue) -> {
+            isOfferAvailableLabel.setVisible(false);
+            isOfferAvailableLabel.setManaged(false);
+            isOfferAvailableProgressIndicator.setProgress(0);
+            isOfferAvailableProgressIndicator.setVisible(false);
+            isOfferAvailableProgressIndicator.setManaged(false);
+
+            if ((newValue == TakeOfferDataModel.OfferAvailableState.OFFER_AVAILABLE)) {
+                showPaymentInfoScreenButton.setVisible(true);
+            }
+            else if ((newValue == TakeOfferDataModel.OfferAvailableState.OFFER_NOT_AVAILABLE)) {
+                Popups.openWarningPopup("You cannot take that offer",
+                        "The offerer is either offline or the offer was already taken by another trader.");
+                close();
+            }
+        });
     }
 
     public void configCloseHandlers(BooleanProperty tabIsClosable) {
-        this.tabIsClosable = tabIsClosable;
         tabIsClosable.bind(model.tabIsClosable);
     }
 
@@ -206,8 +221,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     @FXML
     void onToggleShowAdvancedSettings() {
-        detailsVisible = !detailsVisible;
-        if (detailsVisible) {
+        model.detailsVisible = !model.detailsVisible;
+        if (model.detailsVisible) {
             showAdvancedSettingsButton.setText(BSResources.get("takeOffer.fundsBox.hideAdvanced"));
             showAdvancedSettingsButton.setGraphic(collapse);
             showDetailsScreen();
@@ -236,7 +251,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void close() {
         TabPane tabPane = ((TabPane) (root.getParent().getParent()));
-        tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
+
+        // Might fix #315  Offerbook tab gets closed 
+        //tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
+        tabPane.getTabs().remove(1);
     }
 
     private void setupListeners() {
@@ -329,7 +347,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.layout();
 
-        advancedScreenInited = !advancedScreenInited;
+        model.advancedScreenInited = !model.advancedScreenInited;
 
         toggleDetailsScreen(true);
     }

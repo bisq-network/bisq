@@ -64,6 +64,8 @@ class TakeOfferViewModel extends ActivatableWithDelegate<TakeOfferDataModel> imp
     private final BSFormatter formatter;
     private final String offerFee;
     private final String networkFee;
+    boolean detailsVisible;
+    boolean advancedScreenInited;
 
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty volume = new SimpleStringProperty();
@@ -80,6 +82,8 @@ class TakeOfferViewModel extends ActivatableWithDelegate<TakeOfferDataModel> imp
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
     final BooleanProperty tabIsClosable = new SimpleBooleanProperty(true);
+    final ObjectProperty<TakeOfferDataModel.OfferAvailableState> offerIsAvailable =
+            new SimpleObjectProperty<>(TakeOfferDataModel.OfferAvailableState.UNKNOWN);
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
 
@@ -135,7 +139,6 @@ class TakeOfferViewModel extends ActivatableWithDelegate<TakeOfferDataModel> imp
         bankAccountCurrency = BSResources.get(offer.getCurrency().getDisplayName());
         bankAccountCounty = BSResources.get(offer.getBankAccountCountry().getName());
     }
-
 
     void takeOffer() {
         delegate.requestTakeOfferErrorMessage.set(null);
@@ -294,7 +297,8 @@ class TakeOfferViewModel extends ActivatableWithDelegate<TakeOfferDataModel> imp
                 delegate.volumeAsFiat));
         totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(delegate.totalToPayAsCoin.get()),
                 delegate.totalToPayAsCoin));
-        securityDeposit.bind(createStringBinding(() -> formatter.formatCoinWithCode(delegate.securityDepositAsCoin.get()),
+        securityDeposit.bind(createStringBinding(() -> formatter.formatCoinWithCode(delegate.securityDepositAsCoin
+                        .get()),
                 delegate.securityDepositAsCoin));
 
         totalToPayAsCoin.bind(delegate.totalToPayAsCoin);
@@ -302,6 +306,7 @@ class TakeOfferViewModel extends ActivatableWithDelegate<TakeOfferDataModel> imp
         requestTakeOfferErrorMessage.bind(delegate.requestTakeOfferErrorMessage);
         showTransactionPublishedScreen.bind(delegate.requestTakeOfferSuccess);
         transactionId.bind(delegate.transactionId);
+        offerIsAvailable.bind(delegate.offerIsAvailable);
 
         btcCode.bind(delegate.btcCode);
     }
