@@ -316,7 +316,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         // For alpha
         vBox.setDisable(true);
-        
+
         return vBox;
     }
 

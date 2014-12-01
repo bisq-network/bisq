@@ -212,7 +212,6 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
                     public void handle(ActionEvent actionEvent) {
                         getProperties().put("type", "NO");
                         Dialog.Actions.NO.handle(actionEvent);
-                        overlayManager.removeBlurContent();
                     }
                 });
 
@@ -221,7 +220,6 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
                     public void handle(ActionEvent actionEvent) {
                         getProperties().put("type", "YES");
                         Dialog.Actions.YES.handle(actionEvent);
-                        overlayManager.removeBlurContent();
                     }
                 });
 
@@ -232,6 +230,8 @@ public class FiatAccountView extends ActivatableViewAndModel<GridPane, FiatAccou
 
                 if (Popups.isYes(response))
                     model.addCountryToAcceptedCountriesList();
+
+                overlayManager.removeBlurContent();
             }
         });
 

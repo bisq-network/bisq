@@ -206,7 +206,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             public void handle(ActionEvent actionEvent) {
                 getProperties().put("type", "OK");
                 Dialog.Actions.OK.handle(actionEvent);
-                overlayManager.removeBlurContent();
                 navigation.setReturnPath(navigation.getCurrentPath());
                 navigation.navigateTo(MainView.class, AccountView.class, AccountSetupWizard.class);
             }
@@ -240,7 +239,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             public void handle(ActionEvent actionEvent) {
                 getProperties().put("type", "YES");
                 Dialog.Actions.YES.handle(actionEvent);
-                overlayManager.removeBlurContent();
             }
         });
         actions.add(new AbstractAction(BSResources.get("shared.no")) {
@@ -248,7 +246,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             public void handle(ActionEvent actionEvent) {
                 getProperties().put("type", "NO");
                 Dialog.Actions.NO.handle(actionEvent);
-                overlayManager.removeBlurContent();
             }
         });
 
@@ -256,6 +253,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 "You do not fulfill the requirements for that offer.",
                 restrictionsInfo,
                 actions);
+
+        Popups.removeBlurContent();
 
         if (Popups.isYes(response))
             navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, RestrictionsView.class);

@@ -156,7 +156,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 public void handle(ActionEvent actionEvent) {
                     getProperties().put("type", "CLOSE");
                     Dialog.Actions.CLOSE.handle(actionEvent);
-                    overlayManager.removeBlurContent();
                 }
             });
             Popups.openInfoPopup("To ensure that both traders behave fair they need to pay a security deposit.",
@@ -296,6 +295,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 Popups.openErrorPopup(BSResources.get("shared.error"),
                         BSResources.get("createOffer.amountPriceBox.error.message",
                                 model.requestPlaceOfferErrorMessage.get()));
+                Popups.removeBlurContent();
             }
         });
 
@@ -323,7 +323,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                             e.printStackTrace();
                         }
                         Dialog.Actions.CLOSE.handle(actionEvent);
-                        overlayManager.removeBlurContent();
                     }
                 });
 

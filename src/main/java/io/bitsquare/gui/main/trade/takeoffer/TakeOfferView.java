@@ -178,7 +178,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 public void handle(ActionEvent actionEvent) {
                     getProperties().put("type", "CLOSE");
                     Dialog.Actions.CLOSE.handle(actionEvent);
-                    overlayManager.removeBlurContent();
                 }
             });
             Popups.openInfoPopup("To ensure that both traders behave fair they need to pay a security deposit.",
@@ -280,6 +279,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 Popups.openErrorPopup(BSResources.get("shared.error"),
                         BSResources.get("takeOffer.amountPriceBox.error.message",
                                 model.requestTakeOfferErrorMessage.get()));
+                Popups.removeBlurContent();
             }
         });
 
@@ -308,7 +308,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                             e.printStackTrace();
                         }
                         Dialog.Actions.CLOSE.handle(actionEvent);
-                        overlayManager.removeBlurContent();
                     }
                 });
 

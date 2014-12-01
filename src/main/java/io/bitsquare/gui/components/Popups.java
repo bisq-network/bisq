@@ -51,6 +51,10 @@ public class Popups {
 
     private static OverlayManager overlayManager;
 
+    public static void removeBlurContent() {
+        overlayManager.removeBlurContent();
+    }
+
     // Information
     public static void openInfoPopup(String message) {
         openInfoPopup(null, message);
@@ -64,7 +68,6 @@ public class Popups {
             public void handle(ActionEvent actionEvent) {
                 getProperties().put("type", "CLOSE");
                 Dialog.Actions.CLOSE.handle(actionEvent);
-                overlayManager.removeBlurContent();
             }
         });
         openInfoPopup(masthead, message, actions);
@@ -77,6 +80,7 @@ public class Popups {
                 .masthead(masthead)
                 .actions(actions)
                 .showInformation();
+        removeBlurContent();
     }
 
     // Confirm
@@ -92,16 +96,13 @@ public class Popups {
             public void handle(ActionEvent actionEvent) {
                 getProperties().put("type", "OK");
                 Dialog.Actions.OK.handle(actionEvent);
-                overlayManager.removeBlurContent();
             }
-
         });
         actions.add(new AbstractAction(BSResources.get("shared.cancel")) {
             @Override
             public void handle(ActionEvent actionEvent) {
                 getProperties().put("type", "CANCEL");
                 Dialog.Actions.CANCEL.handle(actionEvent);
-                overlayManager.removeBlurContent();
             }
         });
         return openConfirmPopup(title, masthead, message, actions);
@@ -134,7 +135,6 @@ public class Popups {
             public void handle(ActionEvent actionEvent) {
                 getProperties().put("type", "CLOSE");
                 Dialog.Actions.CLOSE.handle(actionEvent);
-                overlayManager.removeBlurContent();
             }
         });
         openWarningPopup(title, masthead, message, actions);
@@ -148,18 +148,19 @@ public class Popups {
                 .masthead(masthead)
                 .actions(actions)
                 .showWarning();
+        removeBlurContent();
     }
 
     // Error
-    public static Action openErrorPopup(String message) {
-        return openErrorPopup("Error", message);
+    public static void openErrorPopup(String message) {
+        openErrorPopup("Error", message);
     }
 
-    public static Action openErrorPopup(String title, String message) {
-        return openErrorPopup(title, null, message);
+    public static void openErrorPopup(String title, String message) {
+        openErrorPopup(title, null, message);
     }
 
-    public static Action openErrorPopup(String title, String masthead, String message) {
+    public static void openErrorPopup(String title, String masthead, String message) {
         overlayManager.blurContent();
         List<Action> actions = new ArrayList<>();
         actions.add(new AbstractAction(BSResources.get("shared.close")) {
@@ -167,32 +168,32 @@ public class Popups {
             public void handle(ActionEvent actionEvent) {
                 getProperties().put("type", "CLOSE");
                 Dialog.Actions.CLOSE.handle(actionEvent);
-                overlayManager.removeBlurContent();
             }
         });
-        return openErrorPopup(title, masthead, message, actions);
+        openErrorPopup(title, masthead, message, actions);
     }
 
-    private static Action openErrorPopup(String title, String masthead, String message, List<Action> actions) {
-        return Dialogs.create()
+    private static void openErrorPopup(String title, String masthead, String message, List<Action> actions) {
+        Dialogs.create()
                 .owner(primaryStage)
                 .title(title)
                 .message(message)
                 .masthead(masthead)
                 .actions(actions)
                 .showError();
+        removeBlurContent();
     }
 
     // Exception
-    public static Action openExceptionPopup(Throwable throwable) {
-        return openExceptionPopup(throwable, "Exception", "That should not have happened...");
+    public static void openExceptionPopup(Throwable throwable) {
+        openExceptionPopup(throwable, "Exception", "That should not have happened...");
     }
 
-    public static Action openExceptionPopup(Throwable throwable, String title, String message) {
-        return openExceptionPopup(throwable, title, null, message);
+    public static void openExceptionPopup(Throwable throwable, String title, String message) {
+        openExceptionPopup(throwable, title, null, message);
     }
 
-    private static Action openExceptionPopup(Throwable throwable, String title, String masthead, String message) {
+    private static void openExceptionPopup(Throwable throwable, String title, String masthead, String message) {
         overlayManager.blurContent();
         List<Action> actions = new ArrayList<>();
         actions.add(new AbstractAction(BSResources.get("shared.close")) {
@@ -200,16 +201,16 @@ public class Popups {
             public void handle(ActionEvent actionEvent) {
                 getProperties().put("type", "CLOSE");
                 Dialog.Actions.CLOSE.handle(actionEvent);
-                overlayManager.removeBlurContent();
             }
         });
-        return Dialogs.create()
+        Dialogs.create()
                 .owner(primaryStage)
                 .title(title)
                 .message(message)
                 .masthead(masthead)
                 .actions(actions)
                 .showException(throwable);
+        removeBlurContent();
     }
 
     // Support handling of uncaught exception from any thread (also non gui thread)
@@ -221,18 +222,16 @@ public class Popups {
 
         Runnable runnable = () -> {
             if (Throwables.getRootCause(throwable) instanceof BlockStoreException) {
-                Action response = Popups.openErrorPopup("Error", "Application already running",
+                Popups.openErrorPopup("Error", "Application already running",
                         "This application is already running and cannot be started twice.\n\n " +
                                 "Check your system tray to reopen the window of the running application.");
-                if (Popups.isOK(response))
-                    Platform.exit();
+                Platform.exit();
             }
             else {
-                Action response = Popups.openExceptionPopup(throwable, "Exception", "A critical error has occurred.",
+                Popups.openExceptionPopup(throwable, "Exception", "A critical error has occurred.",
                         "Please copy the exception details and open a bug report at:\n " +
                                 "https://github.com/bitsquare/bitsquare/issues.");
-                if (Popups.isOK(response))
-                    Platform.exit();
+                Platform.exit();
             }
         };
 

@@ -112,7 +112,6 @@ public class RegistrationView extends InitializableView<GridPane, RegistrationVi
                         if (wizard != null)
                             wizard.nextStep(RegistrationView.this);
                         Dialog.Actions.CLOSE.handle(actionEvent);
-                        overlayManager.removeBlurContent();
                     }
                 });
 

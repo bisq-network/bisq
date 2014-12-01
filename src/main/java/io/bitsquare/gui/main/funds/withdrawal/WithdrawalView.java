@@ -151,12 +151,12 @@ public class WithdrawalView extends ActivatableViewAndModel {
                             "You receive in total: " +
                             formatter.formatCoinWithCode(amount.subtract(FeePolicy.TX_FEE)) + " BTC\n\n" +
                             "Are you sure you withdraw that amount?");
+
+            Popups.removeBlurContent();
             if (Popups.isOK(response)) {
                 try {
-                    walletService.sendFunds(
-                            withdrawFromTextField.getText(), withdrawToTextField.getText(),
+                    walletService.sendFunds(withdrawFromTextField.getText(), withdrawToTextField.getText(),
                             amount, callback);
-
                     fillList();
                 } catch (AddressFormatException e) {
                     Popups.openErrorPopup("Address invalid",
@@ -168,13 +168,11 @@ public class WithdrawalView extends ActivatableViewAndModel {
                     Popups.openErrorPopup("Wrong inputs", "Please check the inputs.");
                 }
             }
-
         }
         else {
             Popups.openErrorPopup("Insufficient amount",
                     "The amount to transfer is lower the the transaction fee and the min. possible tx value.");
         }
-
     }
 
     private void fillList() {
