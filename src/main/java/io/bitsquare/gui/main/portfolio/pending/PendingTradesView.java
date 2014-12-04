@@ -428,10 +428,10 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         holderNameLabel.setVisible(visible);
 
         // irc demo
-        // primaryIdLabel.setVisible(visible);
-        // secondaryIdLabel.setVisible(visible);
-        // primaryIdTextField.setVisible(visible);
-        // secondaryIdTextField.setVisible(visible);
+        primaryIdLabel.setVisible(visible);
+        secondaryIdLabel.setVisible(visible);
+        primaryIdTextField.setVisible(visible);
+        secondaryIdTextField.setVisible(visible);
 
         paymentMethodTextField.setVisible(visible);
         paymentsInfoDisplay.setVisible(visible);
@@ -445,13 +445,12 @@ public class PendingTradesView extends ActivatableViewAndModel<AnchorPane, Pendi
         fiatAmountLabel.setManaged(visible);
         holderNameLabel.setManaged(visible);
 
-        // irc demo
-        // primaryIdLabel.setManaged(visible);
-        // secondaryIdLabel.setManaged(visible);
-        primaryIdLabel.setManaged(false);
-        secondaryIdLabel.setManaged(false);
-        primaryIdTextField.setManaged(false);
-        secondaryIdTextField.setManaged(false);
+        primaryIdLabel.setManaged(visible);
+        secondaryIdLabel.setManaged(visible);
+        primaryIdLabel.setManaged(visible);
+        secondaryIdLabel.setManaged(visible);
+        primaryIdTextField.setManaged(visible);
+        secondaryIdTextField.setManaged(visible);
 
         paymentMethodTextField.setManaged(visible);
         paymentsInfoDisplay.setManaged(visible);

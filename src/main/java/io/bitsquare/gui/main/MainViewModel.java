@@ -234,10 +234,10 @@ class MainViewModel implements ViewModel {
             BankAccount bankAccount = new BankAccount(BankAccountType.IRC,
                     Currency.getInstance("EUR"),
                     CountryUtil.getDefaultCountry(),
-                    "Demo",
-                    "Demo",
-                    "Demo",
-                    "Demo");
+                    "Demo (Name of bank)",
+                    "Demo (Account holder name)",
+                    "Demo (E.g. IBAN) ",
+                    "Demo (E.g. BIC) ");
             user.setBankAccount(bankAccount);
             persistence.write(user);
 
