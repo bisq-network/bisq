@@ -60,6 +60,7 @@ public class Persistence {
     private final File dir;
     private final String prefix;
     private final File storageFile;
+    private int resetCounter = 0;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -83,17 +84,10 @@ public class Persistence {
             lock.lock();
             final Map<String, Serializable> map = readRootMap();
 
-            if (map == null) {
-                lock.lock();
-                try {
-                    saveObjectToFile((Serializable) rootMap);
-                } finally {
-                    lock.unlock();
-                }
-            }
-            else {
+            if (map == null)
+                saveObjectToFile((Serializable) rootMap);
+            else
                 rootMap = map;
-            }
         } finally {
             lock.unlock();
         }
@@ -213,9 +207,24 @@ public class Persistence {
             log.trace("File not found is ok for the first execute.");
             return null;
         } catch (ClassNotFoundException | IOException e2) {
-            e2.printStackTrace();
-            log.error("Could not read rootMap. " + e2);
-            return null;
+            log.warn("Could not read rootMap. " + e2);
+
+            // If there are problems with incompatible versions, we reset the persisted data
+            // TODO We need a clean solution when we use another persistence solution
+            rootMap = new HashMap<>();
+            saveObjectToFile((Serializable) rootMap);
+            resetCounter++;
+
+            // We only try that once, if it fails repeatedly we 
+            if (resetCounter == 1) {
+                log.warn("We reset the persisted data and try again to read the root map.");
+                return readRootMap();
+            }
+            else {
+                e2.printStackTrace();
+                log.error("We tried already to reset the persisted data, but we get an error again, so we give up.");
+                return null;
+            }
         }
     }
 
