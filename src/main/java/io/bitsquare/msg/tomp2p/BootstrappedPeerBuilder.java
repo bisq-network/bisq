@@ -229,10 +229,10 @@ class BootstrappedPeerBuilder {
                     else {
                         handleError(BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_FAILED, "Automatic port forwarding " +
                                 "failed. " +
-                                "Fail reason: " + future.failedReason() +
-                                "\nCheck if UPnP is not enabled on your router. " +
-                                "\nYou can try also to setup manual port forwarding. " +
-                                "\nRelay mode is currently not supported but will follow later. ");
+                                "\n\nCheck if UPnP is enabled on your router. " +
+                                "\nIf it is enabled and it still does not work you can try also to setup manual port " +
+                                "forwarding. " +
+                                "\n\nYou find on our Github Wiki help how to setup manual port forwarding.");
 
                         // For the moment we don't support relay mode as it has too much problems
                   /*  setState(BootstrapState.AUTO_PORT_FORWARDING_NOT_SUCCEEDED, "Port forwarding has failed. " +
