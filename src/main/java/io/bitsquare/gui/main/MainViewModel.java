@@ -150,12 +150,12 @@ class MainViewModel implements ViewModel {
                             newValue == BootstrapState.RELAY_FAILED) {
 
                         bootstrapErrorMsg.set(newValue.getMessage());
-                        bootstrapStateText.set("Connection to P2P network failed.");
+                        bootstrapStateText.set("Connecting to the Bitsquare network failed.");
                         bootstrapProgress.set(0);
                         bootstrapFailed.set(true);
                     }
                     else {
-                        bootstrapStateText.set("Connecting to P2P network: " + newValue.getMessage());
+                        bootstrapStateText.set("Connecting to the Bitsquare network: " + newValue.getMessage());
                     }
                 }
         );
@@ -196,10 +196,11 @@ class MainViewModel implements ViewModel {
         bitcoinNetworkTimeout = Utilities.setTimeout(20000, animationTimer -> {
             Platform.runLater(() -> {
                 networkSyncProgress.set(0);
-                blockchainSyncState.set("Connection to bitcoin network failed.");
-                Popups.openErrorPopup("Connection to bitcoin network failed",
+                blockchainSyncState.set("Connecting to the bitcoin network failed.");
+                Popups.openErrorPopup("Connecting to the bitcoin network failed",
                         "Please check your network connection.\n\n" +
-                                "You need to allow outgoing TCP connections to port 18333 for the bitcoin testnet.");
+                                "You must allow outgoing TCP connections to port 18333 for the bitcoin testnet.\n\n" +
+                                "See https://github.com/bitsquare/bitsquare/wiki for instructions.");
             });
             return null;
         });
@@ -300,11 +301,11 @@ class MainViewModel implements ViewModel {
     private void setNetworkSyncProgress(double value) {
         blockchainSyncProgress.set(value);
         if (value >= 1)
-            blockchainSyncState.set("Synchronization completed.");
+            blockchainSyncState.set("Blockchain synchronization complete.");
         else if (value > 0.0)
             blockchainSyncState.set("Synchronizing blockchain: " + formatter.formatToPercent(value));
         else
-            blockchainSyncState.set("Connecting to bitcoin network...");
+            blockchainSyncState.set("Connecting to the bitcoin network...");
 
         blockchainSyncIndicatorVisible.set(value < 1);
     }

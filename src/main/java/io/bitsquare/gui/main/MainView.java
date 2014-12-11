@@ -258,7 +258,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 bootstrapStateLabel.setId("splash-error-state-msg");
                 bootstrapIndicator.setVisible(false);
 
-                Popups.openErrorPopup("Error", "Connection to P2P network failed. \n\nReason: " +
+                Popups.openErrorPopup("Error", "Connecting to the Bitsquare network failed. \n\nReason: " +
                         model.bootstrapErrorMsg.get());
             }
         });

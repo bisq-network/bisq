@@ -185,20 +185,20 @@ class BootstrappedPeerBuilder {
 
     // We need to discover our external address and test if we are reachable for other nodes
     // We know our internal address from a discovery of our local network interfaces
-    // We start a discover process with our bootstrap node. 
+    // We start a discover process with our bootstrap node.
     // There are 4 cases:
     // 1. If we are not behind a NAT we get reported back the same address as our internal.
-    // 2. If we are behind a NAT and manual port forwarding is setup we get reported our external address from the 
+    // 2. If we are behind a NAT and manual port forwarding is setup we get reported our external address from the
     // bootstrap node and the bootstrap node could ping us so we know we are reachable.
     // 3. If we are behind a NAT and the ping probes fails we need to setup port forwarding with UPnP or NAT-PMP.
-    // If that is successfully setup we need to try again a discover so we find out our external address and have 
+    // If that is successfully setup we need to try again a discover so we find out our external address and have
     // tested successfully our reachability (the additional discover is done internally from startSetupPortforwarding)
-    // 4. If the port forwarding failed we can try as last resort to open a permanent TCP connection to the 
+    // 4. If the port forwarding failed we can try as last resort to open a permanent TCP connection to the
     // bootstrap node and use that peer as relay (currently not supported as its too unstable)
 
     private void discoverExternalAddress() {
         FutureDiscover futureDiscover = peer.discover().peerAddress(getBootstrapAddress()).start();
-        setState(BootstrapState.DISCOVERY_STARTED, "We are starting discovery against a bootstrap node.");
+        setState(BootstrapState.DISCOVERY_STARTED, "Starting discovery...");
         PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
         FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
         futureNAT.addListener(new BaseFutureListener<BaseFuture>() {
@@ -208,31 +208,29 @@ class BootstrappedPeerBuilder {
                 if (futureDiscover.isSuccess()) {
                     if (useManualPortForwarding) {
                         setState(BootstrapState.DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED,
-                                "We use manual port forwarding and are visible to other peers.");
+                                "Now visible to the Bitsquare network (with manual port forwarding).");
                         bootstrap();
                     }
                     else {
-                        setState(BootstrapState.DISCOVERY_DIRECT_SUCCEEDED,
-                                "We are not behind a NAT and visible to other peers.");
+                        setState(BootstrapState.DISCOVERY_DIRECT_SUCCEEDED, "Now visible to the Bitsquare network.");
                         bootstrap();
                     }
                 }
                 else {
                     setState(BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_STARTED,
-                            "We are probably behind a NAT and not reachable to other peers. " +
-                                    "We try to setup automatic port forwarding.");
+                            "Configuring automatic port forwarding");
                     if (futureNAT.isSuccess()) {
                         setState(BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED,
-                                "Discover with automatic port forwarding was successful.");
+                                "Now visible to the Bitsquare network (with automatic port forwarding).");
                         bootstrap();
                     }
                     else {
-                        handleError(BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_FAILED, "Automatic port forwarding " +
-                                "failed. " +
-                                "\n\nCheck if UPnP is enabled on your router. " +
-                                "\nIf it is enabled and it still does not work you can try also to setup manual port " +
-                                "forwarding. " +
-                                "\n\nYou find on our Github Wiki help how to setup manual port forwarding.");
+                        handleError(BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_FAILED,
+                                "Automatic port forwarding failed.\n\n" +
+                                        "Check whether UPnP (Universal Plug and Play) is enabled on your router.\n\n" +
+                                        "If UPnP is enabled and you still cannot connect, you will need to set up " +
+                                        "manual port forwarding.\n\n" +
+                                        "See https://github.com/bitsquare/bitsquare/wiki for instructions.");
 
                         // For the moment we don't support relay mode as it has too much problems
                   /*  setState(BootstrapState.AUTO_PORT_FORWARDING_NOT_SUCCEEDED, "Port forwarding has failed. " +
