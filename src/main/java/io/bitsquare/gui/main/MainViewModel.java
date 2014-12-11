@@ -193,7 +193,7 @@ class MainViewModel implements ViewModel {
     }
 
     public void initBackend() {
-        bitcoinNetworkTimeout = Utilities.setTimeout(2000, animationTimer -> {
+        bitcoinNetworkTimeout = Utilities.setTimeout(20000, animationTimer -> {
             Platform.runLater(() -> {
                 networkSyncProgress.set(0);
                 blockchainSyncState.set("Connection to bitcoin network failed.");
