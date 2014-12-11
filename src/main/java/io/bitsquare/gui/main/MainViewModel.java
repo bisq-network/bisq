@@ -35,6 +35,7 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
+import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -49,6 +50,7 @@ import java.util.Locale;
 
 import viewfx.model.ViewModel;
 
+import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -84,7 +86,7 @@ class MainViewModel implements ViewModel {
     final BooleanProperty bankAccountsComboBoxDisable = new SimpleBooleanProperty();
 
     final StringProperty blockchainSyncState = new SimpleStringProperty("Initializing");
-    final DoubleProperty blockchainSyncProgress = new SimpleDoubleProperty();
+    final DoubleProperty blockchainSyncProgress = new SimpleDoubleProperty(-1);
     final BooleanProperty blockchainSyncIndicatorVisible = new SimpleBooleanProperty(true);
     final StringProperty blockchainSyncIconId = new SimpleStringProperty();
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
@@ -106,6 +108,7 @@ class MainViewModel implements ViewModel {
     private final BSFormatter formatter;
     private Persistence persistence;
     private AccountSettings accountSettings;
+    private AnimationTimer bitcoinNetworkTimeout;
 
     @Inject
     public MainViewModel(User user, WalletService walletService, MessageService messageService,
@@ -127,6 +130,7 @@ class MainViewModel implements ViewModel {
 
         bootstrapState.addListener((ov, oldValue, newValue) -> {
                     if (newValue == BootstrapState.DISCOVERY_DIRECT_SUCCEEDED ||
+                            newValue == BootstrapState.DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED ||
                             newValue == BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED ||
                             newValue == BootstrapState.RELAY_SUCCEEDED) {
                         bootstrapStateText.set("Successfully connected to P2P network: " + newValue.getMessage());
@@ -134,7 +138,8 @@ class MainViewModel implements ViewModel {
 
                         if (newValue == BootstrapState.DISCOVERY_DIRECT_SUCCEEDED)
                             bootstrapIconId.set("image-connection-direct");
-                        else if (newValue == BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED)
+                        else if (newValue == BootstrapState.DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED ||
+                                newValue == BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_SUCCEEDED)
                             bootstrapIconId.set("image-connection-nat");
                         else if (newValue == BootstrapState.RELAY_SUCCEEDED)
                             bootstrapIconId.set("image-connection-relay");
@@ -156,7 +161,6 @@ class MainViewModel implements ViewModel {
         );
 
         walletServiceException.addListener((ov, oldValue, newValue) -> {
-            blockchainSyncProgress.set(0);
             blockchainSyncIndicatorVisible.set(false);
             blockchainSyncState.set("Startup failed.");
             walletServiceErrorMsg.set(((Throwable) newValue).getMessage());
@@ -189,8 +193,22 @@ class MainViewModel implements ViewModel {
     }
 
     public void initBackend() {
+        bitcoinNetworkTimeout = Utilities.setTimeout(2000, animationTimer -> {
+            Platform.runLater(() -> {
+                networkSyncProgress.set(0);
+                blockchainSyncState.set("Connection to bitcoin network failed.");
+                Popups.openErrorPopup("Connection to bitcoin network failed",
+                        "Please check your network connection.\n\n" +
+                                "You need to allow outgoing TCP connections to port 18333 for the bitcoin testnet.");
+            });
+            return null;
+        });
+
         walletService.getDownloadProgress().subscribe(
-                percentage -> Platform.runLater(() -> networkSyncProgress.set(percentage / 100.0)),
+                percentage -> Platform.runLater(() -> {
+                    if (percentage > 0)
+                        networkSyncProgress.set(percentage / 100.0);
+                }),
                 error -> log.error(error.toString()),
                 () -> Platform.runLater(() -> networkSyncProgress.set(1.0)));
 
@@ -206,7 +224,11 @@ class MainViewModel implements ViewModel {
                 next -> {
                 },
                 error -> Platform.runLater(() -> walletServiceException.set(error)),
-                () -> log.trace("wallet completed"));
+                () -> {
+                    log.trace("wallet completed");
+                    bitcoinNetworkTimeout.stop();
+                    bitcoinNetworkTimeout = null;
+                });
 
         Observable<?> backend = Observable.merge(message, wallet);
         backend.subscribe(
@@ -219,6 +241,7 @@ class MainViewModel implements ViewModel {
 
     private void backEndCompleted() {
         log.trace("backend completed");
+
         tradeManager.getPendingTrades().addListener(
                 (MapChangeListener<String, Trade>) change -> updateNumPendingTrades());
         updateNumPendingTrades();
