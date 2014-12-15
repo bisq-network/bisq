@@ -3,8 +3,8 @@
 [Setup]
 AppId={{bitsquare}}
 AppName=Bitsquare
-AppVersion=0.1.0
-AppVerName=Bitsquare 0.1.0
+AppVersion=0.1.1
+AppVerName=Bitsquare 0.1.1
 AppPublisher=Bitsquare
 AppComments=Bitsquare
 AppCopyright=Copyright (C) 2014
@@ -23,7 +23,7 @@ DefaultGroupName=Bitsquare
 LicenseFile=
 ;WinXP or above
 MinVersion=0,5.1 
-OutputBaseFilename=Bitsquare-0.1.0
+OutputBaseFilename=Bitsquare-0.1.1
 Compression=lzma
 SolidCompression=yes
 PrivilegesRequired=lowest

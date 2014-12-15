@@ -13,7 +13,7 @@ apply plugin: 'jacoco'
 
 wrapper.gradleVersion = '2.1'
 
-version = '0.1.0'
+version = '0.1.1-SNAPSHOT'
 sourceCompatibility = 1.8
 
 sourceSets.main.resources.srcDirs += 'src/main/java'
