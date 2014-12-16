@@ -14,8 +14,7 @@ There are no central points of control or failure in the Bitsquare network. Ther
 
 Because the fiat money portion of any trade must be transferred via traditional means such as a wire transfer, Bitsquare incorporates first-class support for human arbitration to resolve any errors or disputes.
 
-You can read about all of this and more in the [overview](https://bitsquare.io/overview.png), 
-[whitepaper](https://bitsquare.io/whitepaper.pdf), [arbitration](https://bitsquare.io/arbitration_system.pdf) and [risk analysis](https://bitsquare.io/risk_analysis.pdf) documents. Several [screencasts](https://www.youtube.com/playlist?list=PLXvC3iNe_di9bL1A5xyAKI2PzNg8jU092) are available as well.
+You can read about all of this and more in the [whitepaper](https://bitsquare.io/bitsquare.pdf), [arbitration](https://bitsquare.io/arbitration_system.pdf) and [risk analysis](https://bitsquare.io/risk_analysis.pdf) documents. Several [videos](https://bitsquare.io/blog/category/video) are available as well.
 
 Status
 ------
