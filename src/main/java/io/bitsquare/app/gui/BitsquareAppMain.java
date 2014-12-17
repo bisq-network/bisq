@@ -24,6 +24,12 @@ import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.Node;
 import io.bitsquare.util.joptsimple.EnumValueConverter;
 
+import java.io.File;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.vinumeris.updatefx.UpdateFX;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
@@ -33,8 +39,17 @@ import static io.bitsquare.network.Node.*;
 import static java.util.Arrays.asList;
 
 public class BitsquareAppMain extends BitsquareExecutable {
+    private static final Logger log = LoggerFactory.getLogger(BitsquareAppMain.class);
 
     public static void main(String[] args) throws Exception {
+        // We don't want to do the whole arg parsing/setup here as that might easily change in update versions
+        // So we only handle the absolute minimum which is APP_NAME and USER_DATA_DIR
+        // TODO Not impl. yet, just use default for first testings
+        UpdateFX.bootstrap(BitsquareAppMain.class, new File(BitsquareEnvironment.DEFAULT_APP_DATA_DIR).toPath(), args);
+    }
+
+    // That will be called from UpdateFX after updates are checked
+    public static void realMain(String[] args) throws Exception {
         new BitsquareAppMain().execute(args);
     }
 

@@ -49,12 +49,17 @@ import javafx.scene.image.*;
 import javafx.scene.input.*;
 import javafx.stage.Stage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.core.env.Environment;
 import org.springframework.util.FileSystemUtils;
 
 import static io.bitsquare.app.BitsquareEnvironment.*;
 
 public class BitsquareApp extends Application {
+    private static final Logger log = LoggerFactory.getLogger(BitsquareAppMain.class);
+
     private static Environment env;
 
     private BitsquareAppModule bitsquareAppModule;
@@ -66,6 +71,9 @@ public class BitsquareApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
+        // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
+        Thread.currentThread().setContextClassLoader(BitsquareApp.class.getClassLoader());
+
         bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
         injector = Guice.createInjector(bitsquareAppModule);
         injector.getInstance(InjectorViewFactory.class).setInjector(injector);
@@ -139,8 +147,7 @@ public class BitsquareApp extends Application {
         else
             iconPath = "/images/task_bar_icon_linux.png";
 
-        if (iconPath != null)
-            primaryStage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
 
 
         // make the UI visible

@@ -152,7 +152,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         root.getChildren().addAll(baseApplicationContainer, splashScreen);
 
-        model.isReadyForMainScreen.addListener((ov, oldValue, newValue) -> {
+        model.showAppScreen.addListener((ov, oldValue, newValue) -> {
             if (newValue) {
                 bankAccountComboBoxHolder.getChildren().setAll(createBankAccountComboBox());
 
@@ -184,15 +184,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Pane notification = new Pane();
         notification.relocate(30, 9);
         notification.setMouseTransparent(true);
-        notification.setVisible(model.numPendingTrades.get() > 0);
         notification.setEffect(new DropShadow(4, 1, 2, Color.GREY));
         notification.getChildren().addAll(icon, numPendingTradesLabel);
+        notification.visibleProperty().bind(model.showPendingTradesNotification);
         portfolioButtonHolder.getChildren().add(notification);
 
-        model.numPendingTrades.addListener((ov, oldValue, newValue) -> {
-            notification.setVisible((int) newValue > 0);
-
-            if ((int) newValue > 0)
+        model.showPendingTradesNotification.addListener((ov, oldValue, newValue) -> {
+            if (newValue)
                 SystemNotification.openInfoNotification(title, "You got a new trade message.");
         });
     }
@@ -200,17 +198,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private VBox createSplashScreen() {
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.CENTER);
-        vBox.setSpacing(10);
+        vBox.setSpacing(0);
         vBox.setId("splash");
 
         ImageView logo = new ImageView();
         logo.setId("image-splash-logo");
 
         Label blockchainSyncLabel = new Label();
-        blockchainSyncLabel.textProperty().bind(model.blockchainSyncState);
+        blockchainSyncLabel.textProperty().bind(model.blockchainSyncInfo);
         model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
             blockchainSyncLabel.setId("splash-error-state-msg");
-            Popups.openErrorPopup("Error", "An error occurred at startup. \n\nError message:\n" +
+            Popups.openErrorPopup("Error", "Connecting to the bitcoin network failed. \n\nReason: " +
                     newValue);
         });
 
@@ -238,7 +236,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         HBox blockchainSyncBox = new HBox();
         blockchainSyncBox.setSpacing(10);
         blockchainSyncBox.setAlignment(Pos.CENTER);
-        blockchainSyncBox.setPadding(new Insets(60, 0, 0, 0));
+        blockchainSyncBox.setPadding(new Insets(40, 0, 0, 0));
         blockchainSyncBox.setPrefHeight(50);
         blockchainSyncBox.getChildren().addAll(blockchainSyncLabel, blockchainSyncIndicator,
                 blockchainSyncIcon, bitcoinNetworkLabel);
@@ -247,20 +245,18 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         bootstrapStateLabel.setWrapText(true);
         bootstrapStateLabel.setMaxWidth(500);
         bootstrapStateLabel.setTextAlignment(TextAlignment.CENTER);
-        bootstrapStateLabel.textProperty().bind(model.bootstrapStateText);
+        bootstrapStateLabel.textProperty().bind(model.bootstrapInfo);
 
         ProgressIndicator bootstrapIndicator = new ProgressIndicator();
         bootstrapIndicator.setMaxSize(24, 24);
         bootstrapIndicator.progressProperty().bind(model.bootstrapProgress);
 
-        model.bootstrapFailed.addListener((ov, oldValue, newValue) -> {
-            if (newValue) {
-                bootstrapStateLabel.setId("splash-error-state-msg");
-                bootstrapIndicator.setVisible(false);
+        model.bootstrapErrorMsg.addListener((ov, oldValue, newValue) -> {
+            bootstrapStateLabel.setId("splash-error-state-msg");
+            bootstrapIndicator.setVisible(false);
 
-                Popups.openErrorPopup("Error", "Connecting to the Bitsquare network failed. \n\nReason: " +
-                        model.bootstrapErrorMsg.get());
-            }
+            Popups.openErrorPopup("Error", "Connecting to the Bitsquare network failed. \n\nReason: " +
+                    model.bootstrapErrorMsg.get());
         });
 
         ImageView bootstrapIcon = new ImageView();
@@ -279,11 +275,35 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         HBox bootstrapBox = new HBox();
         bootstrapBox.setSpacing(10);
         bootstrapBox.setAlignment(Pos.CENTER);
-        bootstrapBox.setPadding(new Insets(10, 0, 0, 0));
         bootstrapBox.setPrefHeight(50);
         bootstrapBox.getChildren().addAll(bootstrapStateLabel, bootstrapIndicator, bootstrapIcon);
 
-        vBox.getChildren().addAll(logo, blockchainSyncBox, bootstrapBox);
+        // software update
+        Label updateInfoLabel = new Label();
+        updateInfoLabel.setTextAlignment(TextAlignment.RIGHT);
+        updateInfoLabel.textProperty().bind(model.updateInfo);
+
+        Button restartButton = new Button("Restart");
+        restartButton.setDefaultButton(true);
+        restartButton.visibleProperty().bind(model.showRestartButton);
+        restartButton.managedProperty().bind(model.showRestartButton);
+        restartButton.setOnAction(e -> model.restart());
+
+        ImageView updateIcon = new ImageView();
+        updateIcon.setId(model.updateIconId.get());
+        model.updateIconId.addListener((ov, oldValue, newValue) -> {
+            updateIcon.setId(newValue);
+            updateIcon.setVisible(true);
+            updateIcon.setManaged(true);
+        });
+
+        HBox updateBox = new HBox();
+        updateBox.setSpacing(10);
+        updateBox.setAlignment(Pos.CENTER);
+        updateBox.setPrefHeight(20);
+        updateBox.getChildren().addAll(updateInfoLabel, restartButton, updateIcon);
+
+        vBox.getChildren().addAll(logo, blockchainSyncBox, bootstrapBox, updateBox);
         return vBox;
     }
 

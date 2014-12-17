@@ -45,7 +45,9 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
     public static final String APP_VERSION_KEY = "app.version";
 
+    // TODO what is the difference to APP_DATA_DIR ?
     public static final String USER_DATA_DIR_KEY = "user.data.dir";
+
     public static final String DEFAULT_USER_DATA_DIR = defaultUserDataDir();
 
     public static final String APP_NAME_KEY = "app.name";

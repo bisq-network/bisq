@@ -61,6 +61,11 @@ class BitsquareAppModule extends BitsquareModule {
         bindConstant().annotatedWith(named(Persistence.PREFIX_KEY)).to(env.getRequiredProperty(Persistence.PREFIX_KEY));
         bind(Persistence.class).asEagerSingleton();
 
+        // TODO UpdateFXHelper needs Environment. Should we just expose the 2 properties needed? 
+        bind(Environment.class).toInstance(env);
+        // for temp testing with mock
+        bind(UpdateProcess.class).to(MockUpdateProcess.class).asEagerSingleton();
+
         install(messageModule());
         install(bitcoinModule());
         install(cryptoModule());
