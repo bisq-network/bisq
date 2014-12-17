@@ -139,3 +139,20 @@
 #image-connection-synced {
     -fx-image: url("../../../images/connection/synced.png");
 }
+
+/* software update*/
+#image-update-in-progress {
+    -fx-image: url("../../../images/update/update_in_progress.png");
+}
+
+#image-update-up-to-date {
+    -fx-image: url("../../../images/update/update_up_to_date.png");
+}
+
+#image-update-available {
+    -fx-image: url("../../../images/update/update_available.png");
+}
+
+#image-update-failed {
+    -fx-image: url("../../../images/update/update_failed.png");
+}
