@@ -71,6 +71,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -214,7 +215,7 @@ public class WalletService {
         }, Threading.USER_THREAD);
         walletAppKit.startAsync();
 
-        return status.mergeWith(downloadProgress);
+        return status.mergeWith(downloadProgress).timeout(20, TimeUnit.SECONDS);
     }
 
     private void initWallet() {
