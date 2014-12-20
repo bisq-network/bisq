@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.funds.transactions;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 
 import org.bitcoinj.core.Transaction;
@@ -36,6 +35,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.util.Callback;
 
 @FxmlView
@@ -81,14 +81,6 @@ public class TransactionsView extends ActivatableViewAndModel {
             transactionsListItem.cleanup();
     }
 
-    private void openTxDetails(TransactionsListItem item) {
-        // TODO Open popup with details view
-        log.debug("openTxDetails " + item);
-
-        Popups.openWarningPopup("Under construction",
-                "This will open a details popup but that is not implemented yet.");
-    }
-
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         addressColumn.setCellFactory(
@@ -99,17 +91,17 @@ public class TransactionsView extends ActivatableViewAndModel {
                     public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
                             TransactionsListItem> column) {
                         return new TableCell<TransactionsListItem, TransactionsListItem>() {
-                            private Hyperlink hyperlink;
+                            private Label label;
 
                             @Override
                             public void updateItem(final TransactionsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    hyperlink = new Hyperlink(item.getAddressString());
-                                    hyperlink.setId("id-link");
-                                    hyperlink.setOnAction(event -> openTxDetails(item));
-                                    setGraphic(hyperlink);
+                                    label = makeSelectable(new Label(item.getAddressString()));
+                                    label.setId("id-link");
+                                    label.setFocusTraversable(true);
+                                    setGraphic(label);
                                 }
                                 else {
                                     setGraphic(null);
@@ -147,6 +139,27 @@ public class TransactionsView extends ActivatableViewAndModel {
                         };
                     }
                 });
+    }
+
+
+    // pasted from here: https://community.oracle.com/thread/2319231?tstart=0
+    private static Label makeSelectable(Label label) {
+        StackPane textStack = new StackPane();
+        TextField textField = new TextField(label.getText());
+        textField.setEditable(false);
+        textField.setStyle(
+                "-fx-background-color: transparent; -fx-background-insets: 0; -fx-background-radius: 0; -fx-padding: 0;"
+        );
+        // the invisible label is a hack to get the textField to size like a label.
+        Label invisibleLabel = new Label();
+        invisibleLabel.textProperty().bind(label.textProperty());
+        invisibleLabel.setVisible(false);
+        textStack.getChildren().addAll(invisibleLabel, textField);
+        label.textProperty().bindBidirectional(textField.textProperty());
+        label.setGraphic(textStack);
+        label.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+
+        return label;
     }
 }
 
