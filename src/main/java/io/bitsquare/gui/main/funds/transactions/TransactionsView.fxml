@@ -44,7 +44,7 @@
                     <PropertyValueFactory property="amount"/>
                 </cellValueFactory>
             </TableColumn>
-
+            <TableColumn text="Copy" fx:id="copyColumn" minWidth="30" sortable="false"/>
             <TableColumn text="Status" fx:id="confidenceColumn" minWidth="30" sortable="false"/>
         </columns>
     </TableView>
