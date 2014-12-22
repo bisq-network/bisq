@@ -36,7 +36,7 @@ processResources {
 
 repositories {
     jcenter()
-    maven { url 'http://partnerdemo.artifactoryonline.com/partnerdemo/libs-snapshots-local' }
+    maven { url 'https://partnerdemo.artifactoryonline.com/partnerdemo/libs-snapshots-local' }
 }
 
 dependencies {
