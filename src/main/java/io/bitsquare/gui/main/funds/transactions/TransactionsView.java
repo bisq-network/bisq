@@ -39,12 +39,15 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.util.Callback;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
 @FxmlView
 public class TransactionsView extends ActivatableViewAndModel {
 
     @FXML TableView<TransactionsListItem> table;
     @FXML TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, addressColumn, amountColumn, typeColumn,
-            confidenceColumn;
+            confidenceColumn, copyColumn;
 
     private ObservableList<TransactionsListItem> transactionsListItems;
 
@@ -64,6 +67,7 @@ public class TransactionsView extends ActivatableViewAndModel {
 
         setAddressColumnCellFactory();
         setConfidenceColumnCellFactory();
+        setCopyColumnCellFactory();
     }
 
     @Override
@@ -146,6 +150,43 @@ public class TransactionsView extends ActivatableViewAndModel {
 
                                 if (item != null && !empty) {
                                     setGraphic(item.getProgressIndicator());
+                                }
+                                else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setCopyColumnCellFactory() {
+        copyColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        copyColumn.setCellFactory(
+                new Callback<TableColumn<TransactionsListItem, TransactionsListItem>, TableCell<TransactionsListItem,
+                        TransactionsListItem>>() {
+
+                    @Override
+                    public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
+                            TransactionsListItem> column) {
+                        return new TableCell<TransactionsListItem, TransactionsListItem>() {
+                            final Label copyIcon = new Label();
+
+                            {
+                                copyIcon.getStyleClass().add("copy-icon");
+                                AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
+                                Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
+                            }
+
+                            @Override
+                            public void updateItem(final TransactionsListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    setGraphic(copyIcon);
+                                    copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(item
+                                            .getAddressString()));
+
                                 }
                                 else {
                                     setGraphic(null);
