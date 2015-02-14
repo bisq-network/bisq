@@ -36,12 +36,12 @@ processResources {
 
 repositories {
     jcenter()
-    maven { url 'https://partnerdemo.artifactoryonline.com/partnerdemo/libs-snapshots-local' }
+    maven { url 'http://tomp2p.net/dev/mvn/' }
 }
 
 dependencies {
     compile 'org.bitcoinj:bitcoinj-core:0.12.2'
-    compile 'net.tomp2p:tomp2p-all:5.0-Alpha.8f1cafb-SNAPSHOT'
+    compile 'net.tomp2p:tomp2p-all:5.0-Beta2'
     compile 'io.reactivex:rxjava:1.0.0'
     compile 'org.springframework:spring-core:4.1.1.RELEASE'
     compile 'net.sf.jopt-simple:jopt-simple:4.8'
