@@ -325,7 +325,7 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
             }
 
             @Override
-            public void onScriptsAdded(Wallet wallet, List<Script> scripts) {
+            public void onScriptsChanged(Wallet wallet, List<Script> list, boolean b) {
 
             }
 

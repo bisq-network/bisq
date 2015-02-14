@@ -37,10 +37,10 @@ public class SetupListenerForBlockChainConfirmation {
 
         depositTransaction.getConfidence().addEventListener(new TransactionConfidence.Listener() {
             @Override
-            public void onConfidenceChanged(Transaction tx, ChangeReason reason) {
-                log.trace("onConfidenceChanged " + tx.getConfidence());
-                if (reason == ChangeReason.TYPE &&
-                        tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
+            public void onConfidenceChanged(TransactionConfidence transactionConfidence, ChangeReason changeReason) {
+                log.trace("onConfidenceChanged " + transactionConfidence);
+                if (changeReason == ChangeReason.TYPE &&
+                        transactionConfidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
                     listener.onDepositTxConfirmedInBlockchain();
                     depositTransaction.getConfidence().removeEventListener(this);
                     log.trace("Tx is in blockchain");

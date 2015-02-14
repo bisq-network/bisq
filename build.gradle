@@ -40,7 +40,7 @@ repositories {
 }
 
 dependencies {
-    compile 'org.bitcoinj:bitcoinj-core:0.12.2'
+    compile 'org.bitcoinj:bitcoinj-core:0.13-SNAPSHOT'
     compile 'net.tomp2p:tomp2p-all:5.0-Beta2'
     compile 'io.reactivex:rxjava:1.0.0'
     compile 'org.springframework:spring-core:4.1.1.RELEASE'
