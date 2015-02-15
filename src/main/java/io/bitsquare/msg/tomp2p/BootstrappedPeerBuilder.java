@@ -55,7 +55,7 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMapChangeListener;
 import net.tomp2p.peers.PeerStatistic;
-import net.tomp2p.relay.RelayConfig;
+import net.tomp2p.relay.tcp.TCPRelayClientConfig;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -203,7 +203,7 @@ class BootstrappedPeerBuilder {
         setState(BootstrapState.DISCOVERY_STARTED, "Starting discovery...");
         PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
         FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
-        FutureRelayNAT futureRelayNAT = peerNAT.startRelay(RelayConfig.OpenTCP(), futureDiscover, futureNAT);
+        FutureRelayNAT futureRelayNAT = peerNAT.startRelay(new TCPRelayClientConfig(), futureDiscover, futureNAT);
 
         futureRelayNAT.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
