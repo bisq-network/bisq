@@ -17,19 +17,13 @@
 
 package io.bitsquare.crypto;
 
-import io.bitsquare.BitsquareModule;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.Utils;
 
-import org.springframework.core.env.Environment;
+public class HashService {
 
-public class CryptoModule extends BitsquareModule {
-
-    public CryptoModule(Environment env) {
-        super(env);
-    }
-
-    @Override
-    protected void configure() {
-        bind(SignatureService.class).asEagerSingleton();
-        bind(HashService.class).asEagerSingleton();
+    public Sha256Hash hash(String message) {
+        byte[] data = Utils.formatMessageForSigning(message);
+        return Sha256Hash.createDouble(data);
     }
 }

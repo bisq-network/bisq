@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.funds.transactions;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.util.Utilities;
 
 import org.bitcoinj.core.Transaction;
 
@@ -85,8 +86,14 @@ public class TransactionsView extends ActivatableViewAndModel {
         // TODO Open popup with details view
         log.debug("openTxDetails " + item);
 
-        Popups.openWarningPopup("Under construction",
-                "This will open a details popup but that is not implemented yet.");
+        try {
+            // TODO get the url form the app preferences
+            Utilities.openWebPage("https://www.biteasy.com/testnet/addresses/" + item.getAddressString());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            Popups.openWarningPopup("Warning", "Opening browser failed. Please check your internet " +
+                    "connection.");
+        }
     }
 
     private void setAddressColumnCellFactory() {

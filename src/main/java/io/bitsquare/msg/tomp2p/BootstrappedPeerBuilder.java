@@ -46,6 +46,7 @@ import net.tomp2p.futures.BaseFutureListener;
 import net.tomp2p.futures.FutureBootstrap;
 import net.tomp2p.futures.FutureDiscover;
 import net.tomp2p.nat.FutureNAT;
+import net.tomp2p.nat.FutureRelayNAT;
 import net.tomp2p.nat.PeerBuilderNAT;
 import net.tomp2p.nat.PeerNAT;
 import net.tomp2p.p2p.Peer;
@@ -54,6 +55,7 @@ import net.tomp2p.peers.Number160;
 import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.peers.PeerMapChangeListener;
 import net.tomp2p.peers.PeerStatistic;
+import net.tomp2p.relay.tcp.TCPRelayClientConfig;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -194,17 +196,18 @@ class BootstrappedPeerBuilder {
     // If that is successfully setup we need to try again a discover so we find out our external address and have
     // tested successfully our reachability (the additional discover is done internally from startSetupPortforwarding)
     // 4. If the port forwarding failed we can try as last resort to open a permanent TCP connection to the
-    // bootstrap node and use that peer as relay (currently not supported as its too unstable)
+    // bootstrap node and use that peer as relay
 
     private void discoverExternalAddress() {
         FutureDiscover futureDiscover = peer.discover().peerAddress(getBootstrapAddress()).start();
         setState(BootstrapState.DISCOVERY_STARTED, "Starting discovery...");
         PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
         FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
-        futureNAT.addListener(new BaseFutureListener<BaseFuture>() {
+        FutureRelayNAT futureRelayNAT = peerNAT.startRelay(new TCPRelayClientConfig(), futureDiscover, futureNAT);
+
+        futureRelayNAT.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
-                // If futureDiscover was successful we are directly connected (or manual port forwarding is set)
                 if (futureDiscover.isSuccess()) {
                     if (useManualPortForwarding) {
                         setState(BootstrapState.DISCOVERY_MANUAL_PORT_FORWARDING_SUCCEEDED,
@@ -225,56 +228,26 @@ class BootstrappedPeerBuilder {
                         bootstrap();
                     }
                     else {
-                        handleError(BootstrapState.DISCOVERY_AUTO_PORT_FORWARDING_FAILED,
-                                "Automatic port forwarding failed.\n\n" +
-                                        "Check whether UPnP (Universal Plug and Play) is enabled on your router.\n\n" +
-                                        "If UPnP is enabled and you still cannot connect, you will need to set up " +
-                                        "manual port forwarding.\n\n" +
-                                        "See https://github.com/bitsquare/bitsquare/wiki for instructions.");
-
-                        // For the moment we don't support relay mode as it has too much problems
-                  /*  setState(BootstrapState.AUTO_PORT_FORWARDING_NOT_SUCCEEDED, "Port forwarding has failed. " +
-                            "We try to use a relay as next step.");
-                    bootstrapWithRelay();*/
+                        if (future.isSuccess()) {
+                            // relay mode succeeded
+                            setState(BootstrapState.RELAY_SUCCEEDED, "Bootstrap using relay was successful.");
+                            bootstrap();
+                        }
+                        else {
+                            // All attempts failed. Give up...
+                            handleError(BootstrapState.RELAY_FAILED, "Bootstrap using relay has failed " +
+                                    futureRelayNAT.failedReason());
+                        }
                     }
                 }
             }
 
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
-                handleError(BootstrapState.DISCOVERY_FAILED, "Exception at discover visibility: " + t
-                        .getMessage());
+                handleError(BootstrapState.RELAY_FAILED, "Exception at bootstrap: " + t.getMessage());
             }
         });
     }
-
-    // For the moment we don't support relay mode as it has too much problems
-    // 3. Attempt: We try to use another peer as relay
-   /* private void bootstrapWithRelay() {
-        setState(BootstrapState.RELAY_INIT, "We try to use another peer as relay.");
-        FutureDiscover futureDiscover = peer.discover().peerAddress(getBootstrapAddress()).start();
-        PeerNAT peerNAT = new PeerBuilderNAT(peer).start();
-        FutureNAT futureNAT = peerNAT.startSetupPortforwarding(futureDiscover);
-        FutureRelayNAT futureRelayNAT = peerNAT.startRelay(RelayConfig.OpenTCP(), futureDiscover, futureNAT);
-        futureRelayNAT.addListener(new BaseFutureListener<BaseFuture>() {
-            @Override
-            public void operationComplete(BaseFuture future) throws Exception {
-                if (future.isSuccess()) {
-                    setState(BootstrapState.RELAY_SUCCESS, "Bootstrap using relay was successful.");
-                    bootstrap(BootstrapState.RELAY_SUCCESS);
-                }
-                else {
-                    handleError(BootstrapState.RELAY_FAILED, "Bootstrap using relay has failed " +
-                            futureRelayNAT.failedReason());
-                }
-            }
-
-            @Override
-            public void exceptionCaught(Throwable t) throws Exception {
-                handleError(BootstrapState.RELAY_FAILED, "Exception at bootstrapWithRelay: " + t.getMessage());
-            }
-        });
-    }*/
 
     private void bootstrap() {
         FutureBootstrap futureBootstrap = peer.bootstrap().peerAddress(getBootstrapAddress()).start();
