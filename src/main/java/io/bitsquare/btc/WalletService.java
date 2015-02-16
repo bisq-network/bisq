@@ -215,7 +215,7 @@ public class WalletService {
         }, Threading.USER_THREAD);
         walletAppKit.startAsync();
 
-        return status.mergeWith(downloadProgress).timeout(20, TimeUnit.SECONDS);
+        return status.mergeWith(downloadProgress).timeout(30, TimeUnit.SECONDS);
     }
 
     private void initWallet() {
