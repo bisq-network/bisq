@@ -30,6 +30,10 @@ public class SignatureService {
     public String signMessage(ECKey key, String message) {
         byte[] data = Utils.formatMessageForSigning(message);
         Sha256Hash hash = Sha256Hash.createDouble(data);
+        return signMessage(key, hash);
+    }
+
+    public String signMessage(ECKey key, Sha256Hash hash) {
         ECKey.ECDSASignature sig = key.sign(hash, null);
         // Now we have to work backwards to figure out the recId needed to recover the signature.
         int recId = -1;
@@ -53,5 +57,9 @@ public class SignatureService {
     public byte[] digestMessageWithSignature(ECKey key, String message) {
         String signedMessage = signMessage(key, message);
         return Utils.sha256hash160(message.concat(signedMessage).getBytes(Charsets.UTF_8));
+    }
+
+    public boolean verify(ECKey key, Sha256Hash hash, ECKey.ECDSASignature signature) {
+        return key.verify(hash, signature);
     }
 }
