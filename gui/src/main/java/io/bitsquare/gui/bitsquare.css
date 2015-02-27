@@ -1,0 +1,489 @@
+/*
+Theme colors:
+
+logo colors:
+
+new blue: 0f87c3
+new grey: 666666
+
+00abff
+orange webpage quotes : ff7f00
+
+
+main bg grey: dddddd
+content bg grey: f4f4f4
+tab pane upper bg gradient color mid dark grey to bright grey: cfcfcf -> dddddd
+upper border on tab: cfcfcf
+lower border on tab: b5b5b5
+upper gradient color on tab: d3d3d3
+lower gradient color on tab: dddddd
+*/
+
+.root {
+    -bs-grey: #666666;
+    -bs-bg-grey: #dddddd;
+    -bs-error-red: #dd0000;
+
+    -fx-accent: #0f87c3;
+    -fx-default-button: derive(-fx-accent, 95%);
+    -fx-focus-color: -fx-accent;
+    -fx-faint-focus-color: #0f87c322;
+    -fx-selection-bar: derive(-fx-accent, 50%);
+}
+
+/* Splash */
+#splash {
+    -fx-background-color: #ffffff;
+}
+
+#splash-error-state-msg {
+    -fx-text-fill: -bs-error-red;
+}
+
+#splash-bitcoin-network-label {
+    -fx-text-fill: -fx-accent;
+    -fx-weight: bold;
+}
+
+/* Main UI */
+#base-content-container {
+    -fx-background-color: -bs-bg-grey;
+}
+
+#content-pane {
+    -fx-background-color: #f4f4f4;
+}
+
+#headline-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 18;
+}
+
+/* Main navigation */
+#nav-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+}
+
+#nav-button .text {
+    -fx-font-size: 10;
+}
+
+#nav-button:selected .text {
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
+    -fx-fill: -fx-accent;
+}
+
+#nav-button-label {
+    -fx-font-size: 10;
+}
+
+#nav-balance-label {
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-background-color: #dddddd;
+}
+
+#nav-alert-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 11;
+    -fx-text-fill: white;
+}
+
+.text-field:readonly {
+    -fx-text-fill: #000000;
+    -fx-background-color: #FAFAFA;
+}
+
+#feedback-text {
+    -fx-font-size: 10;
+}
+
+#label-url {
+    -fx-cursor: hand;
+    -fx-text-fill: blue;
+    -fx-underline: true;
+}
+
+#icon-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+}
+
+.copy-icon {
+    -fx-text-fill: -fx-accent;
+    -fx-cursor: hand;
+}
+
+.copy-icon:hover {
+    -fx-text-fill: black;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Tooltip                                                                     *
+ *                                                                             *
+ ******************************************************************************/
+
+.tooltip {
+    -fx-background: white;
+    -fx-text-fill: black;
+    -fx-background-color: white;
+    -fx-background-radius: 6px;
+    -fx-background-insets: 0;
+    -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 10, 0.0, 0, 3);
+    -fx-font-size: 0.85em;
+}
+
+/* Same style like non editable textfield. But textfield spans a whole column in a grid, so we use generally
+textfield */
+#label-with-background {
+    -fx-background-color: #FAFAFA;
+    -fx-border-radius: 4;
+    -fx-padding: 4 4 4 4;
+}
+
+#address-text-field {
+    -fx-cursor: hand;
+    -fx-text-fill: -fx-accent;
+}
+
+#address-text-field:hover {
+    -fx-text-fill: black;
+}
+
+#funds-confidence {
+    -fx-progress-color: dimgrey;
+}
+
+/* .table-view */
+.table-view .table-cell {
+    -fx-alignment: center;
+}
+
+.table-view .column-header .label {
+    -fx-alignment: center;
+}
+
+.table-view .focus {
+    -fx-alignment: center;
+}
+
+.table-view .text {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection .text {
+    -fx-fill: white;
+}
+
+.table-view .table-row-cell:selected .button .text {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell .copy-icon .text {
+    -fx-fill: -fx-accent;
+}
+
+.table-view .table-row-cell .copy-icon .text:hover {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell:selected .copy-icon .text {
+    -fx-fill: white;
+}
+
+.table-view .table-row-cell:selected .copy-icon .text:hover {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell .hyperlink .text {
+    -fx-fill: -fx-accent;
+}
+
+.table-view .table-row-cell .hyperlink .text:hover {
+    -fx-fill: black;
+}
+
+.table-view .table-row-cell:selected .hyperlink .text {
+    -fx-fill: white;
+}
+
+.table-view .table-row-cell:selected .hyperlink .text:hover {
+    -fx-fill: black;
+}
+
+#form-header-text {
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+}
+
+#non-clickable-icon {
+    -fx-text-fill: #AAAAAA;
+}
+
+#clickable-icon {
+    -fx-text-fill: -fx-accent;
+    -fx-cursor: hand;
+}
+
+#clickable-icon:hover {
+    -fx-text-fill: #666666;
+}
+
+#form-title {
+    -fx-font-weight: bold;
+}
+
+/* tab pane */
+.tab-pane .tab-label {
+    -fx-font-size: 15;
+}
+
+.tab-pane:focused {
+    -fx-background-color: transparent;
+}
+
+.tab-header-area:focused {
+    -fx-background-color: transparent;
+}
+
+.tab:focused {
+    -fx-background-color: transparent;
+}
+
+/* table-view */
+.table-view:focused {
+    -fx-background-color: transparent;
+}
+
+/* scroll-pane */
+
+.scroll-pane {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.scroll-pane:focused {
+    -fx-background-insets: 0;
+}
+
+.scroll-pane .corner {
+    -fx-background-insets: 0;
+}
+
+/* validation */
+#validation-error {
+    -fx-text-fill: red;
+}
+
+/* Account */
+
+#content-pane-top {
+    -fx-background-color: #cfcfcf,
+    linear-gradient(#cfcfcf 0%, #b5b5b5 100%),
+    linear-gradient(#d3d3d3 0%, -bs-bg-grey 100%);
+    -fx-background-insets: 0 0 0 0, 0, 1;
+}
+
+#info-icon-label {
+    -fx-font-size: 16;
+    -fx-text-fill: #333000;
+}
+
+/* Create offer */
+#direction-icon-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+    -fx-text-fill: -bs-grey;
+}
+
+#input-description-label {
+    -fx-font-size: 11;
+    -fx-alignment: center;
+}
+
+#create-offer-calc-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 20;
+    -fx-padding: 15 5 0 5;
+}
+
+#currency-info-label {
+    -fx-border-radius: 0 4 4 0;
+    -fx-padding: 4 4 4 4;
+    -fx-background-color: #f6f6f6;
+    -fx-border-color: #aaa;
+    -fx-border-style: solid solid solid none;
+    -fx-border-insets: 0 0 0 -2;
+}
+
+#totals-separator {
+    -fx-background: #AAAAAA;
+}
+
+#payment-info {
+    -fx-background-color: #f4f4f4;
+}
+
+/* Account setup */
+#wizard-title-deactivated {
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+    -fx-text-fill: #999999;
+}
+
+#wizard-title-active {
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+    -fx-text-fill: #333333;
+}
+
+#wizard-title-completed {
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+    -fx-text-fill: #333333;
+}
+
+#wizard-sub-title-deactivated {
+    -fx-text-fill: #999999;
+}
+
+#wizard-sub-title-active {
+    -fx-text-fill: #333333;
+}
+
+#wizard-sub-title-completed {
+    -fx-text-fill: #333333;
+}
+
+#wizard-item-background-deactivated {
+    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, #dddddd, #ccc);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#wizard-item-background-active {
+    -fx-body-color: linear-gradient(to bottom, #f1f6f7, #e7f5f9);
+    -fx-outer-border: linear-gradient(to bottom, #b5e1ef, #6aa4b6);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#wizard-item-background-completed {
+    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, #99ba9c, #619865);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+/* Account settings */
+#wizard-title-disabled {
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+    -fx-text-fill: #999999;
+}
+
+#wizard-title-active {
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+    -fx-text-fill: #333333;
+}
+
+#wizard-title-selected {
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+    -fx-text-fill: -fx-accent;
+}
+
+#account-settings-item-background-disabled {
+    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, #dddddd, #ccc);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#account-settings-item-background-active {
+    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, #dddddd, #ccc);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#account-settings-item-background-selected {
+    -fx-body-color: linear-gradient(to bottom, #f1f6f7, #e7f5f9);
+    -fx-outer-border: linear-gradient(to bottom, #b5e1ef, #6aa4b6);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+/* TitledGroupBg */
+#titled-group-bg-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+    -fx-text-fill: -bs-grey;
+    -fx-background-color: #f4f4f4;
+}
+
+#titled-group-bg-label-active {
+    -fx-font-weight: bold;
+    -fx-font-size: 14;
+    -fx-text-fill: -fx-accent;
+    -fx-background-color: #f4f4f4;
+}
+
+#titled-group-bg {
+    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, #dddddd, #ccc);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#titled-group-bg-active {
+    -fx-body-color: linear-gradient(to bottom, #f4f4f4, #F0F0F0);
+    -fx-outer-border: linear-gradient(to bottom, #9bbdc9, #57acc9);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+/* TitledSeparator */
+#titled-separator:horizontal .line {
+    -fx-border-color: transparent #f4f4f4 transparent #f4f4f4;
+    -fx-background-color: transparent;
+    -fx-border-width: 10px;
+}
