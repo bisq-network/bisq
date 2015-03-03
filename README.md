@@ -18,44 +18,12 @@ You can read about all of this and more in the [whitepaper](https://bitsquare.io
 
 Status
 ------
-Pre-alpha and under heavy development.
+Alpha and under heavy development.
 
 Building from source
 --------------------
 
-1. Install the latest JDK (8u20 or better)
-2. Clone this repository
-3. **Build and launch the Bitsquare JavaFX client** by running:
-```
-./gradlew run
-```
-
-Pass command line arguments to the app via the Gradle `-Pargs` property as follows:
-
-    ./gradlew run -Pargs="--help"
-
-Or, **build an executable jar** with the `appJar` task:
-
-    ./gradlew appJar
-
-Run the app as follows:
-
-    java -jar build/libs/bitsquare-<version>-app.jar
-
-Pass the `--help` flag to see what options are available:
-
-    java -jar build/libs/bitsquare-<version>-app.jar --help
-
-To **build a headless bootstrap node jar**, run the `bootstrapNodeJar` task:
-
-    ./gradlew bootstrapNodeJar
-
-Run the bootstrap node:
-
-    java -jar build/libs/bitsquare-<version>-bootstrapNode.jar
-
-
-See [doc/build.md](doc/build.md) for additional information.
+See [doc/build.md](doc/build.md).
 
 
 Staying in Touch
