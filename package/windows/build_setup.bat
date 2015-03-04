@@ -14,5 +14,5 @@ call java -Xmx2048m -jar ./updatefx/updatefx-app-1.2.jar --url=http://localhost:
 cd package\win
 
 :: start webserver for update data
-:: cd gui\updatefx\site
+:: cd ..\..\gui\updatefx\site
 :: python -m SimpleHTTPServer 8000

@@ -14,7 +14,7 @@ java -jar ./updatefx/updatefx-app-1.2.jar --url=http://localhost:8000/ gui/updat
 cd package/mac
 
 # start webserver for update data
-# cd gui/updatefx/site
+# cd ../../gui/updatefx/site
 # python -m SimpleHTTPServer 8000
 
 # create icons

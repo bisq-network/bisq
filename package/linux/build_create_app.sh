@@ -12,7 +12,7 @@ $JAVA_HOME/bin/javapackager \
     -deploy \
     -BappVersion=0.1.1-SNAPSHOT \
     -Bcategory=Finance \
-    -Bemail=info@bitsquare.io \
+    -Bemail=team@bitsquare.io \
     -BlicenseType=GPLv3 \
     -native deb \
     -name Bitsquare \

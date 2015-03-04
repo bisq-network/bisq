@@ -9,4 +9,4 @@ cp gui/target/shaded.jar gui/updatefx/builds/2.jar
 # edit url
 java -jar ./updatefx/updatefx-app-1.2.jar --url=http://localhost:8000/ gui/updatefx
 
-cd package/mac
+cd package/linux
