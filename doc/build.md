@@ -9,21 +9,21 @@ This guide will walk you through the process of building Bitsquare from source.
 For the impatient
 -----------------
 
-What follows is explained in detail in the sections below, but for those who know their way around Java, git and Gradle, here are the instructions in a nutshell:
+What follows is explained in detail in the sections below, but for those who know their way around Java, git and Maven, here are the instructions in a nutshell:
 
     $ javac -version
     javac 1.8.0_20       # must be 1.8.0_20 or better
 
     $ git clone https://github.com/bitsquare/bitsquare.git
     $ cd bitsquare
-    $ ./gradlew appJar    # (on *nix)
-       --- or ---
-    $ gradlew appJar      # (on Windows)
+    $ mvn package    
 
-When the build completes, you will find an excutable jar in the `build/libs` directory. Run it as follows for the help screen:
+When the build completes, you will find an excutable jar: `gui/target/shaded.jar`. 
+To run it use:
+    $ java -jar gui/target/shaded.jar
 
-    $ java -jar build/libs/bitsquare-<version>-app.jar --help
-
+To build the binary needs a bit more preparation as we use [UpdateFX](https://github.com/vinumeris/updatefx) for automatic updates.
+You can find more information in the build scripts under package.
 
 Prerequisites
 -------------
@@ -52,19 +52,20 @@ The preferred approach is to clone the Bitsquare repository using [git](http://w
 However, if you're not familiar with git or it is otherwise inconvenient to use, you can also download and extract a zip file of the latest sources at https://github.com/bitsquare/bitsquare/archive/master.zip.
 
 
-### 2. Build
+### 2. Build jar
 
-Bitsquare uses [Gradle](http://www.gradle.org/), and the [Gradle wrapper](http://www.gradle.org/docs/current/userguide/gradle_wrapper.html) as a build system. This means you don't need to download or do anything other than run the following command within the `bitsquare` directory.
+Bitsquare uses maven as a build system. 
 
-    ./gradlew appJar
-
-> _**NOTE:** on Windows, leave out the `./` and simply run `gradlew appJar`._
-
+    $ cd bitsquare
+    $ mvn package
+    
 
 ### 3. Run
 
-When the build completes, you'll find an executable jar in the `build/libs` directory. See instructions above for how to run it.
+When the build completes, you will find an excutable jar: `gui/target/shaded.jar`. 
+To run it use:
 
+    $ java -jar gui/target/shaded.jar
 
 Problems?
 ---------

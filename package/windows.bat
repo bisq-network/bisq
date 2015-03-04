@@ -1,1 +1,0 @@
-"c:\Program Files\Java\jdk1.8.0_20\bin\javapackager.exe" -deploy -BappVersion=0.1.1-SNAPSHOT -native exe -name Bitsquare -title Bitsquare -vendor Bitsquare -outdir build -appclass io.bitsquare.app.gui.BitsquareAppMain -srcfiles "build\libs\bitsquare-0.1.1-SNAPSHOT-app.jar" -outfile Bitsquare -Bruntime="c:\Program Files\Java\jdk1.8.0_20\jre"

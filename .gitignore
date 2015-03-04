@@ -6,7 +6,8 @@
 !.idea/copyright/Bitsquare_Affero_GPLv3.xml
 !.idea/copyright/profiles_settings.xml
 !.idea/codeStyleSettings.xml
-bitsquare.iml
+*.iml
+*/*.iml
 *.spvchain
 *.wallet
 *.ser

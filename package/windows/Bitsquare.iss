@@ -3,8 +3,8 @@
 [Setup]
 AppId={{bitsquare}}
 AppName=Bitsquare
-AppVersion=0.1.1
-AppVerName=Bitsquare 0.1.1
+AppVersion=0.1.1-SNAPSHOT
+AppVerName=Bitsquare 0.1.1-SNAPSHOT
 AppPublisher=Bitsquare
 AppComments=Bitsquare
 AppCopyright=Copyright (C) 2014
@@ -23,11 +23,11 @@ DefaultGroupName=Bitsquare
 LicenseFile=
 ;WinXP or above
 MinVersion=0,5.1 
-OutputBaseFilename=Bitsquare-0.1.1
+OutputBaseFilename=Bitsquare-0.1.1-SNAPSHOT
 Compression=lzma
 SolidCompression=yes
 PrivilegesRequired=lowest
-SetupIconFile=Bitsquare\Bitsquare.ico
+SetupIconFile=Bitsquare.ico
 UninstallDisplayIcon={app}\Bitsquare.ico
 UninstallDisplayName=Bitsquare
 WizardImageStretch=No
