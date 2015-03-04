@@ -52,7 +52,7 @@ public class UpdateProcess {
     private static final Logger log = LoggerFactory.getLogger(UpdateProcess.class);
 
     // Edit version for updateFX
-    private static final int VERSION = 12;
+    private static final int VERSION = 1;
     
     private static final List<ECPoint> UPDATE_SIGNING_KEYS = Crypto.decode("032D7B4073B0B94F0B0AAD72D4CC2B86FDDE7AAE334DE4BE448B0983D887975289");
     private static final String UPDATES_BASE_URL = "http://localhost:8000/";
