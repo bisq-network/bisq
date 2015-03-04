@@ -54,7 +54,7 @@ public class UpdateProcess {
     // Edit version for updateFX
     private static final int VERSION = 12;
     
-    private static final List<ECPoint> UPDATE_SIGNING_KEYS = Crypto.decode("03C00C9B7894A072A459FFF87DBA8CFE76366D5BF4C013E41AE8D7A314625DFB30");
+    private static final List<ECPoint> UPDATE_SIGNING_KEYS = Crypto.decode("032D7B4073B0B94F0B0AAD72D4CC2B86FDDE7AAE334DE4BE448B0983D887975289");
     private static final String UPDATES_BASE_URL = "http://localhost:8000/";
     
     private static final int UPDATE_SIGNING_THRESHOLD = 1;
