@@ -23,7 +23,7 @@ To run it use:
     $ java -jar gui/target/shaded.jar
 
 To build the binary needs a bit more preparation as we use [UpdateFX](https://github.com/vinumeris/updatefx) for automatic updates.
-You can find more information in the build scripts for your OS (e.g. build_setup.sh, build_create_app_mac.sh, build_update.sh)
+You can find more information in the build scripts under package.
 
 Prerequisites
 -------------

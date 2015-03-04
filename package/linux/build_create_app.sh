@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cd ../../
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 cp gui/target/shaded.jar gui/updatefx/builds/1.jar
 
@@ -9,7 +10,7 @@ java -jar ./updatefx/updatefx-app-1.2.jar --url=http://localhost:8000/ gui/updat
 # Note: fakeroot needs to be installed on linux
 $JAVA_HOME/bin/javapackager \
     -deploy \
-    -BappVersion=0.1 \
+    -BappVersion=0.1.1-SNAPSHOT \
     -Bcategory=Finance \
     -Bemail=info@bitsquare.io \
     -BlicenseType=GPLv3 \
@@ -23,3 +24,5 @@ $JAVA_HOME/bin/javapackager \
     -outfile Bitsquare
     
 # TODO icons:  -Bicon=client/icons/icon.png \
+
+cd package/linux

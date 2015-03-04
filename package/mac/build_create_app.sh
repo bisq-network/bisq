@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cd ../../
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 cp gui/target/shaded.jar gui/updatefx/builds/1.jar
 
@@ -8,7 +9,7 @@ java -jar ./updatefx/updatefx-app-1.2.jar --url=http://localhost:8000/ gui/updat
 
 $JAVA_HOME/bin/javapackager \
     -deploy \
-    -BappVersion=0.1 \
+    -BappVersion=0.1.1-SNAPSHOT \
     -Bmac.CFBundleIdentifier=bitsquare \
     -Bmac.CFBundleName=Bitsquare \
     -Bruntime="$JAVA_HOME/../../" \
@@ -20,3 +21,5 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles gui/updatefx/builds/processed/1.jar \
     -appclass io.bitsquare.app.gui.BitsquareAppMain \
     -outfile Bitsquare
+    
+cd package/mac

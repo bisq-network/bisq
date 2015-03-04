@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # setup dirs
+cd ../../
 mkdir gui/updatefx
 mkdir gui/updatefx/builds
 mkdir gui/updatefx/builds/processed
@@ -9,6 +10,8 @@ mkdir gui/deploy
 
 # create key/wallet. Copy wallet to UpdateProcess or use wallet form other OS build
 java -jar ./updatefx/updatefx-app-1.2.jar --url=http://localhost:8000/ gui/updatefx
+
+cd package/mac
 
 # start webserver for update data
 # cd gui/updatefx/site
