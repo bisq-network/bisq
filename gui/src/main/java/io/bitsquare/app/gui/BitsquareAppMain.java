@@ -42,6 +42,12 @@ import static java.util.Arrays.asList;
 public class BitsquareAppMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(BitsquareAppMain.class);
 
+    private static final String VERSION = "0.1";
+
+    public static String getVersion() {
+        return VERSION + "." + UpdateProcess.getBuildVersion();
+    }
+
     public static void main(String[] args) throws Exception {
         // We don't want to do the full argument parsing here as that might easily change in update versions
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
@@ -49,8 +55,6 @@ public class BitsquareAppMain extends BitsquareExecutable {
         parser.accepts(USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
                 .withRequiredArg();
         parser.accepts(APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
-                .withRequiredArg();
-        parser.accepts(APP_DATA_DIR_KEY, description("Application data directory", DEFAULT_APP_DATA_DIR))
                 .withRequiredArg();
 
         OptionSet options;

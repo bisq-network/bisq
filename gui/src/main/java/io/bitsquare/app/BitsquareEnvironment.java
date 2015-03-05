@@ -18,6 +18,7 @@
 package io.bitsquare.app;
 
 import io.bitsquare.BitsquareException;
+import io.bitsquare.app.gui.BitsquareAppMain;
 import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.main.MainView;
@@ -42,8 +43,6 @@ import org.springframework.core.io.support.ResourcePropertySource;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BitsquareEnvironment extends StandardEnvironment {
-
-    public static final String APP_VERSION_KEY = "app.version";
 
     public static final String USER_DATA_DIR_KEY = "user.data.dir";
 
@@ -131,7 +130,7 @@ public class BitsquareEnvironment extends StandardEnvironment {
             setProperty(APP_NAME_KEY, appName);
 
             setProperty(UserAgent.NAME_KEY, appName);
-            setProperty(UserAgent.VERSION_KEY, BitsquareEnvironment.this.getRequiredProperty(APP_VERSION_KEY));
+            setProperty(UserAgent.VERSION_KEY, BitsquareAppMain.getVersion());
 
             setProperty(WalletService.DIR_KEY, appDataDir);
             setProperty(WalletService.PREFIX_KEY, appName);

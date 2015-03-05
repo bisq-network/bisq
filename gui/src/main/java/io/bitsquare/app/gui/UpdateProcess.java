@@ -52,15 +52,18 @@ public class UpdateProcess {
     private static final Logger log = LoggerFactory.getLogger(UpdateProcess.class);
 
     // Edit version for updateFX
-    private static final int VERSION = 1;
+    private static final int BUILD_VERSION = 2;
     
-    private static final List<ECPoint> UPDATE_SIGNING_KEYS = Crypto.decode("032D7B4073B0B94F0B0AAD72D4CC2B86FDDE7AAE334DE4BE448B0983D887975289");
-    private static final String UPDATES_BASE_URL = "http://localhost:8000/";
-    
+    private static final List<ECPoint> UPDATE_SIGNING_KEYS = Crypto.decode("025AA74490F66D195D42D49070D821C96A137496C070A924E5AAB0D6EE8549457E");
+    private static final String UPDATES_BASE_URL = "http://bitsquare.io/updateFX/";
     private static final int UPDATE_SIGNING_THRESHOLD = 1;
     private static final Path ROOT_CLASS_PATH = UpdateFX.findCodePath(BitsquareAppMain.class);
-    private Environment environment;
 
+    public static int getBuildVersion() {
+        return BUILD_VERSION;
+    }
+    
+    private Environment environment;
 
     public enum State {
         CHECK_FOR_UPDATES,
@@ -93,7 +96,7 @@ public class UpdateProcess {
     }
 
     public void init() {
-        log.info("UpdateFX current version " + VERSION);
+        log.info("UpdateFX current version " + BUILD_VERSION);
 
         // process.timeout() will cause an error state back but we don't want to break startup in case of an timeout
         timeoutTimer = Utilities.setTimeout(10000, new Function<AnimationTimer, Void>() {
@@ -105,9 +108,9 @@ public class UpdateProcess {
         });
         timeoutTimer.start();
         
-        String agent = environment.getProperty(BitsquareEnvironment.APP_NAME_KEY) + VERSION;
+        String agent = environment.getProperty(BitsquareEnvironment.APP_NAME_KEY) + BUILD_VERSION;
         Path dataDirPath = new File(environment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY)).toPath();
-        Updater updater = new Updater(UPDATES_BASE_URL, agent, VERSION, dataDirPath, ROOT_CLASS_PATH,
+        Updater updater = new Updater(UPDATES_BASE_URL, agent, BUILD_VERSION, dataDirPath, ROOT_CLASS_PATH,
                 UPDATE_SIGNING_KEYS, UPDATE_SIGNING_THRESHOLD) {
             @Override
             protected void updateProgress(long workDone, long max) {
@@ -132,14 +135,14 @@ public class UpdateProcess {
                     log.info("One liner: {}", summary.descriptions.get(0).getOneLiner());
                     log.info("{}", summary.descriptions.get(0).getDescription());
                 }
-                if (summary.highestVersion > VERSION) {
+                if (summary.highestVersion > BUILD_VERSION) {
                     log.info("UPDATE_AVAILABLE");
                     state.set(State.UPDATE_AVAILABLE);
                     // We stop the timeout and treat it not completed. 
                     // The user should click the restart button manually if there are updates available.
                     timeoutTimer.stop();
                 }
-                else if (summary.highestVersion == VERSION) {
+                else if (summary.highestVersion == BUILD_VERSION) {
                     log.info("UP_TO_DATE");
                     state.set(State.UP_TO_DATE);
                     timeoutTimer.stop();
