@@ -41,7 +41,6 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Files]
 Source: "Bitsquare\Bitsquare.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Bitsquare\runtime\jre\bin\plugin2\msvcr100.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Bitsquare\runtime\jre\bin\msvcp100.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Bitsquare\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
