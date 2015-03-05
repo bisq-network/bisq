@@ -20,7 +20,6 @@ $JAVA_HOME/bin/javapackager \
     -Bcategory=Finance \
     -Bemail=team@bitsquare.io \
     -BlicenseType=GPLv3 \
-    -BlicenseFile=LICENSE
     -Bicon=package/linux/icon.png \
     -native deb \
     -name Bitsquare \
