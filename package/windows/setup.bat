@@ -1,4 +1,4 @@
-﻿cd ..\..\
+cd ..\..\
 
 :: setup dirs
 mkdir gui\updatefx
