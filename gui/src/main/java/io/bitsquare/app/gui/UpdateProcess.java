@@ -54,7 +54,7 @@ public class UpdateProcess {
     // Edit version for updateFX
     private static final int BUILD_VERSION = 1;
     
-    private static final List<ECPoint> UPDATE_SIGNING_KEYS = Crypto.decode("025AA74490F66D195D42D49070D821C96A137496C070A924E5AAB0D6EE8549457E");
+    private static final List<ECPoint> UPDATE_SIGNING_KEYS = Crypto.decode("0296CFF54A8B1611499D4C1024E654140AFBB58C505FE4BB7C847B4F4A7C683DF6");
     private static final String UPDATES_BASE_URL = "http://bitsquare.io/updateFX/";
     private static final int UPDATE_SIGNING_THRESHOLD = 1;
     private static final Path ROOT_CLASS_PATH = UpdateFX.findCodePath(BitsquareAppMain.class);

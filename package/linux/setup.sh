@@ -9,6 +9,6 @@ mkdir gui/updatefx/site
 mkdir gui/deploy
 
 # Copy wallet file from main build
-java -jar ./updatefx/updatefx-app-1.2.jar --url=http://bitsquare.io/updateFX/ gui/updatefx
+# java -jar ./updatefx/updatefx-app-1.2.jar --url=http://bitsquare.io/updateFX/ gui/updatefx
 
 cd package/linux

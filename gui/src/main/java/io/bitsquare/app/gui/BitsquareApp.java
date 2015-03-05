@@ -17,7 +17,6 @@
 
 package io.bitsquare.app.gui;
 
-import io.bitsquare.BitsquareException;
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.gui.SystemTray;
 import io.bitsquare.gui.components.Popups;
@@ -34,10 +33,6 @@ import com.google.inject.Injector;
 
 import java.io.IOException;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import viewfx.view.View;
 import viewfx.view.ViewLoader;
 import viewfx.view.support.CachingViewLoader;
@@ -53,9 +48,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.core.env.Environment;
-import org.springframework.util.FileSystemUtils;
 
-import static io.bitsquare.app.BitsquareEnvironment.*;
+import static io.bitsquare.app.BitsquareEnvironment.APP_NAME_KEY;
 
 public class BitsquareApp extends Application {
     private static final Logger log = LoggerFactory.getLogger(BitsquareApp.class);
@@ -81,14 +75,6 @@ public class BitsquareApp extends Application {
 
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) ->
                 Popups.handleUncaughtExceptions(Throwables.getRootCause(throwable)));
-
-
-        // initialize the application data directory (if necessary)
-
-        initAppDir(
-                env.getRequiredProperty(APP_DATA_DIR_KEY),
-                env.getRequiredProperty(APP_DATA_DIR_CLEAN_KEY, boolean.class));
-
 
         // load and apply any stored settings
 
@@ -159,23 +145,5 @@ public class BitsquareApp extends Application {
     public void stop() {
         bitsquareAppModule.close(injector);
         System.exit(0);
-    }
-
-
-    private void initAppDir(String appDir, boolean doClean) {
-        Path dir = Paths.get(appDir);
-        if (Files.exists(dir)) {
-            if (!Files.isWritable(dir))
-                throw new BitsquareException("Application data directory '%s' is not writeable", dir);
-            if (doClean)
-                FileSystemUtils.deleteRecursively(dir.toFile());
-            else
-                return;
-        }
-        try {
-            Files.createDirectory(dir);
-        } catch (IOException ex) {
-            throw new BitsquareException(ex, "Application data directory '%s' could not be created", dir);
-        }
     }
 }

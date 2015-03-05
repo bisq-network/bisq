@@ -17,6 +17,7 @@
 
 package io.bitsquare.app.gui;
 
+import io.bitsquare.BitsquareException;
 import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.BitsquareExecutable;
 import io.bitsquare.btc.BitcoinNetwork;
@@ -25,6 +26,11 @@ import io.bitsquare.network.Node;
 import io.bitsquare.util.joptsimple.EnumValueConverter;
 
 import java.io.File;
+import java.io.IOException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +75,10 @@ public class BitsquareAppMain extends BitsquareExecutable {
         }
         BitsquareEnvironment bitsquareEnvironment = new BitsquareEnvironment(options);
         String updatesDirectory = bitsquareEnvironment.getProperty(BitsquareEnvironment.APP_DATA_DIR_KEY);
+        
+        // app dir need to be setup before UpdateFX bootstrap
+        initAppDir(updatesDirectory);
+
         UpdateFX.bootstrap(BitsquareAppMain.class, new File(updatesDirectory).toPath(), args);
     }
 
@@ -80,6 +90,21 @@ public class BitsquareAppMain extends BitsquareExecutable {
         Thread.currentThread().setContextClassLoader(BitsquareAppMain.class.getClassLoader());
 
         new BitsquareAppMain().execute(args);
+    }
+
+    private static void initAppDir(String appDir) {
+        Path dir = Paths.get(appDir);
+        if (Files.exists(dir)) {
+            if (!Files.isWritable(dir))
+                throw new BitsquareException("Application data directory '%s' is not writeable", dir);
+            else
+                return;
+        }
+        try {
+            Files.createDirectory(dir);
+        } catch (IOException ex) {
+            throw new BitsquareException(ex, "Application data directory '%s' could not be created", dir);
+        }
     }
 
     @Override
