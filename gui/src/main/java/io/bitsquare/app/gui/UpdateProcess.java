@@ -52,7 +52,7 @@ public class UpdateProcess {
     private static final Logger log = LoggerFactory.getLogger(UpdateProcess.class);
 
     // Edit version for updateFX
-    private static final int BUILD_VERSION = 2;
+    private static final int BUILD_VERSION = 1;
     
     private static final List<ECPoint> UPDATE_SIGNING_KEYS = Crypto.decode("025AA74490F66D195D42D49070D821C96A137496C070A924E5AAB0D6EE8549457E");
     private static final String UPDATES_BASE_URL = "http://bitsquare.io/updateFX/";

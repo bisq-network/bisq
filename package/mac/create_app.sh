@@ -10,7 +10,7 @@ buildVersion=$( sed -n 's/^.*final int BUILD_VERSION = //p' gui/src/main/java/io
 buildVersion="${buildVersion:0:${#buildVersion}-1}"
 fullVersion=$( sed -n 's/^.*final String VERSION = "//p' gui/src/main/java/io/bitsquare/app/gui/BitsquareAppMain.java )
 # remove trailing ";
-fullVersion="${fullVersion:0:${#fullVersion}-2}"
+fullVersion="${fullVersion:0:${#fullVersion}-2}".$buildVersion
 
 echo buildVersion = $buildVersion
 echo fullVersion = $fullVersion

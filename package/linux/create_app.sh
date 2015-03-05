@@ -4,21 +4,13 @@ cd ../../
 
 set -e
 
-# Extract the version number. buildVersion is used for ever increasing integer at UpdateFX. fullVersion contains major and minor version + buildVersion 
-buildVersion=$( sed -n 's/^.*final int BUILD_VERSION = //p' gui/src/main/java/io/bitsquare/app/gui/UpdateProcess.java )
-# remove trailing;
-buildVersion="${buildVersion:0:${#buildVersion}-1}"
-fullVersion=$( sed -n 's/^.*final String VERSION = "//p' gui/src/main/java/io/bitsquare/app/gui/BitsquareAppMain.java )
-# remove trailing ";
-fullVersion="${fullVersion:0:${#fullVersion}-2}"
-
-echo buildVersion = $buildVersion
-echo fullVersion = $fullVersion
+# Edit versions
+buildVersion=1
+fullVersion=0.1.1
 
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 cp gui/target/shaded.jar gui/updatefx/builds/$buildVersion.jar
 
-# edit url
 java -jar ./updatefx/updatefx-app-1.2.jar --url=http://bitsquare.io/updateFX/ gui/updatefx
 
 # Note: fakeroot needs to be installed on linux
@@ -42,3 +34,6 @@ $JAVA_HOME/bin/javapackager \
 cd package/linux
 
 # TODO: Figure out where LICENSE file goes so distros don't complain about "low quality" packages.
+# -BlicenseFile=LICENSE comlains about missing file (Bundler DEB Installer skipped because of a configuration problem: Specified license file is missing.  
+# Advice to fix: Make sure that references a file in the app resources, and that it is relative to the 
+# basedir.)
