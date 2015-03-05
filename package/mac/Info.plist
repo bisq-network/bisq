@@ -1,0 +1,56 @@
+<?xml version="1.0" ?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>LSMinimumSystemVersion</key>
+        <string>10.7.4</string>
+        <key>CFBundleDevelopmentRegion</key>
+        <string>English</string>
+        <key>CFBundleAllowMixedLocalizations</key>
+        <true/>
+        <key>CFBundleExecutable</key>
+        <string>Bitsquare</string>
+        <key>CFBundleIconFile</key>
+        <string>Bitsquare.icns</string>
+        <key>CFBundleIdentifier</key>
+        <string>io.bitsquare</string>
+        <key>CFBundleInfoDictionaryVersion</key>
+        <string>6.0</string>
+        <key>CFBundleName</key>
+        <string>Bitsquare</string>
+        <key>CFBundlePackageType</key>
+        <string>APPL</string>
+        <key>CFBundleShortVersionString</key>
+        <string>19</string>
+        <key>CFBundleSignature</key>
+        <string>????</string>
+        <!-- See http://developer.apple.com/library/mac/#releasenotes/General/SubmittingToMacAppStore/_index.html
+             for list of AppStore categories -->
+        <key>LSApplicationCategoryType</key>
+        <string>Unknown</string>
+        <key>CFBundleVersion</key>
+        <string>100</string>
+        <key>NSHumanReadableCopyright</key>
+        <string>Copyright (C) 2015</string>
+        <key>JVMRuntime</key>
+        <string>..</string>
+        <key>JVMMainClassName</key>
+        <string>io.bitsquare.app.gui.BitsquareAppMain</string>
+        <key>JVMAppClasspath</key>
+        <string></string>
+        <key>JVMMainJarName</key>
+        <string>1.jar</string>
+        <key>JVMPreferencesID</key>
+        <string>bitsquare</string>
+        <key>JVMOptions</key>
+        <array>
+
+        </array>
+        <key>JVMUserOptions</key>
+        <dict>
+
+        </dict>
+        <key>NSHighResolutionCapable</key>
+        <string>true</string>
+    </dict>
+</plist>

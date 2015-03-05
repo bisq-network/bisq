@@ -14,6 +14,7 @@ $JAVA_HOME/bin/javapackager \
     -Bcategory=Finance \
     -Bemail=team@bitsquare.io \
     -BlicenseType=GPLv3 \
+    -Bicon=icon.pngicon.png \
     -native deb \
     -name Bitsquare \
     -title Bitsquare \
@@ -22,7 +23,7 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles gui/updatefx/builds/processed/1.jar \
     -appclass io.bitsquare.app.gui.BitsquareAppMain \
     -outfile Bitsquare
-    
-# TODO icons:  -Bicon=client/icons/icon.png \
 
 cd package/linux
+
+# TODO: Figure out where LICENSE file goes so distros don't complain about "low quality" packages.

@@ -4,7 +4,7 @@
 AppId={{bitsquare}}
 AppName=Bitsquare
 AppVersion=0.1.1-SNAPSHOT
-AppVerName=Bitsquare 0.1.1-SNAPSHOT
+AppVerName=Bitsquare
 AppPublisher=Bitsquare
 AppComments=Bitsquare
 AppCopyright=Copyright (C) 2014
@@ -22,17 +22,18 @@ DefaultGroupName=Bitsquare
 ;Optional License
 LicenseFile=
 ;WinXP or above
-MinVersion=0,5.1 
-OutputBaseFilename=Bitsquare-0.1.1-SNAPSHOT
+MinVersion=0,5.1
+OutputBaseFilename=Bitsquare
 Compression=lzma
 SolidCompression=yes
 PrivilegesRequired=lowest
-SetupIconFile=Bitsquare.ico
+SetupIconFile=Bitsquare\Bitsquare.ico
 UninstallDisplayIcon={app}\Bitsquare.ico
 UninstallDisplayName=Bitsquare
 WizardImageStretch=No
-WizardSmallImageFile=Bitsquare-setup-icon.bmp   
+WizardSmallImageFile=Bitsquare-setup-icon.bmp
 ArchitecturesInstallIn64BitMode=x64
+ChangesAssociations=Yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -70,6 +71,6 @@ begin
 // Possible future improvements:
 //   if version less or same => just launch app
 //   if upgrade => check if same app is running and wait for it to exit
-//   Add pack200/unpack200 support? 
+//   Add pack200/unpack200 support?
   Result := True;
-end;  
+end;

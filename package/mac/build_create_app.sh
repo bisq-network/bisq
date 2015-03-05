@@ -10,8 +10,9 @@ java -jar ./updatefx/updatefx-app-1.2.jar --url=http://localhost:8000/ gui/updat
 $JAVA_HOME/bin/javapackager \
     -deploy \
     -BappVersion=0.1.1-SNAPSHOT \
-    -Bmac.CFBundleIdentifier=bitsquare \
+    -Bmac.CFBundleIdentifier=io.bitsquare \
     -Bmac.CFBundleName=Bitsquare \
+    -Bicon=BitsquareLICENSE.icns \
     -Bruntime="$JAVA_HOME/../../" \
     -native dmg \
     -name Bitsquare \
