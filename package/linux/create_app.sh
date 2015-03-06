@@ -4,7 +4,8 @@ cd ../../
 
 set -e
 
-# Edit version
+# Edit versions
+buildVersion=1
 fullVersion=0.1.1
 
 # Copy jar file from mac build (1.jar from processed folder) to linux box 
@@ -21,7 +22,7 @@ $JAVA_HOME/bin/javapackager \
     -title Bitsquare \
     -vendor Bitsquare \
     -outdir gui/deploy \
-    -srcfiles gui/updatefx/builds/processed/1.jar \
+    -srcfiles gui/updatefx/builds/processed/$buildVersion.jar \
     -appclass io.bitsquare.app.gui.BitsquareAppMain \
     -outfile Bitsquare
 

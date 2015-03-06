@@ -3,7 +3,7 @@ cd ..\..\
 :: edit iss file -> AppVersion=0.1.1
 
 :: Copy jar file from mac build (1.jar from processed folder) to windows
-:: edit -> -BappVersion=0.1.1
+:: edit -> -BappVersion=0.1.1 and -srcfiles
 
 :: 64 bit build
 :: Needs Inno Setup 5 or later (http://www.jrsoftware.org/isdl.php)
