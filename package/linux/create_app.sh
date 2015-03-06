@@ -4,15 +4,10 @@ cd ../../
 
 set -e
 
-# Edit versions
-buildVersion=1
+# Edit version
 fullVersion=0.1.1
 
-mvn clean package -DskipTests -Dmaven.javadoc.skip=true
-cp gui/target/shaded.jar gui/updatefx/builds/$buildVersion.jar
-
-java -jar ./updatefx/updatefx-app-1.2.jar --url=http://bitsquare.io/updateFX/ gui/updatefx
-
+# Copy jar file from mac build (1.jar from processed folder) to linux box 
 # Note: fakeroot needs to be installed on linux
 $JAVA_HOME/bin/javapackager \
     -deploy \
@@ -26,7 +21,7 @@ $JAVA_HOME/bin/javapackager \
     -title Bitsquare \
     -vendor Bitsquare \
     -outdir gui/deploy \
-    -srcfiles gui/updatefx/builds/processed/$buildVersion.jar \
+    -srcfiles gui/updatefx/builds/processed/1.jar \
     -appclass io.bitsquare.app.gui.BitsquareAppMain \
     -outfile Bitsquare
 
