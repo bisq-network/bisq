@@ -64,6 +64,7 @@ public class Offer implements Serializable {
     private final List<Locale> acceptedLanguageLocales;
     private final String bankAccountUID;
     private final List<Arbitrator> arbitrators;
+    
     private String offerFeePaymentTxID;
 
 

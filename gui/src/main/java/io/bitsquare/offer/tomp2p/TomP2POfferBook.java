@@ -115,9 +115,7 @@ public class TomP2POfferBook implements RemoteOfferBook {
         }
     }
 
-    //TODO remove is failing, probably due Coin or Fiat class (was working before)
-    // objects are identical but returned object form network might have some problem with serialisation?
-    public void removeOffer(Offer offer) {
+    public void removeOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler) {
         Number160 locationKey = Number160.createHash(offer.getCurrency().getCurrencyCode());
         try {
             final Data offerData = new Data(offer);
@@ -130,20 +128,22 @@ public class TomP2POfferBook implements RemoteOfferBook {
                     // We don't test futureRemove.isSuccess() as this API does not fit well to that operation, 
                     // it might change in future to something like foundAndRemoved and notFound
                     // See discussion at: https://github.com/tomp2p/TomP2P/issues/57#issuecomment-62069840
-
+                    log.trace("isRemoved? " + futureRemove.isRemoved());
                     executor.execute(() -> {
+                        resultHandler.handleResult();
                         offerRepositoryListeners.stream().forEach(listener -> {
                             try {
                                 Object offerDataObject = offerData.object();
                                 if (offerDataObject instanceof Offer) {
                                     log.trace("Remove offer from DHT was successful. Removed data: [key: " +
                                             locationKey + ", " +
-                                            "offer: " + (Offer) offerDataObject + "]");
+                                            "offer: " + offerDataObject + "]");
                                     listener.onOfferRemoved((Offer) offerDataObject);
                                 }
                             } catch (ClassNotFoundException | IOException e) {
                                 e.printStackTrace();
                                 log.error("Remove offer from DHT failed. Error: " + e.getMessage());
+                                faultHandler.handleFault("Remove offer from DHT failed. Error: " + e.getMessage(), e);
                             }
                         });
                         writeInvalidationTimestampToDHT(offer.getCurrency().getCurrencyCode());
@@ -153,11 +153,13 @@ public class TomP2POfferBook implements RemoteOfferBook {
                 @Override
                 public void exceptionCaught(Throwable t) throws Exception {
                     log.error("Remove offer from DHT failed. Error: " + t.getMessage());
+                    faultHandler.handleFault("Remove offer from DHT failed. Error: " + t.getMessage(), t);
                 }
             });
         } catch (IOException e) {
             e.printStackTrace();
             log.error("Remove offer from DHT failed. Error: " + e.getMessage());
+            faultHandler.handleFault("Remove offer from DHT failed. Error: " + e.getMessage(), e);
         }
     }
 

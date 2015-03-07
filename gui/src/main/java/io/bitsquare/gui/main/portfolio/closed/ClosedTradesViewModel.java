@@ -22,24 +22,24 @@ import io.bitsquare.gui.util.BSFormatter;
 import com.google.inject.Inject;
 
 import viewfx.model.ViewModel;
-import viewfx.model.support.ActivatableWithDelegate;
+import viewfx.model.support.ActivatableWithDataModel;
 
 import javafx.collections.ObservableList;
 
-class ClosedTradesViewModel extends ActivatableWithDelegate<ClosedTradesDataModel> implements ViewModel {
+class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataModel> implements ViewModel {
 
     private final BSFormatter formatter;
 
 
     @Inject
-    public ClosedTradesViewModel(ClosedTradesDataModel delegate, BSFormatter formatter) {
-        super(delegate);
+    public ClosedTradesViewModel(ClosedTradesDataModel dataModel, BSFormatter formatter) {
+        super(dataModel);
 
         this.formatter = formatter;
     }
 
     public ObservableList<ClosedTradesListItem> getList() {
-        return delegate.getList();
+        return dataModel.getList();
     }
 
     String getTradeId(ClosedTradesListItem item) {
@@ -59,7 +59,7 @@ class ClosedTradesViewModel extends ActivatableWithDelegate<ClosedTradesDataMode
     }
 
     String getDirectionLabel(ClosedTradesListItem item) {
-        return (item != null) ? formatter.formatDirection(delegate.getDirection(item.getTrade().getOffer())) : "";
+        return (item != null) ? formatter.formatDirection(dataModel.getDirection(item.getTrade().getOffer())) : "";
     }
 
     String getDate(ClosedTradesListItem item) {

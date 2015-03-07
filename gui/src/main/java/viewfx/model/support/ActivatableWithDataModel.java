@@ -19,15 +19,15 @@ package viewfx.model.support;
 
 import viewfx.model.Activatable;
 
-public abstract class ActivatableWithDelegate<D extends Activatable> extends WithDelegate<D> implements  Activatable {
+public abstract class ActivatableWithDataModel<D extends Activatable> extends WithDataModel<D> implements Activatable {
 
-    public ActivatableWithDelegate(D delegate) {
-        super(delegate);
+    public ActivatableWithDataModel(D dataModel) {
+        super(dataModel);
     }
 
     @Override
     public final void activate() {
-        delegate.activate();
+        dataModel.activate();
         this.doActivate();
     }
 
@@ -36,7 +36,7 @@ public abstract class ActivatableWithDelegate<D extends Activatable> extends Wit
 
     @Override
     public final void deactivate() {
-        delegate.deactivate();
+        dataModel.deactivate();
         this.doDeactivate();
     }
 

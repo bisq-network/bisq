@@ -31,7 +31,7 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.RemoteOfferBook;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.trade.protocol.createoffer.CreateOfferProtocol;
+import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocol;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocolListener;
@@ -49,6 +49,8 @@ import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
 import io.bitsquare.user.User;
 import io.bitsquare.util.task.ErrorMessageHandler;
+import io.bitsquare.util.task.FaultHandler;
+import io.bitsquare.util.task.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -172,41 +174,34 @@ public class TradeManager {
                 accountSettings.getAcceptedCountries(),
                 accountSettings.getAcceptedLanguageLocales());
 
-        CreateOfferProtocol createOfferCoordinator = new CreateOfferProtocol(
+        PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 offer,
                 walletService,
-                (transactionId) -> {
-                    try {
-                        offer.setOfferFeePaymentTxID(transactionId.getHashAsString());
-                        addOffer(offer);
-                        resultHandler.onResult(transactionId);
-                    } catch (Exception e) {
-                        errorMessageHandler.handleErrorMessage("Could not save offer. Reason: " +
-                                (e.getCause() != null ? e.getCause().getMessage() : e.toString()));
-                    }
+                remoteOfferBook,
+                (transaction) -> {
+                    saveOffer(offer);
+                    resultHandler.onResult(transaction);
                 },
-                (message, throwable) -> errorMessageHandler.handleErrorMessage(message),
-                remoteOfferBook);
+                (message, throwable) -> errorMessageHandler.handleErrorMessage(message)
+        );
 
-        createOfferCoordinator.createOffer();
+        placeOfferProtocol.placeOffer();
     }
 
-    private void addOffer(Offer offer) {
-        if (offers.containsKey(offer.getId()))
-            log.error("An offer with the id " + offer.getId() + " already exists. ");
-
+    private void saveOffer(Offer offer) {
         offers.put(offer.getId(), offer);
         persistOffers();
     }
 
-    public void removeOffer(Offer offer) {
-        if (!offers.containsKey(offer.getId()))
+    public void requestRemoveOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler) {
+        if (offers.containsKey(offer.getId()))
+            offers.remove(offer.getId());
+        else
             log.error("offers does not contain the offer with the ID " + offer.getId());
 
-        offers.remove(offer.getId());
         persistOffers();
 
-        remoteOfferBook.removeOffer(offer);
+        remoteOfferBook.removeOffer(offer, resultHandler, faultHandler);
     }
 
 
@@ -261,7 +256,7 @@ public class TradeManager {
                         public void onOfferAccepted(Offer offer) {
                             trade.setState(Trade.State.OFFERER_ACCEPTED);
                             persistPendingTrades();
-                            removeOffer(offer);
+                            requestRemoveOffer(offer);
                         }
 
                         @Override

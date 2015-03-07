@@ -22,30 +22,30 @@ import io.bitsquare.gui.util.BSFormatter;
 import com.google.inject.Inject;
 
 import viewfx.model.ViewModel;
-import viewfx.model.support.ActivatableWithDelegate;
+import viewfx.model.support.ActivatableWithDataModel;
 
 import javafx.collections.ObservableList;
 
-class OffersViewModel extends ActivatableWithDelegate<OffersDataModel> implements ViewModel {
+class OffersViewModel extends ActivatableWithDataModel<OffersDataModel> implements ViewModel {
 
     private final BSFormatter formatter;
 
 
     @Inject
-    public OffersViewModel(OffersDataModel delegate, BSFormatter formatter) {
-        super(delegate);
+    public OffersViewModel(OffersDataModel dataModel, BSFormatter formatter) {
+        super(dataModel);
 
         this.formatter = formatter;
     }
 
 
     void removeOffer(OfferListItem item) {
-        delegate.removeOffer(item);
+        dataModel.removeOffer(item);
     }
 
 
     public ObservableList<OfferListItem> getList() {
-        return delegate.getList();
+        return dataModel.getList();
     }
 
     String getTradeId(OfferListItem item) {
@@ -65,7 +65,7 @@ class OffersViewModel extends ActivatableWithDelegate<OffersDataModel> implement
     }
 
     String getDirectionLabel(OfferListItem item) {
-        return (item != null) ? formatter.formatDirection(delegate.getDirection(item.getOffer())) : "";
+        return (item != null) ? formatter.formatDirection(dataModel.getDirection(item.getOffer())) : "";
     }
 
     String getDate(OfferListItem item) {

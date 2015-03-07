@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.createoffer;
+package io.bitsquare.trade.protocol.placeoffer;
 
 import io.bitsquare.arbitrator.Arbitrator;
 import io.bitsquare.bank.BankAccountType;
@@ -76,8 +76,8 @@ import static org.junit.Assert.*;
  * 4. Start BootstrapNodeMain at localhost with program args: --node.name localhost
  */
 @Ignore
-public class CreateOfferProtocolTest {
-    private static final Logger log = LoggerFactory.getLogger(CreateOfferProtocolTest.class);
+public class PlaceOfferProtocolTest {
+    private static final Logger log = LoggerFactory.getLogger(PlaceOfferProtocolTest.class);
 
     private WalletService walletService;
     private TomP2PMessageService messageService;
@@ -201,9 +201,9 @@ public class CreateOfferProtocolTest {
                 throwable.printStackTrace();
                 fail(throwable.getMessage());
             };
-            CreateOfferProtocol createOfferCoordinator = getCreateOfferCoordinator(offer);
-            Transaction transaction = createOfferCoordinator.createOfferFeeTx();
-            createOfferCoordinator.broadcastCreateOfferFeeTx(transaction, resultHandler, faultHandler);
+            PlaceOfferProtocol placeOfferProtocol = getCreateOfferCoordinator(offer);
+            Transaction transaction = placeOfferProtocol.createOfferFeeTx();
+            placeOfferProtocol.broadcastCreateOfferFeeTx(transaction, resultHandler, faultHandler);
             log.info("Balance post = " + walletService.getBalanceForAddress(address));
 
         } catch (Exception e) {
@@ -246,9 +246,9 @@ public class CreateOfferProtocolTest {
                 countDownLatch.countDown();
                 countDownLatch.countDown();
             };
-            CreateOfferProtocol createOfferCoordinator = getCreateOfferCoordinator(offer, resultHandler, faultHandler);
-            Transaction transaction = createOfferCoordinator.createOfferFeeTx();
-            createOfferCoordinator.addOffer(transaction);
+            PlaceOfferProtocol placeOfferProtocol = getPlaceOfferProtocol(offer, resultHandler, faultHandler);
+            Transaction transaction = placeOfferProtocol.createOfferFeeTx();
+            placeOfferProtocol.addOffer(transaction);
             countDownLatch.await();
             log.info("Finished");
         } catch (Exception e) {
@@ -260,7 +260,7 @@ public class CreateOfferProtocolTest {
     }
 
     @Test
-    public void createOfferTest() throws InterruptedException {
+    public void placeOfferTest() throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         TransactionResultHandler resultHandler = transaction -> {
             assertNotNull(transaction);
@@ -273,29 +273,29 @@ public class CreateOfferProtocolTest {
             countDownLatch.countDown();
             countDownLatch.countDown();
         };
-        CreateOfferProtocol createOfferCoordinator = getCreateOfferCoordinator(getOffer(), resultHandler, faultHandler);
-        createOfferCoordinator.createOffer();
+        PlaceOfferProtocol placeOfferProtocol = getPlaceOfferProtocol(getOffer(), resultHandler, faultHandler);
+        placeOfferProtocol.placeOffer();
         countDownLatch.await();
     }
 
-    
-    private CreateOfferProtocol getCreateOfferCoordinator(Offer offer) throws InterruptedException {
+
+    private PlaceOfferProtocol getCreateOfferCoordinator(Offer offer) throws InterruptedException {
         TransactionResultHandler resultHandler = transaction -> log.debug("result transaction=" + transaction.toString());
         FaultHandler faultHandler = (message, throwable) -> {
             log.error(message);
             throwable.printStackTrace();
             log.info("Balance = " + walletService.getBalanceForAddress(walletService.getAddressInfoByTradeID(OFFER_ID).getAddress()));
         };
-        return getCreateOfferCoordinator(offer, resultHandler, faultHandler);
+        return getPlaceOfferProtocol(offer, resultHandler, faultHandler);
     }
 
-    private CreateOfferProtocol getCreateOfferCoordinator(Offer offer, TransactionResultHandler resultHandler, FaultHandler faultHandler) throws
+    private PlaceOfferProtocol getPlaceOfferProtocol(Offer offer, TransactionResultHandler resultHandler, FaultHandler faultHandler) throws
             InterruptedException {
-        return new CreateOfferProtocol(offer,
+        return new PlaceOfferProtocol(offer,
                 walletService,
+                remoteOfferBook,
                 resultHandler,
-                faultHandler,
-                remoteOfferBook);
+                faultHandler);
     }
 
     private Offer getOffer() {

@@ -30,7 +30,7 @@ import com.google.inject.Inject;
 import java.util.Currency;
 
 import viewfx.model.ViewModel;
-import viewfx.model.support.ActivatableWithDelegate;
+import viewfx.model.support.ActivatableWithDataModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -42,7 +42,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.util.StringConverter;
 
-class FiatAccountViewModel extends ActivatableWithDelegate<FiatAccountDataModel> implements ViewModel {
+class FiatAccountViewModel extends ActivatableWithDataModel<FiatAccountDataModel> implements ViewModel {
 
     private final BankAccountNumberValidator bankAccountNumberValidator;
 
@@ -61,26 +61,26 @@ class FiatAccountViewModel extends ActivatableWithDelegate<FiatAccountDataModel>
 
 
     @Inject
-    public FiatAccountViewModel(FiatAccountDataModel delegate, BankAccountNumberValidator bankAccountNumberValidator) {
-        super(delegate);
+    public FiatAccountViewModel(FiatAccountDataModel dataModel, BankAccountNumberValidator bankAccountNumberValidator) {
+        super(dataModel);
         this.bankAccountNumberValidator = bankAccountNumberValidator;
 
         // input
-        title.bindBidirectional(delegate.title);
-        holderName.bindBidirectional(delegate.holderName);
-        primaryID.bindBidirectional(delegate.primaryID);
-        secondaryID.bindBidirectional(delegate.secondaryID);
-        type.bindBidirectional(delegate.type);
-        country.bindBidirectional(delegate.country);
-        currency.bindBidirectional(delegate.currency);
+        title.bindBidirectional(dataModel.title);
+        holderName.bindBidirectional(dataModel.holderName);
+        primaryID.bindBidirectional(dataModel.primaryID);
+        secondaryID.bindBidirectional(dataModel.secondaryID);
+        type.bindBidirectional(dataModel.type);
+        country.bindBidirectional(dataModel.country);
+        currency.bindBidirectional(dataModel.currency);
 
-        primaryIDPrompt.bind(delegate.primaryIDPrompt);
-        secondaryIDPrompt.bind(delegate.secondaryIDPrompt);
+        primaryIDPrompt.bind(dataModel.primaryIDPrompt);
+        secondaryIDPrompt.bind(dataModel.secondaryIDPrompt);
 
         selectionPrompt.set("No bank account available");
         selectionDisable.set(true);
 
-        delegate.title.addListener((ov, oldValue, newValue) -> validateInput());
+        dataModel.title.addListener((ov, oldValue, newValue) -> validateInput());
         holderName.addListener((ov, oldValue, newValue) -> validateInput());
         primaryID.addListener((ov, oldValue, newValue) -> validateInput());
         secondaryID.addListener((ov, oldValue, newValue) -> validateInput());
@@ -88,7 +88,7 @@ class FiatAccountViewModel extends ActivatableWithDelegate<FiatAccountDataModel>
 
     @Override
     public void doActivate() {
-        delegate.allBankAccounts.addListener((ListChangeListener<BankAccount>) change -> applyAllBankAccounts());
+        dataModel.allBankAccounts.addListener((ListChangeListener<BankAccount>) change -> applyAllBankAccounts());
         applyAllBankAccounts();
     }
 
@@ -96,21 +96,21 @@ class FiatAccountViewModel extends ActivatableWithDelegate<FiatAccountDataModel>
     InputValidator.ValidationResult requestSaveBankAccount() {
         InputValidator.ValidationResult result = validateInput();
         if (result.isValid) {
-            delegate.saveBankAccount();
+            dataModel.saveBankAccount();
         }
         return result;
     }
 
     void removeBankAccount() {
-        delegate.removeBankAccount();
+        dataModel.removeBankAccount();
     }
 
     void addCountryToAcceptedCountriesList() {
-        delegate.addCountryToAcceptedCountriesList();
+        dataModel.addCountryToAcceptedCountriesList();
     }
 
     void selectBankAccount(BankAccount bankAccount) {
-        delegate.selectBankAccount(bankAccount);
+        dataModel.selectBankAccount(bankAccount);
     }
 
 
@@ -188,27 +188,27 @@ class FiatAccountViewModel extends ActivatableWithDelegate<FiatAccountDataModel>
 
 
     ObservableList<BankAccountType> getAllTypes() {
-        return delegate.allTypes;
+        return dataModel.allTypes;
     }
 
     ObservableList<BankAccount> getAllBankAccounts() {
-        return delegate.allBankAccounts;
+        return dataModel.allBankAccounts;
     }
 
     ObservableList<Currency> getAllCurrencies() {
-        return delegate.allCurrencies;
+        return dataModel.allCurrencies;
     }
 
     ObservableList<Region> getAllRegions() {
-        return delegate.allRegions;
+        return dataModel.allRegions;
     }
 
     BooleanProperty getCountryNotInAcceptedCountriesList() {
-        return delegate.countryNotInAcceptedCountriesList;
+        return dataModel.countryNotInAcceptedCountriesList;
     }
 
     ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
-        return delegate.getAllCountriesFor(selectedRegion);
+        return dataModel.getAllCountriesFor(selectedRegion);
     }
 
     BankAccountNumberValidator getBankAccountNumberValidator() {
@@ -217,23 +217,23 @@ class FiatAccountViewModel extends ActivatableWithDelegate<FiatAccountDataModel>
 
 
     void setType(BankAccountType type) {
-        delegate.setType(type);
+        dataModel.setType(type);
         validateInput();
     }
 
     void setCountry(Country country) {
-        delegate.setCountry(country);
+        dataModel.setCountry(country);
         validateInput();
     }
 
     void setCurrency(Currency currency) {
-        delegate.setCurrency(currency);
+        dataModel.setCurrency(currency);
         validateInput();
     }
 
 
     private void applyAllBankAccounts() {
-        if (delegate.allBankAccounts.isEmpty()) {
+        if (dataModel.allBankAccounts.isEmpty()) {
             selectionPrompt.set("No bank account available");
             selectionDisable.set(true);
         }
@@ -244,23 +244,23 @@ class FiatAccountViewModel extends ActivatableWithDelegate<FiatAccountDataModel>
     }
 
     private InputValidator.ValidationResult validateInput() {
-        InputValidator.ValidationResult result = bankAccountNumberValidator.validate(delegate.title.get());
+        InputValidator.ValidationResult result = bankAccountNumberValidator.validate(dataModel.title.get());
         if (result.isValid) {
-            result = bankAccountNumberValidator.validate(delegate.holderName.get());
+            result = bankAccountNumberValidator.validate(dataModel.holderName.get());
             if (result.isValid) {
-                result = bankAccountNumberValidator.validate(delegate.primaryID.get());
+                result = bankAccountNumberValidator.validate(dataModel.primaryID.get());
                 if (result.isValid) {
-                    result = bankAccountNumberValidator.validate(delegate.secondaryID.get());
+                    result = bankAccountNumberValidator.validate(dataModel.secondaryID.get());
                     if (result.isValid) {
-                        if (delegate.currency.get() == null)
+                        if (dataModel.currency.get() == null)
                             result = new InputValidator.ValidationResult(false,
                                     "You have not selected a currency");
                         if (result.isValid) {
-                            if (delegate.country.get() == null)
+                            if (dataModel.country.get() == null)
                                 result = new InputValidator.ValidationResult(false,
                                         "You have not selected a country of the payments account");
                             if (result.isValid) {
-                                if (delegate.type.get() == null)
+                                if (dataModel.type.get() == null)
                                     result = new InputValidator.ValidationResult(false,
                                             "You have not selected a payments method");
                             }

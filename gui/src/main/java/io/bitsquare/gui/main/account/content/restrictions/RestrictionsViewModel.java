@@ -26,20 +26,20 @@ import com.google.inject.Inject;
 import java.util.Locale;
 
 import viewfx.model.ViewModel;
-import viewfx.model.support.ActivatableWithDelegate;
+import viewfx.model.support.ActivatableWithDataModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 
-class RestrictionsViewModel extends ActivatableWithDelegate<RestrictionsDataModel> implements ViewModel {
+class RestrictionsViewModel extends ActivatableWithDataModel<RestrictionsDataModel> implements ViewModel {
 
     final BooleanProperty doneButtonDisable = new SimpleBooleanProperty(true);
 
 
     @Inject
-    public RestrictionsViewModel(RestrictionsDataModel delegate) {
-        super(delegate);
+    public RestrictionsViewModel(RestrictionsDataModel dataModel) {
+        super(dataModel);
     }
 
 
@@ -49,70 +49,70 @@ class RestrictionsViewModel extends ActivatableWithDelegate<RestrictionsDataMode
     }
 
     void addLanguage(Locale locale) {
-        delegate.addLanguage(locale);
+        dataModel.addLanguage(locale);
         updateDoneButtonDisableState();
     }
 
     void removeLanguage(Locale locale) {
-        delegate.removeLanguage(locale);
+        dataModel.removeLanguage(locale);
         updateDoneButtonDisableState();
     }
 
     void addCountry(Country country) {
-        delegate.addCountry(country);
+        dataModel.addCountry(country);
         updateDoneButtonDisableState();
     }
 
     void removeCountry(Country country) {
-        delegate.removeCountry(country);
+        dataModel.removeCountry(country);
         updateDoneButtonDisableState();
     }
 
     void removeArbitrator(Arbitrator arbitrator) {
-        delegate.removeArbitrator(arbitrator);
+        dataModel.removeArbitrator(arbitrator);
         updateDoneButtonDisableState();
     }
 
     void updateArbitratorList() {
-        delegate.updateArbitratorList();
+        dataModel.updateArbitratorList();
         updateDoneButtonDisableState();
     }
 
 
     ObservableList<Country> getListWithAllEuroCountries() {
-        return delegate.getListWithAllEuroCountries();
+        return dataModel.getListWithAllEuroCountries();
     }
 
     ObservableList<Country> getAllCountriesFor(Region selectedRegion) {
-        return delegate.getAllCountriesFor(selectedRegion);
+        return dataModel.getAllCountriesFor(selectedRegion);
     }
 
     ObservableList<Locale> getLanguageList() {
-        return delegate.languageList;
+        return dataModel.languageList;
     }
 
     ObservableList<Region> getAllRegions() {
-        return delegate.allRegions;
+        return dataModel.allRegions;
     }
 
     ObservableList<Locale> getAllLanguages() {
-        return delegate.allLanguages;
+        return dataModel.allLanguages;
     }
 
     ObservableList<Country> getCountryList() {
-        return delegate.countryList;
+        return dataModel.countryList;
     }
 
     ObservableList<Arbitrator> getArbitratorList() {
-        return delegate.arbitratorList;
+        return dataModel.arbitratorList;
     }
 
 
     //TODO Revert size() > -1 to 0(2 later). For mock testing disabled arbitratorList test
     private void updateDoneButtonDisableState() {
-        boolean isValid = delegate.languageList != null && delegate.languageList.size() > 0 &&
-                delegate.countryList != null && delegate.countryList.size() > 0 &&
-                delegate.arbitratorList != null && delegate.arbitratorList.size() > -1;
+        boolean isValid = dataModel.languageList != null && dataModel.languageList.size() > 0 &&
+                dataModel.countryList != null && dataModel.countryList.size() > 0 &&
+                dataModel.arbitratorList != null && dataModel.arbitratorList.size() > -1;
         doneButtonDisable.set(!isValid);
     }
 

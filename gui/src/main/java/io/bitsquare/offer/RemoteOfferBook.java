@@ -33,7 +33,7 @@ public interface RemoteOfferBook {
 
     void addOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler);
 
-    void removeOffer(Offer offer);
+    void removeOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler);
 
     void addListener(Listener listener);
 

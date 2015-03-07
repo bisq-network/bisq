@@ -27,7 +27,7 @@ import com.google.inject.Inject;
 import java.util.Currency;
 
 import viewfx.model.ViewModel;
-import viewfx.model.support.ActivatableWithDelegate;
+import viewfx.model.support.ActivatableWithDataModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -38,7 +38,7 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.util.StringConverter;
 
-class IrcAccountViewModel extends ActivatableWithDelegate<IrcAccountDataModel> implements ViewModel {
+class IrcAccountViewModel extends ActivatableWithDataModel<IrcAccountDataModel> implements ViewModel {
 
     private final InputValidator nickNameValidator;
 
@@ -49,23 +49,23 @@ class IrcAccountViewModel extends ActivatableWithDelegate<IrcAccountDataModel> i
 
 
     @Inject
-    public IrcAccountViewModel(IrcAccountDataModel delegate, BankAccountNumberValidator nickNameValidator) {
-        super(delegate);
+    public IrcAccountViewModel(IrcAccountDataModel dataModel, BankAccountNumberValidator nickNameValidator) {
+        super(dataModel);
         this.nickNameValidator = nickNameValidator;
 
         // input
-        ircNickName.bindBidirectional(delegate.nickName);
-        type.bindBidirectional(delegate.type);
-        currency.bindBidirectional(delegate.currency);
+        ircNickName.bindBidirectional(dataModel.nickName);
+        type.bindBidirectional(dataModel.type);
+        currency.bindBidirectional(dataModel.currency);
 
-        delegate.nickName.addListener((ov, oldValue, newValue) -> validateInput());
+        dataModel.nickName.addListener((ov, oldValue, newValue) -> validateInput());
     }
 
 
     InputValidator.ValidationResult requestSaveBankAccount() {
         InputValidator.ValidationResult result = validateInput();
         if (result.isValid) {
-            delegate.saveBankAccount();
+            dataModel.saveBankAccount();
         }
         return result;
     }
@@ -104,11 +104,11 @@ class IrcAccountViewModel extends ActivatableWithDelegate<IrcAccountDataModel> i
 
 
     ObservableList<BankAccountType> getAllTypes() {
-        return delegate.allTypes;
+        return dataModel.allTypes;
     }
 
     ObservableList<Currency> getAllCurrencies() {
-        return delegate.allCurrencies;
+        return dataModel.allCurrencies;
     }
 
     InputValidator getNickNameValidator() {
@@ -117,24 +117,24 @@ class IrcAccountViewModel extends ActivatableWithDelegate<IrcAccountDataModel> i
 
 
     void setType(BankAccountType type) {
-        delegate.setType(type);
+        dataModel.setType(type);
         validateInput();
     }
 
     void setCurrency(Currency currency) {
-        delegate.setCurrency(currency);
+        dataModel.setCurrency(currency);
         validateInput();
     }
 
 
 
     private InputValidator.ValidationResult validateInput() {
-        InputValidator.ValidationResult result = nickNameValidator.validate(delegate.nickName.get());
-        if (delegate.currency.get() == null)
+        InputValidator.ValidationResult result = nickNameValidator.validate(dataModel.nickName.get());
+        if (dataModel.currency.get() == null)
             result = new InputValidator.ValidationResult(false,
                     "You have not selected a currency");
         if (result.isValid) {
-            if (delegate.type.get() == null)
+            if (dataModel.type.get() == null)
                 result = new InputValidator.ValidationResult(false,
                         "You have not selected a payments method");
         }

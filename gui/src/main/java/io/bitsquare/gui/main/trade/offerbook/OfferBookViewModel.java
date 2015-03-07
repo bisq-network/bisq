@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.trade.offerbook;
 
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.OptionalBtcValidator;
@@ -31,13 +32,17 @@ import org.bitcoinj.utils.Fiat;
 import com.google.inject.Inject;
 
 import viewfx.model.ViewModel;
-import viewfx.model.support.ActivatableWithDelegate;
+import viewfx.model.support.ActivatableWithDataModel;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.transformation.SortedList;
 
-class OfferBookViewModel extends ActivatableWithDelegate<OfferBookDataModel> implements ViewModel {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> implements ViewModel {
+    private static final Logger log = LoggerFactory.getLogger(OfferBookViewModel.class);
 
     private final OptionalBtcValidator optionalBtcValidator;
     private final BSFormatter formatter;
@@ -52,17 +57,17 @@ class OfferBookViewModel extends ActivatableWithDelegate<OfferBookDataModel> imp
 
 
     @Inject
-    public OfferBookViewModel(OfferBookDataModel delegate, OptionalFiatValidator optionalFiatValidator,
+    public OfferBookViewModel(OfferBookDataModel dataModel, OptionalFiatValidator optionalFiatValidator,
                               OptionalBtcValidator optionalBtcValidator, BSFormatter formatter) {
-        super(delegate);
+        super(dataModel);
 
         this.optionalFiatValidator = optionalFiatValidator;
         this.optionalBtcValidator = optionalBtcValidator;
         this.formatter = formatter;
 
-        btcCode.bind(delegate.btcCode);
-        fiatCode.bind(delegate.fiatCode);
-        restrictionsInfo.bind(delegate.restrictionsInfo);
+        btcCode.bind(dataModel.btcCode);
+        fiatCode.bind(dataModel.fiatCode);
+        restrictionsInfo.bind(dataModel.restrictionsInfo);
 
         // Bidirectional bindings are used for all input fields: amount, price and volume
         // We do volume/amount calculation during input, so user has immediate feedback
@@ -70,7 +75,7 @@ class OfferBookViewModel extends ActivatableWithDelegate<OfferBookDataModel> imp
             if (isBtcInputValid(newValue).isValid) {
                 setAmountToModel();
                 setPriceToModel();
-                delegate.calculateVolume();
+                dataModel.calculateVolume();
             }
         });
 
@@ -78,7 +83,7 @@ class OfferBookViewModel extends ActivatableWithDelegate<OfferBookDataModel> imp
             if (isFiatInputValid(newValue).isValid) {
                 setAmountToModel();
                 setPriceToModel();
-                delegate.calculateVolume();
+                dataModel.calculateVolume();
             }
         });
 
@@ -86,42 +91,51 @@ class OfferBookViewModel extends ActivatableWithDelegate<OfferBookDataModel> imp
             if (isFiatInputValid(newValue).isValid) {
                 setPriceToModel();
                 setVolumeToModel();
-                delegate.calculateAmount();
+                dataModel.calculateAmount();
             }
         });
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
-        delegate.amountAsCoinProperty().addListener((ov, oldValue, newValue) -> amount.set(formatter.formatCoin
+        dataModel.amountAsCoinProperty().addListener((ov, oldValue, newValue) -> amount.set(formatter.formatCoin
                 (newValue)));
-        delegate.priceAsFiatProperty().addListener((ov, oldValue, newValue) -> price.set(formatter.formatFiat(newValue)));
-        delegate.volumeAsFiatProperty().addListener((ov, oldValue, newValue) -> volume.set(formatter.formatFiat
+        dataModel.priceAsFiatProperty().addListener((ov, oldValue, newValue) -> price.set(formatter.formatFiat(newValue)));
+        dataModel.volumeAsFiatProperty().addListener((ov, oldValue, newValue) -> volume.set(formatter.formatFiat
                 (newValue)));
     }
 
     void removeOffer(Offer offer) {
-        delegate.removeOffer(offer);
+        dataModel.removeOffer(offer,
+                () -> {
+                    // visual feedback?
+                    log.debug("remove was successful");
+                },
+                (message, throwable) -> {
+                    log.error(message);
+                    Popups.openWarningPopup("Remove offer failed", message);
+                }
+        );
     }
 
     boolean isTradable(Offer offer) {
-        return delegate.isTradable(offer);
+        return dataModel.isTradable(offer);
     }
 
 
     void setDirection(Direction direction) {
-        delegate.setDirection(direction);
+        dataModel.setDirection(direction);
     }
 
 
     SortedList<OfferBookListItem> getOfferList() {
-        return delegate.getOfferList();
+        return dataModel.getOfferList();
     }
 
     boolean isRegistered() {
-        return delegate.isRegistered();
+        return dataModel.isRegistered();
     }
 
     boolean isMyOffer(Offer offer) {
-        return delegate.isMyOffer(offer);
+        return dataModel.isMyOffer(offer);
     }
 
     String getAmount(OfferBookListItem item) {
@@ -147,15 +161,15 @@ class OfferBookViewModel extends ActivatableWithDelegate<OfferBookDataModel> imp
     }
 
     Direction getDirection() {
-        return delegate.getDirection();
+        return dataModel.getDirection();
     }
 
     Coin getAmountAsCoin() {
-        return delegate.getAmountAsCoin();
+        return dataModel.getAmountAsCoin();
     }
 
     Fiat getPriceAsCoin() {
-        return delegate.getPriceAsFiat();
+        return dataModel.getPriceAsFiat();
     }
 
     private InputValidator.ValidationResult isBtcInputValid(String input) {
@@ -167,15 +181,15 @@ class OfferBookViewModel extends ActivatableWithDelegate<OfferBookDataModel> imp
     }
 
     private void setAmountToModel() {
-        delegate.setAmount(formatter.parseToCoinWith4Decimals(amount.get()));
+        dataModel.setAmount(formatter.parseToCoinWith4Decimals(amount.get()));
     }
 
     private void setPriceToModel() {
-        delegate.setPrice(formatter.parseToFiatWith2Decimals(price.get()));
+        dataModel.setPrice(formatter.parseToFiatWith2Decimals(price.get()));
     }
 
     private void setVolumeToModel() {
-        delegate.setVolume(formatter.parseToFiatWith2Decimals(volume.get()));
+        dataModel.setVolume(formatter.parseToFiatWith2Decimals(volume.get()));
     }
 
 }

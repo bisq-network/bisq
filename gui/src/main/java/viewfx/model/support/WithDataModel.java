@@ -19,11 +19,11 @@ package viewfx.model.support;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public abstract class WithDelegate<D> {
+public abstract class WithDataModel<D> {
 
-    protected final D delegate;
+    protected final D dataModel;
 
-    protected WithDelegate(D delegate) {
-        this.delegate = checkNotNull(delegate, "Delegate object must not be null");
+    protected WithDataModel(D dataModel) {
+        this.dataModel = checkNotNull(dataModel, "Delegate object must not be null");
     }
 }

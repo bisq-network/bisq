@@ -26,6 +26,8 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.settings.Preferences;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
+import io.bitsquare.util.task.FaultHandler;
+import io.bitsquare.util.task.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
@@ -114,8 +116,8 @@ class OfferBookDataModel implements Activatable, DataModel {
         btcCode.unbind();
     }
 
-    void removeOffer(Offer offer) {
-        tradeManager.removeOffer(offer);
+    void removeOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler) {
+        tradeManager.requestRemoveOffer(offer, resultHandler, faultHandler);
     }
 
     void calculateVolume() {

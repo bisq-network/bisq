@@ -27,11 +27,11 @@ import viewfx.view.ViewLoader;
 public class CachingViewLoader implements ViewLoader {
 
     private final HashMap<Object, View> cache = new HashMap<>();
-    private final ViewLoader delegate;
+    private final ViewLoader viewLoader;
 
     @Inject
-    public CachingViewLoader(ViewLoader delegate) {
-        this.delegate = delegate;
+    public CachingViewLoader(ViewLoader viewLoader) {
+        this.viewLoader = viewLoader;
     }
 
     @Override
@@ -39,7 +39,7 @@ public class CachingViewLoader implements ViewLoader {
         if (cache.containsKey(viewClass))
             return cache.get(viewClass);
 
-        View view = delegate.load(viewClass);
+        View view = viewLoader.load(viewClass);
         cache.put(viewClass, view);
         return view;
     }

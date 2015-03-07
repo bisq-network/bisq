@@ -20,33 +20,33 @@ package io.bitsquare.gui.main.settings.application;
 import com.google.inject.Inject;
 
 import viewfx.model.ViewModel;
-import viewfx.model.support.ActivatableWithDelegate;
+import viewfx.model.support.ActivatableWithDataModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 
-class PreferencesViewModel extends ActivatableWithDelegate<PreferencesDataModel> implements ViewModel {
+class PreferencesViewModel extends ActivatableWithDataModel<PreferencesDataModel> implements ViewModel {
 
     @Inject
-    public PreferencesViewModel(PreferencesDataModel delegate) {
-        super(delegate);
+    public PreferencesViewModel(PreferencesDataModel dataModel) {
+        super(dataModel);
     }
 
     public ObservableList<String> getBtcDenominationItems() {
-        return delegate.btcDenominations;
+        return dataModel.btcDenominations;
     }
 
     BooleanProperty useAnimations() {
-        return delegate.useAnimations;
+        return dataModel.useAnimations;
     }
 
     BooleanProperty useEffects() {
-        return delegate.useEffects;
+        return dataModel.useEffects;
     }
 
     StringProperty btcDenomination() {
-        return delegate.btcDenomination;
+        return dataModel.btcDenomination;
     }
 
 

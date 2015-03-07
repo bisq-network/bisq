@@ -27,7 +27,7 @@ import org.bitcoinj.core.Coin;
 import com.google.inject.Inject;
 
 import viewfx.model.ViewModel;
-import viewfx.model.support.WithDelegate;
+import viewfx.model.support.WithDataModel;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -37,7 +37,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 
-class RegistrationViewModel extends WithDelegate<RegistrationDataModel> implements ViewModel {
+class RegistrationViewModel extends WithDataModel<RegistrationDataModel> implements ViewModel {
 
     final BooleanProperty isPayButtonDisabled = new SimpleBooleanProperty(true);
     final StringProperty requestPlaceOfferErrorMessage = new SimpleStringProperty();
@@ -50,27 +50,27 @@ class RegistrationViewModel extends WithDelegate<RegistrationDataModel> implemen
 
 
     @Inject
-    public RegistrationViewModel(RegistrationDataModel delegate, BSFormatter formatter) {
-        super(delegate);
+    public RegistrationViewModel(RegistrationDataModel dataModel, BSFormatter formatter) {
+        super(dataModel);
         this.formatter = formatter;
 
-        if (delegate.getAddressEntry() != null) {
-            address.set(delegate.getAddressEntry().getAddress());
+        if (dataModel.getAddressEntry() != null) {
+            address.set(dataModel.getAddressEntry().getAddress());
         }
 
-        delegate.isWalletFunded.addListener((ov, oldValue, newValue) -> {
+        dataModel.isWalletFunded.addListener((ov, oldValue, newValue) -> {
             if (newValue)
                 validateInput();
         });
         validateInput();
 
-        delegate.payFeeSuccess.addListener((ov, oldValue, newValue) -> {
+        dataModel.payFeeSuccess.addListener((ov, oldValue, newValue) -> {
             isPayButtonDisabled.set(newValue);
             showTransactionPublishedScreen.set(newValue);
             isPaymentSpinnerVisible.set(false);
         });
 
-        delegate.payFeeErrorMessage.addListener((ov, oldValue, newValue) -> {
+        dataModel.payFeeErrorMessage.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 requestPlaceOfferErrorMessage.set(newValue);
                 isPaymentSpinnerVisible.set(false);
@@ -79,18 +79,18 @@ class RegistrationViewModel extends WithDelegate<RegistrationDataModel> implemen
     }
 
     void payFee() {
-        delegate.payFeeErrorMessage.set(null);
-        delegate.payFeeSuccess.set(false);
+        dataModel.payFeeErrorMessage.set(null);
+        dataModel.payFeeSuccess.set(false);
 
         isPayButtonDisabled.set(true);
         isPaymentSpinnerVisible.set(true);
 
-        delegate.payFee();
+        dataModel.payFee();
     }
 
 
     WalletService getWalletService() {
-        return delegate.getWalletService();
+        return dataModel.getWalletService();
     }
 
     BSFormatter getFormatter() {
@@ -98,11 +98,11 @@ class RegistrationViewModel extends WithDelegate<RegistrationDataModel> implemen
     }
 
     Coin getFeeAsCoin() {
-        return delegate.getFeeAsCoin();
+        return dataModel.getFeeAsCoin();
     }
 
     String getAddressAsString() {
-        return delegate.getAddressEntry() != null ? delegate.getAddressEntry().getAddress().toString() : "";
+        return dataModel.getAddressEntry() != null ? dataModel.getAddressEntry().getAddress().toString() : "";
     }
 
     String getPaymentLabel() {
@@ -110,16 +110,16 @@ class RegistrationViewModel extends WithDelegate<RegistrationDataModel> implemen
     }
 
     String getFeeAsString() {
-        return formatter.formatCoinWithCode(delegate.getFeeAsCoin());
+        return formatter.formatCoinWithCode(dataModel.getFeeAsCoin());
     }
 
     String getTransactionId() {
-        return delegate.getTransactionId();
+        return dataModel.getTransactionId();
     }
 
 
     private void validateInput() {
-        isPayButtonDisabled.set(!(delegate.isWalletFunded.get()));
+        isPayButtonDisabled.set(!(dataModel.isWalletFunded.get()));
     }
 
 

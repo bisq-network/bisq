@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.createoffer;
+package io.bitsquare.trade.protocol.placeoffer;
 
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.offer.Offer;
@@ -35,9 +35,9 @@ import org.slf4j.LoggerFactory;
  * Responsible for coordinating tasks involved in the create offer process.
  * Executed on UI thread (single threaded)
  */
-public class CreateOfferProtocol {
+public class PlaceOfferProtocol {
 
-    private static final Logger log = LoggerFactory.getLogger(CreateOfferProtocol.class);
+    private static final Logger log = LoggerFactory.getLogger(PlaceOfferProtocol.class);
 
     private final Offer offer;
     private final WalletService walletService;
@@ -46,8 +46,8 @@ public class CreateOfferProtocol {
     private final RemoteOfferBook remoteOfferBook;
     private int repeatAddOfferCallCounter = 0;
 
-    public CreateOfferProtocol(Offer offer, WalletService walletService, TransactionResultHandler resultHandler,
-                               FaultHandler faultHandler, RemoteOfferBook remoteOfferBook) {
+    public PlaceOfferProtocol(Offer offer, WalletService walletService, RemoteOfferBook remoteOfferBook, TransactionResultHandler resultHandler,
+                              FaultHandler faultHandler) {
         this.offer = offer;
         this.walletService = walletService;
         this.resultHandler = resultHandler;
@@ -55,18 +55,16 @@ public class CreateOfferProtocol {
         this.remoteOfferBook = remoteOfferBook;
     }
 
-    public void createOffer() {
+    public void placeOffer() {
         try {
             validateOffer();
             Transaction transaction = createOfferFeeTx();
-
             TransactionResultHandler resultHandler1 = transaction1 -> addOffer(transaction1);
             FaultHandler faultHandler1 = (message, throwable) -> faultHandler.handleFault(message, throwable);
             broadcastCreateOfferFeeTx(transaction, resultHandler1, faultHandler1);
-
         } catch (Throwable t) {
+            // handled in specific methods
         }
-
     }
 
     // 1. Validate offer data
@@ -128,9 +126,11 @@ public class CreateOfferProtocol {
     // Async
     // In case of an error: Try again, afterwards give up.
     void addOffer(Transaction transaction) {
+        // need to write data before storage, otherwise hash is different when removing offer!
+        offer.setOfferFeePaymentTxID(transaction.getHashAsString());
+        
         remoteOfferBook.addOffer(offer,
                 () -> {
-                    offer.setOfferFeePaymentTxID(transaction.getHashAsString());
                     resultHandler.onResult(transaction);
                 },
                 (message, throwable) -> {

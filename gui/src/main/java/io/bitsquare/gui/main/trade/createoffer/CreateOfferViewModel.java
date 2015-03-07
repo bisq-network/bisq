@@ -32,7 +32,7 @@ import org.bitcoinj.utils.Fiat;
 import javax.inject.Inject;
 
 import viewfx.model.ViewModel;
-import viewfx.model.support.ActivatableWithDelegate;
+import viewfx.model.support.ActivatableWithDataModel;
 
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
@@ -45,7 +45,7 @@ import javafx.beans.property.StringProperty;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel> implements ViewModel {
+class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel> implements ViewModel {
 
     private final BtcValidator btcValidator;
     private final BSFormatter formatter;
@@ -94,19 +94,19 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
 
 
     @Inject
-    public CreateOfferViewModel(CreateOfferDataModel delegate, FiatValidator fiatValidator, BtcValidator btcValidator,
+    public CreateOfferViewModel(CreateOfferDataModel dataModel, FiatValidator fiatValidator, BtcValidator btcValidator,
                                 BSFormatter formatter) {
-        super(delegate);
+        super(dataModel);
 
         this.fiatValidator = fiatValidator;
         this.btcValidator = btcValidator;
         this.formatter = formatter;
 
-        paymentLabel.set(BSResources.get("createOffer.fundsBox.paymentLabel", delegate.getOfferId()));
+        paymentLabel.set(BSResources.get("createOffer.fundsBox.paymentLabel", dataModel.getOfferId()));
 
-        if (delegate.getAddressEntry() != null) {
-            addressAsString.set(delegate.getAddressEntry().getAddress().toString());
-            address.set(delegate.getAddressEntry().getAddress());
+        if (dataModel.getAddressEntry() != null) {
+            addressAsString.set(dataModel.getAddressEntry().getAddress().toString());
+            address.set(dataModel.getAddressEntry().getAddress());
         }
 
         setupBindings();
@@ -115,39 +115,39 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
 
     // setOfferBookFilter is a one time call
     void initWithData(Direction direction, Coin amount, Fiat price) {
-        delegate.setDirection(direction);
-        directionLabel.set(delegate.getDirection() == Direction.BUY ? BSResources.get("shared.buy") : BSResources.get
+        dataModel.setDirection(direction);
+        directionLabel.set(dataModel.getDirection() == Direction.BUY ? BSResources.get("shared.buy") : BSResources.get
                 ("shared.sell"));
 
         // apply only if valid
         boolean amountValid = false;
         if (amount != null && isBtcInputValid(amount.toPlainString())
                 .isValid) {
-            delegate.amountAsCoin.set(amount);
-            delegate.minAmountAsCoin.set(amount);
+            dataModel.amountAsCoin.set(amount);
+            dataModel.minAmountAsCoin.set(amount);
             amountValid = true;
         }
 
         // apply only if valid
         boolean priceValid = false;
         if (price != null && isBtcInputValid(price.toPlainString()).isValid) {
-            delegate.priceAsFiat.set(formatter.parseToFiatWith2Decimals(price.toPlainString()));
+            dataModel.priceAsFiat.set(formatter.parseToFiatWith2Decimals(price.toPlainString()));
             priceValid = true;
         }
 
         if (amountValid && priceValid)
-            delegate.calculateTotalToPay();
+            dataModel.calculateTotalToPay();
     }
 
 
     void placeOffer() {
-        delegate.requestPlaceOfferErrorMessage.set(null);
-        delegate.requestPlaceOfferSuccess.set(false);
+        dataModel.requestPlaceOfferErrorMessage.set(null);
+        dataModel.requestPlaceOfferSuccess.set(false);
 
         isPlaceOfferButtonDisabled.set(true);
         isPlaceOfferSpinnerVisible.set(true);
 
-        delegate.placeOffer();
+        dataModel.placeOffer();
     }
 
 
@@ -165,12 +165,12 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
                 // only allow max 4 decimal places for btc values
                 setAmountToModel();
                 // reformat input
-                amount.set(formatter.formatCoin(delegate.amountAsCoin.get()));
+                amount.set(formatter.formatCoin(dataModel.amountAsCoin.get()));
 
                 calculateVolume();
 
                 // handle minAmount/amount relationship
-                if (!delegate.isMinAmountLessOrEqualAmount()) {
+                if (!dataModel.isMinAmountLessOrEqualAmount()) {
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             BSResources.get("createOffer.validation.amountSmallerThanMinAmount")));
                 }
@@ -190,9 +190,9 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
             if (result.isValid) {
                 showWarningInvalidBtcDecimalPlaces.set(!formatter.hasBtcValidDecimals(userInput));
                 setMinAmountToModel();
-                minAmount.set(formatter.formatCoin(delegate.minAmountAsCoin.get()));
+                minAmount.set(formatter.formatCoin(dataModel.minAmountAsCoin.get()));
 
-                if (!delegate.isMinAmountLessOrEqualAmount()) {
+                if (!dataModel.isMinAmountLessOrEqualAmount()) {
                     minAmountValidationResult.set(new InputValidator.ValidationResult(false,
                             BSResources.get("createOffer.validation.minAmountLargerThanAmount")));
                 }
@@ -213,7 +213,7 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
             if (isValid) {
                 showWarningInvalidFiatDecimalPlaces.set(!formatter.hasFiatValidDecimals(userInput));
                 setPriceToModel();
-                price.set(formatter.formatFiat(delegate.priceAsFiat.get()));
+                price.set(formatter.formatFiat(dataModel.priceAsFiat.get()));
 
                 calculateVolume();
             }
@@ -227,7 +227,7 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
             if (result.isValid) {
                 showWarningInvalidFiatDecimalPlaces.set(!formatter.hasFiatValidDecimals(userInput));
                 setVolumeToModel();
-                volume.set(formatter.formatFiat(delegate.volumeAsFiat.get()));
+                volume.set(formatter.formatFiat(dataModel.volumeAsFiat.get()));
 
                 calculateAmount();
 
@@ -241,12 +241,12 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
     }
 
     void securityDepositInfoDisplayed() {
-        delegate.securityDepositInfoDisplayed();
+        dataModel.securityDepositInfoDisplayed();
     }
 
 
     WalletService getWalletService() {
-        return delegate.getWalletService();
+        return dataModel.getWalletService();
     }
 
     BSFormatter getFormatter() {
@@ -254,7 +254,7 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
     }
 
     Boolean displaySecurityDepositInfo() {
-        return delegate.displaySecurityDepositInfo();
+        return dataModel.displaySecurityDepositInfo();
     }
 
     private void setupListeners() {
@@ -264,7 +264,7 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
             if (isBtcInputValid(newValue).isValid) {
                 setAmountToModel();
                 calculateVolume();
-                delegate.calculateTotalToPay();
+                dataModel.calculateTotalToPay();
             }
             updateButtonDisableState();
         });
@@ -278,7 +278,7 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
             if (isFiatInputValid(newValue).isValid) {
                 setPriceToModel();
                 calculateVolume();
-                delegate.calculateTotalToPay();
+                dataModel.calculateTotalToPay();
             }
             updateButtonDisableState();
         });
@@ -287,12 +287,12 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
             if (isFiatInputValid(newValue).isValid) {
                 setVolumeToModel();
                 setPriceToModel();
-                delegate.calculateAmount();
-                delegate.calculateTotalToPay();
+                dataModel.calculateAmount();
+                dataModel.calculateTotalToPay();
             }
             updateButtonDisableState();
         });
-        delegate.isWalletFunded.addListener((ov, oldValue, newValue) -> {
+        dataModel.isWalletFunded.addListener((ov, oldValue, newValue) -> {
             if (newValue) {
                 updateButtonDisableState();
                 tabIsClosable.set(false);
@@ -300,70 +300,70 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
         });
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
-        delegate.amountAsCoin.addListener((ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue)));
-        delegate.minAmountAsCoin.addListener((ov, oldValue, newValue) -> minAmount.set(formatter.formatCoin(newValue)));
-        delegate.priceAsFiat.addListener((ov, oldValue, newValue) -> price.set(formatter.formatFiat(newValue)));
-        delegate.volumeAsFiat.addListener((ov, oldValue, newValue) -> volume.set(formatter.formatFiat(newValue)));
+        dataModel.amountAsCoin.addListener((ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue)));
+        dataModel.minAmountAsCoin.addListener((ov, oldValue, newValue) -> minAmount.set(formatter.formatCoin(newValue)));
+        dataModel.priceAsFiat.addListener((ov, oldValue, newValue) -> price.set(formatter.formatFiat(newValue)));
+        dataModel.volumeAsFiat.addListener((ov, oldValue, newValue) -> volume.set(formatter.formatFiat(newValue)));
 
-        delegate.requestPlaceOfferErrorMessage.addListener((ov, oldValue, newValue) -> {
+        dataModel.requestPlaceOfferErrorMessage.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 isPlaceOfferButtonDisabled.set(false);
                 isPlaceOfferSpinnerVisible.set(false);
             }
         });
-        delegate.requestPlaceOfferSuccess.addListener((ov, oldValue, newValue) -> {
+        dataModel.requestPlaceOfferSuccess.addListener((ov, oldValue, newValue) -> {
             isPlaceOfferButtonVisible.set(!newValue);
             isPlaceOfferSpinnerVisible.set(false);
         });
 
         // ObservableLists
-        delegate.acceptedCountries.addListener((Observable o) -> acceptedCountries.set(formatter
-                .countryLocalesToString(delegate.acceptedCountries)));
-        delegate.acceptedLanguages.addListener((Observable o) -> acceptedLanguages.set(formatter
-                .languageLocalesToString(delegate.acceptedLanguages)));
-        delegate.acceptedArbitrators.addListener((Observable o) -> acceptedArbitrators.set(formatter
-                .arbitratorsToString(delegate.acceptedArbitrators)));
+        dataModel.acceptedCountries.addListener((Observable o) -> acceptedCountries.set(formatter
+                .countryLocalesToString(dataModel.acceptedCountries)));
+        dataModel.acceptedLanguages.addListener((Observable o) -> acceptedLanguages.set(formatter
+                .languageLocalesToString(dataModel.acceptedLanguages)));
+        dataModel.acceptedArbitrators.addListener((Observable o) -> acceptedArbitrators.set(formatter
+                .arbitratorsToString(dataModel.acceptedArbitrators)));
     }
 
     private void setupBindings() {
-        totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(delegate.totalToPayAsCoin.get()),
-                delegate.totalToPayAsCoin));
-        securityDeposit.bind(createStringBinding(() -> formatter.formatCoinWithCode(delegate.securityDepositAsCoin.get()),
-                delegate.securityDepositAsCoin));
+        totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),
+                dataModel.totalToPayAsCoin));
+        securityDeposit.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.securityDepositAsCoin.get()),
+                dataModel.securityDepositAsCoin));
 
-        totalToPayAsCoin.bind(delegate.totalToPayAsCoin);
+        totalToPayAsCoin.bind(dataModel.totalToPayAsCoin);
 
-        offerFee.bind(createStringBinding(() -> formatter.formatCoinWithCode(delegate.offerFeeAsCoin.get()),
-                delegate.offerFeeAsCoin));
-        networkFee.bind(createStringBinding(() -> formatter.formatCoinWithCode(delegate.networkFeeAsCoin.get()),
-                delegate.offerFeeAsCoin));
+        offerFee.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.offerFeeAsCoin.get()),
+                dataModel.offerFeeAsCoin));
+        networkFee.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.networkFeeAsCoin.get()),
+                dataModel.offerFeeAsCoin));
 
-        bankAccountType.bind(Bindings.createStringBinding(() -> BSResources.get(delegate.bankAccountType.get()),
-                delegate.bankAccountType));
-        bankAccountCurrency.bind(delegate.bankAccountCurrency);
-        bankAccountCounty.bind(delegate.bankAccountCounty);
+        bankAccountType.bind(Bindings.createStringBinding(() -> BSResources.get(dataModel.bankAccountType.get()),
+                dataModel.bankAccountType));
+        bankAccountCurrency.bind(dataModel.bankAccountCurrency);
+        bankAccountCounty.bind(dataModel.bankAccountCounty);
 
-        requestPlaceOfferErrorMessage.bind(delegate.requestPlaceOfferErrorMessage);
-        showTransactionPublishedScreen.bind(delegate.requestPlaceOfferSuccess);
-        transactionId.bind(delegate.transactionId);
+        requestPlaceOfferErrorMessage.bind(dataModel.requestPlaceOfferErrorMessage);
+        showTransactionPublishedScreen.bind(dataModel.requestPlaceOfferSuccess);
+        transactionId.bind(dataModel.transactionId);
 
-        btcCode.bind(delegate.btcCode);
-        fiatCode.bind(delegate.fiatCode);
+        btcCode.bind(dataModel.btcCode);
+        fiatCode.bind(dataModel.fiatCode);
     }
 
     private void calculateVolume() {
         setAmountToModel();
         setPriceToModel();
-        delegate.calculateVolume();
+        dataModel.calculateVolume();
     }
 
     private void calculateAmount() {
         setVolumeToModel();
         setPriceToModel();
-        delegate.calculateAmount();
+        dataModel.calculateAmount();
 
         // Amount calculation could lead to amount/minAmount invalidation
-        if (!delegate.isMinAmountLessOrEqualAmount()) {
+        if (!dataModel.isMinAmountLessOrEqualAmount()) {
             amountValidationResult.set(new InputValidator.ValidationResult(false,
                     BSResources.get("createOffer.validation.amountSmallerThanMinAmount")));
         }
@@ -376,19 +376,19 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
     }
 
     private void setAmountToModel() {
-        delegate.amountAsCoin.set(formatter.parseToCoinWith4Decimals(amount.get()));
+        dataModel.amountAsCoin.set(formatter.parseToCoinWith4Decimals(amount.get()));
     }
 
     private void setMinAmountToModel() {
-        delegate.minAmountAsCoin.set(formatter.parseToCoinWith4Decimals(minAmount.get()));
+        dataModel.minAmountAsCoin.set(formatter.parseToCoinWith4Decimals(minAmount.get()));
     }
 
     private void setPriceToModel() {
-        delegate.priceAsFiat.set(formatter.parseToFiatWith2Decimals(price.get()));
+        dataModel.priceAsFiat.set(formatter.parseToFiatWith2Decimals(price.get()));
     }
 
     private void setVolumeToModel() {
-        delegate.volumeAsFiat.set(formatter.parseToFiatWith2Decimals(volume.get()));
+        dataModel.volumeAsFiat.set(formatter.parseToFiatWith2Decimals(volume.get()));
     }
 
     private void updateButtonDisableState() {
@@ -396,8 +396,8 @@ class CreateOfferViewModel extends ActivatableWithDelegate<CreateOfferDataModel>
                         isBtcInputValid(minAmount.get()).isValid &&
                         isBtcInputValid(price.get()).isValid &&
                         isBtcInputValid(volume.get()).isValid &&
-                        delegate.isMinAmountLessOrEqualAmount() &&
-                        delegate.isWalletFunded.get())
+                        dataModel.isMinAmountLessOrEqualAmount() &&
+                        dataModel.isWalletFunded.get())
         );
     }
 
