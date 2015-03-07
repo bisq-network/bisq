@@ -256,7 +256,9 @@ public class TradeManager {
                         public void onOfferAccepted(Offer offer) {
                             trade.setState(Trade.State.OFFERER_ACCEPTED);
                             persistPendingTrades();
-                            requestRemoveOffer(offer);
+                            requestRemoveOffer(offer,
+                                    () -> log.debug("remove was successful"),
+                                    (message, throwable) -> log.error(message));
                         }
 
                         @Override

@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.offer;
 
+import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.util.BSFormatter;
 
 import com.google.inject.Inject;
@@ -26,7 +27,11 @@ import viewfx.model.support.ActivatableWithDataModel;
 
 import javafx.collections.ObservableList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 class OffersViewModel extends ActivatableWithDataModel<OffersDataModel> implements ViewModel {
+    private static final Logger log = LoggerFactory.getLogger(OffersViewModel.class);
 
     private final BSFormatter formatter;
 
@@ -40,9 +45,16 @@ class OffersViewModel extends ActivatableWithDataModel<OffersDataModel> implemen
 
 
     void removeOffer(OfferListItem item) {
-        dataModel.removeOffer(item);
+        dataModel.removeOffer(item.getOffer(),
+                () -> {
+                    // visual feedback?
+                    log.debug("Remove offer was successful");
+                },
+                (message, throwable) -> {
+                    log.error(message);
+                    Popups.openWarningPopup("Remove offer failed", message);
+                });
     }
-
 
     public ObservableList<OfferListItem> getList() {
         return dataModel.getList();

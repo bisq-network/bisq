@@ -107,7 +107,7 @@ class OfferBookViewModel extends ActivatableWithDataModel<OfferBookDataModel> im
         dataModel.removeOffer(offer,
                 () -> {
                     // visual feedback?
-                    log.debug("remove was successful");
+                    log.debug("Remove offer was successful");
                 },
                 (message, throwable) -> {
                     log.error(message);

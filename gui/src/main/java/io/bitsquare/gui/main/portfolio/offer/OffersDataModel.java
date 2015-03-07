@@ -21,6 +21,8 @@ import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
+import io.bitsquare.util.task.FaultHandler;
+import io.bitsquare.util.task.ResultHandler;
 
 import com.google.inject.Inject;
 
@@ -33,7 +35,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 class OffersDataModel implements Activatable, DataModel {
+    private static final Logger log = LoggerFactory.getLogger(OffersDataModel.class);
 
     private final TradeManager tradeManager;
     private final User user;
@@ -71,8 +77,8 @@ class OffersDataModel implements Activatable, DataModel {
         tradeManager.getOffers().removeListener(offerMapChangeListener);
     }
 
-    void removeOffer(OfferListItem item) {
-        tradeManager.requestRemoveOffer(item.getOffer());
+    void removeOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler) {
+        tradeManager.requestRemoveOffer(offer, resultHandler, faultHandler);
     }
 
 
