@@ -26,9 +26,9 @@
 
     <logger name="io.bitsquare" level="TRACE"/>
 
-    <logger name="org.bitcoinj" level="INFO"/>
-    <logger name="net.tomp2p" level="INFO"/>
-    <logger name="com.vinumeris.updatefx" level="TRACE"/>
+    <logger name="org.bitcoinj" level="WARN"/>
+    <logger name="net.tomp2p" level="WARN"/>
+    <logger name="com.vinumeris.updatefx" level="INFO"/>
 
 
     <logger name="net.tomp2p.message.Encoder" level="WARN"/>

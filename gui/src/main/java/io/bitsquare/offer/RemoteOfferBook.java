@@ -21,10 +21,13 @@ import io.bitsquare.util.task.FaultHandler;
 import io.bitsquare.util.task.ResultHandler;
 
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import javafx.beans.property.LongProperty;
 
-public interface OfferRepository {
+public interface RemoteOfferBook {
+
+    void setExecutor(Executor executor);
 
     void getOffers(String fiatCode);
 

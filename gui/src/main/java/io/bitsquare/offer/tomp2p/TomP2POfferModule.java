@@ -17,8 +17,15 @@
 
 package io.bitsquare.offer.tomp2p;
 
+import io.bitsquare.msg.tomp2p.TomP2PNode;
 import io.bitsquare.offer.OfferModule;
-import io.bitsquare.offer.OfferRepository;
+import io.bitsquare.offer.RemoteOfferBook;
+
+import com.google.inject.Provider;
+
+import javax.inject.Inject;
+
+import javafx.application.Platform;
 
 import org.springframework.core.env.Environment;
 
@@ -29,7 +36,21 @@ public class TomP2POfferModule extends OfferModule {
     }
 
     @Override
-    public Class<? extends OfferRepository> offerRepository() {
-        return TomP2POfferRepository.class;
+    protected void configure() {
+        bind(RemoteOfferBook.class).toProvider(RemoteOfferBookProvider.class).asEagerSingleton();
+    }
+}
+
+class RemoteOfferBookProvider implements Provider<RemoteOfferBook> {
+    private final TomP2POfferBook remoteOfferBook;
+
+    @Inject
+    public RemoteOfferBookProvider(TomP2PNode p2pNode) {
+        remoteOfferBook = new TomP2POfferBook(p2pNode);
+        remoteOfferBook.setExecutor(Platform::runLater);
+    }
+
+    public RemoteOfferBook get() {
+        return remoteOfferBook;
     }
 }

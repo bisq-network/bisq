@@ -66,7 +66,7 @@ import rx.Observable;
  * <p>
  * TODO: improve callbacks that Platform.runLater is not necessary. We call usually that methods form teh UI thread.
  */
-class TomP2PMessageService implements MessageService {
+public class TomP2PMessageService implements MessageService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PMessageService.class);
     private static final String ARBITRATORS_ROOT = "ArbitratorsRoot";
 

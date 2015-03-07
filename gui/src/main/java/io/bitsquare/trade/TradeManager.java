@@ -28,10 +28,10 @@ import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.offer.OfferRepository;
+import io.bitsquare.offer.RemoteOfferBook;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.trade.protocol.createoffer.CreateOfferCoordinator;
+import io.bitsquare.trade.protocol.createoffer.CreateOfferProtocol;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocol;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocolListener;
@@ -83,7 +83,7 @@ public class TradeManager {
     private final BlockChainService blockChainService;
     private final WalletService walletService;
     private final SignatureService signatureService;
-    private final OfferRepository offerRepository;
+    private final RemoteOfferBook remoteOfferBook;
 
     //TODO store TakerAsSellerProtocol in trade
     private final Map<String, SellerTakesOfferProtocol> takerAsSellerProtocolMap = new HashMap<>();
@@ -106,7 +106,7 @@ public class TradeManager {
     public TradeManager(User user, AccountSettings accountSettings, Persistence persistence,
                         MessageService messageService, BlockChainService blockChainService,
                         WalletService walletService, SignatureService signatureService,
-                        OfferRepository offerRepository) {
+                        RemoteOfferBook remoteOfferBook) {
         this.user = user;
         this.accountSettings = accountSettings;
         this.persistence = persistence;
@@ -114,7 +114,7 @@ public class TradeManager {
         this.blockChainService = blockChainService;
         this.walletService = walletService;
         this.signatureService = signatureService;
-        this.offerRepository = offerRepository;
+        this.remoteOfferBook = remoteOfferBook;
 
         Object offersObject = persistence.read(this, "offers");
         if (offersObject instanceof Map) {
@@ -172,7 +172,7 @@ public class TradeManager {
                 accountSettings.getAcceptedCountries(),
                 accountSettings.getAcceptedLanguageLocales());
 
-        CreateOfferCoordinator createOfferCoordinator = new CreateOfferCoordinator(
+        CreateOfferProtocol createOfferCoordinator = new CreateOfferProtocol(
                 offer,
                 walletService,
                 (transactionId) -> {
@@ -186,9 +186,9 @@ public class TradeManager {
                     }
                 },
                 (message, throwable) -> errorMessageHandler.handleErrorMessage(message),
-                offerRepository);
+                remoteOfferBook);
 
-        createOfferCoordinator.start();
+        createOfferCoordinator.createOffer();
     }
 
     private void addOffer(Offer offer) {
@@ -206,7 +206,7 @@ public class TradeManager {
         offers.remove(offer.getId());
         persistOffers();
 
-        offerRepository.removeOffer(offer);
+        remoteOfferBook.removeOffer(offer);
     }
 
 

@@ -25,6 +25,7 @@ import java.awt.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -175,6 +176,30 @@ public class Utilities {
             e.printStackTrace();
         }
         return obj;
+    }
+
+    /**
+     * Empty and delete a folder (and subfolders).
+     * @param folder
+     *            folder to empty
+     */
+    public static void removeDirectory(final File folder) {
+        // check if folder file is a real folder
+        if (folder.isDirectory()) {
+            File[] list = folder.listFiles();
+            if (list != null) {
+                for (int i = 0; i < list.length; i++) {
+                    File tmpF = list[i];
+                    if (tmpF.isDirectory()) {
+                        removeDirectory(tmpF);
+                    }
+                    tmpF.delete();
+                }
+            }
+            if (!folder.delete()) {
+                log.warn("can't delete folder : " + folder);
+            }
+        }
     }
 
     public static AnimationTimer setTimeout(int delay, Function<AnimationTimer, Void> callback) {

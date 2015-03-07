@@ -24,6 +24,8 @@ import org.bitcoinj.crypto.DeterministicKey;
 
 import java.io.Serializable;
 
+import java.util.Arrays;
+
 /**
  * Is a minimalistic wallet abstraction used to separate transactions between different activities like:
  * Registration, trade and arbiter deposit.
@@ -86,5 +88,17 @@ public class AddressEntry implements Serializable {
         REGISTRATION_FEE,
         TRADE,
         ARBITRATOR_DEPOSIT
+    }
+
+    @Override
+    public String toString() {
+        return "AddressEntry{" +
+                "addressString=" + getAddress().toString() +
+                "key=" + key +
+                ", params=" + params +
+                ", addressContext=" + addressContext +
+                ", offerId='" + offerId + '\'' +
+                ", pubKeyHash=" + Arrays.toString(pubKeyHash) +
+                '}';
     }
 }

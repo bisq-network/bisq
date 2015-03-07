@@ -19,7 +19,7 @@ package io.bitsquare.offer.tomp2p;
 
 import io.bitsquare.msg.tomp2p.TomP2PNode;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.offer.OfferRepository;
+import io.bitsquare.offer.RemoteOfferBook;
 import io.bitsquare.util.task.FaultHandler;
 import io.bitsquare.util.task.ResultHandler;
 
@@ -28,10 +28,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
 
-import javafx.application.Platform;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleLongProperty;
 
@@ -48,18 +48,23 @@ import net.tomp2p.storage.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class TomP2POfferRepository implements OfferRepository {
+public class TomP2POfferBook implements RemoteOfferBook {
 
-    private static final Logger log = LoggerFactory.getLogger(TomP2POfferRepository.class);
+    private static final Logger log = LoggerFactory.getLogger(TomP2POfferBook.class);
 
     private final List<Listener> offerRepositoryListeners = new ArrayList<>();
     private final LongProperty invalidationTimestamp = new SimpleLongProperty(0);
 
     private final TomP2PNode p2pNode;
+    private Executor executor;
 
     @Inject
-    public TomP2POfferRepository(TomP2PNode p2pNode) {
+    public TomP2POfferBook(TomP2PNode p2pNode) {
         this.p2pNode = p2pNode;
+    }
+
+    public void setExecutor(Executor executor) {
+        this.executor = executor;
     }
 
     @Override
@@ -78,13 +83,13 @@ class TomP2POfferRepository implements OfferRepository {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
                     if (future.isSuccess()) {
-                        Platform.runLater(() -> {
+                        executor.execute(() -> {
                             resultHandler.handleResult();
                             offerRepositoryListeners.stream().forEach(listener -> {
                                 try {
                                     Object offerDataObject = offerData.object();
                                     if (offerDataObject instanceof Offer) {
-                                        log.error("Added offer to DHT with ID: " + offerDataObject);
+                                        log.info("Added offer to DHT with ID: " + offerDataObject);
                                         listener.onOfferAdded((Offer) offerDataObject);
                                     }
                                 } catch (ClassNotFoundException | IOException e) {
@@ -102,15 +107,11 @@ class TomP2POfferRepository implements OfferRepository {
 
                 @Override
                 public void exceptionCaught(Throwable ex) throws Exception {
-                    Platform.runLater(() -> {
-                        faultHandler.handleFault("Failed to add offer to DHT", ex);
-                    });
+                    executor.execute(() -> faultHandler.handleFault("Failed to add offer to DHT", ex));
                 }
             });
         } catch (IOException ex) {
-            Platform.runLater(() -> {
-                faultHandler.handleFault("Failed to add offer to DHT", ex);
-            });
+            executor.execute(() -> faultHandler.handleFault("Failed to add offer to DHT", ex));
         }
     }
 
@@ -130,7 +131,7 @@ class TomP2POfferRepository implements OfferRepository {
                     // it might change in future to something like foundAndRemoved and notFound
                     // See discussion at: https://github.com/tomp2p/TomP2P/issues/57#issuecomment-62069840
 
-                    Platform.runLater(() -> {
+                    executor.execute(() -> {
                         offerRepositoryListeners.stream().forEach(listener -> {
                             try {
                                 Object offerDataObject = offerData.object();
@@ -182,7 +183,7 @@ class TomP2POfferRepository implements OfferRepository {
                             }
                         }
 
-                        Platform.runLater(() -> offerRepositoryListeners.stream().forEach(listener ->
+                        executor.execute(() -> offerRepositoryListeners.stream().forEach(listener ->
                                 listener.onOffersReceived(offers)));
                     }
 
@@ -193,7 +194,7 @@ class TomP2POfferRepository implements OfferRepository {
                     final Map<Number640, Data> dataMap = futureGet.dataMap();
                     if (dataMap == null || dataMap.size() == 0) {
                         log.trace("Get offers from DHT delivered empty dataMap.");
-                        Platform.runLater(() -> offerRepositoryListeners.stream().forEach(listener ->
+                        executor.execute(() -> offerRepositoryListeners.stream().forEach(listener ->
                                 listener.onOffersReceived(new ArrayList<>())));
                     }
                     else {
@@ -262,7 +263,7 @@ class TomP2POfferRepository implements OfferRepository {
                     Data data = futureGet.data();
                     if (data != null && data.object() instanceof Long) {
                         final Object object = data.object();
-                        Platform.runLater(() -> {
+                        executor.execute(() -> {
                             Long timeStamp = (Long) object;
                             //log.trace("Get invalidationTimestamp from DHT was successful. TimeStamp=" + timeStamp);
                             invalidationTimestamp.set(timeStamp);

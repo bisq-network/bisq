@@ -534,8 +534,9 @@ public class WalletService {
         sendRequest.shuffleOutputs = false;
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
         // wait for 1 confirmation)
-        sendRequest.coinSelector = new AddressBasedCoinSelector(params, getAddressInfoByTradeID(offerId), true);
-        sendRequest.changeAddress = getAddressInfoByTradeID(offerId).getAddress();
+        AddressEntry addressEntry = getAddressInfoByTradeID(offerId);
+        sendRequest.coinSelector = new AddressBasedCoinSelector(params, addressEntry, true);
+        sendRequest.changeAddress = addressEntry.getAddress();
         wallet.completeTx(sendRequest);
         printInputs("payCreateOfferFee", tx);
         return tx;

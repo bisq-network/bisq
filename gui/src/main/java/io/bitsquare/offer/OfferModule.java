@@ -27,10 +27,4 @@ public abstract class OfferModule extends BitsquareModule {
         super(env);
     }
 
-    @Override
-    protected void configure() {
-        bind(OfferRepository.class).to(offerRepository()).asEagerSingleton();
-    }
-
-    protected abstract Class<? extends OfferRepository> offerRepository();
 }

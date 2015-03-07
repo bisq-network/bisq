@@ -160,9 +160,9 @@ class MainViewModel implements ViewModel {
                 error -> log.error(error.toString()),
                 () -> Platform.runLater(() -> setBitcoinNetworkSyncProgress(1.0)));
 
-        Observable<BootstrapState> message = messageService.init();
-        message.publish();
-        message.subscribe(
+        Observable<BootstrapState> messageObservable = messageService.init();
+        messageObservable.publish();
+        messageObservable.subscribe(
                 state -> Platform.runLater(() -> setBootstrapState(state)),
                 error -> Platform.runLater(() -> {
                     log.error(error.toString());
@@ -173,8 +173,8 @@ class MainViewModel implements ViewModel {
                 }),
                 () -> log.trace("message completed"));
 
-        Observable<Object> wallet = walletService.initialize(Platform::runLater);
-        wallet.subscribe(
+        Observable<Object> walletServiceObservable = walletService.initialize(Platform::runLater);
+        walletServiceObservable.subscribe(
                 next -> {
                     log.trace("wallet next");
                 },
@@ -186,8 +186,8 @@ class MainViewModel implements ViewModel {
                     log.trace("wallet completed");
                 });
 
-        Observable<UpdateProcess.State> updateProcess = this.updateProcess.getProcess();
-        updateProcess.subscribe(next -> {
+        Observable<UpdateProcess.State> updateProcessObservable = this.updateProcess.getProcess();
+        updateProcessObservable.subscribe(next -> {
                     log.trace("updateProcess next");
                 },
                 error -> {
@@ -197,7 +197,7 @@ class MainViewModel implements ViewModel {
                     log.trace("updateProcess completed");
                 });
 
-        Observable<?> allTasks = Observable.merge(message, wallet, updateProcess);
+        Observable<?> allTasks = Observable.merge(messageObservable, walletServiceObservable, updateProcessObservable);
         allTasks.subscribe(
                 next -> {
                 },

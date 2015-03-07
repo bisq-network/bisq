@@ -58,6 +58,7 @@ public class BitsquareAppMain extends BitsquareExecutable {
         // We don't want to do the full argument parsing here as that might easily change in update versions
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
         OptionParser parser = new OptionParser();
+        parser.allowsUnrecognizedOptions();
         parser.accepts(USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
                 .withRequiredArg();
         parser.accepts(APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
