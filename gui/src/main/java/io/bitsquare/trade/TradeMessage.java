@@ -17,10 +17,12 @@
 
 package io.bitsquare.trade;
 
+import io.bitsquare.network.Message;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TradeMessage {
+public class TradeMessage implements Message {
     private static final Logger log = LoggerFactory.getLogger(TradeMessage.class);
 
     public TradeMessage() {

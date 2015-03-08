@@ -15,13 +15,17 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg;
+package io.bitsquare.arbitrator.listeners;
 
-import io.bitsquare.network.Peer;
+import io.bitsquare.arbitrator.Arbitrator;
 
-/**
- * Interface for the object handling incoming messages.
- */
-public interface MessageBroker {
-    void handleMessage(Object message, Peer sender);
+import java.util.List;
+
+// Arbitration is not much developed yet
+public interface ArbitratorListener {
+    void onArbitratorAdded(Arbitrator arbitrator);
+
+    void onArbitratorsReceived(List<Arbitrator> arbitrators);
+
+    void onArbitratorRemoved(Arbitrator arbitrator);
 }

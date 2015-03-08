@@ -25,17 +25,18 @@ import io.bitsquare.btc.UserAgent;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.msg.tomp2p.BootstrappedPeerBuilder;
-import io.bitsquare.msg.tomp2p.TomP2PMessageService;
-import io.bitsquare.msg.tomp2p.TomP2PNode;
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.Node;
+import io.bitsquare.network.tomp2p.BootstrappedPeerBuilder;
+import io.bitsquare.network.tomp2p.TomP2PNode;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.RemoteOfferBook;
 import io.bitsquare.offer.tomp2p.TomP2POfferBook;
 import io.bitsquare.persistence.Persistence;
+import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
+import io.bitsquare.trade.tomp2p.TomP2PTradeMessageService;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 import io.bitsquare.util.handlers.FaultHandler;
@@ -80,11 +81,13 @@ public class PlaceOfferProtocolTest {
     private static final Logger log = LoggerFactory.getLogger(PlaceOfferProtocolTest.class);
 
     private WalletService walletService;
-    private TomP2PMessageService messageService;
+    private TradeMessageService tradeMessageService;
     private RemoteOfferBook remoteOfferBook;
     private final File dir = new File("./temp");
     private final static String OFFER_ID = "offerID";
     private Address address;
+    private TomP2PNode tomP2PNode;
+    private BootstrappedPeerBuilder bootstrappedPeerBuilder;
 
     @Before
     public void setup() throws InterruptedException {
@@ -98,11 +101,11 @@ public class PlaceOfferProtocolTest {
         Node bootstrapNode = Node.at("localhost", "127.0.0.1");
         User user = new User();
         user.applyPersistedUser(null);
-        BootstrappedPeerBuilder bootstrappedPeerBuilder = new BootstrappedPeerBuilder(Node.DEFAULT_PORT, false, bootstrapNode, "<unspecified>");
-        TomP2PNode p2pNode = new TomP2PNode(bootstrappedPeerBuilder);
-        messageService = new TomP2PMessageService(user, p2pNode);
+        bootstrappedPeerBuilder = new BootstrappedPeerBuilder(Node.DEFAULT_PORT, false, bootstrapNode, "<unspecified>");
+        tomP2PNode = new TomP2PNode(bootstrappedPeerBuilder);
+        tradeMessageService = new TomP2PTradeMessageService(user, tomP2PNode);
 
-        Observable<BootstrapState> messageObservable = messageService.init();
+        Observable<BootstrapState> messageObservable = tomP2PNode.bootstrap(user.getMessageKeyPair(), tradeMessageService);
         messageObservable.publish();
         messageObservable.subscribe(
                 state -> log.trace("state changed: " + state),
@@ -112,7 +115,7 @@ public class PlaceOfferProtocolTest {
                 () -> {
                     log.trace("message completed");
 
-                    remoteOfferBook = new TomP2POfferBook(p2pNode);
+                    remoteOfferBook = new TomP2POfferBook(tomP2PNode);
                     remoteOfferBook.setExecutor(Threading.SAME_THREAD);
                 }
         );
@@ -161,7 +164,7 @@ public class PlaceOfferProtocolTest {
     @After
     public void shutDown() throws IOException, InterruptedException {
         walletService.shutDown();
-        messageService.shutDown();
+        bootstrappedPeerBuilder.shutDown();
     }
 
     @Test

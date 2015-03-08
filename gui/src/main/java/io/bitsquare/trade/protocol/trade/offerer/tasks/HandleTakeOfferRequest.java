@@ -17,10 +17,10 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.msg.MessageService;
-import io.bitsquare.msg.listeners.OutgoingMessageListener;
+import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.listeners.OutgoingMessageListener;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
 import io.bitsquare.util.handlers.ExceptionHandler;
 
@@ -31,7 +31,7 @@ public class HandleTakeOfferRequest {
     private static final Logger log = LoggerFactory.getLogger(HandleTakeOfferRequest.class);
 
     public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, Peer peer,
-                           MessageService messageService, Trade.State tradeState, String tradeId) {
+                           TradeMessageService tradeMessageService, Trade.State tradeState, String tradeId) {
         log.trace("Run task");
         boolean isTradeIsOpen = tradeState == Trade.State.OPEN;
         if (!isTradeIsOpen) {
@@ -39,7 +39,7 @@ public class HandleTakeOfferRequest {
         }
         RespondToTakeOfferRequestMessage tradeMessage =
                 new RespondToTakeOfferRequestMessage(tradeId, isTradeIsOpen);
-        messageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
+        tradeMessageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
             @Override
             public void onResult() {
                 log.trace("RespondToTakeOfferRequestMessage successfully arrived at peer");

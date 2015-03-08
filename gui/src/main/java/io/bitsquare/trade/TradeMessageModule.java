@@ -15,17 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg.listeners;
+package io.bitsquare.trade;
 
-import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.BitsquareModule;
 
-import java.util.List;
+import org.springframework.core.env.Environment;
 
-// Arbitration is not much developed yet
-public interface ArbitratorListener {
-    void onArbitratorAdded(Arbitrator arbitrator);
+public abstract class TradeMessageModule extends BitsquareModule {
 
-    void onArbitratorsReceived(List<Arbitrator> arbitrators);
+    protected TradeMessageModule(Environment env) {
+        super(env);
+    }
 
-    void onArbitratorRemoved(Arbitrator arbitrator);
+    @Override
+    protected final void configure() {
+        doConfigure();
+    }
+
+    protected void doConfigure() {
+    }
 }

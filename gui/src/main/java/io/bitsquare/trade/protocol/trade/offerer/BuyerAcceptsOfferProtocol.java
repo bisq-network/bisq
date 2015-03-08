@@ -22,11 +22,11 @@ import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
-import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateDepositTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.HandleTakeOfferRequest;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.RequestTakerDepositPayment;
@@ -96,7 +96,7 @@ public class BuyerAcceptsOfferProtocol {
     // provided
     private final Trade trade;
     private final Peer peer;
-    private final MessageService messageService;
+    private final TradeMessageService tradeMessageService;
     private final WalletService walletService;
     private final BlockChainService blockChainService;
     private final SignatureService signatureService;
@@ -139,7 +139,7 @@ public class BuyerAcceptsOfferProtocol {
 
     public BuyerAcceptsOfferProtocol(Trade trade,
                                      Peer peer,
-                                     MessageService messageService,
+                                     TradeMessageService tradeMessageService,
                                      WalletService walletService,
                                      BlockChainService blockChainService,
                                      SignatureService signatureService,
@@ -148,7 +148,7 @@ public class BuyerAcceptsOfferProtocol {
         this.trade = trade;
         this.peer = peer;
         this.listener = listener;
-        this.messageService = messageService;
+        this.tradeMessageService = tradeMessageService;
         this.walletService = walletService;
         this.blockChainService = blockChainService;
         this.signatureService = signatureService;
@@ -175,7 +175,7 @@ public class BuyerAcceptsOfferProtocol {
     public void start() {
         log.debug("start called " + step++);
         state = State.HandleTakeOfferRequest;
-        HandleTakeOfferRequest.run(this::onResultHandleTakeOfferRequest, this::onFault, peer, messageService,
+        HandleTakeOfferRequest.run(this::onResultHandleTakeOfferRequest, this::onFault, peer, tradeMessageService,
                 trade.getState(), tradeId);
     }
 
@@ -239,7 +239,7 @@ public class BuyerAcceptsOfferProtocol {
         RequestTakerDepositPayment.run(this::onResultRequestTakerDepositPayment,
                 this::onFault,
                 peer,
-                messageService,
+                tradeMessageService,
                 tradeId,
                 bankAccount,
                 accountId,
@@ -338,7 +338,7 @@ public class BuyerAcceptsOfferProtocol {
         listener.onDepositTxPublished(depositTransaction);
 
         state = State.SendDepositTxIdToTaker;
-        SendDepositTxIdToTaker.run(this::onResultSendDepositTxIdToTaker, this::onFault, peer, messageService,
+        SendDepositTxIdToTaker.run(this::onResultSendDepositTxIdToTaker, this::onFault, peer, tradeMessageService,
                 tradeId, depositTransaction);
     }
 
@@ -381,7 +381,7 @@ public class BuyerAcceptsOfferProtocol {
         SendSignedPayoutTx.run(this::onResultSendSignedPayoutTx,
                 this::onFault,
                 peer,
-                messageService,
+                tradeMessageService,
                 walletService,
                 tradeId,
                 peersPayoutAddress,

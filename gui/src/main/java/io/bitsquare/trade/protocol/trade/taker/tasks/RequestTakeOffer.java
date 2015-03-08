@@ -17,8 +17,8 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.msg.MessageService;
-import io.bitsquare.msg.listeners.OutgoingMessageListener;
+import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.trade.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
 import io.bitsquare.util.handlers.ExceptionHandler;
@@ -31,9 +31,9 @@ public class RequestTakeOffer {
     private static final Logger log = LoggerFactory.getLogger(RequestTakeOffer.class);
 
     public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, Peer peer,
-                           MessageService messageService, String tradeId) {
+                           TradeMessageService tradeMessageService, String tradeId) {
         log.trace("Run task");
-        messageService.sendMessage(peer, new RequestTakeOfferMessage(tradeId),
+        tradeMessageService.sendMessage(peer, new RequestTakeOfferMessage(tradeId),
                 new OutgoingMessageListener() {
                     @Override
                     public void onResult() {

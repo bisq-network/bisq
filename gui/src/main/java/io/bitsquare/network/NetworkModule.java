@@ -15,34 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg;
+package io.bitsquare.network;
 
 import io.bitsquare.BitsquareModule;
 
-import com.google.inject.Injector;
-
 import org.springframework.core.env.Environment;
 
-public abstract class MessageModule extends BitsquareModule {
+public abstract class NetworkModule extends BitsquareModule {
 
-    protected MessageModule(Environment env) {
+    protected NetworkModule(Environment env) {
         super(env);
     }
 
     @Override
     protected final void configure() {
-        bind(MessageService.class).to(messageService()).asEagerSingleton();
-
         doConfigure();
     }
 
     protected void doConfigure() {
-    }
-
-    protected abstract Class<? extends MessageService> messageService();
-
-    @Override
-    protected void doClose(Injector injector) {
-        injector.getInstance(MessageService.class).shutDown();
     }
 }

@@ -19,8 +19,8 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.msg.MessageService;
-import io.bitsquare.msg.listeners.OutgoingMessageListener;
+import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.trade.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
 import io.bitsquare.util.handlers.ExceptionHandler;
@@ -40,7 +40,7 @@ public class SendSignedTakerDepositTxAsHex {
     public static void run(ResultHandler resultHandler,
                            ExceptionHandler exceptionHandler,
                            Peer peer,
-                           MessageService messageService,
+                           TradeMessageService tradeMessageService,
                            WalletService walletService,
                            BankAccount bankAccount,
                            String accountId,
@@ -68,7 +68,7 @@ public class SendSignedTakerDepositTxAsHex {
                 walletService.getAddressInfoByTradeID(tradeId).getAddressString(),
                 takerTxOutIndex,
                 offererTxOutIndex);
-        messageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
+        tradeMessageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
             @Override
             public void onResult() {
                 log.trace("RequestOffererDepositPublicationMessage successfully arrived at peer");

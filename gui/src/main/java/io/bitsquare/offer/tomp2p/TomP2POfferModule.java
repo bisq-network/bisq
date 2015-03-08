@@ -17,7 +17,7 @@
 
 package io.bitsquare.offer.tomp2p;
 
-import io.bitsquare.msg.tomp2p.TomP2PNode;
+import io.bitsquare.network.tomp2p.TomP2PNode;
 import io.bitsquare.offer.OfferModule;
 import io.bitsquare.offer.RemoteOfferBook;
 
@@ -45,8 +45,8 @@ class RemoteOfferBookProvider implements Provider<RemoteOfferBook> {
     private final TomP2POfferBook remoteOfferBook;
 
     @Inject
-    public RemoteOfferBookProvider(TomP2PNode p2pNode) {
-        remoteOfferBook = new TomP2POfferBook(p2pNode);
+    public RemoteOfferBookProvider(TomP2PNode tomP2PNode) {
+        remoteOfferBook = new TomP2POfferBook(tomP2PNode);
         remoteOfferBook.setExecutor(Platform::runLater);
     }
 

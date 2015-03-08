@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg.tomp2p;
+package io.bitsquare.network.tomp2p;
 
 import java.io.IOException;
 

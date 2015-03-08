@@ -17,10 +17,16 @@
 
 package io.bitsquare.network;
 
+import java.security.KeyPair;
+
+import rx.Observable;
+
 public interface ClientNode {
     ConnectionType getConnectionType();
 
     Node getAddress();
 
     Node getBootstrapNodeAddress();
+
+    public Observable<BootstrapState> bootstrap(KeyPair keyPair, MessageBroker messageBroker);
 }

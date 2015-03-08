@@ -21,11 +21,11 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
-import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RequestTakerDepositPaymentMessage;
@@ -86,7 +86,7 @@ public class SellerTakesOfferProtocol {
     // provided data
     private final Trade trade;
     private final SellerTakesOfferProtocolListener listener;
-    private final MessageService messageService;
+    private final TradeMessageService tradeMessageService;
     private final WalletService walletService;
     private final BlockChainService blockChainService;
     private final SignatureService signatureService;
@@ -133,14 +133,14 @@ public class SellerTakesOfferProtocol {
 
     public SellerTakesOfferProtocol(Trade trade,
                                     SellerTakesOfferProtocolListener listener,
-                                    MessageService messageService,
+                                    TradeMessageService tradeMessageService,
                                     WalletService walletService,
                                     BlockChainService blockChainService,
                                     SignatureService signatureService,
                                     User user) {
         this.trade = trade;
         this.listener = listener;
-        this.messageService = messageService;
+        this.tradeMessageService = tradeMessageService;
         this.walletService = walletService;
         this.blockChainService = blockChainService;
         this.signatureService = signatureService;
@@ -164,10 +164,13 @@ public class SellerTakesOfferProtocol {
         state = State.Init;
     }
 
+    // 1. GetPeerAddress
+    // Async
+    // In case of an error: No rollback activity needed
     public void start() {
         log.debug("start called " + step++);
         state = State.GetPeerAddress;
-        GetPeerAddress.run(this::onResultGetPeerAddress, this::onFault, messageService, peersMessagePublicKey);
+        GetPeerAddress.run(this::onResultGetPeerAddress, this::onFault, tradeMessageService, peersMessagePublicKey);
     }
 
     public void onResultGetPeerAddress(Peer peer) {
@@ -175,7 +178,7 @@ public class SellerTakesOfferProtocol {
         this.peer = peer;
 
         state = State.RequestTakeOffer;
-        RequestTakeOffer.run(this::onResultRequestTakeOffer, this::onFault, peer, messageService, tradeId);
+        RequestTakeOffer.run(this::onResultRequestTakeOffer, this::onFault, peer, tradeMessageService, tradeId);
     }
 
     public void onResultRequestTakeOffer() {
@@ -211,7 +214,7 @@ public class SellerTakesOfferProtocol {
 
         state = State.SendTakeOfferFeePayedTxId;
         SendTakeOfferFeePayedTxId.run(this::onResultSendTakeOfferFeePayedTxId, this::onFault, peer,
-                messageService, tradeId, takeOfferFeeTxId, tradeAmount, pubKeyForThatTrade);
+                tradeMessageService, tradeId, takeOfferFeeTxId, tradeAmount, pubKeyForThatTrade);
     }
 
     public void onResultSendTakeOfferFeePayedTxId() {
@@ -291,7 +294,7 @@ public class SellerTakesOfferProtocol {
         SendSignedTakerDepositTxAsHex.run(this::onResultSendSignedTakerDepositTxAsHex,
                 this::onFault,
                 peer,
-                messageService,
+                tradeMessageService,
                 walletService,
                 bankAccount,
                 accountId,
@@ -385,7 +388,7 @@ public class SellerTakesOfferProtocol {
         listener.onPayoutTxPublished(trade, transaction);
 
         state = State.SendPayoutTxToOfferer;
-        SendPayoutTxToOfferer.run(this::onResultSendPayoutTxToOfferer, this::onFault, peer, messageService,
+        SendPayoutTxToOfferer.run(this::onResultSendPayoutTxToOfferer, this::onFault, peer, tradeMessageService,
                 tradeId, payoutTxAsHex);
     }
 

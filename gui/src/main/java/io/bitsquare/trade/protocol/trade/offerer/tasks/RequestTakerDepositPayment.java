@@ -18,8 +18,8 @@
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.bank.BankAccount;
-import io.bitsquare.msg.MessageService;
-import io.bitsquare.msg.listeners.OutgoingMessageListener;
+import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.trade.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RequestTakerDepositPaymentMessage;
 import io.bitsquare.util.handlers.ExceptionHandler;
@@ -34,7 +34,7 @@ public class RequestTakerDepositPayment {
     public static void run(ResultHandler resultHandler,
                            ExceptionHandler exceptionHandler,
                            Peer peer,
-                           MessageService messageService,
+                           TradeMessageService tradeMessageService,
                            String tradeId,
                            BankAccount bankAccount,
                            String accountId,
@@ -44,7 +44,7 @@ public class RequestTakerDepositPayment {
         log.trace("Run task");
         RequestTakerDepositPaymentMessage tradeMessage = new RequestTakerDepositPaymentMessage(
                 tradeId, bankAccount, accountId, offererPubKey, preparedOffererDepositTxAsHex, offererTxOutIndex);
-        messageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
+        tradeMessageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
             @Override
             public void onResult() {
                 log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");

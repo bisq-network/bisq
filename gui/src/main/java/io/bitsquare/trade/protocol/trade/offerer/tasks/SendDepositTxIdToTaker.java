@@ -17,8 +17,8 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.msg.MessageService;
-import io.bitsquare.msg.listeners.OutgoingMessageListener;
+import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.trade.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
 import io.bitsquare.util.handlers.ExceptionHandler;
@@ -34,12 +34,12 @@ public class SendDepositTxIdToTaker {
     private static final Logger log = LoggerFactory.getLogger(SendDepositTxIdToTaker.class);
 
     public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, Peer peer,
-                           MessageService messageService, String tradeId, Transaction depositTransaction) {
+                           TradeMessageService tradeMessageService, String tradeId, Transaction depositTransaction) {
         log.trace("Run task");
         DepositTxPublishedMessage tradeMessage =
                 new DepositTxPublishedMessage(tradeId, Utils.HEX.encode(depositTransaction.bitcoinSerialize()));
 
-        messageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
+        tradeMessageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
             @Override
             public void onResult() {
                 log.trace("DepositTxPublishedMessage successfully arrived at peer");

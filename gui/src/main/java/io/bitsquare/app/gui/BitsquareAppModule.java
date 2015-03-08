@@ -19,16 +19,20 @@ package io.bitsquare.app.gui;
 
 import io.bitsquare.BitsquareModule;
 import io.bitsquare.account.AccountSettings;
+import io.bitsquare.arbitrator.ArbitratorMessageModule;
+import io.bitsquare.arbitrator.tomp2p.TomP2PArbitratorMessageModule;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.crypto.CryptoModule;
 import io.bitsquare.gui.GuiModule;
-import io.bitsquare.msg.MessageModule;
-import io.bitsquare.msg.tomp2p.TomP2PMessageModule;
+import io.bitsquare.network.NetworkModule;
+import io.bitsquare.network.tomp2p.TomP2PNetworkModule;
 import io.bitsquare.offer.OfferModule;
 import io.bitsquare.offer.tomp2p.TomP2POfferModule;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Preferences;
+import io.bitsquare.trade.TradeMessageModule;
 import io.bitsquare.trade.TradeModule;
+import io.bitsquare.trade.tomp2p.TomP2PTradeMessageModule;
 import io.bitsquare.user.User;
 
 import com.google.inject.Injector;
@@ -64,16 +68,22 @@ class BitsquareAppModule extends BitsquareModule {
         bind(Environment.class).toInstance(env);
         bind(UpdateProcess.class).asEagerSingleton();
 
-        install(messageModule());
+        install(networkModule());
         install(bitcoinModule());
         install(cryptoModule());
         install(tradeModule());
+        install(tradeMessageModule());
         install(offerModule());
+        install(arbitratorMessageModule());
         install(guiModule());
     }
 
-    protected MessageModule messageModule() {
-        return new TomP2PMessageModule(env);
+    protected ArbitratorMessageModule arbitratorMessageModule() {
+        return new TomP2PArbitratorMessageModule(env);
+    }
+
+    protected NetworkModule networkModule() {
+        return new TomP2PNetworkModule(env);
     }
 
     protected BitcoinModule bitcoinModule() {
@@ -86,6 +96,10 @@ class BitsquareAppModule extends BitsquareModule {
 
     protected TradeModule tradeModule() {
         return new TradeModule(env);
+    }
+
+    protected TradeMessageModule tradeMessageModule() {
+        return new TomP2PTradeMessageModule(env);
     }
 
     protected OfferModule offerModule() {

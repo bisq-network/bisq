@@ -15,10 +15,29 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade;
+package io.bitsquare.trade.tomp2p;
 
-import io.bitsquare.network.Message;
+import io.bitsquare.trade.TradeMessageModule;
+import io.bitsquare.trade.TradeMessageService;
 
-public interface TradeMessage extends Message {
-    public String getTradeId();
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
+
+import org.springframework.core.env.Environment;
+
+public class TomP2PTradeMessageModule extends TradeMessageModule {
+
+    public TomP2PTradeMessageModule(Environment env) {
+        super(env);
+    }
+
+    @Override
+    protected void doConfigure() {
+        bind(TradeMessageService.class).to(TomP2PTradeMessageService.class).in(Singleton.class);
+    }
+
+    @Override
+    protected void doClose(Injector injector) {
+        super.doClose(injector);
+    }
 }

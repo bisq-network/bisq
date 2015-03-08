@@ -22,15 +22,14 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.BlockChainService;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.crypto.SignatureService;
-import io.bitsquare.msg.Message;
-import io.bitsquare.msg.MessageService;
-import io.bitsquare.msg.listeners.OutgoingMessageListener;
+import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.RemoteOfferBook;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
+import io.bitsquare.trade.listeners.OutgoingMessageListener;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocol;
@@ -80,7 +79,7 @@ public class TradeManager {
     private final User user;
     private final AccountSettings accountSettings;
     private final Persistence persistence;
-    private final MessageService messageService;
+    private final TradeMessageService tradeMessageService;
     private final BlockChainService blockChainService;
     private final WalletService walletService;
     private final SignatureService signatureService;
@@ -105,13 +104,13 @@ public class TradeManager {
 
     @Inject
     public TradeManager(User user, AccountSettings accountSettings, Persistence persistence,
-                        MessageService messageService, BlockChainService blockChainService,
+                        TradeMessageService tradeMessageService, BlockChainService blockChainService,
                         WalletService walletService, SignatureService signatureService,
                         RemoteOfferBook remoteOfferBook) {
         this.user = user;
         this.accountSettings = accountSettings;
         this.persistence = persistence;
-        this.messageService = messageService;
+        this.tradeMessageService = tradeMessageService;
         this.blockChainService = blockChainService;
         this.walletService = walletService;
         this.signatureService = signatureService;
@@ -132,7 +131,7 @@ public class TradeManager {
             closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
 
-        messageService.addIncomingMessageListener(this::onIncomingTradeMessage);
+        tradeMessageService.addIncomingMessageListener(this::onIncomingTradeMessage);
     }
 
 
@@ -141,7 +140,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void cleanup() {
-        messageService.removeIncomingMessageListener(this::onIncomingTradeMessage);
+        tradeMessageService.removeIncomingMessageListener(this::onIncomingTradeMessage);
     }
 
 
@@ -250,7 +249,7 @@ public class TradeManager {
 
             BuyerAcceptsOfferProtocol buyerAcceptsOfferProtocol = new BuyerAcceptsOfferProtocol(trade,
                     sender,
-                    messageService,
+                    tradeMessageService,
                     walletService,
                     blockChainService,
                     signatureService,
@@ -380,7 +379,7 @@ public class TradeManager {
         };
 
         SellerTakesOfferProtocol sellerTakesOfferProtocol = new SellerTakesOfferProtocol(
-                trade, listener, messageService, walletService, blockChainService, signatureService,
+                trade, listener, tradeMessageService, walletService, blockChainService, signatureService,
                 user);
         takerAsSellerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
         sellerTakesOfferProtocol.start();
@@ -429,7 +428,7 @@ public class TradeManager {
                 boolean isOfferOpen = getTrade(tradeId) == null;
                 RespondToIsOfferAvailableMessage replyMessage =
                         new RespondToIsOfferAvailableMessage(tradeId, isOfferOpen);
-                messageService.sendMessage(sender, replyMessage, new OutgoingMessageListener() {
+                tradeMessageService.sendMessage(sender, replyMessage, new OutgoingMessageListener() {
                     @Override
                     public void onResult() {
                         log.trace("RespondToTakeOfferRequestMessage successfully arrived at peer");

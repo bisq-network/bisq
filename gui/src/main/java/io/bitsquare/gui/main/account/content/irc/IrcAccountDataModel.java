@@ -25,7 +25,7 @@ import io.bitsquare.bank.BankAccountType;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.msg.MessageService;
+import io.bitsquare.arbitrator.ArbitratorMessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
@@ -55,7 +55,7 @@ class IrcAccountDataModel implements Activatable, DataModel {
 
     private final User user;
     private final AccountSettings accountSettings;
-    private final MessageService messageService;
+    private final ArbitratorMessageService messageService;
     private final Persistence persistence;
 
     final StringProperty nickName = new SimpleStringProperty();
@@ -70,7 +70,7 @@ class IrcAccountDataModel implements Activatable, DataModel {
 
     @Inject
     public IrcAccountDataModel(User user, Persistence persistence, AccountSettings accountSettings,
-                               MessageService messageService) {
+                               ArbitratorMessageService messageService) {
         this.persistence = persistence;
         this.user = user;
         this.accountSettings = accountSettings;

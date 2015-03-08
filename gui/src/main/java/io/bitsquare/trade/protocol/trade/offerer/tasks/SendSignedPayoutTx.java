@@ -18,8 +18,8 @@
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.msg.MessageService;
-import io.bitsquare.msg.listeners.OutgoingMessageListener;
+import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.trade.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
 import io.bitsquare.util.handlers.ExceptionHandler;
@@ -39,7 +39,7 @@ public class SendSignedPayoutTx {
     public static void run(ResultHandler resultHandler,
                            ExceptionHandler exceptionHandler,
                            Peer peer,
-                           MessageService messageService,
+                           TradeMessageService tradeMessageService,
                            WalletService walletService,
                            String tradeId,
                            String takerPayoutAddress,
@@ -68,7 +68,7 @@ public class SendSignedPayoutTx {
                     takerPaybackAmount,
                     offererPayoutAddress);
 
-            messageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
+            tradeMessageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
                 @Override
                 public void onResult() {
                     log.trace("BankTransferInitedMessage successfully arrived at peer");

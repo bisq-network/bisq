@@ -24,7 +24,7 @@ import io.bitsquare.gui.components.confidence.ConfidenceProgressIndicator;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.msg.MessageService;
+import io.bitsquare.arbitrator.ArbitratorMessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
@@ -85,13 +85,13 @@ public class ArbitratorRegistrationView extends ActivatableView<AnchorPane, Void
 
     private final Persistence persistence;
     private final WalletService walletService;
-    private final MessageService messageService;
+    private final ArbitratorMessageService messageService;
     private final User user;
     private final BSFormatter formatter;
 
     @Inject
     private ArbitratorRegistrationView(Persistence persistence, WalletService walletService,
-                                       MessageService messageService, User user, BSFormatter formatter) {
+                                       ArbitratorMessageService messageService, User user, BSFormatter formatter) {
         this.persistence = persistence;
         this.walletService = walletService;
         this.messageService = messageService;

@@ -17,9 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.msg.MessageService;
-import io.bitsquare.msg.listeners.GetPeerAddressListener;
 import io.bitsquare.network.Peer;
+import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.trade.listeners.GetPeerAddressListener;
 import io.bitsquare.util.handlers.ExceptionHandler;
 
 import java.security.PublicKey;
@@ -29,11 +29,11 @@ import org.slf4j.LoggerFactory;
 
 public class GetPeerAddress {
     private static final Logger log = LoggerFactory.getLogger(GetPeerAddress.class);
-
+    
     public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler,
-                           MessageService messageService, PublicKey messagePublicKey) {
-        log.trace("Run task");
-        messageService.getPeerAddress(messagePublicKey, new GetPeerAddressListener() {
+                           TradeMessageService tradeMessageService, PublicKey messagePublicKey) {
+        log.trace("Run GetPeerAddress task");
+        tradeMessageService.getPeerAddress(messagePublicKey, new GetPeerAddressListener() {
             @Override
             public void onResult(Peer peer) {
                 log.trace("Received peer = " + peer.toString());
@@ -42,8 +42,8 @@ public class GetPeerAddress {
 
             @Override
             public void onFailed() {
-                log.error("Lookup for peer address faultHandler.onFault.");
-                exceptionHandler.handleException(new Exception("Lookup for peer address faultHandler.onFault."));
+                log.error("Lookup for peer address failed.");
+                exceptionHandler.handleException(new Exception("Lookup for peer address failed."));
             }
         });
     }

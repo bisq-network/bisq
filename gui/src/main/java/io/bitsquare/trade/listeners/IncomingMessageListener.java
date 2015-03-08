@@ -15,12 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg.listeners;
+package io.bitsquare.trade.listeners;
 
+import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 
-public interface GetPeerAddressListener {
-    void onResult(Peer peer);
-
-    void onFailed();
+public interface IncomingMessageListener {
+    void onMessage(Message message, Peer sender);
 }

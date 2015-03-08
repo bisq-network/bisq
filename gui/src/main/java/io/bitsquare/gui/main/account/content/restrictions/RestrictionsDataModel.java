@@ -24,7 +24,7 @@ import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.LanguageUtil;
 import io.bitsquare.locale.Region;
-import io.bitsquare.msg.MessageService;
+import io.bitsquare.arbitrator.ArbitratorMessageService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
@@ -50,7 +50,7 @@ class RestrictionsDataModel implements Activatable, DataModel {
     private final User user;
     private final AccountSettings accountSettings;
     private final Persistence persistence;
-    private final MessageService messageService;
+    private final ArbitratorMessageService messageService;
 
     final ObservableList<Locale> languageList = FXCollections.observableArrayList();
     final ObservableList<Country> countryList = FXCollections.observableArrayList();
@@ -62,7 +62,7 @@ class RestrictionsDataModel implements Activatable, DataModel {
 
     @Inject
     public RestrictionsDataModel(User user, AccountSettings accountSettings, Persistence persistence,
-                                 MessageService messageService) {
+                                 ArbitratorMessageService messageService) {
         this.user = user;
         this.accountSettings = accountSettings;
         this.persistence = persistence;

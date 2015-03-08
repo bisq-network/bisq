@@ -15,54 +15,48 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg.tomp2p;
+package io.bitsquare.network.tomp2p;
 
-import io.bitsquare.msg.MessageModule;
-import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.BootstrapNodes;
 import io.bitsquare.network.ClientNode;
+import io.bitsquare.network.NetworkModule;
 import io.bitsquare.network.Node;
 
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import com.google.inject.name.Names;
-
-import javax.inject.Singleton;
 
 import org.springframework.core.env.Environment;
 
-import static io.bitsquare.msg.tomp2p.BootstrappedPeerBuilder.*;
+import static io.bitsquare.network.tomp2p.BootstrappedPeerBuilder.*;
 
-public class TomP2PMessageModule extends MessageModule {
-
+public class TomP2PNetworkModule extends NetworkModule {
     public static final String BOOTSTRAP_NODE_NAME_KEY = "bootstrap.node.name";
     public static final String BOOTSTRAP_NODE_IP_KEY = "bootstrap.node.ip";
     public static final String BOOTSTRAP_NODE_PORT_KEY = "bootstrap.node.port";
     public static final String NETWORK_INTERFACE_KEY = BootstrappedPeerBuilder.NETWORK_INTERFACE_KEY;
     public static final String USE_MANUAL_PORT_FORWARDING_KEY = BootstrappedPeerBuilder.USE_MANUAL_PORT_FORWARDING_KEY;
 
-    public TomP2PMessageModule(Environment env) {
+    public TomP2PNetworkModule(Environment env) {
         super(env);
     }
 
     @Override
     protected void doConfigure() {
-        bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(
-                env.getProperty(Node.PORT_KEY, int.class, Node.DEFAULT_PORT));
+        bind(ClientNode.class).to(TomP2PNode.class).in(Singleton.class);
+        bind(TomP2PNode.class).in(Singleton.class);
+
+        bind(int.class).annotatedWith(Names.named(Node.PORT_KEY)).toInstance(env.getProperty(Node.PORT_KEY, int.class, Node.DEFAULT_PORT));
         bind(boolean.class).annotatedWith(Names.named(USE_MANUAL_PORT_FORWARDING_KEY)).toInstance(
                 env.getProperty(USE_MANUAL_PORT_FORWARDING_KEY, boolean.class, false));
-                
-        bind(TomP2PNode.class).in(Singleton.class);
-        bind(ClientNode.class).to(TomP2PNode.class);
 
         bind(Node.class).annotatedWith(Names.named(BOOTSTRAP_NODE_KEY)).toInstance(
-                Node.at(
-                        env.getProperty(BOOTSTRAP_NODE_NAME_KEY, BootstrapNodes.DEFAULT.getName()),
+                Node.at(env.getProperty(BOOTSTRAP_NODE_NAME_KEY, BootstrapNodes.DEFAULT.getName()),
                         env.getProperty(BOOTSTRAP_NODE_IP_KEY, BootstrapNodes.DEFAULT.getIp()),
                         env.getProperty(BOOTSTRAP_NODE_PORT_KEY, int.class, BootstrapNodes.DEFAULT.getPort())
                 )
         );
-        bindConstant().annotatedWith(Names.named(NETWORK_INTERFACE_KEY)).to(
-                env.getProperty(NETWORK_INTERFACE_KEY, NETWORK_INTERFACE_UNSPECIFIED));
+        bindConstant().annotatedWith(Names.named(NETWORK_INTERFACE_KEY)).to(env.getProperty(NETWORK_INTERFACE_KEY, NETWORK_INTERFACE_UNSPECIFIED));
         bind(BootstrappedPeerBuilder.class).asEagerSingleton();
     }
 
@@ -71,10 +65,5 @@ public class TomP2PMessageModule extends MessageModule {
         super.doClose(injector);
 
         injector.getInstance(BootstrappedPeerBuilder.class).shutDown();
-    }
-
-    @Override
-    protected Class<? extends MessageService> messageService() {
-        return TomP2PMessageService.class;
     }
 }

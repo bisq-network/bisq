@@ -17,7 +17,7 @@
 
 package io.bitsquare.offer.tomp2p;
 
-import io.bitsquare.msg.tomp2p.TomP2PNode;
+import io.bitsquare.network.tomp2p.TomP2PNode;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.RemoteOfferBook;
 import io.bitsquare.util.handlers.FaultHandler;
@@ -29,8 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
-
-import javax.inject.Inject;
 
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleLongProperty;
@@ -55,12 +53,11 @@ public class TomP2POfferBook implements RemoteOfferBook {
     private final List<Listener> offerRepositoryListeners = new ArrayList<>();
     private final LongProperty invalidationTimestamp = new SimpleLongProperty(0);
 
-    private final TomP2PNode p2pNode;
+    private final TomP2PNode tomP2PNode;
     private Executor executor;
 
-    @Inject
-    public TomP2POfferBook(TomP2PNode p2pNode) {
-        this.p2pNode = p2pNode;
+    public TomP2POfferBook(TomP2PNode tomP2PNode) {
+        this.tomP2PNode = tomP2PNode;
     }
 
     public void setExecutor(Executor executor) {
@@ -78,7 +75,7 @@ public class TomP2POfferBook implements RemoteOfferBook {
             offerData.ttlSeconds(defaultOfferTTL);
             log.trace("Add offer to DHT requested. Added data: [locationKey: " + locationKey +
                     ", hash: " + offerData.hash().toString() + "]");
-            FuturePut futurePut = p2pNode.addProtectedData(locationKey, offerData);
+            FuturePut futurePut = tomP2PNode.addProtectedData(locationKey, offerData);
             futurePut.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
@@ -121,7 +118,7 @@ public class TomP2POfferBook implements RemoteOfferBook {
             final Data offerData = new Data(offer);
             log.trace("Remove offer from DHT requested. Removed data: [locationKey: " + locationKey +
                     ", hash: " + offerData.hash().toString() + "]");
-            FutureRemove futureRemove = p2pNode.removeFromDataMap(locationKey, offerData);
+            FutureRemove futureRemove = tomP2PNode.removeFromDataMap(locationKey, offerData);
             futureRemove.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
@@ -166,7 +163,7 @@ public class TomP2POfferBook implements RemoteOfferBook {
     public void getOffers(String currencyCode) {
         Number160 locationKey = Number160.createHash(currencyCode);
         log.trace("Get offers from DHT requested for locationKey: " + locationKey);
-        FutureGet futureGet = p2pNode.getDataMap(locationKey);
+        FutureGet futureGet = tomP2PNode.getDataMap(locationKey);
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
@@ -230,7 +227,7 @@ public class TomP2POfferBook implements RemoteOfferBook {
     private void writeInvalidationTimestampToDHT(String currencyCode) {
         invalidationTimestamp.set(System.currentTimeMillis());
         try {
-            FuturePut putFuture = p2pNode.putData(getInvalidatedLocationKey(currencyCode),
+            FuturePut putFuture = tomP2PNode.putData(getInvalidatedLocationKey(currencyCode),
                     new Data(invalidationTimestamp.get()));
             putFuture.addListener(new BaseFutureListener<BaseFuture>() {
                 @Override
@@ -257,7 +254,7 @@ public class TomP2POfferBook implements RemoteOfferBook {
     }
 
     public void requestInvalidationTimeStampFromDHT(String currencyCode) {
-        FutureGet futureGet = p2pNode.getData(getInvalidatedLocationKey(currencyCode));
+        FutureGet futureGet = tomP2PNode.getData(getInvalidatedLocationKey(currencyCode));
         futureGet.addListener(new BaseFutureListener<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {

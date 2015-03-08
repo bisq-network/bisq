@@ -15,16 +15,15 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg.tomp2p;
+package io.bitsquare.network.tomp2p;
 
 import io.bitsquare.BitsquareException;
-import io.bitsquare.msg.MessageBroker;
+import io.bitsquare.network.MessageBroker;
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.ClientNode;
 import io.bitsquare.network.ConnectionType;
 import io.bitsquare.network.NetworkException;
 import io.bitsquare.network.Node;
-import io.bitsquare.network.tomp2p.TomP2PPeer;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -75,10 +74,7 @@ public class TomP2PNode implements ClientNode {
     private static final Logger log = LoggerFactory.getLogger(TomP2PNode.class);
 
     private KeyPair keyPair;
-    private MessageBroker messageBroker;
-
     private PeerAddress storedPeerAddress;
-
     private PeerDHT peerDHT;
     private BootstrappedPeerBuilder bootstrappedPeerBuilder;
 
@@ -97,20 +93,15 @@ public class TomP2PNode implements ClientNode {
         this.keyPair = keyPair;
         this.peerDHT = peerDHT;
         peerDHT.peerBean().keyPair(keyPair);
-        messageBroker = (message, peerAddress) -> {
-        };
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Observable<BootstrapState> bootstrap(MessageBroker messageBroker, KeyPair keyPair) {
+    public Observable<BootstrapState> bootstrap(KeyPair keyPair, MessageBroker messageBroker) {
         checkNotNull(keyPair, "keyPair must not be null.");
-        checkNotNull(messageBroker, "messageBroker must not be null.");
 
-        this.messageBroker = messageBroker;
         this.keyPair = keyPair;
         bootstrappedPeerBuilder.setKeyPair(keyPair);
 
@@ -128,7 +119,7 @@ public class TomP2PNode implements ClientNode {
                 if (peerDHT != null) {
                     TomP2PNode.this.peerDHT = peerDHT;
                     setupTimerForIPCheck();
-                    setupReplyHandler();
+                    setupReplyHandler(messageBroker);
                     try {
                         storeAddress();
                     } catch (NetworkException e) {
@@ -152,10 +143,6 @@ public class TomP2PNode implements ClientNode {
         return bootstrapStateSubject.asObservable();
     }
 
-    public void shutDown() {
-        if (peerDHT != null)
-            peerDHT.shutdown();
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Generic DHT methods
@@ -302,7 +289,7 @@ public class TomP2PNode implements ClientNode {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupReplyHandler() {
+    private void setupReplyHandler(MessageBroker messageBroker) {
         peerDHT.peer().objectDataReply((sender, request) -> {
             log.debug("handleMessage peerAddress " + sender);
             log.debug("handleMessage message " + request);

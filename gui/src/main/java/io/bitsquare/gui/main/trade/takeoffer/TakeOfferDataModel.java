@@ -21,15 +21,15 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.FeePolicy;
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.msg.MessageService;
-import io.bitsquare.msg.listeners.GetPeerAddressListener;
-import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.settings.Preferences;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.trade.listeners.GetPeerAddressListener;
+import io.bitsquare.trade.listeners.OutgoingMessageListener;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestIsOfferAvailableMessage;
 
 import org.bitcoinj.core.Coin;
@@ -69,7 +69,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
 
     private final TradeManager tradeManager;
     private final WalletService walletService;
-    private MessageService messageService;
+    private TradeMessageService tradeMessageService;
     private final Preferences preferences;
     private final Persistence persistence;
 
@@ -98,12 +98,12 @@ class TakeOfferDataModel implements Activatable, DataModel {
     private boolean isActivated;
 
     @Inject
-    public TakeOfferDataModel(TradeManager tradeManager, WalletService walletService, MessageService messageService,
+    public TakeOfferDataModel(TradeManager tradeManager, WalletService walletService, TradeMessageService tradeMessageService,
                               Preferences preferences,
                               Persistence persistence) {
         this.tradeManager = tradeManager;
         this.walletService = walletService;
-        this.messageService = messageService;
+        this.tradeMessageService = tradeMessageService;
         this.preferences = preferences;
         this.persistence = persistence;
 
@@ -154,7 +154,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
     // TODO: Should be moved to a domain and handled with add/remove listeners instead of isActivated
     // or maybe with rx?
     private void getPeerAddress(Offer offer) {
-        messageService.getPeerAddress(offer.getMessagePublicKey(), new GetPeerAddressListener() {
+        tradeMessageService.getPeerAddress(offer.getMessagePublicKey(), new GetPeerAddressListener() {
             @Override
             public void onResult(Peer peer) {
                 if (isActivated)
@@ -170,7 +170,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
     }
 
     private void isOfferAvailable(Peer peer, String offerId) {
-        messageService.sendMessage(peer, new RequestIsOfferAvailableMessage(offerId),
+        tradeMessageService.sendMessage(peer, new RequestIsOfferAvailableMessage(offerId),
                 new OutgoingMessageListener() {
                     @Override
                     public void onResult() {

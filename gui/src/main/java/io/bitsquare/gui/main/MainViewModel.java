@@ -20,6 +20,7 @@ package io.bitsquare.gui.main;
 import io.bitsquare.account.AccountSettings;
 import io.bitsquare.app.gui.UpdateProcess;
 import io.bitsquare.arbitrator.Arbitrator;
+import io.bitsquare.arbitrator.ArbitratorMessageService;
 import io.bitsquare.arbitrator.Reputation;
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.bank.BankAccountType;
@@ -28,11 +29,12 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CountryUtil;
 import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.msg.MessageService;
 import io.bitsquare.network.BootstrapState;
+import io.bitsquare.network.ClientNode;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
 
@@ -102,7 +104,9 @@ class MainViewModel implements ViewModel {
 
     private final User user;
     private final WalletService walletService;
-    private final MessageService messageService;
+    private final ClientNode clientNode;
+    private TradeMessageService tradeMessageService;
+    private ArbitratorMessageService arbitratorMessageService;
     private final TradeManager tradeManager;
     private UpdateProcess updateProcess;
     private final BSFormatter formatter;
@@ -110,12 +114,15 @@ class MainViewModel implements ViewModel {
     private AccountSettings accountSettings;
 
     @Inject
-    public MainViewModel(User user, WalletService walletService, MessageService messageService,
+    public MainViewModel(User user, WalletService walletService, ClientNode clientNode, TradeMessageService tradeMessageService,
+                         ArbitratorMessageService arbitratorMessageService,
                          TradeManager tradeManager, BitcoinNetwork bitcoinNetwork, UpdateProcess updateProcess,
                          BSFormatter formatter, Persistence persistence, AccountSettings accountSettings) {
         this.user = user;
         this.walletService = walletService;
-        this.messageService = messageService;
+        this.clientNode = clientNode;
+        this.tradeMessageService = tradeMessageService;
+        this.arbitratorMessageService = arbitratorMessageService;
         this.tradeManager = tradeManager;
         this.updateProcess = updateProcess;
         this.formatter = formatter;
@@ -160,7 +167,7 @@ class MainViewModel implements ViewModel {
                 error -> log.error(error.toString()),
                 () -> Platform.runLater(() -> setBitcoinNetworkSyncProgress(1.0)));
 
-        Observable<BootstrapState> messageObservable = messageService.init();
+        Observable<BootstrapState> messageObservable = clientNode.bootstrap(user.getMessageKeyPair(), tradeMessageService);
         messageObservable.publish();
         messageObservable.subscribe(
                 state -> Platform.runLater(() -> setBootstrapState(state)),
@@ -377,7 +384,7 @@ class MainViewModel implements ViewModel {
             accountSettings.addAcceptedArbitrator(arbitrator);
             persistence.write(accountSettings);
 
-            messageService.addArbitrator(arbitrator);
+            arbitratorMessageService.addArbitrator(arbitrator);
         }
     }
 }

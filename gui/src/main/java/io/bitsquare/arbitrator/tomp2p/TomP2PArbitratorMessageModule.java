@@ -15,10 +15,29 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg.listeners;
+package io.bitsquare.arbitrator.tomp2p;
 
-public interface OutgoingMessageListener {
-    void onFailed();
+import io.bitsquare.arbitrator.ArbitratorMessageModule;
+import io.bitsquare.arbitrator.ArbitratorMessageService;
 
-    void onResult();
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
+
+import org.springframework.core.env.Environment;
+
+public class TomP2PArbitratorMessageModule extends ArbitratorMessageModule {
+
+    public TomP2PArbitratorMessageModule(Environment env) {
+        super(env);
+    }
+
+    @Override
+    protected void doConfigure() {
+        bind(ArbitratorMessageService.class).to(TomP2PArbitratorMessageService.class).in(Singleton.class);
+    }
+
+    @Override
+    protected void doClose(Injector injector) {
+        super.doClose(injector);
+    }
 }

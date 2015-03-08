@@ -15,10 +15,23 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade;
+package io.bitsquare.arbitrator;
 
-import io.bitsquare.network.Message;
+import io.bitsquare.BitsquareModule;
 
-public interface TradeMessage extends Message {
-    public String getTradeId();
+import org.springframework.core.env.Environment;
+
+public abstract class ArbitratorMessageModule extends BitsquareModule {
+
+    protected ArbitratorMessageModule(Environment env) {
+        super(env);
+    }
+
+    @Override
+    protected final void configure() {
+        doConfigure();
+    }
+
+    protected void doConfigure() {
+    }
 }

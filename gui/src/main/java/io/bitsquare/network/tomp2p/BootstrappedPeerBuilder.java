@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.msg.tomp2p;
+package io.bitsquare.network.tomp2p;
 
 import io.bitsquare.network.BootstrapState;
 import io.bitsquare.network.Node;
@@ -180,7 +180,7 @@ public class BootstrappedPeerBuilder {
         return settableFuture;
     }
 
-    void shutDown() {
+    public void shutDown() {
         if (peerDHT != null)
             peerDHT.shutdown();
     }
