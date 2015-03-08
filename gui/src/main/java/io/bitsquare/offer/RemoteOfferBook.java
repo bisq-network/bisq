@@ -17,8 +17,8 @@
 
 package io.bitsquare.offer;
 
-import io.bitsquare.util.task.FaultHandler;
-import io.bitsquare.util.task.ResultHandler;
+import io.bitsquare.util.handlers.FaultHandler;
+import io.bitsquare.util.handlers.ResultHandler;
 
 import java.util.List;
 import java.util.concurrent.Executor;

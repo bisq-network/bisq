@@ -20,8 +20,8 @@ package io.bitsquare.offer.tomp2p;
 import io.bitsquare.msg.tomp2p.TomP2PNode;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.RemoteOfferBook;
-import io.bitsquare.util.task.FaultHandler;
-import io.bitsquare.util.task.ResultHandler;
+import io.bitsquare.util.handlers.FaultHandler;
+import io.bitsquare.util.handlers.ResultHandler;
 
 import java.io.IOException;
 

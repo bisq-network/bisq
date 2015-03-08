@@ -48,9 +48,8 @@ import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDep
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
 import io.bitsquare.user.User;
-import io.bitsquare.util.task.ErrorMessageHandler;
-import io.bitsquare.util.task.FaultHandler;
-import io.bitsquare.util.task.ResultHandler;
+import io.bitsquare.util.handlers.ErrorMessageHandler;
+import io.bitsquare.util.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -180,7 +179,7 @@ public class TradeManager {
                 remoteOfferBook,
                 (transaction) -> {
                     saveOffer(offer);
-                    resultHandler.onResult(transaction);
+                    resultHandler.handleResult(transaction);
                 },
                 (message, throwable) -> errorMessageHandler.handleErrorMessage(message)
         );
@@ -193,15 +192,20 @@ public class TradeManager {
         persistOffers();
     }
 
-    public void requestRemoveOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler) {
-        if (offers.containsKey(offer.getId()))
-            offers.remove(offer.getId());
-        else
-            log.error("offers does not contain the offer with the ID " + offer.getId());
-
-        persistOffers();
-
-        remoteOfferBook.removeOffer(offer, resultHandler, faultHandler);
+    public void requestRemoveOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        remoteOfferBook.removeOffer(offer,
+                () -> {
+                    if (offers.containsKey(offer.getId())) {
+                        offers.remove(offer.getId());
+                        persistOffers();
+                        resultHandler.handleResult();
+                    }
+                    else {
+                        log.error("Locally stored offers does not contain the offer with the ID " + offer.getId());
+                        errorMessageHandler.handleErrorMessage("Locally stored offers does not contain the offer with the ID " + offer.getId());
+                    }
+                },
+                (message, throwable) -> errorMessageHandler.handleErrorMessage(message));
     }
 
 
@@ -258,7 +262,7 @@ public class TradeManager {
                             persistPendingTrades();
                             requestRemoveOffer(offer,
                                     () -> log.debug("remove was successful"),
-                                    (message, throwable) -> log.error(message));
+                                    (message) -> log.error(message));
                         }
 
                         @Override

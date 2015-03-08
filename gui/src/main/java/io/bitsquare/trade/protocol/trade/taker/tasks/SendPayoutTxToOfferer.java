@@ -21,8 +21,8 @@ import io.bitsquare.msg.MessageService;
 import io.bitsquare.msg.listeners.OutgoingMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
-import io.bitsquare.util.task.ExceptionHandler;
-import io.bitsquare.util.task.ResultHandler;
+import io.bitsquare.util.handlers.ExceptionHandler;
+import io.bitsquare.util.handlers.ResultHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

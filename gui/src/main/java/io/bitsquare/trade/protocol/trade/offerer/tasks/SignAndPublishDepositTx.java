@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.util.task.ExceptionHandler;
+import io.bitsquare.util.handlers.ExceptionHandler;
 
 import org.bitcoinj.core.Transaction;
 

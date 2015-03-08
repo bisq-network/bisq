@@ -38,7 +38,7 @@ import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
-import io.bitsquare.util.task.FaultHandler;
+import io.bitsquare.util.handlers.FaultHandler;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

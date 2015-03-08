@@ -15,8 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.util.task;
+package io.bitsquare.util.handlers;
 
-public interface ResultHandler {
-    void handleResult();
+/**
+ * For reporting throwables only
+ */
+public interface ExceptionHandler {
+    void handleException(Throwable throwable);
 }

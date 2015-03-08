@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.util.task;
+package io.bitsquare.util.handlers;
 
 /**
  * For reporting error message only (UI)

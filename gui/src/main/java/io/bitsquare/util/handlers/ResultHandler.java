@@ -15,11 +15,8 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.util.task;
+package io.bitsquare.util.handlers;
 
-/**
- * For reporting a description message and throwable
- */
-public interface FaultHandler {
-    void handleFault(String message, Throwable throwable);
+public interface ResultHandler {
+    void handleResult();
 }

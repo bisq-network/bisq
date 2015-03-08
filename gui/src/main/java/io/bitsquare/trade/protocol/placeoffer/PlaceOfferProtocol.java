@@ -21,7 +21,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.RemoteOfferBook;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.util.task.FaultHandler;
+import io.bitsquare.util.handlers.FaultHandler;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
@@ -108,7 +108,7 @@ public class PlaceOfferProtocol {
                         Exception ex = new Exception("Broadcast of offer fee payment failed because transaction = null.");
                         faultHandler.handleFault("Broadcast of offer fee payment failed.", ex);
                     }
-                    resultHandler1.onResult(transaction);
+                    resultHandler1.handleResult(transaction);
                 }
 
                 @Override
@@ -131,7 +131,7 @@ public class PlaceOfferProtocol {
         
         remoteOfferBook.addOffer(offer,
                 () -> {
-                    resultHandler.onResult(transaction);
+                    resultHandler.handleResult(transaction);
                 },
                 (message, throwable) -> {
                     repeatAddOfferCallCounter++;

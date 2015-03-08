@@ -22,7 +22,7 @@ import io.bitsquare.crypto.SignatureService;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.util.Utilities;
-import io.bitsquare.util.task.ExceptionHandler;
+import io.bitsquare.util.handlers.ExceptionHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;

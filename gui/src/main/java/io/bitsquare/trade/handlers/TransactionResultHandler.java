@@ -20,5 +20,5 @@ package io.bitsquare.trade.handlers;
 import org.bitcoinj.core.Transaction;
 
 public interface TransactionResultHandler {
-    void onResult(Transaction transaction);
+    void handleResult(Transaction transaction);
 }

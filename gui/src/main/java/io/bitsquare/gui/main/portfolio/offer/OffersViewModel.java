@@ -50,7 +50,7 @@ class OffersViewModel extends ActivatableWithDataModel<OffersDataModel> implemen
                     // visual feedback?
                     log.debug("Remove offer was successful");
                 },
-                (message, throwable) -> {
+                (message) -> {
                     log.error(message);
                     Popups.openWarningPopup("Remove offer failed", message);
                 });

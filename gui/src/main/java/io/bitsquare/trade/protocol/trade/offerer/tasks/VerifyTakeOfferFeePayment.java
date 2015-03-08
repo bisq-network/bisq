@@ -18,8 +18,8 @@
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.btc.WalletService;
-import io.bitsquare.util.task.ExceptionHandler;
-import io.bitsquare.util.task.ResultHandler;
+import io.bitsquare.util.handlers.ExceptionHandler;
+import io.bitsquare.util.handlers.ResultHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

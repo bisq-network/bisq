@@ -21,8 +21,8 @@ import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
-import io.bitsquare.util.task.FaultHandler;
-import io.bitsquare.util.task.ResultHandler;
+import io.bitsquare.util.handlers.ErrorMessageHandler;
+import io.bitsquare.util.handlers.ResultHandler;
 
 import com.google.inject.Inject;
 
@@ -77,8 +77,8 @@ class OffersDataModel implements Activatable, DataModel {
         tradeManager.getOffers().removeListener(offerMapChangeListener);
     }
 
-    void removeOffer(Offer offer, ResultHandler resultHandler, FaultHandler faultHandler) {
-        tradeManager.requestRemoveOffer(offer, resultHandler, faultHandler);
+    void removeOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        tradeManager.requestRemoveOffer(offer, resultHandler, errorMessageHandler);
     }
 
 
