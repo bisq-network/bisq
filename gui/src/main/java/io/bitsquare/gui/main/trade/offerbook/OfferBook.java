@@ -21,7 +21,7 @@ import io.bitsquare.bank.BankAccount;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.offer.RemoteOfferBook;
+import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
 
@@ -50,11 +50,11 @@ public class OfferBook {
 
     private static final Logger log = LoggerFactory.getLogger(OfferBook.class);
 
-    private final RemoteOfferBook remoteOfferBook;
+    private final OfferBookService offerBookService;
     private final User user;
 
     private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-    private final RemoteOfferBook.Listener remoteOfferBookListener;
+    private final OfferBookService.Listener remoteOfferBookListener;
     private final ChangeListener<BankAccount> bankAccountChangeListener;
     private final ChangeListener<Number> invalidationListener;
     private String fiatCode;
@@ -68,14 +68,14 @@ public class OfferBook {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBook(RemoteOfferBook remoteOfferBook, User user) {
-        this.remoteOfferBook = remoteOfferBook;
+    OfferBook(OfferBookService offerBookService, User user) {
+        this.offerBookService = offerBookService;
         this.user = user;
 
         bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
         invalidationListener = (ov, oldValue, newValue) -> requestOffers();
 
-        remoteOfferBookListener = new RemoteOfferBook.Listener() {
+        remoteOfferBookListener = new OfferBookService.Listener() {
             @Override
             public void onOfferAdded(Offer offer) {
                 addOfferToOfferBookListItems(offer);
@@ -142,15 +142,15 @@ public class OfferBook {
     private void addListeners() {
         log.debug("addListeners ");
         user.currentBankAccountProperty().addListener(bankAccountChangeListener);
-        remoteOfferBook.addListener(remoteOfferBookListener);
-        remoteOfferBook.invalidationTimestampProperty().addListener(invalidationListener);
+        offerBookService.addListener(remoteOfferBookListener);
+        offerBookService.invalidationTimestampProperty().addListener(invalidationListener);
     }
 
     private void removeListeners() {
         log.debug("removeListeners ");
         user.currentBankAccountProperty().removeListener(bankAccountChangeListener);
-        remoteOfferBook.removeListener(remoteOfferBookListener);
-        remoteOfferBook.invalidationTimestampProperty().removeListener(invalidationListener);
+        offerBookService.removeListener(remoteOfferBookListener);
+        offerBookService.invalidationTimestampProperty().removeListener(invalidationListener);
     }
 
     private void addOfferToOfferBookListItems(Offer offer) {
@@ -160,7 +160,7 @@ public class OfferBook {
     }
 
     private void requestOffers() {
-        remoteOfferBook.getOffers(fiatCode);
+        offerBookService.getOffers(fiatCode);
     }
 
 
@@ -173,11 +173,11 @@ public class OfferBook {
         addListeners();
         setBankAccount(user.getCurrentBankAccount().get());
         pollingTimer = Utilities.setInterval(3000, (animationTimer) -> {
-            remoteOfferBook.requestInvalidationTimeStampFromDHT(fiatCode);
+            offerBookService.requestInvalidationTimeStampFromDHT(fiatCode);
             return null;
         });
 
-        remoteOfferBook.getOffers(fiatCode);
+        offerBookService.getOffers(fiatCode);
     }
 
     private void stopPolling() {

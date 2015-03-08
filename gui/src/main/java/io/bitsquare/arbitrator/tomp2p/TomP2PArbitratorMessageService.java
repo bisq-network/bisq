@@ -27,10 +27,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-import javax.inject.Inject;
-
-import javafx.application.Platform;
+import java.util.concurrent.Executor;
 
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.dht.FuturePut;
@@ -51,17 +48,21 @@ public class TomP2PArbitratorMessageService implements ArbitratorMessageService 
     
     private final TomP2PNode tomP2PNode;
     private final List<ArbitratorListener> arbitratorListeners = new ArrayList<>();
+    private Executor executor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
     public TomP2PArbitratorMessageService(TomP2PNode tomP2PNode) {
         this.tomP2PNode = tomP2PNode;
     }
 
+    
+    public void setExecutor(Executor executor) {
+        this.executor = executor;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Arbitrators
@@ -76,7 +77,7 @@ public class TomP2PArbitratorMessageService implements ArbitratorMessageService 
             addFuture.addListener(new BaseFutureAdapter<BaseFuture>() {
                 @Override
                 public void operationComplete(BaseFuture future) throws Exception {
-                    Platform.runLater(() -> arbitratorListeners.stream().forEach(listener ->
+                    executor.execute(() -> arbitratorListeners.stream().forEach(listener ->
                     {
                         try {
                             Object arbitratorDataObject = arbitratorData.object();
@@ -110,7 +111,7 @@ public class TomP2PArbitratorMessageService implements ArbitratorMessageService 
         removeFuture.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
-                Platform.runLater(() -> arbitratorListeners.stream().forEach(listener ->
+                executor.execute(() -> arbitratorListeners.stream().forEach(listener ->
                 {
                     for (Data arbitratorData : removeFuture.dataMap().values()) {
                         try {
@@ -141,7 +142,7 @@ public class TomP2PArbitratorMessageService implements ArbitratorMessageService 
         futureGet.addListener(new BaseFutureAdapter<BaseFuture>() {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
-                Platform.runLater(() -> arbitratorListeners.stream().forEach(listener ->
+                executor.execute(() -> arbitratorListeners.stream().forEach(listener ->
                 {
                     List<Arbitrator> arbitrators = new ArrayList<>();
                     for (Data arbitratorData : futureGet.dataMap().values()) {

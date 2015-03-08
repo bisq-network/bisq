@@ -31,10 +31,7 @@ import java.security.PublicKey;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.inject.Inject;
-
-import javafx.application.Platform;
+import java.util.concurrent.Executor;
 
 import net.tomp2p.dht.FutureGet;
 import net.tomp2p.futures.BaseFuture;
@@ -54,25 +51,29 @@ import org.slf4j.LoggerFactory;
  * The TomP2P library codebase shall not be used outside that service.
  * That way we limit the dependency of the TomP2P library only to that class (and it's sub components).
  * <p/>
- * TODO: improve callbacks that Platform.runLater is not necessary. We call usually that methods form teh UI thread.
+ * TODO: improve callbacks that executor.execute is not necessary. We call usually that methods form teh UI thread.
  */
 public class TomP2PTradeMessageService implements TradeMessageService {
     private static final Logger log = LoggerFactory.getLogger(TomP2PTradeMessageService.class);
 
     private final TomP2PNode tomP2PNode;
     private final User user;
-
     private final List<IncomingMessageListener> incomingMessageListeners = new ArrayList<>();
+    private Executor executor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
     public TomP2PTradeMessageService(User user, TomP2PNode tomP2PNode) {
         this.user = user;
         this.tomP2PNode = tomP2PNode;
+    }
+    
+    
+    public void setExecutor(Executor executor) {
+        this.executor = executor;
     }
 
 
@@ -89,11 +90,11 @@ public class TomP2PTradeMessageService implements TradeMessageService {
             public void operationComplete(BaseFuture baseFuture) throws Exception {
                 if (baseFuture.isSuccess() && futureGet.data() != null) {
                     final Peer peer = (Peer) futureGet.data().object();
-                    Platform.runLater(() -> listener.onResult(peer));
+                    executor.execute(() -> listener.onResult(peer));
                 }
                 else {
                     log.error("getPeerAddress failed. failedReason = " + baseFuture.failedReason());
-                    Platform.runLater(listener::onFailed);
+                    executor.execute(listener::onFailed);
                 }
             }
         });
@@ -113,17 +114,17 @@ public class TomP2PTradeMessageService implements TradeMessageService {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
-                    Platform.runLater(listener::onResult);
+                    executor.execute(listener::onResult);
                 }
                 else {
                     log.error("sendMessage failed with reason " + futureDirect.failedReason());
-                    Platform.runLater(listener::onFailed);
+                    executor.execute(listener::onFailed);
                 }
             }
 
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
-                Platform.runLater(listener::onFailed);
+                executor.execute(listener::onFailed);
             }
         });
     }
@@ -149,7 +150,7 @@ public class TomP2PTradeMessageService implements TradeMessageService {
     @Override
     public void handleMessage(Object message, Peer sender) {
         if (message instanceof Message) {
-            Platform.runLater(() -> incomingMessageListeners.stream().forEach(e ->
+            executor.execute(() -> incomingMessageListeners.stream().forEach(e ->
                     e.onMessage((Message) message, sender)));
         }
     }

@@ -17,11 +17,18 @@
 
 package io.bitsquare.trade.tomp2p;
 
+import io.bitsquare.network.tomp2p.TomP2PNode;
 import io.bitsquare.trade.TradeMessageModule;
 import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.user.User;
 
 import com.google.inject.Injector;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
+
+import javax.inject.Inject;
+
+import javafx.application.Platform;
 
 import org.springframework.core.env.Environment;
 
@@ -33,11 +40,25 @@ public class TomP2PTradeMessageModule extends TradeMessageModule {
 
     @Override
     protected void doConfigure() {
-        bind(TradeMessageService.class).to(TomP2PTradeMessageService.class).in(Singleton.class);
+        bind(TradeMessageService.class).toProvider(TomP2PTradeMessageServiceProvider.class).in(Singleton.class);
     }
 
     @Override
     protected void doClose(Injector injector) {
         super.doClose(injector);
+    }
+}
+
+class TomP2PTradeMessageServiceProvider implements Provider<TradeMessageService> {
+    private final TradeMessageService tradeMessageService;
+
+    @Inject
+    public TomP2PTradeMessageServiceProvider(User user, TomP2PNode tomP2PNode) {
+        tradeMessageService = new TomP2PTradeMessageService(user, tomP2PNode);
+        tradeMessageService.setExecutor(Platform::runLater);
+    }
+
+    public TradeMessageService get() {
+        return tradeMessageService;
     }
 }

@@ -31,8 +31,8 @@ import io.bitsquare.network.tomp2p.BootstrappedPeerBuilder;
 import io.bitsquare.network.tomp2p.TomP2PNode;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.offer.RemoteOfferBook;
-import io.bitsquare.offer.tomp2p.TomP2POfferBook;
+import io.bitsquare.offer.OfferBookService;
+import io.bitsquare.offer.tomp2p.TomP2POfferBookService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
@@ -82,7 +82,7 @@ public class PlaceOfferProtocolTest {
 
     private WalletService walletService;
     private TradeMessageService tradeMessageService;
-    private RemoteOfferBook remoteOfferBook;
+    private OfferBookService offerBookService;
     private final File dir = new File("./temp");
     private final static String OFFER_ID = "offerID";
     private Address address;
@@ -115,8 +115,8 @@ public class PlaceOfferProtocolTest {
                 () -> {
                     log.trace("message completed");
 
-                    remoteOfferBook = new TomP2POfferBook(tomP2PNode);
-                    remoteOfferBook.setExecutor(Threading.SAME_THREAD);
+                    offerBookService = new TomP2POfferBookService(tomP2PNode);
+                    offerBookService.setExecutor(Threading.SAME_THREAD);
                 }
         );
         bootstrappedPeerBuilder.start();
@@ -222,7 +222,7 @@ public class PlaceOfferProtocolTest {
         CountDownLatch countDownLatch = new CountDownLatch(2);
         try {
             Offer offer = getOffer();
-            remoteOfferBook.addListener(new RemoteOfferBook.Listener() {
+            offerBookService.addListener(new OfferBookService.Listener() {
                 @Override
                 public void onOfferAdded(Offer offer1) {
                     assertEquals("Offer matching", offer.getId(), offer1.getId());
@@ -296,7 +296,7 @@ public class PlaceOfferProtocolTest {
             InterruptedException {
         return new PlaceOfferProtocol(offer,
                 walletService,
-                remoteOfferBook,
+                offerBookService,
                 resultHandler,
                 faultHandler);
     }

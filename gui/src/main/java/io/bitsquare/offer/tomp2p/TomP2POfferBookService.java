@@ -19,7 +19,7 @@ package io.bitsquare.offer.tomp2p;
 
 import io.bitsquare.network.tomp2p.TomP2PNode;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.offer.RemoteOfferBook;
+import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.util.handlers.FaultHandler;
 import io.bitsquare.util.handlers.ResultHandler;
 
@@ -46,9 +46,9 @@ import net.tomp2p.storage.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TomP2POfferBook implements RemoteOfferBook {
+public class TomP2POfferBookService implements OfferBookService {
 
-    private static final Logger log = LoggerFactory.getLogger(TomP2POfferBook.class);
+    private static final Logger log = LoggerFactory.getLogger(TomP2POfferBookService.class);
 
     private final List<Listener> offerRepositoryListeners = new ArrayList<>();
     private final LongProperty invalidationTimestamp = new SimpleLongProperty(0);
@@ -56,7 +56,7 @@ public class TomP2POfferBook implements RemoteOfferBook {
     private final TomP2PNode tomP2PNode;
     private Executor executor;
 
-    public TomP2POfferBook(TomP2PNode tomP2PNode) {
+    public TomP2POfferBookService(TomP2PNode tomP2PNode) {
         this.tomP2PNode = tomP2PNode;
     }
 

@@ -21,8 +21,10 @@ package io.bitsquare.arbitrator;
 import io.bitsquare.arbitrator.listeners.ArbitratorListener;
 
 import java.util.Locale;
+import java.util.concurrent.Executor;
 
 public interface ArbitratorMessageService {
+    void setExecutor(Executor executor);
 
     void addArbitrator(Arbitrator arbitrator);
 

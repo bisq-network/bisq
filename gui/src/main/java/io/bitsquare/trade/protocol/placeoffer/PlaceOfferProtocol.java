@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.placeoffer;
 
 import io.bitsquare.btc.WalletService;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.offer.RemoteOfferBook;
+import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.util.handlers.FaultHandler;
 
@@ -43,16 +43,16 @@ public class PlaceOfferProtocol {
     private final WalletService walletService;
     private final TransactionResultHandler resultHandler;
     private final FaultHandler faultHandler;
-    private final RemoteOfferBook remoteOfferBook;
+    private final OfferBookService offerBookService;
     private int repeatAddOfferCallCounter = 0;
 
-    public PlaceOfferProtocol(Offer offer, WalletService walletService, RemoteOfferBook remoteOfferBook, TransactionResultHandler resultHandler,
+    public PlaceOfferProtocol(Offer offer, WalletService walletService, OfferBookService offerBookService, TransactionResultHandler resultHandler,
                               FaultHandler faultHandler) {
         this.offer = offer;
         this.walletService = walletService;
         this.resultHandler = resultHandler;
         this.faultHandler = faultHandler;
-        this.remoteOfferBook = remoteOfferBook;
+        this.offerBookService = offerBookService;
     }
 
     public void placeOffer() {
@@ -129,7 +129,7 @@ public class PlaceOfferProtocol {
         // need to write data before storage, otherwise hash is different when removing offer!
         offer.setOfferFeePaymentTxID(transaction.getHashAsString());
         
-        remoteOfferBook.addOffer(offer,
+        offerBookService.addOffer(offer,
                 () -> {
                     resultHandler.handleResult(transaction);
                 },

@@ -26,7 +26,7 @@ import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
-import io.bitsquare.offer.RemoteOfferBook;
+import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.listeners.OutgoingMessageListener;
@@ -83,7 +83,7 @@ public class TradeManager {
     private final BlockChainService blockChainService;
     private final WalletService walletService;
     private final SignatureService signatureService;
-    private final RemoteOfferBook remoteOfferBook;
+    private final OfferBookService offerBookService;
 
     //TODO store TakerAsSellerProtocol in trade
     private final Map<String, SellerTakesOfferProtocol> takerAsSellerProtocolMap = new HashMap<>();
@@ -106,7 +106,7 @@ public class TradeManager {
     public TradeManager(User user, AccountSettings accountSettings, Persistence persistence,
                         TradeMessageService tradeMessageService, BlockChainService blockChainService,
                         WalletService walletService, SignatureService signatureService,
-                        RemoteOfferBook remoteOfferBook) {
+                        OfferBookService offerBookService) {
         this.user = user;
         this.accountSettings = accountSettings;
         this.persistence = persistence;
@@ -114,7 +114,7 @@ public class TradeManager {
         this.blockChainService = blockChainService;
         this.walletService = walletService;
         this.signatureService = signatureService;
-        this.remoteOfferBook = remoteOfferBook;
+        this.offerBookService = offerBookService;
 
         Object offersObject = persistence.read(this, "offers");
         if (offersObject instanceof Map) {
@@ -175,7 +175,7 @@ public class TradeManager {
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 offer,
                 walletService,
-                remoteOfferBook,
+                offerBookService,
                 (transaction) -> {
                     saveOffer(offer);
                     resultHandler.handleResult(transaction);
@@ -192,7 +192,7 @@ public class TradeManager {
     }
 
     public void requestRemoveOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        remoteOfferBook.removeOffer(offer,
+        offerBookService.removeOffer(offer,
                 () -> {
                     if (offers.containsKey(offer.getId())) {
                         offers.remove(offer.getId());

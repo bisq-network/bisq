@@ -19,14 +19,18 @@ package io.bitsquare.trade;
 
 import io.bitsquare.network.Message;
 import io.bitsquare.network.MessageBroker;
+import io.bitsquare.network.Peer;
 import io.bitsquare.trade.listeners.GetPeerAddressListener;
 import io.bitsquare.trade.listeners.IncomingMessageListener;
 import io.bitsquare.trade.listeners.OutgoingMessageListener;
-import io.bitsquare.network.Peer;
 
 import java.security.PublicKey;
 
+import java.util.concurrent.Executor;
+
 public interface TradeMessageService extends MessageBroker {
+    
+    void setExecutor(Executor executor);
 
     void sendMessage(Peer peer, Message message, OutgoingMessageListener listener);
 

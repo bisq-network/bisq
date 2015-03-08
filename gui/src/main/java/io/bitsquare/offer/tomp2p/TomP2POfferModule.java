@@ -19,7 +19,7 @@ package io.bitsquare.offer.tomp2p;
 
 import io.bitsquare.network.tomp2p.TomP2PNode;
 import io.bitsquare.offer.OfferModule;
-import io.bitsquare.offer.RemoteOfferBook;
+import io.bitsquare.offer.OfferBookService;
 
 import com.google.inject.Provider;
 
@@ -37,20 +37,20 @@ public class TomP2POfferModule extends OfferModule {
 
     @Override
     protected void configure() {
-        bind(RemoteOfferBook.class).toProvider(RemoteOfferBookProvider.class).asEagerSingleton();
+        bind(OfferBookService.class).toProvider(OfferBookServiceProvider.class).asEagerSingleton();
     }
 }
 
-class RemoteOfferBookProvider implements Provider<RemoteOfferBook> {
-    private final TomP2POfferBook remoteOfferBook;
+class OfferBookServiceProvider implements Provider<OfferBookService> {
+    private final OfferBookService offerBookService;
 
     @Inject
-    public RemoteOfferBookProvider(TomP2PNode tomP2PNode) {
-        remoteOfferBook = new TomP2POfferBook(tomP2PNode);
-        remoteOfferBook.setExecutor(Platform::runLater);
+    public OfferBookServiceProvider(TomP2PNode tomP2PNode) {
+        offerBookService = new TomP2POfferBookService(tomP2PNode);
+        offerBookService.setExecutor(Platform::runLater);
     }
 
-    public RemoteOfferBook get() {
-        return remoteOfferBook;
+    public OfferBookService get() {
+        return offerBookService;
     }
 }

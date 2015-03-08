@@ -25,7 +25,7 @@ import java.util.concurrent.Executor;
 
 import javafx.beans.property.LongProperty;
 
-public interface RemoteOfferBook {
+public interface OfferBookService {
 
     void setExecutor(Executor executor);
 
