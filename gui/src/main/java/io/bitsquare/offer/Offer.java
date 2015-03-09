@@ -34,6 +34,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+
 import static com.google.common.base.Preconditions.*;
 import static io.bitsquare.btc.Restrictions.MIN_TRADE_AMOUNT;
 
@@ -41,6 +44,14 @@ import static io.bitsquare.btc.Restrictions.MIN_TRADE_AMOUNT;
 
 public class Offer implements Serializable {
     private static final long serialVersionUID = -971164804305475826L;
+
+
+    public enum State {
+        UNKNOWN,
+        OFFER_AVAILABLE,
+        OFFER_NOT_AVAILABLE,
+        OFFER_REMOVED
+    }
 
     // key attributes for lookup
     private final Direction direction;
@@ -64,8 +75,10 @@ public class Offer implements Serializable {
     private final List<Locale> acceptedLanguageLocales;
     private final String bankAccountUID;
     private final List<Arbitrator> arbitrators;
-    
+
     private String offerFeePaymentTxID;
+    private State state = State.UNKNOWN;
+    private transient ObjectProperty<State> stateProperty; // don't access directly, use getStateProperty()
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -103,6 +116,7 @@ public class Offer implements Serializable {
         this.acceptedLanguageLocales = acceptedLanguageLocales;
 
         creationDate = new Date();
+        getStateProperty().set(state);
     }
 
 
@@ -110,10 +124,10 @@ public class Offer implements Serializable {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PublicKey getMessagePublicKey() {
-        return messagePublicKey;
+    public void setState(State state) {
+        this.state = state;
+        getStateProperty().set(state);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -198,8 +212,22 @@ public class Offer implements Serializable {
         return bankAccountUID;
     }
 
+    public PublicKey getMessagePublicKey() {
+        return messagePublicKey;
+    }
+
     public Date getCreationDate() {
         return creationDate;
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public ObjectProperty<State> getStateProperty() {
+        if (stateProperty == null)
+            stateProperty = new SimpleObjectProperty<>(state);
+        return stateProperty;
     }
 
     public void validate() throws Exception {

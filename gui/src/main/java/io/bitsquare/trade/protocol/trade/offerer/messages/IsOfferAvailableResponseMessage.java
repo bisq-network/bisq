@@ -17,23 +17,23 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.messages;
 
-import io.bitsquare.trade.protocol.trade.TradeMessage;
+import io.bitsquare.trade.protocol.trade.OfferMessage;
 
 import java.io.Serializable;
 
-public class RespondToIsOfferAvailableMessage implements Serializable, TradeMessage {
+public class IsOfferAvailableResponseMessage implements Serializable, OfferMessage {
     private static final long serialVersionUID = 6177387534187739018L;
-    private final String tradeId;
+    private final String offerId;
     private final boolean isOfferOpen;
 
-    public RespondToIsOfferAvailableMessage(String tradeId, boolean isOfferOpen) {
-        this.tradeId = tradeId;
+    public IsOfferAvailableResponseMessage(String offerId, boolean isOfferOpen) {
+        this.offerId = offerId;
         this.isOfferOpen = isOfferOpen;
     }
 
     @Override
-    public String getTradeId() {
-        return tradeId;
+    public String getOfferId() {
+        return offerId;
     }
 
     public boolean isOfferOpen() {

@@ -23,8 +23,8 @@ import io.bitsquare.network.tomp2p.TomP2PNode;
 import io.bitsquare.network.tomp2p.TomP2PPeer;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.GetPeerAddressListener;
-import io.bitsquare.trade.listeners.IncomingMessageListener;
-import io.bitsquare.trade.listeners.OutgoingMessageListener;
+import io.bitsquare.trade.listeners.HandleNewMessageListener;
+import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.user.User;
 
 import java.security.PublicKey;
@@ -58,7 +58,7 @@ public class TomP2PTradeMessageService implements TradeMessageService {
 
     private final TomP2PNode tomP2PNode;
     private final User user;
-    private final List<IncomingMessageListener> incomingMessageListeners = new ArrayList<>();
+    private final List<HandleNewMessageListener> handleNewMessageListeners = new ArrayList<>();
     private Executor executor;
 
 
@@ -70,8 +70,8 @@ public class TomP2PTradeMessageService implements TradeMessageService {
         this.user = user;
         this.tomP2PNode = tomP2PNode;
     }
-    
-    
+
+
     public void setExecutor(Executor executor) {
         this.executor = executor;
     }
@@ -101,11 +101,10 @@ public class TomP2PTradeMessageService implements TradeMessageService {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Trade process
+    // Trade messages
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void sendMessage(Peer peer, Message message,
-                            OutgoingMessageListener listener) {
+    public void sendMessage(Peer peer, Message message, SendMessageListener listener) {
         if (!(peer instanceof TomP2PPeer)) {
             throw new IllegalArgumentException("peer must be of type TomP2PPeer");
         }
@@ -114,17 +113,17 @@ public class TomP2PTradeMessageService implements TradeMessageService {
             @Override
             public void operationComplete(BaseFuture future) throws Exception {
                 if (future.isSuccess()) {
-                    executor.execute(listener::onResult);
+                    executor.execute(listener::handleResult);
                 }
                 else {
                     log.error("sendMessage failed with reason " + futureDirect.failedReason());
-                    executor.execute(listener::onFailed);
+                    executor.execute(listener::handleFault);
                 }
             }
 
             @Override
             public void exceptionCaught(Throwable t) throws Exception {
-                executor.execute(listener::onFailed);
+                executor.execute(listener::handleFault);
             }
         });
     }
@@ -134,12 +133,12 @@ public class TomP2PTradeMessageService implements TradeMessageService {
     // Event Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addIncomingMessageListener(IncomingMessageListener listener) {
-        incomingMessageListeners.add(listener);
+    public void addHandleNewMessageListener(HandleNewMessageListener listener) {
+        handleNewMessageListeners.add(listener);
     }
 
-    public void removeIncomingMessageListener(IncomingMessageListener listener) {
-        incomingMessageListeners.remove(listener);
+    public void removeHandleNewMessageListener(HandleNewMessageListener listener) {
+        handleNewMessageListeners.remove(listener);
     }
 
 
@@ -149,9 +148,9 @@ public class TomP2PTradeMessageService implements TradeMessageService {
 
     @Override
     public void handleMessage(Object message, Peer sender) {
-        if (message instanceof Message) {
-            executor.execute(() -> incomingMessageListeners.stream().forEach(e ->
-                    e.onMessage((Message) message, sender)));
+        if (message instanceof Message && sender instanceof TomP2PPeer) {
+            executor.execute(() -> handleNewMessageListeners.stream().forEach(e ->
+                    e.handleMessage((Message) message, sender)));
         }
     }
 }

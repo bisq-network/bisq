@@ -17,10 +17,10 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.listeners.OutgoingMessageListener;
+import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
 import io.bitsquare.util.handlers.ExceptionHandler;
 
@@ -32,22 +32,21 @@ public class HandleTakeOfferRequest {
 
     public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, Peer peer,
                            TradeMessageService tradeMessageService, Trade.State tradeState, String tradeId) {
-        log.trace("Run task");
+        log.trace("Run HandleTakeOfferRequest task");
         boolean isTradeIsOpen = tradeState == Trade.State.OPEN;
         if (!isTradeIsOpen) {
             log.warn("Received take offer request but the offer not marked as open anymore.");
         }
-        RespondToTakeOfferRequestMessage tradeMessage =
-                new RespondToTakeOfferRequestMessage(tradeId, isTradeIsOpen);
-        tradeMessageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
+        RespondToTakeOfferRequestMessage tradeMessage = new RespondToTakeOfferRequestMessage(tradeId, isTradeIsOpen);
+        tradeMessageService.sendMessage(peer, tradeMessage, new SendMessageListener() {
             @Override
-            public void onResult() {
+            public void handleResult() {
                 log.trace("RespondToTakeOfferRequestMessage successfully arrived at peer");
-                resultHandler.onResult(isTradeIsOpen);
+                resultHandler.handleResult(isTradeIsOpen);
             }
 
             @Override
-            public void onFailed() {
+            public void handleFault() {
                 log.error("AcceptTakeOfferRequestMessage  did not arrive at peer");
                 exceptionHandler.handleException(new Exception("AcceptTakeOfferRequestMessage did not arrive at peer"));
             }
@@ -55,6 +54,6 @@ public class HandleTakeOfferRequest {
     }
 
     public interface ResultHandler {
-        void onResult(boolean takeOfferRequestAccepted);
+        void handleResult(boolean takeOfferRequestAccepted);
     }
 }

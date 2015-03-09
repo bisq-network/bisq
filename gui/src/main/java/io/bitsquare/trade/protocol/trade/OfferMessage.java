@@ -15,11 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.listeners;
+package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.network.Message;
-import io.bitsquare.network.Peer;
 
-public interface IncomingMessageListener {
-    void onMessage(Message message, Peer sender);
+public interface OfferMessage extends Message {
+    public String getOfferId();
 }

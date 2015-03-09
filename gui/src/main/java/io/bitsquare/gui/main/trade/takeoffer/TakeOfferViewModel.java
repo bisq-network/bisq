@@ -82,8 +82,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final BooleanProperty showWarningInvalidBtcDecimalPlaces = new SimpleBooleanProperty();
     final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
     final BooleanProperty tabIsClosable = new SimpleBooleanProperty(true);
-    final ObjectProperty<TakeOfferDataModel.OfferAvailableState> offerIsAvailable =
-            new SimpleObjectProperty<>(TakeOfferDataModel.OfferAvailableState.UNKNOWN);
+    final ObjectProperty<Offer.State> offerIsAvailable = new SimpleObjectProperty<>(Offer.State.UNKNOWN);
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
 

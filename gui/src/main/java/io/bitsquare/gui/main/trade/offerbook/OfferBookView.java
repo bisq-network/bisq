@@ -216,9 +216,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void takeOffer(Offer offer) {
-
         if (model.isRegistered()) {
             if (offer.getDirection() == Direction.BUY) {
+                // reset available state
+                if (offer.getState() != Offer.State.OFFER_REMOVED)
+                    offer.setState(Offer.State.UNKNOWN);
+
                 offerActionHandler.takeOffer(model.getAmountAsCoin(), model.getPriceAsCoin(), offer);
             }
             else {

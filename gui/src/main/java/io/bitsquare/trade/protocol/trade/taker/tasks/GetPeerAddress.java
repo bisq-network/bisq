@@ -20,7 +20,7 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.GetPeerAddressListener;
-import io.bitsquare.util.handlers.ExceptionHandler;
+import io.bitsquare.util.handlers.ErrorMessageHandler;
 
 import java.security.PublicKey;
 
@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public class GetPeerAddress {
     private static final Logger log = LoggerFactory.getLogger(GetPeerAddress.class);
     
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler,
+    public static void run(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler,
                            TradeMessageService tradeMessageService, PublicKey messagePublicKey) {
         log.trace("Run GetPeerAddress task");
         tradeMessageService.getPeerAddress(messagePublicKey, new GetPeerAddressListener() {
@@ -43,7 +43,7 @@ public class GetPeerAddress {
             @Override
             public void onFailed() {
                 log.error("Lookup for peer address failed.");
-                exceptionHandler.handleException(new Exception("Lookup for peer address failed."));
+                errorMessageHandler.handleErrorMessage("Lookup for peer address failed.");
             }
         });
     }

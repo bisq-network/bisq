@@ -29,16 +29,18 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.trade.listeners.OutgoingMessageListener;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
+import io.bitsquare.trade.protocol.trade.OfferMessage;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocol;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocolListener;
 import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.messages.IsOfferAvailableResponseMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RequestTakerDepositPaymentMessage;
-import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.IsOfferAvailableResponse;
+import io.bitsquare.trade.protocol.trade.taker.RequestIsOfferAvailableProtocol;
 import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocol;
 import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocolListener;
 import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
@@ -69,6 +71,8 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * The domain for the trading
  * TODO: Too messy, need to be improved a lot....
@@ -88,8 +92,9 @@ public class TradeManager {
     //TODO store TakerAsSellerProtocol in trade
     private final Map<String, SellerTakesOfferProtocol> takerAsSellerProtocolMap = new HashMap<>();
     private final Map<String, BuyerAcceptsOfferProtocol> offererAsBuyerProtocolMap = new HashMap<>();
+    private final Map<String, RequestIsOfferAvailableProtocol> requestIsOfferAvailableProtocolMap = new HashMap<>();
 
-    private final ObservableMap<String, Offer> offers = FXCollections.observableHashMap();
+    private final ObservableMap<String, Offer> openOffers = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> pendingTrades = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> closedTrades = FXCollections.observableHashMap();
 
@@ -118,7 +123,7 @@ public class TradeManager {
 
         Object offersObject = persistence.read(this, "offers");
         if (offersObject instanceof Map) {
-            offers.putAll((Map<String, Offer>) offersObject);
+            openOffers.putAll((Map<String, Offer>) offersObject);
         }
 
         Object pendingTradesObject = persistence.read(this, "pendingTrades");
@@ -131,7 +136,7 @@ public class TradeManager {
             closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
 
-        tradeMessageService.addIncomingMessageListener(this::onIncomingTradeMessage);
+        tradeMessageService.addHandleNewMessageListener(this::handleNewMessage);
     }
 
 
@@ -140,7 +145,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void cleanup() {
-        tradeMessageService.removeIncomingMessageListener(this::onIncomingTradeMessage);
+        tradeMessageService.removeHandleNewMessageListener(this::handleNewMessage);
     }
 
 
@@ -187,15 +192,15 @@ public class TradeManager {
     }
 
     private void saveOffer(Offer offer) {
-        offers.put(offer.getId(), offer);
+        openOffers.put(offer.getId(), offer);
         persistOffers();
     }
 
     public void requestRemoveOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         offerBookService.removeOffer(offer,
                 () -> {
-                    if (offers.containsKey(offer.getId())) {
-                        offers.remove(offer.getId());
+                    if (openOffers.containsKey(offer.getId())) {
+                        openOffers.remove(offer.getId());
                         persistOffers();
                         resultHandler.handleResult();
                     }
@@ -241,8 +246,8 @@ public class TradeManager {
 
     private void createOffererAsBuyerProtocol(String offerId, Peer sender) {
         log.trace("createOffererAsBuyerProtocol offerId = " + offerId);
-        if (offers.containsKey(offerId)) {
-            Offer offer = offers.get(offerId);
+        if (openOffers.containsKey(offerId)) {
+            Offer offer = openOffers.get(offerId);
 
             Trade trade = createTrade(offer);
             currentPendingTrade = trade;
@@ -368,6 +373,14 @@ public class TradeManager {
             @Override
             public void onFault(Throwable throwable, SellerTakesOfferProtocol.State state) {
                 log.error("onFault: " + throwable.getMessage() + " / " + state);
+                switch (state) {
+                    case GetPeerAddress:
+                        // TODO add unreachable node to a local ignore list in case of repeated failures
+                        break;
+                    case RequestTakeOffer:
+                        // TODO add unreachable node to a local ignore list in case of repeated failures
+                        break;
+                }
             }
 
             // probably not needed
@@ -379,7 +392,12 @@ public class TradeManager {
         };
 
         SellerTakesOfferProtocol sellerTakesOfferProtocol = new SellerTakesOfferProtocol(
-                trade, listener, tradeMessageService, walletService, blockChainService, signatureService,
+                trade,
+                listener,
+                tradeMessageService,
+                walletService,
+                blockChainService,
+                signatureService,
                 user);
         takerAsSellerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
         sellerTakesOfferProtocol.start();
@@ -407,62 +425,80 @@ public class TradeManager {
         takerAsSellerProtocolMap.get(tradeId).onUIEventFiatReceived();
     }
 
+    public void requestIsOfferAvailable(Offer offer) {
+        if (!requestIsOfferAvailableProtocolMap.containsKey(offer.getId())) {
+            RequestIsOfferAvailableProtocol protocol = new RequestIsOfferAvailableProtocol(offer, tradeMessageService);
+            requestIsOfferAvailableProtocolMap.put(offer.getId(), protocol);
+            protocol.start();
+        }
+        else {
+            log.warn("requestIsOfferAvailable already called for offer with ID:" + offer.getId());
+        }
+    }
+
+    public void handleRemovedOffer(Offer offer) {
+        requestIsOfferAvailableProtocolMap.remove(offer.getId());
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Process incoming tradeMessages
+    // Process new tradeMessages
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Routes the incoming messages to the responsible protocol
-    private void onIncomingTradeMessage(Message message, Peer sender) {
-        if (!(message instanceof TradeMessage))
-            throw new IllegalArgumentException("message must be of type TradeMessage");
-        TradeMessage tradeMessage = (TradeMessage) message;
+    private void handleNewMessage(Message message, Peer sender) {
+        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName());
+        log.trace("handleNewMessage: sender = " + sender);
 
-        log.trace("onIncomingTradeMessage instance " + tradeMessage.getClass().getSimpleName());
-        log.trace("onIncomingTradeMessage sender " + sender);
-
-        String tradeId = tradeMessage.getTradeId();
-        if (tradeId != null) {
-            if (tradeMessage instanceof RequestIsOfferAvailableMessage) {
-                // TODO Does not fit in any of the 2 protocols, but should not be here as well...
-                // Lets keep it until we refactor the trade process
-                boolean isOfferOpen = getTrade(tradeId) == null;
-                RespondToIsOfferAvailableMessage replyMessage =
-                        new RespondToIsOfferAvailableMessage(tradeId, isOfferOpen);
-                tradeMessageService.sendMessage(sender, replyMessage, new OutgoingMessageListener() {
-                    @Override
-                    public void onResult() {
-                        log.trace("RespondToTakeOfferRequestMessage successfully arrived at peer");
-                    }
-
-                    @Override
-                    public void onFailed() {
-                        log.error("AcceptTakeOfferRequestMessage  did not arrive at peer");
-                    }
-                });
+        if (message instanceof OfferMessage) {
+            OfferMessage offerMessage = (OfferMessage) message;
+            // Before starting any take offer activity we check if the offer is still available.
+            if (offerMessage instanceof RequestIsOfferAvailableMessage) {
+                // That message arrives at the offerer and he returns if the offer is still available (if there is no trade already created with that offerId).
+                String offerId = offerMessage.getOfferId();
+                checkNotNull(offerId);
+                boolean isOfferOpen = getTrade(offerId) == null;
+                // no handling of results or faults needed
+                IsOfferAvailableResponse.run(sender, tradeMessageService, offerId, isOfferOpen);
             }
-            else if (tradeMessage instanceof RequestTakeOfferMessage) {
+            else if (offerMessage instanceof IsOfferAvailableResponseMessage) {
+                // That message arrives at the taker in response to a previous requestIsOfferAvailable call.
+                // It might be that the offer got removed form the offer book, so lets check if its still there.
+                if (requestIsOfferAvailableProtocolMap.containsKey(offerMessage.getOfferId())) {
+                    RequestIsOfferAvailableProtocol protocol = requestIsOfferAvailableProtocolMap.get(offerMessage.getOfferId());
+                    protocol.handleIsOfferAvailableResponseMessage((IsOfferAvailableResponseMessage) offerMessage);
+                    requestIsOfferAvailableProtocolMap.remove(offerMessage.getOfferId());
+                }
+                else {
+                    log.info("Offer might have been removed in the meantime. No protocol found for offer with ID:" + offerMessage.getOfferId());
+                }
+            }
+            else {
+                log.error("Incoming offerMessage not supported. " + offerMessage);
+            }
+        }
+        else if (message instanceof TradeMessage) {
+            TradeMessage tradeMessage = (TradeMessage) message;
+            String tradeId = tradeMessage.getTradeId();
+            checkNotNull(tradeId);
+
+            if (tradeMessage instanceof RequestTakeOfferMessage) {
                 createOffererAsBuyerProtocol(tradeId, sender);
             }
             else if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
-                takerAsSellerProtocolMap.get(tradeId).onRespondToTakeOfferRequestMessage(
-                        (RespondToTakeOfferRequestMessage) tradeMessage);
+                takerAsSellerProtocolMap.get(tradeId).onRespondToTakeOfferRequestMessage((RespondToTakeOfferRequestMessage) tradeMessage);
             }
             else if (tradeMessage instanceof TakeOfferFeePayedMessage) {
-                offererAsBuyerProtocolMap.get(tradeId).onTakeOfferFeePayedMessage((TakeOfferFeePayedMessage)
-                        tradeMessage);
+                offererAsBuyerProtocolMap.get(tradeId).onTakeOfferFeePayedMessage((TakeOfferFeePayedMessage) tradeMessage);
             }
             else if (tradeMessage instanceof RequestTakerDepositPaymentMessage) {
-                takerAsSellerProtocolMap.get(tradeId).onRequestTakerDepositPaymentMessage(
-                        (RequestTakerDepositPaymentMessage) tradeMessage);
+                takerAsSellerProtocolMap.get(tradeId).onRequestTakerDepositPaymentMessage((RequestTakerDepositPaymentMessage) tradeMessage);
             }
             else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
-                offererAsBuyerProtocolMap.get(tradeId).onRequestOffererPublishDepositTxMessage(
-                        (RequestOffererPublishDepositTxMessage) tradeMessage);
+                offererAsBuyerProtocolMap.get(tradeId).onRequestOffererPublishDepositTxMessage((RequestOffererPublishDepositTxMessage) tradeMessage);
             }
             else if (tradeMessage instanceof DepositTxPublishedMessage) {
                 persistPendingTrades();
-                takerAsSellerProtocolMap.get(tradeId).onDepositTxPublishedMessage((DepositTxPublishedMessage)
-                        tradeMessage);
+                takerAsSellerProtocolMap.get(tradeId).onDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
             }
             else if (tradeMessage instanceof BankTransferInitedMessage) {
                 // Here happened a null pointer. I assume the only possible reason was that we got a null for the 
@@ -471,26 +507,18 @@ public class TradeManager {
                 // For getting better info we add a check. tradeId is checked above.
                 if (takerAsSellerProtocolMap.get(tradeId) == null)
                     log.error("takerAsSellerProtocolMap.get(tradeId) = null. That must not happen.");
-                takerAsSellerProtocolMap.get(tradeId).onBankTransferInitedMessage((BankTransferInitedMessage)
-                        tradeMessage);
+                takerAsSellerProtocolMap.get(tradeId).onBankTransferInitedMessage((BankTransferInitedMessage) tradeMessage);
             }
             else if (tradeMessage instanceof PayoutTxPublishedMessage) {
-                offererAsBuyerProtocolMap.get(tradeId).onPayoutTxPublishedMessage((PayoutTxPublishedMessage)
-                        tradeMessage);
+                offererAsBuyerProtocolMap.get(tradeId).onPayoutTxPublishedMessage((PayoutTxPublishedMessage) tradeMessage);
+            }
+            else {
+                log.error("Incoming tradeMessage not supported. " + tradeMessage);
             }
         }
         else {
-            log.error("tradeId from onIncomingTradeMessage is null. That must not happen.");
+            log.error("Incoming message not supported. " + message);
         }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public boolean isOfferAlreadyInTrades(Offer offer) {
-        return pendingTrades.containsKey(offer.getId());
     }
 
 
@@ -507,8 +535,8 @@ public class TradeManager {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableMap<String, Offer> getOffers() {
-        return offers;
+    public ObservableMap<String, Offer> getOpenOffers() {
+        return openOffers;
     }
 
     public ObservableMap<String, Trade> getPendingTrades() {
@@ -536,7 +564,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void persistOffers() {
-        persistence.write(this, "offers", (Map<String, Offer>) new HashMap<>(offers));
+        persistence.write(this, "offers", (Map<String, Offer>) new HashMap<>(openOffers));
     }
 
     private void persistPendingTrades() {

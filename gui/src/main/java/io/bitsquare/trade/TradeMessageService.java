@@ -21,8 +21,8 @@ import io.bitsquare.network.Message;
 import io.bitsquare.network.MessageBroker;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.listeners.GetPeerAddressListener;
-import io.bitsquare.trade.listeners.IncomingMessageListener;
-import io.bitsquare.trade.listeners.OutgoingMessageListener;
+import io.bitsquare.trade.listeners.HandleNewMessageListener;
+import io.bitsquare.trade.listeners.SendMessageListener;
 
 import java.security.PublicKey;
 
@@ -32,11 +32,11 @@ public interface TradeMessageService extends MessageBroker {
     
     void setExecutor(Executor executor);
 
-    void sendMessage(Peer peer, Message message, OutgoingMessageListener listener);
+    void sendMessage(Peer peer, Message message, SendMessageListener listener);
 
-    void addIncomingMessageListener(IncomingMessageListener listener);
+    void addHandleNewMessageListener(HandleNewMessageListener listener);
 
-    void removeIncomingMessageListener(IncomingMessageListener listener);
+    void removeHandleNewMessageListener(HandleNewMessageListener listener);
 
     void getPeerAddress(PublicKey messagePublicKey, GetPeerAddressListener getPeerAddressListener);
 }

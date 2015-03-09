@@ -64,17 +64,17 @@ class OffersDataModel implements Activatable, DataModel {
     @Override
     public void activate() {
         list.clear();
-        list.addAll(tradeManager.getOffers().values().stream().map(OfferListItem::new).collect(Collectors.toList()));
+        list.addAll(tradeManager.getOpenOffers().values().stream().map(OfferListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getOffer().getCreationDate().compareTo(o1.getOffer().getCreationDate()));
 
-        tradeManager.getOffers().addListener(offerMapChangeListener);
+        tradeManager.getOpenOffers().addListener(offerMapChangeListener);
     }
 
     @Override
     public void deactivate() {
-        tradeManager.getOffers().removeListener(offerMapChangeListener);
+        tradeManager.getOpenOffers().removeListener(offerMapChangeListener);
     }
 
     void removeOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

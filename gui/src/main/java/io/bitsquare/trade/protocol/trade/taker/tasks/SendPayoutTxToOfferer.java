@@ -18,7 +18,7 @@
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.trade.TradeMessageService;
-import io.bitsquare.trade.listeners.OutgoingMessageListener;
+import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
 import io.bitsquare.util.handlers.ExceptionHandler;
@@ -34,15 +34,15 @@ public class SendPayoutTxToOfferer {
                            TradeMessageService tradeMessageService, String tradeId, String payoutTxAsHex) {
         log.trace("Run task");
         PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(tradeId, payoutTxAsHex);
-        tradeMessageService.sendMessage(peer, tradeMessage, new OutgoingMessageListener() {
+        tradeMessageService.sendMessage(peer, tradeMessage, new SendMessageListener() {
             @Override
-            public void onResult() {
+            public void handleResult() {
                 log.trace("PayoutTxPublishedMessage successfully arrived at peer");
                 resultHandler.handleResult();
             }
 
             @Override
-            public void onFailed() {
+            public void handleFault() {
                 log.error("PayoutTxPublishedMessage  did not arrive at peer");
                 exceptionHandler.handleException(new Exception("PayoutTxPublishedMessage did not arrive at peer"));
             }

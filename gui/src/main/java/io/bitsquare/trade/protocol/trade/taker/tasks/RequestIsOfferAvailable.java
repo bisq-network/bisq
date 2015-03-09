@@ -17,35 +17,36 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
+import io.bitsquare.network.Peer;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.network.Peer;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
-import io.bitsquare.util.handlers.ExceptionHandler;
-import io.bitsquare.util.handlers.ResultHandler;
+import io.bitsquare.trade.protocol.trade.taker.messages.RequestIsOfferAvailableMessage;
+import io.bitsquare.util.handlers.ErrorMessageHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RequestTakeOffer {
-    private static final Logger log = LoggerFactory.getLogger(RequestTakeOffer.class);
+public class RequestIsOfferAvailable {
+    private static final Logger log = LoggerFactory.getLogger(RequestIsOfferAvailable.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, Peer peer,
-                           TradeMessageService tradeMessageService, String tradeId) {
-        log.trace("Run RequestTakeOffer task");
-        tradeMessageService.sendMessage(peer, new RequestTakeOfferMessage(tradeId),
+    public static void run(ErrorMessageHandler errorMessageHandler,
+                           Peer peer, TradeMessageService tradeMessageService, String offerId) {
+        log.trace("Run RequestIsOfferAvailable task");
+
+        tradeMessageService.sendMessage(peer, new RequestIsOfferAvailableMessage(offerId),
                 new SendMessageListener() {
                     @Override
                     public void handleResult() {
-                        log.trace("RequestTakeOfferMessage successfully arrived at peer");
-                        resultHandler.handleResult();
+                        log.trace("RequestIsOfferAvailableMessage successfully arrived at peer");
+                        // nothing to do
                     }
 
                     @Override
                     public void handleFault() {
-                        log.error("RequestTakeOfferMessage did not arrive at peer");
-                        exceptionHandler.handleException(new Exception("RequestTakeOfferMessage did not arrive at peer"));
+                        log.error("RequestIsOfferAvailableMessage did not arrive at peer");
+                        errorMessageHandler.handleErrorMessage("RequestIsOfferAvailableMessage did not arrive at peer");
                     }
                 });
     }
 }
+

@@ -140,22 +140,30 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         acceptedLanguagesTextField.setText(model.getAcceptedLanguages());
         acceptedArbitratorsTextField.setText(model.getAcceptedArbitrators());
 
-        model.offerIsAvailable.addListener((ov, oldValue, newValue) -> {
-            isOfferAvailableLabel.setVisible(false);
-            isOfferAvailableLabel.setManaged(false);
-            isOfferAvailableProgressIndicator.setProgress(0);
-            isOfferAvailableProgressIndicator.setVisible(false);
-            isOfferAvailableProgressIndicator.setManaged(false);
+        model.offerIsAvailable.addListener((ov, oldValue, newValue) -> handleOfferIsAvailableState(newValue));
+        handleOfferIsAvailableState(model.offerIsAvailable.get());
+    }
 
-            if ((newValue == TakeOfferDataModel.OfferAvailableState.OFFER_AVAILABLE)) {
-                showPaymentInfoScreenButton.setVisible(true);
-            }
-            else if ((newValue == TakeOfferDataModel.OfferAvailableState.OFFER_NOT_AVAILABLE)) {
-                Popups.openWarningPopup("You cannot take that offer",
-                        "The offerer is either offline or the offer was already taken by another trader.");
-                close();
-            }
-        });
+    private void handleOfferIsAvailableState(Offer.State state) {
+        isOfferAvailableLabel.setVisible(false);
+        isOfferAvailableLabel.setManaged(false);
+        isOfferAvailableProgressIndicator.setProgress(0);
+        isOfferAvailableProgressIndicator.setVisible(false);
+        isOfferAvailableProgressIndicator.setManaged(false);
+
+        if ((state == Offer.State.OFFER_AVAILABLE)) {
+            showPaymentInfoScreenButton.setVisible(true);
+        }
+        else if ((state == Offer.State.OFFER_NOT_AVAILABLE)) {
+            Popups.openWarningPopup("You cannot take that offer",
+                    "The offerer is either offline or the offer was already taken by another trader.");
+            close();
+        }
+        else if ((state == Offer.State.OFFER_REMOVED)) {
+            Popups.openWarningPopup("You cannot take that offer",
+                    "The offerer has been removed in the meantime.");
+            close();
+        }
     }
 
     public void configCloseHandlers(BooleanProperty tabIsClosable) {

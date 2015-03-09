@@ -22,6 +22,7 @@ import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
+import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
 
@@ -68,12 +69,12 @@ public class OfferBook {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBook(OfferBookService offerBookService, User user) {
+    OfferBook(OfferBookService offerBookService, User user, TradeManager tradeManager) {
         this.offerBookService = offerBookService;
         this.user = user;
 
         bankAccountChangeListener = (observableValue, oldValue, newValue) -> setBankAccount(newValue);
-        invalidationListener = (ov, oldValue, newValue) -> requestOffers();
+        invalidationListener = (ov, oldValue, newValue) -> requestGetOffers();
 
         remoteOfferBookListener = new OfferBookService.Listener() {
             @Override
@@ -90,6 +91,12 @@ public class OfferBook {
 
             @Override
             public void onOfferRemoved(Offer offer) {
+                // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
+                offer.setState(Offer.State.OFFER_REMOVED);
+                
+                // clean up possible references in tradeManager 
+                tradeManager.handleRemovedOffer(offer);
+                
                 offerBookListItems.removeIf(item -> item.getOffer().getId().equals(offer.getId()));
             }
         };
@@ -159,7 +166,7 @@ public class OfferBook {
         }
     }
 
-    private void requestOffers() {
+    private void requestGetOffers() {
         offerBookService.getOffers(fiatCode);
     }
 

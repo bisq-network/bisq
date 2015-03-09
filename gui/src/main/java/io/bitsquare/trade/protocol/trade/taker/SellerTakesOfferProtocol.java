@@ -100,7 +100,7 @@ public class SellerTakesOfferProtocol {
     private final Coin tradeAmount;
     private final String pubKeyForThatTrade;
     private final ECKey accountKey;
-    private final PublicKey peersMessagePublicKey;
+    private final PublicKey offererMessagePublicKey;
     private final Coin securityDeposit;
     private final String arbitratorPubKey;
 
@@ -120,6 +120,7 @@ public class SellerTakesOfferProtocol {
     private Coin offererPaybackAmount;
     private Coin takerPaybackAmount;
     private String offererPayoutAddress;
+    private int repeatCounter = 0;
 
 
     // state
@@ -152,7 +153,7 @@ public class SellerTakesOfferProtocol {
         //TODO use 1. for now
         arbitratorPubKey = trade.getOffer().getArbitrators().get(0).getPubKeyAsHex();
 
-        peersMessagePublicKey = offer.getMessagePublicKey();
+        offererMessagePublicKey = offer.getMessagePublicKey();
 
         bankAccount = user.getCurrentBankAccount().get();
         accountId = user.getAccountId();
@@ -164,20 +165,37 @@ public class SellerTakesOfferProtocol {
         state = State.Init;
     }
 
-    // 1. GetPeerAddress
-    // Async
-    // In case of an error: No rollback activity needed
     public void start() {
-        log.debug("start called " + step++);
-        state = State.GetPeerAddress;
-        GetPeerAddress.run(this::onResultGetPeerAddress, this::onFault, tradeMessageService, peersMessagePublicKey);
+        getPeerAddress();
     }
 
+    // 1. GetPeerAddress
+    // Async
+    // In case of an error: Repeat once, then give up. No rollback activity needed
+    private void getPeerAddress() {
+        log.debug("getPeerAddress called " + step++);
+        state = State.GetPeerAddress;
+        GetPeerAddress.run(this::onResultGetPeerAddress, this::onGetPeerAddressFault, tradeMessageService, offererMessagePublicKey);
+    }
+
+    private void onGetPeerAddressFault(String errorMessage) {
+        log.debug("Run getPeerAddress again after onGetPeerAddressFault" + step);
+        GetPeerAddress.run(this::onResultGetPeerAddress, this::onErrorMessage, tradeMessageService, offererMessagePublicKey);
+    }
+
+    // 2. RequestTakeOffer
+    // Async
+    // In case of an error: Repeat once, then give up. No rollback activity needed
     public void onResultGetPeerAddress(Peer peer) {
         log.debug("onResultGetPeerAddress called " + step++);
         this.peer = peer;
 
         state = State.RequestTakeOffer;
+        RequestTakeOffer.run(this::onResultRequestTakeOffer, this::onRequestTakeOfferFault, peer, tradeMessageService, tradeId);
+    }
+
+    private void onRequestTakeOfferFault(Throwable throwable) {
+        log.debug("Run getPeerAddress again after onGetPeerAddressFault" + step);
         RequestTakeOffer.run(this::onResultRequestTakeOffer, this::onFault, peer, tradeMessageService, tradeId);
     }
 
@@ -191,6 +209,9 @@ public class SellerTakesOfferProtocol {
     // Incoming message from peer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // 3. PayTakeOfferFee
+    // Async
+    // In case of an error: Repeat once, then give up. No rollback activity needed
     public void onRespondToTakeOfferRequestMessage(RespondToTakeOfferRequestMessage message) {
         log.debug("onRespondToTakeOfferRequestMessage called " + step++);
         log.debug("state " + state);
@@ -266,7 +287,7 @@ public class SellerTakesOfferProtocol {
                 takeOfferFeeTxId,
                 accountId,
                 bankAccount,
-                peersMessagePublicKey,
+                offererMessagePublicKey,
                 messagePublicKey,
                 peersAccountId,
                 peersBankAccount,
@@ -413,6 +434,10 @@ public class SellerTakesOfferProtocol {
     // generic fault handler
     private void onFault(Throwable throwable) {
         listener.onFault(throwable, state);
+    }
+
+    private void onErrorMessage(String errorMessage) {
+        listener.onFault(new Exception(errorMessage), state);
     }
 
 }

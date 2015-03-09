@@ -60,9 +60,9 @@ import static io.bitsquare.util.Validator.*;
 /**
  * Responsible for the correct execution of the sequence of tasks, message passing to the peer and message processing
  * from the peer.
- * <p>
+ * <p/>
  * This class handles the role of the offerer as the Bitcoin buyer.
- * <p>
+ * <p/>
  * It uses sub tasks to not pollute the main class too much with all the async result/fault handling.
  * Any data from incoming messages need to be validated before further processing.
  */
@@ -159,7 +159,7 @@ public class BuyerAcceptsOfferProtocol {
         checkNotNull(tradeId);
         checkNotNull(offer);
 
-        //TODO use first for now
+        //TODO use default arbitrator for now
         arbitratorPubKey = offer.getArbitrators().get(0).getPubKeyAsHex();
 
         bankAccount = user.getBankAccount(trade.getOffer().getBankAccountId());
@@ -173,10 +173,21 @@ public class BuyerAcceptsOfferProtocol {
     }
 
     public void start() {
-        log.debug("start called " + step++);
+        handleTakeOfferRequest();
+    }
+
+    // 1. HandleTakeOfferRequest
+    // Async
+    // In case of an error: Repeat once, then give up. No rollback activity needed
+    private void handleTakeOfferRequest() {
+        log.debug("handleTakeOfferRequest called " + step++);
         state = State.HandleTakeOfferRequest;
-        HandleTakeOfferRequest.run(this::onResultHandleTakeOfferRequest, this::onFault, peer, tradeMessageService,
-                trade.getState(), tradeId);
+        HandleTakeOfferRequest.run(this::onResultHandleTakeOfferRequest, this::onHandleTakeOfferRequestFault, peer, tradeMessageService, trade.getState(), 
+                tradeId);
+    }
+
+    private void onHandleTakeOfferRequestFault(Throwable throwable) {
+        HandleTakeOfferRequest.run(this::onResultHandleTakeOfferRequest, this::onFault, peer, tradeMessageService, trade.getState(), tradeId);
     }
 
     public void onResultHandleTakeOfferRequest(boolean takeOfferRequestAccepted) {
@@ -187,6 +198,7 @@ public class BuyerAcceptsOfferProtocol {
             listener.onWaitingForPeerResponse(state);
         }
         else {
+            // Don't use OFFERER_REJECTED as that trade might has been accepted to another taker.
             log.info("Finish here as we have already the offer accepted.");
         }
     }
