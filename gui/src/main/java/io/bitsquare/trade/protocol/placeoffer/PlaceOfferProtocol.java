@@ -128,7 +128,7 @@ public class PlaceOfferProtocol {
     void addOffer(Transaction transaction) {
         // need to write data before storage, otherwise hash is different when removing offer!
         offer.setOfferFeePaymentTxID(transaction.getHashAsString());
-        
+
         offerBookService.addOffer(offer,
                 () -> {
                     resultHandler.handleResult(transaction);

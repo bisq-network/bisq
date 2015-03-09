@@ -139,7 +139,7 @@ public class OfferBook {
             country = bankAccount.getCountry();
             fiatCode = bankAccount.getCurrency().getCurrencyCode();
 
-            // TODO check why that was used
+            // TODO check why that was used (probably just for update triggering, if so refactor that)
             //offerBookListItems.stream().forEach(e -> e.setBankAccountCountry(country));
         }
         else {

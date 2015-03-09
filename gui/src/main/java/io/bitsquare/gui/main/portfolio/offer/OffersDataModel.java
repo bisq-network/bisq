@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.portfolio.offer;
 
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.offer.OpenOffer;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 import io.bitsquare.util.handlers.ErrorMessageHandler;
@@ -44,8 +45,8 @@ class OffersDataModel implements Activatable, DataModel {
     private final TradeManager tradeManager;
     private final User user;
 
-    private final ObservableList<OfferListItem> list = FXCollections.observableArrayList();
-    private final MapChangeListener<String, Offer> offerMapChangeListener;
+    private final ObservableList<OpenOfferListItem> list = FXCollections.observableArrayList();
+    private final MapChangeListener<String, OpenOffer> offerMapChangeListener;
 
 
     @Inject
@@ -55,19 +56,19 @@ class OffersDataModel implements Activatable, DataModel {
 
         this.offerMapChangeListener = change -> {
             if (change.wasAdded())
-                list.add(new OfferListItem(change.getValueAdded()));
+                list.add(new OpenOfferListItem(change.getValueAdded()));
             else if (change.wasRemoved())
-                list.removeIf(e -> e.getOffer().getId().equals(change.getValueRemoved().getId()));
+                list.removeIf(e -> e.getOpenOffer().getId().equals(change.getValueRemoved().getId()));
         };
     }
 
     @Override
     public void activate() {
         list.clear();
-        list.addAll(tradeManager.getOpenOffers().values().stream().map(OfferListItem::new).collect(Collectors.toList()));
+        list.addAll(tradeManager.getOpenOffers().values().stream().map(OpenOfferListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
-        list.sort((o1, o2) -> o2.getOffer().getCreationDate().compareTo(o1.getOffer().getCreationDate()));
+        list.sort((o1, o2) -> o2.getOpenOffer().getOffer().getCreationDate().compareTo(o1.getOpenOffer().getOffer().getCreationDate()));
 
         tradeManager.getOpenOffers().addListener(offerMapChangeListener);
     }
@@ -77,16 +78,17 @@ class OffersDataModel implements Activatable, DataModel {
         tradeManager.getOpenOffers().removeListener(offerMapChangeListener);
     }
 
-    void removeOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        tradeManager.requestRemoveOffer(offer, resultHandler, errorMessageHandler);
+    void removeOpenOffer(String offerId, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        tradeManager.requestRemoveOpenOffer(offerId, resultHandler, errorMessageHandler);
     }
 
 
-    public ObservableList<OfferListItem> getList() {
+    public ObservableList<OpenOfferListItem> getList() {
         return list;
     }
 
-    public Direction getDirection(Offer offer) {
+    public Direction getDirection(OpenOffer openOffer) {
+        Offer offer = openOffer.getOffer();
         return offer.getMessagePublicKey().equals(user.getMessagePublicKey()) ?
                 offer.getDirection() : offer.getMirroredDirection();
     }

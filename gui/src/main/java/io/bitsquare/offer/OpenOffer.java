@@ -15,22 +15,29 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.portfolio.offer;
+package io.bitsquare.offer;
 
-import io.bitsquare.offer.Offer;
+import java.io.Serializable;
 
-/**
- * We could remove that wrapper if it is not needed for additional UI only fields.
- */
-class OfferListItem {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+public class OpenOffer implements Serializable  {
+    private static final long serialVersionUID = -7523483764145982933L;
+    
+    private static final Logger log = LoggerFactory.getLogger(OpenOffer.class);
+    
     private final Offer offer;
 
-    public OfferListItem(Offer offer) {
+    public OpenOffer( Offer offer) {
         this.offer = offer;
     }
 
     public Offer getOffer() {
         return offer;
+    }
+
+    public String getId() {
+        return offer.getId();
     }
 }

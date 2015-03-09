@@ -468,8 +468,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (model.isMyOffer(offer)) {
                                         iconView.setId("image-remove");
                                         title = "Remove";
-                                        button.setOnAction(event -> model.removeOffer(item
-                                                .getOffer()));
+                                        button.setOnAction(event -> model.removeOpenOffer(item
+                                                .getOffer().getId()));
                                     }
                                     else {
                                         if (offer.getDirection() == Direction.SELL)

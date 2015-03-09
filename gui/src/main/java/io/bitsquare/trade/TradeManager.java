@@ -27,6 +27,7 @@ import io.bitsquare.network.Peer;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
 import io.bitsquare.offer.OfferBookService;
+import io.bitsquare.offer.OpenOffer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
@@ -94,7 +95,7 @@ public class TradeManager {
     private final Map<String, BuyerAcceptsOfferProtocol> offererAsBuyerProtocolMap = new HashMap<>();
     private final Map<String, RequestIsOfferAvailableProtocol> requestIsOfferAvailableProtocolMap = new HashMap<>();
 
-    private final ObservableMap<String, Offer> openOffers = FXCollections.observableHashMap();
+    private final ObservableMap<String, OpenOffer> openOffers = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> pendingTrades = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> closedTrades = FXCollections.observableHashMap();
 
@@ -121,9 +122,9 @@ public class TradeManager {
         this.signatureService = signatureService;
         this.offerBookService = offerBookService;
 
-        Object offersObject = persistence.read(this, "offers");
-        if (offersObject instanceof Map) {
-            openOffers.putAll((Map<String, Offer>) offersObject);
+        Object openOffersObject = persistence.read(this, "openOffers");
+        if (openOffersObject instanceof Map) {
+            openOffers.putAll((Map<String, OpenOffer>) openOffersObject);
         }
 
         Object pendingTradesObject = persistence.read(this, "pendingTrades");
@@ -177,12 +178,13 @@ public class TradeManager {
                 accountSettings.getAcceptedCountries(),
                 accountSettings.getAcceptedLanguageLocales());
 
+
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 offer,
                 walletService,
                 offerBookService,
                 (transaction) -> {
-                    saveOffer(offer);
+                    saveOpenOffer(new OpenOffer(offer));
                     resultHandler.handleResult(transaction);
                 },
                 (message, throwable) -> errorMessageHandler.handleErrorMessage(message)
@@ -191,22 +193,22 @@ public class TradeManager {
         placeOfferProtocol.placeOffer();
     }
 
-    private void saveOffer(Offer offer) {
-        openOffers.put(offer.getId(), offer);
-        persistOffers();
+    private void saveOpenOffer(OpenOffer openOffer) {
+        openOffers.put(openOffer.getId(), openOffer);
+        persistOpenOffers();
     }
 
-    public void requestRemoveOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        offerBookService.removeOffer(offer,
+    public void requestRemoveOpenOffer(String offerId, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        offerBookService.removeOffer(openOffers.get(offerId).getOffer(),
                 () -> {
-                    if (openOffers.containsKey(offer.getId())) {
-                        openOffers.remove(offer.getId());
-                        persistOffers();
+                    if (openOffers.containsKey(offerId)) {
+                        openOffers.remove(offerId);
+                        persistOpenOffers();
                         resultHandler.handleResult();
                     }
                     else {
-                        log.error("Locally stored offers does not contain the offer with the ID " + offer.getId());
-                        errorMessageHandler.handleErrorMessage("Locally stored offers does not contain the offer with the ID " + offer.getId());
+                        log.error("Locally stored offers does not contain the offer with the ID " + offerId);
+                        errorMessageHandler.handleErrorMessage("Locally stored offers does not contain the offer with the ID " + offerId);
                     }
                 },
                 (message, throwable) -> errorMessageHandler.handleErrorMessage(message));
@@ -247,8 +249,7 @@ public class TradeManager {
     private void createOffererAsBuyerProtocol(String offerId, Peer sender) {
         log.trace("createOffererAsBuyerProtocol offerId = " + offerId);
         if (openOffers.containsKey(offerId)) {
-            Offer offer = openOffers.get(offerId);
-
+            Offer offer = openOffers.get(offerId).getOffer();
             Trade trade = createTrade(offer);
             currentPendingTrade = trade;
 
@@ -264,7 +265,7 @@ public class TradeManager {
                         public void onOfferAccepted(Offer offer) {
                             trade.setState(Trade.State.OFFERER_ACCEPTED);
                             persistPendingTrades();
-                            requestRemoveOffer(offer,
+                            requestRemoveOpenOffer(offer.getId(),
                                     () -> log.debug("remove was successful"),
                                     (message) -> log.error(message));
                         }
@@ -535,7 +536,7 @@ public class TradeManager {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableMap<String, Offer> getOpenOffers() {
+    public ObservableMap<String, OpenOffer> getOpenOffers() {
         return openOffers;
     }
 
@@ -563,8 +564,8 @@ public class TradeManager {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void persistOffers() {
-        persistence.write(this, "offers", (Map<String, Offer>) new HashMap<>(openOffers));
+    private void persistOpenOffers() {
+        persistence.write(this, "openOffers", (Map<String, OpenOffer>) new HashMap<>(openOffers));
     }
 
     private void persistPendingTrades() {

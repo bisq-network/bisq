@@ -76,9 +76,13 @@ public class Offer implements Serializable {
     private final String bankAccountUID;
     private final List<Arbitrator> arbitrators;
 
+    // Mutable property. Has to be set before offer is save in DHT as it changes the objects hash!
     private String offerFeePaymentTxID;
-    private State state = State.UNKNOWN;
-    private transient ObjectProperty<State> stateProperty; // don't access directly, use getStateProperty()
+
+    // Those state properties are transient and only used at runtime! 
+    private transient State state = State.UNKNOWN;
+    // don't access directly as it might be null; use getStateProperty() which creates an object if not instantiated
+    private transient ObjectProperty<State> stateProperty;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
