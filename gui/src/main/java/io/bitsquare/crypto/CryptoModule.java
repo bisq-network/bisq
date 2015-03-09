@@ -19,6 +19,8 @@ package io.bitsquare.crypto;
 
 import io.bitsquare.BitsquareModule;
 
+import com.google.inject.Singleton;
+
 import org.springframework.core.env.Environment;
 
 public class CryptoModule extends BitsquareModule {
@@ -29,7 +31,7 @@ public class CryptoModule extends BitsquareModule {
 
     @Override
     protected void configure() {
-        bind(SignatureService.class).asEagerSingleton();
-        bind(HashService.class).asEagerSingleton();
+        bind(SignatureService.class).in(Singleton.class);
+        bind(HashService.class).in(Singleton.class);
     }
 }

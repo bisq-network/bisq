@@ -15,24 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.offer;
+package io.bitsquare.trade.listeners;
 
-import io.bitsquare.BitsquareModule;
+import io.bitsquare.network.Message;
+import io.bitsquare.network.Peer;
 
-import com.google.inject.Singleton;
-
-import org.springframework.core.env.Environment;
-
-public abstract class OfferModule extends BitsquareModule {
-
-    protected OfferModule(Environment env) {
-        super(env);
-    }
-
-    @Override
-    protected void configure() {
-        bind(OfferBook.class).in(Singleton.class);
-        bind(OfferBook.class).in(Singleton.class);
-
-    }
+public interface ProcessNewMessageListener {
+    void handleMessage(Message message, Peer sender);
 }

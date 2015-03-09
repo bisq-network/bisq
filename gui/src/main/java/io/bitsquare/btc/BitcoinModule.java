@@ -20,6 +20,7 @@ package io.bitsquare.btc;
 import io.bitsquare.BitsquareModule;
 
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 
 import java.io.File;
 
@@ -38,19 +39,19 @@ public class BitcoinModule extends BitsquareModule {
     protected void configure() {
         bind(BitcoinNetwork.class).toInstance(
                 env.getProperty(BitcoinNetwork.KEY, BitcoinNetwork.class, BitcoinNetwork.DEFAULT));
-        bind(FeePolicy.class).asEagerSingleton();
+        bind(FeePolicy.class).in(Singleton.class);
 
         bindConstant().annotatedWith(named(UserAgent.NAME_KEY)).to(env.getRequiredProperty(UserAgent.NAME_KEY));
         bindConstant().annotatedWith(named(UserAgent.VERSION_KEY)).to(env.getRequiredProperty(UserAgent.VERSION_KEY));
-        bind(UserAgent.class).asEagerSingleton();
+        bind(UserAgent.class).in(Singleton.class);
 
         File walletDir = new File(env.getRequiredProperty(WalletService.DIR_KEY));
         bind(File.class).annotatedWith(named(WalletService.DIR_KEY)).toInstance(walletDir);
         bindConstant().annotatedWith(named(WalletService.PREFIX_KEY)).to(
                 env.getRequiredProperty(WalletService.PREFIX_KEY));
-        bind(WalletService.class).asEagerSingleton();
+        bind(WalletService.class).in(Singleton.class);
 
-        bind(BlockChainService.class).asEagerSingleton();
+        bind(BlockChainService.class).in(Singleton.class);
     }
 
     @Override

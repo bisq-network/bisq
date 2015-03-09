@@ -19,6 +19,8 @@ package io.bitsquare.trade;
 
 import io.bitsquare.BitsquareModule;
 
+import com.google.inject.Singleton;
+
 import org.springframework.core.env.Environment;
 
 public class TradeModule extends BitsquareModule {
@@ -29,6 +31,6 @@ public class TradeModule extends BitsquareModule {
 
     @Override
     protected void configure() {
-        bind(TradeManager.class).asEagerSingleton();
+        bind(TradeManager.class).in(Singleton.class);
     }
 }

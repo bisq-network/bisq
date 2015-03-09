@@ -23,6 +23,7 @@ import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.offer.Direction;
 import io.bitsquare.offer.Offer;
+import io.bitsquare.offer.OfferBook;
 import io.bitsquare.settings.Preferences;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
@@ -34,8 +35,6 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import com.google.inject.Inject;
-
-import java.util.Comparator;
 
 import viewfx.model.Activatable;
 import viewfx.model.DataModel;
@@ -77,7 +76,6 @@ class OfferBookDataModel implements Activatable, DataModel {
     final StringProperty fiatCode = new SimpleStringProperty();
     final StringProperty btcCode = new SimpleStringProperty();
     final ObjectProperty<Country> bankAccountCountry = new SimpleObjectProperty<>();
-    final ObjectProperty<Comparator<OfferBookListItem>> comparator = new SimpleObjectProperty<>();
     private Direction direction;
 
 

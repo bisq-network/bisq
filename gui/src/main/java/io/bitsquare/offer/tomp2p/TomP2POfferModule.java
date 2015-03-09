@@ -18,10 +18,11 @@
 package io.bitsquare.offer.tomp2p;
 
 import io.bitsquare.network.tomp2p.TomP2PNode;
-import io.bitsquare.offer.OfferModule;
 import io.bitsquare.offer.OfferBookService;
+import io.bitsquare.offer.OfferModule;
 
 import com.google.inject.Provider;
+import com.google.inject.Singleton;
 
 import javax.inject.Inject;
 
@@ -37,7 +38,8 @@ public class TomP2POfferModule extends OfferModule {
 
     @Override
     protected void configure() {
-        bind(OfferBookService.class).toProvider(OfferBookServiceProvider.class).asEagerSingleton();
+        super.configure();
+        bind(OfferBookService.class).toProvider(OfferBookServiceProvider.class).in(Singleton.class);
     }
 }
 

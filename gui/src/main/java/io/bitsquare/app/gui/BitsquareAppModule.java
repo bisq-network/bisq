@@ -36,6 +36,7 @@ import io.bitsquare.trade.tomp2p.TomP2PTradeMessageModule;
 import io.bitsquare.user.User;
 
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 
 import java.io.File;
 
@@ -56,17 +57,17 @@ class BitsquareAppModule extends BitsquareModule {
 
     @Override
     protected void configure() {
-        bind(User.class).asEagerSingleton();
-        bind(Preferences.class).asEagerSingleton();
-        bind(AccountSettings.class).asEagerSingleton();
+        bind(User.class).in(Singleton.class);
+        bind(Preferences.class).in(Singleton.class);
+        bind(AccountSettings.class).in(Singleton.class);
 
         File persistenceDir = new File(env.getRequiredProperty(Persistence.DIR_KEY));
         bind(File.class).annotatedWith(named(Persistence.DIR_KEY)).toInstance(persistenceDir);
         bindConstant().annotatedWith(named(Persistence.PREFIX_KEY)).to(env.getRequiredProperty(Persistence.PREFIX_KEY));
-        bind(Persistence.class).asEagerSingleton();
+        bind(Persistence.class).in(Singleton.class);
 
         bind(Environment.class).toInstance(env);
-        bind(UpdateProcess.class).asEagerSingleton();
+        bind(UpdateProcess.class).in(Singleton.class);
 
         install(networkModule());
         install(bitcoinModule());

@@ -15,13 +15,12 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.gui.main.trade.offerbook;
+package io.bitsquare.offer;
 
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.gui.main.trade.offerbook.OfferBookListItem;
 import io.bitsquare.locale.Country;
 import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.offer.Offer;
-import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.user.User;
 import io.bitsquare.util.Utilities;
@@ -93,10 +92,10 @@ public class OfferBook {
             public void onOfferRemoved(Offer offer) {
                 // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
                 offer.setState(Offer.State.OFFER_REMOVED);
-                
+
                 // clean up possible references in tradeManager 
                 tradeManager.handleRemovedOffer(offer);
-                
+
                 offerBookListItems.removeIf(item -> item.getOffer().getId().equals(offer.getId()));
             }
         };
@@ -107,13 +106,13 @@ public class OfferBook {
     // Package scope
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void addClient() {
+    public void addClient() {
         numClients++;
         if (numClients == 1)
             startPolling();
     }
 
-    void removeClient() {
+    public void removeClient() {
         numClients--;
         checkArgument(numClients >= 0);
         if (numClients == 0)
@@ -125,7 +124,7 @@ public class OfferBook {
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    ObservableList<OfferBookListItem> getOfferBookListItems() {
+    public ObservableList<OfferBookListItem> getOfferBookListItems() {
         return offerBookListItems;
     }
 
@@ -139,7 +138,9 @@ public class OfferBook {
         if (bankAccount != null) {
             country = bankAccount.getCountry();
             fiatCode = bankAccount.getCurrency().getCurrencyCode();
-            offerBookListItems.stream().forEach(e -> e.setBankAccountCountry(country));
+
+            // TODO check why that was used
+            //offerBookListItems.stream().forEach(e -> e.setBankAccountCountry(country));
         }
         else {
             fiatCode = CurrencyUtil.getDefaultCurrency().getCurrencyCode();

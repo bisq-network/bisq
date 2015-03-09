@@ -57,7 +57,7 @@ public class TomP2PNetworkModule extends NetworkModule {
                 )
         );
         bindConstant().annotatedWith(Names.named(NETWORK_INTERFACE_KEY)).to(env.getProperty(NETWORK_INTERFACE_KEY, NETWORK_INTERFACE_UNSPECIFIED));
-        bind(BootstrappedPeerBuilder.class).asEagerSingleton();
+        bind(BootstrappedPeerBuilder.class).in(Singleton.class);
     }
 
     @Override

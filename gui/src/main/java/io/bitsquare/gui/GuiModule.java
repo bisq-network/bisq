@@ -20,7 +20,7 @@ package io.bitsquare.gui;
 import io.bitsquare.BitsquareModule;
 import io.bitsquare.gui.components.Popups;
 import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.trade.offerbook.OfferBook;
+import io.bitsquare.offer.OfferBook;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.gui.util.validation.BankAccountNumberValidator;
@@ -60,20 +60,20 @@ public class GuiModule extends BitsquareModule {
         bind(ViewFactory.class).to(InjectorViewFactory.class);
 
         bind(ResourceBundle.class).toInstance(BSResources.getResourceBundle());
-        bind(ViewLoader.class).to(FxmlViewLoader.class).asEagerSingleton();
-        bind(CachingViewLoader.class).asEagerSingleton();
+        bind(ViewLoader.class).to(FxmlViewLoader.class).in(Singleton.class);
+        bind(CachingViewLoader.class).in(Singleton.class);
 
-        bind(OfferBook.class).asEagerSingleton();
-        bind(Navigation.class).asEagerSingleton();
-        bind(OverlayManager.class).asEagerSingleton();
-        bind(BSFormatter.class).asEagerSingleton();
+        bind(OfferBook.class).in(Singleton.class);
+        bind(Navigation.class).in(Singleton.class);
+        bind(OverlayManager.class).in(Singleton.class);
+        bind(BSFormatter.class).in(Singleton.class);
 
-        bind(BankAccountNumberValidator.class).asEagerSingleton();
-        bind(BtcValidator.class).asEagerSingleton();
-        bind(FiatValidator.class).asEagerSingleton();
-        bind(InputValidator.class).asEagerSingleton();
-        bind(PasswordValidator.class).asEagerSingleton();
-        bind(Transitions.class).asEagerSingleton();
+        bind(BankAccountNumberValidator.class).in(Singleton.class);
+        bind(BtcValidator.class).in(Singleton.class);
+        bind(FiatValidator.class).in(Singleton.class);
+        bind(InputValidator.class).in(Singleton.class);
+        bind(PasswordValidator.class).in(Singleton.class);
+        bind(Transitions.class).in(Singleton.class);
 
         bind(Stage.class).toInstance(primaryStage);
         Popups.primaryStage = primaryStage;
