@@ -47,6 +47,7 @@ import viewfx.view.FxmlView;
 import viewfx.view.support.ActivatableViewAndModel;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.HPos;
@@ -95,6 +96,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private final Navigation navigation;
     private final OverlayManager overlayManager;
+    private ChangeListener<Offer.State> offerIsAvailableChangeListener;
 
     @Inject
     private TakeOfferView(TakeOfferViewModel model, Navigation navigation,
@@ -109,6 +111,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     public void initialize() {
         setupListeners();
         setupBindings();
+    }
+
+    @Override
+    protected void doDeactivate() {
+        if (offerIsAvailableChangeListener != null)
+            model.offerIsAvailable.removeListener(offerIsAvailableChangeListener);
     }
 
     public void initWithData(Direction direction, Coin amount, Offer offer) {
@@ -140,18 +148,18 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         acceptedLanguagesTextField.setText(model.getAcceptedLanguages());
         acceptedArbitratorsTextField.setText(model.getAcceptedArbitrators());
 
-        model.offerIsAvailable.addListener((ov, oldValue, newValue) -> handleOfferIsAvailableState(newValue));
+        offerIsAvailableChangeListener = (ov, oldValue, newValue) -> handleOfferIsAvailableState(newValue);
+        model.offerIsAvailable.addListener(offerIsAvailableChangeListener);
         handleOfferIsAvailableState(model.offerIsAvailable.get());
     }
 
     private void handleOfferIsAvailableState(Offer.State state) {
-        isOfferAvailableLabel.setVisible(false);
-        isOfferAvailableLabel.setManaged(false);
-        isOfferAvailableProgressIndicator.setProgress(0);
-        isOfferAvailableProgressIndicator.setVisible(false);
-        isOfferAvailableProgressIndicator.setManaged(false);
-
-        if ((state == Offer.State.OFFER_AVAILABLE)) {
+        if (state == Offer.State.OFFER_AVAILABLE) {
+            isOfferAvailableLabel.setVisible(false);
+            isOfferAvailableLabel.setManaged(false);
+            isOfferAvailableProgressIndicator.setProgress(0);
+            isOfferAvailableProgressIndicator.setVisible(false);
+            isOfferAvailableProgressIndicator.setManaged(false);
             showPaymentInfoScreenButton.setVisible(true);
         }
         else if ((state == Offer.State.OFFER_NOT_AVAILABLE)) {
@@ -173,7 +181,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     @FXML
     void onTakeOffer() {
         model.takeOffer();
-
     }
 
     @FXML
@@ -261,7 +268,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         // Might fix #315  Offerbook tab gets closed 
         //tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
-        tabPane.getTabs().remove(1);
+        if (tabPane != null && tabPane.getTabs() != null && tabPane.getTabs().size() > 1)
+            tabPane.getTabs().remove(1);
     }
 
     private void setupListeners() {

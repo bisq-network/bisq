@@ -156,3 +156,16 @@
 #image-update-failed {
     -fx-image: url("../../../images/update/update_failed.png");
 }
+
+/* offer state */
+#image-offer_state_unknown {
+    -fx-image: url("../../../images/offer/offer_state_unknown.png");
+}
+
+#image-offer_state_available {
+    -fx-image: url("../../../images/offer/offer_state_available.png");
+}
+
+#image-offer_state_not_available {
+    -fx-image: url("../../../images/offer/offer_state_not_available.png");
+}

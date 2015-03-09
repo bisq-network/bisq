@@ -436,8 +436,13 @@ public class TradeManager {
             log.warn("requestIsOfferAvailable already called for offer with ID:" + offer.getId());
         }
     }
-
-    public void handleRemovedOffer(Offer offer) {
+    
+    // When closing take offer view, we are not interested in the requestIsOfferAvailable result anymore, so remove from the map
+    public void stopRequestIsOfferAvailableRequest(Offer offer) {
+        requestIsOfferAvailableProtocolMap.remove(offer.getId());
+    }
+    
+    public void onOfferRemovedFromRemoteOfferBook(Offer offer) {
         requestIsOfferAvailableProtocolMap.remove(offer.getId());
     }
 

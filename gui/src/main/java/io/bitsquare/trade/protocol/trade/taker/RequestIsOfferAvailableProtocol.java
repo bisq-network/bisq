@@ -70,30 +70,30 @@ public class RequestIsOfferAvailableProtocol {
 
     // 1. GetPeerAddress
     // Async
-    // In case of an error: Repeat once, then give up. 
+    // In case of an error: Don't repeat call for now, maybe in production repeat once. 
     private void getPeerAddress() {
         log.debug("getPeerAddress called");
-        GetPeerAddress.run(this::onResultGetPeerAddress, this::onGetPeerAddressFault, tradeMessageService, offererMessagePublicKey);
-    }
-
-    private void onGetPeerAddressFault(String errorMessage) {
         GetPeerAddress.run(this::onResultGetPeerAddress, this::handleErrorMessage, tradeMessageService, offererMessagePublicKey);
     }
+
+   /* private void onGetPeerAddressFault(String errorMessage) {
+        GetPeerAddress.run(this::onResultGetPeerAddress, this::handleErrorMessage, tradeMessageService, offererMessagePublicKey);
+    }*/
 
 
     // 2. RequestTakeOffer
     // Async
-    // In case of an error: Repeat once, then give up.
+    // In case of an error: Don't repeat call for now, maybe in production repeat once. 
     public void onResultGetPeerAddress(Peer peer) {
         log.debug("onResultGetPeerAddress called");
         this.peer = peer;
 
-        RequestIsOfferAvailable.run(this::onRequestIsOfferAvailableFault, peer, tradeMessageService, offerId);
-    }
-
-    private void onRequestIsOfferAvailableFault(String errorMessage) {
         RequestIsOfferAvailable.run(this::handleErrorMessage, peer, tradeMessageService, offerId);
     }
+
+   /* private void onRequestIsOfferAvailableFault(String errorMessage) {
+        RequestIsOfferAvailable.run(this::handleErrorMessage, peer, tradeMessageService, offerId);
+    }*/
 
     // generic
     private void handleErrorMessage(String errorMessage) {

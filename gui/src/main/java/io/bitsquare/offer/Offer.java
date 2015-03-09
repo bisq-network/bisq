@@ -80,7 +80,7 @@ public class Offer implements Serializable {
     private String offerFeePaymentTxID;
 
     // Those state properties are transient and only used at runtime! 
-    private transient State state = State.UNKNOWN;
+    private transient State state;
     // don't access directly as it might be null; use getStateProperty() which creates an object if not instantiated
     private transient ObjectProperty<State> stateProperty;
 
@@ -120,6 +120,7 @@ public class Offer implements Serializable {
         this.acceptedLanguageLocales = acceptedLanguageLocales;
 
         creationDate = new Date();
+        state = State.UNKNOWN;
         getStateProperty().set(state);
     }
 
@@ -225,6 +226,9 @@ public class Offer implements Serializable {
     }
 
     public State getState() {
+        if(state == null)
+            setState(State.UNKNOWN);
+        
         return state;
     }
 

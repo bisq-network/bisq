@@ -82,7 +82,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
     final ObjectProperty<Offer.State> offerIsAvailable = new SimpleObjectProperty<>(Offer.State.UNKNOWN);
 
     @Inject
-    public TakeOfferDataModel(TradeManager tradeManager, 
+    public TakeOfferDataModel(TradeManager tradeManager,
                               WalletService walletService,
                               Preferences preferences,
                               Persistence persistence) {
@@ -103,6 +103,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
     @Override
     public void deactivate() {
         btcCode.unbind();
+        tradeManager.stopRequestIsOfferAvailableRequest(offer);
     }
 
     void initWithData(Coin amount, Offer offer) {

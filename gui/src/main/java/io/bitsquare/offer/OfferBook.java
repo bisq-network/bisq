@@ -94,7 +94,7 @@ public class OfferBook {
                 offer.setState(Offer.State.OFFER_REMOVED);
 
                 // clean up possible references in tradeManager 
-                tradeManager.handleRemovedOffer(offer);
+                tradeManager.onOfferRemovedFromRemoteOfferBook(offer);
 
                 offerBookListItems.removeIf(item -> item.getOffer().getId().equals(offer.getId()));
             }

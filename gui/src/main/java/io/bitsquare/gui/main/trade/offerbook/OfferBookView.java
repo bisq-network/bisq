@@ -42,7 +42,9 @@ import javax.inject.Inject;
 import viewfx.view.FxmlView;
 import viewfx.view.support.ActivatableViewAndModel;
 
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -67,7 +69,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @FXML InputTextField volumeTextField, amountTextField, priceTextField;
     @FXML Button createOfferButton, showAdvancedSettingsButton, openCountryFilterButton, openPaymentMethodsFilterButton;
     @FXML TableColumn<OfferBookListItem, OfferBookListItem> priceColumn, amountColumn, volumeColumn, directionColumn,
-    /*countryColumn,*/ bankAccountTypeColumn;
+    /*countryColumn,*/ bankAccountTypeColumn, statusColumn;
     @FXML Label amountBtcLabel, priceDescriptionLabel, priceFiatLabel, volumeDescriptionLabel, volumeFiatLabel,
             extendedButton1Label, extendedButton2Label, extendedCheckBoxLabel;
 
@@ -107,6 +109,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
       /*  setCountryColumnCellFactory();*/
         setBankAccountTypeColumnCellFactory();
         setDirectionColumnCellFactory();
+        setStatusColumnCellFactory();
 
         table.getSortOrder().add(priceColumn);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -480,6 +483,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setOnAction(event -> takeOffer(item.getOffer()));
                                     }
 
+                                    //TODO remove listener
                                     item.bankAccountCountryProperty().addListener((ov, o, n) ->
                                             verifyIfTradable(item));
                                     verifyIfTradable(item);
@@ -488,6 +492,66 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     setGraphic(button);
                                 }
                                 else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setStatusColumnCellFactory() {
+        statusColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        statusColumn.setCellFactory(
+                new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
+                        OfferBookListItem>>() {
+
+                    @Override
+                    public TableCell<OfferBookListItem, OfferBookListItem> call(
+                            TableColumn<OfferBookListItem, OfferBookListItem> column) {
+                        return new TableCell<OfferBookListItem, OfferBookListItem>() {
+                            final ImageView iconView = new ImageView();
+                            private ChangeListener<Offer.State> stateChangeListener;
+                            private ObjectProperty<Offer.State> stateProperty;
+
+                            private void updateIcon(final OfferBookListItem item) {
+                                Offer offer = item.getOffer();
+                                if (model.isMyOffer(offer)) {
+                                    iconView.setId("image-offer_state_available");
+                                }
+                                else {
+                                    switch (offer.getState()) {
+                                        case UNKNOWN:
+                                            iconView.setId("image-offer_state_unknown");
+                                            break;
+                                        case OFFER_AVAILABLE:
+                                            iconView.setId("image-offer_state_available");
+                                            break;
+                                        case OFFER_NOT_AVAILABLE:
+                                        case OFFER_REMOVED:
+                                            iconView.setId("image-offer_state_not_available");
+                                            break;
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void updateItem(final OfferBookListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null) {
+                                    stateProperty = item.getOffer().getStateProperty();
+                                    this.stateChangeListener = (ov, o, n) -> updateIcon(item);
+                                    stateProperty.addListener(stateChangeListener);
+                                    updateIcon(item);
+
+                                    setGraphic(iconView);
+                                }
+                                else {
+                                    if (stateProperty != null) {
+                                        stateProperty.removeListener(stateChangeListener);
+                                        stateChangeListener = null;
+                                    }
                                     setGraphic(null);
                                 }
                             }
