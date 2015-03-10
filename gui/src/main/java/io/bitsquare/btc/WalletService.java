@@ -611,7 +611,6 @@ public class WalletService {
 
     // 1. step: deposit tx
     // Offerer creates the 2of3 multiSig deposit tx with his unsigned input and change output
-
     public Transaction offererCreatesMSTxAndAddPayment(Coin offererInputAmount,
                                                        String offererPubKey,
                                                        String takerPubKey,

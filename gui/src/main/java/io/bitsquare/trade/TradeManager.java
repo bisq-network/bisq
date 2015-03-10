@@ -281,12 +281,10 @@ public class TradeManager {
 
                         @Override
                         public void onDepositTxPublished(Transaction depositTx) {
-                            trade.setDepositTx(depositTx);
-                            trade.setState(Trade.State.DEPOSIT_PUBLISHED);
                             persistPendingTrades();
-                            log.trace("trading onDepositTxPublishedMessage " + depositTx.getHashAsString());
                         }
 
+                        // TODO should be removed
                         @Override
                         public void onDepositTxConfirmedInBlockchain() {
                             log.trace("trading onDepositTxConfirmedInBlockchain");
@@ -310,6 +308,36 @@ public class TradeManager {
                             switch (state) {
                                 case RespondToTakeOfferRequest:
                                     removeFailedTrade(trade);
+                                    break;
+                                case ValidateTakeOfferFeePayedMessage:
+                                    removeFailedTrade(trade);
+                                    break;
+                                case CreateDepositTx:
+                                    removeFailedTrade(trade);
+                                    break;
+                                case SendTakerDepositPaymentRequest:
+                                    removeFailedTrade(trade);
+                                    break;
+                                case ValidateRequestOffererPublishDepositTxMessage:
+                                    removeFailedTrade(trade);
+                                    break;
+                                case VerifyTakerAccount:
+                                    removeFailedTrade(trade);
+                                    break;
+                                case VerifyAndSignContract:
+                                    removeFailedTrade(trade);
+                                    break;
+                                case SignAndPublishDepositTx:
+                                    removeFailedTrade(trade);
+                                    break;
+                                case SignAndPublishDepositTxResulted:
+                                    removeFailedTrade(trade);
+                                    break;
+                                case SendSignedPayoutTx:
+                                    removeFailedTrade(trade);
+                                    break;
+                                default:
+                                    log.error("Unhandled state: " + state);
                                     break;
                             }
                         }
@@ -347,9 +375,7 @@ public class TradeManager {
             }
 
             @Override
-            public void onDepositTxPublished(Transaction depositTx) {
-                trade.setDepositTx(depositTx);
-                trade.setState(Trade.State.DEPOSIT_PUBLISHED);
+            public void onDepositTxPublished() {
                 persistPendingTrades();
             }
 
@@ -378,10 +404,17 @@ public class TradeManager {
                     case RequestTakeOffer:
                         removeFailedTrade(trade);
                         break;
+                    case ValidateRespondToTakeOfferRequestMessage:
+                        // TODO might need further inspection. Removal could be used for sabotage.
+                        //removeFailedTrade(trade);
+                        break;
                     case PayTakeOfferFee:
                         removeFailedTrade(trade);
                         break;
                     case SendTakeOfferFeePayedMessage:
+                        removeFailedTrade(trade);
+                        break;
+                    case ValidateTakerDepositPaymentRequestMessage:
                         removeFailedTrade(trade);
                         break;
 
@@ -410,7 +443,7 @@ public class TradeManager {
     // Also we don't support yet offline messaging (mail box)
     public void fiatPaymentStarted(String tradeId) {
         if (offererAsBuyerProtocolMap.get(tradeId) != null) {
-            offererAsBuyerProtocolMap.get(tradeId).handleUIEventBankTransferInited();
+            offererAsBuyerProtocolMap.get(tradeId).handleUIEventBankTransferStarted();
             pendingTrades.get(tradeId).setState(Trade.State.PAYMENT_STARTED);
             persistPendingTrades();
         }

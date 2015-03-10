@@ -17,7 +17,6 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.btc.WalletService;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
@@ -25,39 +24,25 @@ import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMess
 import io.bitsquare.util.handlers.ExceptionHandler;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
-
-import javafx.util.Pair;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendSignedPayoutTx {
-    private static final Logger log = LoggerFactory.getLogger(SendSignedPayoutTx.class);
+public class SendBankTransferInitedMessage {
+    private static final Logger log = LoggerFactory.getLogger(SendBankTransferInitedMessage.class);
 
     public static void run(ExceptionHandler exceptionHandler,
                            Peer peer,
                            TradeMessageService tradeMessageService,
-                           WalletService walletService,
                            String tradeId,
-                           String takerPayoutAddress,
-                           String offererPayoutAddress,
-                           String depositTransactionId,
-                           Coin securityDeposit,
-                           Coin tradeAmount) {
-        log.trace("Run task");
+                           String depositTxAsHex,
+                           String offererSignatureR,
+                           String offererSignatureS,
+                           Coin offererPaybackAmount,
+                           Coin takerPaybackAmount,
+                           String offererPayoutAddress) {
+        log.trace("Run SendSignedPayoutTx task");
         try {
-            Coin offererPaybackAmount = tradeAmount.add(securityDeposit);
-            @SuppressWarnings("UnnecessaryLocalVariable") Coin takerPaybackAmount = securityDeposit;
-
-            Pair<ECKey.ECDSASignature, String> result = walletService.offererCreatesAndSignsPayoutTx(
-                    depositTransactionId, offererPaybackAmount, takerPaybackAmount, takerPayoutAddress, tradeId);
-
-            ECKey.ECDSASignature offererSignature = result.getKey();
-            String offererSignatureR = offererSignature.r.toString();
-            String offererSignatureS = offererSignature.s.toString();
-            String depositTxAsHex = result.getValue();
-
             BankTransferInitedMessage tradeMessage = new BankTransferInitedMessage(tradeId,
                     depositTxAsHex,
                     offererSignatureR,
@@ -65,22 +50,19 @@ public class SendSignedPayoutTx {
                     offererPaybackAmount,
                     takerPaybackAmount,
                     offererPayoutAddress);
-
             tradeMessageService.sendMessage(peer, tradeMessage, new SendMessageListener() {
                 @Override
                 public void handleResult() {
-                    log.trace("BankTransferInitedMessage successfully arrived at peer");
+                    log.trace("Sending BankTransferInitedMessage succeeded.");
                 }
 
                 @Override
                 public void handleFault() {
-                    log.error("BankTransferInitedMessage did not arrive at peer");
-                    exceptionHandler.handleException(new Exception("BankTransferInitedMessage did not arrive at peer"));
+                    exceptionHandler.handleException(new Exception("Sending BankTransferInitedMessage failed."));
 
                 }
             });
         } catch (Exception e) {
-            log.error("Exception at OffererCreatesAndSignsPayoutTx " + e);
             exceptionHandler.handleException(e);
         }
     }

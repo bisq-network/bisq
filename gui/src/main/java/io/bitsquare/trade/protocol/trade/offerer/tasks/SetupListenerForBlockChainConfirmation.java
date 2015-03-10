@@ -25,6 +25,7 @@ import org.bitcoinj.core.TransactionConfidence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// TODO should be removed
 public class SetupListenerForBlockChainConfirmation {
     private static final Logger log = LoggerFactory.getLogger(SetupListenerForBlockChainConfirmation.class);
 

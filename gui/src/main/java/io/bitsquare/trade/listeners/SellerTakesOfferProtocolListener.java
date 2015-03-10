@@ -23,7 +23,7 @@ import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocol;
 import org.bitcoinj.core.Transaction;
 
 public interface SellerTakesOfferProtocolListener {
-    void onDepositTxPublished(Transaction depositTx);
+    void onDepositTxPublished();
 
     void onBankTransferInited(String tradeId);
 

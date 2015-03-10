@@ -44,9 +44,8 @@ public class SignAndPublishPayoutTx {
                            Coin offererPaybackAmount,
                            Coin takerPaybackAmount,
                            String offererPayoutAddress) {
-        log.trace("Run task");
+        log.trace("Run SignAndPublishPayoutTx task");
         try {
-
             walletService.takerSignsAndSendsTx(depositTxAsHex,
                     offererSignatureR,
                     offererSignatureS,
@@ -64,12 +63,10 @@ public class SignAndPublishPayoutTx {
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            log.error("Exception at takerSignsAndSendsTx " + t);
                             exceptionHandler.handleException(t);
                         }
                     });
         } catch (Exception e) {
-            log.error("Exception at takerSignsAndSendsTx " + e);
             exceptionHandler.handleException(e);
         }
     }
