@@ -17,8 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
-import io.bitsquare.trade.protocol.trade.offerer.BuyerAcceptsOfferProtocolListener;
-import io.bitsquare.util.handlers.ResultHandler;
+import io.bitsquare.trade.listeners.BuyerAcceptsOfferProtocolListener;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
@@ -29,9 +28,8 @@ import org.slf4j.LoggerFactory;
 public class SetupListenerForBlockChainConfirmation {
     private static final Logger log = LoggerFactory.getLogger(SetupListenerForBlockChainConfirmation.class);
 
-    public static void run(ResultHandler resultHandler,
-                           Transaction depositTransaction, BuyerAcceptsOfferProtocolListener listener) {
-        log.trace("Run task");
+    public static void run(Transaction depositTransaction, BuyerAcceptsOfferProtocolListener listener) {
+        log.trace("Run SetupListenerForBlockChainConfirmation task");
         //TODO
         // sharedModel.offererPaymentProtocolListener.onDepositTxConfirmedInBlockchain();
 
@@ -44,7 +42,6 @@ public class SetupListenerForBlockChainConfirmation {
                     listener.onDepositTxConfirmedInBlockchain();
                     depositTransaction.getConfidence().removeEventListener(this);
                     log.trace("Tx is in blockchain");
-                    resultHandler.handleResult();
                 }
             }
         });

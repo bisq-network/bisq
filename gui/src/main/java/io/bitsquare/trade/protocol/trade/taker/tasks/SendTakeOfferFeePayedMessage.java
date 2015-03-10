@@ -17,44 +17,41 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
+import io.bitsquare.network.Peer;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.network.Peer;
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
-import io.bitsquare.util.handlers.ExceptionHandler;
-import io.bitsquare.util.handlers.ResultHandler;
+import io.bitsquare.util.handlers.ErrorMessageHandler;
 
 import org.bitcoinj.core.Coin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendTakeOfferFeePayedTxId {
-    private static final Logger log = LoggerFactory.getLogger(SendTakeOfferFeePayedTxId.class);
+public class SendTakeOfferFeePayedMessage {
+    private static final Logger log = LoggerFactory.getLogger(SendTakeOfferFeePayedMessage.class);
 
-    public static void run(ResultHandler resultHandler,
-                           ExceptionHandler exceptionHandler,
+    public static void run(ErrorMessageHandler errorMessageHandler,
                            Peer peer,
                            TradeMessageService tradeMessageService,
                            String tradeId,
                            String takeOfferFeeTxId,
                            Coin tradeAmount,
-                           String pubKeyForThatTradeAsHex) {
-        log.trace("Run task");
+                           String tradePubKeyAsHex) {
+        log.trace("Run SendTakeOfferFeePayedMessage task");
         TakeOfferFeePayedMessage msg = new TakeOfferFeePayedMessage(tradeId, takeOfferFeeTxId, tradeAmount,
-                pubKeyForThatTradeAsHex);
+                tradePubKeyAsHex);
 
         tradeMessageService.sendMessage(peer, msg, new SendMessageListener() {
             @Override
             public void handleResult() {
-                log.trace("TakeOfferFeePayedMessage successfully arrived at peer");
-                resultHandler.handleResult();
+                log.trace("TakeOfferFeePayedMessage succeeded.");
             }
 
             @Override
             public void handleFault() {
-                log.error("TakeOfferFeePayedMessage  did not arrive at peer");
-                exceptionHandler.handleException(new Exception("TakeOfferFeePayedMessage did not arrive at peer"));
+                log.error("Sending TakeOfferFeePayedMessage failed.");
+                errorMessageHandler.handleErrorMessage("Sending TakeOfferFeePayedMessage failed.");
             }
         });
     }

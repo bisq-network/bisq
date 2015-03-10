@@ -40,7 +40,7 @@ public class PayDeposit {
                            String arbitratorPubKey,
                            String offererPubKey,
                            String preparedOffererDepositTxAsHex) {
-        log.trace("Run task");
+        log.trace("Run PayDeposit task");
         try {
             Coin amountToPay = tradeAmount.add(securityDeposit);
             Coin msOutputAmount = amountToPay.add(securityDeposit);
@@ -53,18 +53,15 @@ public class PayDeposit {
                     preparedOffererDepositTxAsHex,
                     tradeId);
 
-            log.trace("sharedModel.signedTakerDepositTx: " + signedTakerDepositTx);
+            log.trace("signedTakerDepositTx: " + signedTakerDepositTx);
             resultHandler.onResult(signedTakerDepositTx);
         } catch (InsufficientMoneyException e) {
-            log.error("Pay deposit faultHandler.onFault due InsufficientMoneyException " + e);
-            exceptionHandler.handleException(
-                    new Exception("Pay deposit faultHandler.onFault due InsufficientMoneyException " + e));
+            log.error("Pay deposit failed due InsufficientMoneyException " + e);
+            exceptionHandler.handleException(e);
         }
     }
 
     public interface ResultHandler {
         void onResult(Transaction signedTakerDepositTx);
     }
-
-
 }

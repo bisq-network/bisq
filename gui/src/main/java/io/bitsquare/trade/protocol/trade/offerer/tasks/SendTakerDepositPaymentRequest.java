@@ -18,21 +18,19 @@
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.bank.BankAccount;
+import io.bitsquare.network.Peer;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.network.Peer;
-import io.bitsquare.trade.protocol.trade.offerer.messages.RequestTakerDepositPaymentMessage;
-import io.bitsquare.util.handlers.ExceptionHandler;
-import io.bitsquare.util.handlers.ResultHandler;
+import io.bitsquare.trade.protocol.trade.offerer.messages.TakerDepositPaymentRequestMessage;
+import io.bitsquare.util.handlers.ErrorMessageHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RequestTakerDepositPayment {
-    private static final Logger log = LoggerFactory.getLogger(RequestTakerDepositPayment.class);
+public class SendTakerDepositPaymentRequest {
+    private static final Logger log = LoggerFactory.getLogger(SendTakerDepositPaymentRequest.class);
 
-    public static void run(ResultHandler resultHandler,
-                           ExceptionHandler exceptionHandler,
+    public static void run(ErrorMessageHandler errorMessageHandler,
                            Peer peer,
                            TradeMessageService tradeMessageService,
                            String tradeId,
@@ -41,21 +39,19 @@ public class RequestTakerDepositPayment {
                            String offererPubKey,
                            String preparedOffererDepositTxAsHex,
                            long offererTxOutIndex) {
-        log.trace("Run task");
-        RequestTakerDepositPaymentMessage tradeMessage = new RequestTakerDepositPaymentMessage(
+        log.trace("Run SendTakerDepositPaymentRequest task");
+        TakerDepositPaymentRequestMessage tradeMessage = new TakerDepositPaymentRequestMessage(
                 tradeId, bankAccount, accountId, offererPubKey, preparedOffererDepositTxAsHex, offererTxOutIndex);
         tradeMessageService.sendMessage(peer, tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("RequestTakerDepositPaymentMessage successfully arrived at peer");
-                resultHandler.handleResult();
             }
 
             @Override
             public void handleFault() {
                 log.error("RequestTakerDepositPaymentMessage  did not arrive at peer");
-                exceptionHandler.handleException(new Exception("RequestTakerDepositPaymentMessage did not arrive at " +
-                        "peer"));
+                errorMessageHandler.handleErrorMessage("RequestTakerDepositPaymentMessage did not arrive at peer");
             }
         });
     }

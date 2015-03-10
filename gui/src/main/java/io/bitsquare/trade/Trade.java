@@ -53,7 +53,7 @@ public class Trade implements Serializable {
     private String takeOfferFeeTxID;
     private Contract contract;
     private String contractAsJson;
-    private String takerSignature;
+    private String takerContractSignature;
     private Transaction depositTx;
     private Transaction payoutTx;
 
@@ -86,8 +86,8 @@ public class Trade implements Serializable {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setContractTakerSignature(String takerSignature) {
-        this.takerSignature = takerSignature;
+    public void setTakerContractSignature(String takerSignature) {
+        this.takerContractSignature = takerSignature;
     }
 
     public void setTakeOfferFeeTxID(String takeOfferFeeTxID) {
@@ -143,8 +143,8 @@ public class Trade implements Serializable {
         return offer.getVolumeByAmount(tradeAmount);
     }
 
-    public String getTakerSignature() {
-        return takerSignature;
+    public String getTakerContractSignature() {
+        return takerContractSignature;
     }
 
     public Transaction getDepositTx() {

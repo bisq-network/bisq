@@ -29,13 +29,13 @@ public class TakeOfferFeePayedMessage implements Serializable, TradeMessage {
 
     private final Coin tradeAmount;
     private final String takeOfferFeeTxID;
-    private final String takerPubKey;
+    private final String tradePubKeyAsHex;
 
-    public TakeOfferFeePayedMessage(String tradeId, String takeOfferFeeTxID, Coin tradeAmount, String takerPubKey) {
+    public TakeOfferFeePayedMessage(String tradeId, String takeOfferFeeTxID, Coin tradeAmount, String tradePubKeyAsHex) {
         this.tradeId = tradeId;
         this.takeOfferFeeTxID = takeOfferFeeTxID;
         this.tradeAmount = tradeAmount;
-        this.takerPubKey = takerPubKey;
+        this.tradePubKeyAsHex = tradePubKeyAsHex;
     }
 
     @Override
@@ -51,8 +51,8 @@ public class TakeOfferFeePayedMessage implements Serializable, TradeMessage {
         return takeOfferFeeTxID;
     }
 
-    public String getTakerPubKey() {
-        return takerPubKey;
+    public String getTakerPubKeyAsHex() {
+        return tradePubKeyAsHex;
     }
 
 }

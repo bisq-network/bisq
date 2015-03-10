@@ -48,7 +48,7 @@ public class CreateAndSignContract {
                            String peersAccountId,
                            BankAccount peersBankAccount,
                            ECKey registrationKey) {
-        log.trace("Run task");
+        log.trace("Run CreateAndSignContract task");
         try {
             Contract contract = new Contract(offer, tradeAmount, takeOfferFeeTxId, peersAccountId, accountId,
                     peersBankAccount, bankAccount, peersMessagePublicKey, messagePublicKey);

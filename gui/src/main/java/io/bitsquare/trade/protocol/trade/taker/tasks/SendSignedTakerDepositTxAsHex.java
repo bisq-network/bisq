@@ -19,12 +19,11 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 
 import io.bitsquare.bank.BankAccount;
 import io.bitsquare.btc.WalletService;
+import io.bitsquare.network.Peer;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.network.Peer;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
-import io.bitsquare.util.handlers.ExceptionHandler;
-import io.bitsquare.util.handlers.ResultHandler;
+import io.bitsquare.util.handlers.ErrorMessageHandler;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Utils;
@@ -37,8 +36,7 @@ import org.slf4j.LoggerFactory;
 public class SendSignedTakerDepositTxAsHex {
     private static final Logger log = LoggerFactory.getLogger(SendSignedTakerDepositTxAsHex.class);
 
-    public static void run(ResultHandler resultHandler,
-                           ExceptionHandler exceptionHandler,
+    public static void run(ErrorMessageHandler errorMessageHandler,
                            Peer peer,
                            TradeMessageService tradeMessageService,
                            WalletService walletService,
@@ -47,10 +45,10 @@ public class SendSignedTakerDepositTxAsHex {
                            PublicKey messagePublicKey,
                            String tradeId,
                            String contractAsJson,
-                           String takerSignature,
+                           String takerContractSignature,
                            Transaction signedTakerDepositTx,
                            long offererTxOutIndex) {
-        log.trace("Run task");
+        log.trace("Run SendSignedTakerDepositTxAsHex task");
         long takerTxOutIndex = signedTakerDepositTx.getInput(1).getOutpoint().getIndex();
 
         RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(tradeId,
@@ -64,7 +62,7 @@ public class SendSignedTakerDepositTxAsHex {
                         .getParentTransaction()
                         .bitcoinSerialize()),
                 contractAsJson,
-                takerSignature,
+                takerContractSignature,
                 walletService.getAddressInfoByTradeID(tradeId).getAddressString(),
                 takerTxOutIndex,
                 offererTxOutIndex);
@@ -72,14 +70,12 @@ public class SendSignedTakerDepositTxAsHex {
             @Override
             public void handleResult() {
                 log.trace("RequestOffererDepositPublicationMessage successfully arrived at peer");
-                resultHandler.handleResult();
             }
 
             @Override
             public void handleFault() {
                 log.error("RequestOffererDepositPublicationMessage  did not arrive at peer");
-                exceptionHandler.handleException(
-                        new Exception("RequestOffererDepositPublicationMessage did not arrive at peer"));
+                errorMessageHandler.handleErrorMessage("RequestOffererDepositPublicationMessage did not arrive at peer");
             }
         });
     }

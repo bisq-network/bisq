@@ -27,15 +27,15 @@ import io.bitsquare.offer.Offer;
 import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeMessageService;
+import io.bitsquare.trade.listeners.BuyerAcceptsOfferProtocolListener;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.CreateDepositTx;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.HandleTakeOfferRequest;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.RequestTakerDepositPayment;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.RespondToTakeOfferRequest;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendDepositTxIdToTaker;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SendSignedPayoutTx;
+import io.bitsquare.trade.protocol.trade.offerer.tasks.SendTakerDepositPaymentRequest;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SetupListenerForBlockChainConfirmation;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.SignAndPublishDepositTx;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyAndSignContract;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakeOfferFeePayment;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.VerifyTakerAccount;
 import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
@@ -72,25 +72,24 @@ public class BuyerAcceptsOfferProtocol {
 
     public enum State {
         Init,
-        HandleTakeOfferRequest,
+        RespondToTakeOfferRequest,
 
-        onTakeOfferFeePayedMessage,
-        VerifyTakeOfferFeePayment,
+        handleTakeOfferFeePayedMessage,
+       /* VerifyTakeOfferFeePayment,*/
         CreateDepositTx,
         RequestTakerDepositPayment,
 
-        onRequestOffererPublishDepositTxMessage,
+        handleRequestOffererPublishDepositTxMessage,
         VerifyTakerAccount,
         VerifyAndSignContract,
         SignAndPublishDepositTx,
         SendDepositTxIdToTaker,
         SetupListenerForBlockChainConfirmation,
-        onResultSetupListenerForBlockChainConfirmation,
 
-        onUIEventBankTransferInited,
+        handleUIEventBankTransferInited,
         SendSignedPayoutTx,
 
-        onPayoutTxPublishedMessage
+        handlePayoutTxPublishedMessage
     }
 
     // provided
@@ -118,7 +117,7 @@ public class BuyerAcceptsOfferProtocol {
 
     // data written by messages, read by tasks
     private String takeOfferFeeTxId;
-    private String takerPubKey;
+    private String tradePubKeyAsHex;
     private String peersPayoutAddress;
     private String peersAccountId;
     private BankAccount peersBankAccount;
@@ -131,7 +130,7 @@ public class BuyerAcceptsOfferProtocol {
 
     // state
     private State state;
-    private int step = 0;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -173,33 +172,28 @@ public class BuyerAcceptsOfferProtocol {
     }
 
     public void start() {
-        handleTakeOfferRequest();
+        respondToTakeOfferRequest();
     }
 
-    // 1. HandleTakeOfferRequest
-    // Async
-    // In case of an error: Repeat once, then give up. No rollback activity needed
-    private void handleTakeOfferRequest() {
-        log.debug("handleTakeOfferRequest called " + step++);
-        state = State.HandleTakeOfferRequest;
-        HandleTakeOfferRequest.run(this::onResultHandleTakeOfferRequest, this::onHandleTakeOfferRequestFault, peer, tradeMessageService, trade.getState(), 
-                tradeId);
+    // 4. RespondToTakeOfferRequest
+    private void respondToTakeOfferRequest() {
+        log.debug("respondToTakeOfferRequest called: state = " + state);
+        state = State.RespondToTakeOfferRequest;
+        RespondToTakeOfferRequest.run(this::handleRespondToTakeOfferRequestResult, this::handleErrorMessage, tradeMessageService, peer,
+                trade.getState(), tradeId);
     }
 
-    private void onHandleTakeOfferRequestFault(Throwable throwable) {
-        HandleTakeOfferRequest.run(this::onResultHandleTakeOfferRequest, this::onFault, peer, tradeMessageService, trade.getState(), tradeId);
-    }
+    private void handleRespondToTakeOfferRequestResult() {
+        log.debug("handleRespondToTakeOfferRequestResult called: state = " + state);
 
-    public void onResultHandleTakeOfferRequest(boolean takeOfferRequestAccepted) {
-        log.debug("onResultHandleTakeOfferRequest called " + step++);
-        if (takeOfferRequestAccepted) {
+        // Here we are not setting a state as that is not relevant for the trade process.
+        // In accept case we remove the offer from the offerbook, but that happens outside of the flow of the trade process
+        if (trade.getState() == Trade.State.OPEN) {
             trade.setState(Trade.State.OFFERER_ACCEPTED);
             listener.onOfferAccepted(offer);
-            listener.onWaitingForPeerResponse(state);
         }
         else {
-            // Don't use OFFERER_REJECTED as that trade might has been accepted to another taker.
-            log.info("Finish here as we have already the offer accepted.");
+            log.info("Ignore that request as we have already the offer accepted.");
         }
     }
 
@@ -208,48 +202,48 @@ public class BuyerAcceptsOfferProtocol {
     // Incoming message from peer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onTakeOfferFeePayedMessage(@NotNull TakeOfferFeePayedMessage message) {
-        log.debug("onTakeOfferFeePayedMessage called " + step++);
-        log.debug("state " + state);
+    // 8. handleTakeOfferFeePayedMessage
+    public void handleTakeOfferFeePayedMessage(@NotNull TakeOfferFeePayedMessage message) {
+        log.debug("handleTakeOfferFeePayedMessage called: state = " + state);
 
         // validation
-        checkState(state == State.HandleTakeOfferRequest);
-        checkArgument(tradeId.equals(message.getTradeId()));
+        checkState(state == State.RespondToTakeOfferRequest);
+        checkTradeId(tradeId, message);
         String takeOfferFeeTxId = nonEmptyStringOf(message.getTakeOfferFeeTxId());
         Coin tradeAmount = positiveCoinOf(nonZeroCoinOf(message.getTradeAmount()));
-        String takerPubKey = nonEmptyStringOf(message.getTakerPubKey());
+        String tradePubKeyAsHex = nonEmptyStringOf(message.getTakerPubKeyAsHex());
 
         // apply new state
-        state = State.onTakeOfferFeePayedMessage;
+        state = State.handleTakeOfferFeePayedMessage;
         this.takeOfferFeeTxId = takeOfferFeeTxId;
-        this.takerPubKey = takerPubKey;
+        this.tradePubKeyAsHex = tradePubKeyAsHex;
         trade.setTakeOfferFeeTxID(takeOfferFeeTxId);
         trade.setTradeAmount(tradeAmount);
 
         // next task
-        state = State.VerifyTakeOfferFeePayment;
-        VerifyTakeOfferFeePayment.run(this::onResultVerifyTakeOfferFeePayment, this::onFault, walletService,
-                this.takeOfferFeeTxId);
+        createDepositTx();
     }
 
-    public void onResultVerifyTakeOfferFeePayment() {
-        log.debug("onResultVerifyTakeOfferFeePayment called " + step++);
-
+    // 9. CreateDepositTx
+    private void createDepositTx() {
+        log.debug("handleVerifyTakeOfferFeePaymentResult called: state = " + state);
+        checkState(state == State.handleTakeOfferFeePayedMessage);
         Coin offererInputAmount = trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
         state = State.CreateDepositTx;
-        CreateDepositTx.run(this::onResultCreateDepositTx, this::onFault, walletService, tradeId, offererInputAmount,
-                takerPubKey, arbitratorPubKey);
+        CreateDepositTx.run(this::handleCreateDepositTxResult, this::handleFault, walletService, tradeId, offererInputAmount,
+                tradePubKeyAsHex, arbitratorPubKey);
     }
 
-    public void onResultCreateDepositTx(String offererPubKey, String preparedOffererDepositTxAsHex,
-                                        long offererTxOutIndex) {
-        log.debug("onResultCreateDepositTx called " + step++);
+    // 4. RequestTakerDepositPayment
+    private void handleCreateDepositTxResult(String offererPubKey, String preparedOffererDepositTxAsHex, long offererTxOutIndex) {
+        log.debug("handleCreateDepositTxResult called: state = " + state);
+        checkState(state == State.CreateDepositTx);
+
         this.preparedOffererDepositTxAsHex = preparedOffererDepositTxAsHex;
         this.offererTxOutIndex = offererTxOutIndex;
 
         state = State.RequestTakerDepositPayment;
-        RequestTakerDepositPayment.run(this::onResultRequestTakerDepositPayment,
-                this::onFault,
+        SendTakerDepositPaymentRequest.run(this::handleErrorMessage,
                 peer,
                 tradeMessageService,
                 tradeId,
@@ -260,23 +254,19 @@ public class BuyerAcceptsOfferProtocol {
                 offererTxOutIndex);
     }
 
-    public void onResultRequestTakerDepositPayment() {
-        log.debug("onResultRequestTakerDepositPayment called " + step++);
-        listener.onWaitingForPeerResponse(state);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message from peer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onRequestOffererPublishDepositTxMessage(RequestOffererPublishDepositTxMessage message) {
-        log.debug("onRequestOffererPublishDepositTxMessage called " + step++);
+    // 5. VerifyTakerAccount
+    public void handleRequestOffererPublishDepositTxMessage(RequestOffererPublishDepositTxMessage message) {
+        log.debug("handleRequestOffererPublishDepositTxMessage called: state = " + state);
         log.debug("state " + state);
 
         // validation
         checkState(state == State.RequestTakerDepositPayment);
-        checkArgument(tradeId.equals(message.getTradeId()));
+        checkTradeId(tradeId, message);
         String peersPayoutAddress = nonEmptyStringOf(message.getTakerPayoutAddress());
         String peersAccountId = nonEmptyStringOf(message.getTakerAccountId());
         BankAccount peersBankAccount = checkNotNull(message.getTakerBankAccount());
@@ -288,7 +278,7 @@ public class BuyerAcceptsOfferProtocol {
         long takerTxOutIndex = nonNegativeLongOf(message.getTakerTxOutIndex());
 
         // apply new state
-        state = State.onRequestOffererPublishDepositTxMessage;
+        state = State.handleRequestOffererPublishDepositTxMessage;
         this.peersPayoutAddress = peersPayoutAddress;
         this.peersAccountId = peersAccountId;
         this.peersBankAccount = peersBankAccount;
@@ -301,17 +291,18 @@ public class BuyerAcceptsOfferProtocol {
 
         // next task
         state = State.VerifyTakerAccount;
-        VerifyTakerAccount.run(this::onResultVerifyTakerAccount, this::onFault, blockChainService,
+        VerifyTakerAccount.run(this::handleVerifyTakerAccountResult, this::handleFault, blockChainService,
                 this.peersAccountId, this.peersBankAccount);
     }
 
-    public void onResultVerifyTakerAccount() {
-        log.debug("onResultVerifyTakerAccount called " + step++);
+    // 6. VerifyAndSignContract
+    private void handleVerifyTakerAccountResult() {
+        log.debug("handleVerifyTakerAccountResult called: state = " + state);
 
         Coin tradeAmount = trade.getTradeAmount();
         state = State.VerifyAndSignContract;
-        VerifyAndSignContract.run(this::onResultVerifyAndSignContract,
-                this::onFault,
+        VerifyAndSignContract.run(this::handleVerifyAndSignContractResult,
+                this::handleFault,
                 signatureService,
                 accountId,
                 tradeAmount,
@@ -326,15 +317,16 @@ public class BuyerAcceptsOfferProtocol {
                 accountKey);
     }
 
-    public void onResultVerifyAndSignContract(Contract contract, String contractAsJson, String signature) {
-        log.debug("onResultVerifyAndSignContract called " + step++);
+    // 7. SignAndPublishDepositTx
+    private void handleVerifyAndSignContractResult(Contract contract, String contractAsJson, String signature) {
+        log.debug("handleVerifyAndSignContractResult called: state = " + state);
 
         trade.setContract(contract);
         trade.setContractAsJson(contractAsJson);
-        trade.setContractTakerSignature(signature);
+        trade.setTakerContractSignature(signature);
         state = State.SignAndPublishDepositTx;
-        SignAndPublishDepositTx.run(this::onResultSignAndPublishDepositTx,
-                this::onFault,
+        SignAndPublishDepositTx.run(this::handleSignAndPublishDepositTxResult,
+                this::handleFault,
                 walletService,
                 preparedOffererDepositTxAsHex,
                 signedTakerDepositTxAsHex,
@@ -344,54 +336,64 @@ public class BuyerAcceptsOfferProtocol {
                 takerTxOutIndex);
     }
 
-    public void onResultSignAndPublishDepositTx(Transaction depositTransaction) {
-        log.debug("onResultSignAndPublishDepositTx called " + step++);
+    // 8. SendDepositTxIdToTaker
+    private void handleSignAndPublishDepositTxResult(Transaction depositTransaction) {
+        log.debug("handleSignAndPublishDepositTxResult called: state = " + state);
 
         listener.onDepositTxPublished(depositTransaction);
 
         state = State.SendDepositTxIdToTaker;
-        SendDepositTxIdToTaker.run(this::onResultSendDepositTxIdToTaker, this::onFault, peer, tradeMessageService,
+        SendDepositTxIdToTaker.run(this::handleSendDepositTxIdToTakerResult, this::handleErrorMessage, peer, tradeMessageService,
                 tradeId, depositTransaction);
     }
 
-    public void onResultSendDepositTxIdToTaker() {
-        log.debug("onResultSendDepositTxIdToTaker called " + step++);
+    private void handleSendDepositTxIdToTakerResult() {
+        log.debug("handleSendDepositTxIdToTakerResult called: state = " + state);
 
         state = State.SetupListenerForBlockChainConfirmation;
-        SetupListenerForBlockChainConfirmation.run(this::onResultSetupListenerForBlockChainConfirmation,
-                trade.getDepositTx(), listener);
+        SetupListenerForBlockChainConfirmation.run(trade.getDepositTx(), listener);
     }
 
-    public void onResultSetupListenerForBlockChainConfirmation() {
-        log.debug("onResultSetupListenerForBlockChainConfirmation called " + step++);
-
-        state = State.onResultSetupListenerForBlockChainConfirmation;
-        listener.onWaitingForUserInteraction(state);
+    /*
+     // 9. VerifyTakeOfferFeePayment
+    private void verifyTakeOfferFeePayment() {
+        state = State.VerifyTakeOfferFeePayment;
+        VerifyTakeOfferFeePayment.run(this::handleVerifyTakeOfferFeePaymentResult, this::handleFault, walletService, this.takeOfferFeeTxId);
     }
 
+    // 10. CreateDepositTx
+    private void handleVerifyTakeOfferFeePaymentResult() {
+        log.debug("handleVerifyTakeOfferFeePaymentResult called: state = " + state);
+        checkState(state == State.VerifyTakeOfferFeePayment);
+        Coin offererInputAmount = trade.getSecurityDeposit().add(FeePolicy.TX_FEE);
+        state = State.CreateDepositTx;
+        CreateDepositTx.run(this::handleCreateDepositTxResult, this::handleFault, walletService, tradeId, offererInputAmount,
+                tradePubKeyAsHex, arbitratorPubKey);
+    }
+     */
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Triggered UI event
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Triggered from UI event: Button click "Bank transfer inited"
-    public void onUIEventBankTransferInited() {
-        log.debug("onUIEventBankTransferInited called " + step++);
+    // 9. SendSignedPayoutTx
+    public void handleUIEventBankTransferInited() {
+        log.debug("onUIEventBankTransferInited called: state = " + state);
         log.debug("state " + state);
 
         // validation
         checkState(state.ordinal() >= State.SignAndPublishDepositTx.ordinal() &&
-                state.ordinal() <= State.onResultSetupListenerForBlockChainConfirmation.ordinal());
+                state.ordinal() <= State.SetupListenerForBlockChainConfirmation.ordinal());
 
-        state = State.onUIEventBankTransferInited;
+        state = State.handleUIEventBankTransferInited;
 
         // next task
         String depositTransactionId = trade.getDepositTx().getHashAsString();
         Coin tradeAmount = trade.getTradeAmount();
         Coin securityDeposit = trade.getSecurityDeposit();
         state = State.SendSignedPayoutTx;
-        SendSignedPayoutTx.run(this::onResultSendSignedPayoutTx,
-                this::onFault,
+        SendSignedPayoutTx.run(this::handleFault,
                 peer,
                 tradeMessageService,
                 walletService,
@@ -403,40 +405,24 @@ public class BuyerAcceptsOfferProtocol {
                 tradeAmount);
     }
 
-    public void onResultSendSignedPayoutTx() {
-        log.debug("onResultSendSignedPayoutTx called " + step++);
-
-        listener.onWaitingForPeerResponse(state);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message from peer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onPayoutTxPublishedMessage(PayoutTxPublishedMessage message) {
-        log.debug("onPayoutTxPublishedMessage called " + step++);
-        log.debug("state " + state);
+    // 10. handlePayoutTxPublishedMessage
+    public void handlePayoutTxPublishedMessage(PayoutTxPublishedMessage message) {
+        log.debug("onPayoutTxPublishedMessage called: state = " + state);
 
         // validation
         checkState(state == State.SendSignedPayoutTx);
-        checkArgument(tradeId.equals(message.getTradeId()));
+        checkTradeId(tradeId, message);
         String payoutTxAsHex = nonEmptyStringOf(message.getPayoutTxAsHex());
 
-        state = State.onPayoutTxPublishedMessage;
-
-        Transaction payoutTx = new Transaction(walletService.getWallet().getParams(),
-                Utils.parseAsHexOrBase58(payoutTxAsHex));
+        // apply new state
+        state = State.handlePayoutTxPublishedMessage;
+        Transaction payoutTx = new Transaction(walletService.getWallet().getParams(), Utils.parseAsHexOrBase58(payoutTxAsHex));
         listener.onPayoutTxPublished(payoutTx);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters, Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getId() {
-        return tradeId;
     }
 
 
@@ -445,8 +431,14 @@ public class BuyerAcceptsOfferProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // generic fault handler
-    private void onFault(Throwable throwable) {
+    private void handleFault(Throwable throwable) {
+        trade.setFault(throwable);
+        trade.setState(Trade.State.FAILED);
         listener.onFault(throwable, state);
+    }
+
+    private void handleErrorMessage(String errorMessage) {
+        handleFault(new Exception(errorMessage));
     }
 
 }

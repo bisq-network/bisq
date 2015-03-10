@@ -35,7 +35,7 @@ public class PayTakeOfferFee {
 
     public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, WalletService walletService,
                            String tradeId) {
-        log.trace("Run task");
+        log.trace("Run PayTakeOfferFee task");
         try {
             walletService.payTakeOfferFee(tradeId, new FutureCallback<Transaction>() {
                 @Override
@@ -46,15 +46,13 @@ public class PayTakeOfferFee {
 
                 @Override
                 public void onFailure(@NotNull Throwable t) {
-                    log.error("Take offer fee paid faultHandler.onFault with exception: " + t);
-                    exceptionHandler.handleException(
-                            new Exception("Take offer fee paid faultHandler.onFault with exception: " + t));
+                    log.error("Pay take offer fee caused an exception: " + t);
+                    exceptionHandler.handleException(t);
                 }
             });
         } catch (InsufficientMoneyException e) {
-            log.error("Take offer fee paid faultHandler.onFault due InsufficientMoneyException " + e);
-            exceptionHandler.handleException(
-                    new Exception("Take offer fee paid faultHandler.onFault due to InsufficientMoneyException " + e));
+            log.error("Pay take offer fee caused an exception: " + e);
+            exceptionHandler.handleException(e);
         }
     }
 

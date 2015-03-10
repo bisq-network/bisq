@@ -29,7 +29,7 @@ public class VerifyTakeOfferFeePayment {
 
     public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, WalletService walletService,
                            String takeOfferFeeTxId) {
-        log.trace("Run task");
+        log.trace("Run VerifyTakeOfferFeePayment task");
         //TODO mocked yet, need a confidence listeners
         int numOfPeersSeenTx = walletService.getNumOfPeersSeenTx(takeOfferFeeTxId);
         if (numOfPeersSeenTx > 2) {

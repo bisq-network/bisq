@@ -22,38 +22,38 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
-import io.bitsquare.util.handlers.ExceptionHandler;
+import io.bitsquare.util.handlers.ErrorMessageHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HandleTakeOfferRequest {
-    private static final Logger log = LoggerFactory.getLogger(HandleTakeOfferRequest.class);
+public class RespondToTakeOfferRequest {
+    private static final Logger log = LoggerFactory.getLogger(RespondToTakeOfferRequest.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, Peer peer,
-                           TradeMessageService tradeMessageService, Trade.State tradeState, String tradeId) {
+    public static void run(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler,
+                           TradeMessageService tradeMessageService, Peer peer, Trade.State tradeState, String tradeId) {
         log.trace("Run HandleTakeOfferRequest task");
-        boolean isTradeIsOpen = tradeState == Trade.State.OPEN;
-        if (!isTradeIsOpen) {
+        boolean takeOfferRequestAccepted = tradeState == Trade.State.OPEN;
+        if (!takeOfferRequestAccepted) {
             log.warn("Received take offer request but the offer not marked as open anymore.");
         }
-        RespondToTakeOfferRequestMessage tradeMessage = new RespondToTakeOfferRequestMessage(tradeId, isTradeIsOpen);
+        RespondToTakeOfferRequestMessage tradeMessage = new RespondToTakeOfferRequestMessage(tradeId, takeOfferRequestAccepted);
         tradeMessageService.sendMessage(peer, tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("RespondToTakeOfferRequestMessage successfully arrived at peer");
-                resultHandler.handleResult(isTradeIsOpen);
+                resultHandler.handleResult();
             }
 
             @Override
             public void handleFault() {
                 log.error("AcceptTakeOfferRequestMessage  did not arrive at peer");
-                exceptionHandler.handleException(new Exception("AcceptTakeOfferRequestMessage did not arrive at peer"));
+                errorMessageHandler.handleErrorMessage("AcceptTakeOfferRequestMessage did not arrive at peer");
             }
         });
     }
 
     public interface ResultHandler {
-        void handleResult(boolean takeOfferRequestAccepted);
+        void handleResult();
     }
 }

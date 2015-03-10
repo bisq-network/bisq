@@ -17,11 +17,11 @@
 
 package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
+import io.bitsquare.network.Peer;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.network.Peer;
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
-import io.bitsquare.util.handlers.ExceptionHandler;
+import io.bitsquare.util.handlers.ErrorMessageHandler;
 import io.bitsquare.util.handlers.ResultHandler;
 
 import org.bitcoinj.core.Transaction;
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public class SendDepositTxIdToTaker {
     private static final Logger log = LoggerFactory.getLogger(SendDepositTxIdToTaker.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, Peer peer,
+    public static void run(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler, Peer peer,
                            TradeMessageService tradeMessageService, String tradeId, Transaction depositTransaction) {
         log.trace("Run task");
         DepositTxPublishedMessage tradeMessage =
@@ -49,7 +49,7 @@ public class SendDepositTxIdToTaker {
             @Override
             public void handleFault() {
                 log.error("DepositTxPublishedMessage  did not arrive at peer");
-                exceptionHandler.handleException(new Exception("DepositTxPublishedMessage did not arrive at peer"));
+                errorMessageHandler.handleErrorMessage("DepositTxPublishedMessage did not arrive at peer");
             }
         });
     }

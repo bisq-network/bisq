@@ -142,9 +142,16 @@ class TakeOfferDataModel implements Activatable, DataModel {
         trade.stateProperty().addListener((ov, oldValue, newValue) -> {
             log.debug("trade state = " + newValue);
             switch (newValue) {
-                // TODO Check why DEPOSIT_CONFIRMED can happen, refactor state handling
+                case OPEN:
+                    break;
+                case OFFERER_ACCEPTED:
+                    break;
+                case OFFERER_REJECTED:
+                    requestTakeOfferErrorMessage.set("Take offer request got rejected. Maybe another trader has taken the offer in the meantime.");
+                    break;
                 case DEPOSIT_PUBLISHED:
                 case DEPOSIT_CONFIRMED:
+                    // TODO Check why DEPOSIT_CONFIRMED can happen, refactor state handling
                     // TODO null pointer happened here!
                     if (trade.getDepositTx() != null) {
                         transactionId.set(trade.getDepositTx().getHashAsString());
@@ -155,14 +162,15 @@ class TakeOfferDataModel implements Activatable, DataModel {
                                 " That should not happen and needs more investigation why it can happen.");
                     }
                     break;
+                case PAYMENT_STARTED:
+                    break;
                 case FAILED:
                     requestTakeOfferErrorMessage.set("An error occurred. Error: " + trade.getFault().getMessage());
                     break;
-                case OFFERER_REJECTED:
-                    requestTakeOfferErrorMessage.set("Take offer request got rejected.");
+                case COMPLETED:
                     break;
                 default:
-                    log.warn("Unhandled trade state: " + newValue);
+                    log.error("Unhandled trade state: " + newValue);
                     break;
             }
         });

@@ -548,7 +548,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     setGraphic(iconView);
                                 }
                                 else {
-                                    if (stateProperty != null) {
+                                    if (stateProperty != null && stateChangeListener != null) {
                                         stateProperty.removeListener(stateChangeListener);
                                         stateChangeListener = null;
                                     }

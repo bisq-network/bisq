@@ -48,7 +48,7 @@
     <logger name="org.bitcoinj.core.BitcoinSerializer" level="WARN"/>
     <logger name="org.bitcoinj.core.AbstractBlockChain" level="WARN"/>
     <logger name="org.bitcoinj.wallet.DeterministicKeyChain" level="WARN"/>
-    <logger name="io.bitsquare.btc.WalletService" level="WARN"/>
+   <!-- <logger name="io.bitsquare.btc.WalletService" level="WARN"/>-->
 
     <!--
     <logger name="org.bitcoinj.core.Wallet" level="OFF"/>

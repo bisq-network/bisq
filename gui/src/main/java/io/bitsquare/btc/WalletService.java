@@ -39,7 +39,6 @@ import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.Utils;
-import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.core.WalletEventListener;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -624,11 +623,11 @@ public class WalletService {
         log.trace("offererPubKey=" + offererPubKey);
         log.trace("takerPubKey=" + takerPubKey);
         log.trace("arbitratorPubKey=" + arbitratorPubKey);
-        log.trace("offererInputAmount=" + offererInputAmount.toFriendlyString());
+        log.trace("tradeId=" + tradeId);
 
-        // we need to subtract the fee as it will go to the miners
-        Coin amountToPay = offererInputAmount.subtract(FeePolicy.TX_FEE);
-        log.trace("amountToPay=" + amountToPay.toFriendlyString());
+        // We need to subtract the fee as it will go to the miners
+        Coin offererInput = offererInputAmount.subtract(FeePolicy.TX_FEE);
+        log.trace("amountToPay=" + offererInput.toFriendlyString());
 
         // We pay the offererInputAmount to a temporary MS output which will be changed later to the correct value.
         // With the usage of completeTx() we get all the work done with fee calculation, validation and coin selection.
@@ -638,7 +637,7 @@ public class WalletService {
         // The btc tx fee will be included by the completeTx() call, so we don't need to add it manually.
         Transaction tx = new Transaction(params);
         Script multiSigOutputScript = getMultiSigScript(offererPubKey, takerPubKey, arbitratorPubKey);
-        tx.addOutput(amountToPay, multiSigOutputScript);
+        tx.addOutput(offererInput, multiSigOutputScript);   // that output is just a dummy for input calculation
 
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
         sendRequest.shuffleOutputs = false;
@@ -660,8 +659,7 @@ public class WalletService {
          /*
         IN[0]  any input > offererInputAmount + fee (unsigned)
         OUT[0] MS offererInputAmount
-        OUT[1] Change = input - offererInputAmount - fee
-               btc tx fee
+        OUT[1] Optional Change = input - offererInputAmount - fee btc tx fee
          */
 
         log.trace("Check if wallet is consistent: result=" + wallet.isConsistent());
@@ -688,6 +686,7 @@ public class WalletService {
         log.trace("takerPubKey=" + takerPubKey);
         log.trace("arbitratorPubKey=" + arbitratorPubKey);
         log.trace("offerersPartialDepositTxAsHex=" + offerersPartialDepositTxAsHex);
+        log.trace("tradeId=" + tradeId);
 
         // We pay the btc tx fee 2 times to the deposit tx:
         // 1. will be spent to miners when publishing the deposit tx
@@ -718,8 +717,7 @@ public class WalletService {
          /*
         IN[0]  any input taker > takerInputAmount + fee (signed)
         OUT[0] MS takerInputAmount
-        OUT[1] Change = input taker - takerInputAmount - fee
-               btc tx fee
+        OUT[1] Optional change = input taker - takerInputAmount - fee btc tx fee
          */
 
 
@@ -736,7 +734,9 @@ public class WalletService {
         */
 
         // Now we add the inputs and outputs from our temp tx and change the multiSig amount to the correct value
+        // TODO multiple inputs not supported yet
         tx.addInput(tempTx.getInput(0));
+        // handle optional change output
         if (tempTx.getOutputs().size() == 2) {
             tx.addOutput(tempTx.getOutput(1));
         }
@@ -745,11 +745,10 @@ public class WalletService {
         msOutputAmount = msOutputAmount.add(FeePolicy.TX_FEE);
         tx.getOutput(0).setValue(msOutputAmount);
 
-        // Now we sign our input
+        // Now we sign our input (index 1)
         TransactionInput input = tx.getInput(1);
-        if (input == null || input.getConnectedOutput() == null) {
-            log.error("input or input.getConnectedOutput() is null: " + input);
-        }
+        if (input == null || input.getConnectedOutput() == null)
+            log.error("Must not happen - input or input.getConnectedOutput() is null: " + input);
 
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
@@ -778,8 +777,7 @@ public class WalletService {
         IN[1]  any input taker > takerInputAmount + fee (signed)  e.g.: 1.1001
         OUT[0] MS offererInputAmount  e.g.: 1.2001
         OUT[1] Change = input offerer - offererInputAmount - fee   e.g.: 0 if input is matching correct value
-        OUT[2] Change = input taker - takerInputAmount - fee   e.g.: 0 if input is matching correct value
-               btc tx fee   e.g.: 0.1001
+        OUT[2] Change = input taker - takerInputAmount - fee   e.g.: 0 if input is matching correct value btc tx fee   e.g.: 0.1001
         */
 
         // We must not commit that tx to the wallet as we will get it over the network when the offerer
@@ -926,13 +924,9 @@ public class WalletService {
         // boolean isAlreadyInWallet = wallet.maybeCommitTx(depositTx);
         //log.trace("isAlreadyInWallet=" + isAlreadyInWallet);
 
-        try {
-            // Manually add the multisigContract to the wallet, overriding the isRelevant checks so we can track
-            // it and check for double-spends later
-            wallet.receivePending(depositTx, null, true);
-        } catch (VerificationException e) {
-            throw new RuntimeException(e); // Cannot happen, we already called multisigContract.verify()
-        }
+        // Manually add the multisigContract to the wallet, overriding the isRelevant checks so we can track
+        // it and check for double-spends later
+        wallet.receivePending(depositTx, null, true);
 
         return depositTx;
 

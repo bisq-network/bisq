@@ -15,24 +15,24 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.offerer;
+package io.bitsquare.trade.listeners;
 
-import io.bitsquare.offer.Offer;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocol;
 
 import org.bitcoinj.core.Transaction;
 
-public interface BuyerAcceptsOfferProtocolListener {
-    void onOfferAccepted(Offer offer);
-
+public interface SellerTakesOfferProtocolListener {
     void onDepositTxPublished(Transaction depositTx);
 
-    void onDepositTxConfirmedInBlockchain();
+    void onBankTransferInited(String tradeId);
 
-    void onPayoutTxPublished(Transaction payoutTx);
+    void onPayoutTxPublished(Trade trade, Transaction payoutTx);
 
-    void onFault(Throwable throwable, BuyerAcceptsOfferProtocol.State state);
+    void onFault(Throwable throwable, SellerTakesOfferProtocol.State state);
 
-    void onWaitingForPeerResponse(BuyerAcceptsOfferProtocol.State state);
+    void onTakeOfferRequestAccepted();
 
-    void onWaitingForUserInteraction(BuyerAcceptsOfferProtocol.State state);
+    void onTakeOfferRequestRejected();
+
 }

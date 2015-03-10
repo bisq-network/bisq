@@ -22,7 +22,7 @@ import io.bitsquare.trade.protocol.trade.TradeMessage;
 
 import java.io.Serializable;
 
-public class RequestTakerDepositPaymentMessage implements Serializable, TradeMessage {
+public class TakerDepositPaymentRequestMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = -3988720410493712913L;
 
     private final String tradeId;
@@ -32,7 +32,7 @@ public class RequestTakerDepositPaymentMessage implements Serializable, TradeMes
     private final String preparedOffererDepositTxAsHex;
     private final long offererTxOutIndex;
 
-    public RequestTakerDepositPaymentMessage(String tradeId, BankAccount bankAccount, String accountID,
+    public TakerDepositPaymentRequestMessage(String tradeId, BankAccount bankAccount, String accountID,
                                              String offererPubKey, String preparedOffererDepositTxAsHex,
                                              long offererTxOutIndex) {
         this.tradeId = tradeId;

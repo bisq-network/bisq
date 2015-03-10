@@ -17,21 +17,29 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.bank.BankAccount;
-import io.bitsquare.btc.BlockChainService;
-import io.bitsquare.trade.protocol.trade.shared.tasks.VerifyPeerAccount;
+import io.bitsquare.btc.WalletService;
 import io.bitsquare.util.handlers.ExceptionHandler;
-import io.bitsquare.util.handlers.ResultHandler;
+
+import org.bitcoinj.core.Transaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyOffererAccount {
-    private static final Logger log = LoggerFactory.getLogger(VerifyOffererAccount.class);
+public class TakerCommitDepositTx {
+    private static final Logger log = LoggerFactory.getLogger(TakerCommitDepositTx.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler,
-                           BlockChainService blockChainService, String peersAccountId, BankAccount peersBankAccount) {
-        log.trace("Run VerifyOffererAccount task");
-        VerifyPeerAccount.run(resultHandler, exceptionHandler, blockChainService, peersAccountId, peersBankAccount);
+    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, WalletService walletService, String depositTxAsHex) {
+        log.trace("Run PayDeposit task");
+        try {
+            Transaction transaction = walletService.takerCommitDepositTx(depositTxAsHex);
+            resultHandler.onResult(transaction);
+        } catch (Exception e) {
+            log.error("takerCommitDepositTx failed with exception " + e);
+            exceptionHandler.handleException(e);
+        }
+    }
+
+    public interface ResultHandler {
+        void onResult(Transaction transaction);
     }
 }

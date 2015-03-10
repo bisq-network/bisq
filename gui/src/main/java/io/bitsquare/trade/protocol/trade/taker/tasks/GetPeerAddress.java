@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 public class GetPeerAddress {
     private static final Logger log = LoggerFactory.getLogger(GetPeerAddress.class);
-    
+
     public static void run(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler,
                            TradeMessageService tradeMessageService, PublicKey messagePublicKey) {
         log.trace("Run GetPeerAddress task");
@@ -42,8 +42,8 @@ public class GetPeerAddress {
 
             @Override
             public void onFailed() {
-                log.error("Lookup for peer address failed.");
-                errorMessageHandler.handleErrorMessage("Lookup for peer address failed.");
+                log.error("DHT lookup for peer address failed.");
+                errorMessageHandler.handleErrorMessage("DHT lookup for peer address failed.");
             }
         });
     }

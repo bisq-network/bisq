@@ -163,13 +163,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             showPaymentInfoScreenButton.setVisible(true);
         }
         else if ((state == Offer.State.OFFER_NOT_AVAILABLE)) {
-            Popups.openWarningPopup("You cannot take that offer",
-                    "The offerer is either offline or the offer was already taken by another trader.");
+            Popups.openWarningPopup("You cannot take that offer", "The offerer is either offline or the offer was already taken by another trader.");
             close();
         }
         else if ((state == Offer.State.OFFER_REMOVED)) {
-            Popups.openWarningPopup("You cannot take that offer",
-                    "The offerer has been removed in the meantime.");
+            Popups.openWarningPopup("You cannot take that offer", "The offerer has been removed in the meantime.");
             close();
         }
     }
@@ -196,8 +194,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 }
             });
             Popups.openInfoPopup("To ensure that both traders behave fair they need to pay a security deposit.",
-                    "The deposit will stay in your local trading wallet until the offer gets accepted by " +
-                            "another trader. " +
+                    "The deposit will stay in your local trading wallet until the offer gets accepted by another trader. " +
                             "\nIt will be refunded to you after the trade has successfully completed.",
                     actions);
 
