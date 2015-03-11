@@ -17,32 +17,35 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.network.Peer;
-import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestTakeOfferMessage;
-import io.bitsquare.util.handlers.ErrorMessageHandler;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RequestTakeOffer {
+public class RequestTakeOffer extends Task<SellerTakesOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(RequestTakeOffer.class);
 
-    public static void run(ErrorMessageHandler errorMessageHandler,
-                           TradeMessageService tradeMessageService, Peer peer, String tradeId) {
-        log.trace("Run RequestTakeOffer task");
-        tradeMessageService.sendMessage(peer, new RequestTakeOfferMessage(tradeId),
+    public RequestTakeOffer(TaskRunner taskHandler, SellerTakesOfferModel model) {
+        super(taskHandler, model);
+    }
+
+    @Override
+    protected void run() {
+        model.getTradeMessageService().sendMessage(model.getPeer(), new RequestTakeOfferMessage(model.getTradeId()),
                 new SendMessageListener() {
                     @Override
                     public void handleResult() {
                         log.trace("Sending RequestTakeOfferMessage succeeded.");
+                        complete();
                     }
 
                     @Override
                     public void handleFault() {
-                        log.error("Sending RequestTakeOfferMessage failed.");
-                        errorMessageHandler.handleErrorMessage("Sending RequestTakeOfferMessage failed.");
+                        failed("Sending RequestTakeOfferMessage failed.");
                     }
                 });
     }

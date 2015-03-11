@@ -17,8 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.btc.WalletService;
-import io.bitsquare.util.handlers.ExceptionHandler;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -27,41 +28,32 @@ import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PayDeposit {
+public class PayDeposit extends Task<SellerTakesOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(PayDeposit.class);
 
-    public static void run(ResultHandler resultHandler,
-                           ExceptionHandler exceptionHandler,
-                           WalletService walletService,
-                           Coin securityDeposit,
-                           Coin tradeAmount,
-                           String tradeId,
-                           String pubKeyForThatTrade,
-                           String arbitratorPubKey,
-                           String offererPubKey,
-                           String preparedOffererDepositTxAsHex) {
-        log.trace("Run PayDeposit task");
-        try {
-            Coin amountToPay = tradeAmount.add(securityDeposit);
-            Coin msOutputAmount = amountToPay.add(securityDeposit);
-
-            Transaction signedTakerDepositTx = walletService.takerAddPaymentAndSignTx(amountToPay,
-                    msOutputAmount,
-                    offererPubKey,
-                    pubKeyForThatTrade,
-                    arbitratorPubKey,
-                    preparedOffererDepositTxAsHex,
-                    tradeId);
-
-            log.trace("signedTakerDepositTx: " + signedTakerDepositTx);
-            resultHandler.onResult(signedTakerDepositTx);
-        } catch (InsufficientMoneyException e) {
-            log.error("Pay deposit failed due InsufficientMoneyException " + e);
-            exceptionHandler.handleException(e);
-        }
+    public PayDeposit(TaskRunner taskHandler, SellerTakesOfferModel model) {
+        super(taskHandler, model);
     }
 
-    public interface ResultHandler {
-        void onResult(Transaction signedTakerDepositTx);
+    @Override
+    protected void run() {
+        try {
+            Coin amountToPay = model.getTradeAmount().add(model.getSecurityDeposit());
+            Coin msOutputAmount = amountToPay.add(model.getSecurityDeposit());
+            Transaction signedTakerDepositTx = model.getWalletService().takerAddPaymentAndSignTx(
+                    amountToPay,
+                    msOutputAmount,
+                    model.getPeersPubKey(),
+                    model.getTradePubKeyAsHex(),
+                    model.getArbitratorPubKey(),
+                    model.getPreparedPeersDepositTxAsHex(),
+                    model.getTradeId());
+
+            model.setSignedTakerDepositTx(signedTakerDepositTx);
+
+            complete();
+        } catch (InsufficientMoneyException e) {
+            failed(e);
+        }
     }
 }

@@ -20,15 +20,40 @@ package io.bitsquare.trade.protocol.trade.taker.tasks;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.GetPeerAddressListener;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
 import io.bitsquare.util.handlers.ErrorMessageHandler;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import java.security.PublicKey;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GetPeerAddress {
+public class GetPeerAddress extends Task<SellerTakesOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(GetPeerAddress.class);
+
+    public GetPeerAddress(TaskRunner taskHandler, SellerTakesOfferModel model) {
+        super(taskHandler, model);
+    }
+
+    @Override
+    protected void run() {
+        model.getTradeMessageService().getPeerAddress(model.getOffererMessagePublicKey(), new GetPeerAddressListener() {
+            @Override
+            public void onResult(Peer peer) {
+                log.trace("Found peer: " + peer.toString());
+                model.setPeer(peer);
+                complete();
+            }
+
+            @Override
+            public void onFailed() {
+                failed("DHT lookup for peer address failed.", null);
+            }
+        });
+    }
+
 
     public static void run(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler,
                            TradeMessageService tradeMessageService, PublicKey messagePublicKey) {

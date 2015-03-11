@@ -17,30 +17,36 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
 import io.bitsquare.util.tasks.Task;
 import io.bitsquare.util.tasks.TaskRunner;
 
-import org.bitcoinj.core.Transaction;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TakerCommitDepositTx extends Task<SellerTakesOfferModel> {
-    private static final Logger log = LoggerFactory.getLogger(TakerCommitDepositTx.class);
+import static com.google.common.base.Preconditions.checkState;
+import static io.bitsquare.util.Validator.*;
 
-    public TakerCommitDepositTx(TaskRunner taskHandler, SellerTakesOfferModel model) {
+public class ValidateDepositTxPublishedMessage extends Task<SellerTakesOfferModel> {
+    private static final Logger log = LoggerFactory.getLogger(ValidateDepositTxPublishedMessage.class);
+
+    public ValidateDepositTxPublishedMessage(TaskRunner taskHandler, SellerTakesOfferModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void run() {
-        Transaction transaction = model.getWalletService().takerCommitDepositTx(model.getDepositTxAsHex());
+        try {
+            checkState(model.getTrade().getPreviousTask() == SendSignedTakerDepositTxAsHex.class);
+            checkTradeId(model.getTradeId(), model.getTradeMessage());
+            
+            DepositTxPublishedMessage message = (DepositTxPublishedMessage) model.getTradeMessage();
+            model.setDepositTxAsHex(nonEmptyStringOf(message.getDepositTxAsHex()));
 
-        model.getTrade().setDepositTx(transaction);
-        model.getTrade().setState(Trade.State.DEPOSIT_PUBLISHED);
-
-        complete();
+            complete();
+        } catch (Throwable t) {
+            failed("Validation for DepositTxPublishedMessage failed.", t);
+        }
     }
 }

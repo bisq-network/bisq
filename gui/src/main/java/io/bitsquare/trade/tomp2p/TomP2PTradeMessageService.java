@@ -23,7 +23,7 @@ import io.bitsquare.network.tomp2p.TomP2PNode;
 import io.bitsquare.network.tomp2p.TomP2PPeer;
 import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.GetPeerAddressListener;
-import io.bitsquare.trade.listeners.ProcessNewMessageListener;
+import io.bitsquare.trade.listeners.MessageHandler;
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.user.User;
 
@@ -58,7 +58,7 @@ public class TomP2PTradeMessageService implements TradeMessageService {
 
     private final TomP2PNode tomP2PNode;
     private final User user;
-    private final List<ProcessNewMessageListener> processNewMessageListeners = new ArrayList<>();
+    private final List<MessageHandler> messageHandlers = new ArrayList<>();
     private Executor executor;
 
 
@@ -133,12 +133,12 @@ public class TomP2PTradeMessageService implements TradeMessageService {
     // Event Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addHandleNewMessageListener(ProcessNewMessageListener listener) {
-        processNewMessageListeners.add(listener);
+    public void addMessageHandler(MessageHandler listener) {
+        messageHandlers.add(listener);
     }
 
-    public void removeHandleNewMessageListener(ProcessNewMessageListener listener) {
-        processNewMessageListeners.remove(listener);
+    public void removeMessageHandler(MessageHandler listener) {
+        messageHandlers.remove(listener);
     }
 
 
@@ -149,7 +149,7 @@ public class TomP2PTradeMessageService implements TradeMessageService {
     @Override
     public void handleMessage(Object message, Peer sender) {
         if (message instanceof Message && sender instanceof TomP2PPeer) {
-            executor.execute(() -> processNewMessageListeners.stream().forEach(e ->
+            executor.execute(() -> messageHandlers.stream().forEach(e ->
                     e.handleMessage((Message) message, sender)));
         }
     }

@@ -17,23 +17,27 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.btc.WalletService;
-import io.bitsquare.util.handlers.ExceptionHandler;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyOfferFeePayment {
+public class VerifyOfferFeePayment extends Task<SellerTakesOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(VerifyOfferFeePayment.class);
 
-    public static void run(ExceptionHandler exceptionHandler, WalletService walletService,
-                           String takeOfferFeeTxId) {
-        log.trace("Run VerifyOfferFeePayment task");
-        //TODO mocked yet, need a confidence listeners
-        int numOfPeersSeenTx = walletService.getNumOfPeersSeenTx(takeOfferFeeTxId);
+    public VerifyOfferFeePayment(TaskRunner taskHandler, SellerTakesOfferModel model) {
+        super(taskHandler, model);
+    }
+
+    @Override
+    protected void run() {
+        //TODO impl. missing
+        int numOfPeersSeenTx = model.getWalletService().getNumOfPeersSeenTx(model.getTrade().getTakeOfferFeeTxId());
        /* if (numOfPeersSeenTx > 2) {
             resultHandler.handleResult();
         }*/
+        complete();
     }
-
 }

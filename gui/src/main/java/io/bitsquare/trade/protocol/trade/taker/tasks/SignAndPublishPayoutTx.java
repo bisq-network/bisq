@@ -17,10 +17,12 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.btc.WalletService;
-import io.bitsquare.util.handlers.ExceptionHandler;
+import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
-import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Utils;
 
@@ -31,48 +33,43 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SignAndPublishPayoutTx {
+public class SignAndPublishPayoutTx extends Task<SellerTakesOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(SignAndPublishPayoutTx.class);
 
-    public static void run(ResultHandler resultHandler,
-                           ExceptionHandler exceptionHandler,
-                           WalletService walletService,
-                           String tradeId,
-                           String depositTxAsHex,
-                           String offererSignatureR,
-                           String offererSignatureS,
-                           Coin offererPaybackAmount,
-                           Coin takerPaybackAmount,
-                           String offererPayoutAddress) {
-        log.trace("Run SignAndPublishPayoutTx task");
+    public SignAndPublishPayoutTx(TaskRunner taskHandler, SellerTakesOfferModel model) {
+        super(taskHandler, model);
+    }
+
+    @Override
+    protected void run() {
         try {
-            walletService.takerSignsAndSendsTx(depositTxAsHex,
-                    offererSignatureR,
-                    offererSignatureS,
-                    offererPaybackAmount,
-                    takerPaybackAmount,
-                    offererPayoutAddress,
-                    tradeId,
+            model.getWalletService().takerSignsAndSendsTx(model.getDepositTxAsHex(),
+                    model.getOffererSignatureR(),
+                    model.getOffererSignatureS(),
+                    model.getOffererPaybackAmount(),
+                    model.getTakerPaybackAmount(),
+                    model.getOffererPayoutAddress(),
+                    model.getTradeId(),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             log.debug("takerSignsAndSendsTx " + transaction);
                             String payoutTxAsHex = Utils.HEX.encode(transaction.bitcoinSerialize());
-                            resultHandler.onResult(transaction, payoutTxAsHex);
+
+                            model.setPayoutTx(transaction);
+                            model.setPayoutTxAsHex(payoutTxAsHex);
+                            model.getTrade().setState(Trade.State.PAYOUT_PUBLISHED);
+                            
+                            complete();
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            exceptionHandler.handleException(t);
+                            failed(t);
                         }
                     });
-        } catch (Exception e) {
-            exceptionHandler.handleException(e);
+        } catch (AddressFormatException e) {
+            failed(e);
         }
     }
-
-    public interface ResultHandler {
-        void onResult(Transaction transaction, String payoutTxAsHex);
-    }
-
 }

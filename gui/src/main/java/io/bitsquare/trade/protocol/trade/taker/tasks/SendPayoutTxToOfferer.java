@@ -17,33 +17,36 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.network.Peer;
-import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
 import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
-import io.bitsquare.util.handlers.ErrorMessageHandler;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendPayoutTxToOfferer {
+public class SendPayoutTxToOfferer extends Task<SellerTakesOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(SendPayoutTxToOfferer.class);
 
-    public static void run(ErrorMessageHandler errorMessageHandler, Peer peer, TradeMessageService tradeMessageService, String tradeId, String payoutTxAsHex) {
-        log.trace("Run SendPayoutTxToOfferer task");
-        PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(tradeId, payoutTxAsHex);
-        tradeMessageService.sendMessage(peer, tradeMessage, new SendMessageListener() {
+    public SendPayoutTxToOfferer(TaskRunner taskHandler, SellerTakesOfferModel model) {
+        super(taskHandler, model);
+    }
+
+    @Override
+    protected void run() {
+        PayoutTxPublishedMessage tradeMessage = new PayoutTxPublishedMessage(model.getTradeId(), model.getPayoutTxAsHex());
+        model.getTradeMessageService().sendMessage(model.getPeer(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
                 log.trace("PayoutTxPublishedMessage successfully arrived at peer");
+                complete();
             }
 
             @Override
             public void handleFault() {
-                errorMessageHandler.handleErrorMessage("Sending PayoutTxPublishedMessage failed.");
+                failed("Sending PayoutTxPublishedMessage failed.");
             }
         });
-
     }
-
 }

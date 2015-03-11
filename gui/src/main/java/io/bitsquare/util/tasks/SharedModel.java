@@ -15,11 +15,11 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.listeners;
+package io.bitsquare.util.tasks;
 
-import io.bitsquare.network.Message;
-import io.bitsquare.network.Peer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public interface ProcessNewMessageListener {
-    void handleMessage(Message message, Peer sender);
+public class SharedModel {
+    private static final Logger log = LoggerFactory.getLogger(SharedModel.class);
 }

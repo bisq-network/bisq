@@ -17,66 +17,55 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.bank.BankAccount;
-import io.bitsquare.btc.WalletService;
-import io.bitsquare.network.Peer;
-import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestOffererPublishDepositTxMessage;
-import io.bitsquare.util.handlers.ErrorMessageHandler;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.Utils;
 
-import java.security.PublicKey;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendSignedTakerDepositTxAsHex {
+public class SendSignedTakerDepositTxAsHex extends Task<SellerTakesOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(SendSignedTakerDepositTxAsHex.class);
 
-    public static void run(ErrorMessageHandler errorMessageHandler,
-                           Peer peer,
-                           TradeMessageService tradeMessageService,
-                           WalletService walletService,
-                           BankAccount bankAccount,
-                           String accountId,
-                           PublicKey messagePublicKey,
-                           String tradeId,
-                           String contractAsJson,
-                           String takerContractSignature,
-                           Transaction signedTakerDepositTx,
-                           long offererTxOutIndex) {
-        log.trace("Run SendSignedTakerDepositTxAsHex task");
-        long takerTxOutIndex = signedTakerDepositTx.getInput(1).getOutpoint().getIndex();
+    public SendSignedTakerDepositTxAsHex(TaskRunner taskHandler, SellerTakesOfferModel model) {
+        super(taskHandler, model);
+    }
 
-        RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(tradeId,
-                bankAccount,
-                accountId,
-                messagePublicKey,
+    @Override
+    protected void run() {
+        Transaction signedTakerDepositTx = model.getSignedTakerDepositTx();
+        long takerTxOutIndex = model.getSignedTakerDepositTx().getInput(1).getOutpoint().getIndex();
+
+        RequestOffererPublishDepositTxMessage tradeMessage = new RequestOffererPublishDepositTxMessage(
+                model.getTradeId(),
+                model.getBankAccount(),
+                model.getAccountId(),
+                model.getMessagePublicKey(),
                 Utils.HEX.encode(signedTakerDepositTx.bitcoinSerialize()),
                 Utils.HEX.encode(signedTakerDepositTx.getInput(1).getScriptBytes()),
-                Utils.HEX.encode(signedTakerDepositTx.getInput(1)
-                        .getConnectedOutput()
-                        .getParentTransaction()
-                        .bitcoinSerialize()),
-                contractAsJson,
-                takerContractSignature,
-                walletService.getAddressInfoByTradeID(tradeId).getAddressString(),
+                Utils.HEX.encode(signedTakerDepositTx.getInput(1).getConnectedOutput().getParentTransaction().bitcoinSerialize()),
+                model.getTrade().getContractAsJson(),
+                model.getTrade().getTakerContractSignature(),
+                model.getWalletService().getAddressInfoByTradeID(model.getTradeId()).getAddressString(),
                 takerTxOutIndex,
-                offererTxOutIndex);
-        tradeMessageService.sendMessage(peer, tradeMessage, new SendMessageListener() {
+                model.getPeersTxOutIndex());
+
+        model.getTradeMessageService().sendMessage(model.getPeer(), tradeMessage, new SendMessageListener() {
             @Override
             public void handleResult() {
-                log.trace("RequestOffererDepositPublicationMessage successfully arrived at peer");
+                complete();
             }
 
             @Override
             public void handleFault() {
-                log.error("RequestOffererDepositPublicationMessage  did not arrive at peer");
-                errorMessageHandler.handleErrorMessage("RequestOffererDepositPublicationMessage did not arrive at peer");
+                failed("Sending RequestOffererDepositPublicationMessage failed");
             }
         });
     }
+
 }

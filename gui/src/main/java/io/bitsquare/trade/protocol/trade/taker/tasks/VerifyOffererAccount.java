@@ -17,21 +17,32 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.bank.BankAccount;
-import io.bitsquare.btc.BlockChainService;
-import io.bitsquare.trade.protocol.trade.shared.tasks.VerifyPeerAccount;
-import io.bitsquare.util.handlers.ExceptionHandler;
-import io.bitsquare.util.handlers.ResultHandler;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VerifyOffererAccount {
+public class VerifyOffererAccount extends Task<SellerTakesOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(VerifyOffererAccount.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler,
-                           BlockChainService blockChainService, String peersAccountId, BankAccount peersBankAccount) {
-        log.trace("Run VerifyOffererAccount task");
-        VerifyPeerAccount.run(resultHandler, exceptionHandler, blockChainService, peersAccountId, peersBankAccount);
+    public VerifyOffererAccount(TaskRunner taskHandler, SellerTakesOfferModel model) {
+        super(taskHandler, model);
+    }
+
+    @Override
+    protected void run() {
+        if (model.getBlockChainService().verifyAccountRegistration()) {
+            if (model.getBlockChainService().isAccountBlackListed(model.getPeersAccountId(), model.getPeersBankAccount())) {
+                failed("Taker is blacklisted.");
+            }
+            else {
+                complete();
+            }
+        }
+        else {
+            failed("Account registration validation for peer faultHandler.onFault.");
+        }
     }
 }

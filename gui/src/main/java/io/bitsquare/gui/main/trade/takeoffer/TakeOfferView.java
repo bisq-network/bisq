@@ -76,7 +76,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     @FXML InputTextField amountTextField;
     @FXML AddressTextField addressTextField;
     @FXML BalanceTextField balanceTextField;
-    @FXML ProgressIndicator takeOfferSpinner;
+    @FXML ProgressIndicator takeOfferSpinner, isOfferAvailableProgressIndicator;
     @FXML InfoDisplay advancedInfoDisplay, fundsBoxInfoDisplay;
     @FXML TitledGroupBg priceAmountPane, payFundsPane, showDetailsPane;
     @FXML Button showPaymentInfoScreenButton, showAdvancedSettingsButton, takeOfferButton;
@@ -88,7 +88,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             bankAccountTypeLabel, bankAccountCurrencyLabel, bankAccountCountyLabel, acceptedCountriesLabel,
             acceptedLanguagesLabel, acceptedArbitratorsLabel, amountBtcLabel, priceDescriptionLabel,
             volumeDescriptionLabel, takeOfferSpinnerInfoLabel;
-    @FXML ProgressIndicator isOfferAvailableProgressIndicator;
 
     private ImageView expand;
     private ImageView collapse;

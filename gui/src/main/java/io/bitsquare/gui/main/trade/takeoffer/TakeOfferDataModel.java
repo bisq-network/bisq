@@ -162,12 +162,12 @@ class TakeOfferDataModel implements Activatable, DataModel {
                                 " That should not happen and needs more investigation why it can happen.");
                     }
                     break;
-                case PAYMENT_STARTED:
+                case FIAT_PAYMENT_STARTED:
                     break;
                 case FAILED:
                     requestTakeOfferErrorMessage.set("An error occurred. Error: " + trade.getFault().getMessage());
                     break;
-                case COMPLETED:
+                case PAYOUT_PUBLISHED:
                     break;
                 default:
                     log.error("Unhandled trade state: " + newValue);

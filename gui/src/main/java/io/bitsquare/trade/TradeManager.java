@@ -31,7 +31,6 @@ import io.bitsquare.offer.OpenOffer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.listeners.BuyerAcceptsOfferProtocolListener;
-import io.bitsquare.trade.listeners.SellerTakesOfferProtocolListener;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.trade.protocol.trade.OfferMessage;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
@@ -43,6 +42,7 @@ import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequ
 import io.bitsquare.trade.protocol.trade.offerer.messages.TakerDepositPaymentRequestMessage;
 import io.bitsquare.trade.protocol.trade.offerer.tasks.IsOfferAvailableResponse;
 import io.bitsquare.trade.protocol.trade.taker.RequestIsOfferAvailableProtocol;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
 import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocol;
 import io.bitsquare.trade.protocol.trade.taker.messages.PayoutTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.taker.messages.RequestIsOfferAvailableMessage;
@@ -137,7 +137,7 @@ public class TradeManager {
             closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
 
-        tradeMessageService.addHandleNewMessageListener(this::handleNewMessage);
+        tradeMessageService.addMessageHandler(this::handleNewMessage);
     }
 
 
@@ -146,7 +146,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void cleanup() {
-        tradeMessageService.removeHandleNewMessageListener(this::handleNewMessage);
+        tradeMessageService.removeMessageHandler(this::handleNewMessage);
     }
 
 
@@ -239,6 +239,11 @@ public class TradeManager {
         pendingTrades.remove(trade.getId());
         persistPendingTrades();
 
+        if (takerAsSellerProtocolMap.containsKey(trade.getId()))
+            takerAsSellerProtocolMap.remove(trade.getId());
+        else if (offererAsBuyerProtocolMap.containsKey(trade.getId()))
+            offererAsBuyerProtocolMap.remove(trade.getId());
+
         closedTrades.put(trade.getId(), trade);
         persistClosedTrades();
     }
@@ -274,9 +279,9 @@ public class TradeManager {
                         public void onOfferAccepted(Offer offer) {
                             persistPendingTrades();
                             //TODO do that later
-                            requestRemoveOpenOffer(offer.getId(),
+                            /*requestRemoveOpenOffer(offer.getId(),
                                     () -> log.debug("remove offer was successful"),
-                                    (message) -> log.error(message));
+                                    (message) -> log.error(message));*/
                         }
 
                         @Override
@@ -295,7 +300,7 @@ public class TradeManager {
                         @Override
                         public void onPayoutTxPublished(Transaction payoutTx) {
                             trade.setPayoutTx(payoutTx);
-                            trade.setState(Trade.State.COMPLETED);
+                            trade.setState(Trade.State.PAYOUT_PUBLISHED);
                             // We close the trade when the user has withdrawn his trade funds (see #283)
                             //closeTrade(trade);
 
@@ -363,76 +368,48 @@ public class TradeManager {
         Trade trade = createTrade(offer);
         trade.setTradeAmount(amount);
 
-        SellerTakesOfferProtocolListener listener = new SellerTakesOfferProtocolListener() {
-            @Override
-            public void onTakeOfferRequestAccepted() {
-                persistPendingTrades();
+        trade.stateProperty().addListener((ov, oldValue, newValue) -> {
+            log.debug("trade state = " + newValue);
+            switch (newValue) {
+                case OPEN:
+                    break;
+                case OFFERER_ACCEPTED:
+                    persistPendingTrades();
+                    break;
+                case OFFERER_REJECTED:
+                    removeFailedTrade(trade);
+                    break;
+                case DEPOSIT_PUBLISHED:
+                    persistPendingTrades();
+                    break;
+                case DEPOSIT_CONFIRMED:
+                    break;
+                case FIAT_PAYMENT_STARTED:
+                    persistPendingTrades();
+                    break;
+                case FAILED:
+                    removeFailedTrade(trade);
+                    break;
+                case PAYOUT_PUBLISHED:
+                    persistPendingTrades();
+                    break;
+                default:
+                    log.error("Unhandled trade state: " + newValue);
+                    break;
             }
+        });
 
-            @Override
-            public void onTakeOfferRequestRejected() {
-                removeFailedTrade(trade);
-            }
-
-            @Override
-            public void onDepositTxPublished() {
-                persistPendingTrades();
-            }
-
-            @Override
-            public void onBankTransferInited(String tradeId) {
-                trade.setState(Trade.State.PAYMENT_STARTED);
-                persistPendingTrades();
-            }
-
-            @Override
-            public void onPayoutTxPublished(Trade trade, Transaction payoutTx) {
-                trade.setPayoutTx(payoutTx);
-                trade.setState(Trade.State.COMPLETED);
-                // We close the trade when the user has withdrawn his trade funds (see #283)
-                //closeTrade(trade);
-                persistPendingTrades();
-            }
-
-            @Override
-            public void onFault(Throwable throwable, SellerTakesOfferProtocol.State state) {
-                log.error("Error while executing trade process at state: " + state + " / " + throwable);
-                switch (state) {
-                    case GetPeerAddress:
-                        removeFailedTrade(trade);
-                        break;
-                    case RequestTakeOffer:
-                        removeFailedTrade(trade);
-                        break;
-                    case ValidateRespondToTakeOfferRequestMessage:
-                        // TODO might need further inspection. Removal could be used for sabotage.
-                        //removeFailedTrade(trade);
-                        break;
-                    case PayTakeOfferFee:
-                        removeFailedTrade(trade);
-                        break;
-                    case SendTakeOfferFeePayedMessage:
-                        removeFailedTrade(trade);
-                        break;
-                    case ValidateTakerDepositPaymentRequestMessage:
-                        removeFailedTrade(trade);
-                        break;
-
-
-                }
-            }
-
-        };
-
-        SellerTakesOfferProtocol sellerTakesOfferProtocol = new SellerTakesOfferProtocol(
+        SellerTakesOfferModel model = new SellerTakesOfferModel(
                 trade,
-                listener,
                 tradeMessageService,
                 walletService,
                 blockChainService,
                 signatureService,
                 user);
+
+        SellerTakesOfferProtocol sellerTakesOfferProtocol = new SellerTakesOfferProtocol(model);
         takerAsSellerProtocolMap.put(trade.getId(), sellerTakesOfferProtocol);
+
         sellerTakesOfferProtocol.start();
 
         return trade;
@@ -444,7 +421,7 @@ public class TradeManager {
     public void fiatPaymentStarted(String tradeId) {
         if (offererAsBuyerProtocolMap.get(tradeId) != null) {
             offererAsBuyerProtocolMap.get(tradeId).handleUIEventBankTransferStarted();
-            pendingTrades.get(tradeId).setState(Trade.State.PAYMENT_STARTED);
+            pendingTrades.get(tradeId).setState(Trade.State.FIAT_PAYMENT_STARTED);
             persistPendingTrades();
         }
         else {
@@ -455,7 +432,7 @@ public class TradeManager {
     }
 
     public void fiatPaymentReceived(String tradeId) {
-        takerAsSellerProtocolMap.get(tradeId).handleUIEventFiatReceived();
+        takerAsSellerProtocolMap.get(tradeId).handleFiatReceivedUIEvent();
     }
 
     public void requestIsOfferAvailable(Offer offer) {
@@ -524,29 +501,19 @@ public class TradeManager {
                 createOffererAsBuyerProtocol(tradeId, sender);
             }
             else if (tradeMessage instanceof RespondToTakeOfferRequestMessage) {
-                takerAsSellerProtocolMap.get(tradeId).handleRespondToTakeOfferRequestMessage((RespondToTakeOfferRequestMessage) tradeMessage);
             }
             else if (tradeMessage instanceof TakeOfferFeePayedMessage) {
                 offererAsBuyerProtocolMap.get(tradeId).handleTakeOfferFeePayedMessage((TakeOfferFeePayedMessage) tradeMessage);
             }
             else if (tradeMessage instanceof TakerDepositPaymentRequestMessage) {
-                takerAsSellerProtocolMap.get(tradeId).handleTakerDepositPaymentRequestMessage((TakerDepositPaymentRequestMessage) tradeMessage);
             }
             else if (tradeMessage instanceof RequestOffererPublishDepositTxMessage) {
                 offererAsBuyerProtocolMap.get(tradeId).handleRequestOffererPublishDepositTxMessage((RequestOffererPublishDepositTxMessage) tradeMessage);
             }
             else if (tradeMessage instanceof DepositTxPublishedMessage) {
-                persistPendingTrades();
-                takerAsSellerProtocolMap.get(tradeId).handleDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
+                // persistPendingTrades();
             }
             else if (tradeMessage instanceof BankTransferInitedMessage) {
-                // Here happened a null pointer. I assume the only possible reason was that we got a null for the 
-                // tradeID
-                // as the takerAsSellerProtocolMap need to have that trade got added earlier.
-                // For getting better info we add a check. tradeId is checked above.
-                if (takerAsSellerProtocolMap.get(tradeId) == null)
-                    log.error("takerAsSellerProtocolMap.get(tradeId) = null. That must not happen.");
-                takerAsSellerProtocolMap.get(tradeId).handleBankTransferInitedMessage((BankTransferInitedMessage) tradeMessage);
             }
             else if (tradeMessage instanceof PayoutTxPublishedMessage) {
                 offererAsBuyerProtocolMap.get(tradeId).handlePayoutTxPublishedMessage((PayoutTxPublishedMessage) tradeMessage);

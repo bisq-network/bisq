@@ -230,11 +230,11 @@ class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataM
                     state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_START_PAYMENT :
                             State.TAKER_SELLER_WAIT_PAYMENT_STARTED);
                     break;
-                case PAYMENT_STARTED:
+                case FIAT_PAYMENT_STARTED:
                     state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_WAIT_CONFIRM_PAYMENT_RECEIVED :
                             State.TAKER_SELLER_CONFIRM_RECEIVE_PAYMENT);
                     break;
-                case COMPLETED:
+                case PAYOUT_PUBLISHED:
                     state.set(dataModel.isOfferer() ? State.OFFERER_BUYER_COMPLETED : State.TAKER_SELLER_COMPLETED);
                     break;
                 case FAILED:

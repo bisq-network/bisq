@@ -18,6 +18,7 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.offer.Offer;
+import io.bitsquare.util.tasks.Task;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -32,6 +33,24 @@ import javafx.beans.property.SimpleObjectProperty;
 
 public class Trade implements Serializable {
     private static final long serialVersionUID = -8275323072940974077L;
+    private Class<? extends Task> previousTask;
+    private Class<? extends Task> currentTask;
+
+    public void setCurrentTask(Class<? extends Task> currentTask) {
+        this.currentTask = currentTask;
+    }
+
+    public Class<? extends Task> getCurrentTask() {
+        return currentTask;
+    }
+
+    public void setPreviousTask(Class<? extends Task> previousTask) {
+        this.previousTask = previousTask;
+    }
+
+    public Class<? extends Task> getPreviousTask() {
+        return previousTask;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -43,9 +62,10 @@ public class Trade implements Serializable {
         OFFERER_REJECTED, /* For taker only*/
         DEPOSIT_PUBLISHED,
         DEPOSIT_CONFIRMED,
-        PAYMENT_STARTED,
-        FAILED,
-        COMPLETED
+        FIAT_PAYMENT_STARTED,
+        FIAT_PAYMENT_RECEIVED,
+        PAYOUT_PUBLISHED,
+        FAILED
     }
 
     private final Offer offer;

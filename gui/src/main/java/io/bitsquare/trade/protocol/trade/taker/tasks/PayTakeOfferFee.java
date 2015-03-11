@@ -17,8 +17,9 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.btc.WalletService;
-import io.bitsquare.util.handlers.ExceptionHandler;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
@@ -30,34 +31,31 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PayTakeOfferFee {
+public class PayTakeOfferFee extends Task<SellerTakesOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(PayTakeOfferFee.class);
 
-    public static void run(ResultHandler resultHandler, ExceptionHandler exceptionHandler, WalletService walletService,
-                           String tradeId) {
-        log.trace("Run PayTakeOfferFee task");
+    public PayTakeOfferFee(TaskRunner taskHandler, SellerTakesOfferModel model) {
+        super(taskHandler, model);
+    }
+
+    @Override
+    protected void run() {
         try {
-            walletService.payTakeOfferFee(tradeId, new FutureCallback<Transaction>() {
+            model.getWalletService().payTakeOfferFee(model.getTradeId(), new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     log.debug("Take offer fee paid successfully. Transaction ID = " + transaction.getHashAsString());
-                    resultHandler.onResult(transaction.getHashAsString());
+                    model.getTrade().setTakeOfferFeeTxID(transaction.getHashAsString());
+                    complete();
                 }
 
                 @Override
                 public void onFailure(@NotNull Throwable t) {
-                    log.error("Pay take offer fee caused an exception: " + t);
-                    exceptionHandler.handleException(t);
+                    failed("Pay take offer fee caused an exception: ", t);
                 }
             });
         } catch (InsufficientMoneyException e) {
-            log.error("Pay take offer fee caused an exception: " + e);
-            exceptionHandler.handleException(e);
+            failed("Pay take offer fee caused an exception: ", e);
         }
     }
-
-    public interface ResultHandler {
-        void onResult(String takeOfferFeeTxId);
-    }
-
 }

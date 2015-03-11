@@ -17,41 +17,41 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.network.Peer;
-import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
+import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferModel;
 import io.bitsquare.trade.protocol.trade.taker.messages.TakeOfferFeePayedMessage;
-import io.bitsquare.util.handlers.ErrorMessageHandler;
-
-import org.bitcoinj.core.Coin;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendTakeOfferFeePayedMessage {
+public class SendTakeOfferFeePayedMessage extends Task<SellerTakesOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(SendTakeOfferFeePayedMessage.class);
 
-    public static void run(ErrorMessageHandler errorMessageHandler,
-                           Peer peer,
-                           TradeMessageService tradeMessageService,
-                           String tradeId,
-                           String takeOfferFeeTxId,
-                           Coin tradeAmount,
-                           String tradePubKeyAsHex) {
-        log.trace("Run SendTakeOfferFeePayedMessage task");
-        TakeOfferFeePayedMessage msg = new TakeOfferFeePayedMessage(tradeId, takeOfferFeeTxId, tradeAmount,
-                tradePubKeyAsHex);
+    public SendTakeOfferFeePayedMessage(TaskRunner taskHandler, SellerTakesOfferModel model) {
+        super(taskHandler, model);
+    }
 
-        tradeMessageService.sendMessage(peer, msg, new SendMessageListener() {
+    @Override
+    protected void run() {
+        TakeOfferFeePayedMessage msg = new TakeOfferFeePayedMessage(
+                model.getTradeId(),
+                model.getTrade().getTakeOfferFeeTxId(),
+                model.getTradeAmount(),
+                model.getTradePubKeyAsHex()
+        );
+
+        model.getTradeMessageService().sendMessage(model.getPeer(), msg, new SendMessageListener() {
             @Override
             public void handleResult() {
-                log.trace("TakeOfferFeePayedMessage succeeded.");
+                log.trace("Sending TakeOfferFeePayedMessage succeeded.");
+                complete();
             }
 
             @Override
             public void handleFault() {
-                log.error("Sending TakeOfferFeePayedMessage failed.");
-                errorMessageHandler.handleErrorMessage("Sending TakeOfferFeePayedMessage failed.");
+                failed("Sending TakeOfferFeePayedMessage failed.");
             }
         });
     }

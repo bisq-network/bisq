@@ -15,24 +15,24 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.listeners;
+package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.taker.SellerTakesOfferProtocol;
+import io.bitsquare.util.tasks.SharedModel;
 
-import org.bitcoinj.core.Transaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public interface SellerTakesOfferProtocolListener {
-    void onDepositTxPublished();
+public class TradeSharedModel extends SharedModel {
+    private static final Logger log = LoggerFactory.getLogger(TradeSharedModel.class);
 
-    void onBankTransferInited(String tradeId);
+    public Trade getTrade() {
+        return trade;
+    }
 
-    void onPayoutTxPublished(Trade trade, Transaction payoutTx);
+    protected final Trade trade;
 
-    void onFault(Throwable throwable, SellerTakesOfferProtocol.State state);
-
-    void onTakeOfferRequestAccepted();
-
-    void onTakeOfferRequestRejected();
-
+    public TradeSharedModel(Trade trade) {
+        this.trade = trade;
+    }
 }

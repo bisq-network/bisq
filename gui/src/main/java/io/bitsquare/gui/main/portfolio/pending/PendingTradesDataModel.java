@@ -167,6 +167,7 @@ class PendingTradesDataModel implements Activatable, DataModel {
     }
 
     void fiatPaymentReceived() {
+        getTrade().setState(Trade.State.FIAT_PAYMENT_RECEIVED);
         tradeManager.fiatPaymentReceived(getTrade().getId());
     }
 
