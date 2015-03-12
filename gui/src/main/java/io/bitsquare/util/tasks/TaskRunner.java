@@ -41,6 +41,8 @@ public class TaskRunner<T extends SharedModel> {
     private Class<? extends Task> currentTask;
     private Class<? extends Task> previousTask;
 
+    private boolean isCanceled;
+
     public TaskRunner(T sharedModel, ResultHandler resultHandler, FaultHandler faultHandler) {
         this.sharedModel = sharedModel;
         this.resultHandler = resultHandler;
@@ -56,7 +58,7 @@ public class TaskRunner<T extends SharedModel> {
     }
 
     protected void next() {
-        if (!failed) {
+        if (!failed && !isCanceled) {
             if (tasks.size() > 0) {
                 try {
                     setCurrentTask(tasks.poll());
@@ -72,6 +74,10 @@ public class TaskRunner<T extends SharedModel> {
                 resultHandler.handleResult();
             }
         }
+    }
+
+    public void cancel() {
+        isCanceled = true;
     }
 
     protected void setPreviousTask(Class<? extends Task> task) {
@@ -103,4 +109,5 @@ public class TaskRunner<T extends SharedModel> {
         failed = true;
         faultHandler.handleFault(message, throwable);
     }
+
 }

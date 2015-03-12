@@ -15,31 +15,33 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.taker.tasks;
+package io.bitsquare.trade.protocol.offer.tasks;
 
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.listeners.GetPeerAddressListener;
-import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
+import io.bitsquare.trade.protocol.offer.CheckOfferAvailabilityModel;
 import io.bitsquare.util.tasks.Task;
 import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GetPeerAddress extends Task<SellerAsTakerModel> {
+public class GetPeerAddress extends Task<CheckOfferAvailabilityModel> {
     private static final Logger log = LoggerFactory.getLogger(GetPeerAddress.class);
 
-    public GetPeerAddress(TaskRunner taskHandler, SellerAsTakerModel model) {
+    public GetPeerAddress(TaskRunner taskHandler, CheckOfferAvailabilityModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void run() {
-        model.getTradeMessageService().getPeerAddress(model.getOffererMessagePublicKey(), new GetPeerAddressListener() {
+        model.getTradeMessageService().getPeerAddress(model.getOffer().getMessagePublicKey(), new GetPeerAddressListener() {
             @Override
             public void onResult(Peer peer) {
                 log.trace("Found peer: " + peer.toString());
+                
                 model.setPeer(peer);
+                
                 complete();
             }
 

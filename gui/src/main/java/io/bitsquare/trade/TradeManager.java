@@ -30,16 +30,16 @@ import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.offer.OpenOffer;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
+import io.bitsquare.trade.listeners.SendMessageListener;
+import io.bitsquare.trade.protocol.offer.CheckOfferAvailabilityModel;
+import io.bitsquare.trade.protocol.offer.CheckOfferAvailabilityProtocol;
+import io.bitsquare.trade.protocol.offer.messages.ReportOfferAvailabilityMessage;
+import io.bitsquare.trade.protocol.offer.messages.RequestIsOfferAvailableMessage;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
-import io.bitsquare.trade.protocol.trade.OfferMessage;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererProtocol;
-import io.bitsquare.trade.protocol.trade.offerer.messages.IsOfferAvailableResponseMessage;
-import io.bitsquare.trade.protocol.trade.offerer.tasks.IsOfferAvailableResponse;
-import io.bitsquare.trade.protocol.trade.taker.RequestIsOfferAvailableProtocol;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerProtocol;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestIsOfferAvailableMessage;
 import io.bitsquare.user.User;
 import io.bitsquare.util.handlers.ErrorMessageHandler;
 import io.bitsquare.util.handlers.ResultHandler;
@@ -54,8 +54,6 @@ import javax.inject.Inject;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
-
-import org.jetbrains.annotations.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +79,7 @@ public class TradeManager {
     //TODO store TakerAsSellerProtocol in trade
     private final Map<String, SellerAsTakerProtocol> takerAsSellerProtocolMap = new HashMap<>();
     private final Map<String, BuyerAsOffererProtocol> offererAsBuyerProtocolMap = new HashMap<>();
-    private final Map<String, RequestIsOfferAvailableProtocol> requestIsOfferAvailableProtocolMap = new HashMap<>();
+    private final Map<String, CheckOfferAvailabilityProtocol> checkOfferAvailabilityProtocolMap = new HashMap<>();
 
     private final ObservableMap<String, OpenOffer> openOffers = FXCollections.observableHashMap();
     private final ObservableMap<String, Trade> pendingTrades = FXCollections.observableHashMap();
@@ -124,16 +122,7 @@ public class TradeManager {
             closedTrades.putAll((Map<String, Trade>) closedTradesObject);
         }
 
-        tradeMessageService.addMessageHandler(this::handleNewMessage);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void cleanup() {
-        tradeMessageService.removeMessageHandler(this::handleNewMessage);
+        tradeMessageService.addMessageHandler(this::handleMessage);
     }
 
 
@@ -141,20 +130,23 @@ public class TradeManager {
     // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onGetOfferAvailableStateRequested(Offer offer) {
-        if (!requestIsOfferAvailableProtocolMap.containsKey(offer.getId())) {
-            RequestIsOfferAvailableProtocol protocol = new RequestIsOfferAvailableProtocol(offer, tradeMessageService);
-            requestIsOfferAvailableProtocolMap.put(offer.getId(), protocol);
-            protocol.start();
+    public void onCheckOfferAvailability(Offer offer) {
+        if (!checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
+
+            CheckOfferAvailabilityModel model = new CheckOfferAvailabilityModel(offer, tradeMessageService, () -> {
+            });
+            CheckOfferAvailabilityProtocol protocol = new CheckOfferAvailabilityProtocol(model);
+            checkOfferAvailabilityProtocolMap.put(offer.getId(), protocol);
+            protocol.onCheckOfferAvailability();
         }
         else {
-            log.warn("requestIsOfferAvailable already called for offer with ID:" + offer.getId());
+            log.error("onGetOfferAvailableStateRequested already called for offer with ID:" + offer.getId());
         }
     }
 
     // When closing take offer view, we are not interested in the requestIsOfferAvailable result anymore, so remove from the map
     public void onGetOfferAvailableStateRequestCanceled(Offer offer) {
-        requestIsOfferAvailableProtocolMap.remove(offer.getId());
+        cleanupCheckOfferAvailabilityProtocolMap(offer);
     }
 
     public void onPlaceOfferRequested(String id,
@@ -200,7 +192,6 @@ public class TradeManager {
     public void onRemoveOpenOfferRequested(String offerId, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         removeOpenOffer(offerId, resultHandler, errorMessageHandler, true);
     }
-
 
     public Trade onTakeOfferRequested(Coin amount, Offer offer) {
         Trade trade = createTrade(offer);
@@ -263,16 +254,42 @@ public class TradeManager {
         closeTrade(trade, false);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Called from Offerbook (DHT)
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Called from Offerbook when offer gets removed from DHT
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onOfferRemovedFromRemoteOfferBook(Offer offer) {
-        requestIsOfferAvailableProtocolMap.remove(offer.getId());
+        cleanupCheckOfferAvailabilityProtocolMap(offer);
     }
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Process new tradeMessages
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Routes the incoming messages to the responsible protocol
+    private void handleMessage(Message message, Peer sender) {
+        if (message instanceof RequestIsOfferAvailableMessage) {
+            String offerId = ((RequestIsOfferAvailableMessage) message).getOfferId();
+            checkNotNull(offerId);
+
+            ReportOfferAvailabilityMessage reportOfferAvailabilityMessage = new ReportOfferAvailabilityMessage(offerId, isOfferOpen(offerId));
+            tradeMessageService.sendMessage(sender, reportOfferAvailabilityMessage, new SendMessageListener() {
+                @Override
+                public void handleResult() {
+                    log.trace("ReportOfferAvailabilityMessage successfully arrived at peer");
+                }
+
+                @Override
+                public void handleFault() {
+                    log.warn("Sending ReportOfferAvailabilityMessage failed.");
+                }
+            });
+        }
+    }
+
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -291,12 +308,14 @@ public class TradeManager {
         offerBookService.removeOffer(openOffers.get(offerId).getOffer(),
                 () -> {
                     if (openOffers.containsKey(offerId)) {
-                        openOffers.remove(offerId);
+                        OpenOffer openOffer = openOffers.remove(offerId);
+                        cleanupCheckOfferAvailabilityProtocolMap(openOffer.getOffer());
                         persistOpenOffers();
                         if (removeFromOffererAsBuyerProtocolMap && offererAsBuyerProtocolMap.containsKey(offerId)) {
                             offererAsBuyerProtocolMap.get(offerId).cleanup();
                             offererAsBuyerProtocolMap.remove(offerId);
                         }
+
                         resultHandler.handleResult();
                     }
                     else {
@@ -400,7 +419,6 @@ public class TradeManager {
             offererAsBuyerProtocolMap.remove(trade.getId());
         }
 
-
         if (!failed) {
             closedTrades.put(trade.getId(), trade);
             persistClosedTrades();
@@ -410,51 +428,19 @@ public class TradeManager {
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Process new tradeMessages
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // TODO remove
-    // Routes the incoming messages to the responsible protocol
-    private void handleNewMessage(Message message, Peer sender) {
-        log.trace("handleNewMessage: message = " + message.getClass().getSimpleName());
-        log.trace("handleNewMessage: sender = " + sender);
-
-
-        if (message instanceof OfferMessage) {
-            OfferMessage offerMessage = (OfferMessage) message;
-            // Before starting any take offer activity we check if the offer is still available.
-            if (offerMessage instanceof RequestIsOfferAvailableMessage) {
-                // That message arrives at the offerer and he returns if the offer is still available (if there is no trade already created with that offerId).
-                String offerId = offerMessage.getOfferId();
-                checkNotNull(offerId);
-                boolean isOfferOpen = getTrade(offerId) == null;
-                // no handling of results or faults needed
-                IsOfferAvailableResponse.run(sender, tradeMessageService, offerId, isOfferOpen);
-            }
-            else if (offerMessage instanceof IsOfferAvailableResponseMessage) {
-                // That message arrives at the taker in response to a previous requestIsOfferAvailable call.
-                // It might be that the offer got removed form the offer book, so lets check if its still there.
-                if (requestIsOfferAvailableProtocolMap.containsKey(offerMessage.getOfferId())) {
-                    RequestIsOfferAvailableProtocol protocol = requestIsOfferAvailableProtocolMap.get(offerMessage.getOfferId());
-                    protocol.handleIsOfferAvailableResponseMessage((IsOfferAvailableResponseMessage) offerMessage);
-                    requestIsOfferAvailableProtocolMap.remove(offerMessage.getOfferId());
-                }
-                else {
-                    log.info("Offer might have been removed in the meantime. No protocol found for offer with ID:" + offerMessage.getOfferId());
-                }
-            }
-            else {
-                log.error("Incoming offerMessage not supported. " + offerMessage);
-            }
+    private void cleanupCheckOfferAvailabilityProtocolMap(Offer offer) {
+        if (checkOfferAvailabilityProtocolMap.containsKey(offer.getId())) {
+            CheckOfferAvailabilityProtocol protocol = checkOfferAvailabilityProtocolMap.get(offer.getId());
+            protocol.cancel();
+            protocol.cleanup();
+            checkOfferAvailabilityProtocolMap.remove(offer.getId());
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
+    public boolean isOfferOpen(String offerId) {
+        // Don't use openOffers as the offer gets removed async from DHT, but is added sync to pendingTrades
+        return !pendingTrades.containsKey(offerId) && !closedTrades.containsKey(offerId);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -492,17 +478,5 @@ public class TradeManager {
     private void persistClosedTrades() {
         persistence.write(this, "closedTrades", (Map<String, Trade>) new HashMap<>(closedTrades));
     }
-
-
-    @Nullable
-    public Trade getTrade(String tradeId) {
-        if (pendingTrades.containsKey(tradeId)) {
-            return pendingTrades.get(tradeId);
-        }
-        else {
-            return null;
-        }
-    }
-
 
 }

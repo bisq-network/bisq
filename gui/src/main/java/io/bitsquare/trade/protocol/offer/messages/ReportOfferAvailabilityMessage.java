@@ -15,19 +15,20 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.taker.messages;
+package io.bitsquare.trade.protocol.offer.messages;
 
 import io.bitsquare.trade.protocol.trade.OfferMessage;
 
 import java.io.Serializable;
 
-// That msg is used to ping the offerer if he is online and if the offer is still available
-public class RequestIsOfferAvailableMessage implements Serializable, OfferMessage {
-    private static final long serialVersionUID = 4630151440192191798L;
+public class ReportOfferAvailabilityMessage implements Serializable, OfferMessage {
+    private static final long serialVersionUID = 6177387534187739018L;
     private final String offerId;
+    private final boolean isOfferOpen;
 
-    public RequestIsOfferAvailableMessage(String offerId) {
+    public ReportOfferAvailabilityMessage(String offerId, boolean isOfferOpen) {
         this.offerId = offerId;
+        this.isOfferOpen = isOfferOpen;
     }
 
     @Override
@@ -35,5 +36,7 @@ public class RequestIsOfferAvailableMessage implements Serializable, OfferMessag
         return offerId;
     }
 
-
+    public boolean isOfferOpen() {
+        return isOfferOpen;
+    }
 }

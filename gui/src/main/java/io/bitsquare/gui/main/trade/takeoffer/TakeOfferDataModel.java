@@ -134,7 +134,7 @@ class TakeOfferDataModel implements Activatable, DataModel {
         offer.getStateProperty().addListener((observable, oldValue, newValue) -> {
             offerIsAvailable.set(newValue);
         });
-        tradeManager.onGetOfferAvailableStateRequested(offer);
+        tradeManager.onCheckOfferAvailability(offer);
     }
 
     void takeOffer() {

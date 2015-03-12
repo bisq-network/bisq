@@ -47,7 +47,6 @@ import org.slf4j.LoggerFactory;
 
 import static io.bitsquare.util.Validator.nonEmptyStringOf;
 
-
 public class SellerAsTakerProtocol {
     private static final Logger log = LoggerFactory.getLogger(SellerAsTakerProtocol.class);
 

@@ -15,36 +15,37 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.trade.protocol.trade.taker.tasks;
+package io.bitsquare.trade.protocol.offer.tasks;
 
-import io.bitsquare.network.Peer;
-import io.bitsquare.trade.TradeMessageService;
 import io.bitsquare.trade.listeners.SendMessageListener;
-import io.bitsquare.trade.protocol.trade.taker.messages.RequestIsOfferAvailableMessage;
-import io.bitsquare.util.handlers.ErrorMessageHandler;
+import io.bitsquare.trade.protocol.offer.CheckOfferAvailabilityModel;
+import io.bitsquare.trade.protocol.offer.messages.RequestIsOfferAvailableMessage;
+import io.bitsquare.util.tasks.Task;
+import io.bitsquare.util.tasks.TaskRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RequestIsOfferAvailable {
+public class RequestIsOfferAvailable extends Task<CheckOfferAvailabilityModel> {
     private static final Logger log = LoggerFactory.getLogger(RequestIsOfferAvailable.class);
 
-    public static void run(ErrorMessageHandler errorMessageHandler,
-                           Peer peer, TradeMessageService tradeMessageService, String offerId) {
-        log.trace("Run RequestIsOfferAvailable task");
+    public RequestIsOfferAvailable(TaskRunner taskHandler, CheckOfferAvailabilityModel model) {
+        super(taskHandler, model);
+    }
 
-        tradeMessageService.sendMessage(peer, new RequestIsOfferAvailableMessage(offerId),
+    @Override
+    protected void run() {
+        model.getTradeMessageService().sendMessage(model.getPeer(), new RequestIsOfferAvailableMessage(model.getOffer().getId()),
                 new SendMessageListener() {
                     @Override
                     public void handleResult() {
                         log.trace("RequestIsOfferAvailableMessage successfully arrived at peer");
-                        // nothing to do
+                        complete();
                     }
 
                     @Override
                     public void handleFault() {
-                        log.error("RequestIsOfferAvailableMessage did not arrive at peer");
-                        errorMessageHandler.handleErrorMessage("RequestIsOfferAvailableMessage did not arrive at peer");
+                        failed("Sending RequestIsOfferAvailableMessage failed.");
                     }
                 });
     }
