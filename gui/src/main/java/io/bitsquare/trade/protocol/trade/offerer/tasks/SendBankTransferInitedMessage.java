@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade.offerer.tasks;
 
 import io.bitsquare.trade.listeners.SendMessageListener;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
-import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferStartedMessage;
 import io.bitsquare.util.tasks.Task;
 import io.bitsquare.util.tasks.TaskRunner;
 
@@ -35,7 +35,7 @@ public class SendBankTransferInitedMessage extends Task<BuyerAsOffererModel> {
 
     @Override
     protected void run() {
-        BankTransferInitedMessage tradeMessage = new BankTransferInitedMessage(
+        BankTransferStartedMessage tradeMessage = new BankTransferStartedMessage(
                 model.getTrade().getId(),
                 model.getDepositTxAsHex(),
                 model.getOffererSignatureR(),

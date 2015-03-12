@@ -23,7 +23,7 @@ import org.bitcoinj.core.Coin;
 
 import java.io.Serializable;
 
-public class BankTransferInitedMessage implements Serializable, TradeMessage {
+public class BankTransferStartedMessage implements Serializable, TradeMessage {
     private static final long serialVersionUID = -3479634129543632523L;
     private final String tradeId;
 
@@ -34,13 +34,13 @@ public class BankTransferInitedMessage implements Serializable, TradeMessage {
     private final Coin takerPaybackAmount;
     private final String offererPayoutAddress;
 
-    public BankTransferInitedMessage(String tradeId,
-                                     String depositTxAsHex,
-                                     String offererSignatureR,
-                                     String offererSignatureS,
-                                     Coin offererPaybackAmount,
-                                     Coin takerPaybackAmount,
-                                     String offererPayoutAddress) {
+    public BankTransferStartedMessage(String tradeId,
+                                      String depositTxAsHex,
+                                      String offererSignatureR,
+                                      String offererSignatureS,
+                                      Coin offererPaybackAmount,
+                                      Coin takerPaybackAmount,
+                                      String offererPayoutAddress) {
         this.tradeId = tradeId;
         this.depositTxAsHex = depositTxAsHex;
         this.offererSignatureR = offererSignatureR;

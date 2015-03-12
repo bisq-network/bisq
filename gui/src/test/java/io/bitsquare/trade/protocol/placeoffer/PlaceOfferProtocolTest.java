@@ -35,15 +35,12 @@ import io.bitsquare.offer.OfferBookService;
 import io.bitsquare.offer.tomp2p.TomP2POfferBookService;
 import io.bitsquare.persistence.Persistence;
 import io.bitsquare.trade.TradeMessageService;
-import io.bitsquare.trade.handlers.TransactionResultHandler;
 import io.bitsquare.trade.tomp2p.TomP2PTradeMessageService;
 import io.bitsquare.user.User;
 import io.bitsquare.util.DSAKeyUtil;
-import io.bitsquare.util.handlers.FaultHandler;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.Threading;
 
 import java.io.File;
@@ -51,20 +48,16 @@ import java.io.IOException;
 
 import java.util.Arrays;
 import java.util.Currency;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Test;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import rx.Observable;
-
-import static org.junit.Assert.*;
 
 /**
  * That test is ignored for automated testing as it needs custom setup.
@@ -167,7 +160,7 @@ public class PlaceOfferProtocolTest {
         bootstrappedPeerBuilder.shutDown();
     }
 
-    @Test
+/*    @Test
     public void validateOfferTest() throws InterruptedException {
         try {
             Offer offer = getOffer();
@@ -261,7 +254,7 @@ public class PlaceOfferProtocolTest {
             countDownLatch.countDown();
         }
     }
-
+    
     @Test
     public void placeOfferTest() throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -299,7 +292,7 @@ public class PlaceOfferProtocolTest {
                 offerBookService,
                 resultHandler,
                 faultHandler);
-    }
+    }*/
 
     private Offer getOffer() {
         return new Offer(OFFER_ID,

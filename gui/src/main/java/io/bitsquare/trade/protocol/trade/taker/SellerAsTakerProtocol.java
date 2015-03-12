@@ -21,7 +21,7 @@ import io.bitsquare.network.Message;
 import io.bitsquare.network.Peer;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradeMessage;
-import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.RespondToTakeOfferRequestMessage;
 import io.bitsquare.trade.protocol.trade.offerer.messages.TakerDepositPaymentRequestMessage;
@@ -108,8 +108,8 @@ public class SellerAsTakerProtocol {
             else if (tradeMessage instanceof DepositTxPublishedMessage) {
                 handleDepositTxPublishedMessage((DepositTxPublishedMessage) tradeMessage);
             }
-            else if (tradeMessage instanceof BankTransferInitedMessage) {
-                handleBankTransferInitedMessage((BankTransferInitedMessage) tradeMessage);
+            else if (tradeMessage instanceof BankTransferStartedMessage) {
+                handleBankTransferInitedMessage((BankTransferStartedMessage) tradeMessage);
             }
             else {
                 log.error("Incoming message not supported. " + tradeMessage);
@@ -175,7 +175,7 @@ public class SellerAsTakerProtocol {
         sequence.run();
     }
 
-    private void handleBankTransferInitedMessage(BankTransferInitedMessage tradeMessage) {
+    private void handleBankTransferInitedMessage(BankTransferStartedMessage tradeMessage) {
         model.setTradeMessage(tradeMessage);
 
         SellerAsTakerTaskRunner<SellerAsTakerModel> sequence = new SellerAsTakerTaskRunner<>(model,

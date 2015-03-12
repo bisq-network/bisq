@@ -35,6 +35,7 @@ import io.bitsquare.trade.protocol.offer.CheckOfferAvailabilityModel;
 import io.bitsquare.trade.protocol.offer.CheckOfferAvailabilityProtocol;
 import io.bitsquare.trade.protocol.offer.messages.ReportOfferAvailabilityMessage;
 import io.bitsquare.trade.protocol.offer.messages.RequestIsOfferAvailableMessage;
+import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererModel;
 import io.bitsquare.trade.protocol.trade.offerer.BuyerAsOffererProtocol;
@@ -170,11 +171,10 @@ public class TradeManager {
                 accountSettings.getAcceptedCountries(),
                 accountSettings.getAcceptedLanguageLocales());
 
+        PlaceOfferModel model = new PlaceOfferModel(offer, walletService, offerBookService);
 
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
-                offer,
-                walletService,
-                offerBookService,
+                model,
                 (transaction) -> {
                     OpenOffer openOffer = createOpenOffer(offer);
                     createOffererAsBuyerProtocol(openOffer);

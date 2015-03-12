@@ -17,7 +17,7 @@
 
 package io.bitsquare.trade.protocol.trade.taker.tasks;
 
-import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferInitedMessage;
+import io.bitsquare.trade.protocol.trade.offerer.messages.BankTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.taker.SellerAsTakerModel;
 import io.bitsquare.util.tasks.Task;
 import io.bitsquare.util.tasks.TaskRunner;
@@ -38,7 +38,7 @@ public class ProcessBankTransferInitedMessage extends Task<SellerAsTakerModel> {
     protected void run() {
         try {
             checkTradeId(model.getTrade().getId(), model.getTradeMessage());
-            BankTransferInitedMessage message = (BankTransferInitedMessage) model.getTradeMessage();
+            BankTransferStartedMessage message = (BankTransferStartedMessage) model.getTradeMessage();
             
             model.setDepositTxAsHex(nonEmptyStringOf(message.getDepositTxAsHex()));
             model.setOffererSignatureR(nonEmptyStringOf(message.getOffererSignatureR()));
